@@ -213,6 +213,7 @@ cc_test(
         "//iris/light_scenes:all_light_scene",
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
+        "//iris/spectra:mock_spectrum",
         "@com_google_googletest//:gtest_main",
     ],
 )

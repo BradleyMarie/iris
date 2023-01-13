@@ -2,9 +2,13 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/internal/arena.h"
+#include "iris/lights/mock_light.h"
+#include "iris/random/mock_random.h"
 
-const iris::Light* g_light = reinterpret_cast<const iris::Light*>(1);
-iris::Random* g_random = reinterpret_cast<iris::Random*>(2);
+static const std::unique_ptr<iris::Light> g_light =
+    std::make_unique<iris::lights::MockLight>();
+static const std::unique_ptr<iris::Random> g_random =
+    std::make_unique<iris::random::MockRandom>();
 
 class TestLightScene final : public iris::LightScene {
  public:
@@ -37,7 +41,7 @@ TEST(LightSamplerTest, Sample) {
 
   auto sample = sampler.Sample(iris::Point(1.0, 1.0, 1.0));
   ASSERT_NE(nullptr, sample);
-  EXPECT_EQ(g_light, &sample->light);
+  EXPECT_EQ(g_light.get(), &sample->light);
   EXPECT_EQ(2.0, sample->pdf);
   EXPECT_EQ(nullptr, sample->next);
 }

@@ -10,8 +10,9 @@
 #include "iris/light_scenes/all_light_scene.h"
 #include "iris/random/mock_random.h"
 #include "iris/scenes/list_scene.h"
+#include "iris/spectra/mock_spectrum.h"
 
-const iris::Spectrum* spectrum = reinterpret_cast<const iris::Spectrum*>(3);
+static const iris::spectra::MockSpectrum g_spectrum;
 
 void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads) {
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
@@ -68,7 +69,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads) {
         auto result = std::make_unique<iris::integrators::MockIntegrator>();
         EXPECT_CALL(*result, Integrate(trace_ray, testing::_, testing::_,
                                        testing::_, testing::_, testing::_))
-            .WillRepeatedly(testing::Return(spectrum));
+            .WillRepeatedly(testing::Return(&g_spectrum));
         return result;
       }));
 

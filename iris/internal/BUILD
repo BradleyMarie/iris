@@ -158,7 +158,9 @@ cc_test(
     deps = [
         ":arena",
         ":visibility_tester",
+        "//iris/emissive_materials:mock_emissive_material",
         "//iris/scenes:list_scene",
+        "//iris/spectra:mock_spectrum",
         "@com_google_googletest//:gtest_main",
     ],
 )

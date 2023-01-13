@@ -3,33 +3,33 @@
 #include <optional>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/emissive_materials/mock_emissive_material.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/ray_tracer.h"
 #include "iris/scenes/list_scene.h"
+#include "iris/spectra/mock_spectrum.h"
 
 static bool g_override_face = false;
 static iris::face_t g_front_face = 1;
 static const uint32_t g_data = 0xDEADBEEF;
 static bool g_second_hit = false;
 
-class TestEmissiveMaterial final : public iris::EmissiveMaterial {
- public:
-  TestEmissiveMaterial(std::array<iris::geometric, 2> expected,
-                       const iris::Spectrum* spectrum = nullptr)
-      : expected_(expected), spectrum_(spectrum) {}
-
-  const iris::Spectrum* Evaluate(
-      const iris::TextureCoordinates& texture_coordinates,
-      iris::SpectralAllocator& spectral_allocator) const override {
-    EXPECT_EQ(expected_, texture_coordinates.uv);
-    EXPECT_FALSE(texture_coordinates.derivatives);
-    return spectrum_;
-  }
-
- private:
-  std::array<iris::geometric, 2> expected_;
-  const iris::Spectrum* spectrum_;
-};
+std::unique_ptr<iris::EmissiveMaterial> MakeEmissiveMaterial(
+    std::array<iris::geometric, 2> expected,
+    const iris::Spectrum* spectrum = nullptr) {
+  auto result =
+      std::make_unique<iris::emissive_materials::MockEmissiveMaterial>();
+  EXPECT_CALL(*result, Evaluate(testing::_, testing::_))
+      .WillRepeatedly(testing::Invoke(
+          [expected, spectrum](
+              const iris::TextureCoordinates& texture_coordinates,
+              iris::SpectralAllocator& spectral_allocator) {
+            EXPECT_EQ(expected, texture_coordinates.uv);
+            EXPECT_FALSE(texture_coordinates.derivatives);
+            return spectrum;
+          }));
+  return result;
+}
 
 class TestGeometry final : public iris::Geometry {
  public:
@@ -138,13 +138,13 @@ TEST(VisibilityTesterTest, SucceedsSecondHit) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
-  const iris::Spectrum* spectrum = reinterpret_cast<iris::Spectrum*>(2);
-  TestEmissiveMaterial emissive_material({0.0, 0.0}, spectrum);
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
+  auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto builder = iris::SceneObjects::Builder();
 
   auto geometry = iris::MakeReferenceCounted<TestGeometry>(
-      model_ray, iris::Point(1.0, 0.0, 0.0), &emissive_material);
+      model_ray, iris::Point(1.0, 0.0, 0.0), emissive_material.get());
   auto geometry_ptr = geometry.Get();
   builder.Add(std::move(geometry));
 
@@ -274,12 +274,12 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
-  TestEmissiveMaterial emissive_material({0.0, 0.0});
+  auto emissive_material = MakeEmissiveMaterial({0.0, 0.0});
 
   auto builder = iris::SceneObjects::Builder();
 
   auto geometry = iris::MakeReferenceCounted<TestGeometry>(
-      model_ray, iris::Point(1.0, 0.0, 0.0), &emissive_material);
+      model_ray, iris::Point(1.0, 0.0, 0.0), emissive_material.get());
   auto geometry_ptr = geometry.Get();
   builder.Add(std::move(geometry));
 
@@ -299,13 +299,13 @@ TEST(VisibilityTesterTest, Succeeds) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
-  const iris::Spectrum* spectrum = reinterpret_cast<iris::Spectrum*>(2);
-  TestEmissiveMaterial emissive_material({0.0, 0.0}, spectrum);
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
+  auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto builder = iris::SceneObjects::Builder();
 
   auto geometry = iris::MakeReferenceCounted<TestGeometry>(
-      model_ray, iris::Point(1.0, 0.0, 0.0), &emissive_material);
+      model_ray, iris::Point(1.0, 0.0, 0.0), emissive_material.get());
   auto geometry_ptr = geometry.Get();
   builder.Add(std::move(geometry));
 
@@ -320,7 +320,7 @@ TEST(VisibilityTesterTest, Succeeds) {
   auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
                                           1.0, nullptr);
   ASSERT_TRUE(result);
-  EXPECT_EQ(spectrum, &result->emission);
+  EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
 }
 
@@ -328,13 +328,13 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
-  const iris::Spectrum* spectrum = reinterpret_cast<iris::Spectrum*>(2);
-  TestEmissiveMaterial emissive_material({0.0, 0.0}, spectrum);
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
+  auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto builder = iris::SceneObjects::Builder();
 
   auto geometry = iris::MakeReferenceCounted<TestGeometry>(
-      model_ray, iris::Point(1.0, 0.0, 0.0), &emissive_material);
+      model_ray, iris::Point(1.0, 0.0, 0.0), emissive_material.get());
   auto geometry_ptr = geometry.Get();
   builder.Add(std::move(geometry));
 
@@ -350,7 +350,7 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
                                           0.5, &pdf);
   ASSERT_TRUE(result);
-  EXPECT_EQ(spectrum, &result->emission);
+  EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
   EXPECT_EQ(2.0, pdf);
 }
@@ -359,13 +359,13 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.5, 0.0, 0.0));
 
-  const iris::Spectrum* spectrum = reinterpret_cast<iris::Spectrum*>(2);
-  TestEmissiveMaterial emissive_material({0.0, 0.0}, spectrum);
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
+  auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto builder = iris::SceneObjects::Builder();
 
   auto geometry = iris::MakeReferenceCounted<TestGeometry>(
-      model_ray, iris::Point(0.5, 0.0, 0.0), &emissive_material);
+      model_ray, iris::Point(0.5, 0.0, 0.0), emissive_material.get());
   auto geometry_ptr = geometry.Get();
   builder.Add(std::move(geometry), iris::Matrix::Scalar(2.0, 1.0, 1.0).value());
   auto objects = builder.Build();
@@ -381,7 +381,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   auto result =
       visibility_tester.Visible(world_ray, *geometry_ptr, matrix, 1, 0.5, &pdf);
   ASSERT_TRUE(result);
-  EXPECT_EQ(spectrum, &result->emission);
+  EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
   EXPECT_EQ(2.0, pdf);
 }
@@ -390,13 +390,13 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
-  const iris::Spectrum* spectrum = reinterpret_cast<iris::Spectrum*>(2);
-  TestEmissiveMaterial emissive_material({0.5, 0.5}, spectrum);
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
+  auto emissive_material = MakeEmissiveMaterial({0.5, 0.5}, spectrum.get());
 
   auto builder = iris::SceneObjects::Builder();
 
   auto geometry = iris::MakeReferenceCounted<TestGeometry>(
-      model_ray, iris::Point(1.0, 0.0, 0.0), &emissive_material,
+      model_ray, iris::Point(1.0, 0.0, 0.0), emissive_material.get(),
       iris::TextureCoordinates{{0.5, 0.5}});
   auto geometry_ptr = geometry.Get();
   builder.Add(std::move(geometry));
@@ -412,6 +412,6 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
                                           1.0, nullptr);
   ASSERT_TRUE(result);
-  EXPECT_EQ(spectrum, &result->emission);
+  EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
 }

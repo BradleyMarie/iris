@@ -314,6 +314,7 @@ cc_test(
     deps = [
         ":light_sample_allocator",
         "//iris/internal:arena",
+        "//iris/lights:mock_light",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -347,6 +348,8 @@ cc_test(
     deps = [
         ":light_sampler",
         "//iris/internal:arena",
+        "//iris/lights:mock_light",
+        "//iris/random:mock_random",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -581,6 +584,7 @@ cc_test(
         "//iris/light_scenes:all_light_scene",
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
+        "//iris/spectra:mock_spectrum",
         "@com_google_googletest//:gtest_main",
     ],
 )
