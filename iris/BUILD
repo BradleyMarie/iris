@@ -493,8 +493,12 @@ cc_test(
     deps = [
         ":ray_tracer",
         "//iris/bxdfs:mock_bxdf",
+        "//iris/emissive_materials:mock_emissive_material",
         "//iris/environmental_lights:mock_environmental_light",
+        "//iris/geometry:mock_geometry",
         "//iris/internal:ray_tracer",
+        "//iris/materials:mock_material",
+        "//iris/normal_maps:mock_normal_map",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
         "@com_google_googletest//:gtest_main",
