@@ -33,8 +33,238 @@ iris::ReferenceCounted<iris::Geometry> SimpleTriangle() {
       {{{0, 1, 2}, {0, 1, 1}}}, {}, {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}},
       front_material, back_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
-  EXPECT_EQ(triangles.size(), 1);
+  EXPECT_EQ(triangles.size(), 1u);
   return triangles.front();
+}
+
+TEST(Triangle, MissesOnEdge) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(-0.5, -0.5, 0.0);
+  iris::Vector direction(0.5, 0.5, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  auto* hit = triangle->Trace(hit_allocator);
+  EXPECT_EQ(nullptr, hit);
+}
+
+TEST(Triangle, MissesBelow) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(0.5, -1.0, -1.0);
+  iris::Vector direction(0.0, 0.0, 1.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  auto* hit = triangle->Trace(hit_allocator);
+  EXPECT_EQ(nullptr, hit);
+}
+
+TEST(Triangle, MissesAbove) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(0.5, 1.0, -1.0);
+  iris::Vector direction(0.0, 0.0, 1.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  auto* hit = triangle->Trace(hit_allocator);
+  EXPECT_EQ(nullptr, hit);
+}
+
+TEST(Triangle, MissesLeft) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(-1.0, 0.5, -1.0);
+  iris::Vector direction(0.0, 0.0, 1.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  auto* hit = triangle->Trace(hit_allocator);
+  EXPECT_EQ(nullptr, hit);
+}
+
+TEST(Triangle, MissesRight) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(1.0, 0.5, -1.0);
+  iris::Vector direction(0.0, 0.0, 1.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  auto* hit = triangle->Trace(hit_allocator);
+  EXPECT_EQ(nullptr, hit);
+}
+
+TEST(Triangle, HitsXDominantFront) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
+        iris::Point(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
+
+  iris::Point origin(1.0, 0.25, 0.25);
+  iris::Vector direction(-1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangles.front()->Trace(hit_allocator);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(1.0, hit->distance);
+  EXPECT_EQ(nullptr, hit->next);
+
+  EXPECT_EQ(FRONT_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit));
+
+  const auto* additional_data =
+      static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
+  ASSERT_NE(nullptr, additional_data);
+  EXPECT_EQ(0.50, additional_data->at(0));
+  EXPECT_EQ(0.25, additional_data->at(1));
+  EXPECT_EQ(0.25, additional_data->at(2));
+}
+
+TEST(Triangle, HitsXDominantBack) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
+        iris::Point(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
+
+  iris::Point origin(-1.0, 0.25, 0.25);
+  iris::Vector direction(1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangles.front()->Trace(hit_allocator);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(1.0, hit->distance);
+  EXPECT_EQ(nullptr, hit->next);
+
+  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit));
+
+  const auto* additional_data =
+      static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
+  ASSERT_NE(nullptr, additional_data);
+  EXPECT_EQ(0.50, additional_data->at(0));
+  EXPECT_EQ(0.25, additional_data->at(1));
+  EXPECT_EQ(0.25, additional_data->at(2));
+}
+
+TEST(Triangle, HitsYDominantFront) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 0.0, 1.0),
+        iris::Point(1.0, 0.0, 0.0)}},
+      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
+
+  iris::Point origin(0.25, 1.0, 0.25);
+  iris::Vector direction(0.0, -1.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangles.front()->Trace(hit_allocator);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(1.0, hit->distance);
+  EXPECT_EQ(nullptr, hit->next);
+
+  EXPECT_EQ(FRONT_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit));
+
+  const auto* additional_data =
+      static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
+  ASSERT_NE(nullptr, additional_data);
+  EXPECT_EQ(0.50, additional_data->at(0));
+  EXPECT_EQ(0.25, additional_data->at(1));
+  EXPECT_EQ(0.25, additional_data->at(2));
+}
+
+TEST(Triangle, HitsYDominantBack) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 0.0, 1.0),
+        iris::Point(1.0, 0.0, 0.0)}},
+      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
+
+  iris::Point origin(0.25, -1.0, 0.25);
+  iris::Vector direction(0.0, 1.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangles.front()->Trace(hit_allocator);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(1.0, hit->distance);
+  EXPECT_EQ(nullptr, hit->next);
+
+  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit));
+
+  const auto* additional_data =
+      static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
+  ASSERT_NE(nullptr, additional_data);
+  EXPECT_EQ(0.50, additional_data->at(0));
+  EXPECT_EQ(0.25, additional_data->at(1));
+  EXPECT_EQ(0.25, additional_data->at(2));
+}
+
+TEST(Triangle, HitsZDominantFront) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(0.25, 0.25, 1.0);
+  iris::Vector direction(0.0, 0.0, -1.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangle->Trace(hit_allocator);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(1.0, hit->distance);
+  EXPECT_EQ(nullptr, hit->next);
+
+  EXPECT_EQ(FRONT_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit));
+
+  const auto* additional_data =
+      static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
+  ASSERT_NE(nullptr, additional_data);
+  EXPECT_EQ(0.50, additional_data->at(0));
+  EXPECT_EQ(0.25, additional_data->at(1));
+  EXPECT_EQ(0.25, additional_data->at(2));
+}
+
+TEST(Triangle, HitsZDominantBack) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(0.25, 0.25, -1.0);
+  iris::Vector direction(0.0, 0.0, 1.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangle->Trace(hit_allocator);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(1.0, hit->distance);
+  EXPECT_EQ(nullptr, hit->next);
+
+  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit));
+
+  const auto* additional_data =
+      static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
+  ASSERT_NE(nullptr, additional_data);
+  EXPECT_EQ(0.50, additional_data->at(0));
+  EXPECT_EQ(0.25, additional_data->at(1));
+  EXPECT_EQ(0.25, additional_data->at(2));
 }
 
 TEST(Triangle, ComputeSurfaceNormal) {
@@ -251,7 +481,7 @@ TEST(Triangle, ComputeArea) {
 TEST(Triangle, GetFaces) {
   auto triangle = SimpleTriangle();
   auto faces = triangle->GetFaces();
-  ASSERT_EQ(2, faces.size());
+  ASSERT_EQ(2u, faces.size());
   EXPECT_EQ(FRONT_FACE, faces[0]);
   EXPECT_EQ(BACK_FACE, faces[1]);
 }

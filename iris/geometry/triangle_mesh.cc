@@ -265,7 +265,7 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
                                  b1 * inverse_determinant,
                                  b2 * inverse_determinant};
 
-  geometric_t dp = DotProduct(ray.direction, Normalize(ComputeSurfaceNormal()));
+  geometric_t dp = DotProduct(ray.direction, ComputeSurfaceNormal());
 
   face_t front_face, back_face;
   if (dp < 0.0) {
