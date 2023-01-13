@@ -1,49 +1,32 @@
 #include "iris/geometry.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/geometry/mock_geometry.h"
 #include "iris/internal/hit_arena.h"
 #include "iris/random/mock_random.h"
-
-class TestGeometry final : public iris::Geometry {
- public:
-  TestGeometry(const iris::Ray& ray, const iris::Geometry* nested)
-      : expected_ray_(ray), nested_(nested) {}
-
- private:
-  iris::Hit* Trace(const iris::Ray& ray,
-                   iris::HitAllocator& hit_allocator) const override {
-    EXPECT_EQ(expected_ray_, ray);
-    if (nested_) {
-      auto* nested_hit = nested_->Trace(hit_allocator);
-      return &hit_allocator.Allocate(nested_hit, 1.0, 2, 3);
-    }
-    return &hit_allocator.Allocate(nullptr, 2.0, 3, 4);
-  }
-
-  iris::Vector ComputeSurfaceNormal(
-      const iris::Point& hit_point, iris::face_t face,
-      const void* additional_data) const override {
-    EXPECT_FALSE(true);
-    return iris::Vector(1.0, 0.0, 0.0);
-  }
-
-  std::span<const iris::face_t> GetFaces() const override {
-    static const iris::face_t faces[] = {1};
-    EXPECT_FALSE(true);
-    return faces;
-  }
-
-  iris::Ray expected_ray_;
-  const iris::Geometry* nested_;
-};
 
 TEST(GeometryTest, Trace) {
   iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0));
   auto arena = iris::internal::HitArena();
   iris::HitAllocator allocator(ray, arena);
 
-  TestGeometry nested_geom(ray, nullptr);
-  TestGeometry geom(ray, &nested_geom);
+  iris::geometry::MockBasicGeometry nested_geom;
+  EXPECT_CALL(nested_geom, Trace(testing::_, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Ray& trace_ray, iris::HitAllocator& hit_allocator) {
+            EXPECT_EQ(ray, trace_ray);
+            return &hit_allocator.Allocate(nullptr, 2.0, 3, 4);
+          }));
+
+  iris::geometry::MockBasicGeometry geom;
+  EXPECT_CALL(geom, Trace(testing::_, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Ray& trace_ray, iris::HitAllocator& hit_allocator) {
+            EXPECT_EQ(ray, trace_ray);
+            const iris::Geometry* base_geom = &nested_geom;
+            auto* nested_hit = base_geom->Trace(hit_allocator);
+            return &hit_allocator.Allocate(nested_hit, 1.0, 2, 3);
+          }));
 
   iris::Geometry* base_geom = &geom;
   auto* hit = base_geom->Trace(allocator);
@@ -64,48 +47,36 @@ TEST(GeometryTest, Trace) {
 };
 
 TEST(GeometryTest, ComputeTextureCoordinates) {
-  TestGeometry geom(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0)),
-      nullptr);
+  iris::geometry::MockBasicGeometry geom;
   EXPECT_FALSE(
       geom.ComputeTextureCoordinates(iris::Point(0.0, 0.0, 0.0), 0, nullptr)
           .has_value());
 }
 
 TEST(GeometryTest, ComputeShadingNormal) {
-  TestGeometry geom(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0)),
-      nullptr);
+  iris::geometry::MockBasicGeometry geom;
   auto normal = geom.ComputeShadingNormal(0, nullptr);
   ASSERT_TRUE(std::holds_alternative<const iris::NormalMap*>(normal));
   EXPECT_EQ(nullptr, std::get<const iris::NormalMap*>(normal));
 }
 
 TEST(GeometryTest, GetMaterial) {
-  TestGeometry geom(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0)),
-      nullptr);
+  iris::geometry::MockBasicGeometry geom;
   EXPECT_EQ(nullptr, geom.GetMaterial(0, nullptr));
 }
 
 TEST(GeometryTest, IsEmissive) {
-  TestGeometry geom(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0)),
-      nullptr);
+  iris::geometry::MockBasicGeometry geom;
   EXPECT_FALSE(geom.IsEmissive(0));
 }
 
 TEST(GeometryTest, GetEmissiveMaterial) {
-  TestGeometry geom(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0)),
-      nullptr);
+  iris::geometry::MockBasicGeometry geom;
   EXPECT_EQ(nullptr, geom.GetEmissiveMaterial(0, nullptr));
 }
 
 TEST(GeometryTest, SampleFace) {
-  TestGeometry geom(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0)),
-      nullptr);
+  iris::geometry::MockBasicGeometry geom;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   iris::Sampler sampler(rng);
@@ -113,9 +84,7 @@ TEST(GeometryTest, SampleFace) {
 }
 
 TEST(GeometryTest, ComputeArea) {
-  TestGeometry geom(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0)),
-      nullptr);
+  iris::geometry::MockBasicGeometry geom;
   iris::random::MockRandom rng;
   EXPECT_FALSE(geom.ComputeArea(0));
 }

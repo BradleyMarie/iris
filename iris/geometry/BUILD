@@ -25,3 +25,13 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "mock_geometry",
+    testonly = True,
+    hdrs = ["mock_geometry.h"],
+    deps = [
+        "//iris:geometry",
+        "@com_google_googletest//:gtest",
+    ],
+)
