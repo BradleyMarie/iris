@@ -28,11 +28,12 @@ iris::ReferenceCounted<iris::NormalMap> back_normal_map =
 
 iris::ReferenceCounted<iris::Geometry> SimpleTriangle() {
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      {iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
-       iris::Point(0.0, 1.0, 0.0)},
-      {{0, 1, 2}}, {}, {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}, front_material,
-      back_material, front_emissive_material, back_emissive_material,
-      front_normal_map, back_normal_map);
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}, {0, 1, 1}}}, {}, {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}},
+      front_material, back_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
+  EXPECT_EQ(triangles.size(), 1);
   return triangles.front();
 }
 
@@ -50,9 +51,9 @@ TEST(Triangle, ComputeSurfaceNormal) {
 
 TEST(Triangle, ComputeTextureCoordinatesNone) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      {iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
-       iris::Point(0.0, 1.0, 0.0)},
-      {{0, 1, 2}}, {}, {}, back_material, front_material,
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
       front_emissive_material, back_emissive_material, front_normal_map,
       back_normal_map);
 
@@ -85,9 +86,9 @@ TEST(Triangle, ComputeTextureCoordinates) {
 
 TEST(Triangle, ComputeShadingNormalNone) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      {iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
-       iris::Point(0.0, 1.0, 0.0)},
-      {{0, 1, 2}}, {}, {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}, back_material,
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}}, back_material,
       front_material, front_emissive_material, back_emissive_material,
       iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
@@ -115,12 +116,12 @@ TEST(Triangle, ComputeShadingNormalFromMap) {
 
 TEST(Triangle, ComputeShadingNormalFromNormals) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      {iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
-       iris::Point(0.0, 1.0, 0.0)},
-      {{0, 1, 2}},
-      {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
-       iris::Vector(0.0, 0.0, 1.0)},
-      {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}, back_material, front_material,
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}}},
+      {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
+        iris::Vector(0.0, 0.0, 1.0)}},
+      {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}}, back_material, front_material,
       front_emissive_material, back_emissive_material,
       iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
@@ -165,12 +166,12 @@ TEST(Triangle, GetMaterial) {
 
 TEST(Triangle, IsEmissive) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      {iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
-       iris::Point(0.0, 1.0, 0.0)},
-      {{0, 1, 2}},
-      {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
-       iris::Vector(0.0, 0.0, 1.0)},
-      {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}, back_material, front_material,
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}}},
+      {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
+        iris::Vector(0.0, 0.0, 1.0)}},
+      {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}}, back_material, front_material,
       front_emissive_material, iris::ReferenceCounted<iris::EmissiveMaterial>(),
       iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());

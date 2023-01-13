@@ -26,10 +26,10 @@ namespace iris {
 namespace geometry {
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
-    std::vector<Point> points,
-    const std::vector<std::array<uint32_t, 3>>& indices,
-    std::vector<Vector> normals,
-    std::vector<std::pair<geometric, geometric>> uv,
+    std::span<const Point> points,
+    std::span<const std::array<uint32_t, 3>> indices,
+    std::span<const Vector> normals,
+    std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<Material> back_material,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<EmissiveMaterial> front_emissive_material,

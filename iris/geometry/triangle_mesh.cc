@@ -283,10 +283,10 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
 }  // namespace
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
-    std::vector<Point> points,
-    const std::vector<std::array<uint32_t, 3>>& indices,
-    std::vector<Vector> normals,
-    std::vector<std::pair<geometric, geometric>> uv,
+    std::span<const Point> points,
+    std::span<const std::array<uint32_t, 3>> indices,
+    std::span<const Vector> normals,
+    std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<Material> back_material,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<EmissiveMaterial> front_emissive_material,
@@ -295,9 +295,9 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     ReferenceCounted<NormalMap> back_normal_map) {
   auto shared_data =
       std::make_shared<Triangle::SharedData>(Triangle::SharedData{
-          std::move(points),
-          std::move(normals),
-          std::move(uv),
+          std::vector<Point>(points.begin(), points.end()),
+          std::vector<Vector>(normals.begin(), normals.end()),
+          std::vector<std::pair<geometric, geometric>>(uv.begin(), uv.end()),
           {std::move(back_material), std::move(front_material)},
           {std::move(front_emissive_material),
            std::move(back_emissive_material)},
