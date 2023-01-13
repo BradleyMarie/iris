@@ -2,45 +2,25 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/environmental_lights/mock_environmental_light.h"
+#include "iris/geometry/mock_geometry.h"
 #include "iris/lights/mock_light.h"
 
-class TestGeometry : public iris::Geometry {
- public:
-  TestGeometry(bool emissive) : emissive_(emissive) {}
-
-  iris::Hit* Trace(const iris::Ray& ray,
-                   iris::HitAllocator& hit_allocator) const override {
-    EXPECT_FALSE(true);
-    return nullptr;
-  }
-
-  iris::Vector ComputeSurfaceNormal(
-      const iris::Point& hit_point, iris::face_t face,
-      const void* additional_data) const override {
-    EXPECT_FALSE(true);
-    return iris::Vector(1.0, 0.0, 0.0);
-  }
-
-  bool IsEmissive(iris::face_t face) const override { return emissive_; }
-
-  std::optional<iris::visual_t> ComputeArea(iris::face_t face) const override {
-    return 1.0;
-  }
-
-  std::span<const iris::face_t> GetFaces() const override {
-    static const iris::face_t faces[] = {1};
-    return faces;
-  }
-
- private:
-  bool emissive_;
-};
+iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
+  static const std::vector<iris::face_t> faces = {1};
+  auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+  EXPECT_CALL(*result, ComputeArea(testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(*result, IsEmissive(testing::_))
+      .WillRepeatedly(testing::Return(emissive));
+  EXPECT_CALL(*result, GetFaces()).WillRepeatedly(testing::Return(faces));
+  return result;
+}
 
 TEST(SceneObjects, Build) {
-  auto geom0 = iris::MakeReferenceCounted<TestGeometry>(false);
-  auto geom1 = iris::MakeReferenceCounted<TestGeometry>(false);
-  auto geom2 = iris::MakeReferenceCounted<TestGeometry>(false);
-  auto geom3 = iris::MakeReferenceCounted<TestGeometry>(true);
+  auto geom0 = MakeGeometry(false);
+  auto geom1 = MakeGeometry(false);
+  auto geom2 = MakeGeometry(false);
+  auto geom3 = MakeGeometry(true);
   auto light0 = iris::MakeReferenceCounted<iris::lights::MockLight>();
   auto light1 = iris::MakeReferenceCounted<iris::lights::MockLight>();
   auto environmental_light = iris::MakeReferenceCounted<
@@ -82,10 +62,10 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(environmental_light.Get(), scene_objects.GetEnvironmentalLight());
 
   // Reuse builder
-  geom0 = iris::MakeReferenceCounted<TestGeometry>(false);
-  geom1 = iris::MakeReferenceCounted<TestGeometry>(false);
-  geom2 = iris::MakeReferenceCounted<TestGeometry>(false);
-  geom3 = iris::MakeReferenceCounted<TestGeometry>(true);
+  geom0 = MakeGeometry(false);
+  geom1 = MakeGeometry(false);
+  geom2 = MakeGeometry(false);
+  geom3 = MakeGeometry(true);
   light0 = iris::MakeReferenceCounted<iris::lights::MockLight>();
   light1 = iris::MakeReferenceCounted<iris::lights::MockLight>();
 

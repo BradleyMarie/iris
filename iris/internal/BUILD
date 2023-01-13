@@ -130,6 +130,7 @@ cc_test(
     deps = [
         ":ray_tracer",
         "//iris:scene_objects",
+        "//iris/geometry:mock_geometry",
         "//iris/scenes:list_scene",
         "@com_google_googletest//:gtest_main",
     ],

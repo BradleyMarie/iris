@@ -272,6 +272,7 @@ cc_test(
     srcs = ["intersector_test.cc"],
     deps = [
         ":intersector",
+        "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
         "@com_google_googletest//:gtest_main",
     ],
@@ -624,6 +625,7 @@ cc_test(
     deps = [
         ":scene_objects",
         "//iris/environmental_lights:mock_environmental_light",
+        "//iris/geometry:mock_geometry",
         "//iris/lights:mock_light",
         "@com_google_googletest//:gtest_main",
     ],
@@ -719,6 +721,7 @@ cc_test(
     srcs = ["visibility_tester_test.cc"],
     deps = [
         ":visibility_tester",
+        "//iris/geometry:mock_geometry",
         "//iris/internal:arena",
         "//iris/internal:ray_tracer",
         "//iris/scenes:list_scene",
