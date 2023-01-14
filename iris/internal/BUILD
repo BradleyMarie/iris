@@ -159,6 +159,7 @@ cc_test(
         ":arena",
         ":visibility_tester",
         "//iris/emissive_materials:mock_emissive_material",
+        "//iris/geometry:mock_geometry",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
         "@com_google_googletest//:gtest_main",
