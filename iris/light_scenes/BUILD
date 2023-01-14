@@ -30,6 +30,16 @@ cc_test(
 )
 
 cc_library(
+    name = "mock_light_scene",
+    testonly = True,
+    hdrs = ["mock_light_scene.h"],
+    deps = [
+        "//iris:light_scene",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_library(
     name = "one_light_scene",
     srcs = ["one_light_scene.cc"],
     hdrs = ["one_light_scene.h"],

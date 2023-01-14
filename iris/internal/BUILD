@@ -28,6 +28,7 @@ cc_test(
     deps = [
         ":area_light",
         "//iris/emissive_materials:mock_emissive_material",
+        "//iris/geometry:mock_geometry",
         "//iris/random:mock_random",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",

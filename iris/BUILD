@@ -348,6 +348,7 @@ cc_test(
     deps = [
         ":light_sampler",
         "//iris/internal:arena",
+        "//iris/light_scenes:mock_light_scene",
         "//iris/lights:mock_light",
         "//iris/random:mock_random",
         "@com_google_googletest//:gtest_main",
@@ -448,6 +449,7 @@ cc_test(
     srcs = ["random_test.cc"],
     deps = [
         ":random",
+        "//iris/random:mock_random",
         "@com_google_googletest//:gtest_main",
     ],
 )
