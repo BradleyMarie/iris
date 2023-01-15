@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include "frontends/pbrt/material_manager.h"
@@ -46,8 +47,12 @@ class Parser {
   bool Integrator();
   bool MakeNamedMaterial();
   bool Material();
+  bool ObjectBegin();
+  bool ObjectEnd();
+  bool ObjectInstance();
   bool PixelFilter();
   bool Sampler();
+  bool Shape();
   bool WorldBegin();
   bool WorldEnd();
 
@@ -71,6 +76,11 @@ class Parser {
   };
 
   std::vector<AttributeEntry> attributes_;
+
+  std::unordered_map<std::string, std::vector<iris::ReferenceCounted<Geometry>>>
+      objects_;
+  std::optional<std::string> current_object_;
+
   std::unique_ptr<SpectrumManager> spectrum_manager_;
   std::unique_ptr<MaterialManager> material_manager_;
   std::unique_ptr<MatrixManager> matrix_manager_;
@@ -78,6 +88,7 @@ class Parser {
 
   std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
       camera_;
+  SceneObjects::Builder scene_objects_builder_;
   std::pair<size_t, size_t> image_dimensions_;
   std::unique_ptr<iris::ImageSampler> image_sampler_;
   std::unique_ptr<iris::Integrator> integrator_;

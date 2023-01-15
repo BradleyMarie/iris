@@ -12,6 +12,7 @@
 #include "frontends/pbrt/materials/parse.h"
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/samplers/parse.h"
+#include "frontends/pbrt/shapes/parse.h"
 
 namespace iris::pbrt_frontend {
 
@@ -202,6 +203,101 @@ bool Parser::Material() {
   return true;
 }
 
+bool Parser::ObjectBegin() {
+  if (!world_begin_encountered_) {
+    std::cerr
+        << "ERROR: Directive cannot be specified before WorldBegin: ObjectBegin"
+        << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (current_object_) {
+    std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto next = tokenizers_.back().tokenizer->Next();
+  if (!next) {
+    std::cerr << "ERROR: Too few parameters to directive: ObjectBegin"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto unquoted = Unquote(*next);
+  if (!unquoted) {
+    std::cerr << "ERROR: Parameter to ObjectBegin must be a string"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  current_object_ = *unquoted;
+
+  return true;
+}
+
+bool Parser::ObjectEnd() {
+  if (!world_begin_encountered_) {
+    std::cerr
+        << "ERROR: Directive cannot be specified before WorldBegin: ObjectEnd"
+        << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (!current_object_) {
+    std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  current_object_.reset();
+
+  return true;
+}
+
+bool Parser::ObjectInstance() {
+  if (!world_begin_encountered_) {
+    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                 "ObjectInstance"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (current_object_) {
+    std::cerr << "ERROR: ObjectInstance cannot be specified between "
+                 "ObjectBegin and ObjectEnd"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto next = tokenizers_.back().tokenizer->Next();
+  if (!next) {
+    std::cerr << "ERROR: Too few parameters to directive: ObjectInstance"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto unquoted = Unquote(*next);
+  if (!unquoted) {
+    std::cerr << "ERROR: Parameter to ObjectInstance must be a string"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto iter = objects_.find(std::string(*unquoted));
+  if (iter == objects_.end()) {
+    std::cerr << "ERROR: ObjectInstance referred to an unknown object: "
+              << *unquoted << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  for (const auto& geometry : iter->second) {
+    scene_objects_builder_.Add(geometry, matrix_manager_->Get().start);
+  }
+
+  return true;
+}
+
 bool Parser::PixelFilter() {
   if (world_begin_encountered_) {
     std::cerr << "ERROR: Directive cannot be specified between WorldBegin and "
@@ -260,6 +356,31 @@ bool Parser::Sampler() {
                                *spectrum_manager_, *texture_manager_);
 
   sampler_encountered_ = true;
+
+  return true;
+}
+
+bool Parser::Shape() {
+  if (!world_begin_encountered_) {
+    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: Shape"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto [shapes, transform] = shapes::Parse(
+      *tokenizers_.back().tokenizer, *spectrum_manager_, *texture_manager_,
+      attributes_.back().material, attributes_.back().emissive_material.first,
+      attributes_.back().emissive_material.second,
+      current_object_ ? Matrix::Identity() : matrix_manager_->Get().start);
+
+  if (current_object_) {
+    auto& objects = objects_.at(*current_object_);
+    objects.insert(objects.end(), shapes.begin(), shapes.end());
+  } else {
+    for (const auto& geometry : shapes) {
+      scene_objects_builder_.Add(geometry, transform);
+    }
+  }
 
   return true;
 }
@@ -327,8 +448,12 @@ std::optional<Renderable> Parser::ParseFrom(
           {"Integrator", &Parser::Integrator},
           {"MakeNamedMaterial", &Parser::MakeNamedMaterial},
           {"Material", &Parser::Material},
+          {"ObjectBegin", &Parser::ObjectBegin},
+          {"ObjectEnd", &Parser::ObjectEnd},
+          {"ObjectInstance", &Parser::ObjectInstance},
           {"PixelFilter", &Parser::PixelFilter},
           {"Sampler", &Parser::Sampler},
+          {"Shape", &Parser::Shape},
           {"WorldBegin", &Parser::WorldBegin},
           {"WorldEnd", &Parser::WorldEnd},
       };
@@ -374,10 +499,14 @@ std::optional<Renderable> Parser::ParseFrom(
 
   camera_ = nullptr;
   attributes_.clear();
+  objects_.clear();
   spectrum_manager_->Clear();
+  current_object_.reset();
   material_manager_.reset();
   matrix_manager_.reset();
   texture_manager_.reset();
+
+  scene_objects_builder_.Build();
 
   return std::nullopt;
 }

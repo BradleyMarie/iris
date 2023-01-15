@@ -160,6 +160,7 @@ cc_library(
         "//frontends/pbrt/integrators:parse",
         "//frontends/pbrt/materials:parse",
         "//frontends/pbrt/samplers:parse",
+        "//frontends/pbrt/shapes:parse",
         "//iris:image_sampler",
         "//iris:integrator",
         "//iris:light_scene",

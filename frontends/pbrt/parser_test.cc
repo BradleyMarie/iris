@@ -322,6 +322,140 @@ TEST(Material, TooFewArguments) {
               "ERROR: Too few parameters to directive: Material");
 }
 
+TEST(ObjectBegin, BeforeWorldBegin) {
+  std::stringstream input("ObjectBegin");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(
+      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Directive cannot be specified before WorldBegin: ObjectBegin");
+}
+
+TEST(ObjectBegin, Mismatched) {
+  std::stringstream input("WorldBegin ObjectBegin \"abc\" ObjectBegin \"abc\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
+}
+
+TEST(ObjectBegin, TooFew) {
+  std::stringstream input("WorldBegin ObjectBegin");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Too few parameters to directive: ObjectBegin");
+}
+
+TEST(ObjectBegin, NotAString) {
+  std::stringstream input("WorldBegin ObjectBegin 1");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Parameter to ObjectBegin must be a string");
+}
+
+TEST(ObjectEnd, BeforeWorldBegin) {
+  std::stringstream input("ObjectEnd");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(
+      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Directive cannot be specified before WorldBegin: ObjectEnd");
+}
+
+TEST(ObjectEnd, Mismatched) {
+  std::stringstream input("WorldBegin ObjectEnd");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
+}
+
+TEST(ObjectInstance, BeforeWorldBegin) {
+  std::stringstream input("ObjectInstance");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "ObjectInstance");
+}
+
+TEST(ObjectInstance, InsideObject) {
+  std::stringstream input("WorldBegin ObjectBegin \"abc\" ObjectInstance");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: ObjectInstance cannot be specified between ObjectBegin "
+              "and ObjectEnd");
+}
+
+TEST(ObjectInstance, TooFew) {
+  std::stringstream input("WorldBegin ObjectInstance");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Too few parameters to directive: ObjectInstance");
+}
+
+TEST(ObjectInstance, NotAString) {
+  std::stringstream input("WorldBegin ObjectInstance 1");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Parameter to ObjectInstance must be a string");
+}
+
+TEST(ObjectInstance, MissingObject) {
+  std::stringstream input("WorldBegin ObjectInstance \"1\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: ObjectInstance referred to an unknown object: 1");
+}
+
 TEST(Matrix, Parses) {
   std::stringstream input("Identity");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -418,6 +552,18 @@ TEST(Sampler, TooFewArguments) {
   EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Sampler");
+}
+
+TEST(Shape, BeforeWorldBegin) {
+  std::stringstream input("Shape");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: Shape");
 }
 
 TEST(WorldBegin, Duplicate) {
