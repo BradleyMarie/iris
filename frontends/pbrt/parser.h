@@ -30,13 +30,21 @@ class Parser {
     spectrum_manager_->Clear();
   }
 
-  std::optional<Renderable> ParseFrom(
+  struct Result {
+    Renderable renderable;
+    std::filesystem::path output_filename;
+    std::function<void(Framebuffer&, std::ofstream&)> output_write_function;
+  };
+
+  std::optional<Result> ParseFrom(
       const std::filesystem::path& search_root, Tokenizer& tokenizer,
       std::optional<std::filesystem::path> file_path = std::nullopt);
 
  private:
   std::optional<std::string_view> PeekToken();
   std::string_view NextToken();
+
+  void InitializeDefault();
 
   bool AreaLightSource();
   bool AttributeBegin();
@@ -95,6 +103,7 @@ class Parser {
   std::unique_ptr<iris::ImageSampler> image_sampler_;
   std::unique_ptr<iris::Integrator> integrator_;
   std::unique_ptr<iris::LightScene::Builder> light_scene_builder_;
+  std::filesystem::path output_filename_;
   std::function<void(Framebuffer&, std::ofstream&)> write_function_;
 
   bool camera_encountered_ = false;

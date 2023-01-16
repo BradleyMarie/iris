@@ -41,4 +41,8 @@ const ObjectBuilder<std::unique_ptr<ImageSampler>>& Parse(
   return *iter->second;
 }
 
+const ObjectBuilder<std::unique_ptr<ImageSampler>>& Default() {
+  return *g_stratified_builder;  // TODO: Return Halton Sampler
+}
+
 }  // namespace iris::pbrt_frontend::samplers

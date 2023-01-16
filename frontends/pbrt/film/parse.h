@@ -8,6 +8,8 @@ namespace iris::pbrt_frontend::film {
 
 const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer);
 
+const ObjectBuilder<Result>& Default();
+
 }  // namespace iris::pbrt_frontend::film
 
 #endif  // _FRONTENDS_PBRT_FILM_PARSE_

@@ -13,6 +13,7 @@
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/samplers/parse.h"
 #include "frontends/pbrt/shapes/parse.h"
+#include "iris/scenes/list_scene.h"
 
 namespace iris::pbrt_frontend {
 
@@ -103,6 +104,7 @@ bool Parser::Film() {
                             *spectrum_manager_, *texture_manager_);
 
   image_dimensions_ = result.resolution;
+  output_filename_ = result.filename;
   write_function_ = result.write_function;
 
   film_encountered_ = true;
@@ -422,10 +424,39 @@ std::string_view Parser::NextToken() {
   return tokenizers_.back().tokenizer->Next().value();
 }
 
-std::optional<Renderable> Parser::ParseFrom(
+void Parser::InitializeDefault() {
+  std::stringstream empty("");
+  iris::pbrt_frontend::Tokenizer empty_tokenizer(empty);
+
+  auto default_film = BuildObject(film::Default(), empty_tokenizer,
+                                  *spectrum_manager_, *texture_manager_);
+  image_dimensions_ = default_film.resolution;
+  output_filename_ = default_film.filename;
+  write_function_ = std::move(default_film.write_function);
+
+  auto default_integrator = BuildObject(integrators::Default(), empty_tokenizer,
+                                        *spectrum_manager_, *texture_manager_);
+  integrator_ = std::move(default_integrator.integrator);
+  light_scene_builder_ = std::move(default_integrator.light_scene_builder);
+
+  auto default_sampler = BuildObject(samplers::Default(), empty_tokenizer,
+                                     *spectrum_manager_, *texture_manager_);
+  image_sampler_ = std::move(default_sampler);
+
+  auto default_camera =
+      BuildObject(cameras::Default(), empty_tokenizer, *spectrum_manager_,
+                  *texture_manager_, matrix_manager_->Get());
+  camera_ = std::move(default_camera);
+
+  auto default_material =
+      BuildObject(materials::Default(), empty_tokenizer, *spectrum_manager_,
+                  *texture_manager_, *texture_manager_);
+  attributes_.emplace_back(default_material);
+}
+
+std::optional<Parser::Result> Parser::ParseFrom(
     const std::filesystem::path& search_root, Tokenizer& tokenizer,
     std::optional<std::filesystem::path> file_path) {
-  attributes_.emplace_back(materials::Default());
   material_manager_ = std::make_unique<MaterialManager>();
   matrix_manager_ = std::make_unique<MatrixManager>();
   texture_manager_ = std::make_unique<TextureManager>();
@@ -466,6 +497,8 @@ std::optional<Renderable> Parser::ParseFrom(
                            std::filesystem::weakly_canonical(search_root),
                            file_path, nullptr);
 
+  InitializeDefault();
+
   bool tokens_parsed = false;
   for (;;) {
     auto peeked_token = PeekToken();
@@ -497,6 +530,12 @@ std::optional<Renderable> Parser::ParseFrom(
     }
   }
 
+  Renderer renderer(scenes::ListScene::Builder(), *light_scene_builder_,
+                    scene_objects_builder_.Build());
+  Renderable renderable(std::move(renderer), camera_(image_dimensions_),
+                        std::move(image_sampler_), std::move(integrator_),
+                        image_dimensions_);
+
   camera_ = nullptr;
   attributes_.clear();
   objects_.clear();
@@ -506,9 +545,8 @@ std::optional<Renderable> Parser::ParseFrom(
   matrix_manager_.reset();
   texture_manager_.reset();
 
-  scene_objects_builder_.Build();
-
-  return std::nullopt;
+  return Parser::Result{std::move(renderable), std::move(output_filename_),
+                        std::move(write_function_)};
 }
 
 }  // namespace iris::pbrt_frontend

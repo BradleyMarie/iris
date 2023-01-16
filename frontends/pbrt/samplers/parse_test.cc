@@ -37,3 +37,10 @@ TEST(Parse, Stratified) {
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::samplers::Parse(tokenizer);
 }
+
+TEST(Default, Default) {
+  std::stringstream input("\"stratified\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  EXPECT_EQ(&iris::pbrt_frontend::samplers::Parse(tokenizer),
+            &iris::pbrt_frontend::samplers::Default());
+}

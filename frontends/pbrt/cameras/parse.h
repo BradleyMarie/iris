@@ -15,6 +15,11 @@ const ObjectBuilder<
     const MatrixManager::Transformation&>&
 Parse(Tokenizer& tokenizer);
 
+const ObjectBuilder<
+    std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>,
+    const MatrixManager::Transformation&>&
+Default();
+
 }  // namespace iris::pbrt_frontend::cameras
 
 #endif  // _FRONTENDS_PBRT_CAMERAS_PARSE_

@@ -31,3 +31,10 @@ TEST(Parse, Image) {
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::film::Parse(tokenizer);
 }
+
+TEST(Default, Default) {
+  std::stringstream input("\"image\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  EXPECT_EQ(&iris::pbrt_frontend::film::Parse(tokenizer),
+            &iris::pbrt_frontend::film::Default());
+}

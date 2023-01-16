@@ -21,10 +21,9 @@ class Renderable {
   Renderable(Renderer renderer, std::unique_ptr<Camera> camera,
              std::unique_ptr<ImageSampler> image_sampler,
              std::unique_ptr<Integrator> integrator,
-             std::unique_ptr<Random> rng,
              std::pair<size_t, size_t> image_dimensions) noexcept;
 
-  Framebuffer Render(const ColorMatcher& color_matcher,
+  Framebuffer Render(const ColorMatcher& color_matcher, Random& rng,
                      geometric_t minimum_distance,
                      unsigned num_threads = 0) const;
 
@@ -33,7 +32,6 @@ class Renderable {
   std::unique_ptr<Camera> camera_;
   std::unique_ptr<ImageSampler> image_sampler_;
   std::unique_ptr<Integrator> integrator_;
-  std::unique_ptr<Random> rng_;
   std::pair<size_t, size_t> image_dimensions_;
 };
 

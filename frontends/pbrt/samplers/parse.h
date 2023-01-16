@@ -10,6 +10,8 @@ namespace iris::pbrt_frontend::samplers {
 
 const ObjectBuilder<std::unique_ptr<ImageSampler>>& Parse(Tokenizer& tokenizer);
 
+const ObjectBuilder<std::unique_ptr<ImageSampler>>& Default();
+
 }  // namespace iris::pbrt_frontend::samplers
 
 #endif  // _FRONTENDS_PBRT_SAMPLERS_PARSE_

@@ -37,3 +37,10 @@ TEST(Parse, Perspective) {
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::cameras::Parse(tokenizer);
 }
+
+TEST(Default, Default) {
+  std::stringstream input("\"perspective\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  EXPECT_EQ(&iris::pbrt_frontend::cameras::Parse(tokenizer),
+            &iris::pbrt_frontend::cameras::Default());
+}

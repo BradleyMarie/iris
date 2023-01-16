@@ -46,4 +46,11 @@ Parse(Tokenizer& tokenizer) {
   return *iter->second;
 }
 
+const ObjectBuilder<
+    std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>,
+    const MatrixManager::Transformation&>&
+Default() {
+  return *g_perspective_builder;
+}
+
 }  // namespace iris::pbrt_frontend::cameras

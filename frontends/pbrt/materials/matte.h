@@ -18,11 +18,6 @@ extern const std::unique_ptr<const ObjectBuilder<
     TextureManager&>>
     g_matte_builder;
 
-extern const std::shared_ptr<ObjectBuilder<
-    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
-    TextureManager&>>
-    g_default;
-
 }  // namespace iris::pbrt_frontend::materials
 
 #endif  // _FRONTENDS_PBRT_MATERIALS_MATTE_

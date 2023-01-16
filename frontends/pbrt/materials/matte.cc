@@ -122,25 +122,6 @@ NestedMatteObjectBuilder::Build(
       ReferenceCounted<NormalMap>());
 }
 
-std::shared_ptr<ObjectBuilder<
-    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
-    TextureManager&>>
-InitializeDefault() {
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::reflectors::UniformReflector>(
-          kDefaultReflectance);
-
-  auto diffuse = iris::MakeReferenceCounted<
-      iris::textures::ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-      std::move(reflectance));
-
-  auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<visual>>(kDefaultSigma);
-
-  return std::make_shared<NestedMatteObjectBuilder>(
-      std::move(diffuse), std::move(sigma), ReferenceCounted<NormalMap>());
-}
-
 }  // namespace
 
 const std::unique_ptr<const ObjectBuilder<
@@ -149,10 +130,5 @@ const std::unique_ptr<const ObjectBuilder<
         TextureManager&>>,
     TextureManager&>>
     g_matte_builder = std::make_unique<MatteObjectBuilder>();
-
-const std::shared_ptr<ObjectBuilder<
-    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
-    TextureManager&>>
-    g_default = InitializeDefault();
 
 }  // namespace iris::pbrt_frontend::materials

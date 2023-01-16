@@ -165,6 +165,7 @@ cc_library(
         "//iris:image_sampler",
         "//iris:integrator",
         "//iris:light_scene",
+        "//iris/scenes:list_scene",
     ],
 )
 

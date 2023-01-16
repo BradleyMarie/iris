@@ -137,6 +137,8 @@ TEST(ParseNamed, Matte) {
 }
 
 TEST(Default, Default) {
-  auto default_builder = iris::pbrt_frontend::materials::Default();
-  EXPECT_NE(nullptr, default_builder.get());
+  std::stringstream input("\"matte\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  EXPECT_EQ(&iris::pbrt_frontend::materials::Parse(tokenizer),
+            &iris::pbrt_frontend::materials::Default());
 }

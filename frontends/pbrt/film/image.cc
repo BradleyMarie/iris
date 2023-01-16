@@ -126,8 +126,9 @@ Result ImageObjectBuilder::Build(
 
   std::function<void(Framebuffer&, std::ofstream&)> write_to_file_function;
   if (filename.extension() == ".pfm") {
-    write_to_file_function = [](Framebuffer& filename, std::ofstream& output) {
-      file::WritePfm(filename, iris::Color::LINEAR_SRGB, output);
+    write_to_file_function = [](Framebuffer& framebuffer,
+                                std::ofstream& output) {
+      file::WritePfm(framebuffer, iris::Color::LINEAR_SRGB, output);
     };
   } else {
     std::cerr << "ERROR: Unsupported file extension for parameter: filename"

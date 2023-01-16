@@ -87,9 +87,9 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads) {
 
   iris::pbrt_frontend::Renderable renderable(
       std::move(renderer), std::move(camera), std::move(image_sampler),
-      std::move(integrator), std::move(rng), image_dimensions);
+      std::move(integrator), image_dimensions);
   auto framebuffer =
-      renderable.Render(color_matcher, 0.0, num_threads_requested);
+      renderable.Render(color_matcher, *rng, 0.0, num_threads_requested);
   EXPECT_EQ(image_dimensions, framebuffer.Size());
 
   for (size_t y = 0; y < image_dimensions.first; y++) {

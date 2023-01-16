@@ -121,11 +121,13 @@ void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
   material_manager.Put(name, result);
 }
 
-std::shared_ptr<ObjectBuilder<
-    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
-    TextureManager&>>
+const ObjectBuilder<
+    std::shared_ptr<ObjectBuilder<
+        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        TextureManager&>>,
+    TextureManager&>&
 Default() {
-  return g_default;
+  return *g_matte_builder;
 }
 
 }  // namespace iris::pbrt_frontend::materials

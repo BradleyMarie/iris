@@ -31,3 +31,10 @@ TEST(Parse, Path) {
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::integrators::Parse(tokenizer);
 }
+
+TEST(Default, Default) {
+  std::stringstream input("\"path\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  EXPECT_EQ(&iris::pbrt_frontend::integrators::Parse(tokenizer),
+            &iris::pbrt_frontend::integrators::Default());
+}

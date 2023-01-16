@@ -38,4 +38,6 @@ const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer) {
   return *iter->second;
 }
 
+const ObjectBuilder<Result>& Default() { return *g_path_builder; }
+
 }  // namespace iris::pbrt_frontend::integrators
