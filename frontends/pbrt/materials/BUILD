@@ -10,6 +10,7 @@ cc_library(
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:texture_manager",
         "//iris:material",
+        "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:matte_material",
         "//iris/reflectors:uniform_reflector",
@@ -40,6 +41,7 @@ cc_library(
         "//frontends/pbrt:quoted_string",
         "//frontends/pbrt:texture_manager",
         "//iris:material",
+        "//iris:normal_map",
         "//iris:reference_counted",
     ],
 )

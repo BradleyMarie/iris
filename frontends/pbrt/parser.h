@@ -68,7 +68,9 @@ class Parser {
 
   struct AttributeEntry {
     std::shared_ptr<
-        ObjectBuilder<iris::ReferenceCounted<iris::Material>, TextureManager&>>
+        ObjectBuilder<std::pair<iris::ReferenceCounted<iris::Material>,
+                                iris::ReferenceCounted<iris::NormalMap>>,
+                      TextureManager&>>
         material;
     std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,
               iris::ReferenceCounted<iris::EmissiveMaterial>>

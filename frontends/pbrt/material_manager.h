@@ -9,25 +9,30 @@
 #include "frontends/pbrt/object_builder.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/material.h"
+#include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 
 namespace iris::pbrt_frontend {
 
 class MaterialManager {
  public:
-  std::shared_ptr<
-      ObjectBuilder<iris::ReferenceCounted<Material>, TextureManager&>>
+  std::shared_ptr<ObjectBuilder<
+      std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+      TextureManager&>>
   Get(std::string_view name) const;
   void Put(std::string_view name,
-           std::shared_ptr<
-               ObjectBuilder<iris::ReferenceCounted<Material>, TextureManager&>>
+           std::shared_ptr<ObjectBuilder<std::pair<ReferenceCounted<Material>,
+                                                   ReferenceCounted<NormalMap>>,
+                                         TextureManager&>>
                texture);
   void Clear();
 
  private:
-  std::unordered_map<std::string,
-                     std::shared_ptr<ObjectBuilder<
-                         iris::ReferenceCounted<Material>, TextureManager&>>>
+  std::unordered_map<
+      std::string,
+      std::shared_ptr<ObjectBuilder<
+          std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+          TextureManager&>>>
       materials_;
   mutable std::string temp_key_;
 };

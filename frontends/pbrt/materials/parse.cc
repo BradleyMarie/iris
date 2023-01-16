@@ -12,16 +12,20 @@ namespace {
 
 static const std::unordered_map<
     std::string_view,
-    const ObjectBuilder<std::shared_ptr<ObjectBuilder<
-                            iris::ReferenceCounted<Material>, TextureManager&>>,
-                        TextureManager&>*>
+    const ObjectBuilder<
+        std::shared_ptr<ObjectBuilder<
+            std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+            TextureManager&>>,
+        TextureManager&>*>
     g_materials = {{"matte", g_matte_builder.get()}};
 
 }  // namespace
 
-const ObjectBuilder<std::shared_ptr<ObjectBuilder<
-                        iris::ReferenceCounted<Material>, TextureManager&>>,
-                    TextureManager&>&
+const ObjectBuilder<
+    std::shared_ptr<ObjectBuilder<
+        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        TextureManager&>>,
+    TextureManager&>&
 Parse(Tokenizer& tokenizer) {
   auto type = tokenizer.Next();
   if (!type) {
@@ -117,8 +121,9 @@ void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
   material_manager.Put(name, result);
 }
 
-std::shared_ptr<
-    ObjectBuilder<iris::ReferenceCounted<Material>, TextureManager&>>
+std::shared_ptr<ObjectBuilder<
+    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+    TextureManager&>>
 Default() {
   return g_default;
 }

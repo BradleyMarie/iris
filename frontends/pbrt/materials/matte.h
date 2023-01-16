@@ -6,18 +6,21 @@
 #include "frontends/pbrt/object_builder.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/material.h"
+#include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 
 namespace iris::pbrt_frontend::materials {
 
-extern const std::unique_ptr<
-    const ObjectBuilder<std::shared_ptr<ObjectBuilder<
-                            iris::ReferenceCounted<Material>, TextureManager&>>,
-                        TextureManager&>>
+extern const std::unique_ptr<const ObjectBuilder<
+    std::shared_ptr<ObjectBuilder<
+        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        TextureManager&>>,
+    TextureManager&>>
     g_matte_builder;
 
-extern const std::shared_ptr<
-    ObjectBuilder<iris::ReferenceCounted<Material>, TextureManager&>>
+extern const std::shared_ptr<ObjectBuilder<
+    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+    TextureManager&>>
     g_default;
 
 }  // namespace iris::pbrt_frontend::materials

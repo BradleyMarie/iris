@@ -22,8 +22,9 @@ static const std::unordered_map<
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
     Tokenizer& tokenizer, SpectrumManager& spectrum_manager,
     TextureManager& texture_manager,
-    const std::shared_ptr<ObjectBuilder<iris::ReferenceCounted<iris::Material>,
-                                        TextureManager&>>& material_builder,
+    const std::shared_ptr<ObjectBuilder<
+        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        TextureManager&>>& material_builder,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
     const Matrix& model_to_world) {
@@ -71,10 +72,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
 
   auto material = material_builder->Build(material_parameters, texture_manager);
 
-  return iter->second->Build(shape_parameters, texture_manager, material,
-                             ReferenceCounted<iris::NormalMap>(),
-                             front_emissive_material, back_emissive_material,
-                             model_to_world);
+  return iter->second->Build(shape_parameters, texture_manager, material.first,
+                             material.second, front_emissive_material,
+                             back_emissive_material, model_to_world);
 }
 
 }  // namespace iris::pbrt_frontend::shapes

@@ -40,6 +40,7 @@ cc_library(
         ":object_builder",
         ":texture_manager",
         "//iris:material",
+        "//iris:normal_map",
         "//iris:reference_counted",
     ],
 )

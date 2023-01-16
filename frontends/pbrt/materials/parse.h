@@ -7,21 +7,25 @@
 #include "frontends/pbrt/object_builder.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/material.h"
+#include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 
 namespace iris::pbrt_frontend::materials {
 
-const ObjectBuilder<std::shared_ptr<ObjectBuilder<
-                        iris::ReferenceCounted<Material>, TextureManager&>>,
-                    TextureManager&>&
+const ObjectBuilder<
+    std::shared_ptr<ObjectBuilder<
+        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        TextureManager&>>,
+    TextureManager&>&
 Parse(Tokenizer& tokenizer);
 
 void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
                 SpectrumManager& spectrum_manager,
                 TextureManager& texture_manager);
 
-std::shared_ptr<
-    ObjectBuilder<iris::ReferenceCounted<Material>, TextureManager&>>
+std::shared_ptr<ObjectBuilder<
+    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+    TextureManager&>>
 Default();
 
 }  // namespace iris::pbrt_frontend::materials
