@@ -182,6 +182,8 @@ cc_test(
     deps = [
         ":parser",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris/color_matchers:mock_color_matcher",
+        "//iris/random:mersenne_twister_random",
         "@com_google_googletest//:gtest_main",
     ],
 )

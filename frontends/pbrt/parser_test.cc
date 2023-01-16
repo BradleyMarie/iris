@@ -4,6 +4,8 @@
 
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/color_matchers/mock_color_matcher.h"
+#include "iris/random/mersenne_twister_random.h"
 
 TEST(Parser, Empty) {
   std::stringstream input("");
@@ -588,4 +590,38 @@ TEST(WorldEnd, NoWorldBegin) {
   EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldEnd directive");
+}
+
+TEST(Render, EmptyScene) {
+  std::stringstream input("WorldBegin WorldEnd");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  auto result = parser.ParseFrom(".", tokenizer);
+  ASSERT_TRUE(result);
+
+  EXPECT_EQ("pbrt.pfm", result->output_filename);
+
+  iris::color_matchers::MockColorMatcher color_matcher;
+  EXPECT_CALL(color_matcher, ColorSpace())
+      .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
+
+  iris::random::MersenneTwisterRandom rng;
+
+  auto framebuffer = result->renderable.Render(color_matcher, rng, 0.0, 1u);
+  auto dimensions = framebuffer.Size();
+  EXPECT_EQ(480u, dimensions.first);
+  EXPECT_EQ(640u, dimensions.second);
+
+  for (size_t y = 0; y < dimensions.first; y++) {
+    for (size_t x = 0; x < dimensions.second; x++) {
+      auto color = framebuffer.Get(y, x);
+      EXPECT_EQ(0.0, color.r);
+      EXPECT_EQ(0.0, color.g);
+      EXPECT_EQ(0.0, color.b);
+      EXPECT_EQ(iris::Color::LINEAR_SRGB, color.space);
+    }
+  }
 }

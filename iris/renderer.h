@@ -20,9 +20,10 @@ class Renderer {
   Renderer(const Scene::Builder& scene_builder,
            const LightScene::Builder& light_scene_builder,
            SceneObjects scene_objects)
-      : scene_objects_(std::move(scene_objects)),
-        scene_(scene_builder.Build(scene_objects_)),
-        light_scene_(light_scene_builder.Build(scene_objects_)) {}
+      : scene_objects_(
+            std::make_unique<SceneObjects>(std::move(scene_objects))),
+        scene_(scene_builder.Build(*scene_objects_)),
+        light_scene_(light_scene_builder.Build(*scene_objects_)) {}
 
   Framebuffer Render(const Camera& camera, const ImageSampler& image_sampler,
                      const Integrator& integrator,
@@ -32,7 +33,7 @@ class Renderer {
                      unsigned num_threads = 0) const;
 
  private:
-  SceneObjects scene_objects_;
+  std::unique_ptr<SceneObjects> scene_objects_;
   std::unique_ptr<const Scene> scene_;
   std::unique_ptr<const LightScene> light_scene_;
 };

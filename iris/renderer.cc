@@ -133,13 +133,14 @@ Framebuffer Renderer::Render(const Camera& camera,
   std::atomic<size_t> chunk_counter = 0;
   for (unsigned i = 1; i < num_threads; i++) {
     threads.push_back(std::thread(
-        RenderChunk, std::cref(*scene_), scene_objects_.GetEnvironmentalLight(),
-        std::cref(*light_scene_), std::cref(camera), integrator.Duplicate(),
-        std::cref(color_matcher), std::ref(chunks), std::ref(chunk_counter),
-        num_chunks, minimum_distance, std::ref(result)));
+        RenderChunk, std::cref(*scene_),
+        scene_objects_->GetEnvironmentalLight(), std::cref(*light_scene_),
+        std::cref(camera), integrator.Duplicate(), std::cref(color_matcher),
+        std::ref(chunks), std::ref(chunk_counter), num_chunks, minimum_distance,
+        std::ref(result)));
   }
 
-  RenderChunk(*scene_, scene_objects_.GetEnvironmentalLight(), *light_scene_,
+  RenderChunk(*scene_, scene_objects_->GetEnvironmentalLight(), *light_scene_,
               camera, integrator.Duplicate(), color_matcher, chunks,
               chunk_counter, num_chunks, minimum_distance, result);
 
