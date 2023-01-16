@@ -11,9 +11,8 @@ static const std::unordered_map<
     std::string_view,
     const ObjectBuilder<
         std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-        TextureManager&,
-        const std::shared_ptr<ObjectBuilder<
-            iris::ReferenceCounted<iris::Material>, TextureManager&>>&,
+        TextureManager&, const ReferenceCounted<iris::Material>&,
+        const ReferenceCounted<iris::NormalMap>&,
         const ReferenceCounted<EmissiveMaterial>&,
         const ReferenceCounted<EmissiveMaterial>&, const Matrix&>*>
     g_shapes = {};
@@ -24,7 +23,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
     Tokenizer& tokenizer, SpectrumManager& spectrum_manager,
     TextureManager& texture_manager,
     const std::shared_ptr<ObjectBuilder<iris::ReferenceCounted<iris::Material>,
-                                        TextureManager&>>& material,
+                                        TextureManager&>>& material_builder,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
     const Matrix& model_to_world) {
@@ -47,7 +46,35 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
     exit(EXIT_FAILURE);
   }
 
-  return {std::vector<ReferenceCounted<Geometry>>(), Matrix::Identity()};
+  std::unordered_set<std::string_view> parameters_parsed;
+  std::unordered_map<std::string_view, Parameter> material_parameters;
+  std::unordered_map<std::string_view, Parameter> shape_parameters;
+
+  ParameterList parameter_list;
+  while (parameter_list.ParseFrom(tokenizer)) {
+    auto material_parameter = material_builder->Parse(
+        parameter_list, spectrum_manager, texture_manager, parameters_parsed,
+        /*must_succeed=*/false);
+    if (material_parameter) {
+      auto name = *parameters_parsed.find(parameter_list.GetName());
+      material_parameters[name] = std::move(*material_parameter);
+      continue;
+    }
+
+    auto shape_parameter = iter->second
+                               ->Parse(parameter_list, spectrum_manager,
+                                       texture_manager, parameters_parsed)
+                               .value();
+    auto name = *parameters_parsed.find(parameter_list.GetName());
+    shape_parameters[name] = std::move(shape_parameter);
+  }
+
+  auto material = material_builder->Build(material_parameters, texture_manager);
+
+  return iter->second->Build(shape_parameters, texture_manager, material,
+                             ReferenceCounted<iris::NormalMap>(),
+                             front_emissive_material, back_emissive_material,
+                             model_to_world);
 }
 
 }  // namespace iris::pbrt_frontend::shapes
