@@ -7,15 +7,19 @@
 namespace iris {
 namespace file {
 
-bool WriteExr(const Framebuffer& framebuffer, Color::Space color_space,
-              std::ostream& output) {
+bool WriteExr(const Framebuffer& framebuffer, std::ostream& output) {
   auto size = framebuffer.Size();
 
   std::vector<float> image;
   for (size_t y = 0; y < size.first; y++) {
     for (size_t x = 0; x < size.second; x++) {
       auto color = framebuffer.Get(y, x);
+
+      // Per the OpenEXR spec, a file doesn't have a chromaticities attribute is
+      // assumed to have a white point primaries that match Rec. ITU-R BT.709-3.
+      // These primaries and whitepoint are also shared by linear SRGB.
       auto rgb_color = color.ConvertTo(Color::LINEAR_SRGB);
+
       image.push_back(static_cast<float>(rgb_color.r));
       image.push_back(static_cast<float>(rgb_color.g));
       image.push_back(static_cast<float>(rgb_color.b));

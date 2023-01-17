@@ -12,6 +12,19 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "exr_writer_test",
+    srcs = ["exr_writer_test.cc"],
+    data = [
+        "test_data/black.exr",
+        "test_data/white.exr",
+    ],
+    deps = [
+        ":exr_writer",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "pfm_writer",
     srcs = ["pfm_writer.cc"],

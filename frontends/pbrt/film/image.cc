@@ -129,8 +129,7 @@ Result ImageObjectBuilder::Build(
   if (filename.extension() == ".exr") {
     write_to_file_function = [](Framebuffer& framebuffer,
                                 std::ofstream& output) {
-      bool success =
-          file::WriteExr(framebuffer, iris::Color::LINEAR_SRGB, output);
+      bool success = file::WriteExr(framebuffer, output);
       if (!success) {
         std::cerr << "ERROR: Failed to write output file" << std::endl;
         exit(EXIT_FAILURE);

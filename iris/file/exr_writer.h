@@ -8,8 +8,7 @@
 namespace iris {
 namespace file {
 
-bool WriteExr(const Framebuffer& framebuffer, Color::Space color_space,
-              std::ostream& output);
+bool WriteExr(const Framebuffer& framebuffer, std::ostream& output);
 
 }  // namespace file
 }  // namespace iris
