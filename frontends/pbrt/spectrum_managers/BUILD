@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 package(default_visibility = ["//frontends/pbrt:__subpackages__"])
 
@@ -15,6 +15,17 @@ cc_library(
         "//iris/color_matchers:cie_color_matcher",
         "//iris/reflectors:sampled_reflector",
         "//iris/spectra:sampled_spectrum",
+    ],
+)
+
+cc_test(
+    name = "color_spectrum_manager_test",
+    srcs = ["color_spectrum_manager_test.cc"],
+    deps = [
+        ":color_spectrum_manager",
+        "//frontends/pbrt/spectrum_managers/internal:color_reflector",
+        "//frontends/pbrt/spectrum_managers/internal:color_spectrum",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

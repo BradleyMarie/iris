@@ -57,10 +57,15 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
   iris::Color xyz_color(values[0], values[1], values[2],
                         g_color_matcher.ColorSpace());
   auto rgb_color = xyz_color.ConvertTo(iris::Color::LINEAR_SRGB);
+  auto bounded_rgb_color =
+      iris::Color(std::min(static_cast<visual>(1.0), rgb_color.r),
+                  std::min(static_cast<visual>(1.0), rgb_color.g),
+                  std::min(static_cast<visual>(1.0), rgb_color.b),
+                  iris::Color::LINEAR_SRGB);
 
   return iris::MakeReferenceCounted<
       iris::pbrt_frontend::spectrum_managers::internal::ColorReflector>(
-      rgb_color);
+      bounded_rgb_color);
 }
 
 void ColorSpectrumManager::Clear() {}
