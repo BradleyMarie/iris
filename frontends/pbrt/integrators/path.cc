@@ -30,7 +30,7 @@ Result PathObjectBuilder::Build(
   std::string_view sample_strategy = "uniform";  // TODO: This should be spatial
   std::optional<std::array<size_t, 4>> pixel_bounds;
   visual maximum_path_continue_probability = 0.95;
-  visual always_continue_threshold = 1.0;
+  visual always_continue_path_throughput = 1.0;
   uint8_t min_bounces = 3;
   uint8_t max_bounces = 5;
 
@@ -55,12 +55,12 @@ Result PathObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    always_continue_threshold = value;
+    always_continue_path_throughput = value;
   }
 
   auto integrator = std::make_unique<iris::integrators::PathIntegrator>(
-      maximum_path_continue_probability, always_continue_threshold, min_bounces,
-      max_bounces);
+      maximum_path_continue_probability, always_continue_path_throughput,
+      min_bounces, max_bounces);
 
   auto lightsamplestrategy = parameters.find("lightsamplestrategy");
   if (lightsamplestrategy != parameters.end()) {

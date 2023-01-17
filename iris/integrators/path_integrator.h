@@ -19,7 +19,7 @@ namespace integrators {
 class PathIntegrator final : public Integrator {
  public:
   PathIntegrator(visual maximum_path_continue_probability,
-                 visual always_continue_threshold, uint8_t min_bounces,
+                 visual always_continue_path_throughput, uint8_t min_bounces,
                  uint8_t max_bounces) noexcept;
 
   virtual const Spectrum* Integrate(const Ray& ray, RayTracer& ray_tracer,
@@ -35,7 +35,7 @@ class PathIntegrator final : public Integrator {
   std::vector<const Spectrum*> spectra_;
   std::vector<visual_t> attenuations_;
   visual maximum_path_continue_probability_;
-  visual always_continue_threshold_;
+  visual always_continue_path_throughput_;
   uint8_t min_bounces_;
   uint8_t max_bounces_;
 };

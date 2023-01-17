@@ -638,7 +638,7 @@ TEST(Render, EmptyScene) {
   auto result = parser.ParseFrom(".", tokenizer);
   ASSERT_TRUE(result);
 
-  EXPECT_EQ("pbrt.pfm", result->output_filename);
+  EXPECT_EQ("pbrt.exr", result->output_filename);
 
   iris::color_matchers::MockColorMatcher color_matcher;
   EXPECT_CALL(color_matcher, ColorSpace())

@@ -9,11 +9,12 @@ using iris::random::MockRandom;
 
 TEST(RussianRoulette, AboveThreshold) {
   MockRandom rng;
-  EXPECT_CALL(rng, DiscardVisual(1)).Times(2);
+  EXPECT_CALL(rng, NextVisual()).WillOnce(testing::Return(0.0));
+  EXPECT_CALL(rng, DiscardVisual(1));
 
-  RussianRoulette roulette(1.0, 0.5);
-  EXPECT_EQ(1.0, roulette.Evaluate(rng, 1.0));
-  EXPECT_EQ(1.0, roulette.Evaluate(rng, 2.0));
+  RussianRoulette roulette(0.95, 100.0);
+  EXPECT_NEAR(0.95, roulette.Evaluate(rng, 1.0).value(), 0.001);
+  EXPECT_EQ(1.00, roulette.Evaluate(rng, 100.0));
 }
 
 TEST(RussianRoulette, AboveMaximumSuccess) {

@@ -13,14 +13,13 @@ namespace internal {
 class RussianRoulette {
  public:
   RussianRoulette(visual maximum_continue_probability,
-                  visual always_continue_threshold) noexcept;
+                  visual always_continue_path_throughput) noexcept;
 
-  std::optional<visual_t> Evaluate(Random& rng,
-                                   visual_t desired_continue_probability) const;
+  std::optional<visual_t> Evaluate(Random& rng, visual_t path_throughput) const;
 
  private:
   visual maximum_continue_probability_;
-  visual always_continue_probability_;
+  visual always_continue_path_throughput_;
 };
 
 }  // namespace internal

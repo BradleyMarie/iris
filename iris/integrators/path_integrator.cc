@@ -11,16 +11,15 @@ namespace iris {
 namespace integrators {
 
 PathIntegrator::PathIntegrator(visual maximum_path_continue_probability,
-                               visual always_continue_threshold,
+                               visual always_continue_path_throughput,
                                uint8_t min_bounces,
                                uint8_t max_bounces) noexcept
     : maximum_path_continue_probability_(
           std::max(static_cast<visual>(0.0),
                    std::min(static_cast<visual>(1.0),
                             maximum_path_continue_probability))),
-      always_continue_threshold_(std::max(
-          static_cast<visual>(0.0),
-          std::min(static_cast<visual>(1.0), always_continue_threshold))),
+      always_continue_path_throughput_(
+          std::max(static_cast<visual>(0.0), always_continue_path_throughput)),
       min_bounces_(min_bounces),
       max_bounces_(max_bounces) {
   reflectors_.reserve(max_bounces);
@@ -34,7 +33,7 @@ const Spectrum* PathIntegrator::Integrate(const Ray& ray, RayTracer& ray_tracer,
                                           SpectralAllocator& spectral_allocator,
                                           Random& rng) {
   internal::RussianRoulette russian_roulette(maximum_path_continue_probability_,
-                                             always_continue_threshold_);
+                                             always_continue_path_throughput_);
   internal::PathBuilder path_builder(reflectors_, spectra_, attenuations_);
 
   visual_t path_throughput = 1.0;
@@ -104,7 +103,7 @@ const Spectrum* PathIntegrator::Integrate(const Ray& ray, RayTracer& ray_tracer,
 
 std::unique_ptr<Integrator> PathIntegrator::Duplicate() const {
   return std::make_unique<PathIntegrator>(maximum_path_continue_probability_,
-                                          always_continue_threshold_,
+                                          always_continue_path_throughput_,
                                           min_bounces_, max_bounces_);
 }
 
