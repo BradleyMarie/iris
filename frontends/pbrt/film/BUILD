@@ -9,6 +9,7 @@ cc_library(
     deps = [
         ":result",
         "//frontends/pbrt:object_builder",
+        "//iris/file:exr_writer",
         "//iris/file:pfm_writer",
     ],
 )

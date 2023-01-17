@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "iris/file/exr_writer.h"
 #include "iris/file/pfm_writer.h"
 
 namespace iris::pbrt_frontend::film {
@@ -30,7 +31,7 @@ Result ImageObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters) const {
   std::array<geometric_t, 4> crop_window = {0.0, 1.0, 0.0, 1.0};
   geometric_t diagonal = 35.0;
-  std::filesystem::path filename = "pbrt.pfm";  // TODO: Set to exr
+  std::filesystem::path filename = "pbrt.exr";
   visual_t scale = 1.0;
   std::optional<visual_t> max_sample_luminance = std::nullopt;
   size_t x_resolution = 640;
@@ -125,7 +126,17 @@ Result ImageObjectBuilder::Build(
   }
 
   std::function<void(Framebuffer&, std::ofstream&)> write_to_file_function;
-  if (filename.extension() == ".pfm") {
+  if (filename.extension() == ".exr") {
+    write_to_file_function = [](Framebuffer& framebuffer,
+                                std::ofstream& output) {
+      bool success =
+          file::WriteExr(framebuffer, iris::Color::LINEAR_SRGB, output);
+      if (!success) {
+        std::cerr << "ERROR: Failed to write output file" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    };
+  } else if (filename.extension() == ".pfm") {
     write_to_file_function = [](Framebuffer& framebuffer,
                                 std::ofstream& output) {
       file::WritePfm(framebuffer, iris::Color::LINEAR_SRGB, output);

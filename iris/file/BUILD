@@ -3,6 +3,16 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "exr_writer",
+    srcs = ["exr_writer.cc"],
+    hdrs = ["exr_writer.h"],
+    deps = [
+        "//iris:framebuffer",
+        "//third_party/tinyexr",
+    ],
+)
+
+cc_library(
     name = "pfm_writer",
     srcs = ["pfm_writer.cc"],
     hdrs = ["pfm_writer.h"],

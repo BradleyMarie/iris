@@ -13,7 +13,7 @@ TEST(Image, Empty) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::film::g_image_builder, tokenizer, spectrum_manager,
       texture_manager);
-  EXPECT_EQ("pbrt.pfm", result.filename);
+  EXPECT_EQ("pbrt.exr", result.filename);
   EXPECT_EQ(480u, result.resolution.first);
   EXPECT_EQ(640u, result.resolution.second);
   EXPECT_EQ(0.0, result.crop_window[0]);
