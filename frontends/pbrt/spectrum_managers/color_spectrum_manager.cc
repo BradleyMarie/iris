@@ -1,4 +1,4 @@
-#include "frontends/pbrt/spectrum_managers/linear_rgb_spectrum_manager.h"
+#include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
 
 #include "frontends/pbrt/spectrum_managers/internal/color_reflector.h"
 #include "frontends/pbrt/spectrum_managers/internal/color_spectrum.h"
@@ -13,23 +13,23 @@ static iris::color_matchers::CieColorMatcher g_color_matcher;
 
 };  // namespace
 
-std::array<visual_t, 3> LinearRGBColorMatcher::Match(
+std::array<visual_t, 3> ColorColorMatcher::Match(
     const Spectrum& spectrum) const {
   return {spectrum.Intensity(0.5), spectrum.Intensity(1.5),
           spectrum.Intensity(2.5)};
 }
 
-iris::Color::Space LinearRGBColorMatcher::ColorSpace() const {
+iris::Color::Space ColorColorMatcher::ColorSpace() const {
   return iris::Color::LINEAR_SRGB;
 }
 
-ReferenceCounted<Spectrum> LinearRGBSpectrumManager::AllocateSpectrum(
+ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
     const Color& color) {
   return iris::MakeReferenceCounted<
       iris::pbrt_frontend::spectrum_managers::internal::ColorSpectrum>(color);
 }
 
-ReferenceCounted<Spectrum> LinearRGBSpectrumManager::AllocateSpectrum(
+ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
     const std::map<visual, visual>& wavelengths) {
   iris::spectra::SampledSpectrum sampled_spectrum(wavelengths);
 
@@ -43,13 +43,13 @@ ReferenceCounted<Spectrum> LinearRGBSpectrumManager::AllocateSpectrum(
       rgb_color);
 }
 
-ReferenceCounted<Reflector> LinearRGBSpectrumManager::AllocateReflector(
+ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
     const Color& color) {
   return iris::MakeReferenceCounted<
       iris::pbrt_frontend::spectrum_managers::internal::ColorReflector>(color);
 }
 
-ReferenceCounted<Reflector> LinearRGBSpectrumManager::AllocateReflector(
+ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
     const std::map<visual, visual>& wavelengths) {
   iris::reflectors::SampledReflector sampled_reflector(wavelengths);
 
@@ -63,6 +63,6 @@ ReferenceCounted<Reflector> LinearRGBSpectrumManager::AllocateReflector(
       rgb_color);
 }
 
-void LinearRGBSpectrumManager::Clear() {}
+void ColorSpectrumManager::Clear() {}
 
 }  // namespace iris::pbrt_frontend::spectrum_managers

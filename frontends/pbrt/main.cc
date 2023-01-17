@@ -12,7 +12,7 @@
 #include "absl/flags/usage.h"
 #include "absl/flags/usage_config.h"
 #include "frontends/pbrt/parser.h"
-#include "frontends/pbrt/spectrum_managers/linear_rgb_spectrum_manager.h"
+#include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
 #include "frontends/pbrt/tokenizer.h"
 #include "iris/color_matchers/cie_color_matcher.h"
 #include "iris/random/mersenne_twister_random.h"
@@ -94,9 +94,9 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   } else {
     spectral_manager = std::make_unique<
-        iris::pbrt_frontend::spectrum_managers::LinearRGBSpectrumManager>();
+        iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager>();
     color_matcher = std::make_unique<
-        iris::pbrt_frontend::spectrum_managers::LinearRGBColorMatcher>();
+        iris::pbrt_frontend::spectrum_managers::ColorColorMatcher>();
   }
 
 #ifdef INSTRUMENTED_BUILD

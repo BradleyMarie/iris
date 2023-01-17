@@ -38,7 +38,7 @@ cc_binary(
     deps = [
         ":parser",
         ":tokenizer",
-        "//frontends/pbrt/spectrum_managers:linear_rgb_spectrum_manager",
+        "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
         "//iris/color_matchers:cie_color_matcher",
         "//iris/random:mersenne_twister_random",
         "@com_google_absl//absl/flags:config",

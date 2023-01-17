@@ -3,9 +3,9 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 package(default_visibility = ["//frontends/pbrt:__subpackages__"])
 
 cc_library(
-    name = "linear_rgb_spectrum_manager",
-    srcs = ["linear_rgb_spectrum_manager.cc"],
-    hdrs = ["linear_rgb_spectrum_manager.h"],
+    name = "color_spectrum_manager",
+    srcs = ["color_spectrum_manager.cc"],
+    hdrs = ["color_spectrum_manager.h"],
     deps = [
         "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt/spectrum_managers/internal:color_reflector",
