@@ -9,8 +9,9 @@
 namespace iris::pbrt_frontend::integrators {
 namespace {
 
-static const std::unordered_map<std::string_view, const ObjectBuilder<Result>*>
-    g_integrators = {{"path", g_path_builder.get()}};
+static const std::unordered_map<
+    std::string_view, const std::unique_ptr<const ObjectBuilder<Result>>&>
+    g_integrators = {{"path", g_path_builder}};
 
 }  // namespace
 

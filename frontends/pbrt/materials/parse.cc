@@ -12,12 +12,12 @@ namespace {
 
 static const std::unordered_map<
     std::string_view,
-    const ObjectBuilder<
+    const std::unique_ptr<const ObjectBuilder<
         std::shared_ptr<ObjectBuilder<
             std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
             TextureManager&>>,
-        TextureManager&>*>
-    g_materials = {{"matte", g_matte_builder.get()}};
+        TextureManager&>>&>
+    g_materials = {{"matte", g_matte_builder}};
 
 }  // namespace
 

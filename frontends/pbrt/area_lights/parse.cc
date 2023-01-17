@@ -11,11 +11,11 @@ namespace iris::pbrt_frontend::area_lights {
 namespace {
 
 static const std::unordered_map<
-    std::string_view,
-    const ObjectBuilder<std::pair<iris::ReferenceCounted<EmissiveMaterial>,
-                                  iris::ReferenceCounted<EmissiveMaterial>>,
-                        SpectrumManager&>*>
-    g_area_lights = {{"diffuse", g_diffuse_builder.get()}};
+    std::string_view, const std::unique_ptr<const ObjectBuilder<
+                          std::pair<iris::ReferenceCounted<EmissiveMaterial>,
+                                    iris::ReferenceCounted<EmissiveMaterial>>,
+                          SpectrumManager&>>&>
+    g_area_lights = {{"diffuse", g_diffuse_builder}};
 
 }  // namespace
 

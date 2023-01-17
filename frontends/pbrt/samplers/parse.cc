@@ -11,9 +11,10 @@ namespace iris::pbrt_frontend::samplers {
 namespace {
 
 static const std::unordered_map<
-    std::string_view, const ObjectBuilder<std::unique_ptr<ImageSampler>>*>
-    g_samplers = {{"random", g_random_builder.get()},
-                  {"stratified", g_stratified_builder.get()}};
+    std::string_view,
+    const std::unique_ptr<const ObjectBuilder<std::unique_ptr<ImageSampler>>>&>
+    g_samplers = {{"random", g_random_builder},
+                  {"stratified", g_stratified_builder}};
 
 }  // namespace
 

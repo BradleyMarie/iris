@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
   if (unparsed.size() == 1) {
     tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(std::cin);
   } else {
-    file_input = std::make_unique<std::ifstream>(unparsed.at(0));
+    file_input = std::make_unique<std::ifstream>(unparsed.at(1));
     tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(*file_input);
   }
 

@@ -324,6 +324,42 @@ TEST(Material, TooFewArguments) {
               "ERROR: Too few parameters to directive: Material");
 }
 
+TEST(NamedMaterial, BeforeWorldEnd) {
+  std::stringstream input("NamedMaterial \"name\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(
+      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Directive cannot be specified before WorldBegin: NamedMaterial");
+}
+
+TEST(NamedMaterial, TooFewArguments) {
+  std::stringstream input("WorldBegin NamedMaterial");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Too few parameters to directive: NamedMaterial");
+}
+
+TEST(NamedMaterial, NotAString) {
+  std::stringstream input("WorldBegin NamedMaterial 1");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Parameter to NamedMaterial must be a string");
+}
+
 TEST(ObjectBegin, BeforeWorldBegin) {
   std::stringstream input("ObjectBegin");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

@@ -3,19 +3,20 @@
 #include <unordered_map>
 
 #include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/shapes/trianglemesh.h"
 
 namespace iris::pbrt_frontend::shapes {
 namespace {
 
 static const std::unordered_map<
     std::string_view,
-    const ObjectBuilder<
+    const std::unique_ptr<const ObjectBuilder<
         std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-        TextureManager&, const ReferenceCounted<iris::Material>&,
+        const ReferenceCounted<iris::Material>&,
         const ReferenceCounted<iris::NormalMap>&,
         const ReferenceCounted<EmissiveMaterial>&,
-        const ReferenceCounted<EmissiveMaterial>&, const Matrix&>*>
-    g_shapes = {};
+        const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>&>
+    g_shapes = {{"trianglemesh", g_trianglemesh_builder}};
 
 }  // namespace
 
@@ -72,9 +73,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
 
   auto material = material_builder->Build(material_parameters, texture_manager);
 
-  return iter->second->Build(shape_parameters, texture_manager, material.first,
-                             material.second, front_emissive_material,
-                             back_emissive_material, model_to_world);
+  return iter->second->Build(shape_parameters, material.first, material.second,
+                             front_emissive_material, back_emissive_material,
+                             model_to_world);
 }
 
 }  // namespace iris::pbrt_frontend::shapes

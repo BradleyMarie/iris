@@ -8,6 +8,7 @@ cc_library(
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":trianglemesh",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
         "//iris:geometry",
@@ -23,5 +24,18 @@ cc_test(
         ":parse",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "trianglemesh",
+    srcs = ["trianglemesh.cc"],
+    hdrs = ["trianglemesh.h"],
+    deps = [
+        "//frontends/pbrt:object_builder",
+        "//iris:geometry",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris/geometry:triangle_mesh",
     ],
 )

@@ -10,13 +10,13 @@
 namespace iris::pbrt_frontend::cameras {
 namespace {
 
-static const std::unordered_map<
-    std::string_view,
-    const ObjectBuilder<std::function<std::unique_ptr<Camera>(
-                            const std::pair<size_t, size_t>&)>,
-                        const MatrixManager::Transformation&>*>
-    g_samplers = {{"orthographic", g_orthographic_builder.get()},
-                  {"perspective", g_perspective_builder.get()}};
+static const std::unordered_map<std::string_view,
+                                const std::unique_ptr<const ObjectBuilder<
+                                    std::function<std::unique_ptr<Camera>(
+                                        const std::pair<size_t, size_t>&)>,
+                                    const MatrixManager::Transformation&>>&>
+    g_cameras = {{"orthographic", g_orthographic_builder},
+                 {"perspective", g_perspective_builder}};
 
 }  // namespace
 
@@ -36,8 +36,8 @@ Parse(Tokenizer& tokenizer) {
     exit(EXIT_FAILURE);
   }
 
-  auto iter = g_samplers.find(*unquoted);
-  if (iter == g_samplers.end()) {
+  auto iter = g_cameras.find(*unquoted);
+  if (iter == g_cameras.end()) {
     std::cerr << "ERROR: Unsupported type for directive Camera: " << *unquoted
               << std::endl;
     exit(EXIT_FAILURE);

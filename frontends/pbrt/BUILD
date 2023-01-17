@@ -33,7 +33,7 @@ cc_library(
 )
 
 cc_binary(
-    name = "main",
+    name = "iris",
     srcs = ["main.cc"],
     deps = [
         ":parser",

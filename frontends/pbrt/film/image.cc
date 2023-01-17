@@ -14,8 +14,8 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"filename", Parameter::STRING},
         {"maxsampleluminance", Parameter::FLOAT},
         {"scale", Parameter::FLOAT},
-        {"x_resolution", Parameter::INTEGER},
-        {"y_resolution", Parameter::INTEGER},
+        {"xresolution", Parameter::INTEGER},
+        {"yresolution", Parameter::INTEGER},
 };
 
 class ImageObjectBuilder : public ObjectBuilder<Result> {
@@ -100,11 +100,11 @@ Result ImageObjectBuilder::Build(
     scale = value;
   }
 
-  auto x_resolution_iter = parameters.find("x_resolution");
+  auto x_resolution_iter = parameters.find("xresolution");
   if (x_resolution_iter != parameters.end()) {
     auto value = x_resolution_iter->second.GetIntegerValues(1).front();
     if (value <= 0) {
-      std::cerr << "ERROR: Out of range value for parameter: x_resolution"
+      std::cerr << "ERROR: Out of range value for parameter: xresolution"
                 << std::endl;
       exit(EXIT_FAILURE);
     }
@@ -112,11 +112,11 @@ Result ImageObjectBuilder::Build(
     x_resolution = value;
   }
 
-  auto y_resolution_iter = parameters.find("y_resolution");
+  auto y_resolution_iter = parameters.find("yresolution");
   if (y_resolution_iter != parameters.end()) {
     auto value = y_resolution_iter->second.GetIntegerValues(1).front();
     if (value <= 0) {
-      std::cerr << "ERROR: Out of range value for parameter: y_resolution"
+      std::cerr << "ERROR: Out of range value for parameter: yresolution"
                 << std::endl;
       exit(EXIT_FAILURE);
     }

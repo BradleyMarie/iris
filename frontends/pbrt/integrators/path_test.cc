@@ -60,20 +60,6 @@ TEST(Path, NegativeRrthreshold) {
               "ERROR: Out of range value for parameter: rrthreshold");
 }
 
-TEST(Path, TooBigRrthreshold) {
-  std::stringstream input("\"float rrthreshold\" 2.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: rrthreshold");
-}
-
 TEST(Path, BadLightSampleStrategy) {
   std::stringstream input("\"string lightsamplestrategy\" \"aaa\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

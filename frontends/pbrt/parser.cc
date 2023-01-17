@@ -205,6 +205,33 @@ bool Parser::Material() {
   return true;
 }
 
+bool Parser::NamedMaterial() {
+  if (!world_begin_encountered_) {
+    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                 "NamedMaterial"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto next = tokenizers_.back().tokenizer->Next();
+  if (!next) {
+    std::cerr << "ERROR: Too few parameters to directive: NamedMaterial"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  auto unquoted = Unquote(*next);
+  if (!unquoted) {
+    std::cerr << "ERROR: Parameter to NamedMaterial must be a string"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  attributes_.back().material = material_manager_->Get(*unquoted);
+
+  return true;
+}
+
 bool Parser::ObjectBegin() {
   if (!world_begin_encountered_) {
     std::cerr
@@ -376,7 +403,7 @@ bool Parser::Shape() {
       current_object_ ? Matrix::Identity() : matrix_manager_->Get().start);
 
   if (current_object_) {
-    auto& objects = objects_.at(*current_object_);
+    auto& objects = objects_[*current_object_];
     objects.insert(objects.end(), shapes.begin(), shapes.end());
   } else {
     for (const auto& geometry : shapes) {
@@ -479,6 +506,7 @@ std::optional<Parser::Result> Parser::ParseFrom(
           {"Integrator", &Parser::Integrator},
           {"MakeNamedMaterial", &Parser::MakeNamedMaterial},
           {"Material", &Parser::Material},
+          {"NamedMaterial", &Parser::NamedMaterial},
           {"ObjectBegin", &Parser::ObjectBegin},
           {"ObjectEnd", &Parser::ObjectEnd},
           {"ObjectInstance", &Parser::ObjectInstance},

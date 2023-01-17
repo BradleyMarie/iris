@@ -9,8 +9,9 @@
 namespace iris::pbrt_frontend::film {
 namespace {
 
-static const std::unordered_map<std::string_view, const ObjectBuilder<Result>*>
-    g_film = {{"image", g_image_builder.get()}};
+static const std::unordered_map<
+    std::string_view, const std::unique_ptr<const ObjectBuilder<Result>>&>
+    g_film = {{"image", g_image_builder}};
 
 }  // namespace
 

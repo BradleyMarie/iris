@@ -49,7 +49,7 @@ Result PathObjectBuilder::Build(
   auto rrthreshold = parameters.find("rrthreshold");
   if (rrthreshold != parameters.end()) {
     auto value = rrthreshold->second.GetFloatValues(1).front();
-    if (value < 0.0 || value > 1.0) {
+    if (value < 0.0) {
       std::cerr << "ERROR: Out of range value for parameter: rrthreshold"
                 << std::endl;
       exit(EXIT_FAILURE);

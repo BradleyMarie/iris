@@ -55,6 +55,7 @@ class Parser {
   bool Integrator();
   bool MakeNamedMaterial();
   bool Material();
+  bool NamedMaterial();
   bool ObjectBegin();
   bool ObjectEnd();
   bool ObjectInstance();
