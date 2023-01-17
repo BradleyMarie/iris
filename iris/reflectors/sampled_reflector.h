@@ -1,5 +1,5 @@
-#ifndef _IRIS_SPECTRA_SAMPLED_SPECTRUM_
-#define _IRIS_SPECTRA_SAMPLED_SPECTRUM_
+#ifndef _IRIS_REFLECTORS_SAMPLED_REFLECTOR_
+#define _IRIS_REFLECTORS_SAMPLED_REFLECTOR_
 
 #include <map>
 #include <vector>
@@ -26,4 +26,4 @@ class SampledReflector final : public Reflector {
 }  // namespace reflectors
 }  // namespace iris
 
-#endif  // _IRIS_SPECTRA_SAMPLED_SPECTRUM_
+#endif  // _IRIS_REFLECTORS_SAMPLED_REFLECTOR_

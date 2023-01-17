@@ -6,6 +6,7 @@
 #include "iris/color.h"
 #include "iris/color_matcher.h"
 #include "iris/float.h"
+#include "iris/reflector.h"
 #include "iris/spectrum.h"
 
 namespace iris {
@@ -14,6 +15,7 @@ namespace color_matchers {
 class CieColorMatcher final : public ColorMatcher {
  public:
   std::array<visual_t, 3> Match(const Spectrum& spectrum) const override;
+  std::array<visual_t, 3> Match(const Reflector& reflector) const;
   Color::Space ColorSpace() const override;
 };
 

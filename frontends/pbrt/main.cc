@@ -12,7 +12,9 @@
 #include "absl/flags/usage.h"
 #include "absl/flags/usage_config.h"
 #include "frontends/pbrt/parser.h"
+#include "frontends/pbrt/spectrum_managers/linear_rgb_spectrum_manager.h"
 #include "frontends/pbrt/tokenizer.h"
+#include "iris/color_matchers/cie_color_matcher.h"
 #include "iris/random/mersenne_twister_random.h"
 
 #ifdef INSTRUMENTED_BUILD
@@ -85,10 +87,16 @@ int main(int argc, char** argv) {
   std::unique_ptr<iris::ColorMatcher> color_matcher;
   if (absl::GetFlag(FLAGS_spectral)) {
     spectral_manager = nullptr;
-    color_matcher = nullptr;
+    color_matcher = std::make_unique<iris::color_matchers::CieColorMatcher>();
+
+    std::cerr << "ERROR: Spectral rendering is not yet implemented"
+              << std::endl;
+    exit(EXIT_FAILURE);
   } else {
-    spectral_manager = nullptr;
-    color_matcher = nullptr;
+    spectral_manager = std::make_unique<
+        iris::pbrt_frontend::spectrum_managers::LinearRGBSpectrumManager>();
+    color_matcher = std::make_unique<
+        iris::pbrt_frontend::spectrum_managers::LinearRGBColorMatcher>();
   }
 
 #ifdef INSTRUMENTED_BUILD

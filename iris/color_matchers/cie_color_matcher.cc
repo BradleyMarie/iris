@@ -486,6 +486,8 @@ static const Weights g_weights[] = {
     {830.0, 0.000001251141, 0.0000004518100, 0.000000000000},
 };
 
+const static visual g_integral = 106.8569149167;
+
 }  // namespace
 
 std::array<visual_t, 3> CieColorMatcher::Match(const Spectrum& spectrum) const {
@@ -496,6 +498,24 @@ std::array<visual_t, 3> CieColorMatcher::Match(const Spectrum& spectrum) const {
     result[1] += intensity * weights.y;
     result[2] += intensity * weights.z;
   }
+
+  return result;
+}
+
+std::array<visual_t, 3> CieColorMatcher::Match(
+    const Reflector& reflector) const {
+  std::array<visual_t, 3> result = {0.0, 0.0, 0.0};
+  for (const auto& weights : g_weights) {
+    auto intensity = reflector.Reflectance(weights.wavelength);
+    result[0] += intensity * weights.x;
+    result[1] += intensity * weights.y;
+    result[2] += intensity * weights.z;
+  }
+
+  result[0] /= g_integral;
+  result[1] /= g_integral;
+  result[2] /= g_integral;
+
   return result;
 }
 
