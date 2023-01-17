@@ -50,8 +50,8 @@ TriangleMeshBuilder::Build(
     exit(EXIT_FAILURE);
   }
 
-  const auto& indices_array = indices_iter->second.GetIntegerValues();
-  if (indices_array.size() == 0u || indices_array.size() % 3u != 0u) {
+  const auto& indices_array = indices_iter->second.GetIntegerValues(0u, 3u);
+  if (indices_array.size() % 3u != 0u) {
     std::cerr
         << "ERROR: Invalid number of parameters in parameter list: indices"
         << std::endl;
@@ -99,7 +99,7 @@ TriangleMeshBuilder::Build(
   }
 
   const auto& points_array =
-      p_iter->second.GetPoint3Values(target_size, target_size);
+      p_iter->second.GetPoint3Values(0u, target_size);
 
   std::vector<Point> points;
   for (const auto& entry : points_array) {
@@ -109,7 +109,7 @@ TriangleMeshBuilder::Build(
   std::vector<Vector> normals;
   auto n = parameters.find("N");
   if (n != parameters.end() && !n->second.GetVector3Values(0u, 0u).empty()) {
-    auto normals_array = n->second.GetVector3Values(target_size, target_size);
+    auto normals_array = n->second.GetVector3Values(0u, target_size);
 
     for (const auto& normal : normals_array) {
       normals.push_back(model_to_world.InverseTransposeMultiply(normal));

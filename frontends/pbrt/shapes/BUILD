@@ -39,3 +39,14 @@ cc_library(
         "//iris/geometry:triangle_mesh",
     ],
 )
+
+cc_test(
+    name = "trianglemesh_test",
+    srcs = ["trianglemesh_test.cc"],
+    deps = [
+        ":trianglemesh",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
