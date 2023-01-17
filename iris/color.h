@@ -47,7 +47,7 @@ struct Color final {
   const Space space;
 };
 
-bool operator==(const Color& lhs, const Color& rhs) {
+static inline bool operator==(const Color& lhs, const Color& rhs) {
   return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z &&
          lhs.space == rhs.space;
 }

@@ -32,6 +32,20 @@ cc_library(
     ],
 )
 
+cc_binary(
+    name = "main",
+    srcs = ["main.cc"],
+    deps = [
+        ":parser",
+        ":tokenizer",
+        "//iris/random:mersenne_twister_random",
+        "@com_google_absl//absl/flags:config",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "@com_google_absl//absl/flags:usage",
+    ],
+)
+
 cc_library(
     name = "material_manager",
     srcs = ["material_manager.cc"],

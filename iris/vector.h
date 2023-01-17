@@ -44,64 +44,73 @@ struct Vector final {
   const geometric z;
 };
 
-Vector operator-(const Vector& vector) {
+static inline Vector operator-(const Vector& vector) {
   return Vector(-vector.x, -vector.y, -vector.z);
 }
 
-Vector operator-(const Vector& minuend, const Vector& subtrahend) {
+static inline Vector operator-(const Vector& minuend,
+                               const Vector& subtrahend) {
   return Vector(minuend.x - subtrahend.x, minuend.y - subtrahend.y,
                 minuend.z - subtrahend.z);
 }
 
-Vector operator+(const Vector& addend0, const Vector& addend1) {
+static inline Vector operator+(const Vector& addend0, const Vector& addend1) {
   return Vector(addend0.x + addend1.x, addend0.y + addend1.y,
                 addend0.z + addend1.z);
 }
 
 template <typename T>
-Vector operator*(const Vector& vector,
-                 T scalar) requires std::is_floating_point<T>::value {
+static inline Vector operator*(const Vector& vector, T scalar)
+  requires std::is_floating_point<T>::value
+{
   assert(std::isfinite(scalar));
   return Vector(vector.x * scalar, vector.y * scalar, vector.z * scalar);
 }
 
 template <typename T>
-Vector operator*(
-    T scalar, const Vector& vector) requires std::is_floating_point<T>::value {
+static inline Vector operator*(T scalar, const Vector& vector)
+  requires std::is_floating_point<T>::value
+{
   assert(std::isfinite(scalar));
   return vector * scalar;
 }
 
 template <typename T>
-Vector operator/(const Vector& dividend,
-                 T divisor) requires std::is_floating_point<T>::value {
+static inline Vector operator/(const Vector& dividend, T divisor)
+  requires std::is_floating_point<T>::value
+{
   assert(!std::isnan(divisor) && divisor != 0.0);
   return Vector(dividend.x / divisor, dividend.y / divisor,
                 dividend.z / divisor);
 }
 
-geometric_t DotProduct(const Vector& operand0, const Vector& operand1) {
+static inline geometric_t DotProduct(const Vector& operand0,
+                                     const Vector& operand1) {
   return operand0.x * operand1.x + operand0.y * operand1.y +
          operand0.z * operand1.z;
 }
 
-geometric_t AbsDotProduct(const Vector& operand0, const Vector& operand1) {
+static inline geometric_t AbsDotProduct(const Vector& operand0,
+                                        const Vector& operand1) {
   return std::abs(DotProduct(operand0, operand1));
 }
 
-geometric_t PositiveDotProduct(const Vector& operand0, const Vector& operand1) {
+static inline geometric_t PositiveDotProduct(const Vector& operand0,
+                                             const Vector& operand1) {
   return std::max(static_cast<geometric_t>(0.0),
                   DotProduct(operand0, operand1));
 }
 
-Vector CrossProduct(const Vector& operand0, const Vector& operand1) {
+static inline Vector CrossProduct(const Vector& operand0,
+                                  const Vector& operand1) {
   return Vector(operand0.y * operand1.z - operand0.z * operand1.y,
                 operand0.z * operand1.x - operand0.x * operand1.z,
                 operand0.x * operand1.y - operand0.y * operand1.x);
 }
 
-Vector Normalize(const Vector& vector, geometric_t* length_squared = nullptr,
-                 geometric_t* length = nullptr) {
+static inline Vector Normalize(const Vector& vector,
+                               geometric_t* length_squared = nullptr,
+                               geometric_t* length = nullptr) {
   geometric_t old_length_squared = DotProduct(vector, vector);
   if (length_squared) {
     *length_squared = old_length_squared;
@@ -115,18 +124,18 @@ Vector Normalize(const Vector& vector, geometric_t* length_squared = nullptr,
   return vector / old_length;
 }
 
-Vector::Axis Vector::DiminishedAxis() const {
+inline Vector::Axis Vector::DiminishedAxis() const {
   Axis smallest_axis = (std::abs(x) <= std::abs(y)) ? X_AXIS : Y_AXIS;
   return std::abs((*this)[smallest_axis]) <= std::abs(z) ? smallest_axis
                                                          : Z_AXIS;
 }
 
-Vector::Axis Vector::DominantAxis() const {
+inline Vector::Axis Vector::DominantAxis() const {
   Axis largest_axis = (std::abs(x) >= std::abs(y)) ? X_AXIS : Y_AXIS;
   return std::abs((*this)[largest_axis]) >= std::abs(z) ? largest_axis : Z_AXIS;
 }
 
-geometric_t Vector::Length() const {
+inline geometric_t Vector::Length() const {
   return std::sqrt(DotProduct(*this, *this));
 }
 

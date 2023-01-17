@@ -32,17 +32,17 @@ struct Point final {
   const geometric z;
 };
 
-Vector operator-(const Point& minuend, const Point& subtrahend) {
+static inline Vector operator-(const Point& minuend, const Point& subtrahend) {
   return Vector(minuend.x - subtrahend.x, minuend.y - subtrahend.y,
                 minuend.z - subtrahend.z);
 }
 
-Point operator-(const Point& minuend, const Vector& subtrahend) {
+static inline Point operator-(const Point& minuend, const Vector& subtrahend) {
   return Point(minuend.x - subtrahend.x, minuend.y - subtrahend.y,
                minuend.z - subtrahend.z);
 }
 
-Point operator+(const Point& addend0, const Vector& addend1) {
+static inline Point operator+(const Point& addend0, const Vector& addend1) {
   return Point(addend0.x + addend1.x, addend0.y + addend1.y,
                addend0.z + addend1.z);
 }

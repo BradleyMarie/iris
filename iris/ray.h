@@ -29,7 +29,7 @@ struct Ray final {
   const Vector direction;
 };
 
-Ray Normalize(const Ray& ray) {
+static inline Ray Normalize(const Ray& ray) {
   return Ray(ray.origin, Normalize(ray.direction));
 }
 
