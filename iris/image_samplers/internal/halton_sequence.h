@@ -18,9 +18,11 @@ class HaltonSequence final : public LowDiscrepancySequence {
   HaltonSequence(const HaltonSequence& to_copy) = default;
 
   bool Start(std::pair<size_t, size_t> image_dimensions,
-             std::pair<size_t, size_t> pixel, uint32_t sample_index) override;
+             std::pair<size_t, size_t> pixel, unsigned sample_index) override;
   std::optional<geometric_t> Next() override;
   void Discard(size_t num_to_discard) override;
+
+  visual_t SampleWeight(uint32_t desired_num_samples) const override;
 
   std::unique_ptr<LowDiscrepancySequence> Duplicate() override;
 

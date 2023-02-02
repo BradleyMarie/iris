@@ -14,7 +14,6 @@ TEST(Random, Empty) {
       *iris::pbrt_frontend::samplers::g_random_builder, tokenizer,
       spectrum_manager, texture_manager);
   ASSERT_TRUE(result);
-  EXPECT_EQ(16u, result->SamplesPerPixel());
 }
 
 TEST(Random, TooLowPixelSamples) {
@@ -56,5 +55,4 @@ TEST(Random, AllSpecified) {
       *iris::pbrt_frontend::samplers::g_random_builder, tokenizer,
       spectrum_manager, texture_manager);
   ASSERT_TRUE(result);
-  EXPECT_EQ(4u, result->SamplesPerPixel());
 }

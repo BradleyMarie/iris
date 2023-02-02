@@ -54,35 +54,35 @@ void RenderChunk(const Scene& scene,
     auto y = chunk_index % chunks.size();
     auto& chunk = chunks[y][chunk_index / chunks.size()];
 
-    uint32_t num_samples = chunk.image_sampler->SamplesPerPixel();
-    visual_t sample_weight = 1.0 / static_cast<visual_t>(num_samples);
-
     for (auto x = chunk.chunk_start_x; x < chunk.chunk_end_x; x++) {
+      chunk.image_sampler->StartPixel(framebuffer.Size(), std::make_pair(y, x));
+
       std::array<visual_t, 3> pixel_components = {0.0, 0.0, 0.0};
-      for (uint32_t sample_index = 0; sample_index < num_samples;
-           sample_index++) {
-        auto image_sample = chunk.image_sampler->SamplePixel(
-            framebuffer.Size(), std::make_pair(y, x), sample_index, has_lens,
-            *chunk.rng);
+      for (;;) {
+        auto image_sample =
+            chunk.image_sampler->NextSample(has_lens, *chunk.rng);
+        if (!image_sample) {
+          break;
+        }
 
         auto ray =
-            camera.Compute(image_sample.image_uv,
-                           has_lens ? &image_sample.lens_uv.value() : nullptr);
+            camera.Compute(image_sample->image_uv,
+                           has_lens ? &image_sample->lens_uv.value() : nullptr);
 
-        LightSampler light_sampler(light_scene, *chunk.rng,
+        LightSampler light_sampler(light_scene, image_sample->rng,
                                    light_sample_allocator);
-        auto* spectrum = integrator->Integrate(ray, ray_tracer, light_sampler,
-                                               visibility_tester,
-                                               spectral_allocator, *chunk.rng);
+        auto* spectrum = integrator->Integrate(
+            ray, ray_tracer, light_sampler, visibility_tester,
+            spectral_allocator, image_sample->rng);
 
         if (spectrum) {
           auto sample_components = color_matcher.Match(*spectrum);
-          pixel_components[0] = std::fma(sample_components[0], sample_weight,
-                                         pixel_components[0]);
-          pixel_components[1] = std::fma(sample_components[1], sample_weight,
-                                         pixel_components[1]);
-          pixel_components[2] = std::fma(sample_components[2], sample_weight,
-                                         pixel_components[2]);
+          pixel_components[0] = std::fma(
+              sample_components[0], image_sample->weight, pixel_components[0]);
+          pixel_components[1] = std::fma(
+              sample_components[1], image_sample->weight, pixel_components[1]);
+          pixel_components[2] = std::fma(
+              sample_components[2], image_sample->weight, pixel_components[2]);
         }
 
         arena.Clear();
@@ -120,7 +120,7 @@ Framebuffer Renderer::Render(const Camera& camera,
       }
 
       chunks.back().emplace_back(
-          Chunk{image_sampler.Duplicate(), rng.Replicate(), x, x + 1});
+          Chunk{image_sampler.Replicate(), rng.Replicate(), x, x + 1});
       num_chunks += 1;
     }
   }

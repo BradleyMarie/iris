@@ -14,7 +14,6 @@ TEST(Stratified, Empty) {
       *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
       spectrum_manager, texture_manager);
   ASSERT_TRUE(result);
-  EXPECT_EQ(4u, result->SamplesPerPixel());
 }
 
 TEST(Stratified, TooLowXSamples) {
@@ -86,5 +85,4 @@ TEST(Stratified, AllSpecified) {
       *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
       spectrum_manager, texture_manager);
   ASSERT_TRUE(result);
-  EXPECT_EQ(16776960u, result->SamplesPerPixel());
 }

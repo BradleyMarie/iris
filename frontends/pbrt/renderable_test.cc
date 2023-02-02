@@ -39,19 +39,59 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads) {
   size_t sampler_index = 0;
   auto image_sampler =
       std::make_unique<iris::image_samplers::MockImageSampler>();
-  EXPECT_CALL(*image_sampler, Duplicate())
+  EXPECT_CALL(*image_sampler, Replicate())
       .Times(chunks)
       .WillRepeatedly(testing::Invoke([&]() {
         auto result =
             std::make_unique<iris::image_samplers::MockImageSampler>();
-        EXPECT_CALL(*result, SamplesPerPixel())
-            .WillOnce(testing::Return(samples_per_pixel));
-        EXPECT_CALL(*result, SamplePixel(testing::_, testing::_, testing::_,
-                                         testing::_, testing::_))
-            .Times(sampler_index++ % 2 == 0 ? samples_per_pixel * 32
-                                            : samples_per_pixel)
-            .WillRepeatedly(testing::Return(
-                iris::ImageSampler::Sample{{0.0, 0.0}, std::nullopt, *rng}));
+
+        if (sampler_index % 2 == 0) {
+          {
+            testing::InSequence s;
+
+            for (size_t i = 0; i < 32; i++) {
+              EXPECT_CALL(*result,
+                          StartPixel(std::make_pair(static_cast<size_t>(32),
+                                                    static_cast<size_t>(33)),
+                                     std::make_pair(
+                                         static_cast<size_t>(sampler_index / 2),
+                                         static_cast<size_t>(i))));
+              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+                  .Times(samples_per_pixel)
+                  .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
+                      {0.0, 0.0},
+                      std::nullopt,
+                      static_cast<iris::visual_t>(1.0) /
+                          static_cast<iris::visual_t>(samples_per_pixel),
+                      *rng}));
+              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+                  .WillOnce(testing::Return(std::nullopt));
+            }
+          }
+        } else {
+          EXPECT_CALL(
+              *result,
+              StartPixel(std::make_pair(static_cast<size_t>(32),
+                                        static_cast<size_t>(33)),
+                         std::make_pair(static_cast<size_t>(sampler_index / 2),
+                                        static_cast<size_t>(32))));
+          {
+            testing::InSequence s;
+            EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+                .Times(samples_per_pixel)
+                .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
+                    {0.0, 0.0},
+                    std::nullopt,
+                    static_cast<iris::visual_t>(1.0) /
+                        static_cast<iris::visual_t>(samples_per_pixel),
+                    *rng}));
+            EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+                .WillOnce(testing::Return(std::nullopt));
+          }
+        }
+
+        sampler_index += 1;
+
         return result;
       }));
 

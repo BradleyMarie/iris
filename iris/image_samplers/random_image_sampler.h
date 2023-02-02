@@ -15,18 +15,22 @@ namespace image_samplers {
 
 class RandomImageSampler final : public ImageSampler {
  public:
-  RandomImageSampler(uint32_t samples_per_pixel) noexcept
-      : samples_per_pixel_(samples_per_pixel) {}
+  RandomImageSampler(uint32_t samples_per_pixel) noexcept;
 
-  Sample SamplePixel(std::pair<size_t, size_t> image_dimensions,
-                     std::pair<size_t, size_t> pixel, uint32_t sample_index,
-                     bool sample_lens, Random& rng) override;
-  uint32_t SamplesPerPixel() const override;
+  void StartPixel(std::pair<size_t, size_t> image_dimensions,
+                  std::pair<size_t, size_t> pixel) override;
+  std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
 
-  std::unique_ptr<ImageSampler> Duplicate() const override;
+  std::unique_ptr<ImageSampler> Replicate() const override;
 
  private:
   const uint32_t samples_per_pixel_;
+  const visual_t sample_weight_;
+  geometric_t pixel_start_x_;
+  geometric_t pixel_start_y_;
+  geometric_t pixel_size_x_;
+  geometric_t pixel_size_y_;
+  uint32_t sample_index_;
 };
 
 }  // namespace image_samplers

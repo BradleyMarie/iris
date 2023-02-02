@@ -2,37 +2,50 @@
 
 namespace iris {
 namespace image_samplers {
-namespace {
 
-geometric_t ToImageCoordinates(size_t index, size_t size, geometric value) {
-  geometric_t base =
-      static_cast<geometric_t>(index) / static_cast<geometric_t>(size);
-  return base + (value / static_cast<geometric_t>(size));
+RandomImageSampler::RandomImageSampler(uint32_t samples_per_pixel) noexcept
+    : samples_per_pixel_(samples_per_pixel),
+      sample_weight_(std::pow(samples_per_pixel, -1.0)),
+      pixel_start_x_(0.0),
+      pixel_start_y_(0.0),
+      sample_index_(0) {}
+
+void RandomImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
+                                    std::pair<size_t, size_t> pixel) {
+  pixel_start_x_ = static_cast<geometric_t>(pixel.second) /
+                   static_cast<geometric_t>(image_dimensions.second);
+  pixel_start_y_ = static_cast<geometric_t>(pixel.first) /
+                   static_cast<geometric_t>(image_dimensions.first);
+  pixel_size_x_ = static_cast<geometric_t>(1.0) /
+                  static_cast<geometric_t>(image_dimensions.second);
+  pixel_size_y_ = static_cast<geometric_t>(1.0) /
+                  static_cast<geometric_t>(image_dimensions.first);
+  sample_index_ = 0;
 }
 
-}  // namespace
-
-ImageSampler::Sample RandomImageSampler::SamplePixel(
-    std::pair<size_t, size_t> image_dimensions, std::pair<size_t, size_t> pixel,
-    uint32_t sample_index, bool sample_lens, Random& rng) {
-  geometric_t image_u = ToImageCoordinates(
-      pixel.second, image_dimensions.second, rng.NextGeometric());
-  geometric_t image_v = ToImageCoordinates(pixel.first, image_dimensions.first,
-                                           rng.NextGeometric());
-
-  if (!sample_lens) {
-    return {{image_u, image_v}, {}, rng};
+std::optional<ImageSampler::Sample> RandomImageSampler::NextSample(
+    bool sample_lens, Random& rng) {
+  if (sample_index_ == samples_per_pixel_) {
+    return std::nullopt;
   }
 
-  return {
-      {image_u, image_v}, {{rng.NextGeometric(), rng.NextGeometric()}}, rng};
+  geometric_t image_u =
+      std::fma(rng.NextGeometric(), pixel_size_x_, pixel_start_x_);
+  geometric_t image_v =
+      std::fma(rng.NextGeometric(), pixel_size_y_, pixel_start_y_);
+  sample_index_ += 1;
+
+  if (!sample_lens) {
+    return ImageSampler::Sample{{image_u, image_v}, {}, sample_weight_, rng};
+  }
+
+  return ImageSampler::Sample{{image_u, image_v},
+                              {{rng.NextGeometric(), rng.NextGeometric()}},
+                              sample_weight_,
+                              rng};
 }
 
-uint32_t RandomImageSampler::SamplesPerPixel() const {
-  return samples_per_pixel_;
-}
-
-std::unique_ptr<ImageSampler> RandomImageSampler::Duplicate() const {
+std::unique_ptr<ImageSampler> RandomImageSampler::Replicate() const {
   return std::make_unique<RandomImageSampler>(samples_per_pixel_);
 }
 

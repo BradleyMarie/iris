@@ -31,10 +31,12 @@ class LowDiscrepancySequence : public Random {
 
   virtual bool Start(std::pair<size_t, size_t> image_dimensions,
                      std::pair<size_t, size_t> pixel,
-                     uint32_t sample_index) = 0;
+                     unsigned sample_index) = 0;
 
   virtual std::optional<geometric_t> Next() = 0;
   virtual void Discard(size_t num_to_discard) = 0;
+
+  virtual visual_t SampleWeight(uint32_t desired_num_samples) const = 0;
 
   virtual std::unique_ptr<LowDiscrepancySequence> Duplicate() = 0;
 };

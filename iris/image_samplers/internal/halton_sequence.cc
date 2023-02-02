@@ -13,12 +13,11 @@ HaltonSequence::HaltonSequence()
 
 bool HaltonSequence::Start(std::pair<size_t, size_t> image_dimensions,
                            std::pair<size_t, size_t> pixel,
-                           uint32_t sample_index) {
+                           unsigned sample_index) {
   if (image_dimensions.first > std::numeric_limits<unsigned>::max() ||
       image_dimensions.second > std::numeric_limits<unsigned>::max() ||
       pixel.first > std::numeric_limits<unsigned>::max() ||
-      pixel.second > std::numeric_limits<unsigned>::max() ||
-      sample_index > std::numeric_limits<unsigned>::max()) {
+      pixel.second > std::numeric_limits<unsigned>::max()) {
     return false;
   }
 
@@ -27,7 +26,7 @@ bool HaltonSequence::Start(std::pair<size_t, size_t> image_dimensions,
                         static_cast<unsigned>(pixel_.second));
   }
 
-  if (enumerator_->get_max_samples_per_pixel()) {
+  if (enumerator_->get_max_samples_per_pixel() >= sample_index) {
     enumerator_.reset();
     return false;
   }
@@ -48,6 +47,13 @@ std::optional<geometric_t> HaltonSequence::Next() {
                              static_cast<unsigned>(pixel_.second));
 
   return sampler_->sample(dimension_++, index);
+}
+
+visual_t HaltonSequence::SampleWeight(uint32_t desired_num_samples) const {
+  auto max_num_samples = enumerator_->get_max_samples_per_pixel();
+  auto num_samples = desired_num_samples < max_num_samples ? desired_num_samples
+                                                           : max_num_samples;
+  return static_cast<visual_t>(1.0) / static_cast<visual_t>(num_samples);
 }
 
 void HaltonSequence::Discard(size_t num_to_discard) {

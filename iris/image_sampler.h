@@ -13,19 +13,19 @@ namespace iris {
 
 class ImageSampler {
  public:
+  virtual void StartPixel(std::pair<size_t, size_t> image_dimensions,
+                          std::pair<size_t, size_t> pixel) = 0;
+
   struct Sample {
     const std::array<geometric_t, 2> image_uv;
     const std::optional<std::array<geometric_t, 2>> lens_uv;
+    visual_t weight;
     Random& rng;
   };
 
-  virtual Sample SamplePixel(std::pair<size_t, size_t> image_dimensions,
-                             std::pair<size_t, size_t> pixel,
-                             uint32_t sample_index, bool sample_lens,
-                             Random& rng) = 0;
-  virtual uint32_t SamplesPerPixel() const = 0;
+  virtual std::optional<Sample> NextSample(bool sample_lens, Random& rng) = 0;
 
-  virtual std::unique_ptr<ImageSampler> Duplicate() const = 0;
+  virtual std::unique_ptr<ImageSampler> Replicate() const = 0;
 
   virtual ~ImageSampler() {}
 };

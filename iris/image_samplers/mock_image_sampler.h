@@ -16,12 +16,11 @@ namespace image_samplers {
 
 class MockImageSampler final : public ImageSampler {
  public:
-  MOCK_METHOD(Sample, SamplePixel,
-              ((std::pair<size_t, size_t>), (std::pair<size_t, size_t>),
-               uint32_t, bool, Random&),
+  MOCK_METHOD(void, StartPixel,
+              ((std::pair<size_t, size_t>), (std::pair<size_t, size_t>)),
               (override));
-  MOCK_METHOD(uint32_t, SamplesPerPixel, (), (const override));
-  MOCK_METHOD(std::unique_ptr<ImageSampler>, Duplicate, (), (const override));
+  MOCK_METHOD(std::optional<Sample>, NextSample, (bool, Random&), (override));
+  MOCK_METHOD(std::unique_ptr<ImageSampler>, Replicate, (), (const override));
 };
 
 }  // namespace image_samplers
