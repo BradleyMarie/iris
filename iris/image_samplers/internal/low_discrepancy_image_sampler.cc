@@ -1,22 +1,18 @@
-#include "iris/image_samplers/halton_sampler.h"
-
-#include "iris/image_samplers/internal/halton_sequence.h"
+#include "iris/image_samplers/internal/low_discrepancy_image_sampler.h"
 
 namespace iris {
 namespace image_samplers {
+namespace internal {
 
-HaltonImageSampler::HaltonImageSampler(uint32_t desired_samples_per_pixel)
-    : HaltonImageSampler(std::make_unique<internal::HaltonSequence>(),
-                         desired_samples_per_pixel_) {}
-
-void HaltonImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
-                                    std::pair<size_t, size_t> pixel) {
+void LowDiscrepancyImageSampler::StartPixel(
+    std::pair<size_t, size_t> image_dimensions,
+    std::pair<size_t, size_t> pixel) {
   image_dimensions_ = image_dimensions;
   pixel_ = pixel;
   sample_index_ = 0;
 }
 
-std::optional<ImageSampler::Sample> HaltonImageSampler::NextSample(
+std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
     bool sample_lens, Random& rng) {
   if (!sequence_->Start(image_dimensions_, pixel_, sample_index_)) {
     return std::nullopt;
@@ -38,10 +34,11 @@ std::optional<ImageSampler::Sample> HaltonImageSampler::NextSample(
       *sequence_};
 }
 
-std::unique_ptr<ImageSampler> HaltonImageSampler::Replicate() const {
-  return std::make_unique<HaltonImageSampler>(sequence_->Duplicate(),
-                                              desired_samples_per_pixel_);
+std::unique_ptr<ImageSampler> LowDiscrepancyImageSampler::Replicate() const {
+  return std::make_unique<LowDiscrepancyImageSampler>(
+      sequence_->Duplicate(), desired_samples_per_pixel_);
 }
 
+}  // namespace internal
 }  // namespace image_samplers
 }  // namespace iris

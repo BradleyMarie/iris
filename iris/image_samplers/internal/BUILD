@@ -13,6 +13,16 @@ cc_library(
 )
 
 cc_library(
+    name = "low_discrepancy_image_sampler",
+    srcs = ["low_discrepancy_image_sampler.cc"],
+    hdrs = ["low_discrepancy_image_sampler.h"],
+    deps = [
+        ":low_discrepancy_sequence",
+        "//iris:image_sampler",
+    ],
+)
+
+cc_library(
     name = "low_discrepancy_sequence",
     srcs = ["low_discrepancy_sequence.cc"],
     hdrs = ["low_discrepancy_sequence.h"],

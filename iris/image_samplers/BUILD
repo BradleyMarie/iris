@@ -3,11 +3,22 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
-    name = "halton_sampler",
-    hdrs = ["halton_sampler.h"],
+    name = "halton_image_sampler",
+    srcs = ["halton_image_sampler.cc"],
+    hdrs = ["halton_image_sampler.h"],
     deps = [
         "//iris:image_sampler",
         "//iris/image_samplers/internal:halton_sequence",
+        "//iris/image_samplers/internal:low_discrepancy_image_sampler",
+    ],
+)
+
+cc_test(
+    name = "halton_image_sampler_test",
+    srcs = ["halton_image_sampler_test.cc"],
+    deps = [
+        ":halton_image_sampler",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
