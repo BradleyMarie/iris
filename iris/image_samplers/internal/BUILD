@@ -31,3 +31,23 @@ cc_library(
         "//iris:random",
     ],
 )
+
+cc_test(
+    name = "low_discrepancy_sequence_test",
+    srcs = ["low_discrepancy_sequence_test.cc"],
+    deps = [
+        ":low_discrepancy_sequence",
+        ":mock_low_discrepancy_sequence",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "mock_low_discrepancy_sequence",
+    testonly = True,
+    hdrs = ["mock_low_discrepancy_sequence.h"],
+    deps = [
+        ":low_discrepancy_sequence",
+        "@com_google_googletest//:gtest",
+    ],
+)

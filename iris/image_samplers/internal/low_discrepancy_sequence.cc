@@ -1,5 +1,7 @@
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
 
+#include <cmath>
+
 namespace iris {
 namespace image_samplers {
 namespace internal {
@@ -7,7 +9,7 @@ namespace internal {
 size_t LowDiscrepancySequence::NextIndex(size_t size) {
   geometric_t as_geometric = static_cast<geometric_t>(size);
   as_geometric *= Next().value();
-  return static_cast<size_t>(as_geometric);
+  return std::min(static_cast<size_t>(as_geometric), size - 1u);
 }
 
 void LowDiscrepancySequence::DiscardIndex(size_t num_to_discard) {
