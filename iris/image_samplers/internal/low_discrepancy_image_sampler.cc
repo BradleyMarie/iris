@@ -14,6 +14,10 @@ void LowDiscrepancyImageSampler::StartPixel(
 
 std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
     bool sample_lens, Random& rng) {
+  if (sample_index_ == desired_samples_per_pixel_) {
+    return std::nullopt;
+  }
+
   if (!sequence_->Start(image_dimensions_, pixel_, sample_index_)) {
     return std::nullopt;
   }
@@ -21,6 +25,7 @@ std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
   geometric_t image_u = sequence_->NextGeometric();
   geometric_t image_v = sequence_->NextGeometric();
   visual_t sample_weight = sequence_->SampleWeight(desired_samples_per_pixel_);
+  sample_index_ += 1;
 
   if (!sample_lens) {
     return ImageSampler::Sample{

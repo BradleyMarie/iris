@@ -22,6 +22,17 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "low_discrepancy_image_sampler_test",
+    srcs = ["low_discrepancy_image_sampler_test.cc"],
+    deps = [
+        ":low_discrepancy_image_sampler",
+        ":mock_low_discrepancy_sequence",
+        "//iris/random:mock_random",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "low_discrepancy_sequence",
     srcs = ["low_discrepancy_sequence.cc"],
