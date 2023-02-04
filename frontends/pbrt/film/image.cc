@@ -19,6 +19,8 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"yresolution", Parameter::INTEGER},
 };
 
+const int64_t kMaxImageDimensionSize = 59049u;
+
 class ImageObjectBuilder : public ObjectBuilder<Result> {
  public:
   ImageObjectBuilder() : ObjectBuilder(g_parameters) {}
@@ -104,7 +106,7 @@ Result ImageObjectBuilder::Build(
   auto x_resolution_iter = parameters.find("xresolution");
   if (x_resolution_iter != parameters.end()) {
     auto value = x_resolution_iter->second.GetIntegerValues(1).front();
-    if (value <= 0) {
+    if (value <= 0 || value > kMaxImageDimensionSize) {
       std::cerr << "ERROR: Out of range value for parameter: xresolution"
                 << std::endl;
       exit(EXIT_FAILURE);
@@ -116,7 +118,7 @@ Result ImageObjectBuilder::Build(
   auto y_resolution_iter = parameters.find("yresolution");
   if (y_resolution_iter != parameters.end()) {
     auto value = y_resolution_iter->second.GetIntegerValues(1).front();
-    if (value <= 0) {
+    if (value <= 0 || value > kMaxImageDimensionSize) {
       std::cerr << "ERROR: Out of range value for parameter: yresolution"
                 << std::endl;
       exit(EXIT_FAILURE);

@@ -7,17 +7,9 @@
 
 TEST(HaltonSequenceTest, StartLimits) {
   iris::image_samplers::internal::HaltonSequence sequence;
-
-  if constexpr (std::numeric_limits<size_t>::max() >
-                std::numeric_limits<unsigned>::max()) {
-    EXPECT_FALSE(
-        sequence.Start({std::numeric_limits<size_t>::max(), 1}, {0, 0}, 0));
-    EXPECT_FALSE(
-        sequence.Start({1, std::numeric_limits<size_t>::max()}, {0, 0}, 0));
-  }
-
-  EXPECT_FALSE(sequence.Start({1, 1}, {1, 0}, 0));
-  EXPECT_FALSE(sequence.Start({1, 1}, {0, 1}, 0));
+  EXPECT_TRUE(sequence.Start({1, 59049u}, {0, 0}, 0));
+  EXPECT_TRUE(sequence.Start({59049u, 1}, {0, 0}, 0));
+  EXPECT_TRUE(sequence.Start({59049u, 59049u}, {0, 0}, 0));
 }
 
 TEST(HaltonSequenceTest, StartSampleLimit) {

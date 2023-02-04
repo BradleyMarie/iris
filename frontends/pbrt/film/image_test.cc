@@ -206,7 +206,7 @@ TEST(Image, Scale) {
               "ERROR: Out of range value for parameter: scale");
 }
 
-TEST(Image, XResolution) {
+TEST(Image, XResolutionNegative) {
   std::stringstream input("\"integer xresolution\" 0");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
@@ -220,8 +220,36 @@ TEST(Image, XResolution) {
               "ERROR: Out of range value for parameter: xresolution");
 }
 
-TEST(Image, YResolution) {
+TEST(Image, XResolutionTooLarge) {
+  std::stringstream input("\"integer xresolution\" 59050");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+                  spectrum_manager, texture_manager),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: xresolution");
+}
+
+TEST(Image, YResolutionNegative) {
   std::stringstream input("\"integer yresolution\" 0");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+                  spectrum_manager, texture_manager),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: yresolution");
+}
+
+TEST(Image, YResolutionTooLarge) {
+  std::stringstream input("\"integer yresolution\" 59050");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;

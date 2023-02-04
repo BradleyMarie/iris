@@ -4,6 +4,8 @@ namespace iris {
 namespace image_samplers {
 namespace internal {
 
+const static int64_t kMaxImageDimensionSize = 59049u;
+
 HaltonSequence::HaltonSequence()
     : sampler_(std::make_unique<Halton_sampler>()), image_dimensions_(0, 0) {
   sampler_->init_faure();
@@ -12,12 +14,10 @@ HaltonSequence::HaltonSequence()
 bool HaltonSequence::Start(std::pair<size_t, size_t> image_dimensions,
                            std::pair<size_t, size_t> pixel,
                            unsigned sample_index) {
-  if (image_dimensions.first > std::numeric_limits<unsigned>::max() ||
-      image_dimensions.second > std::numeric_limits<unsigned>::max() ||
-      pixel.first >= image_dimensions.first ||
-      pixel.second >= image_dimensions.second) {
-    return false;
-  }
+  assert(image_dimensions.second <= kMaxImageDimensionSize);
+  assert(image_dimensions.second <= kMaxImageDimensionSize);
+  assert(pixel.first < image_dimensions.first);
+  assert(pixel.second < image_dimensions.second);
 
   if (!enumerator_ || image_dimensions != image_dimensions_) {
     enumerator_.emplace(static_cast<unsigned>(image_dimensions.first),
