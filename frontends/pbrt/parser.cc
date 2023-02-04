@@ -381,8 +381,11 @@ bool Parser::Sampler() {
   }
 
   const auto& builder = samplers::Parse(*tokenizers_.back().tokenizer);
-  image_sampler_ = BuildObject(builder, *tokenizers_.back().tokenizer,
-                               *spectrum_manager_, *texture_manager_);
+  auto result = BuildObject(builder, *tokenizers_.back().tokenizer,
+                            *spectrum_manager_, *texture_manager_);
+
+  image_sampler_ = std::move(result.image_sampler);
+  check_fully_sampled_function_ = std::move(result.check_fully_sampled);
 
   sampler_encountered_ = true;
 
@@ -468,7 +471,9 @@ void Parser::InitializeDefault() {
 
   auto default_sampler = BuildObject(samplers::Default(), empty_tokenizer,
                                      *spectrum_manager_, *texture_manager_);
-  image_sampler_ = std::move(default_sampler);
+  image_sampler_ = std::move(default_sampler.image_sampler);
+  check_fully_sampled_function_ =
+      std::move(default_sampler.check_fully_sampled);
 
   auto default_camera =
       BuildObject(cameras::Default(), empty_tokenizer, *spectrum_manager_,
@@ -556,6 +561,10 @@ std::optional<Parser::Result> Parser::ParseFrom(
     if (!(this->*iter->second)()) {
       break;
     }
+  }
+
+  if (check_fully_sampled_function_) {
+    check_fully_sampled_function_(image_dimensions_);
   }
 
   Renderer renderer(scenes::ListScene::Builder(), *light_scene_builder_,

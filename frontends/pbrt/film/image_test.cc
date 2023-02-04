@@ -221,7 +221,7 @@ TEST(Image, XResolutionNegative) {
 }
 
 TEST(Image, XResolutionTooLarge) {
-  std::stringstream input("\"integer xresolution\" 59050");
+  std::stringstream input("\"integer xresolution\" 8193");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -249,7 +249,7 @@ TEST(Image, YResolutionNegative) {
 }
 
 TEST(Image, YResolutionTooLarge) {
-  std::stringstream input("\"integer yresolution\" 59050");
+  std::stringstream input("\"integer yresolution\" 8193");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;

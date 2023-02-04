@@ -628,6 +628,21 @@ TEST(WorldEnd, NoWorldBegin) {
               "ERROR: Invalid WorldEnd directive");
 }
 
+TEST(Render, TooManySamples) {
+  std::stringstream input(
+      "Sampler \"halton\" \"integer pixelsamples\" 10000000 "
+      "WorldBegin WorldEnd");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: At resolution 640x480 Halton sampler only supports 11507 "
+              "samples per pixel");
+}
+
 TEST(Render, EmptyScene) {
   std::stringstream input("WorldBegin WorldEnd");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

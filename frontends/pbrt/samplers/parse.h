@@ -4,13 +4,13 @@
 #include <memory>
 
 #include "frontends/pbrt/object_builder.h"
-#include "iris/image_sampler.h"
+#include "frontends/pbrt/samplers/result.h"
 
 namespace iris::pbrt_frontend::samplers {
 
-const ObjectBuilder<std::unique_ptr<ImageSampler>>& Parse(Tokenizer& tokenizer);
+const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer);
 
-const ObjectBuilder<std::unique_ptr<ImageSampler>>& Default();
+const ObjectBuilder<Result>& Default();
 
 }  // namespace iris::pbrt_frontend::samplers
 

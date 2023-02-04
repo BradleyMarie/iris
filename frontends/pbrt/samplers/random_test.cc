@@ -13,7 +13,8 @@ TEST(Random, Empty) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_random_builder, tokenizer,
       spectrum_manager, texture_manager);
-  ASSERT_TRUE(result);
+  EXPECT_TRUE(result.image_sampler);
+  EXPECT_FALSE(result.check_fully_sampled);
 }
 
 TEST(Random, TooLowPixelSamples) {
@@ -54,5 +55,6 @@ TEST(Random, AllSpecified) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_random_builder, tokenizer,
       spectrum_manager, texture_manager);
-  ASSERT_TRUE(result);
+  EXPECT_TRUE(result.image_sampler);
+  EXPECT_FALSE(result.check_fully_sampled);
 }

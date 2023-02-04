@@ -13,7 +13,8 @@ TEST(Halton, Empty) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_halton_builder, tokenizer,
       spectrum_manager, texture_manager);
-  ASSERT_TRUE(result);
+  EXPECT_TRUE(result.image_sampler);
+  EXPECT_TRUE(result.check_fully_sampled);
 }
 
 TEST(Halton, TooLowPixelSamples) {
@@ -54,5 +55,27 @@ TEST(Halton, AllSpecified) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_halton_builder, tokenizer,
       spectrum_manager, texture_manager);
-  ASSERT_TRUE(result);
+  EXPECT_TRUE(result.image_sampler);
+  EXPECT_TRUE(result.check_fully_sampled);
+}
+
+TEST(Halton, Bounds) {
+  std::stringstream input("");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  auto result = iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::samplers::g_halton_builder, tokenizer,
+      spectrum_manager, texture_manager);
+  EXPECT_TRUE(result.image_sampler);
+  EXPECT_TRUE(result.check_fully_sampled);
+
+  result.check_fully_sampled({8192, 8192});
+
+  EXPECT_EXIT(result.check_fully_sampled({8193, 8193}),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: At resolution 8193x8193 Halton sampler only supports 13 "
+              "samples per pixel");
 }

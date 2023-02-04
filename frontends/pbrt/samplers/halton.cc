@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "iris/image_samplers/halton_image_sampler.h"
+#include "third_party/gruenschloss/halton/halton_enum.h"
 
 namespace iris::pbrt_frontend::samplers {
 namespace {
@@ -12,17 +13,15 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"pixelsamples", Parameter::INTEGER},
 };
 
-class HaltonObjectBuilder
-    : public ObjectBuilder<std::unique_ptr<ImageSampler>> {
+class HaltonObjectBuilder : public ObjectBuilder<Result> {
  public:
   HaltonObjectBuilder() : ObjectBuilder(g_parameters) {}
 
-  std::unique_ptr<ImageSampler> Build(
-      const std::unordered_map<std::string_view, Parameter>& parameters)
-      const override;
+  Result Build(const std::unordered_map<std::string_view, Parameter>&
+                   parameters) const override;
 };
 
-std::unique_ptr<ImageSampler> HaltonObjectBuilder::Build(
+Result HaltonObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters) const {
   uint32_t pixel_samples = 16;
 
@@ -38,12 +37,29 @@ std::unique_ptr<ImageSampler> HaltonObjectBuilder::Build(
     pixel_samples = value;
   }
 
-  return iris::image_samplers::MakeHaltonImageSampler(pixel_samples);
+  auto fully_sampled = [pixel_samples](std::pair<size_t, size_t> dimensions) {
+    assert(dimensions.first <= std::numeric_limits<unsigned>::max());
+    assert(dimensions.second <= std::numeric_limits<unsigned>::max());
+
+    Halton_enum enumerator(static_cast<unsigned>(dimensions.first),
+                           static_cast<unsigned>(dimensions.second));
+
+    if (pixel_samples > enumerator.get_max_samples_per_pixel()) {
+      std::cerr << "ERROR: At resolution " << dimensions.second << "x"
+                << dimensions.first << " Halton sampler only supports "
+                << enumerator.get_max_samples_per_pixel()
+                << " samples per pixel" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  };
+
+  return {iris::image_samplers::MakeHaltonImageSampler(pixel_samples),
+          fully_sampled};
 }
 
 }  // namespace
 
-const std::unique_ptr<const ObjectBuilder<std::unique_ptr<ImageSampler>>>
-    g_halton_builder(std::make_unique<HaltonObjectBuilder>());
+const std::unique_ptr<const ObjectBuilder<Result>> g_halton_builder(
+    std::make_unique<HaltonObjectBuilder>());
 
 }  // namespace iris::pbrt_frontend::samplers
