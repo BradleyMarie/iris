@@ -12,6 +12,16 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "halton_sequence_test",
+    srcs = ["halton_sequence_test.cc"],
+    deps = [
+        ":halton_sequence",
+        "//iris/random:mock_random",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "low_discrepancy_image_sampler",
     srcs = ["low_discrepancy_image_sampler.cc"],

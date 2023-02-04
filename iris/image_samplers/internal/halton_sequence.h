@@ -29,7 +29,6 @@ class HaltonSequence final : public LowDiscrepancySequence {
  private:
   std::shared_ptr<Halton_sampler> sampler_;
   std::pair<size_t, size_t> image_dimensions_;
-  std::pair<size_t, size_t> pixel_;
   std::optional<Halton_enum> enumerator_;
   unsigned sample_index_;
   unsigned dimension_;

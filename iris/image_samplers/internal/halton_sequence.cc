@@ -5,9 +5,7 @@ namespace image_samplers {
 namespace internal {
 
 HaltonSequence::HaltonSequence()
-    : sampler_(std::make_unique<Halton_sampler>()),
-      image_dimensions_(0, 0),
-      pixel_(0, 0) {
+    : sampler_(std::make_unique<Halton_sampler>()), image_dimensions_(0, 0) {
   sampler_->init_faure();
 }
 
@@ -16,37 +14,49 @@ bool HaltonSequence::Start(std::pair<size_t, size_t> image_dimensions,
                            unsigned sample_index) {
   if (image_dimensions.first > std::numeric_limits<unsigned>::max() ||
       image_dimensions.second > std::numeric_limits<unsigned>::max() ||
-      pixel.first > std::numeric_limits<unsigned>::max() ||
-      pixel.second > std::numeric_limits<unsigned>::max()) {
+      pixel.first >= image_dimensions.first ||
+      pixel.second >= image_dimensions.second) {
     return false;
   }
 
   if (!enumerator_ || image_dimensions != image_dimensions_) {
-    enumerator_.emplace(static_cast<unsigned>(pixel_.first),
-                        static_cast<unsigned>(pixel_.second));
+    enumerator_.emplace(static_cast<unsigned>(image_dimensions.first),
+                        static_cast<unsigned>(image_dimensions.second));
   }
 
-  if (enumerator_->get_max_samples_per_pixel() >= sample_index) {
+  if (sample_index >= enumerator_->get_max_samples_per_pixel()) {
     enumerator_.reset();
     return false;
   }
 
-  sample_index_ = sample_index;
+  sample_index_ =
+      enumerator_->get_index(sample_index, static_cast<unsigned>(pixel.first),
+                             static_cast<unsigned>(pixel.second));
+
+  image_dimensions_ = image_dimensions;
   dimension_ = 0;
 
   return true;
 }
 
 std::optional<geometric_t> HaltonSequence::Next() {
-  if (dimension_ > sampler_->get_num_dimensions()) {
+  if (dimension_ >= sampler_->get_num_dimensions()) {
     return std::nullopt;
   }
 
-  auto index =
-      enumerator_->get_index(sample_index_, static_cast<unsigned>(pixel_.first),
-                             static_cast<unsigned>(pixel_.second));
+  geometric_t sample = sampler_->sample(dimension_, sample_index_);
 
-  return sampler_->sample(dimension_++, index);
+  if (dimension_ == 0) {
+    sample = enumerator_->scale_x(sample) /
+             static_cast<geometric_t>(image_dimensions_.first);
+  } else if (dimension_ == 1) {
+    sample = enumerator_->scale_y(sample) /
+             static_cast<geometric_t>(image_dimensions_.second);
+  }
+
+  dimension_ += 1;
+
+  return sample;
 }
 
 visual_t HaltonSequence::SampleWeight(uint32_t desired_num_samples) const {
@@ -57,8 +67,13 @@ visual_t HaltonSequence::SampleWeight(uint32_t desired_num_samples) const {
 }
 
 void HaltonSequence::Discard(size_t num_to_discard) {
-  assert(num_to_discard < std::numeric_limits<unsigned>::max());
-  dimension_ += static_cast<unsigned>(num_to_discard);
+  auto samples_remaining = sampler_->get_num_dimensions() - sample_index_;
+
+  if (num_to_discard >= samples_remaining) {
+    dimension_ = sampler_->get_num_dimensions();
+  } else {
+    dimension_ += static_cast<unsigned>(num_to_discard);
+  }
 }
 
 std::unique_ptr<LowDiscrepancySequence> HaltonSequence::Duplicate() {
