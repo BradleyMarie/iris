@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/samplers/halton.h"
 #include "frontends/pbrt/samplers/random.h"
 #include "frontends/pbrt/samplers/stratified.h"
 
@@ -13,7 +14,8 @@ namespace {
 static const std::unordered_map<
     std::string_view,
     const std::unique_ptr<const ObjectBuilder<std::unique_ptr<ImageSampler>>>&>
-    g_samplers = {{"random", g_random_builder},
+    g_samplers = {{"halton", g_halton_builder},
+                  {"random", g_random_builder},
                   {"stratified", g_stratified_builder}};
 
 }  // namespace
@@ -43,7 +45,7 @@ const ObjectBuilder<std::unique_ptr<ImageSampler>>& Parse(
 }
 
 const ObjectBuilder<std::unique_ptr<ImageSampler>>& Default() {
-  return *g_stratified_builder;  // TODO: Return Halton Sampler
+  return *g_halton_builder;
 }
 
 }  // namespace iris::pbrt_frontend::samplers

@@ -26,6 +26,12 @@ TEST(Parse, InvalidType) {
               "ERROR: Unsupported type for directive Sampler: NotAType");
 }
 
+TEST(Parse, Halton) {
+  std::stringstream input("\"halton\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::samplers::Parse(tokenizer);
+}
+
 TEST(Parse, Random) {
   std::stringstream input("\"random\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -39,7 +45,7 @@ TEST(Parse, Stratified) {
 }
 
 TEST(Default, Default) {
-  std::stringstream input("\"stratified\"");
+  std::stringstream input("\"halton\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   EXPECT_EQ(&iris::pbrt_frontend::samplers::Parse(tokenizer),
             &iris::pbrt_frontend::samplers::Default());

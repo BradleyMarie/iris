@@ -3,11 +3,34 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "halton",
+    srcs = ["halton.cc"],
+    hdrs = ["halton.h"],
+    deps = [
+        "//frontends/pbrt:object_builder",
+        "//iris:image_sampler",
+        "//iris/image_samplers:halton_image_sampler",
+    ],
+)
+
+cc_test(
+    name = "halton_test",
+    srcs = ["halton_test.cc"],
+    deps = [
+        ":halton",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":halton",
         ":random",
         ":stratified",
         "//frontends/pbrt:object_builder",
