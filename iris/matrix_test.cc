@@ -589,3 +589,12 @@ TEST(MatrixTest, LessThan) {
   EXPECT_FALSE(right < left);
   EXPECT_TRUE(left < right);
 }
+
+TEST(MatrixTest, MultiplyBoundingBox) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
+  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
+                           iris::Point(1.0, 1.0, 1.0));
+  auto transformed = matrix.Multiply(bounds);
+  EXPECT_EQ(iris::Point(1.0, 2.0, 3.0), transformed.lower);
+  EXPECT_EQ(iris::Point(2.0, 3.0, 4.0), transformed.upper);
+}

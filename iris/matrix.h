@@ -4,6 +4,7 @@
 #include <array>
 
 #include "absl/status/statusor.h"
+#include "iris/bounding_box.h"
 #include "iris/float.h"
 #include "iris/point.h"
 #include "iris/ray.h"
@@ -32,6 +33,8 @@ struct Matrix final {
 
   static absl::StatusOr<Matrix> Create(
       const std::array<std::array<geometric, 4>, 4>& m);
+
+  BoundingBox Multiply(const BoundingBox& bounding_box) const;
 
   Point Multiply(const Point& point) const;
   Point InverseMultiply(const Point& point) const;

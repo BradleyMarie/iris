@@ -3,6 +3,26 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "bounding_box",
+    hdrs = ["bounding_box.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":point",
+        ":ray",
+        ":vector",
+    ],
+)
+
+cc_test(
+    name = "bounding_box_test",
+    srcs = ["bounding_box_test.cc"],
+    deps = [
+        ":bounding_box",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "bsdf",
     srcs = ["bsdf.cc"],
     hdrs = ["bsdf.h"],
@@ -386,6 +406,7 @@ cc_library(
     hdrs = ["matrix.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":bounding_box",
         ":float",
         ":point",
         ":ray",

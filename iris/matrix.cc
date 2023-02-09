@@ -551,4 +551,26 @@ bool operator<(const Matrix& left, const Matrix& right) {
   return false;
 }
 
+BoundingBox Matrix::Multiply(const BoundingBox& bounding_box) const {
+  Point bottom0(bounding_box.lower.x, bounding_box.lower.y,
+                bounding_box.lower.z);
+  Point bottom1(bounding_box.upper.x, bounding_box.lower.y,
+                bounding_box.lower.z);
+  Point bottom2(bounding_box.lower.x, bounding_box.upper.y,
+                bounding_box.lower.z);
+  Point bottom3(bounding_box.upper.x, bounding_box.upper.y,
+                bounding_box.lower.z);
+  Point upper0(bounding_box.lower.x, bounding_box.lower.y,
+               bounding_box.upper.z);
+  Point upper1(bounding_box.upper.x, bounding_box.lower.y,
+               bounding_box.upper.z);
+  Point upper2(bounding_box.lower.x, bounding_box.upper.y,
+               bounding_box.upper.z);
+  Point upper3(bounding_box.upper.x, bounding_box.upper.y,
+               bounding_box.upper.z);
+  return BoundingBox(Multiply(bottom0), Multiply(bottom1), Multiply(bottom2),
+                     Multiply(bottom3), Multiply(upper0), Multiply(upper1),
+                     Multiply(upper2), Multiply(upper3));
+}
+
 }  // namespace iris
