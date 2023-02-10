@@ -4,6 +4,7 @@ package(default_visibility = ["//visibility:private"])
 
 cc_library(
     name = "bounding_box",
+    srcs = ["bounding_box.cc"],
     hdrs = ["bounding_box.h"],
     visibility = ["//visibility:public"],
     deps = [

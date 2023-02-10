@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <limits>
 #include <optional>
+#include <span>
 
 #include "iris/point.h"
 #include "iris/ray.h"
@@ -11,21 +12,17 @@
 
 namespace iris {
 
-// Forward Declarations
-class BoundingBox;
-static inline std::optional<BoundingBox> Intersection(const BoundingBox& b0,
-                                                      const BoundingBox& b1);
-
 struct BoundingBox final {
   template <typename T, typename... Rest>
   explicit BoundingBox(const T& first, const Rest&... rest) noexcept
       : lower(Min(first, rest...)), upper(Max(first, rest...)) {}
 
+  explicit BoundingBox(std::span<const Point> points) noexcept
+      : lower(Min(points)), upper(Max(points)) {}
+
   BoundingBox(const BoundingBox&) noexcept = default;
 
-  BoundingBox Envelop(const Point& point) const {
-    return BoundingBox(Min(upper, point), Max(upper, point));
-  }
+  bool Empty() const { return lower == upper; }
 
   geometric_t SurfaceArea() const {
     Vector diagonal = upper - lower;
@@ -41,7 +38,7 @@ struct BoundingBox final {
     const geometric_t end;
   };
 
-  std::optional<Intersection> Intersects(const Ray& ray) {
+  std::optional<Intersection> Intersect(const Ray& ray) {
     geometric_t inverse_direction_x =
         static_cast<geometric_t>(1.0) / ray.direction.x;
     geometric_t inverse_direction_y =
@@ -93,6 +90,8 @@ struct BoundingBox final {
     return Min(first, Min(rest...));
   }
 
+  static Point Min(std::span<const Point> points);
+
   static Point Max(const Point& point) { return point; }
 
   static Point Max(const Point& p0, const Point& p1) {
@@ -105,26 +104,13 @@ struct BoundingBox final {
     return Max(first, Max(rest...));
   }
 
-  friend std::optional<BoundingBox> Intersection(const BoundingBox& b0,
-                                                 const BoundingBox& b1);
+  static Point Max(std::span<const Point> points);
+
+  friend BoundingBox Intersect(const BoundingBox& b0, const BoundingBox& b1);
 };
 
-static inline std::optional<BoundingBox> Intersection(const BoundingBox& b0,
-                                                      const BoundingBox& b1) {
-  Point highest_low = BoundingBox::Max(b0.lower, b1.lower);
-  Point lowest_high = BoundingBox::Min(b0.upper, b1.upper);
-
-  if (lowest_high.x <= highest_low.x || lowest_high.y <= highest_low.y ||
-      lowest_high.z <= highest_low.z) {
-    return std::nullopt;
-  }
-
-  return BoundingBox(highest_low, lowest_high);
-}
-
-static inline BoundingBox Union(const BoundingBox& b0, const BoundingBox& b1) {
-  return BoundingBox(b0.lower, b1.lower, b0.upper, b1.upper);
-}
+BoundingBox Intersect(const BoundingBox& b0, const BoundingBox& b1);
+BoundingBox Join(const BoundingBox& b0, const BoundingBox& b1);
 
 }  // namespace iris
 
