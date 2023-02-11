@@ -5,6 +5,13 @@
 #include "iris/geometry/mock_geometry.h"
 #include "iris/lights/mock_light.h"
 
+iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
+  auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+  EXPECT_CALL(*result, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0))));
+  return result;
+}
+
 iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
   static const std::vector<iris::face_t> faces = {1};
   auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
@@ -13,6 +20,9 @@ iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
   EXPECT_CALL(*result, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(emissive));
   EXPECT_CALL(*result, GetFaces()).WillRepeatedly(testing::Return(faces));
+  EXPECT_CALL(*result, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   return result;
 }
 
@@ -21,6 +31,7 @@ TEST(SceneObjects, Build) {
   auto geom1 = MakeGeometry(false);
   auto geom2 = MakeGeometry(false);
   auto geom3 = MakeGeometry(true);
+  auto geom4 = MakeZeroBoundsGeometry();
   auto light0 = iris::MakeReferenceCounted<iris::lights::MockLight>();
   auto light1 = iris::MakeReferenceCounted<iris::lights::MockLight>();
   auto environmental_light = iris::MakeReferenceCounted<
@@ -41,6 +52,8 @@ TEST(SceneObjects, Build) {
   builder.Add(geom1, matrix2);
   builder.Add(geom2, matrix2);
   builder.Add(geom3, matrix0);
+
+  builder.Add(geom4);
 
   builder.Set(environmental_light);
 

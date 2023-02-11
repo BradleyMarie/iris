@@ -34,6 +34,9 @@ void MakeBasicGeometryImpl(
     const iris::Ray& expected_ray, const iris::Point& expected_hit_point) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, Trace(expected_ray, testing::_))
       .WillOnce(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
@@ -185,6 +188,9 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*scene_geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*scene_geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*scene_geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*scene_geometry, Trace(model_ray, testing::_))
@@ -214,6 +220,9 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(testing::_, testing::_))
@@ -246,6 +255,9 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   {
@@ -285,6 +297,9 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
@@ -332,6 +347,9 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
@@ -380,6 +398,9 @@ TEST(VisibilityTesterTest, Succeeds) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
@@ -431,6 +452,9 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
@@ -492,6 +516,9 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
@@ -554,6 +581,9 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))

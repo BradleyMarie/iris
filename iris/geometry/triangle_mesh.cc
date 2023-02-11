@@ -63,6 +63,8 @@ class Triangle final : public Geometry {
 
   virtual std::optional<visual_t> ComputeArea(face_t face) const override;
 
+  virtual BoundingBox ComputeBounds() const override;
+
   virtual std::span<const face_t> GetFaces() const override;
 
  private:
@@ -170,6 +172,12 @@ std::optional<Point> Triangle::SampleFace(face_t face, Sampler& sampler) const {
 std::optional<visual_t> Triangle::ComputeArea(face_t face) const {
   Vector surface_normal = ComputeSurfaceNormal();
   return surface_normal.Length() * 0.5;
+}
+
+BoundingBox Triangle::ComputeBounds() const {
+  return BoundingBox(shared_->points[vertices_[0]],
+                     shared_->points[vertices_[1]],
+                     shared_->points[vertices_[2]]);
 }
 
 std::span<const face_t> Triangle::GetFaces() const {

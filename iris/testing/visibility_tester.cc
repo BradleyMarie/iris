@@ -27,6 +27,10 @@ class NeverVisibleScene final : public Scene {
       return Vector(1.0, 0.0, 0.0);
     }
 
+    BoundingBox ComputeBounds() const override {
+      return BoundingBox(Point(0.0, 0.0, 0.0));
+    }
+
     std::span<const face_t> GetFaces() const override {
       static const face_t faces[] = {1};
       return faces;

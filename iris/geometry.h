@@ -5,6 +5,7 @@
 #include <span>
 #include <variant>
 
+#include "iris/bounding_box.h"
 #include "iris/emissive_material.h"
 #include "iris/hit_allocator.h"
 #include "iris/integer.h"
@@ -43,6 +44,8 @@ class Geometry : public ReferenceCountable {
   virtual std::optional<Point> SampleFace(face_t face, Sampler& sampler) const;
 
   virtual std::optional<visual_t> ComputeArea(face_t face) const;
+
+  virtual BoundingBox ComputeBounds() const = 0;
 
   virtual std::span<const face_t> GetFaces() const = 0;
 

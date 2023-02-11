@@ -19,6 +19,9 @@ static const uint32_t g_data = 0xDEADBEEF;
 void MakeBasicGeometryImpl(
     iris::ReferenceCounted<iris::geometry::MockBasicGeometry> geometry,
     const iris::Ray& expected_ray, const iris::Point& expected_hit_point) {
+  EXPECT_CALL(*geometry, ComputeBounds())
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1})));
   EXPECT_CALL(*geometry, Trace(expected_ray, testing::_))

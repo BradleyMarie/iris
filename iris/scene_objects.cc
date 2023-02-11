@@ -11,7 +11,7 @@ namespace iris {
 
 void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
                                 const Matrix& matrix) {
-  if (!geometry) {
+  if (!geometry || geometry->ComputeBounds().Empty()) {
     return;
   }
 

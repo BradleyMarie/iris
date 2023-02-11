@@ -76,6 +76,10 @@ class AlwaysHitsGeometry : public Geometry {
     return &emissive_material_;
   }
 
+  BoundingBox ComputeBounds() const override {
+    return BoundingBox(Point(0.0, 0.0, 0.0));
+  }
+
   std::span<const face_t> GetFaces() const override {
     static const face_t faces[] = {1};
     return faces;

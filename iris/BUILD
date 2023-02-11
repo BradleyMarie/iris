@@ -182,6 +182,7 @@ cc_library(
     hdrs = ["geometry.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":bounding_box",
         ":emissive_material",
         ":float",
         ":hit_allocator",
