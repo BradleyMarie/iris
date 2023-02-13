@@ -1,5 +1,6 @@
 #include "iris/scene_objects.h"
 
+#include <algorithm>
 #include <limits>
 #include <set>
 
@@ -8,6 +9,25 @@
 #include "iris/internal/environmental_light.h"
 
 namespace iris {
+namespace {
+
+template <typename T>
+void ReorderImpl(std::vector<T>& values,
+                 std::span<const size_t> new_positions) {
+  size_t num_to_sort = new_positions.size() <= values.size()
+                           ? new_positions.size()
+                           : values.size();
+
+  std::sort(values.begin(), values.begin() + num_to_sort,
+            [&](const auto& left, const auto& right) {
+              size_t left_position = &left - values.data();
+              size_t right_position = &right - values.data();
+              return new_positions[left_position] <
+                     new_positions[right_position];
+            });
+}
+
+}  // namespace
 
 void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
                                 const Matrix& matrix) {
@@ -91,6 +111,13 @@ SceneObjects::SceneObjects(Builder&& builder)
   }
 
   lights_.shrink_to_fit();
+}
+
+void SceneObjects::Reorder(
+    std::span<const size_t> new_geometry_positions,
+    std::span<const size_t> new_light_positions) noexcept {
+  ReorderImpl(geometry_, new_geometry_positions);
+  ReorderImpl(lights_, new_light_positions);
 }
 
 }  // namespace iris

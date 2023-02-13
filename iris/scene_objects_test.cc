@@ -91,6 +91,8 @@ TEST(SceneObjects, Build) {
   builder.Add(geom3, matrix0);
 
   scene_objects = builder.Build();
+  scene_objects.Reorder();  // No-op
+
   ASSERT_EQ(4u, scene_objects.NumGeometry());
   EXPECT_EQ(geom0.Get(), &scene_objects.GetGeometry(0).first);
   EXPECT_EQ(matrix1, *scene_objects.GetGeometry(0).second);
@@ -106,4 +108,17 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(light0.Get(), &scene_objects.GetLight(0));
   EXPECT_EQ(light1.Get(), &scene_objects.GetLight(1));
   EXPECT_EQ(nullptr, scene_objects.GetEnvironmentalLight());
+
+  // Reorder
+  scene_objects.Reorder({{4, 3, 2, 1}}, {{1, 0}});
+  EXPECT_EQ(geom0.Get(), &scene_objects.GetGeometry(3).first);
+  EXPECT_EQ(matrix1, *scene_objects.GetGeometry(3).second);
+  EXPECT_EQ(geom1.Get(), &scene_objects.GetGeometry(2).first);
+  EXPECT_EQ(matrix2, *scene_objects.GetGeometry(2).second);
+  EXPECT_EQ(geom2.Get(), &scene_objects.GetGeometry(1).first);
+  EXPECT_EQ(matrix2, *scene_objects.GetGeometry(1).second);
+  EXPECT_EQ(geom3.Get(), &scene_objects.GetGeometry(0).first);
+  EXPECT_EQ(nullptr, scene_objects.GetGeometry(0).second);
+  EXPECT_EQ(light0.Get(), &scene_objects.GetLight(1));
+  EXPECT_EQ(light1.Get(), &scene_objects.GetLight(0));
 }

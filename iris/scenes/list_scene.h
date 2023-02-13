@@ -16,8 +16,7 @@ class ListScene final : public Scene {
   class Builder final : public Scene::Builder {
    public:
     static std::unique_ptr<Scene::Builder> Create();
-    std::unique_ptr<Scene> Build(
-        const SceneObjects& scene_objects) const override;
+    std::unique_ptr<Scene> Build(SceneObjects& scene_objects) const override;
   };
 
   ListScene(const SceneObjects& scene_objects) noexcept

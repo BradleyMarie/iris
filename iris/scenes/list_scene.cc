@@ -10,7 +10,7 @@ std::unique_ptr<Scene::Builder> ListScene::Builder::Create() {
 }
 
 std::unique_ptr<Scene> ListScene::Builder::Build(
-    const SceneObjects& scene_objects) const {
+    SceneObjects& scene_objects) const {
   return std::make_unique<ListScene>(scene_objects);
 }
 

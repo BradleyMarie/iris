@@ -12,8 +12,7 @@ class Scene {
  public:
   class Builder {
    public:
-    virtual std::unique_ptr<Scene> Build(
-        const SceneObjects& scene_objects) const = 0;
+    virtual std::unique_ptr<Scene> Build(SceneObjects& scene_objects) const = 0;
     virtual ~Builder() = default;
   };
 
