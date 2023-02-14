@@ -31,7 +31,7 @@ void ReorderImpl(std::vector<T>& values,
 
 void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
                                 const Matrix& matrix) {
-  if (!geometry || geometry->ComputeBounds().Empty()) {
+  if (!geometry || geometry->ComputeBounds(matrix).Empty()) {
     return;
   }
 

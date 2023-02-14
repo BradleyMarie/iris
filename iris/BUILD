@@ -188,6 +188,7 @@ cc_library(
         ":hit_allocator",
         ":integer",
         ":material",
+        ":matrix",
         ":normal_map",
         ":point",
         ":random",

@@ -7,7 +7,7 @@
 
 iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
   auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*result, ComputeBounds())
+  EXPECT_CALL(*result, ComputeBounds(iris::Matrix::Identity()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0))));
   return result;
 }
@@ -20,9 +20,9 @@ iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
   EXPECT_CALL(*result, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(emissive));
   EXPECT_CALL(*result, GetFaces()).WillRepeatedly(testing::Return(faces));
-  EXPECT_CALL(*result, ComputeBounds())
-      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
-                                                  iris::Point(0.0, 1.0, 2.0))));
+  EXPECT_CALL(*result, ComputeBounds(testing::_))
+      .WillRepeatedly(testing::Return(iris::BoundingBox(
+          iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 2.0))));
   return result;
 }
 

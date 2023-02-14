@@ -478,11 +478,12 @@ TEST(Triangle, ComputeArea) {
   EXPECT_EQ(0.5, triangle->ComputeArea(FRONT_FACE));
 }
 
-TEST(Triangle, GetBounds) {
+TEST(Triangle, GetBoundsWithTransform) {
   auto triangle = SimpleTriangle();
-  auto bounds = triangle->ComputeBounds();
+  auto transform = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
+  auto bounds = triangle->ComputeBounds(transform);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), bounds.lower);
-  EXPECT_EQ(iris::Point(1.0, 1.0, 0.0), bounds.upper);
+  EXPECT_EQ(iris::Point(2.0, 2.0, 0.0), bounds.upper);
 }
 
 TEST(Triangle, GetFaces) {

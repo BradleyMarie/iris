@@ -12,7 +12,7 @@ class MockBasicGeometry : public Geometry {
   MOCK_METHOD(Hit*, Trace, (const Ray&, HitAllocator&), (const override));
   MOCK_METHOD(Vector, ComputeSurfaceNormal, (const Point&, face_t, const void*),
               (const override));
-  MOCK_METHOD(BoundingBox, ComputeBounds, (), (const override));
+  MOCK_METHOD(BoundingBox, ComputeBounds, (const Matrix&), (const override));
   MOCK_METHOD(std::span<const face_t>, GetFaces, (), (const override));
 };
 

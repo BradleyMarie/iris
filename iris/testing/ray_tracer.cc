@@ -76,7 +76,7 @@ class AlwaysHitsGeometry : public Geometry {
     return &emissive_material_;
   }
 
-  BoundingBox ComputeBounds() const override {
+  BoundingBox ComputeBounds(const Matrix& model_to_world) const override {
     return BoundingBox(Point(0.0, 0.0, 0.0));
   }
 

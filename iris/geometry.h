@@ -10,6 +10,7 @@
 #include "iris/hit_allocator.h"
 #include "iris/integer.h"
 #include "iris/material.h"
+#include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/point.h"
 #include "iris/ray.h"
@@ -45,7 +46,7 @@ class Geometry : public ReferenceCountable {
 
   virtual std::optional<visual_t> ComputeArea(face_t face) const;
 
-  virtual BoundingBox ComputeBounds() const = 0;
+  virtual BoundingBox ComputeBounds(const Matrix& model_to_world) const = 0;
 
   virtual std::span<const face_t> GetFaces() const = 0;
 

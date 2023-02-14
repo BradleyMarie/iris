@@ -19,9 +19,6 @@ static const uint32_t g_data = 0xDEADBEEF;
 void MakeBasicGeometryImpl(
     iris::ReferenceCounted<iris::geometry::MockBasicGeometry> geometry,
     const iris::Ray& expected_ray, const iris::Point& expected_hit_point) {
-  EXPECT_CALL(*geometry, ComputeBounds())
-      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
-                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1})));
   EXPECT_CALL(*geometry, Trace(expected_ray, testing::_))
@@ -123,6 +120,9 @@ TEST(RayTracerTest, NoBsdf) {
   iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0));
 
   auto geometry = MakeBasicGeometry(ray, iris::Point(1.0, 1.0, 1.0));
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
 
   auto builder = iris::SceneObjects::Builder();
   builder.Add(std::move(geometry));
@@ -156,6 +156,9 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
 
   auto geometry = MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), nullptr,
                                &emissive_material);
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 1.0, 1.0),
                                                    2u, testing::_))
       .WillOnce(
@@ -187,6 +190,9 @@ TEST(RayTracerTest, Minimal) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 1.0, 1.0),
                                                    2u, testing::_))
       .WillOnce(
@@ -229,6 +235,10 @@ TEST(RayTracerTest, WithTransform) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(-1.0, 1.0, 1.0), material.get(), nullptr);
+  EXPECT_CALL(*geometry,
+              ComputeBounds(iris::Matrix::Scalar(-1.0, 1.0, 1.0).value()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(-1.0, 1.0, 1.0),
                                                    2u, testing::_))
       .WillOnce(
@@ -272,6 +282,9 @@ TEST(RayTracerTest, WithTextureCoordinates) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 1.0, 1.0),
                                                    2u, testing::_))
       .WillOnce(
@@ -314,6 +327,9 @@ TEST(RayTracerTest, WithMaterial) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 1.0, 1.0),
                                                    2u, testing::_))
       .WillOnce(
@@ -356,6 +372,9 @@ TEST(RayTracerTest, WithNormal) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 1.0, 1.0),
                                                    2u, testing::_))
       .WillOnce(
@@ -409,6 +428,9 @@ TEST(RayTracerTest, WithNormalMap) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 1.0, 1.0),
                                                    2u, testing::_))
       .WillOnce(
