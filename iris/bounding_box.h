@@ -38,7 +38,7 @@ struct BoundingBox final {
     const geometric_t end;
   };
 
-  std::optional<Intersection> Intersect(const Ray& ray) {
+  std::optional<Intersection> Intersect(const Ray& ray) const {
     geometric_t inverse_direction_x =
         static_cast<geometric_t>(1.0) / ray.direction.x;
     geometric_t inverse_direction_y =
