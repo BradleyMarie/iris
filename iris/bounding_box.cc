@@ -11,7 +11,16 @@ BoundingBox::Builder::Builder()
       max_z_(-std::numeric_limits<geometric>::infinity()),
       contains_points_(false) {}
 
-void BoundingBox::Builder::Add(const Point& point) {
+void BoundingBox::Builder::Add(const BoundingBox& bounds) noexcept {
+  if (bounds.Empty()) {
+    return;
+  }
+
+  Add(bounds.lower);
+  Add(bounds.upper);
+}
+
+void BoundingBox::Builder::Add(const Point& point) noexcept {
   min_x_ = std::min(min_x_, point.x);
   min_y_ = std::min(min_y_, point.y);
   min_z_ = std::min(min_z_, point.z);

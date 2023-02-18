@@ -17,7 +17,8 @@ struct BoundingBox final {
    public:
     Builder();
 
-    void Add(const Point& point);
+    void Add(const BoundingBox& bounds) noexcept;
+    void Add(const Point& point) noexcept;
     void Reset() noexcept;
 
     BoundingBox Build() const noexcept;

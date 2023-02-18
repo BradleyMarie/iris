@@ -25,6 +25,25 @@ TEST(BoundingBoxBuilderTest, TwoPoints) {
   EXPECT_EQ(point1, bounds.upper);
 }
 
+TEST(BoundingBoxBuilderTest, AddEmptyBounds) {
+  iris::Point point0(0.0, 1.0, 2.0);
+  iris::Point point1(1.0, 2.0, 3.0);
+  iris::BoundingBox::Builder builder;
+  builder.Add(iris::BoundingBox(point0, point0));
+  builder.Add(iris::BoundingBox(point1, point1));
+  EXPECT_TRUE(builder.Build().Empty());
+}
+
+TEST(BoundingBoxBuilderTest, AddBounds) {
+  iris::Point point0(0.0, 1.0, 2.0);
+  iris::Point point1(1.0, 2.0, 3.0);
+  iris::BoundingBox::Builder builder;
+  builder.Add(iris::BoundingBox(point0, point1));
+  auto bounds = builder.Build();
+  EXPECT_EQ(point0, bounds.lower);
+  EXPECT_EQ(point1, bounds.upper);
+}
+
 TEST(BoundingBoxBuilderTest, Reset) {
   iris::Point point0(0.0, 1.0, 2.0);
   iris::Point point1(1.0, 2.0, 3.0);
