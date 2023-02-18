@@ -2,6 +2,39 @@
 
 #include "googletest/include/gtest/gtest.h"
 
+TEST(BoundingBoxBuilderTest, Empty) {
+  iris::BoundingBox::Builder builder;
+  EXPECT_TRUE(builder.Build().Empty());
+}
+
+TEST(BoundingBoxBuilderTest, OnePoint) {
+  iris::Point point(0.0, 1.0, 2.0);
+  iris::BoundingBox::Builder builder;
+  builder.Add(point);
+  EXPECT_TRUE(builder.Build().Empty());
+}
+
+TEST(BoundingBoxBuilderTest, TwoPoints) {
+  iris::Point point0(0.0, 1.0, 2.0);
+  iris::Point point1(1.0, 2.0, 3.0);
+  iris::BoundingBox::Builder builder;
+  builder.Add(point0);
+  builder.Add(point1);
+  auto bounds = builder.Build();
+  EXPECT_EQ(point0, bounds.lower);
+  EXPECT_EQ(point1, bounds.upper);
+}
+
+TEST(BoundingBoxBuilderTest, Reset) {
+  iris::Point point0(0.0, 1.0, 2.0);
+  iris::Point point1(1.0, 2.0, 3.0);
+  iris::BoundingBox::Builder builder;
+  builder.Add(point0);
+  builder.Add(point1);
+  builder.Reset();
+  EXPECT_TRUE(builder.Build().Empty());
+}
+
 TEST(BoundingBoxTest, CreateOne) {
   iris::Point point(0.0, 1.0, 2.0);
   iris::BoundingBox bounding_box(point);

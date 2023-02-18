@@ -13,6 +13,21 @@
 namespace iris {
 
 struct BoundingBox final {
+  class Builder {
+   public:
+    Builder();
+
+    void Add(const Point& point);
+    void Reset() noexcept;
+
+    BoundingBox Build() const noexcept;
+
+   private:
+    geometric min_x_, min_y_, min_z_;
+    geometric max_x_, max_y_, max_z_;
+    bool contains_points_ = false;
+  };
+
   template <typename T, typename... Rest>
   explicit BoundingBox(const T& first, const Rest&... rest) noexcept
       : lower(Min(first, rest...)), upper(Max(first, rest...)) {}

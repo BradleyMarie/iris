@@ -2,6 +2,36 @@
 
 namespace iris {
 
+BoundingBox::Builder::Builder()
+    : min_x_(std::numeric_limits<geometric>::infinity()),
+      min_y_(std::numeric_limits<geometric>::infinity()),
+      min_z_(std::numeric_limits<geometric>::infinity()),
+      max_x_(-std::numeric_limits<geometric>::infinity()),
+      max_y_(-std::numeric_limits<geometric>::infinity()),
+      max_z_(-std::numeric_limits<geometric>::infinity()),
+      contains_points_(false) {}
+
+void BoundingBox::Builder::Add(const Point& point) {
+  min_x_ = std::min(min_x_, point.x);
+  min_y_ = std::min(min_y_, point.y);
+  min_z_ = std::min(min_z_, point.z);
+  max_x_ = std::max(max_x_, point.x);
+  max_y_ = std::max(max_y_, point.y);
+  max_z_ = std::max(max_z_, point.z);
+  contains_points_ = true;
+}
+
+void BoundingBox::Builder::Reset() noexcept { *this = Builder(); }
+
+BoundingBox BoundingBox::Builder::Build() const noexcept {
+  if (!contains_points_) {
+    return BoundingBox(Point(0.0, 0.0, 0.0));
+  }
+
+  return BoundingBox(Point(min_x_, min_y_, min_z_),
+                     Point(max_x_, max_y_, max_z_));
+}
+
 Point BoundingBox::Min(std::span<const Point> points) {
   if (points.empty()) {
     return Point(0.0, 0.0, 0.0);
