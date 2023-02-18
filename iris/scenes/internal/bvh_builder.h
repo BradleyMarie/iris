@@ -33,12 +33,18 @@ Point ComputeCentroid(const BoundingBox& bounds);
 Point ComputeCentroid(const std::pair<const iris::ReferenceCounted<Geometry>,
                                       const Matrix*>& geometry);
 
+BoundingBox ComputeCentroidBounds(
+    std::span<
+        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+        geometry,
+    std::span<const size_t> indices);
+
 struct BVHSplit {
   BoundingBox::Builder bounds;
   size_t num_shapes = 0;
 };
 
-std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
+std::optional<std::array<BVHSplit, kNumSplitsToEvaluate>> ComputeSplits(
     std::span<
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,

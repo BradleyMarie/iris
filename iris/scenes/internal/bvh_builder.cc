@@ -6,6 +6,23 @@ namespace iris {
 namespace scenes {
 namespace internal {
 namespace internal {
+namespace {
+
+template <typename InputIterator, typename OutputIterator>
+void ComputeCosts(InputIterator begin, InputIterator end,
+                  OutputIterator output) {
+  BoundingBox::Builder bounds_builder;
+  size_t cumulative_num_shapes = 0;
+
+  for (auto iter = begin; iter < end; ++iter) {
+    cumulative_num_shapes += iter->num_shapes;
+    bounds_builder.Add(iter->bounds.Build());
+    *output++ = bounds_builder.Build().SurfaceArea() *
+                static_cast<geometric_t>(cumulative_num_shapes);
+  }
+}
+
+}  // namespace
 
 BoundingBox ComputeBounds(
     const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>
@@ -52,7 +69,7 @@ BoundingBox ComputeCentroidBounds(
   return builder.Build();
 }
 
-std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
+std::optional<std::array<BVHSplit, kNumSplitsToEvaluate>> ComputeSplits(
     std::span<
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
@@ -62,6 +79,10 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
   geometric max = centroid_bounds.upper[split_axis];
   geometric range = max - min;
 
+  if (range == 0.0) {
+    return std::nullopt;
+  }
+
   std::array<BVHSplit, kNumSplitsToEvaluate> result;
   for (size_t index : indices) {
     auto bounds = ComputeBounds(geometry[index]);
@@ -69,7 +90,8 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
     geometric_t offset = value - min;
     geometric_t scaled_offset = offset / range;
 
-    size_t split_index = (geometric_t)kNumSplitsToEvaluate * scaled_offset;
+    size_t split_index =
+        static_cast<geometric_t>(kNumSplitsToEvaluate) * scaled_offset;
     if (split_index == kNumSplitsToEvaluate) {
       split_index = kNumSplitsToEvaluate - 1;
     }
@@ -83,35 +105,15 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
 
 std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeAboveCosts(
     std::array<BVHSplit, kNumSplitsToEvaluate> splits) {
-  BoundingBox::Builder bounds_builder;
-  size_t cumulative_num_shapes = 0;
-
   std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
-  for (size_t i = 0; i < (kNumSplitsToEvaluate - 1); i++) {
-    const auto& split = splits.at(kNumSplitsToEvaluate - i - 1);
-    cumulative_num_shapes += split.num_shapes;
-    bounds_builder.Add(split.bounds.Build());
-    result[i] = bounds_builder.Build().SurfaceArea() *
-                static_cast<geometric_t>(cumulative_num_shapes);
-  }
-
+  ComputeCosts(splits.rbegin(), splits.rend() - 1, result.rbegin());
   return result;
 }
 
 std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
     std::array<BVHSplit, kNumSplitsToEvaluate> splits) {
-  BoundingBox::Builder bounds_builder;
-  size_t cumulative_num_shapes = 0;
-
   std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
-  for (size_t i = 0; i < (kNumSplitsToEvaluate - 1); i++) {
-    const auto& split = splits.at(i);
-    cumulative_num_shapes += split.num_shapes;
-    bounds_builder.Add(split.bounds.Build());
-    result[i] = bounds_builder.Build().SurfaceArea() *
-                static_cast<geometric_t>(cumulative_num_shapes);
-  }
-
+  ComputeCosts(splits.begin(), splits.end() - 1, result.begin());
   return result;
 }
 
@@ -124,8 +126,12 @@ std::optional<geometric_t> FindBestSplitOnAxis(
   auto centroid_bounds = ComputeCentroidBounds(geometry, indices);
 
   auto splits = ComputeSplits(geometry, indices, centroid_bounds, split_axis);
-  auto below_costs = ComputeBelowCosts(splits);
-  auto above_costs = ComputeAboveCosts(splits);
+  if (!splits) {
+    return std::nullopt;
+  }
+
+  auto below_costs = ComputeBelowCosts(*splits);
+  auto above_costs = ComputeAboveCosts(*splits);
   geometric_t node_surface_area = node_bounds.SurfaceArea();
 
   geometric_t best_cost = std::numeric_limits<geometric_t>::infinity();
