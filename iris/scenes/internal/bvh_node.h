@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "absl/log/check.h"
 #include "iris/bounding_box.h"
 #include "iris/ray.h"
 
@@ -24,6 +25,8 @@ class BVHNode {
   static BVHNode MakeLeafNode(const BoundingBox& bounds, size_t shape_offset,
                               size_t num_shapes) {
     assert(num_shapes != 0);
+    CHECK(shape_offset < std::numeric_limits<uint32_t>::max());
+    CHECK(num_shapes < std::numeric_limits<uint16_t>::max());
     return BVHNode(bounds, /*offset=*/static_cast<uint32_t>(shape_offset),
                    /*num_shapes=*/static_cast<uint16_t>(num_shapes),
                    /*axis=*/0u);
@@ -32,6 +35,7 @@ class BVHNode {
   void SetRightChildOffset(size_t offset) {
     assert(offset_ == 0);
     assert(num_shapes_ == 0);
+    CHECK(offset < std::numeric_limits<uint32_t>::max());
     offset_ = static_cast<uint32_t>(offset);
   }
 

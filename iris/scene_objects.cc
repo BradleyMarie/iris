@@ -1,7 +1,7 @@
 #include "iris/scene_objects.h"
 
-#include <algorithm>
 #include <limits>
+#include <map>
 #include <set>
 
 #include "absl/log/check.h"
@@ -14,17 +14,19 @@ namespace {
 template <typename T>
 void ReorderImpl(std::vector<T>& values,
                  std::span<const size_t> new_positions) {
-  size_t num_to_sort = new_positions.size() <= values.size()
-                           ? new_positions.size()
-                           : values.size();
+  std::multimap<size_t, T> sorted_values;
+  for (size_t i = 0; i < values.size(); i++) {
+    if (i < new_positions.size()) {
+      sorted_values.insert({new_positions[i], values[i]});
+    } else {
+      sorted_values.insert({std::numeric_limits<size_t>::max(), values[i]});
+    }
+  }
 
-  std::sort(values.begin(), values.begin() + num_to_sort,
-            [&](const auto& left, const auto& right) {
-              size_t left_position = &left - values.data();
-              size_t right_position = &right - values.data();
-              return new_positions[left_position] <
-                     new_positions[right_position];
-            });
+  values.clear();
+  for (const auto& [key, value] : sorted_values) {
+    values.push_back(value);
+  }
 }
 
 }  // namespace
