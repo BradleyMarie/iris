@@ -2,6 +2,8 @@
 #define _IRIS_SCENES_INTERNAL_BVH_BUILDER_
 
 #include <array>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <span>
 
@@ -19,23 +21,20 @@ constexpr size_t kNumSplitsToEvaluate = 12;
 constexpr size_t kMaxBvhDepth = 32;
 
 BoundingBox ComputeBounds(
-    const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>
-        geometry);
+    const std::pair<const Geometry&, const Matrix*>& geometry);
 
 BoundingBox ComputeBounds(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices);
 
 Point ComputeCentroid(const BoundingBox& bounds);
 
-Point ComputeCentroid(const std::pair<const iris::ReferenceCounted<Geometry>,
-                                      const Matrix*>& geometry);
+Point ComputeCentroid(
+    const std::pair<const Geometry&, const Matrix*>& geometry);
 
 BoundingBox ComputeCentroidBounds(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices);
 
@@ -45,8 +44,7 @@ struct BVHSplit {
 };
 
 std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices, const BoundingBox& centroid_bounds,
     Vector::Axis split_axis);
@@ -58,8 +56,7 @@ std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
     std::array<BVHSplit, kNumSplitsToEvaluate> splits);
 
 std::optional<geometric_t> FindBestSplitOnAxis(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices, const BoundingBox& node_bounds,
     const BoundingBox& centroid_bounds, Vector::Axis split_axis);
@@ -70,8 +67,7 @@ struct PartitionResult {
 };
 
 PartitionResult Partition(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     Vector::Axis split_axis, geometric_t split, std::span<size_t> indices);
 
@@ -83,25 +79,23 @@ size_t AddLeafNode(std::span<const size_t> indices,
 size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
                        std::vector<BVHNode>& bvh);
 
-size_t BuildBVH(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
-        geometry,
-    size_t depth_remaining, std::span<size_t> indices,
-    std::vector<BVHNode>& bvh, size_t& geometry_offset,
-    std::span<size_t> geometry_sort_order);
+size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
+                    size_t index)>& geometry,
+                size_t depth_remaining, std::span<size_t> indices,
+                std::vector<BVHNode>& bvh, size_t& geometry_offset,
+                std::span<size_t> geometry_sort_order);
 
 };  // namespace internal
 
 struct BuildBVHResult {
-  std::vector<BVHNode> bvh;
+  std::unique_ptr<BVHNode[]> bvh;
   std::vector<size_t> geometry_sort_order;
 };
 
 BuildBVHResult BuildBVH(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
-        geometry);
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
+        geometry,
+    size_t num_geometry);
 
 }  // namespace internal
 }  // namespace scenes

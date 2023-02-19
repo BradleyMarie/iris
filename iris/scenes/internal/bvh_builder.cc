@@ -1,7 +1,5 @@
 #include "iris/scenes/internal/bvh_builder.h"
 
-#include <array>
-
 namespace iris {
 namespace scenes {
 namespace internal {
@@ -25,23 +23,21 @@ void ComputeCosts(InputIterator begin, InputIterator end,
 }  // namespace
 
 BoundingBox ComputeBounds(
-    const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>
-        geometry) {
+    const std::pair<const Geometry&, const Matrix*>& geometry) {
   if (geometry.second) {
-    return geometry.first->ComputeBounds(*geometry.second);
+    return geometry.first.ComputeBounds(*geometry.second);
   }
-  return geometry.first->ComputeBounds(Matrix::Identity());
+  return geometry.first.ComputeBounds(Matrix::Identity());
 }
 
 BoundingBox ComputeBounds(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices) {
   BoundingBox::Builder builder;
   for (const auto& index : indices) {
-    BoundingBox bounds = geometry[index].first->ComputeBounds(
-        geometry[index].second ? *geometry[index].second : Matrix::Identity());
+    BoundingBox bounds = geometry(index).first.ComputeBounds(
+        geometry(index).second ? *geometry(index).second : Matrix::Identity());
     builder.Add(bounds);
   }
   return builder.Build();
@@ -51,27 +47,25 @@ Point ComputeCentroid(const BoundingBox& bounds) {
   return bounds.lower + 0.5 * (bounds.upper - bounds.lower);
 }
 
-Point ComputeCentroid(const std::pair<const iris::ReferenceCounted<Geometry>,
-                                      const Matrix*>& geometry) {
+Point ComputeCentroid(
+    const std::pair<const Geometry&, const Matrix*>& geometry) {
   return ComputeCentroid(ComputeBounds(geometry));
 }
 
 BoundingBox ComputeCentroidBounds(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices) {
   BoundingBox::Builder builder;
   for (const auto& index : indices) {
-    Point centroid = ComputeCentroid(geometry[index]);
+    Point centroid = ComputeCentroid(geometry(index));
     builder.Add(centroid);
   }
   return builder.Build();
 }
 
 std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices, const BoundingBox& centroid_bounds,
     Vector::Axis split_axis) {
@@ -84,7 +78,7 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
 
   std::array<BVHSplit, kNumSplitsToEvaluate> result;
   for (size_t index : indices) {
-    auto bounds = ComputeBounds(geometry[index]);
+    auto bounds = ComputeBounds(geometry(index));
     geometric value = ComputeCentroid(bounds)[split_axis];
     geometric_t offset = value - min;
     geometric_t scaled_offset = offset / range;
@@ -117,8 +111,7 @@ std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
 }
 
 std::optional<geometric_t> FindBestSplitOnAxis(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     std::span<const size_t> indices, const BoundingBox& node_bounds,
     const BoundingBox& centroid_bounds, Vector::Axis split_axis) {
@@ -156,14 +149,13 @@ std::optional<geometric_t> FindBestSplitOnAxis(
 }
 
 PartitionResult Partition(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     Vector::Axis split_axis, geometric_t split, std::span<size_t> indices) {
   size_t insert_index = 0;
 
   for (size_t i = 0; i < indices.size(); i++) {
-    auto centroid = ComputeCentroid(geometry[indices[i]]);
+    auto centroid = ComputeCentroid(geometry(indices[i]));
     auto value = centroid[split_axis];
     if (value < split) {
       std::swap(indices[i], indices[insert_index++]);
@@ -192,13 +184,11 @@ size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
   return bvh.size() - 1;
 }
 
-size_t BuildBVH(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
-        geometry,
-    size_t depth_remaining, std::span<size_t> indices,
-    std::vector<BVHNode>& bvh, size_t& geometry_offset,
-    std::span<size_t> geometry_sort_order) {
+size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
+                    size_t index)>& geometry,
+                size_t depth_remaining, std::span<size_t> indices,
+                std::vector<BVHNode>& bvh, size_t& geometry_offset,
+                std::span<size_t> geometry_sort_order) {
   assert(!indices.empty());
 
   auto node_bounds = ComputeBounds(geometry, indices);
@@ -218,8 +208,8 @@ size_t BuildBVH(
 
   std::span<size_t> above_indices, below_indices;
   if (indices.size() == 2) {
-    geometric_t shape0 = ComputeCentroid(geometry[indices[0]])[split_axis];
-    geometric_t shape1 = ComputeCentroid(geometry[indices[1]])[split_axis];
+    geometric_t shape0 = ComputeCentroid(geometry(indices[0]))[split_axis];
+    geometric_t shape1 = ComputeCentroid(geometry(indices[1]))[split_axis];
 
     if (shape0 < shape1) {
       below_indices = indices.subspan(0, 1);
@@ -254,25 +244,31 @@ size_t BuildBVH(
 }  // namespace internal
 
 BuildBVHResult BuildBVH(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
-        geometry) {
+    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
+        geometry,
+    size_t num_geometry) {
   std::vector<size_t> geometry_order;
   std::vector<size_t> geometry_sort_order;
-  for (size_t i = 0; i < geometry.size(); i++) {
+  for (size_t i = 0; i < num_geometry; i++) {
     geometry_order.push_back(i);
-    geometry_sort_order.push_back(geometry.size());
+    geometry_sort_order.push_back(num_geometry);
   }
 
-  std::vector<BVHNode> bvh;
-  if (!geometry.empty()) {
+  std::unique_ptr<BVHNode[]> bvh_nodes;
+  if (num_geometry != 0) {
+    std::vector<BVHNode> bvh;
     size_t geometry_offset = 0;
     internal::BuildBVH(geometry, internal::kMaxBvhDepth, geometry_order, bvh,
                        geometry_offset, geometry_sort_order);
-    bvh.shrink_to_fit();
+
+    std::allocator<BVHNode> allocator;
+    bvh_nodes.reset(allocator.allocate(bvh.size()));
+    for (size_t i = 0; i < bvh.size(); i++) {
+      new (&bvh_nodes[i]) BVHNode(bvh.at(i));
+    }
   }
 
-  return {std::move(bvh), std::move(geometry_order)};
+  return {std::move(bvh_nodes), std::move(geometry_order)};
 }
 
 }  // namespace internal

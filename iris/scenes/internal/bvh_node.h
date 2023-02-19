@@ -39,8 +39,9 @@ class BVHNode {
     offset_ = static_cast<uint32_t>(offset);
   }
 
-  inline bool Intersects(const Ray& ray) const {
-    return bounds_.Intersect(ray).has_value();
+  inline std::optional<BoundingBox::Intersection> Intersects(
+      const Ray& ray) const {
+    return bounds_.Intersect(ray);
   }
 
   inline bool HasChildren() const { return num_shapes_ == 0; }

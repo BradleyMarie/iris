@@ -42,3 +42,14 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "bvh_traversal",
+    hdrs = ["bvh_traversal.h"],
+    deps = [
+        "//iris:intersector",
+        "//iris:scene_objects",
+        "//iris/scenes/internal:bvh_builder",
+        "//iris/scenes/internal:bvh_node",
+    ],
+)
