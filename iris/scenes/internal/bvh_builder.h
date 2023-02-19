@@ -44,7 +44,7 @@ struct BVHSplit {
   size_t num_shapes = 0;
 };
 
-std::optional<std::array<BVHSplit, kNumSplitsToEvaluate>> ComputeSplits(
+std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
     std::span<
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
@@ -62,7 +62,7 @@ std::optional<geometric_t> FindBestSplitOnAxis(
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
     std::span<const size_t> indices, const BoundingBox& node_bounds,
-    Vector::Axis split_axis);
+    const BoundingBox& centroid_bounds, Vector::Axis split_axis);
 
 struct PartitionResult {
   std::span<size_t> above;
@@ -75,23 +75,20 @@ PartitionResult Partition(
         geometry,
     Vector::Axis split_axis, geometric_t split, std::span<size_t> indices);
 
-size_t AddLeafNode(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
-        geometry,
-    std::span<const size_t> indices, const BoundingBox& node_bounds,
-    std::vector<BVHNode>* bvh, size_t* geometry_offset,
-    std::span<size_t> geometry_sort_order);
+size_t AddLeafNode(std::span<const size_t> indices,
+                   const BoundingBox& node_bounds, std::vector<BVHNode>& bvh,
+                   size_t& geometry_offset,
+                   std::span<size_t> geometry_sort_order);
 
 size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
-                       std::vector<BVHNode>* bvh);
+                       std::vector<BVHNode>& bvh);
 
 size_t BuildBVH(
     std::span<
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
     uint32_t depth_remaining, std::span<size_t> indices,
-    std::vector<BVHNode>* bvh, size_t* geometry_offset,
+    std::vector<BVHNode>& bvh, size_t& geometry_offset,
     std::span<size_t> geometry_sort_order);
 
 };  // namespace internal

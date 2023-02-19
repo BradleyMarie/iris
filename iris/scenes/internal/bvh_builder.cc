@@ -69,19 +69,18 @@ BoundingBox ComputeCentroidBounds(
   return builder.Build();
 }
 
-std::optional<std::array<BVHSplit, kNumSplitsToEvaluate>> ComputeSplits(
+std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
     std::span<
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
     std::span<const size_t> indices, const BoundingBox& centroid_bounds,
     Vector::Axis split_axis) {
+  assert(centroid_bounds.lower[split_axis] !=
+         centroid_bounds.upper[split_axis]);
+
   geometric min = centroid_bounds.lower[split_axis];
   geometric max = centroid_bounds.upper[split_axis];
   geometric range = max - min;
-
-  if (range == 0.0) {
-    return std::nullopt;
-  }
 
   std::array<BVHSplit, kNumSplitsToEvaluate> result;
   for (size_t index : indices) {
@@ -122,16 +121,13 @@ std::optional<geometric_t> FindBestSplitOnAxis(
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
     std::span<const size_t> indices, const BoundingBox& node_bounds,
-    Vector::Axis split_axis) {
-  auto centroid_bounds = ComputeCentroidBounds(geometry, indices);
+    const BoundingBox& centroid_bounds, Vector::Axis split_axis) {
+  assert(centroid_bounds.lower[split_axis] !=
+         centroid_bounds.upper[split_axis]);
 
   auto splits = ComputeSplits(geometry, indices, centroid_bounds, split_axis);
-  if (!splits) {
-    return std::nullopt;
-  }
-
-  auto below_costs = ComputeBelowCosts(*splits);
-  auto above_costs = ComputeAboveCosts(*splits);
+  auto below_costs = ComputeBelowCosts(splits);
+  auto above_costs = ComputeAboveCosts(splits);
   geometric_t node_surface_area = node_bounds.SurfaceArea();
 
   geometric_t best_cost = std::numeric_limits<geometric_t>::infinity();
@@ -178,25 +174,22 @@ PartitionResult Partition(
           indices.subspan(0, insert_index)};
 }
 
-size_t AddLeafNode(
-    std::span<
-        const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
-        geometry,
-    std::span<const size_t> indices, const BoundingBox& node_bounds,
-    std::vector<BVHNode>* bvh, size_t* geometry_offset,
-    std::span<size_t> geometry_sort_order) {
-  bvh->push_back(BVHNode::MakeLeafNode(ComputeBounds(geometry, indices),
-                                       *geometry_offset, indices.size()));
+size_t AddLeafNode(std::span<const size_t> indices,
+                   const BoundingBox& node_bounds, std::vector<BVHNode>& bvh,
+                   size_t& geometry_offset,
+                   std::span<size_t> geometry_sort_order) {
+  bvh.push_back(
+      BVHNode::MakeLeafNode(node_bounds, geometry_offset, indices.size()));
   for (size_t index : indices) {
-    geometry_sort_order[index] = *geometry_offset++;
+    geometry_sort_order[index] = geometry_offset++;
   }
-  return bvh->size() - 1;
+  return bvh.size() - 1;
 }
 
 size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
-                       std::vector<BVHNode>* bvh) {
-  bvh->push_back(BVHNode::MakeInteriorNode(node_bounds, split_axis));
-  return bvh->size() - 1;
+                       std::vector<BVHNode>& bvh) {
+  bvh.push_back(BVHNode::MakeInteriorNode(node_bounds, split_axis));
+  return bvh.size() - 1;
 }
 
 size_t BuildBVH(
@@ -204,24 +197,23 @@ size_t BuildBVH(
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
     size_t depth_remaining, std::span<size_t> indices,
-    std::vector<BVHNode>* bvh, size_t* geometry_offset,
+    std::vector<BVHNode>& bvh, size_t& geometry_offset,
     std::span<size_t> geometry_sort_order) {
   auto node_bounds = ComputeBounds(geometry, indices);
 
   if (indices.size() == 1 || depth_remaining == 0) {
-    return AddLeafNode(geometry, indices, node_bounds, bvh, geometry_offset,
+    return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
                        geometry_sort_order);
   }
 
-  BoundingBox::Builder centroid_bounds_builder;
-  for (auto index : indices) {
-    centroid_bounds_builder.Add(ComputeCentroid(geometry[index]));
-  }
-
-  auto centroid_bounds = centroid_bounds_builder.Build();
+  auto centroid_bounds = ComputeCentroidBounds(geometry, indices);
   auto centroid_bounds_diagonal = centroid_bounds.upper - centroid_bounds.lower;
   auto split_axis = centroid_bounds_diagonal.DominantAxis();
-  assert(!centroid_bounds.Empty());
+
+  if (centroid_bounds.lower[split_axis] == centroid_bounds.upper[split_axis]) {
+    return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
+                       geometry_sort_order);
+  }
 
   std::span<size_t> above_indices, below_indices;
   if (indices.size() == 2) {
@@ -231,15 +223,15 @@ size_t BuildBVH(
     if (shape0 < shape1) {
       below_indices = indices.subspan(0, 1);
       above_indices = indices.subspan(1, 1);
-    } else {
+    } else if (shape1 > shape0) {
       below_indices = indices.subspan(1, 1);
       above_indices = indices.subspan(0, 1);
     }
   } else {
-    auto split =
-        FindBestSplitOnAxis(geometry, indices, node_bounds, split_axis);
+    auto split = FindBestSplitOnAxis(geometry, indices, node_bounds,
+                                     centroid_bounds, split_axis);
     if (!split.has_value()) {
-      return AddLeafNode(geometry, indices, node_bounds, bvh, geometry_offset,
+      return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
                          geometry_sort_order);
     }
 
@@ -253,7 +245,7 @@ size_t BuildBVH(
            geometry_sort_order);
   size_t right_child = BuildBVH(geometry, depth_remaining - 1, above_indices,
                                 bvh, geometry_offset, geometry_sort_order);
-  bvh->at(result).SetRightChildOffset(right_child);
+  bvh.at(result).SetRightChildOffset(right_child);
 
   return result;
 }
@@ -273,8 +265,10 @@ BuildBVHResult BuildBVH(
 
   std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
-  internal::BuildBVH(geometry, internal::kMaxBvhDepth, geometry_order, &bvh,
-                     &geometry_offset, geometry_sort_order);
+  internal::BuildBVH(geometry, internal::kMaxBvhDepth, geometry_order, bvh,
+                     geometry_offset, geometry_sort_order);
+
+  bvh.shrink_to_fit();
 
   return {std::move(bvh), std::move(geometry_order)};
 }
