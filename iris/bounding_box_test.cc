@@ -149,6 +149,13 @@ TEST(BoundingBoxTest, ProbablyIntersectInFront) {
   EXPECT_EQ(3.0, intersection->end);
 }
 
+TEST(BoundingBoxTest, IntersectEmpty) {
+  iris::Point point0(-1.0, -1.0, -1.0);
+  iris::BoundingBox bounding_box(point0);
+  iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  EXPECT_FALSE(bounding_box.Intersect(ray).has_value());
+}
+
 TEST(BoundingBoxTest, IntersectInside) {
   iris::Point point0(-1.0, -1.0, -1.0);
   iris::Point point1(1.0, 1.0, 1.0);
