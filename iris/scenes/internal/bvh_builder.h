@@ -87,7 +87,7 @@ size_t BuildBVH(
     std::span<
         const std::pair<const iris::ReferenceCounted<Geometry>, const Matrix*>>
         geometry,
-    uint32_t depth_remaining, std::span<size_t> indices,
+    size_t depth_remaining, std::span<size_t> indices,
     std::vector<BVHNode>& bvh, size_t& geometry_offset,
     std::span<size_t> geometry_sort_order);
 

@@ -18,8 +18,8 @@ TEST(BVHNodeTest, InteriorNode) {
       bounds, iris::Vector::X_AXIS);
   node.SetRightChildOffset(30);
   ASSERT_TRUE(node.HasChildren());
-  EXPECT_EQ(&node + 1, node.LeftChild());
-  EXPECT_EQ(&node + 30, node.RightChild());
+  EXPECT_EQ(&node + 1, &node.LeftChild());
+  EXPECT_EQ(&node + 30, &node.RightChild());
   EXPECT_EQ(iris::Vector::X_AXIS, node.Axis());
 }
 

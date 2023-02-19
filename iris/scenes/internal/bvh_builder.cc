@@ -199,8 +199,9 @@ size_t BuildBVH(
     size_t depth_remaining, std::span<size_t> indices,
     std::vector<BVHNode>& bvh, size_t& geometry_offset,
     std::span<size_t> geometry_sort_order) {
-  auto node_bounds = ComputeBounds(geometry, indices);
+  assert(!indices.empty());
 
+  auto node_bounds = ComputeBounds(geometry, indices);
   if (indices.size() == 1 || depth_remaining == 0) {
     return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
                        geometry_sort_order);
@@ -223,7 +224,7 @@ size_t BuildBVH(
     if (shape0 < shape1) {
       below_indices = indices.subspan(0, 1);
       above_indices = indices.subspan(1, 1);
-    } else if (shape1 > shape0) {
+    } else {
       below_indices = indices.subspan(1, 1);
       above_indices = indices.subspan(0, 1);
     }
@@ -264,11 +265,12 @@ BuildBVHResult BuildBVH(
   }
 
   std::vector<BVHNode> bvh;
-  size_t geometry_offset = 0;
-  internal::BuildBVH(geometry, internal::kMaxBvhDepth, geometry_order, bvh,
-                     geometry_offset, geometry_sort_order);
-
-  bvh.shrink_to_fit();
+  if (!geometry.empty()) {
+    size_t geometry_offset = 0;
+    internal::BuildBVH(geometry, internal::kMaxBvhDepth, geometry_order, bvh,
+                       geometry_offset, geometry_sort_order);
+    bvh.shrink_to_fit();
+  }
 
   return {std::move(bvh), std::move(geometry_order)};
 }

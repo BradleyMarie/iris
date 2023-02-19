@@ -50,14 +50,14 @@ class BVHNode {
     return Vector::Axis(axis_);
   }
 
-  inline const BVHNode* LeftChild() const {
+  inline const BVHNode& LeftChild() const {
     assert(num_shapes_ == 0);
-    return this + 1;
+    return *(this + 1);
   }
 
-  inline const BVHNode* RightChild() const {
+  inline const BVHNode& RightChild() const {
     assert(num_shapes_ == 0);
-    return this + offset_;
+    return *(this + offset_);
   }
 
   inline std::pair<size_t, size_t> Shapes() const {

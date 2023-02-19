@@ -333,7 +333,308 @@ TEST(AddInteriorNode, Add) {
   std::vector<iris::scenes::internal::BVHNode> bvh;
   size_t result = iris::scenes::internal::internal::AddInteriorNode(
       bounds, iris::Vector::Y_AXIS, bvh);
+  EXPECT_EQ(0u, result);
   EXPECT_EQ(1u, bvh.size());
   EXPECT_TRUE(bvh.front().HasChildren());
   EXPECT_EQ(iris::Vector::Y_AXIS, bvh.front().Axis());
+}
+
+TEST(BuildBVH, OneGeometry) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < 1; i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    auto bound_offset =
+        1.0 / static_cast<iris::geometric_t>(
+                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
+    iris::BoundingBox bounds0(
+        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  std::vector<iris::scenes::internal::BVHNode> bvh;
+  size_t geometry_offset = 0;
+  std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
+  size_t result = iris::scenes::internal::internal::BuildBVH(
+      geometry, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  EXPECT_EQ(0u, result);
+
+  EXPECT_EQ(1u, bvh.size());
+  EXPECT_FALSE(bvh.front().HasChildren());
+  EXPECT_EQ(0u, bvh.front().Shapes().first);
+  EXPECT_EQ(1u, bvh.front().Shapes().second);
+}
+
+TEST(BuildBVH, DepthLimit) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
+       i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    auto bound_offset =
+        1.0 / static_cast<iris::geometric_t>(
+                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
+    iris::BoundingBox bounds0(
+        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  std::vector<iris::scenes::internal::BVHNode> bvh;
+  size_t geometry_offset = 0;
+  std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
+  size_t result = iris::scenes::internal::internal::BuildBVH(
+      geometry, 0u, indices, bvh, geometry_offset, geometry_sort_order);
+  EXPECT_EQ(0u, result);
+
+  EXPECT_EQ(1u, bvh.size());
+  EXPECT_FALSE(bvh.front().HasChildren());
+  EXPECT_EQ(0u, bvh.front().Shapes().first);
+  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate,
+            bvh.front().Shapes().second);
+}
+
+TEST(BuildBVH, TooMuchOverlap) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < iris::scenes::internal::internal::kNumShapesPerNode;
+       i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    iris::BoundingBox bounds0(iris::Point(0.0, 0.0 + 0.01 * i, 0.0),
+                              iris::Point(1.0, 1.0 + 0.01 * i, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  std::vector<iris::scenes::internal::BVHNode> bvh;
+  size_t geometry_offset = 0;
+  std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
+  size_t result = iris::scenes::internal::internal::BuildBVH(
+      geometry, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  EXPECT_EQ(0u, result);
+
+  EXPECT_EQ(1u, bvh.size());
+  EXPECT_FALSE(bvh.front().HasChildren());
+  EXPECT_EQ(0u, bvh.front().Shapes().first);
+  EXPECT_EQ(iris::scenes::internal::internal::kNumShapesPerNode,
+            bvh.front().Shapes().second);
+}
+
+TEST(BuildBVH, EmptyCentroidBounds) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
+       i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
+                              iris::Point(1.0, 1.0, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  std::vector<iris::scenes::internal::BVHNode> bvh;
+  size_t geometry_offset = 0;
+  std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
+  size_t result = iris::scenes::internal::internal::BuildBVH(
+      geometry, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  EXPECT_EQ(0u, result);
+
+  EXPECT_EQ(1u, bvh.size());
+  EXPECT_FALSE(bvh.front().HasChildren());
+  EXPECT_EQ(0u, bvh.front().Shapes().first);
+  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate,
+            bvh.front().Shapes().second);
+}
+
+TEST(BuildBVH, TwoGeometry) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < 2; i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    iris::BoundingBox bounds0(iris::Point(0.0, i * 2, 0.0),
+                              iris::Point(1.0, i * 2 + 1, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  std::vector<iris::scenes::internal::BVHNode> bvh;
+  size_t geometry_offset = 0;
+  std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
+  size_t result = iris::scenes::internal::internal::BuildBVH(
+      geometry, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  EXPECT_EQ(0u, result);
+
+  EXPECT_EQ(3u, bvh.size());
+  EXPECT_TRUE(bvh.at(0).HasChildren());
+  EXPECT_EQ(iris::Vector::Y_AXIS, bvh.at(0).Axis());
+  auto& left_child = bvh.at(0).LeftChild();
+  EXPECT_FALSE(left_child.HasChildren());
+  EXPECT_EQ(0u, left_child.Shapes().first);
+  EXPECT_EQ(1u, left_child.Shapes().second);
+  auto& right_child = bvh.at(0).RightChild();
+  EXPECT_FALSE(right_child.HasChildren());
+  EXPECT_EQ(1u, right_child.Shapes().first);
+  EXPECT_EQ(1u, right_child.Shapes().second);
+
+  EXPECT_EQ(0u, geometry_sort_order.at(0));
+  EXPECT_EQ(1u, geometry_sort_order.at(1));
+}
+
+TEST(BuildBVH, TwoGeometryReversed) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < 2; i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    iris::BoundingBox bounds0(iris::Point(0.0, (2 - i) * 2, 0.0),
+                              iris::Point(1.0, (2 - i) * 2 + 1, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  std::vector<iris::scenes::internal::BVHNode> bvh;
+  size_t geometry_offset = 0;
+  std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
+  size_t result = iris::scenes::internal::internal::BuildBVH(
+      geometry, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  EXPECT_EQ(0u, result);
+
+  EXPECT_EQ(3u, bvh.size());
+  EXPECT_TRUE(bvh.at(0).HasChildren());
+  EXPECT_EQ(iris::Vector::Y_AXIS, bvh.at(0).Axis());
+  auto& left_child = bvh.at(0).LeftChild();
+  EXPECT_FALSE(left_child.HasChildren());
+  EXPECT_EQ(0u, left_child.Shapes().first);
+  EXPECT_EQ(1u, left_child.Shapes().second);
+  auto& right_child = bvh.at(0).RightChild();
+  EXPECT_FALSE(right_child.HasChildren());
+  EXPECT_EQ(1u, right_child.Shapes().first);
+  EXPECT_EQ(1u, right_child.Shapes().second);
+
+  EXPECT_EQ(1u, geometry_sort_order.at(0));
+  EXPECT_EQ(0u, geometry_sort_order.at(1));
+}
+
+TEST(BuildBVH, HitsDepthLimit) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
+       i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    auto bound_offset =
+        1.0 / static_cast<iris::geometric_t>(
+                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
+    iris::BoundingBox bounds0(
+        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  std::vector<iris::scenes::internal::BVHNode> bvh;
+  size_t geometry_offset = 0;
+  std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
+  size_t result = iris::scenes::internal::internal::BuildBVH(
+      geometry, 1u, indices, bvh, geometry_offset, geometry_sort_order);
+  EXPECT_EQ(0u, result);
+
+  EXPECT_EQ(3u, bvh.size());
+  EXPECT_TRUE(bvh.at(0).HasChildren());
+  EXPECT_EQ(iris::Vector::Y_AXIS, bvh.at(0).Axis());
+  auto& left_child = bvh.at(0).LeftChild();
+  EXPECT_FALSE(left_child.HasChildren());
+  EXPECT_EQ(0u, left_child.Shapes().first);
+  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate / 2,
+            left_child.Shapes().second);
+  auto& right_child = bvh.at(0).RightChild();
+  EXPECT_FALSE(right_child.HasChildren());
+  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate / 2,
+            right_child.Shapes().first);
+  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate / 2,
+            right_child.Shapes().second);
+
+  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
+       i++) {
+    EXPECT_EQ(i, geometry_sort_order.at(i));
+  }
+}
+
+TEST(BuildBVH, NoGeometry) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  auto result = iris::scenes::internal::BuildBVH(geometry);
+  EXPECT_TRUE(result.bvh.empty());
+  EXPECT_TRUE(result.geometry_sort_order.empty());
+}
+
+TEST(BuildBVH, FullTwoGeometry) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < 2; i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    iris::BoundingBox bounds0(iris::Point(0.0, i * 2, 0.0),
+                              iris::Point(1.0, i * 2 + 1, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  auto result = iris::scenes::internal::BuildBVH(geometry);
+
+  EXPECT_EQ(3u, result.bvh.size());
+  EXPECT_TRUE(result.bvh.at(0).HasChildren());
+  EXPECT_EQ(iris::Vector::Y_AXIS, result.bvh.at(0).Axis());
+  auto& left_child = result.bvh.at(0).LeftChild();
+  EXPECT_FALSE(left_child.HasChildren());
+  EXPECT_EQ(0u, left_child.Shapes().first);
+  EXPECT_EQ(1u, left_child.Shapes().second);
+  auto& right_child = result.bvh.at(0).RightChild();
+  EXPECT_FALSE(right_child.HasChildren());
+  EXPECT_EQ(1u, right_child.Shapes().first);
+  EXPECT_EQ(1u, right_child.Shapes().second);
+
+  EXPECT_EQ(0u, result.geometry_sort_order.at(0));
+  EXPECT_EQ(1u, result.geometry_sort_order.at(1));
 }
