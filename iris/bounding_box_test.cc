@@ -113,10 +113,18 @@ TEST(BoundingBoxTest, CreateThreeArray) {
 }
 
 TEST(BoundingBoxTest, Empty) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(3.0, 4.0, 5.0);
-  EXPECT_FALSE(iris::BoundingBox(point0, point1).Empty());
-  EXPECT_TRUE(iris::BoundingBox(point0, point0).Empty());
+  EXPECT_TRUE(
+      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(0.0, 1.0, 2.0))
+          .Empty());
+  EXPECT_TRUE(
+      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(0.0, 1.0, 3.0))
+          .Empty());
+  EXPECT_FALSE(
+      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(0.0, 2.0, 3.0))
+          .Empty());
+  EXPECT_FALSE(
+      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(1.0, 2.0, 3.0))
+          .Empty());
 }
 
 TEST(BoundingBoxTest, SurfaceArea) {

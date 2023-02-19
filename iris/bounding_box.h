@@ -38,7 +38,10 @@ struct BoundingBox final {
 
   BoundingBox(const BoundingBox&) noexcept = default;
 
-  bool Empty() const { return lower == upper; }
+  bool Empty() const {
+    return (lower.x == upper.x) + (lower.y == upper.y) + (lower.z == upper.z) >=
+           2;
+  }
 
   geometric_t SurfaceArea() const {
     Vector diagonal = upper - lower;
