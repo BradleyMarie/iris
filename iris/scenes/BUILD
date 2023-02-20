@@ -34,7 +34,10 @@ cc_test(
     srcs = ["list_scene_test.cc"],
     deps = [
         ":list_scene",
-        "//iris/testing:scene",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
+        "//iris/geometry:mock_geometry",
+        "//iris/testing:intersector",
         "@com_google_googletest//:gtest_main",
     ],
 )

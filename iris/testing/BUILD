@@ -77,25 +77,6 @@ cc_library(
 )
 
 cc_library(
-    name = "scene",
-    testonly = True,
-    srcs = ["scene.cc"],
-    hdrs = ["scene.h"],
-    deps = [
-        "//iris:float",
-        "//iris:geometry",
-        "//iris:hit",
-        "//iris:matrix",
-        "//iris:ray",
-        "//iris:scene",
-        "//iris:scene_objects",
-        "//iris/internal:hit",
-        "//iris/internal:hit_arena",
-        "@com_google_googletest//:gtest",
-    ],
-)
-
-cc_library(
     name = "spectral_allocator",
     testonly = True,
     srcs = ["spectral_allocator.cc"],
