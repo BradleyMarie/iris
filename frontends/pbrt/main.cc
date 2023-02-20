@@ -1,7 +1,13 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <thread>
+
+#ifdef __linux__
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
 
 #ifdef INSTRUMENTED_BUILD
 #include <gperftools/profiler.h>
@@ -46,6 +52,9 @@ static const std::string kDebug = " debug";
 static const std::string kVersion = "0.1";
 static const std::string kBits = (sizeof(void*) == 4) ? "32-bit" : "64-bit";
 static_assert(sizeof(void*) == 4 || sizeof(void*) == 8);
+
+static size_t kDefaultProgressWidth = 80;
+static size_t kReservedSuffixSpace = 16;
 
 std::string VersionString() {
   std::stringstream result;
@@ -127,6 +136,76 @@ int main(int argc, char** argv) {
       break;
     }
 
+    bool first = true;
+    auto start_time = std::chrono::steady_clock::now();
+    auto progress_callback = [&](size_t current_chunk, size_t num_chunks) {
+      auto current_time = std::chrono::steady_clock::now();
+
+      std::string prefix;
+      if (unparsed.size() == 1) {
+        prefix = "Rendering (" + std::to_string(render_index + 1) + ") [";
+      } else {
+        prefix = "Rendering [";
+      }
+
+      std::chrono::duration<float> elapsed_time(current_time - start_time);
+      float chunks_per_second = static_cast<float>(current_chunk) /
+                                static_cast<float>(elapsed_time.count());
+      int elapsed_time_seconds = elapsed_time.count();
+      int estimated_time_remaining_seconds =
+          static_cast<float>(num_chunks - current_chunk) / chunks_per_second;
+
+      std::string suffix = "] (";
+      if (current_chunk == num_chunks) {
+        suffix += std::to_string(elapsed_time_seconds) + "s)";
+      } else if (first) {
+        suffix += std::to_string(elapsed_time_seconds) + "s|?s)";
+      } else {
+        suffix += std::to_string(elapsed_time_seconds) + "s|" +
+                  std::to_string(estimated_time_remaining_seconds) + "s)";
+      }
+
+      while (suffix.size() < kReservedSuffixSpace) {
+        suffix.push_back(' ');
+      }
+
+      if (current_chunk == num_chunks) {
+        suffix.push_back('\n');
+      } else {
+        suffix.push_back('\r');
+      }
+
+      size_t text_width = kDefaultProgressWidth;
+
+#ifdef __linux__
+      struct winsize window;
+      int result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
+      if (result >= 0) {
+        text_width = window.ws_col;
+      }
+#endif
+
+      size_t bar_width = text_width - prefix.size() - suffix.size();
+      float progress =
+          static_cast<float>(current_chunk) / static_cast<float>(num_chunks);
+      size_t bar_length = bar_width * progress;
+
+      std::string bar;
+      for (size_t i = 0; i < bar_width; i++) {
+        if (i < bar_length) {
+          bar += "=";
+        } else if (i == bar_length) {
+          bar += ">";
+        } else {
+          bar += " ";
+        }
+      }
+
+      std::cout << prefix << bar << suffix << std::flush;
+
+      first = false;
+    };
+
     std::ofstream output(result->output_filename, std::ofstream::out |
                                                       std::ofstream::binary |
                                                       std::ofstream::trunc);
@@ -134,7 +213,7 @@ int main(int argc, char** argv) {
     iris::random::MersenneTwisterRandom rng;  // TODO: Support other RNG
     auto framebuffer = result->renderable.Render(
         *color_matcher, rng, absl::GetFlag(FLAGS_epsilon),
-        absl::GetFlag(FLAGS_num_threads));
+        absl::GetFlag(FLAGS_num_threads), progress_callback);
 
     result->output_write_function(framebuffer, output);
   }
