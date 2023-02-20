@@ -13,7 +13,7 @@
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/samplers/parse.h"
 #include "frontends/pbrt/shapes/parse.h"
-#include "iris/scenes/list_scene.h"
+#include "iris/scenes/bvh_scene.h"
 
 namespace iris::pbrt_frontend {
 
@@ -567,7 +567,7 @@ std::optional<Parser::Result> Parser::ParseFrom(
     check_fully_sampled_function_(image_dimensions_);
   }
 
-  Renderer renderer(scenes::ListScene::Builder(), *light_scene_builder_,
+  Renderer renderer(scenes::BVHScene::Builder(), *light_scene_builder_,
                     scene_objects_builder_.Build());
   Renderable renderable(std::move(renderer), camera_(image_dimensions_),
                         std::move(image_sampler_), std::move(integrator_),

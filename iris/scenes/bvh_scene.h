@@ -1,7 +1,8 @@
-#include <memory>
+#include <vector>
 
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
+#include "iris/scenes/internal/bvh_node.h"
 
 namespace iris {
 namespace scenes {
@@ -18,14 +19,14 @@ class BVHScene final : public Scene {
   };
 
   BVHScene(const SceneObjects& scene_objects,
-           std::unique_ptr<internal::BVHNode[]> bvh_nodes) noexcept
+           std::vector<internal::BVHNode> bvh_nodes) noexcept
       : scene_objects_(scene_objects), bvh_nodes_(std::move(bvh_nodes)) {}
 
   void Trace(const Ray& ray, Intersector& intersector) const override;
 
  private:
   const SceneObjects& scene_objects_;
-  const std::unique_ptr<internal::BVHNode[]> bvh_nodes_;
+  const std::vector<internal::BVHNode> bvh_nodes_;
 };
 
 }  // namespace scenes

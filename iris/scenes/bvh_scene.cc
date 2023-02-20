@@ -24,8 +24,8 @@ std::unique_ptr<Scene> BVHScene::Builder::Build(
 }
 
 void BVHScene::Trace(const Ray& ray, Intersector& intersector) const {
-  if (bvh_nodes_) {
-    internal::Intersect(bvh_nodes_[0], scene_objects_, ray, intersector);
+  if (!bvh_nodes_.empty()) {
+    internal::Intersect(bvh_nodes_.front(), scene_objects_, ray, intersector);
   }
 }
 

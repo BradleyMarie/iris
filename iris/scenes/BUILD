@@ -17,6 +17,19 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "bvh_scene_test",
+    srcs = ["bvh_scene_test.cc"],
+    deps = [
+        ":bvh_scene",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
+        "//iris/geometry:mock_geometry",
+        "//iris/testing:intersector",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "list_scene",
     srcs = ["list_scene.cc"],

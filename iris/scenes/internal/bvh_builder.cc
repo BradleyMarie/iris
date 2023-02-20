@@ -231,12 +231,12 @@ size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
     above_indices = result.above;
   }
 
-  auto result = AddInteriorNode(node_bounds, split_axis, bvh);
+  size_t result = AddInteriorNode(node_bounds, split_axis, bvh);
   BuildBVH(geometry, depth_remaining - 1, below_indices, bvh, geometry_offset,
            geometry_sort_order);
   size_t right_child = BuildBVH(geometry, depth_remaining - 1, above_indices,
                                 bvh, geometry_offset, geometry_sort_order);
-  bvh.at(result).SetRightChildOffset(right_child);
+  bvh.at(result).SetRightChildOffset(right_child - result);
 
   return result;
 }
@@ -254,21 +254,15 @@ BuildBVHResult BuildBVH(
     geometry_sort_order.push_back(num_geometry);
   }
 
-  std::unique_ptr<BVHNode[]> bvh_nodes;
+  std::vector<BVHNode> bvh;
   if (num_geometry != 0) {
-    std::vector<BVHNode> bvh;
     size_t geometry_offset = 0;
     internal::BuildBVH(geometry, internal::kMaxBvhDepth, geometry_order, bvh,
                        geometry_offset, geometry_sort_order);
-
-    std::allocator<BVHNode> allocator;
-    bvh_nodes.reset(allocator.allocate(bvh.size()));
-    for (size_t i = 0; i < bvh.size(); i++) {
-      new (&bvh_nodes[i]) BVHNode(bvh.at(i));
-    }
+    bvh.shrink_to_fit();
   }
 
-  return {std::move(bvh_nodes), std::move(geometry_order)};
+  return {std::move(bvh), std::move(geometry_sort_order)};
 }
 
 }  // namespace internal

@@ -3,9 +3,9 @@
 
 #include <array>
 #include <functional>
-#include <memory>
 #include <optional>
 #include <span>
+#include <vector>
 
 #include "iris/geometry.h"
 #include "iris/reference_counted.h"
@@ -88,7 +88,7 @@ size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
 };  // namespace internal
 
 struct BuildBVHResult {
-  std::unique_ptr<BVHNode[]> bvh;
+  std::vector<BVHNode> bvh;
   std::vector<size_t> geometry_sort_order;
 };
 

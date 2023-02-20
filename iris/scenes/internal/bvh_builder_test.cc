@@ -625,7 +625,7 @@ TEST(BuildBVH, NoGeometry) {
       geometry;
   auto result =
       iris::scenes::internal::BuildBVH(WrapGeometry(geometry), geometry.size());
-  EXPECT_FALSE(result.bvh);
+  EXPECT_TRUE(result.bvh.empty());
   EXPECT_TRUE(result.geometry_sort_order.empty());
 }
 
@@ -637,8 +637,8 @@ TEST(BuildBVH, FullTwoGeometry) {
   for (size_t i = 0; i < 2; i++) {
     auto mock_geometry =
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-    iris::BoundingBox bounds0(iris::Point(0.0, i * 2, 0.0),
-                              iris::Point(1.0, i * 2 + 1, 1.0));
+    iris::BoundingBox bounds0(iris::Point(0.0, (2 - i) * 2, 0.0),
+                              iris::Point(1.0, (2 - i) * 2 + 1, 1.0));
     EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
@@ -648,6 +648,7 @@ TEST(BuildBVH, FullTwoGeometry) {
   auto result =
       iris::scenes::internal::BuildBVH(WrapGeometry(geometry), geometry.size());
 
+  ASSERT_FALSE(result.bvh.empty());
   EXPECT_TRUE(result.bvh[0].HasChildren());
   EXPECT_EQ(iris::Vector::Y_AXIS, result.bvh[0].Axis());
   auto& left_child = result.bvh[0].LeftChild();
@@ -659,6 +660,6 @@ TEST(BuildBVH, FullTwoGeometry) {
   EXPECT_EQ(1u, right_child.Shapes().first);
   EXPECT_EQ(1u, right_child.Shapes().second);
 
-  EXPECT_EQ(0u, result.geometry_sort_order.at(0));
-  EXPECT_EQ(1u, result.geometry_sort_order.at(1));
+  EXPECT_EQ(1u, result.geometry_sort_order.at(0));
+  EXPECT_EQ(0u, result.geometry_sort_order.at(1));
 }
