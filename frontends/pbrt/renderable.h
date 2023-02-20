@@ -1,6 +1,7 @@
 #ifndef _FRONTENDS_PBRT_RENDERABLE_
 #define _FRONTENDS_PBRT_RENDERABLE_
 
+#include <functional>
 #include <memory>
 
 #include "iris/camera.h"
@@ -23,9 +24,10 @@ class Renderable {
              std::unique_ptr<Integrator> integrator,
              std::pair<size_t, size_t> image_dimensions) noexcept;
 
-  Framebuffer Render(const ColorMatcher& color_matcher, Random& rng,
-                     geometric_t minimum_distance,
-                     unsigned num_threads = 0) const;
+  Framebuffer Render(
+      const ColorMatcher& color_matcher, Random& rng,
+      geometric_t minimum_distance, unsigned num_threads = 0,
+      std::function<void(size_t, size_t)> progress_callback = nullptr) const;
 
  private:
   Renderer renderer_;

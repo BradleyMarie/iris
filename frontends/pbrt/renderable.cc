@@ -19,12 +19,13 @@ Renderable::Renderable(Renderer renderer, std::unique_ptr<Camera> camera,
   assert(image_dimensions.first != 0 && image_dimensions.second != 0);
 }
 
-Framebuffer Renderable::Render(const ColorMatcher& color_matcher, Random& rng,
-                               geometric_t minimum_distance,
-                               unsigned num_threads) const {
+Framebuffer Renderable::Render(
+    const ColorMatcher& color_matcher, Random& rng,
+    geometric_t minimum_distance, unsigned num_threads,
+    std::function<void(size_t, size_t)> progress_callback) const {
   return renderer_.Render(*camera_, *image_sampler_, *integrator_,
                           color_matcher, rng, image_dimensions_,
-                          minimum_distance, num_threads);
+                          minimum_distance, num_threads, progress_callback);
 }
 
 }  // namespace iris::pbrt_frontend
