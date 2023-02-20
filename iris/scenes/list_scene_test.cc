@@ -8,6 +8,21 @@
 
 static const iris::face_t kFaces[] = {0u};
 
+TEST(ListScene, Empty) {
+  iris::SceneObjects::Builder scene_objects_builder;
+  auto scene_objects = scene_objects_builder.Build();
+
+  iris::Ray ray(iris::Point(0.25, 0.25, -5.5), iris::Vector(0.0, 0.0, -1.0));
+  iris::Hit* closest_hit = nullptr;
+  auto intersector =
+      iris::testing::MakeIntersector(ray, 0.0, 100.0, closest_hit);
+
+  auto scene =
+      iris::scenes::ListScene::Builder().Create()->Build(scene_objects);
+  scene->Trace(ray, intersector);
+  EXPECT_EQ(nullptr, closest_hit);
+}
+
 TEST(ListScene, TestsAll) {
   auto mock_geometry0 =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
