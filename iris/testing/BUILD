@@ -27,6 +27,17 @@ cc_library(
 )
 
 cc_library(
+    name = "intersector",
+    testonly = True,
+    srcs = ["intersector.cc"],
+    hdrs = ["intersector.h"],
+    deps = [
+        "//iris:intersector",
+        "//iris/internal:hit_arena",
+    ],
+)
+
+cc_library(
     name = "light_sample_allocator",
     testonly = True,
     srcs = ["light_sample_allocator.cc"],

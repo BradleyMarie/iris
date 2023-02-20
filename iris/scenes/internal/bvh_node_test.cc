@@ -27,10 +27,34 @@ TEST(BVHNodeTest, Intersects) {
   iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
                            iris::Point(1.0, 1.0, 1.0));
   auto node = iris::scenes::internal::BVHNode::MakeLeafNode(bounds, 100u, 3u);
-  EXPECT_TRUE(node.Intersects(iris::Ray(iris::Point(0.5, 0.5, -1.0),
-                                        iris::Vector(0.0, 0.0, 1.0)))
-                  .has_value());
-  EXPECT_FALSE(node.Intersects(iris::Ray(iris::Point(0.5, 0.5, -1.0),
-                                         iris::Vector(0.0, 0.0, -1.0)))
-                   .has_value());
+  EXPECT_TRUE(node.Intersects(
+      iris::Ray(iris::Point(0.5, 0.5, -1.0), iris::Vector(0.0, 0.0, 1.0)), 0.0,
+      2.0));
+}
+
+TEST(BVHNodeTest, IntersectsWrongDirection) {
+  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
+                           iris::Point(1.0, 1.0, 1.0));
+  auto node = iris::scenes::internal::BVHNode::MakeLeafNode(bounds, 100u, 3u);
+  EXPECT_FALSE(node.Intersects(
+      iris::Ray(iris::Point(0.5, 0.5, -1.0), iris::Vector(0.0, 0.0, -1.0)), 0.0,
+      2.0));
+}
+
+TEST(BVHNodeTest, IntersectsTooClose) {
+  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
+                           iris::Point(1.0, 1.0, 1.0));
+  auto node = iris::scenes::internal::BVHNode::MakeLeafNode(bounds, 100u, 3u);
+  EXPECT_FALSE(node.Intersects(
+      iris::Ray(iris::Point(0.5, 0.5, -1.0), iris::Vector(0.0, 0.0, 1.0)), 3.0,
+      4.0));
+}
+
+TEST(BVHNodeTest, IntersectsTooFar) {
+  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
+                           iris::Point(1.0, 1.0, 1.0));
+  auto node = iris::scenes::internal::BVHNode::MakeLeafNode(bounds, 100u, 3u);
+  EXPECT_FALSE(node.Intersects(
+      iris::Ray(iris::Point(0.5, 0.5, -1.0), iris::Vector(0.0, 0.0, 1.0)), 0.0,
+      0.5));
 }

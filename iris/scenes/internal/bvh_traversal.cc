@@ -12,9 +12,9 @@ void Intersect(const BVHNode& bvh, const SceneObjects& scene_objects,
   const BVHNode* current = &bvh;
   size_t queue_size = 0;
   for (;;) {
-    auto intersection = current->Intersects(ray);
-    if (intersection && intersection->end > intersector.MinimumDistance() &&
-        intersection->begin < intersector.MaximumDistance()) {
+    bool intersects = current->Intersects(ray, intersector.MinimumDistance(),
+                                          intersector.MaximumDistance());
+    if (intersects) {
       if (current->HasChildren()) {
         auto direction = ray.direction[current->Axis()];
         if (direction < 0.0) {

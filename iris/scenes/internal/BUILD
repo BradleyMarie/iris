@@ -45,11 +45,26 @@ cc_test(
 
 cc_library(
     name = "bvh_traversal",
+    srcs = ["bvh_traversal.cc"],
     hdrs = ["bvh_traversal.h"],
     deps = [
         "//iris:intersector",
         "//iris:scene_objects",
         "//iris/scenes/internal:bvh_builder",
         "//iris/scenes/internal:bvh_node",
+    ],
+)
+
+cc_test(
+    name = "bvh_traversal_test",
+    srcs = ["bvh_traversal_test.cc"],
+    deps = [
+        ":bvh_traversal",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
+        "//iris/geometry:mock_geometry",
+        "//iris/scenes/internal:bvh_builder",
+        "//iris/testing:intersector",
+        "@com_google_googletest//:gtest_main",
     ],
 )
