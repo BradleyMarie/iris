@@ -35,7 +35,8 @@ void RenderChunk(const Scene& scene,
                  const ColorMatcher& color_matcher,
                  std::vector<std::vector<Chunk>>& chunks,
                  std::atomic<size_t>& chunk_counter, size_t num_chunks,
-                 geometric_t minimum_distance, Framebuffer& framebuffer) {
+                 geometric_t minimum_distance, Framebuffer& framebuffer,
+                 std::function<void(size_t, size_t)> progress_callback) {
   bool has_lens = camera.HasLens();
   auto color_space = color_matcher.ColorSpace();
 
@@ -49,8 +50,16 @@ void RenderChunk(const Scene& scene,
   RayTracer ray_tracer(scene, environmental_light, minimum_distance,
                        internal_tracer, arena);
 
+  if (progress_callback) {
+    progress_callback(0, num_chunks);
+  }
+
   for (auto chunk_index = chunk_counter.fetch_add(1); chunk_index < num_chunks;
        chunk_index = chunk_counter.fetch_add(1)) {
+    if (progress_callback && chunk_index != 0) {
+      progress_callback(chunk_index, num_chunks);
+    }
+
     auto y = chunk_index % chunks.size();
     auto& chunk = chunks[y][chunk_index / chunks.size()];
 
@@ -96,17 +105,20 @@ void RenderChunk(const Scene& scene,
                 color_space));
     }
   }
+
+  if (progress_callback) {
+    progress_callback(num_chunks, num_chunks);
+  }
 }
 
 }  // namespace
 
-Framebuffer Renderer::Render(const Camera& camera,
-                             const ImageSampler& image_sampler,
-                             const Integrator& integrator,
-                             const ColorMatcher& color_matcher, Random& rng,
-                             std::pair<size_t, size_t> image_dimensions,
-                             geometric_t minimum_distance,
-                             unsigned num_threads) const {
+Framebuffer Renderer::Render(
+    const Camera& camera, const ImageSampler& image_sampler,
+    const Integrator& integrator, const ColorMatcher& color_matcher,
+    Random& rng, std::pair<size_t, size_t> image_dimensions,
+    geometric_t minimum_distance, unsigned num_threads,
+    std::function<void(size_t, size_t)> progress_callback) const {
   Framebuffer result(image_dimensions);
 
   size_t num_chunks = 0;
@@ -137,12 +149,13 @@ Framebuffer Renderer::Render(const Camera& camera,
         scene_objects_->GetEnvironmentalLight(), std::cref(*light_scene_),
         std::cref(camera), integrator.Duplicate(), std::cref(color_matcher),
         std::ref(chunks), std::ref(chunk_counter), num_chunks, minimum_distance,
-        std::ref(result)));
+        std::ref(result), nullptr));
   }
 
   RenderChunk(*scene_, scene_objects_->GetEnvironmentalLight(), *light_scene_,
               camera, integrator.Duplicate(), color_matcher, chunks,
-              chunk_counter, num_chunks, minimum_distance, result);
+              chunk_counter, num_chunks, minimum_distance, result,
+              progress_callback);
 
   for (auto& thread : threads) {
     thread.join();

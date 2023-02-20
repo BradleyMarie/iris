@@ -14,7 +14,8 @@
 
 static const iris::spectra::MockSpectrum g_spectrum;
 
-void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads) {
+void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
+                 std::function<void(size_t, size_t)> progress_callback) {
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
   auto light_scene_builder =
       iris::light_scenes::AllLightScene::Builder::Create();
@@ -123,9 +124,9 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads) {
       .Times(actual_num_threads)
       .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
 
-  auto framebuffer =
-      renderer.Render(camera, image_sampler, integrator, color_matcher, rng,
-                      image_dimensions, 0.0, num_threads_requested);
+  auto framebuffer = renderer.Render(camera, image_sampler, integrator,
+                                     color_matcher, rng, image_dimensions, 0.0,
+                                     num_threads_requested, progress_callback);
   EXPECT_EQ(image_dimensions, framebuffer.Size());
 
   for (size_t y = 0; y < image_dimensions.first; y++) {
@@ -135,8 +136,19 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads) {
   }
 }
 
-TEST(RendererTest, SingleThreaded) { RunTestBody(1u, 1u); }
+TEST(RendererTest, SingleThreaded) { RunTestBody(1u, 1u, nullptr); }
 
 TEST(RendererTest, MultiThreaded) {
-  RunTestBody(0u, std::thread::hardware_concurrency());
+  RunTestBody(0u, std::thread::hardware_concurrency(), nullptr);
+}
+
+TEST(RendererTest, Progress) {
+  size_t next_value = 0;
+  auto progress_callback = [&](size_t current_chunk, size_t num_chunks) {
+    EXPECT_EQ(next_value++, current_chunk);
+    EXPECT_EQ(64u, num_chunks);
+  };
+
+  RunTestBody(1u, 1u, progress_callback);
+  EXPECT_EQ(65u, next_value);
 }
