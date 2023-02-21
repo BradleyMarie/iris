@@ -127,13 +127,14 @@ bool Parser::Include() {
 
   std::filesystem::path file_path(*unquoted);
   if (file_path.is_relative()) {
-    file_path = tokenizers_.back().search_path / file_path;
+    file_path = tokenizers_.back().tokenizer->SearchRoot() / file_path;
   }
 
   file_path = std::filesystem::weakly_canonical(file_path);
 
   for (const auto& entry : tokenizers_) {
-    if (entry.file_path && file_path == *entry.file_path) {
+    if (entry.tokenizer->FilePath().has_value() &&
+        file_path == *entry.tokenizer->FilePath()) {
       std::cerr << "ERROR: Detected cyclic Include of file: " << *unquoted
                 << std::endl;
       exit(EXIT_FAILURE);
@@ -149,11 +150,10 @@ bool Parser::Include() {
     exit(EXIT_FAILURE);
   }
 
-  auto tokenizer = std::make_unique<Tokenizer>(*file);
+  auto tokenizer = std::make_unique<Tokenizer>(*file, file_path);
 
   tokenizers_.emplace_back(tokenizer.get(), std::move(tokenizer),
-                           std::filesystem::weakly_canonical(search_path),
-                           file_path, std::move(file));
+                           std::move(file));
 
   return true;
 }
@@ -486,9 +486,7 @@ void Parser::InitializeDefault() {
   attributes_.emplace_back(default_material);
 }
 
-std::optional<Parser::Result> Parser::ParseFrom(
-    const std::filesystem::path& search_root, Tokenizer& tokenizer,
-    std::optional<std::filesystem::path> file_path) {
+std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
   material_manager_ = std::make_unique<MaterialManager>();
   matrix_manager_ = std::make_unique<MatrixManager>();
   texture_manager_ = std::make_unique<TextureManager>();
@@ -522,13 +520,7 @@ std::optional<Parser::Result> Parser::ParseFrom(
           {"WorldEnd", &Parser::WorldEnd},
       };
 
-  if (file_path) {
-    *file_path = std::filesystem::weakly_canonical(*file_path);
-  }
-
-  tokenizers_.emplace_back(&tokenizer, nullptr,
-                           std::filesystem::weakly_canonical(search_root),
-                           file_path, nullptr);
+  tokenizers_.emplace_back(&tokenizer, nullptr, nullptr);
 
   InitializeDefault();
 

@@ -293,6 +293,9 @@ cc_library(
     name = "tokenizer",
     srcs = ["tokenizer.cc"],
     hdrs = ["tokenizer.h"],
+    data = [
+        "test_data/include_empty.pbrt",
+    ],
 )
 
 cc_test(

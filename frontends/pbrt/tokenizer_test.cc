@@ -38,6 +38,28 @@ TEST(Tokenizer, Move) {
   EXPECT_EQ("hello", tokenizer1.Next());
 }
 
+TEST(Tokenizer, SearchRoot) {
+  std::stringstream input("");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  EXPECT_EQ(std::filesystem::current_path(), tokenizer.SearchRoot());
+  EXPECT_FALSE(tokenizer.FilePath());
+}
+
+TEST(Tokenizer, FilePath) {
+  std::stringstream input("");
+  iris::pbrt_frontend::Tokenizer tokenizer(
+      input, std::filesystem::weakly_canonical(
+                 "frontends/pbrt/test_data/include_empty.pbrt"));
+  EXPECT_EQ(std::filesystem::weakly_canonical(
+                "frontends/pbrt/test_data/include_empty.pbrt")
+                .parent_path(),
+            tokenizer.SearchRoot());
+  ASSERT_TRUE(tokenizer.FilePath());
+  EXPECT_EQ(std::filesystem::weakly_canonical(
+                "frontends/pbrt/test_data/include_empty.pbrt"),
+            tokenizer.FilePath().value());
+}
+
 TEST(Tokenizer, QuotedString) {
   std::stringstream input("\"hello world!\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

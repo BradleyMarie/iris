@@ -36,9 +36,7 @@ class Parser {
     std::function<void(Framebuffer&, std::ofstream&)> output_write_function;
   };
 
-  std::optional<Result> ParseFrom(
-      const std::filesystem::path& search_root, Tokenizer& tokenizer,
-      std::optional<std::filesystem::path> file_path = std::nullopt);
+  std::optional<Result> ParseFrom(Tokenizer& tokenizer);
 
  private:
   std::optional<std::string_view> PeekToken();
@@ -68,8 +66,6 @@ class Parser {
   struct TokenizerEntry {
     Tokenizer* tokenizer;
     std::unique_ptr<Tokenizer> owned_tokenizer;
-    std::filesystem::path search_path;
-    std::optional<std::filesystem::path> file_path;
     std::unique_ptr<std::ifstream> file;
   };
 

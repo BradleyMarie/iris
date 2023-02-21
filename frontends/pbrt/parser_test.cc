@@ -14,7 +14,7 @@ TEST(Parser, Empty) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_FALSE(parser.ParseFrom(".", tokenizer));
+  EXPECT_FALSE(parser.ParseFrom(tokenizer));
 }
 
 TEST(Parser, NoEnd) {
@@ -24,7 +24,7 @@ TEST(Parser, NoEnd) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
 }
@@ -36,7 +36,7 @@ TEST(Parser, InvalidDirective) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid directive: NotADirective");
 }
@@ -48,7 +48,7 @@ TEST(AreaLightSource, BeforeWorldEnd) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "AreaLightSource");
@@ -61,7 +61,7 @@ TEST(AreaLightSource, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: AreaLightSource");
 }
@@ -74,7 +74,7 @@ TEST(AttributeBegin, BeforeWorldBegin) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: AttributeBegin");
 }
 
@@ -85,7 +85,7 @@ TEST(AttributeBegin, Mismatched) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched AttributeBegin and AttributeEnd directives");
 }
@@ -98,7 +98,7 @@ TEST(AttributeEnd, BeforeWorldBegin) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: AttributeEnd");
 }
 
@@ -109,7 +109,7 @@ TEST(AttributeEnd, Mismatched) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing AttributeBegin directive");
 }
@@ -121,7 +121,7 @@ TEST(Camera, AfterWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Camera");
@@ -134,7 +134,7 @@ TEST(Camera, Duplicate) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Camera");
 }
@@ -146,7 +146,7 @@ TEST(Camera, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Camera");
 }
@@ -158,7 +158,7 @@ TEST(Film, AfterWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Film");
@@ -171,7 +171,7 @@ TEST(Film, Duplicate) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Film");
 }
@@ -183,7 +183,7 @@ TEST(Film, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Film");
 }
@@ -195,7 +195,7 @@ TEST(Include, MissingToken) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Include");
 }
@@ -207,7 +207,7 @@ TEST(Include, NotQuoted) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to Include must be a string");
 }
@@ -221,7 +221,7 @@ TEST(Include, Circular) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Detected cyclic Include of file: include_circular_first.pbrt");
 }
 
@@ -234,7 +234,7 @@ TEST(Include, CircularSelf) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Detected cyclic Include of file: include_circular_self.pbrt");
 }
 
@@ -246,7 +246,7 @@ TEST(Include, Empty) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
 }
@@ -258,7 +258,7 @@ TEST(Integrator, AfterWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Integrator");
@@ -271,7 +271,7 @@ TEST(Integrator, Duplicate) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Integrator");
 }
@@ -283,7 +283,7 @@ TEST(Integrator, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Integrator");
 }
@@ -295,7 +295,7 @@ TEST(MakeNamedMaterial, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: MakeNamedMaterial");
 }
@@ -308,7 +308,7 @@ TEST(Material, BeforeWorldEnd) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: Material");
 }
 
@@ -319,7 +319,7 @@ TEST(Material, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Material");
 }
@@ -332,7 +332,7 @@ TEST(NamedMaterial, BeforeWorldEnd) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: NamedMaterial");
 }
 
@@ -343,7 +343,7 @@ TEST(NamedMaterial, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: NamedMaterial");
 }
@@ -355,7 +355,7 @@ TEST(NamedMaterial, NotAString) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to NamedMaterial must be a string");
 }
@@ -368,7 +368,7 @@ TEST(ObjectBegin, BeforeWorldBegin) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: ObjectBegin");
 }
 
@@ -379,7 +379,7 @@ TEST(ObjectBegin, Mismatched) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
 }
@@ -391,7 +391,7 @@ TEST(ObjectBegin, TooFew) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: ObjectBegin");
 }
@@ -403,7 +403,7 @@ TEST(ObjectBegin, NotAString) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to ObjectBegin must be a string");
 }
@@ -416,7 +416,7 @@ TEST(ObjectEnd, BeforeWorldBegin) {
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(
-      parser.ParseFrom(".", tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: ObjectEnd");
 }
 
@@ -427,7 +427,7 @@ TEST(ObjectEnd, Mismatched) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
 }
@@ -439,7 +439,7 @@ TEST(ObjectInstance, BeforeWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "ObjectInstance");
@@ -452,7 +452,7 @@ TEST(ObjectInstance, InsideObject) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance cannot be specified between ObjectBegin "
               "and ObjectEnd");
@@ -465,7 +465,7 @@ TEST(ObjectInstance, TooFew) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: ObjectInstance");
 }
@@ -477,7 +477,7 @@ TEST(ObjectInstance, NotAString) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to ObjectInstance must be a string");
 }
@@ -489,7 +489,7 @@ TEST(ObjectInstance, MissingObject) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance referred to an unknown object: 1");
 }
@@ -501,7 +501,7 @@ TEST(Matrix, Parses) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
 }
@@ -513,7 +513,7 @@ TEST(PixelFilter, AfterWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: PixelFilter");
@@ -526,7 +526,7 @@ TEST(PixelFilter, MissingToken) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: PixelFilter");
 }
@@ -538,7 +538,7 @@ TEST(PixelFilter, NotQuoted) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to PixelFilter must be a string");
 }
@@ -550,7 +550,7 @@ TEST(PixelFilter, Duplicate) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: PixelFilter");
 }
@@ -562,7 +562,7 @@ TEST(Sampler, AfterWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Sampler");
@@ -575,7 +575,7 @@ TEST(Sampler, Duplicate) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Sampler");
 }
@@ -587,7 +587,7 @@ TEST(Sampler, TooFewArguments) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Sampler");
 }
@@ -599,7 +599,7 @@ TEST(Shape, BeforeWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: Shape");
 }
@@ -611,7 +611,7 @@ TEST(WorldBegin, Duplicate) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldBegin directive");
 }
@@ -623,7 +623,7 @@ TEST(WorldEnd, NoWorldBegin) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldEnd directive");
 }
@@ -637,7 +637,7 @@ TEST(Render, TooManySamples) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  EXPECT_EXIT(parser.ParseFrom(".", tokenizer),
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: At resolution 640x480 Halton sampler only supports 11507 "
               "samples per pixel");
@@ -650,7 +650,7 @@ TEST(Render, EmptyScene) {
   iris::pbrt_frontend::Parser parser(
       std::make_unique<
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
-  auto result = parser.ParseFrom(".", tokenizer);
+  auto result = parser.ParseFrom(tokenizer);
   ASSERT_TRUE(result);
 
   EXPECT_EQ("pbrt.exr", result->output_filename);

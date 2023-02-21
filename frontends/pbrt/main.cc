@@ -1,4 +1,5 @@
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -121,12 +122,19 @@ int main(int argc, char** argv) {
     tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(std::cin);
   } else {
     file_input = std::make_unique<std::ifstream>(unparsed.at(1));
-    tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(*file_input);
+    if (file_input->fail()) {
+      std::cerr << "ERROR: Failed to open file: " << unparsed.at(1)
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(
+        *file_input, std::filesystem::weakly_canonical(unparsed.at(1)));
   }
 
   iris::pbrt_frontend::Parser parser(std::move(spectral_manager));
   for (size_t render_index = 0;; render_index += 1) {
-    auto result = parser.ParseFrom(".", *tokenizer, ".");
+    auto result = parser.ParseFrom(*tokenizer);
     if (!result) {
       if (render_index == 0) {
         std::cerr << "ERROR: Render input was empty." << std::endl;
