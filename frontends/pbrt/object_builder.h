@@ -2,6 +2,7 @@
 #define _FRONTENDS_PBRT_OBJECT_BUILDER_
 
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <optional>
 #include <string_view>
@@ -21,8 +22,9 @@ class ObjectBuilder {
       : parameters_(parameters) {}
 
   std::optional<Parameter> Parse(
-      const ParameterList& parameter_list, SpectrumManager& spectrum_manager,
-      TextureManager& texture_manager,
+      const ParameterList& parameter_list,
+      const std::filesystem::path& search_root,
+      SpectrumManager& spectrum_manager, TextureManager& texture_manager,
       std::unordered_set<std::string_view>& handled_args,
       bool must_succeed = true) const {
     if (handled_args.contains(parameter_list.GetName())) {
@@ -43,8 +45,8 @@ class ObjectBuilder {
     }
 
     Parameter parameter;
-    parameter.LoadFrom(parameter_list, iter->second, spectrum_manager,
-                       texture_manager);
+    parameter.LoadFrom(parameter_list, search_root, iter->second,
+                       spectrum_manager, texture_manager);
 
     handled_args.insert(iter->first);
 

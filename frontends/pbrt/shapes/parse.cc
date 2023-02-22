@@ -55,7 +55,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
   ParameterList parameter_list;
   while (parameter_list.ParseFrom(tokenizer)) {
     auto material_parameter = material_builder->Parse(
-        parameter_list, spectrum_manager, texture_manager, parameters_parsed,
+        parameter_list, tokenizer.SearchRoot(), spectrum_manager,
+        texture_manager, parameters_parsed,
         /*must_succeed=*/false);
     if (material_parameter) {
       auto name = *parameters_parsed.find(parameter_list.GetName());
@@ -63,10 +64,11 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
       continue;
     }
 
-    auto shape_parameter = iter->second
-                               ->Parse(parameter_list, spectrum_manager,
-                                       texture_manager, parameters_parsed)
-                               .value();
+    auto shape_parameter =
+        iter->second
+            ->Parse(parameter_list, tokenizer.SearchRoot(), spectrum_manager,
+                    texture_manager, parameters_parsed)
+            .value();
     auto name = *parameters_parsed.find(parameter_list.GetName());
     shape_parameters[name] = std::move(shape_parameter);
   }

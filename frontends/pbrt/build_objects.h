@@ -22,10 +22,11 @@ T BuildObject(const ObjectBuilder<T, BuildArgs...>& builder,
 
   ParameterList parameter_list;
   while (parameter_list.ParseFrom(tokenizer)) {
-    auto parameter = builder
-                         .Parse(parameter_list, spectrum_manager,
-                                texture_manager, parameters_parsed)
-                         .value();
+    auto parameter =
+        builder
+            .Parse(parameter_list, tokenizer.SearchRoot(), spectrum_manager,
+                   texture_manager, parameters_parsed)
+            .value();
     auto name = *parameters_parsed.find(parameter_list.GetName());
     parameters[name] = std::move(parameter);
   }

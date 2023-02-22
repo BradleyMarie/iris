@@ -12,8 +12,9 @@ TEST(ParseLightScene, NegativeXBegin) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(iris::pbrt_frontend::integrators::ParsePixelBounds(parameter),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -29,8 +30,9 @@ TEST(ParseLightScene, NegativeXEnd) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(iris::pbrt_frontend::integrators::ParsePixelBounds(parameter),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -46,8 +48,9 @@ TEST(ParseLightScene, NegativeYBegin) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(iris::pbrt_frontend::integrators::ParsePixelBounds(parameter),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -63,8 +66,9 @@ TEST(ParseLightScene, NegativeYEnd) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(iris::pbrt_frontend::integrators::ParsePixelBounds(parameter),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -80,8 +84,9 @@ TEST(ParseLightScene, BadOrderX) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(iris::pbrt_frontend::integrators::ParsePixelBounds(parameter),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -97,8 +102,9 @@ TEST(ParseLightScene, BadOrderY) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(iris::pbrt_frontend::integrators::ParsePixelBounds(parameter),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -114,8 +120,9 @@ TEST(ParseLightScene, Succeeds) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   auto values = iris::pbrt_frontend::integrators::ParsePixelBounds(parameter);
   EXPECT_EQ(1u, values.at(0));

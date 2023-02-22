@@ -136,6 +136,9 @@ cc_library(
     name = "parameter",
     srcs = ["parameter.cc"],
     hdrs = ["parameter.h"],
+    data = [
+        "test_data/include_empty.pbrt",
+    ],
     deps = [
         ":color",
         ":parameter_list",

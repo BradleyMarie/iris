@@ -1,6 +1,7 @@
 #ifndef _FRONTENDS_PBRT_PARAMETER_
 #define _FRONTENDS_PBRT_PARAMETER_
 
+#include <filesystem>
 #include <span>
 #include <string_view>
 
@@ -20,6 +21,7 @@ class Parameter {
  public:
   enum Type {
     BOOL,
+    FILE_PATH,
     FLOAT,
     FLOAT_TEXTURE,
     INTEGER,
@@ -36,6 +38,9 @@ class Parameter {
 
   const std::vector<bool>& GetBoolValues(size_t max_num_values = 0,
                                          size_t min_num_values = 1) const;
+
+  const std::vector<std::filesystem::path>& GetFilePaths(
+      size_t max_num_values = 0, size_t min_num_values = 1) const;
 
   const std::vector<long double>& GetFloatValues(
       size_t max_num_values = 0, size_t min_num_values = 1) const;
@@ -57,7 +62,7 @@ class Parameter {
   GetReflectorTextures(size_t max_num_values = 0,
                        size_t min_num_values = 1) const;
 
-  const std::vector<std::string_view>& GetStringValues(
+  const std::vector<std::string>& GetStringValues(
       size_t max_num_values = 0, size_t min_num_values = 1) const;
 
   const std::vector<iris::ReferenceCounted<Spectrum>>& GetSpectra(
@@ -66,39 +71,54 @@ class Parameter {
   const std::vector<Vector>& GetVector3Values(size_t max_num_values = 0,
                                               size_t min_num_values = 1) const;
 
-  void LoadFrom(const ParameterList& parameter_list, Type type,
+  void LoadFrom(const ParameterList& parameter_list,
+                const std::filesystem::path& search_path, Type type,
                 SpectrumManager& spectrum_manager,
                 TextureManager& texture_manager);
 
  private:
   void ParseBool(const ParameterList& parameter_list,
+                 const std::filesystem::path& search_path,
                  SpectrumManager& spectrum_manager,
                  TextureManager& texture_manager);
+  void ParseFilePath(const ParameterList& parameter_list,
+                     const std::filesystem::path& search_path,
+                     SpectrumManager& spectrum_manager,
+                     TextureManager& texture_manager);
   void ParseFloat(const ParameterList& parameter_list,
+                  const std::filesystem::path& search_path,
                   SpectrumManager& spectrum_manager,
                   TextureManager& texture_manager);
   void ParseFloatTexture(const ParameterList& parameter_list,
+                         const std::filesystem::path& search_path,
                          SpectrumManager& spectrum_manager,
                          TextureManager& texture_manager);
   void ParseInteger(const ParameterList& parameter_list,
+                    const std::filesystem::path& search_path,
                     SpectrumManager& spectrum_manager,
                     TextureManager& texture_manager);
   void ParseNormal(const ParameterList& parameter_list,
+                   const std::filesystem::path& search_path,
                    SpectrumManager& spectrum_manager,
                    TextureManager& texture_manager);
   void ParsePoint3(const ParameterList& parameter_list,
+                   const std::filesystem::path& search_path,
                    SpectrumManager& spectrum_manager,
                    TextureManager& texture_manager);
   void ParseReflectorTexture(const ParameterList& parameter_list,
+                             const std::filesystem::path& search_path,
                              SpectrumManager& spectrum_manager,
                              TextureManager& texture_manager);
   void ParseSpectrum(const ParameterList& parameter_list,
+                     const std::filesystem::path& search_path,
                      SpectrumManager& spectrum_manager,
                      TextureManager& texture_manager);
   void ParseString(const ParameterList& parameter_list,
+                   const std::filesystem::path& search_path,
                    SpectrumManager& spectrum_manager,
                    TextureManager& texture_manager);
   void ParseVector3(const ParameterList& parameter_list,
+                    const std::filesystem::path& search_path,
                     SpectrumManager& spectrum_manager,
                     TextureManager& texture_manager);
 
@@ -107,6 +127,7 @@ class Parameter {
 
   std::vector<bool> bools_;
   std::vector<Color> colors_;
+  std::vector<std::filesystem::path> file_paths_;
   std::vector<long double> floats_;
   std::vector<ReferenceCounted<textures::ValueTexture2D<visual>>>
       float_textures_;
@@ -115,8 +136,7 @@ class Parameter {
       textures::PointerTexture2D<Reflector, SpectralAllocator>>>
       reflector_textures_;
   std::vector<iris::ReferenceCounted<Spectrum>> spectra_;
-  std::vector<std::string_view> strings_;
-  std::vector<std::string> string_storage_;
+  std::vector<std::string> strings_;
   std::vector<Point> points_;
   std::vector<Vector> vectors_;
 };

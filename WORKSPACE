@@ -19,3 +19,10 @@ http_archive(
     strip_prefix = "googletest-release-1.11.0",
     url = "https://github.com/google/googletest/archive/refs/tags/release-1.11.0.tar.gz",
 )
+
+http_archive(
+    name = "tinyply",
+    sha256 = "",
+    strip_prefix = "tinyply-2.3.4",
+    urls = ["https://github.com/ddiakopoulos/tinyply/archive/refs/tags/2.3.4.zip"],
+)

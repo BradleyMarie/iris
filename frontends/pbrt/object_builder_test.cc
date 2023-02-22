@@ -30,8 +30,9 @@ TEST(ObjectBuilder, SpecifiedTwice) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   std::unordered_set<std::string_view> already_specified = {"name"};
-  EXPECT_EXIT(object_builder.Parse(parameter_list, spectrum_manager,
-                                   texture_manager, already_specified),
+  EXPECT_EXIT(object_builder.Parse(
+                  parameter_list, std::filesystem::current_path(),
+                  spectrum_manager, texture_manager, already_specified),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: A parameter was specified twice: name");
 }
@@ -49,10 +50,12 @@ TEST(ObjectBuilder, UnknownParameter) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   std::unordered_set<std::string_view> already_specified = {};
-  EXPECT_FALSE(object_builder.Parse(parameter_list, spectrum_manager,
-                                    texture_manager, already_specified, false));
-  EXPECT_EXIT(object_builder.Parse(parameter_list, spectrum_manager,
-                                   texture_manager, already_specified),
+  EXPECT_FALSE(object_builder.Parse(
+      parameter_list, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, already_specified, false));
+  EXPECT_EXIT(object_builder.Parse(
+                  parameter_list, std::filesystem::current_path(),
+                  spectrum_manager, texture_manager, already_specified),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unknown parameter: name");
 }
@@ -70,8 +73,9 @@ TEST(ObjectBuilder, Success) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   std::unordered_set<std::string_view> already_specified = {};
-  auto parameter = object_builder.Parse(parameter_list, spectrum_manager,
-                                        texture_manager, already_specified);
+  auto parameter = object_builder.Parse(
+      parameter_list, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, already_specified);
   ASSERT_TRUE(parameter);
   EXPECT_EQ(iris::pbrt_frontend::Parameter::INTEGER, parameter->GetType());
 }

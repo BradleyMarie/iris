@@ -57,6 +57,12 @@ const std::vector<bool>& Parameter::GetBoolValues(size_t max_num_values,
   return GetValues<BOOL>(*this, bools_, max_num_values, min_num_values);
 }
 
+const std::vector<std::filesystem::path>& Parameter::GetFilePaths(
+    size_t max_num_values, size_t min_num_values) const {
+  return GetValues<FILE_PATH>(*this, file_paths_, max_num_values,
+                              min_num_values);
+}
+
 const std::vector<long double>& Parameter::GetFloatValues(
     size_t max_num_values, size_t min_num_values) const {
   return GetValues<FLOAT>(*this, floats_, max_num_values, min_num_values);
@@ -92,7 +98,7 @@ Parameter::GetReflectorTextures(size_t max_num_values,
                                       max_num_values, min_num_values);
 }
 
-const std::vector<std::string_view>& Parameter::GetStringValues(
+const std::vector<std::string>& Parameter::GetStringValues(
     size_t max_num_values, size_t min_num_values) const {
   return GetValues<STRING>(*this, strings_, max_num_values, min_num_values);
 }
@@ -108,13 +114,43 @@ const std::vector<Vector>& Parameter::GetVector3Values(
 }
 
 void Parameter::ParseBool(const ParameterList& parameter_list,
+                          const std::filesystem::path& search_path,
                           SpectrumManager& spectrum_manager,
                           TextureManager& texture_manager) {
   ParseSimpleType<ParameterList::BOOL>(parameter_list,
                                        &ParameterList::GetBoolValues, bools_);
 }
 
+void Parameter::ParseFilePath(const ParameterList& parameter_list,
+                              const std::filesystem::path& search_path,
+                              SpectrumManager& spectrum_manager,
+                              TextureManager& texture_manager) {
+  file_paths_.clear();
+
+  if (parameter_list.GetType() != ParameterList::STRING) {
+    std::cerr << "ERROR: Wrong type for parameter list: "
+              << parameter_list.GetName() << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  for (const auto& string : parameter_list.GetStringValues()) {
+    file_paths_.emplace_back(string);
+    if (file_paths_.back().is_relative()) {
+      file_paths_.back() = search_path / file_paths_.back();
+    }
+
+    if (!std::filesystem::is_regular_file(file_paths_.back())) {
+      std::cerr << "ERROR: Could not find file specified in parameter list: "
+                << parameter_list.GetName() << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    file_paths_.back() = std::filesystem::weakly_canonical(file_paths_.back());
+  }
+}
+
 void Parameter::ParseFloat(const ParameterList& parameter_list,
+                           const std::filesystem::path& search_path,
                            SpectrumManager& spectrum_manager,
                            TextureManager& texture_manager) {
   ParseSimpleType<ParameterList::FLOAT>(
@@ -122,6 +158,7 @@ void Parameter::ParseFloat(const ParameterList& parameter_list,
 }
 
 void Parameter::ParseFloatTexture(const ParameterList& parameter_list,
+                                  const std::filesystem::path& search_path,
                                   SpectrumManager& spectrum_manager,
                                   TextureManager& texture_manager) {
   float_textures_.clear();
@@ -153,6 +190,7 @@ void Parameter::ParseFloatTexture(const ParameterList& parameter_list,
 }
 
 void Parameter::ParseInteger(const ParameterList& parameter_list,
+                             const std::filesystem::path& search_path,
                              SpectrumManager& spectrum_manager,
                              TextureManager& texture_manager) {
   ParseSimpleType<ParameterList::INTEGER>(
@@ -160,6 +198,7 @@ void Parameter::ParseInteger(const ParameterList& parameter_list,
 }
 
 void Parameter::ParseNormal(const ParameterList& parameter_list,
+                            const std::filesystem::path& search_path,
                             SpectrumManager& spectrum_manager,
                             TextureManager& texture_manager) {
   ParseSimpleType<ParameterList::NORMAL>(
@@ -167,6 +206,7 @@ void Parameter::ParseNormal(const ParameterList& parameter_list,
 }
 
 void Parameter::ParsePoint3(const ParameterList& parameter_list,
+                            const std::filesystem::path& search_path,
                             SpectrumManager& spectrum_manager,
                             TextureManager& texture_manager) {
   ParseSimpleType<ParameterList::POINT3>(
@@ -174,6 +214,7 @@ void Parameter::ParsePoint3(const ParameterList& parameter_list,
 }
 
 void Parameter::ParseReflectorTexture(const ParameterList& parameter_list,
+                                      const std::filesystem::path& search_path,
                                       SpectrumManager& spectrum_manager,
                                       TextureManager& texture_manager) {
   reflector_textures_.clear();
@@ -236,6 +277,7 @@ void Parameter::ParseReflectorTexture(const ParameterList& parameter_list,
 }
 
 void Parameter::ParseSpectrum(const ParameterList& parameter_list,
+                              const std::filesystem::path& search_path,
                               SpectrumManager& spectrum_manager,
                               TextureManager& texture_manager) {
   spectra_.clear();
@@ -258,44 +300,41 @@ void Parameter::ParseSpectrum(const ParameterList& parameter_list,
 }
 
 void Parameter::ParseString(const ParameterList& parameter_list,
+                            const std::filesystem::path& search_path,
                             SpectrumManager& spectrum_manager,
                             TextureManager& texture_manager) {
+  strings_.clear();
+
   if (parameter_list.GetType() != ParameterList::STRING) {
     std::cerr << "ERROR: Wrong type for parameter list: "
               << parameter_list.GetName() << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  const auto& string_list = parameter_list.GetStringValues();
-  for (size_t i = 0; i < string_list.size(); i++) {
-    if (i == string_storage_.size()) {
-      string_storage_.emplace_back(string_list[i]);
-    } else {
-      string_storage_[i] = string_list[i];
-    }
-  }
-
-  strings_.clear();
-  for (size_t i = 0; i < string_list.size(); i++) {
-    strings_.emplace_back(string_storage_[i]);
+  for (const auto& string : parameter_list.GetStringValues()) {
+    strings_.emplace_back(string);
   }
 }
 
 void Parameter::ParseVector3(const ParameterList& parameter_list,
+                             const std::filesystem::path& search_path,
                              SpectrumManager& spectrum_manager,
                              TextureManager& texture_manager) {
   ParseSimpleType<ParameterList::VECTOR3>(
       parameter_list, &ParameterList::GetVector3Values, vectors_);
 }
 
-void Parameter::LoadFrom(const ParameterList& parameter_list, Type type,
+void Parameter::LoadFrom(const ParameterList& parameter_list,
+                         const std::filesystem::path& search_path, Type type,
                          SpectrumManager& spectrum_manager,
                          TextureManager& texture_manager) {
-  static std::unordered_map<Type, void (Parameter::*)(const ParameterList&,
-                                                      SpectrumManager&,
-                                                      TextureManager&)>
+  static std::unordered_map<Type, void (Parameter::*)(
+                                      const ParameterList&,
+                                      const std::filesystem::path&,
+                                      SpectrumManager&, TextureManager&)>
       callbacks = {
           {BOOL, &Parameter::ParseBool},
+          {FILE_PATH, &Parameter::ParseFilePath},
           {FLOAT, &Parameter::ParseFloat},
           {FLOAT_TEXTURE, &Parameter::ParseFloatTexture},
           {INTEGER, &Parameter::ParseInteger},
@@ -311,7 +350,8 @@ void Parameter::LoadFrom(const ParameterList& parameter_list, Type type,
   type_ = type;
 
   auto callback = callbacks.at(type);
-  (this->*callback)(parameter_list, spectrum_manager, texture_manager);
+  (this->*callback)(parameter_list, search_path, spectrum_manager,
+                    texture_manager);
 }
 
 }  // namespace iris::pbrt_frontend

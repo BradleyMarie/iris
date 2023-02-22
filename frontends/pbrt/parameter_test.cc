@@ -13,8 +13,9 @@ TEST(Parameter, BoolWrongType) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::BOOL,
-                         spectrum_manager, texture_manager),
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::BOOL, spectrum_manager,
+                         texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Wrong type for parameter list: name");
 }
@@ -28,8 +29,9 @@ TEST(Parameter, BoolTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::BOOL,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::BOOL, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetBoolValues(0u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -45,8 +47,9 @@ TEST(Parameter, BoolTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::BOOL,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::BOOL, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetBoolValues(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -62,11 +65,106 @@ TEST(Parameter, Bool) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::BOOL,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::BOOL, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetBoolValues(1u, 1u).size());
   EXPECT_TRUE(parameter.GetBoolValues(1u, 1u).at(0));
+}
+
+TEST(Parameter, FilePathWrongType) {
+  std::stringstream input("\"integer name\" [1]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::FILE_PATH,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Wrong type for parameter list: name");
+}
+
+TEST(Parameter, FilePathTooFew) {
+  std::stringstream input(
+      "\"string name\" [\"frontends/pbrt/test_data/include_empty.pbrt\" "
+      "\"frontends/pbrt/test_data/include_empty.pbrt\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::FILE_PATH,
+                     spectrum_manager, texture_manager);
+
+  EXPECT_EXIT(parameter.GetFilePaths(0u, 3u),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Too few values in parameter list: name");
+}
+
+TEST(Parameter, FilePathTooMany) {
+  std::stringstream input(
+      "\"string name\" [\"frontends/pbrt/test_data/include_empty.pbrt\" "
+      "\"frontends/pbrt/test_data/include_empty.pbrt\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::FILE_PATH,
+                     spectrum_manager, texture_manager);
+
+  EXPECT_EXIT(parameter.GetFilePaths(1u, 1u),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Too many values in parameter list: name");
+}
+
+TEST(Parameter, FilePathDoesNotExist) {
+  std::stringstream input("\"string name\" [\"notarealpath\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::FILE_PATH,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Could not find file specified in parameter list: name");
+}
+
+TEST(Parameter, FilePathT) {
+  std::stringstream input(
+      "\"string name\" [\"frontends/pbrt/test_data/include_empty.pbrt\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::FILE_PATH,
+                     spectrum_manager, texture_manager);
+
+  EXPECT_EQ(1u, parameter.GetFilePaths(1u, 1u).size());
+  EXPECT_EQ(std::filesystem::weakly_canonical(
+                "frontends/pbrt/test_data/include_empty.pbrt"),
+            parameter.GetFilePaths(1u, 1u).at(0));
 }
 
 TEST(Parameter, FloatWrongType) {
@@ -79,7 +177,8 @@ TEST(Parameter, FloatWrongType) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::FLOAT,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::FLOAT,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Wrong type for parameter list: name");
@@ -94,8 +193,9 @@ TEST(Parameter, FloatTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::FLOAT,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::FLOAT, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetFloatValues(0u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -111,8 +211,9 @@ TEST(Parameter, FloatTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::FLOAT,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::FLOAT, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetFloatValues(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -128,8 +229,9 @@ TEST(Parameter, Float) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::FLOAT,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::FLOAT, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetFloatValues(1u, 1u).size());
   EXPECT_EQ(1.0, parameter.GetFloatValues(1u, 1u).at(0));
@@ -144,11 +246,12 @@ TEST(Parameter, FloatTextureWrongType) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  EXPECT_EXIT(parameter.LoadFrom(parameter_list,
-                                 iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
-                                 spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Wrong type for parameter list: name");
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Wrong type for parameter list: name");
 }
 
 TEST(Parameter, FloatTextureOutOfRange) {
@@ -160,11 +263,12 @@ TEST(Parameter, FloatTextureOutOfRange) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  EXPECT_EXIT(parameter.LoadFrom(parameter_list,
-                                 iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
-                                 spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value in parameter list: name");
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value in parameter list: name");
 }
 
 TEST(Parameter, FloatTextureTooFew) {
@@ -176,7 +280,7 @@ TEST(Parameter, FloatTextureTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -194,7 +298,7 @@ TEST(Parameter, FloatTextureFloat) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -212,7 +316,7 @@ TEST(Parameter, FloatTextureTexture) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -234,7 +338,7 @@ TEST(Parameter, FloatTextureTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::FLOAT_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -252,11 +356,12 @@ TEST(Parameter, IntegerWrongType) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  EXPECT_EXIT(parameter.LoadFrom(parameter_list,
-                                 iris::pbrt_frontend::Parameter::INTEGER,
-                                 spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Wrong type for parameter list: name");
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::INTEGER,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Wrong type for parameter list: name");
 }
 
 TEST(Parameter, IntegerTooFew) {
@@ -268,8 +373,9 @@ TEST(Parameter, IntegerTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetIntegerValues(0u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -285,8 +391,9 @@ TEST(Parameter, IntegerTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetIntegerValues(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -302,8 +409,9 @@ TEST(Parameter, Integer) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::INTEGER,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::INTEGER, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetIntegerValues(1u, 1u).size());
   EXPECT_EQ(1, parameter.GetIntegerValues(1u, 1u).at(0));
@@ -319,7 +427,8 @@ TEST(Parameter, NormalWrongType) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::NORMAL,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::NORMAL,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Wrong type for parameter list: name");
@@ -334,8 +443,9 @@ TEST(Parameter, NormalTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::NORMAL,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::NORMAL, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetNormalValues(0u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -351,8 +461,9 @@ TEST(Parameter, NormalTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::NORMAL,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::NORMAL, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetNormalValues(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -368,8 +479,9 @@ TEST(Parameter, Normal) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::NORMAL,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::NORMAL, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetNormalValues(1u, 1u).size());
   EXPECT_EQ(iris::Vector(1.0, 1.0, 1.0),
@@ -386,7 +498,8 @@ TEST(Parameter, Point3WrongType) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::POINT3,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::POINT3,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Wrong type for parameter list: name");
@@ -401,8 +514,9 @@ TEST(Parameter, Point3TooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::POINT3,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::POINT3, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetPoint3Values(0u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -418,8 +532,9 @@ TEST(Parameter, Point3TooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::POINT3,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::POINT3, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetPoint3Values(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -435,8 +550,9 @@ TEST(Parameter, Point3) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::POINT3,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::POINT3, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetPoint3Values(1u, 1u).size());
   EXPECT_EQ(iris::Point(1.0, 1.0, 1.0),
@@ -453,7 +569,7 @@ TEST(Parameter, ReflectorTextureWrongType) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                          iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -470,7 +586,7 @@ TEST(Parameter, ReflectorFloatTextureOutOfRangeNegative) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                          iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -487,7 +603,7 @@ TEST(Parameter, ReflectorFloatTextureOutOfRangePositive) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                          iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -504,7 +620,7 @@ TEST(Parameter, ReflectorTextureOutOfRange) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                          iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -521,7 +637,7 @@ TEST(Parameter, ReflectorTextureOutOfRangeX) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                          iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -538,7 +654,7 @@ TEST(Parameter, ReflectorTextureOutOfRangeY) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                          iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -555,7 +671,7 @@ TEST(Parameter, ReflectorTextureOutOfRangeZ) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                          iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -572,7 +688,7 @@ TEST(Parameter, ReflectorTextureTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -583,7 +699,7 @@ TEST(Parameter, ReflectorTextureTooFew) {
   texture_manager.Put("texture1", texture);
 
   ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
   EXPECT_EXIT(parameter.GetReflectorTextures(3u, 3u),
@@ -601,7 +717,7 @@ TEST(Parameter, ReflectorTextureTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -612,7 +728,7 @@ TEST(Parameter, ReflectorTextureTooMany) {
   texture_manager.Put("texture1", texture);
 
   ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
   EXPECT_EXIT(parameter.GetReflectorTextures(1u, 1u),
@@ -629,7 +745,7 @@ TEST(Parameter, ReflectorFloatTexture) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -646,7 +762,7 @@ TEST(Parameter, ReflectorColorTexture) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -664,7 +780,7 @@ TEST(Parameter, ReflectorTexture) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -674,7 +790,7 @@ TEST(Parameter, ReflectorTexture) {
   texture_manager.Put("texture0", texture);
 
   ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
-  parameter.LoadFrom(parameter_list,
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
                      iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
                      spectrum_manager, texture_manager);
 
@@ -691,11 +807,12 @@ TEST(Parameter, SpectrumWrongType) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  EXPECT_EXIT(parameter.LoadFrom(parameter_list,
-                                 iris::pbrt_frontend::Parameter::SPECTRUM,
-                                 spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Wrong type for parameter list: name");
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::SPECTRUM,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Wrong type for parameter list: name");
 }
 
 TEST(Parameter, SpectrumTooFew) {
@@ -707,8 +824,9 @@ TEST(Parameter, SpectrumTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::SPECTRUM,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::SPECTRUM, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetSpectra(3u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -724,8 +842,9 @@ TEST(Parameter, SpectrumTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::SPECTRUM,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::SPECTRUM, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetSpectra(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -741,8 +860,9 @@ TEST(Parameter, SpectrumTooManyColor) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::SPECTRUM,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::SPECTRUM, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetSpectra(1u, 1u).size());
   EXPECT_NE(nullptr, parameter.GetSpectra(1u, 1u).at(0).Get());
@@ -757,8 +877,9 @@ TEST(Parameter, SpectrumTooManySampled) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::SPECTRUM,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::SPECTRUM, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetSpectra(1u, 1u).size());
   EXPECT_NE(nullptr, parameter.GetSpectra(1u, 1u).at(0).Get());
@@ -774,7 +895,8 @@ TEST(Parameter, StringWrongType) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
   EXPECT_EXIT(
-      parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::STRING,
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::STRING,
                          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Wrong type for parameter list: name");
@@ -789,8 +911,9 @@ TEST(Parameter, StringTooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::STRING,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::STRING, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetStringValues(0u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -806,8 +929,9 @@ TEST(Parameter, StringTooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::STRING,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::STRING, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetStringValues(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -823,8 +947,9 @@ TEST(Parameter, String) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::STRING,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::STRING, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetStringValues(1u, 1u).size());
   EXPECT_EQ("str", parameter.GetStringValues(1u, 1u).at(0));
@@ -839,11 +964,12 @@ TEST(Parameter, Vector3WrongType) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  EXPECT_EXIT(parameter.LoadFrom(parameter_list,
-                                 iris::pbrt_frontend::Parameter::VECTOR3,
-                                 spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Wrong type for parameter list: name");
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::VECTOR3,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Wrong type for parameter list: name");
 }
 
 TEST(Parameter, Vector3TooFew) {
@@ -855,8 +981,9 @@ TEST(Parameter, Vector3TooFew) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::VECTOR3,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::VECTOR3, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetVector3Values(0u, 3u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -872,8 +999,9 @@ TEST(Parameter, Vector3TooMany) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::VECTOR3,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::VECTOR3, spectrum_manager,
+                     texture_manager);
 
   EXPECT_EXIT(parameter.GetVector3Values(1u, 1u),
               testing::ExitedWithCode(EXIT_FAILURE),
@@ -889,8 +1017,9 @@ TEST(Parameter, Vector3) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::Parameter parameter;
-  parameter.LoadFrom(parameter_list, iris::pbrt_frontend::Parameter::VECTOR3,
-                     spectrum_manager, texture_manager);
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::VECTOR3, spectrum_manager,
+                     texture_manager);
 
   ASSERT_EQ(1u, parameter.GetVector3Values(1u, 1u).size());
   EXPECT_EQ(iris::Vector(1.0, 1.0, 1.0),
