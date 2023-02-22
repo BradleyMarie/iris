@@ -1,10 +1,10 @@
 #ifndef _IRIS_GEOMETRY_TRIANGLE_MESH_
 #define _IRIS_GEOMETRY_TRIANGLE_MESH_
 
-#include <array>
 #include <memory>
 #include <optional>
 #include <span>
+#include <tuple>
 #include <variant>
 #include <vector>
 
@@ -27,7 +27,7 @@ namespace geometry {
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
-    std::span<const std::array<uint32_t, 3>> indices,
+    std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
     std::span<const Vector> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<Material> back_material,

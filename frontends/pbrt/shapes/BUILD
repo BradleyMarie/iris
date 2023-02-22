@@ -17,6 +17,22 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "plymesh",
+    srcs = ["plymesh.cc"],
+    hdrs = ["plymesh.h"],
+    visibility = ["//frontends/pbrt:__subpackages__"],
+    deps = [
+        ":trianglemesh",
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:quoted_string",
+        "//iris:geometry",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "@tinyply",
+    ],
+)
+
 cc_test(
     name = "parse_test",
     srcs = ["parse_test.cc"],

@@ -22,7 +22,7 @@ http_archive(
 
 http_archive(
     name = "tinyply",
-    sha256 = "",
+    sha256 = "1e834b899b64711a477d21ef22d50b465ec9144e8aff9a674b34eb719effed14",
     strip_prefix = "tinyply-2.3.4",
     urls = ["https://github.com/ddiakopoulos/tinyply/archive/refs/tags/2.3.4.zip"],
 )

@@ -35,7 +35,7 @@ class Triangle final : public Geometry {
   static const face_t FRONT_FACE = 0u;
   static const face_t BACK_FACE = 1u;
 
-  Triangle(const std::array<uint32_t, 3>& vertices,
+  Triangle(const std::tuple<uint32_t, uint32_t, uint32_t>& vertices,
            std::shared_ptr<const SharedData> shared) noexcept
       : vertices_(vertices), shared_(std::move(shared)) {}
 
@@ -74,15 +74,15 @@ class Triangle final : public Geometry {
 
   Vector ComputeSurfaceNormal() const;
 
-  const std::array<uint32_t, 3> vertices_;
+  const std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
   const std::shared_ptr<const SharedData> shared_;
 };
 
 Vector Triangle::ComputeSurfaceNormal() const {
-  Vector v0_to_v1 =
-      shared_->points[vertices_[1]] - shared_->points[vertices_[0]];
-  Vector v0_to_v2 =
-      shared_->points[vertices_[2]] - shared_->points[vertices_[0]];
+  Vector v0_to_v1 = shared_->points[std::get<1>(vertices_)] -
+                    shared_->points[std::get<0>(vertices_)];
+  Vector v0_to_v2 = shared_->points[std::get<2>(vertices_)] -
+                    shared_->points[std::get<0>(vertices_)];
   return CrossProduct(v0_to_v1, v0_to_v2);
 }
 
@@ -106,12 +106,14 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
 
   const auto* barycentric = static_cast<const AdditionalData*>(additional_data);
 
-  geometric_t u = shared_->uv[vertices_[0]].first * (*barycentric)[0] +
-                  shared_->uv[vertices_[1]].first * (*barycentric)[1] +
-                  shared_->uv[vertices_[2]].first * (*barycentric)[2];
-  geometric_t v = shared_->uv[vertices_[0]].second * (*barycentric)[0] +
-                  shared_->uv[vertices_[1]].second * (*barycentric)[1] +
-                  shared_->uv[vertices_[2]].second * (*barycentric)[2];
+  geometric_t u =
+      shared_->uv[std::get<0>(vertices_)].first * (*barycentric)[0] +
+      shared_->uv[std::get<1>(vertices_)].first * (*barycentric)[1] +
+      shared_->uv[std::get<2>(vertices_)].first * (*barycentric)[2];
+  geometric_t v =
+      shared_->uv[std::get<0>(vertices_)].second * (*barycentric)[0] +
+      shared_->uv[std::get<1>(vertices_)].second * (*barycentric)[1] +
+      shared_->uv[std::get<2>(vertices_)].second * (*barycentric)[2];
 
   return TextureCoordinates{{u, v}};
 }
@@ -127,9 +129,10 @@ std::variant<Vector, const NormalMap*> Triangle::ComputeShadingNormal(
   }
 
   const auto* barycentric = static_cast<const AdditionalData*>(additional_data);
-  Vector shading_normal = shared_->normals[vertices_[0]] * (*barycentric)[0] +
-                          shared_->normals[vertices_[1]] * (*barycentric)[1] +
-                          shared_->normals[vertices_[2]] * (*barycentric)[2];
+  Vector shading_normal =
+      shared_->normals[std::get<0>(vertices_)] * (*barycentric)[0] +
+      shared_->normals[std::get<1>(vertices_)] * (*barycentric)[1] +
+      shared_->normals[std::get<2>(vertices_)] * (*barycentric)[2];
   Vector normalized = Normalize(shading_normal);
 
   if (face == FRONT_FACE) {
@@ -162,12 +165,12 @@ std::optional<Point> Triangle::SampleFace(face_t face, Sampler& sampler) const {
     v = (geometric_t)1.0 - v;
   }
 
-  Vector v0_to_v1 =
-      shared_->points[vertices_[1]] - shared_->points[vertices_[0]];
-  Vector v0_to_v2 =
-      shared_->points[vertices_[2]] - shared_->points[vertices_[0]];
+  Vector v0_to_v1 = shared_->points[std::get<1>(vertices_)] -
+                    shared_->points[std::get<0>(vertices_)];
+  Vector v0_to_v2 = shared_->points[std::get<2>(vertices_)] -
+                    shared_->points[std::get<0>(vertices_)];
 
-  return shared_->points[vertices_[0]] + v0_to_v1 * u + v0_to_v2 * v;
+  return shared_->points[std::get<0>(vertices_)] + v0_to_v1 * u + v0_to_v2 * v;
 }
 
 std::optional<visual_t> Triangle::ComputeArea(face_t face) const {
@@ -176,9 +179,10 @@ std::optional<visual_t> Triangle::ComputeArea(face_t face) const {
 }
 
 BoundingBox Triangle::ComputeBounds(const Matrix& model_to_world) const {
-  return BoundingBox(model_to_world.Multiply(shared_->points[vertices_[0]]),
-                     model_to_world.Multiply(shared_->points[vertices_[1]]),
-                     model_to_world.Multiply(shared_->points[vertices_[2]]));
+  return BoundingBox(
+      model_to_world.Multiply(shared_->points[std::get<0>(vertices_)]),
+      model_to_world.Multiply(shared_->points[std::get<1>(vertices_)]),
+      model_to_world.Multiply(shared_->points[std::get<2>(vertices_)]));
 }
 
 std::span<const face_t> Triangle::GetFaces() const {
@@ -187,9 +191,9 @@ std::span<const face_t> Triangle::GetFaces() const {
 }
 
 Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
-  auto v0 = Subtract(shared_->points[vertices_[0]], ray.origin);
-  auto v1 = Subtract(shared_->points[vertices_[1]], ray.origin);
-  auto v2 = Subtract(shared_->points[vertices_[2]], ray.origin);
+  auto v0 = Subtract(shared_->points[std::get<0>(vertices_)], ray.origin);
+  auto v1 = Subtract(shared_->points[std::get<1>(vertices_)], ray.origin);
+  auto v2 = Subtract(shared_->points[std::get<2>(vertices_)], ray.origin);
 
   auto dominant_axis = ray.direction.DominantAxis();
 
@@ -293,7 +297,7 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
-    std::span<const std::array<uint32_t, 3>> indices,
+    std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
     std::span<const Vector> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<Material> back_material,
@@ -315,18 +319,24 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
   std::vector<ReferenceCounted<Geometry>> result;
   for (const auto& entry : indices) {
     assert(shared_data->normals.empty() ||
-           entry[0] < shared_data->normals.size());
+           std::get<0>(entry) < shared_data->normals.size());
     assert(shared_data->normals.empty() ||
-           entry[1] < shared_data->normals.size());
+           std::get<1>(entry) < shared_data->normals.size());
     assert(shared_data->normals.empty() ||
-           entry[2] < shared_data->normals.size());
-    assert(shared_data->uv.empty() || entry[0] < shared_data->uv.size());
-    assert(shared_data->uv.empty() || entry[1] < shared_data->uv.size());
-    assert(shared_data->uv.empty() || entry[2] < shared_data->uv.size());
+           std::get<2>(entry) < shared_data->normals.size());
+    assert(shared_data->uv.empty() ||
+           std::get<0>(entry) < shared_data->uv.size());
+    assert(shared_data->uv.empty() ||
+           std::get<1>(entry) < shared_data->uv.size());
+    assert(shared_data->uv.empty() ||
+           std::get<2>(entry) < shared_data->uv.size());
 
-    if (shared_data->points.at(entry[0]) == shared_data->points.at(entry[1]) ||
-        shared_data->points.at(entry[1]) == shared_data->points.at(entry[2]) ||
-        shared_data->points.at(entry[2]) == shared_data->points.at(entry[0])) {
+    if (shared_data->points.at(std::get<0>(entry)) ==
+            shared_data->points.at(std::get<1>(entry)) ||
+        shared_data->points.at(std::get<1>(entry)) ==
+            shared_data->points.at(std::get<2>(entry)) ||
+        shared_data->points.at(std::get<2>(entry)) ==
+            shared_data->points.at(std::get<0>(entry))) {
       continue;
     }
 

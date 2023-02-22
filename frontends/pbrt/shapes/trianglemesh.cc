@@ -60,7 +60,7 @@ TriangleMeshBuilder::Build(
 
   uint32_t max_index = 0u;
 
-  std::vector<std::array<uint32_t, 3>> indices;
+  std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices;
   for (size_t i = 0; i < indices_array.size(); i += 3) {
     if (indices_array[i] > std::numeric_limits<uint32_t>::max() ||
         indices_array[i + 1] > std::numeric_limits<uint32_t>::max() ||
@@ -82,11 +82,9 @@ TriangleMeshBuilder::Build(
       max_index = indices_array[i + 2];
     }
 
-    std::array<uint32_t, 3> triangle{
-        static_cast<uint32_t>(indices_array[i]),
-        static_cast<uint32_t>(indices_array[i + 1]),
-        static_cast<uint32_t>(indices_array[i + 2])};
-    indices.push_back(triangle);
+    indices.emplace_back(static_cast<uint32_t>(indices_array[i]),
+                         static_cast<uint32_t>(indices_array[i + 1]),
+                         static_cast<uint32_t>(indices_array[i + 2]));
   }
 
   uint32_t target_size = max_index + 1u;
@@ -98,8 +96,7 @@ TriangleMeshBuilder::Build(
     exit(EXIT_FAILURE);
   }
 
-  const auto& points_array =
-      p_iter->second.GetPoint3Values(0u, target_size);
+  const auto& points_array = p_iter->second.GetPoint3Values(0u, target_size);
 
   std::vector<Point> points;
   for (const auto& entry : points_array) {
