@@ -47,3 +47,5 @@ TEST(Parse, InvalidType) {
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported type for directive Shape: NotAType");
 }
+
+// TODO: Add better coverage

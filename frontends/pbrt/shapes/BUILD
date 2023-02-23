@@ -8,6 +8,7 @@ cc_library(
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":plymesh",
         ":trianglemesh",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
@@ -21,15 +22,29 @@ cc_library(
     name = "plymesh",
     srcs = ["plymesh.cc"],
     hdrs = ["plymesh.h"],
-    visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
-        ":trianglemesh",
         "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
         "//iris:geometry",
         "//iris:matrix",
         "//iris:reference_counted",
+        "//iris/geometry:triangle_mesh",
         "@tinyply",
+    ],
+)
+
+cc_test(
+    name = "plymesh_test",
+    srcs = ["plymesh_test.cc"],
+    data = [
+        "test_data/empty.ply",
+        "test_data/quads.ply",
+        "test_data/triangles.ply",
+    ],
+    deps = [
+        ":plymesh",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

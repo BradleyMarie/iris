@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/shapes/plymesh.h"
 #include "frontends/pbrt/shapes/trianglemesh.h"
 
 namespace iris::pbrt_frontend::shapes {
@@ -16,7 +17,8 @@ static const std::unordered_map<
         const ReferenceCounted<iris::NormalMap>&,
         const ReferenceCounted<EmissiveMaterial>&,
         const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>&>
-    g_shapes = {{"trianglemesh", g_trianglemesh_builder}};
+    g_shapes = {{"plymesh", g_plymesh_builder},
+                {"trianglemesh", g_trianglemesh_builder}};
 
 }  // namespace
 
