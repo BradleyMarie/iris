@@ -28,7 +28,7 @@ cc_library(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/geometry:triangle_mesh",
-        "@tinyply",
+        "@plyodine//plyodine/readers:triangle_mesh_reader",
     ],
 )
 

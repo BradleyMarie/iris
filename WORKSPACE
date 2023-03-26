@@ -21,8 +21,8 @@ http_archive(
 )
 
 http_archive(
-    name = "tinyply",
-    sha256 = "1e834b899b64711a477d21ef22d50b465ec9144e8aff9a674b34eb719effed14",
-    strip_prefix = "tinyply-2.3.4",
-    urls = ["https://github.com/ddiakopoulos/tinyply/archive/refs/tags/2.3.4.zip"],
+    name = "plyodine",
+    sha256 = "3c140ada65523d7f2f61ea69189804b4b1ab2b1ff7ab3b4de96a5c83e25b5e09",
+    strip_prefix = "plyodine-3df49d7eae095f0a89810e21b22ff0c6d33d42c3",
+    url = "https://github.com/BradleyMarie/plyodine/archive/3df49d7eae095f0a89810e21b22ff0c6d33d42c3.zip",
 )

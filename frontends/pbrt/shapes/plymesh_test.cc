@@ -33,13 +33,13 @@ TEST(PlyMesh, Empty) {
   const iris::ReferenceCounted<iris::NormalMap> normal;
   const iris::ReferenceCounted<iris::EmissiveMaterial> emissive;
 
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
-          spectrum_manager, texture_manager, material, normal, emissive,
-          emissive, iris::Matrix::Identity()),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Invalid PLY file specified by plymesh parameter: filename");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
+                  spectrum_manager, texture_manager, material, normal, emissive,
+                  emissive, iris::Matrix::Identity()),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: PLY file parsing failed with message: The first line of "
+              "the input must exactly contain the magic string");
 }
 
 TEST(PlyMesh, Quads) {
