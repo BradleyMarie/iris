@@ -20,21 +20,22 @@ struct TriangleMeshReader final
     : plyodine::TriangleMeshReader<geometric, geometric, geometric, uint32_t> {
   void Start() override {}
 
-  void Handle(geometric position[3], geometric maybe_normals[3],
-              geometric maybe_uv[2]) override {
+  void AddVertex(const std::array<geometric, 3>& position,
+                 const std::array<geometric, 3>* maybe_normal,
+                 const std::array<geometric, 2>* maybe_uv) override {
     positions.emplace_back(position[0], position[1], position[2]);
 
-    if (maybe_normals) {
-      normals.emplace_back(maybe_normals[0], maybe_normals[1],
-                           maybe_normals[2]);
+    if (maybe_normal) {
+      normals.emplace_back((*maybe_normal)[0], (*maybe_normal)[1],
+                           (*maybe_normal)[2]);
     }
 
     if (maybe_uv) {
-      uvs.emplace_back(maybe_uv[0], maybe_uv[1]);
+      uvs.emplace_back((*maybe_uv)[0], (*maybe_uv)[1]);
     }
   }
 
-  void Handle(uint32_t face[3]) override {
+  void AddFace(const std::array<uint32_t, 3>& face) override {
     faces.emplace_back(face[0], face[1], face[2]);
   }
 

@@ -22,7 +22,7 @@ http_archive(
 
 http_archive(
     name = "plyodine",
-    sha256 = "3c140ada65523d7f2f61ea69189804b4b1ab2b1ff7ab3b4de96a5c83e25b5e09",
-    strip_prefix = "plyodine-3df49d7eae095f0a89810e21b22ff0c6d33d42c3",
-    url = "https://github.com/BradleyMarie/plyodine/archive/3df49d7eae095f0a89810e21b22ff0c6d33d42c3.zip",
+    sha256 = "",
+    strip_prefix = "plyodine-38bb23714cb7c3dc14ea1abf7a930c08ec8f00be",
+    url = "https://github.com/BradleyMarie/plyodine/archive/38bb23714cb7c3dc14ea1abf7a930c08ec8f00be.zip",
 )
