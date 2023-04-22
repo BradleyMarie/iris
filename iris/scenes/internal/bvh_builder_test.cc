@@ -74,8 +74,8 @@ TEST(ComputeCentroid, FromGeometry) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
       .WillOnce(testing::Return(bounds));
-  auto centroid =
-      iris::scenes::internal::internal::ComputeCentroid({*geometry, nullptr});
+  auto centroid = iris::scenes::internal::internal::ComputeCentroid(
+      std::make_pair(*geometry, nullptr));
   EXPECT_EQ(iris::Point(0.5, 0.5, 0.5), centroid);
 }
 

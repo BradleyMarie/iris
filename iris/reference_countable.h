@@ -2,6 +2,7 @@
 #define _IRIS_REFERENCE_COUNTABLE_
 
 #include <atomic>
+#include <concepts>
 #include <cstdint>
 
 namespace iris {
