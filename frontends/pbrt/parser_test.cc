@@ -604,6 +604,30 @@ TEST(Shape, BeforeWorldBegin) {
               "ERROR: Directive cannot be specified before WorldBegin: Shape");
 }
 
+TEST(Texture, BeforeWorldBegin) {
+  std::stringstream input("Texture WorldBegin");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Directive cannot be specified before WorldBegin: Texture");
+}
+
+TEST(Texture, TooFewArguments) {
+  std::stringstream input("WorldBegin Texture");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Too few parameters to directive: Texture");
+}
+
 TEST(WorldBegin, Duplicate) {
   std::stringstream input("WorldBegin WorldBegin");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

@@ -13,6 +13,7 @@
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/samplers/parse.h"
 #include "frontends/pbrt/shapes/parse.h"
+#include "frontends/pbrt/textures/parse.h"
 #include "iris/scenes/bvh_scene.h"
 
 namespace iris::pbrt_frontend {
@@ -417,6 +418,21 @@ bool Parser::Shape() {
   return true;
 }
 
+bool Parser::Texture() {
+  if (!world_begin_encountered_) {
+    std::cerr
+        << "ERROR: Directive cannot be specified before WorldBegin: Texture"
+        << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  const auto& builder = textures::Parse(*tokenizers_.back().tokenizer);
+  BuildObject(builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
+              *texture_manager_, *texture_manager_);
+
+  return true;
+}
+
 bool Parser::WorldBegin() {
   if (world_begin_encountered_) {
     std::cerr << "ERROR: Invalid WorldBegin directive" << std::endl;
@@ -516,6 +532,7 @@ std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
           {"PixelFilter", &Parser::PixelFilter},
           {"Sampler", &Parser::Sampler},
           {"Shape", &Parser::Shape},
+          {"Texture", &Parser::Texture},
           {"WorldBegin", &Parser::WorldBegin},
           {"WorldEnd", &Parser::WorldEnd},
       };

@@ -60,6 +60,7 @@ class Parser {
   bool PixelFilter();
   bool Sampler();
   bool Shape();
+  bool Texture();
   bool WorldBegin();
   bool WorldEnd();
 
