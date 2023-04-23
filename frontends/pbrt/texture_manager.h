@@ -17,6 +17,8 @@ class TextureManager {
   ReferenceCounted<textures::ValueTexture2D<visual>>
   AllocateUniformFloatTexture(visual value);
 
+  ReferenceCounted<Reflector> AllocateUniformReflector(visual reflectance);
+
   ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
   AllocateUniformReflectorTexture(iris::ReferenceCounted<Reflector> reflector);
 
@@ -45,6 +47,9 @@ class TextureManager {
                      ReferenceCounted<textures::PointerTexture2D<
                          Reflector, SpectralAllocator>>>
       uniform_reflector_textures_;
+
+  std::unordered_map<visual, ReferenceCounted<Reflector>>
+      uniform_value_reflectors_;
 
   std::unordered_map<visual, ReferenceCounted<textures::PointerTexture2D<
                                  Reflector, SpectralAllocator>>>

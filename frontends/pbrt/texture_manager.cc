@@ -22,6 +22,21 @@ TextureManager::AllocateUniformFloatTexture(visual value) {
   return texture;
 }
 
+ReferenceCounted<Reflector> TextureManager::AllocateUniformReflector(
+    visual reflectance) {
+  auto iter = uniform_value_reflectors_.find(reflectance);
+  if (iter != uniform_value_reflectors_.end()) {
+    return iter->second;
+  }
+
+  auto reflector =
+      iris::MakeReferenceCounted<iris::reflectors::UniformReflector>(
+          reflectance);
+  uniform_value_reflectors_[reflectance] = reflector;
+
+  return reflector;
+}
+
 ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
 TextureManager::AllocateUniformReflectorTexture(
     iris::ReferenceCounted<Reflector> reflector) {
@@ -47,9 +62,7 @@ TextureManager::AllocateUniformReflectorTexture(visual reflectance) {
     return iter->second;
   }
 
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::UniformReflector>(
-          reflectance);
+  auto reflector = AllocateUniformReflector(reflectance);
 
   auto texture = iris::MakeReferenceCounted<
       iris::textures::ConstantPointerTexture2D<Reflector, SpectralAllocator>>(

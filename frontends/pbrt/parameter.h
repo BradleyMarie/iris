@@ -27,6 +27,7 @@ class Parameter {
     INTEGER,
     NORMAL,
     POINT3,
+    REFLECTOR,
     REFLECTOR_TEXTURE,
     SPECTRUM,
     STRING,
@@ -56,6 +57,9 @@ class Parameter {
 
   const std::vector<Point>& GetPoint3Values(size_t max_num_values = 0,
                                             size_t min_num_values = 1) const;
+
+  const std::vector<ReferenceCounted<Reflector>>& GetReflectors(
+      size_t max_num_values = 0, size_t min_num_values = 1) const;
 
   const std::vector<ReferenceCounted<
       textures::PointerTexture2D<Reflector, SpectralAllocator>>>&
@@ -105,6 +109,10 @@ class Parameter {
                    const std::filesystem::path& search_path,
                    SpectrumManager& spectrum_manager,
                    TextureManager& texture_manager);
+  void ParseReflector(const ParameterList& parameter_list,
+                      const std::filesystem::path& search_path,
+                      SpectrumManager& spectrum_manager,
+                      TextureManager& texture_manager);
   void ParseReflectorTexture(const ParameterList& parameter_list,
                              const std::filesystem::path& search_path,
                              SpectrumManager& spectrum_manager,
@@ -132,6 +140,7 @@ class Parameter {
   std::vector<ReferenceCounted<textures::ValueTexture2D<visual>>>
       float_textures_;
   std::vector<int64_t> integers_;
+  std::vector<ReferenceCounted<Reflector>> reflectors_;
   std::vector<ReferenceCounted<
       textures::PointerTexture2D<Reflector, SpectralAllocator>>>
       reflector_textures_;

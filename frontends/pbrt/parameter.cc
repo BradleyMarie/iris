@@ -90,6 +90,12 @@ const std::vector<Point>& Parameter::GetPoint3Values(
   return GetValues<POINT3>(*this, points_, max_num_values, min_num_values);
 }
 
+const std::vector<ReferenceCounted<Reflector>>& Parameter::GetReflectors(
+    size_t max_num_values, size_t min_num_values) const {
+  return GetValues<REFLECTOR>(*this, reflectors_, max_num_values,
+                              min_num_values);
+}
+
 const std::vector<
     ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>>&
 Parameter::GetReflectorTextures(size_t max_num_values,
@@ -211,6 +217,58 @@ void Parameter::ParsePoint3(const ParameterList& parameter_list,
                             TextureManager& texture_manager) {
   ParseSimpleType<ParameterList::POINT3>(
       parameter_list, &ParameterList::GetPoint3Values, points_);
+}
+
+void Parameter::ParseReflector(const ParameterList& parameter_list,
+                               const std::filesystem::path& search_path,
+                               SpectrumManager& spectrum_manager,
+                               TextureManager& texture_manager) {
+  reflectors_.clear();
+  if (parameter_list.GetType() == ParameterList::FLOAT) {
+    for (const auto& entry : parameter_list.GetFloatValues()) {
+      if (entry < 0.0 || entry > 1.0) {
+        std::cerr << "ERROR: Out of range value in parameter list: "
+                  << GetName() << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      reflectors_.push_back(
+          texture_manager.AllocateUniformReflector(static_cast<visual>(entry)));
+    }
+    return;
+  }
+
+  if (parameter_list.GetType() == ParameterList::COLOR) {
+    for (const auto& entry : parameter_list.GetColorValues()) {
+      if (entry.values[0] > 1.0 || entry.values[1] > 1.0 ||
+          entry.values[2] > 1.0) {
+        std::cerr << "ERROR: Out of range value in parameter list: "
+                  << GetName() << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      reflectors_.push_back(spectrum_manager.AllocateReflector(entry));
+    }
+    return;
+  }
+
+  if (parameter_list.GetType() == ParameterList::SPECTRUM) {
+    for (const auto& entry : parameter_list.GetSpectrumValues()) {
+      if (entry.second > 1.0) {
+        std::cerr << "ERROR: Out of range value in parameter list: "
+                  << GetName() << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    reflectors_.push_back(
+        spectrum_manager.AllocateReflector(parameter_list.GetSpectrumValues()));
+    return;
+  }
+
+  std::cerr << "ERROR: Wrong type for parameter list: "
+            << parameter_list.GetName() << std::endl;
+  exit(EXIT_FAILURE);
 }
 
 void Parameter::ParseReflectorTexture(const ParameterList& parameter_list,
@@ -340,6 +398,7 @@ void Parameter::LoadFrom(const ParameterList& parameter_list,
           {INTEGER, &Parameter::ParseInteger},
           {NORMAL, &Parameter::ParseNormal},
           {POINT3, &Parameter::ParsePoint3},
+          {REFLECTOR, &Parameter::ParseReflector},
           {REFLECTOR_TEXTURE, &Parameter::ParseReflectorTexture},
           {SPECTRUM, &Parameter::ParseSpectrum},
           {STRING, &Parameter::ParseString},

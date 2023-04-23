@@ -71,6 +71,7 @@ class Parser {
   };
 
   std::vector<TokenizerEntry> tokenizers_;
+  std::string texture_name_;
 
   struct AttributeEntry {
     std::shared_ptr<

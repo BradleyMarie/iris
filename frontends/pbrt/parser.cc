@@ -426,9 +426,10 @@ bool Parser::Texture() {
     exit(EXIT_FAILURE);
   }
 
-  const auto& builder = textures::Parse(*tokenizers_.back().tokenizer);
+  const auto& builder =
+      textures::Parse(*tokenizers_.back().tokenizer, texture_name_);
   BuildObject(builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
-              *texture_manager_, *texture_manager_);
+              *texture_manager_, *texture_manager_, texture_name_);
 
   return true;
 }
