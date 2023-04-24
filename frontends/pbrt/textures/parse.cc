@@ -4,6 +4,7 @@
 
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/textures/constant.h"
+#include "frontends/pbrt/textures/scale.h"
 
 namespace iris::pbrt_frontend::textures {
 namespace {
@@ -11,7 +12,8 @@ namespace {
 static const std::unordered_map<
     std::string_view, const std::unique_ptr<const ObjectBuilder<
                           void, TextureManager&, const std::string&>>&>
-    g_float_textures = {{"constant", g_float_constant_builder}};
+    g_float_textures = {{"constant", g_float_constant_builder},
+                        {"scale", g_float_scale_builder}};
 
 static const std::unordered_map<
     std::string_view, const std::unique_ptr<const ObjectBuilder<

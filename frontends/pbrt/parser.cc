@@ -429,7 +429,8 @@ bool Parser::Texture() {
   const auto& builder =
       textures::Parse(*tokenizers_.back().tokenizer, texture_name_);
   BuildObject(builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
-              *texture_manager_, *texture_manager_, texture_name_);
+              *texture_manager_, *texture_manager_,
+              static_cast<const std::string&>(texture_name_));
 
   return true;
 }

@@ -1,6 +1,7 @@
 #include "frontends/pbrt/textures/parse.h"
 
 #include "frontends/pbrt/textures/constant.h"
+#include "frontends/pbrt/textures/scale.h"
 #include "googletest/include/gtest/gtest.h"
 
 TEST(Parse, NoName) {
@@ -116,6 +117,15 @@ TEST(Parse, ConstantSpectrum) {
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   std::string texture_name;
   EXPECT_EQ(iris::pbrt_frontend::textures::g_spectrum_constant_builder.get(),
+            &iris::pbrt_frontend::textures::Parse(tokenizer, texture_name));
+  EXPECT_EQ("name", texture_name);
+}
+
+TEST(Parse, ScaleFloat) {
+  std::stringstream input("\"name\" \"float\" \"scale\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  std::string texture_name;
+  EXPECT_EQ(iris::pbrt_frontend::textures::g_float_scale_builder.get(),
             &iris::pbrt_frontend::textures::Parse(tokenizer, texture_name));
   EXPECT_EQ("name", texture_name);
 }

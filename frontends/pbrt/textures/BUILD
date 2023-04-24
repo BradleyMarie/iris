@@ -31,6 +31,7 @@ cc_library(
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":constant",
+        ":scale",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
         "//frontends/pbrt:texture_manager",
@@ -43,6 +44,30 @@ cc_test(
     deps = [
         ":constant",
         ":parse",
+        ":scale",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "scale",
+    srcs = ["scale.cc"],
+    hdrs = ["scale.h"],
+    deps = [
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:quoted_string",
+        "//frontends/pbrt:texture_manager",
+        "//iris/textures:scaled_texture",
+    ],
+)
+
+cc_test(
+    name = "scale_test",
+    srcs = ["scale_test.cc"],
+    deps = [
+        ":scale",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
     ],
 )

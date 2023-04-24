@@ -719,6 +719,15 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "texture_coordinates_test",
+    srcs = ["texture_coordinates_test.cc"],
+    deps = [
+        ":texture_coordinates",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "vector",
     hdrs = ["vector.h"],
