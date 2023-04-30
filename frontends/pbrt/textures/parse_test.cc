@@ -129,3 +129,12 @@ TEST(Parse, ScaleFloat) {
             &iris::pbrt_frontend::textures::Parse(tokenizer, texture_name));
   EXPECT_EQ("name", texture_name);
 }
+
+TEST(Parse, ScaleSpectrum) {
+  std::stringstream input("\"name\" \"spectrum\" \"scale\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  std::string texture_name;
+  EXPECT_EQ(iris::pbrt_frontend::textures::g_spectrum_scale_builder.get(),
+            &iris::pbrt_frontend::textures::Parse(tokenizer, texture_name));
+  EXPECT_EQ("name", texture_name);
+}

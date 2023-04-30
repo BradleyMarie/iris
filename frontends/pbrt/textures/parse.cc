@@ -18,7 +18,8 @@ static const std::unordered_map<
 static const std::unordered_map<
     std::string_view, const std::unique_ptr<const ObjectBuilder<
                           void, TextureManager&, const std::string&>>&>
-    g_spectral_textures = {{"constant", g_spectrum_constant_builder}};
+    g_spectral_textures = {{"constant", g_spectrum_constant_builder},
+                           {"scale", g_spectrum_scale_builder}};
 
 }  // namespace
 

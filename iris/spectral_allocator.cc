@@ -38,6 +38,20 @@ class ScaledSpectrum final : public Spectrum {
   const visual_t scalar_;
 };
 
+class ScaledSpectra final : public Spectrum {
+ public:
+  ScaledSpectra(const Spectrum& spectrum, const Spectrum& attenuation)
+      : spectrum_(spectrum), attenuation_(attenuation) {}
+
+  visual_t Intensity(visual_t wavelength) const {
+    return spectrum_.Intensity(wavelength) * attenuation_.Intensity(wavelength);
+  }
+
+ private:
+  const Spectrum& spectrum_;
+  const Spectrum& attenuation_;
+};
+
 class ReflectedSpectrum final : public Spectrum {
  public:
   ReflectedSpectrum(const Spectrum& spectrum, const Reflector& reflector)
@@ -89,6 +103,23 @@ class ScaledReflector final : public Reflector {
  private:
   const Reflector& spectrum_;
   const visual_t scalar_;
+};
+
+class ScaledReflectors final : public Reflector {
+ public:
+  ScaledReflectors(const Reflector& spectrum, const Reflector& attenuation)
+      : spectrum_(spectrum), attenuation_(attenuation) {}
+
+  visual_t Reflectance(visual_t wavelength) const {
+    return spectrum_.Reflectance(wavelength) *
+           attenuation_.Reflectance(wavelength);
+  }
+
+  visual_t Albedo() const { return spectrum_.Albedo() * attenuation_.Albedo(); }
+
+ private:
+  const Reflector& spectrum_;
+  const Reflector& attenuation_;
 };
 
 }  // namespace
@@ -158,6 +189,15 @@ const Reflector* SpectralAllocator::Scale(const Reflector* reflector,
   }
 
   return reflector;
+}
+
+const Reflector* SpectralAllocator::Scale(const Reflector* reflector,
+                                          const Reflector* attenuation) {
+  if (!reflector || !attenuation) {
+    return nullptr;
+  }
+
+  return &arena_.Allocate<ScaledReflectors>(*reflector, *attenuation);
 }
 
 }  // namespace iris

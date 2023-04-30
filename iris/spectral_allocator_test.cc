@@ -126,3 +126,23 @@ TEST(SpectralAllocator, ReflectorScale) {
   EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.5));
   EXPECT_EQ(0.25, allocator.Scale(&reflector, 0.5)->Reflectance(1.0));
 }
+
+TEST(SpectralAllocator, ReflectorsScaleNullptr) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::reflectors::MockReflector reflector;
+  EXPECT_EQ(nullptr, allocator.Scale(&reflector, nullptr));
+  EXPECT_EQ(nullptr, allocator.Scale(nullptr, &reflector));
+}
+
+TEST(SpectralAllocator, ReflectorsScale) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::reflectors::MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(1.0))
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.5));
+  EXPECT_EQ(0.25, allocator.Scale(&reflector, &reflector)->Reflectance(1.0));
+}

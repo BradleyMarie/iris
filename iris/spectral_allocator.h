@@ -19,6 +19,8 @@ class SpectralAllocator {
 
   const Reflector* Add(const Reflector* addend0, const Reflector* addend1);
   const Reflector* Scale(const Reflector* reflector, visual_t attenuation);
+  const Reflector* Scale(const Reflector* reflector,
+                         const Reflector* attenuation);
 
  private:
   SpectralAllocator(const SpectralAllocator&) = delete;

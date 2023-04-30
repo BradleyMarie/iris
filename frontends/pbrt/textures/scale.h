@@ -12,6 +12,9 @@ namespace iris::pbrt_frontend::textures {
 extern const std::unique_ptr<
     const ObjectBuilder<void, TextureManager&, const std::string&>>
     g_float_scale_builder;
+extern const std::unique_ptr<
+    const ObjectBuilder<void, TextureManager&, const std::string&>>
+    g_spectrum_scale_builder;
 
 }  // namespace iris::pbrt_frontend::textures
 

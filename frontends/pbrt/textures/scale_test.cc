@@ -6,7 +6,7 @@
 
 static const std::string kName = "name";
 
-TEST(Scale, Empty) {
+TEST(ScaleFloat, Empty) {
   std::stringstream input("");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
@@ -17,7 +17,7 @@ TEST(Scale, Empty) {
       spectrum_manager, texture_manager, texture_manager, kName);
 }
 
-TEST(Scale, WithTex1) {
+TEST(ScaleFloat, WithTex1) {
   std::stringstream input("\"float tex1\" 0.5");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
@@ -28,7 +28,7 @@ TEST(Scale, WithTex1) {
       spectrum_manager, texture_manager, texture_manager, kName);
 }
 
-TEST(Scale, WithTex2) {
+TEST(ScaleFloat, WithTex2) {
   std::stringstream input("\"float tex2\" 0.5");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
@@ -39,7 +39,7 @@ TEST(Scale, WithTex2) {
       spectrum_manager, texture_manager, texture_manager, kName);
 }
 
-TEST(Scale, Full) {
+TEST(ScaleFloat, Full) {
   std::stringstream input("\"float tex1\" 0.5 \"float tex2\" 0.5");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
@@ -47,5 +47,49 @@ TEST(Scale, Full) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_scale_builder, tokenizer,
+      spectrum_manager, texture_manager, texture_manager, kName);
+}
+
+TEST(ScaleSpectrum, Empty) {
+  std::stringstream input("");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
+      spectrum_manager, texture_manager, texture_manager, kName);
+}
+
+TEST(ScaleSpectrum, WithTex1) {
+  std::stringstream input("\"float tex1\" 0.5");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
+      spectrum_manager, texture_manager, texture_manager, kName);
+}
+
+TEST(ScaleSpectrum, WithTex2) {
+  std::stringstream input("\"float tex2\" 0.5");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
+      spectrum_manager, texture_manager, texture_manager, kName);
+}
+
+TEST(ScaleSpectrum, Full) {
+  std::stringstream input("\"float tex1\" 0.5 \"float tex2\" 0.5");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
       spectrum_manager, texture_manager, texture_manager, kName);
 }

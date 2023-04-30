@@ -28,6 +28,7 @@ cc_library(
     deps = [
         ":texture2d",
         "//iris:reference_counted",
+        "//iris:spectral_allocator",
         "//iris:texture_coordinates",
     ],
 )
@@ -38,7 +39,8 @@ cc_test(
     deps = [
         ":constant_texture",
         ":scaled_texture",
-        "//iris/spectra:mock_spectrum",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:spectral_allocator",
         "@com_google_googletest//:gtest_main",
     ],
 )
