@@ -40,4 +40,4 @@ class ConstantValueTexture2D final : public ValueTexture2D<T> {
 }  // namespace textures
 }  // namespace iris
 
-#endif  // _IRIS_TEXTURES_TEXTURE_2D_
+#endif  // _IRIS_TEXTURES_CONSTANT_TEXTURE_
