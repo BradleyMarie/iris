@@ -23,6 +23,27 @@ cc_test(
 )
 
 cc_library(
+    name = "image_texture",
+    hdrs = ["image_texture.h"],
+    deps = [
+        ":uv_texture",
+        "//iris:reference_counted",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+    ],
+)
+
+cc_test(
+    name = "image_texture_test",
+    srcs = ["image_texture_test.cc"],
+    deps = [
+        ":image_texture",
+        "//iris/reflectors:mock_reflector",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "scaled_texture",
     hdrs = ["scaled_texture.h"],
     deps = [
@@ -51,5 +72,25 @@ cc_library(
     deps = [
         "//iris:reference_countable",
         "//iris:texture_coordinates",
+    ],
+)
+
+cc_library(
+    name = "uv_texture",
+    hdrs = ["uv_texture.h"],
+    deps = [
+        ":texture2d",
+        "//iris:reference_counted",
+        "//iris:texture_coordinates",
+    ],
+)
+
+cc_test(
+    name = "uv_texture_test",
+    srcs = ["uv_texture_test.cc"],
+    deps = [
+        ":uv_texture",
+        "//iris/reflectors:mock_reflector",
+        "@com_google_googletest//:gtest_main",
     ],
 )
