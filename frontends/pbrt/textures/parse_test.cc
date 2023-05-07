@@ -1,7 +1,7 @@
 #include "frontends/pbrt/textures/parse.h"
 
 #include "frontends/pbrt/textures/constant.h"
-#include "frontends/pbrt/textures/image.h"
+#include "frontends/pbrt/textures/imagemap.h"
 #include "frontends/pbrt/textures/scale.h"
 #include "googletest/include/gtest/gtest.h"
 
@@ -123,19 +123,19 @@ TEST(Parse, ConstantSpectrum) {
 }
 
 TEST(Parse, Imageloat) {
-  std::stringstream input("\"name\" \"float\" \"image\"");
+  std::stringstream input("\"name\" \"float\" \"imagemap\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   std::string texture_name;
-  EXPECT_EQ(iris::pbrt_frontend::textures::g_float_image_builder.get(),
+  EXPECT_EQ(iris::pbrt_frontend::textures::g_float_imagemap_builder.get(),
             &iris::pbrt_frontend::textures::Parse(tokenizer, texture_name));
   EXPECT_EQ("name", texture_name);
 }
 
 TEST(Parse, ImageSpectrum) {
-  std::stringstream input("\"name\" \"spectrum\" \"image\"");
+  std::stringstream input("\"name\" \"spectrum\" \"imagemap\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   std::string texture_name;
-  EXPECT_EQ(iris::pbrt_frontend::textures::g_spectrum_image_builder.get(),
+  EXPECT_EQ(iris::pbrt_frontend::textures::g_spectrum_imagemap_builder.get(),
             &iris::pbrt_frontend::textures::Parse(tokenizer, texture_name));
   EXPECT_EQ("name", texture_name);
 }

@@ -1,4 +1,4 @@
-#include "frontends/pbrt/textures/image.h"
+#include "frontends/pbrt/textures/imagemap.h"
 
 #include <memory>
 #include <optional>
@@ -311,9 +311,10 @@ class ImageSpectrumTextureBuilder final
 
 const std::unique_ptr<const ObjectBuilder<void, TextureManager&,
                                           SpectrumManager&, const std::string&>>
-    g_float_image_builder = std::make_unique<ImageFloatTextureBuilder>();
+    g_float_imagemap_builder = std::make_unique<ImageFloatTextureBuilder>();
 const std::unique_ptr<const ObjectBuilder<void, TextureManager&,
                                           SpectrumManager&, const std::string&>>
-    g_spectrum_image_builder = std::make_unique<ImageSpectrumTextureBuilder>();
+    g_spectrum_imagemap_builder =
+        std::make_unique<ImageSpectrumTextureBuilder>();
 
 }  // namespace iris::pbrt_frontend::textures

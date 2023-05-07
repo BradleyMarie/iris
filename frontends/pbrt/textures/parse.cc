@@ -4,7 +4,7 @@
 
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/textures/constant.h"
-#include "frontends/pbrt/textures/image.h"
+#include "frontends/pbrt/textures/imagemap.h"
 #include "frontends/pbrt/textures/scale.h"
 
 namespace iris::pbrt_frontend::textures {
@@ -15,7 +15,7 @@ static const std::unordered_map<
     const std::unique_ptr<const ObjectBuilder<
         void, TextureManager&, SpectrumManager&, const std::string&>>&>
     g_float_textures = {{"constant", g_float_constant_builder},
-                        {"image", g_float_image_builder},
+                        {"imagemap", g_float_imagemap_builder},
                         {"scale", g_float_scale_builder}};
 
 static const std::unordered_map<
@@ -23,7 +23,7 @@ static const std::unordered_map<
     const std::unique_ptr<const ObjectBuilder<
         void, TextureManager&, SpectrumManager&, const std::string&>>&>
     g_spectral_textures = {{"constant", g_spectrum_constant_builder},
-                           {"image", g_spectrum_image_builder},
+                           {"imagemap", g_spectrum_imagemap_builder},
                            {"scale", g_spectrum_scale_builder}};
 
 }  // namespace

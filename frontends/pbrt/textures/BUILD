@@ -26,9 +26,9 @@ cc_test(
 )
 
 cc_library(
-    name = "image",
-    srcs = ["image.cc"],
-    hdrs = ["image.h"],
+    name = "imagemap",
+    srcs = ["imagemap.cc"],
+    hdrs = ["imagemap.h"],
     deps = [
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
@@ -40,15 +40,15 @@ cc_library(
 )
 
 cc_test(
-    name = "image_test",
-    srcs = ["image_test.cc"],
+    name = "imagemap_test",
+    srcs = ["imagemap_test.cc"],
     data = [
         "test_data/image",
         "test_data/image.png",
         "test_data/image.txt",
     ],
     deps = [
-        ":image",
+        ":imagemap",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
@@ -62,7 +62,7 @@ cc_library(
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":constant",
-        ":image",
+        ":imagemap",
         ":scale",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
@@ -76,7 +76,7 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":constant",
-        ":image",
+        ":imagemap",
         ":parse",
         ":scale",
         "@com_google_googletest//:gtest_main",
