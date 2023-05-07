@@ -4,27 +4,33 @@
 
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/textures/constant.h"
+#include "frontends/pbrt/textures/image.h"
 #include "frontends/pbrt/textures/scale.h"
 
 namespace iris::pbrt_frontend::textures {
 namespace {
 
 static const std::unordered_map<
-    std::string_view, const std::unique_ptr<const ObjectBuilder<
-                          void, TextureManager&, const std::string&>>&>
+    std::string_view,
+    const std::unique_ptr<const ObjectBuilder<
+        void, TextureManager&, SpectrumManager&, const std::string&>>&>
     g_float_textures = {{"constant", g_float_constant_builder},
+                        {"image", g_float_image_builder},
                         {"scale", g_float_scale_builder}};
 
 static const std::unordered_map<
-    std::string_view, const std::unique_ptr<const ObjectBuilder<
-                          void, TextureManager&, const std::string&>>&>
+    std::string_view,
+    const std::unique_ptr<const ObjectBuilder<
+        void, TextureManager&, SpectrumManager&, const std::string&>>&>
     g_spectral_textures = {{"constant", g_spectrum_constant_builder},
+                           {"image", g_spectrum_image_builder},
                            {"scale", g_spectrum_scale_builder}};
 
 }  // namespace
 
-const ObjectBuilder<void, TextureManager&, const std::string&>& Parse(
-    Tokenizer& tokenizer, std::string& name) {
+const ObjectBuilder<void, TextureManager&, SpectrumManager&,
+                    const std::string&>&
+Parse(Tokenizer& tokenizer, std::string& name) {
   auto name_token = tokenizer.Next();
   if (!name_token) {
     std::cerr << "ERROR: Too few parameters to directive: Texture" << std::endl;
@@ -75,7 +81,8 @@ const ObjectBuilder<void, TextureManager&, const std::string&>& Parse(
     exit(EXIT_FAILURE);
   }
 
-  const ObjectBuilder<void, TextureManager&, const std::string&>* result;
+  const ObjectBuilder<void, TextureManager&, SpectrumManager&,
+                      const std::string&>* result;
   if (float_texture) {
     auto iter = g_float_textures.find(*unquoted_type);
     if (iter == g_float_textures.end()) {

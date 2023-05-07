@@ -4,12 +4,14 @@
 #include <string>
 
 #include "frontends/pbrt/object_builder.h"
+#include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 
 namespace iris::pbrt_frontend::textures {
 
-const ObjectBuilder<void, TextureManager&, const std::string&>& Parse(
-    Tokenizer& tokenizer, std::string& name);
+const ObjectBuilder<void, TextureManager&, SpectrumManager&,
+                    const std::string&>&
+Parse(Tokenizer& tokenizer, std::string& name);
 
 }  // namespace iris::pbrt_frontend::textures
 

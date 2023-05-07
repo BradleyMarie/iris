@@ -1,5 +1,5 @@
-#ifndef _FRONTENDS_PBRT_TEXTURES_SCALE_
-#define _FRONTENDS_PBRT_TEXTURES_SCALE_
+#ifndef _FRONTENDS_PBRT_TEXTURES_IMAGE_
+#define _FRONTENDS_PBRT_TEXTURES_IMAGE_
 
 #include <memory>
 #include <string>
@@ -12,11 +12,11 @@ namespace iris::pbrt_frontend::textures {
 
 extern const std::unique_ptr<const ObjectBuilder<
     void, TextureManager&, SpectrumManager&, const std::string&>>
-    g_float_scale_builder;
+    g_float_image_builder;
 extern const std::unique_ptr<const ObjectBuilder<
     void, TextureManager&, SpectrumManager&, const std::string&>>
-    g_spectrum_scale_builder;
+    g_spectrum_image_builder;
 
 }  // namespace iris::pbrt_frontend::textures
 
-#endif  // _FRONTENDS_PBRT_TEXTURES_SCALE_
+#endif  // _FRONTENDS_PBRT_TEXTURES_IMAGE_

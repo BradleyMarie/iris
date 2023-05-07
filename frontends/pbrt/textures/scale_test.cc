@@ -14,7 +14,9 @@ TEST(ScaleFloat, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }
 
 TEST(ScaleFloat, WithTex1) {
@@ -25,7 +27,9 @@ TEST(ScaleFloat, WithTex1) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }
 
 TEST(ScaleFloat, WithTex2) {
@@ -36,7 +40,9 @@ TEST(ScaleFloat, WithTex2) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }
 
 TEST(ScaleFloat, Full) {
@@ -47,7 +53,9 @@ TEST(ScaleFloat, Full) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }
 
 TEST(ScaleSpectrum, Empty) {
@@ -58,7 +66,9 @@ TEST(ScaleSpectrum, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }
 
 TEST(ScaleSpectrum, WithTex1) {
@@ -69,7 +79,9 @@ TEST(ScaleSpectrum, WithTex1) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }
 
 TEST(ScaleSpectrum, WithTex2) {
@@ -80,7 +92,9 @@ TEST(ScaleSpectrum, WithTex2) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }
 
 TEST(ScaleSpectrum, Full) {
@@ -91,5 +105,7 @@ TEST(ScaleSpectrum, Full) {
   iris::pbrt_frontend::TextureManager texture_manager;
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_spectrum_scale_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager, kName);
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
 }

@@ -11,18 +11,20 @@ static const std::unordered_map<std::string_view, Parameter::Type>
     g_float_parameters = {{"value", Parameter::FLOAT}};
 
 class ConstantFloatTextureBuilder final
-    : public ObjectBuilder<void, TextureManager&, const std::string&> {
+    : public ObjectBuilder<void, TextureManager&, SpectrumManager&,
+                           const std::string&> {
  public:
   ConstantFloatTextureBuilder() : ObjectBuilder(g_float_parameters) {}
 
   void Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-             TextureManager& texture_manager,
+             TextureManager& texture_manager, SpectrumManager& spectrum_manager,
              const std::string& name) const override;
 };
 
 void ConstantFloatTextureBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    TextureManager& texture_manager, const std::string& name) const {
+    TextureManager& texture_manager, SpectrumManager& spectrum_manager,
+    const std::string& name) const {
   geometric value = 1.0;
 
   auto value_iter = parameters.find("value");
@@ -44,18 +46,20 @@ static const std::unordered_map<std::string_view, Parameter::Type>
     g_spectrum_parameters = {{"value", Parameter::SPECTRUM}};
 
 class ConstantSpectrumTextureBuilder final
-    : public ObjectBuilder<void, TextureManager&, const std::string&> {
+    : public ObjectBuilder<void, TextureManager&, SpectrumManager&,
+                           const std::string&> {
  public:
   ConstantSpectrumTextureBuilder() : ObjectBuilder(g_spectrum_parameters) {}
 
   void Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-             TextureManager& texture_manager,
+             TextureManager& texture_manager, SpectrumManager& spectrum_manager,
              const std::string& name) const override;
 };
 
 void ConstantSpectrumTextureBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    TextureManager& texture_manager, const std::string& name) const {
+    TextureManager& texture_manager, SpectrumManager& spectrum_manager,
+    const std::string& name) const {
   ReferenceCounted<
       iris::textures::PointerTexture2D<Reflector, SpectralAllocator>>
       texture;
@@ -75,12 +79,12 @@ void ConstantSpectrumTextureBuilder::Build(
 
 }  // namespace
 
-const std::unique_ptr<
-    const ObjectBuilder<void, TextureManager&, const std::string&>>
+const std::unique_ptr<const ObjectBuilder<void, TextureManager&,
+                                          SpectrumManager&, const std::string&>>
     g_float_constant_builder = std::make_unique<ConstantFloatTextureBuilder>();
 
-const std::unique_ptr<
-    const ObjectBuilder<void, TextureManager&, const std::string&>>
+const std::unique_ptr<const ObjectBuilder<void, TextureManager&,
+                                          SpectrumManager&, const std::string&>>
     g_spectrum_constant_builder =
         std::make_unique<ConstantSpectrumTextureBuilder>();
 
