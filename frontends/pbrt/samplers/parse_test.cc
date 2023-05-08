@@ -38,6 +38,13 @@ TEST(Parse, Random) {
   iris::pbrt_frontend::samplers::Parse(tokenizer);
 }
 
+TEST(Parse, Sobol) {
+  std::stringstream input("\"sobol\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::samplers::Parse(tokenizer);
+}
+
+
 TEST(Parse, Stratified) {
   std::stringstream input("\"stratified\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

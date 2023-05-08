@@ -18,12 +18,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef SOBOL_H
-#define SOBOL_H
+#ifndef SOBOL64_H
+#define SOBOL64_H
 
 #include <cassert>
 
-namespace sobol {
+namespace sobol64 {
 
 struct Matrices
 {

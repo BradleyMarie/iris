@@ -67,9 +67,9 @@ visual_t HaltonSequence::SampleWeight(uint32_t desired_num_samples) const {
 }
 
 void HaltonSequence::Discard(size_t num_to_discard) {
-  auto samples_remaining = sampler_->get_num_dimensions() - sample_index_;
+  auto dimensions_remaining = sampler_->get_num_dimensions() - dimension_;
 
-  if (num_to_discard >= samples_remaining) {
+  if (num_to_discard >= dimensions_remaining) {
     dimension_ = sampler_->get_num_dimensions();
   } else {
     dimension_ += static_cast<unsigned>(num_to_discard);

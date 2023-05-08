@@ -56,6 +56,26 @@ cc_test(
 )
 
 cc_library(
+    name = "sobol_image_sampler",
+    srcs = ["sobol_image_sampler.cc"],
+    hdrs = ["sobol_image_sampler.h"],
+    deps = [
+        "//iris:image_sampler",
+        "//iris/image_samplers/internal:low_discrepancy_image_sampler",
+        "//iris/image_samplers/internal:sobol_sequence",
+    ],
+)
+
+cc_test(
+    name = "sobol_image_sampler_test",
+    srcs = ["sobol_image_sampler_test.cc"],
+    deps = [
+        ":sobol_image_sampler",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "stratified_image_sampler",
     srcs = ["stratified_image_sampler.cc"],
     hdrs = ["stratified_image_sampler.h"],

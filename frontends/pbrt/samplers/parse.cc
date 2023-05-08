@@ -6,6 +6,7 @@
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/samplers/halton.h"
 #include "frontends/pbrt/samplers/random.h"
+#include "frontends/pbrt/samplers/sobol.h"
 #include "frontends/pbrt/samplers/stratified.h"
 
 namespace iris::pbrt_frontend::samplers {
@@ -15,6 +16,7 @@ static const std::unordered_map<
     std::string_view, const std::unique_ptr<const ObjectBuilder<Result>>&>
     g_samplers = {{"halton", g_halton_builder},
                   {"random", g_random_builder},
+                  {"sobol", g_sobol_builder},
                   {"stratified", g_stratified_builder}};
 
 }  // namespace

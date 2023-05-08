@@ -17,7 +17,6 @@ cc_test(
     srcs = ["halton_sequence_test.cc"],
     deps = [
         ":halton_sequence",
-        "//iris/random:mock_random",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -70,5 +69,26 @@ cc_library(
     deps = [
         ":low_discrepancy_sequence",
         "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "sobol_sequence",
+    srcs = ["sobol_sequence.cc"],
+    hdrs = ["sobol_sequence.h"],
+    deps = [
+        ":low_discrepancy_sequence",
+        "//third_party/gruenschloss/double:sobol",
+        "//third_party/gruenschloss/single:sobol",
+        "//third_party/pbrt:sobolmatrices",
+    ],
+)
+
+cc_test(
+    name = "sobol_sequence_test",
+    srcs = ["sobol_sequence_test.cc"],
+    deps = [
+        ":sobol_sequence",
+        "@com_google_googletest//:gtest_main",
     ],
 )

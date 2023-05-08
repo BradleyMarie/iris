@@ -33,6 +33,7 @@ cc_library(
         ":halton",
         ":random",
         ":result",
+        ":sobol",
         ":stratified",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:tokenizer",
@@ -72,6 +73,28 @@ cc_test(
     srcs = ["random_test.cc"],
     deps = [
         ":random",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "sobol",
+    srcs = ["sobol.cc"],
+    hdrs = ["sobol.h"],
+    deps = [
+        ":result",
+        "//frontends/pbrt:object_builder",
+        "//iris/image_samplers:sobol_image_sampler",
+    ],
+)
+
+cc_test(
+    name = "sobol_test",
+    srcs = ["sobol_test.cc"],
+    deps = [
+        ":sobol",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
