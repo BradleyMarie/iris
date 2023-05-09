@@ -54,12 +54,7 @@ TEST(Sphere, MissesOnEdge) {
 
   auto hit_allocator = iris::testing::MakeHitAllocator(ray);
   auto* hit = sphere->Trace(hit_allocator);
-  ASSERT_NE(nullptr, hit);
-  EXPECT_EQ(3.0, hit->distance);
-  ASSERT_EQ(nullptr, hit->next);
-
-  EXPECT_EQ(FRONT_FACE, iris::testing::FrontFace(*hit));
-  EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit));
+  EXPECT_EQ(nullptr, hit);
 }
 
 TEST(Sphere, Inside) {

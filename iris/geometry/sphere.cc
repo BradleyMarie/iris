@@ -170,6 +170,11 @@ Hit* Sphere::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
                                    kFrontFace);
   }
 
+  // Ignore rays that intersect only at a single point
+  if (half_chord_length == 0.0) {
+    return nullptr;
+  }
+
   // Ray intersects sphere and originates outside the sphere.
   face_t first_face, second_face;
   if (distance_to_chord_midpoint >= 0.0) {
@@ -180,13 +185,9 @@ Hit* Sphere::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
     second_face = kFrontFace;
   }
 
-  Hit* farther_hit = nullptr;
-  if (half_chord_length != 0.0) {
-    geometric_t farther_distance =
-        distance_to_chord_midpoint + half_chord_length;
-    farther_hit = &hit_allocator.Allocate(nullptr, farther_distance,
-                                          second_face, first_face);
-  }
+  geometric_t farther_distance = distance_to_chord_midpoint + half_chord_length;
+  Hit* farther_hit = &hit_allocator.Allocate(nullptr, farther_distance,
+                                             second_face, first_face);
 
   geometric_t closer_distance = distance_to_chord_midpoint - half_chord_length;
   return &hit_allocator.Allocate(farther_hit, closer_distance, first_face,
