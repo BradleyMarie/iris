@@ -3,6 +3,40 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "mock_geometry",
+    testonly = True,
+    hdrs = ["mock_geometry.h"],
+    deps = [
+        "//iris:geometry",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "sphere",
+    srcs = ["sphere.cc"],
+    hdrs = ["sphere.h"],
+    deps = [
+        "//iris:geometry",
+        "//iris:reference_counted",
+    ],
+)
+
+cc_test(
+    name = "sphere_test",
+    srcs = ["sphere_test.cc"],
+    deps = [
+        ":sphere",
+        "//iris/emissive_materials:mock_emissive_material",
+        "//iris/materials:mock_material",
+        "//iris/normal_maps:mock_normal_map",
+        "//iris/random:mock_random",
+        "//iris/testing:hit_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "triangle_mesh",
     srcs = ["triangle_mesh.cc"],
     hdrs = ["triangle_mesh.h"],
@@ -23,15 +57,5 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/testing:hit_allocator",
         "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "mock_geometry",
-    testonly = True,
-    hdrs = ["mock_geometry.h"],
-    deps = [
-        "//iris:geometry",
-        "@com_google_googletest//:gtest",
     ],
 )
