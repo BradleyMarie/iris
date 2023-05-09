@@ -32,8 +32,8 @@ class Triangle final : public Geometry {
 
   typedef std::array<geometric_t, 3> AdditionalData;
 
-  static const face_t FRONT_FACE = 0u;
-  static const face_t BACK_FACE = 1u;
+  static constexpr face_t kFrontFace = 0u;
+  static constexpr face_t kBackFace = 1u;
 
   Triangle(const std::tuple<uint32_t, uint32_t, uint32_t>& vertices,
            std::shared_ptr<const SharedData> shared) noexcept
@@ -91,7 +91,7 @@ Vector Triangle::ComputeSurfaceNormal(const Point& hit_point, face_t face,
   Vector surface_normal = ComputeSurfaceNormal();
   Vector normalized = Normalize(surface_normal);
 
-  if (face == FRONT_FACE) {
+  if (face == kFrontFace) {
     return normalized;
   }
 
@@ -135,7 +135,7 @@ std::variant<Vector, const NormalMap*> Triangle::ComputeShadingNormal(
       shared_->normals[std::get<2>(vertices_)] * (*barycentric)[2];
   Vector normalized = Normalize(shading_normal);
 
-  if (face == FRONT_FACE) {
+  if (face == kFrontFace) {
     return normalized;
   }
 
@@ -186,7 +186,7 @@ BoundingBox Triangle::ComputeBounds(const Matrix& model_to_world) const {
 }
 
 std::span<const face_t> Triangle::GetFaces() const {
-  static const face_t faces[2] = {FRONT_FACE, BACK_FACE};
+  static const face_t faces[2] = {kFrontFace, kBackFace};
   return faces;
 }
 
@@ -282,11 +282,11 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
 
   face_t front_face, back_face;
   if (dp < 0.0) {
-    front_face = FRONT_FACE;
-    back_face = BACK_FACE;
+    front_face = kFrontFace;
+    back_face = kBackFace;
   } else {
-    front_face = BACK_FACE;
-    back_face = FRONT_FACE;
+    front_face = kBackFace;
+    back_face = kFrontFace;
   }
 
   return &hit_allocator.Allocate(nullptr, distance, front_face, back_face,
@@ -300,8 +300,8 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
     std::span<const Vector> normals,
     std::span<const std::pair<geometric, geometric>> uv,
-    ReferenceCounted<Material> back_material,
     ReferenceCounted<Material> front_material,
+    ReferenceCounted<Material> back_material,
     ReferenceCounted<EmissiveMaterial> front_emissive_material,
     ReferenceCounted<EmissiveMaterial> back_emissive_material,
     ReferenceCounted<NormalMap> front_normal_map,
@@ -311,7 +311,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
           std::vector<Point>(points.begin(), points.end()),
           std::vector<Vector>(normals.begin(), normals.end()),
           std::vector<std::pair<geometric, geometric>>(uv.begin(), uv.end()),
-          {std::move(back_material), std::move(front_material)},
+          {std::move(front_material), std::move(back_material)},
           {std::move(front_emissive_material),
            std::move(back_emissive_material)},
           {std::move(front_normal_map), std::move(back_normal_map)}});
