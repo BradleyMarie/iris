@@ -9,12 +9,23 @@ cc_library(
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":plymesh",
+        ":sphere",
         ":trianglemesh",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
         "//iris:geometry",
         "//iris:matrix",
         "//iris:reference_counted",
+    ],
+)
+
+cc_test(
+    name = "parse_test",
+    srcs = ["parse_test.cc"],
+    deps = [
+        ":parse",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -48,11 +59,25 @@ cc_test(
     ],
 )
 
-cc_test(
-    name = "parse_test",
-    srcs = ["parse_test.cc"],
+cc_library(
+    name = "sphere",
+    srcs = ["sphere.cc"],
+    hdrs = ["sphere.h"],
     deps = [
-        ":parse",
+        "//frontends/pbrt:object_builder",
+        "//iris:geometry",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris/geometry:sphere",
+    ],
+)
+
+cc_test(
+    name = "sphere_test",
+    srcs = ["sphere_test.cc"],
+    deps = [
+        ":sphere",
+        "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
     ],

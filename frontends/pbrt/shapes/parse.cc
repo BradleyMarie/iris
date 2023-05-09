@@ -4,6 +4,7 @@
 
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/shapes/plymesh.h"
+#include "frontends/pbrt/shapes/sphere.h"
 #include "frontends/pbrt/shapes/trianglemesh.h"
 
 namespace iris::pbrt_frontend::shapes {
@@ -18,6 +19,7 @@ static const std::unordered_map<
         const ReferenceCounted<EmissiveMaterial>&,
         const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>&>
     g_shapes = {{"plymesh", g_plymesh_builder},
+                {"sphere", g_sphere_builder},
                 {"trianglemesh", g_trianglemesh_builder}};
 
 }  // namespace
