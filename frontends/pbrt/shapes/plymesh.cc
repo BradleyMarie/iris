@@ -16,18 +16,24 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"shadowalpha", Parameter::FLOAT_TEXTURE},
 };
 
-struct TriangleMeshReader final
-    : plyodine::TriangleMeshReader<geometric, geometric, geometric, uint32_t> {
+class TriangleMeshReader final
+    : public plyodine::TriangleMeshReader<geometric, geometric, geometric,
+                                          uint32_t> {
+ public:
+  TriangleMeshReader(const Matrix& model_to_world)
+      : model_to_world_(model_to_world) {}
+
   void Start() override {}
 
   void AddVertex(const std::array<geometric, 3>& position,
                  const std::array<geometric, 3>* maybe_normal,
                  const std::array<geometric, 2>* maybe_uv) override {
-    positions.emplace_back(position[0], position[1], position[2]);
+    positions.emplace_back(
+        model_to_world_.Multiply(Point(position[0], position[1], position[2])));
 
     if (maybe_normal) {
-      normals.emplace_back((*maybe_normal)[0], (*maybe_normal)[1],
-                           (*maybe_normal)[2]);
+      normals.emplace_back(model_to_world_.InverseTransposeMultiply(
+          Vector((*maybe_normal)[0], (*maybe_normal)[1], (*maybe_normal)[2])));
     }
 
     if (maybe_uv) {
@@ -43,6 +49,9 @@ struct TriangleMeshReader final
   std::vector<Vector> normals;
   std::vector<std::pair<geometric, geometric>> uvs;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> faces;
+
+ private:
+  const Matrix& model_to_world_;
 };
 
 class PlyMeshBuilder
@@ -87,7 +96,7 @@ PlyMeshBuilder::Build(
     exit(EXIT_FAILURE);
   }
 
-  TriangleMeshReader reader;
+  TriangleMeshReader reader(model_to_world);
   auto result = reader.ReadFrom(file_stream);
   if (!result) {
     std::cerr << "ERROR: PLY file parsing failed with message: "
