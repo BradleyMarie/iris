@@ -14,8 +14,8 @@ PerspectiveCamera::PerspectiveCamera(
       half_frame_size_(half_frame_size),
       image_plane_distance_(std::min(half_frame_size[0], half_frame_size[1]) /
                             std::tan(half_fov)) {
-  assert(std::isfinite(half_frame_size[0]) && half_frame_size[0] != 0.0);
-  assert(std::isfinite(half_frame_size[1]) && half_frame_size[1] != 0.0);
+  assert(std::isfinite(half_frame_size[0]) && 0.0 < half_frame_size[0]);
+  assert(std::isfinite(half_frame_size[1]) && 0.0 < half_frame_size[1]);
   assert(std::isfinite(std::tan(half_fov)) && 0.0 < std::tan(half_fov));
 }
 

@@ -4,15 +4,13 @@
 
 TEST(OrthographicCameraTest, HasLens) {
   iris::cameras::OrthographicCamera camera(
-      iris::Matrix::Identity(),
-      std::array<iris::geometric_t, 4>({-1.0, -1.0, 1.0, 1.0}));
+      iris::Matrix::Identity(), std::array<iris::geometric_t, 2>({1.0, 1.0}));
   EXPECT_FALSE(camera.HasLens());
 }
 
 TEST(OrthographicCameraTest, NoTransform) {
   iris::cameras::OrthographicCamera camera(
-      iris::Matrix::Identity(),
-      std::array<iris::geometric_t, 4>({-1.0, -1.0, 1.0, 1.0}));
+      iris::Matrix::Identity(), std::array<iris::geometric_t, 2>({1.0, 1.0}));
 
   auto top_left = camera.Compute({0.0, 0.0}, nullptr);
   EXPECT_EQ(-1.0, top_left.origin.x);
@@ -42,7 +40,7 @@ TEST(OrthographicCameraTest, NoTransform) {
 TEST(OrthographicCameraTest, Transformed) {
   iris::cameras::OrthographicCamera camera(
       iris::Matrix::Translation(1.0, 2.0, 3.0).value(),
-      std::array<iris::geometric_t, 4>({-0.5, -0.5, 0.5, 0.5}));
+      std::array<iris::geometric_t, 2>({0.5, 0.5}));
 
   auto top_left = camera.Compute({0.0, 0.0}, nullptr);
   EXPECT_EQ(0.5, top_left.origin.x);

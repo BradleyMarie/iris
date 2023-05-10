@@ -48,22 +48,17 @@ OrthographicObjectBuilder::Build(
         static_cast<intermediate_t>(image_dimensions.second) /
         static_cast<intermediate_t>(image_dimensions.first));
 
-    std::array<geometric_t, 4> frame_bounds;
-    if (actual_aspect_ratio < 1.0) {
-      actual_aspect_ratio = 1.0 / actual_aspect_ratio;
-      frame_bounds[0] = -1.0;
-      frame_bounds[1] = -actual_aspect_ratio;
-      frame_bounds[2] = 1.0;
-      frame_bounds[3] = actual_aspect_ratio;
+    std::array<geometric_t, 2> half_frame_size;
+    if (actual_aspect_ratio > 1.0) {
+      half_frame_size[0] = actual_aspect_ratio;
+      half_frame_size[1] = 1.0;
     } else {
-      frame_bounds[0] = -actual_aspect_ratio;
-      frame_bounds[1] = -1.0;
-      frame_bounds[2] = actual_aspect_ratio;
-      frame_bounds[3] = 1.0;
+      half_frame_size[0] = 1.0;
+      half_frame_size[1] = 1.0 / actual_aspect_ratio;
     }
 
     return std::make_unique<iris::cameras::OrthographicCamera>(
-        transformation.start, frame_bounds);
+        transformation.start, half_frame_size);
   };
 }
 
