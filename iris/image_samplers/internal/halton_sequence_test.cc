@@ -45,6 +45,40 @@ TEST(HaltonSequenceTest, Samples) {
     }
   }
 
+  EXPECT_TRUE(sequence.Start({2, 2}, {0, 1}, 1));
+  for (uint32_t i = 0; i < 4; i++) {
+    auto value = sequence.Next();
+
+    ASSERT_TRUE(value);
+    if (i == 0) {
+      EXPECT_GE(*value, 0.5);
+      EXPECT_LE(*value, 1.0);
+    } else if (i == 1) {
+      EXPECT_GE(*value, 0.0);
+      EXPECT_LE(*value, 0.5 + 0.0001);
+    } else {
+      EXPECT_GE(*value, 0.0);
+      EXPECT_LE(*value, 1.0);
+    }
+  }
+
+  EXPECT_TRUE(sequence.Start({2, 2}, {1, 0}, 1));
+  for (uint32_t i = 0; i < 4; i++) {
+    auto value = sequence.Next();
+
+    ASSERT_TRUE(value);
+    if (i == 0) {
+      EXPECT_GE(*value, 0.0);
+      EXPECT_LE(*value, 0.5 + 0.0001);
+    } else if (i == 1) {
+      EXPECT_GE(*value, 0.5);
+      EXPECT_LE(*value, 1.0);
+    } else {
+      EXPECT_GE(*value, 0.0);
+      EXPECT_LE(*value, 1.0);
+    }
+  }
+
   EXPECT_TRUE(sequence.Start({2, 2}, {1, 1}, 0));
   for (uint32_t i = 0; i < 4; i++) {
     auto value = sequence.Next();

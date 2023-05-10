@@ -20,8 +20,8 @@ bool HaltonSequence::Start(std::pair<size_t, size_t> image_dimensions,
   assert(pixel.second < image_dimensions.second);
 
   if (!enumerator_ || image_dimensions != image_dimensions_) {
-    enumerator_.emplace(static_cast<unsigned>(image_dimensions.first),
-                        static_cast<unsigned>(image_dimensions.second));
+    enumerator_.emplace(static_cast<unsigned>(image_dimensions.second),
+                        static_cast<unsigned>(image_dimensions.first));
   }
 
   if (sample_index >= enumerator_->get_max_samples_per_pixel()) {
@@ -30,8 +30,8 @@ bool HaltonSequence::Start(std::pair<size_t, size_t> image_dimensions,
   }
 
   sample_index_ =
-      enumerator_->get_index(sample_index, static_cast<unsigned>(pixel.first),
-                             static_cast<unsigned>(pixel.second));
+      enumerator_->get_index(sample_index, static_cast<unsigned>(pixel.second),
+                             static_cast<unsigned>(pixel.first));
 
   image_dimensions_ = image_dimensions;
   dimension_ = 0;
@@ -48,10 +48,10 @@ std::optional<geometric_t> HaltonSequence::Next() {
 
   if (dimension_ == 0) {
     sample = enumerator_->scale_x(sample) /
-             static_cast<geometric_t>(image_dimensions_.first);
+             static_cast<geometric_t>(image_dimensions_.second);
   } else if (dimension_ == 1) {
     sample = enumerator_->scale_y(sample) /
-             static_cast<geometric_t>(image_dimensions_.second);
+             static_cast<geometric_t>(image_dimensions_.first);
   }
 
   dimension_ += 1;
