@@ -200,13 +200,13 @@ TEST(MatrixManager, RotateX) {
 }
 
 TEST(MatrixManager, Rotate) {
-  std::stringstream input("Rotate 1.0 2.0 2.0 2.0");
+  std::stringstream input("Rotate 0.0 2.0 2.0 2.0");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::MatrixManager matrix_manager;
   EXPECT_TRUE(matrix_manager.TryParse(tokenizer));
 
-  EXPECT_EQ(iris::Matrix::Rotation(1.0, 2.0, 2.0, 2.0).value(),
+  EXPECT_EQ(iris::Matrix::Rotation(0.0, 2.0, 2.0, 2.0).value(),
             matrix_manager.Get().start);
 }
 

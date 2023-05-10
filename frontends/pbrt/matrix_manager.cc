@@ -84,8 +84,9 @@ void MatrixManager::Rotate(Tokenizer& tokenizer) {
     exit(EXIT_FAILURE);
   }
 
-  Transform(
-      Matrix::Rotation(values[0], values[1], values[2], values[3]).value());
+  Transform(Matrix::Rotation((values[0] / 180.0) * M_PI, values[1], values[2],
+                             values[3])
+                .value());
 }
 
 void MatrixManager::LookAt(Tokenizer& tokenizer) {
