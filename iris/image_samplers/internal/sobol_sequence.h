@@ -10,8 +10,6 @@ namespace iris {
 namespace image_samplers {
 namespace internal {
 
-size_t ToLog2Resolution(size_t value);
-
 class SobolSequence final : public LowDiscrepancySequence {
  public:
   SobolSequence() = default;

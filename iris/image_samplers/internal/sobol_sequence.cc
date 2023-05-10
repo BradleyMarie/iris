@@ -12,11 +12,6 @@ namespace iris {
 namespace image_samplers {
 namespace internal {
 
-size_t ToLog2Resolution(size_t value) {
-  size_t rounded_up = std::bit_ceil(value);
-  return std::countr_zero(rounded_up);
-}
-
 std::optional<uint64_t> BitMatrixVectorMultiply(
     const uint64_t bit_matrix[pbrt::SobolMatrixSize], uint64_t bit_vector) {
   if (bit_vector >> static_cast<uint64_t>(pbrt::SobolMatrixSize)) {
@@ -76,22 +71,23 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
   assert(pixel.first < image_dimensions.first);
   assert(pixel.second < image_dimensions.second);
 
-  size_t logical_resolution =
+  size_t longest_dimension =
       std::max(image_dimensions.first, image_dimensions.second);
-  size_t logical_resolution_log2 = ToLog2Resolution(logical_resolution);
+  size_t logical_resolution = std::bit_ceil(longest_dimension);
+  size_t logical_resolution_log2 = std::countr_zero(logical_resolution);
 
   auto maybe_sample_index = SobolSequenceIndex(
       static_cast<uint64_t>(logical_resolution_log2),
-      static_cast<uint64_t>(pixel.first), static_cast<uint64_t>(pixel.second),
+      static_cast<uint64_t>(pixel.second), static_cast<uint64_t>(pixel.first),
       static_cast<uint64_t>(sample_index));
   if (!maybe_sample_index) {
     return false;
   }
 
   to_first_dimension_ = static_cast<geometric_t>(logical_resolution) /
-                        static_cast<geometric_t>(image_dimensions.first);
+                        static_cast<geometric_t>(image_dimensions.second);
   to_second_dimension_ = static_cast<geometric_t>(logical_resolution) /
-                         static_cast<geometric_t>(image_dimensions.second);
+                         static_cast<geometric_t>(image_dimensions.first);
   sample_index_ = *maybe_sample_index;
   dimension_ = 0;
 
