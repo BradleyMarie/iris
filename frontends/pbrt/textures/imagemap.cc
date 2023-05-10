@@ -181,7 +181,8 @@ class ImageFloatTextureBuilder final
     std::vector<visual> scaled_values;
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
-        scaled_values.push_back(values[y * nx + x] * parsed_params.scale);
+        scaled_values.push_back(values[(ny - y - 1) * nx + x] *
+                                parsed_params.scale);
       }
     }
 
@@ -249,9 +250,12 @@ class ImageSpectrumTextureBuilder final
     std::vector<ReferenceCounted<Reflector>> scaled_reflectors;
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
-        visual_t r = values[3 * (y * nx + x) + 0] * parsed_params.scale;
-        visual_t g = values[3 * (y * nx + x) + 1] * parsed_params.scale;
-        visual_t b = values[3 * (y * nx + x) + 2] * parsed_params.scale;
+        visual_t r =
+            values[3 * ((ny - y - 1) * nx + x) + 0] * parsed_params.scale;
+        visual_t g =
+            values[3 * ((ny - y - 1) * nx + x) + 1] * parsed_params.scale;
+        visual_t b =
+            values[3 * ((ny - y - 1) * nx + x) + 2] * parsed_params.scale;
         if (r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0) {
           std::cerr << "ERROR: Image file contained an out of range value"
                     << stbi_failure_reason() << std::endl;
