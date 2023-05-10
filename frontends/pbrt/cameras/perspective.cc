@@ -9,12 +9,9 @@ namespace {
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
-        {"focaldistance", Parameter::FLOAT},
-        {"fov", Parameter::FLOAT},
-        {"frameaspectratio", Parameter::FLOAT},
-        {"halffov", Parameter::FLOAT},
+        {"focaldistance", Parameter::FLOAT},    {"fov", Parameter::FLOAT},
+        {"frameaspectratio", Parameter::FLOAT}, {"halffov", Parameter::FLOAT},
         {"lensradius", Parameter::FLOAT},
-        {"screenwindow", Parameter::FLOAT},
 };
 
 class PerspectiveObjectBuilder
@@ -73,73 +70,39 @@ PerspectiveObjectBuilder::Build(
     half_fov = value;
   }
 
-  auto screenwindow = parameters.find("screenwindow");
-  if (screenwindow != parameters.end()) {
-    const auto& values = screenwindow->second.GetFloatValues(4, 4);
-    if (values[0] >= values[2] || values[1] >= values[3]) {
-      std::cerr << "ERROR: Invalid bounds from parameter: screenwindow"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    screen_window =
-        std::array<geometric_t, 4>{{static_cast<geometric_t>(values[0]),
-                                    static_cast<geometric_t>(values[1]),
-                                    static_cast<geometric_t>(values[2]),
-                                    static_cast<geometric_t>(values[3])}};
-  }
-
-  if (aspect_ratio && screen_window) {
-    std::cerr << "ERROR: Cannot specify parameters together: frameaspectratio, "
-                 "screenwindow"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
   if (fov && half_fov) {
     std::cerr << "ERROR: Cannot specify parameters together: fov, halffov"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
+  if (fov) {
+    half_fov = fov.value() * 0.5;
+  }
+
   if (half_fov) {
-    fov = half_fov.value() * 0.5;
+    *half_fov *= M_PI / 180.0;
+  } else {
+    half_fov = M_PI_4;
   }
 
-  if (!fov) {
-    fov = 90.0;
-  }
-
-  if (screen_window) {
-    return [screen_window, fov,
-            transformation](const std::pair<size_t, size_t>& image_dimensions) {
-      return std::make_unique<iris::cameras::PerspectiveCamera>(
-          transformation.start, screen_window.value(), fov.value());
-    };
-  }
-
-  return [aspect_ratio, fov,
+  return [aspect_ratio, half_fov, screen_window,
           transformation](const std::pair<size_t, size_t>& image_dimensions) {
     geometric_t actual_aspect_ratio = aspect_ratio.value_or(
         static_cast<intermediate_t>(image_dimensions.second) /
         static_cast<intermediate_t>(image_dimensions.first));
 
-    std::array<geometric_t, 4> frame_bounds;
-    if (actual_aspect_ratio < 1.0) {
-      actual_aspect_ratio = 1.0 / actual_aspect_ratio;
-      frame_bounds[0] = -1.0;
-      frame_bounds[1] = -actual_aspect_ratio;
-      frame_bounds[2] = 1.0;
-      frame_bounds[3] = actual_aspect_ratio;
+    std::array<geometric_t, 2> half_frame_size;
+    if (actual_aspect_ratio > 1.0) {
+      half_frame_size[0] = actual_aspect_ratio;
+      half_frame_size[1] = 1.0;
     } else {
-      frame_bounds[0] = -actual_aspect_ratio;
-      frame_bounds[1] = -1.0;
-      frame_bounds[2] = actual_aspect_ratio;
-      frame_bounds[3] = 1.0;
+      half_frame_size[0] = 1.0;
+      half_frame_size[1] = 1.0 / actual_aspect_ratio;
     }
 
     return std::make_unique<iris::cameras::PerspectiveCamera>(
-        transformation.start, frame_bounds, fov.value());
+        transformation.start, half_frame_size, half_fov.value());
   };
 }
 

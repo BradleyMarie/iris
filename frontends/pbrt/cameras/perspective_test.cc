@@ -117,125 +117,6 @@ TEST(Perspective, AspectRatioZero) {
       "ERROR: Out of range value for parameter: frameaspectratio");
 }
 
-TEST(Perspective, ScreenWindowTooFew) {
-  std::stringstream input("\"float screenwindow\" [0.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Too few values in parameter list: screenwindow");
-}
-
-TEST(Perspective, ScreenWindowTooMany) {
-  std::stringstream input("\"float screenwindow\" [0.0 1.0 0.0 1.0 0.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Too many values in parameter list: screenwindow");
-}
-
-TEST(Perspective, ScreenWindowBadXBounds) {
-  std::stringstream input("\"float screenwindow\" [-1.0 -1.0 -2.0 1.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Invalid bounds from parameter: screenwindow");
-}
-
-TEST(Perspective, ScreenWindowBadXBoundsEqual) {
-  std::stringstream input("\"float screenwindow\" [-1.0 -1.0 -1.0 1.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Invalid bounds from parameter: screenwindow");
-}
-
-TEST(Perspective, ScreenWindowBadYBounds) {
-  std::stringstream input("\"float screenwindow\" [-1.0 -1.0 1.0 -2.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Invalid bounds from parameter: screenwindow");
-}
-
-TEST(Perspective, ScreenWindowBadYBoundsEqual) {
-  std::stringstream input("\"float screenwindow\" [-1.0 -1.0 1.0 -1.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Invalid bounds from parameter: screenwindow");
-}
-
-TEST(Perspective, BothSpecified) {
-  std::stringstream input(
-      "\"float frameaspectratio\" 1.0 \"float screenwindow\" [-1.0 -1.0 1.0 "
-      "1.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Cannot specify parameters together: frameaspectratio, "
-      "screenwindow");
-}
-
-TEST(Perspective, WithWindow) {
-  std::stringstream input("\"float screenwindow\" [-2.0 -2.0 2.0 2.0]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
-  ASSERT_TRUE(result);
-
-  auto camera = result(std::make_pair(1u, 1u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
-  EXPECT_EQ(iris::Point(-2.0, 2.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
-  EXPECT_EQ(iris::Point(2.0, -2.0, 0.0), bottom_right.origin);
-}
-
 TEST(Perspective, WithXAspectRatio) {
   std::stringstream input("\"float frameaspectratio\" 2.0");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -248,10 +129,9 @@ TEST(Perspective, WithXAspectRatio) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
-  EXPECT_EQ(iris::Point(-2.0, 1.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
-  EXPECT_EQ(iris::Point(2.0, -1.0, 0.0), bottom_right.origin);
+  auto top_right = camera->Compute({1.0, 0.0}, nullptr);
+  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
+  EXPECT_NEAR(top_right.direction.x, top_right.direction.y * 2.0, 0.001);
 }
 
 TEST(Perspective, WithYAspectRatio) {
@@ -266,10 +146,9 @@ TEST(Perspective, WithYAspectRatio) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
-  EXPECT_EQ(iris::Point(-1.0, 2.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
-  EXPECT_EQ(iris::Point(1.0, -2.0, 0.0), bottom_right.origin);
+  auto top_right = camera->Compute({1.0, 0.0}, nullptr);
+  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
+  EXPECT_NEAR(top_right.direction.x * 2.0, top_right.direction.y, 0.001);
 }
 
 TEST(Perspective, FromFrameX) {
@@ -284,10 +163,9 @@ TEST(Perspective, FromFrameX) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 2u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
-  EXPECT_EQ(iris::Point(-2.0, 1.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
-  EXPECT_EQ(iris::Point(2.0, -1.0, 0.0), bottom_right.origin);
+  auto top_right = camera->Compute({1.0, 0.0}, nullptr);
+  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
+  EXPECT_NEAR(top_right.direction.x, top_right.direction.y * 2.0, 0.001);
 }
 
 TEST(Perspective, FromFrameY) {
@@ -302,10 +180,9 @@ TEST(Perspective, FromFrameY) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(2u, 1u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
-  EXPECT_EQ(iris::Point(-1.0, 2.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
-  EXPECT_EQ(iris::Point(1.0, -2.0, 0.0), bottom_right.origin);
+  auto top_right = camera->Compute({1.0, 0.0}, nullptr);
+  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
+  EXPECT_NEAR(top_right.direction.x * 2.0, top_right.direction.y, 0.001);
 }
 
 TEST(Perspective, WithHalfFov) {

@@ -10,7 +10,6 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"focaldistance", Parameter::FLOAT},
         {"frameaspectratio", Parameter::FLOAT},
         {"lensradius", Parameter::FLOAT},
-        {"screenwindow", Parameter::FLOAT},
 };
 
 class OrthographicObjectBuilder
@@ -30,7 +29,6 @@ OrthographicObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     const MatrixManager::Transformation& transformation) const {
   std::optional<geometric_t> aspect_ratio;
-  std::optional<std::array<geometric_t, 4>> screen_window;
 
   auto frameaspectratio = parameters.find("frameaspectratio");
   if (frameaspectratio != parameters.end()) {
@@ -42,37 +40,6 @@ OrthographicObjectBuilder::Build(
     }
 
     aspect_ratio = value;
-  }
-
-  auto screenwindow = parameters.find("screenwindow");
-  if (screenwindow != parameters.end()) {
-    const auto& values = screenwindow->second.GetFloatValues(4, 4);
-    if (values[0] >= values[2] || values[1] >= values[3]) {
-      std::cerr << "ERROR: Invalid bounds from parameter: screenwindow"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    screen_window =
-        std::array<geometric_t, 4>{{static_cast<geometric_t>(values[0]),
-                                    static_cast<geometric_t>(values[1]),
-                                    static_cast<geometric_t>(values[2]),
-                                    static_cast<geometric_t>(values[3])}};
-  }
-
-  if (aspect_ratio && screen_window) {
-    std::cerr << "ERROR: Cannot specify parameters together: frameaspectratio, "
-                 "screenwindow"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (screen_window) {
-    return [screen_window,
-            transformation](const std::pair<size_t, size_t>& image_dimensions) {
-      return std::make_unique<iris::cameras::OrthographicCamera>(
-          transformation.start, screen_window.value());
-    };
   }
 
   return [aspect_ratio,

@@ -1,45 +1,32 @@
 #include "iris/cameras/perspective_camera.h"
 
-#define _USE_MATH_CONSTANTS
 #include <cassert>
 #include <cmath>
 
 namespace iris {
 namespace cameras {
-namespace {
-
-Point ComputeFrameStart(const std::array<geometric_t, 4>& frame_bounds,
-                        geometric_t fov) {
-  intermediate_t half_fov_radians =
-      fov * static_cast<intermediate_t>(M_PI / 360.0);
-  geometric_t image_plane_distance = 1.0 / std::tan(half_fov_radians);
-  return Point(frame_bounds[0], frame_bounds[3], image_plane_distance);
-}
-
-}  // namespace
 
 PerspectiveCamera::PerspectiveCamera(
     const Matrix& camera_to_world,
-    const std::array<geometric_t, 4>& frame_bounds, geometric_t fov) noexcept
+    const std::array<geometric_t, 2>& half_frame_size,
+    geometric_t half_fov) noexcept
     : camera_to_world_(camera_to_world),
-      frame_start_(ComputeFrameStart(frame_bounds, fov)),
-      frame_size_({frame_bounds[2] - frame_bounds[0],
-                   frame_bounds[1] - frame_bounds[3]}) {
-  assert(std::isfinite(frame_bounds[0]));
-  assert(std::isfinite(frame_bounds[1]));
-  assert(std::isfinite(frame_bounds[2]));
-  assert(std::isfinite(frame_bounds[3]));
-  assert(frame_bounds[0] < frame_bounds[2]);
-  assert(frame_bounds[1] < frame_bounds[3]);
-  assert(0.0 < fov && fov < 180.0);
+      half_frame_size_(half_frame_size),
+      image_plane_distance_(std::min(half_frame_size[0], half_frame_size[1]) /
+                            std::tan(half_fov)) {
+  assert(std::isfinite(half_frame_size[0]) && half_frame_size[0] != 0.0);
+  assert(std::isfinite(half_frame_size[1]) && half_frame_size[1] != 0.0);
+  assert(std::isfinite(std::tan(half_fov)) && 0.0 < std::tan(half_fov));
 }
 
 Ray PerspectiveCamera::Compute(
     const std::array<geometric_t, 2>& image_uv,
     const std::array<geometric_t, 2>* lens_uv) const {
-  Point origin(frame_start_.x + frame_size_[0] * image_uv[0],
-               frame_start_.y + frame_size_[1] * image_uv[1], 0.0);
-  Vector direction(origin.x, origin.y, frame_start_.z);
+  Point origin(0.0, 0.0, 0.0);
+  Vector direction(
+      std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),
+      std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv[1]),
+      image_plane_distance_);
   Ray camera_ray(origin, direction);
   return Normalize(camera_to_world_.Multiply(camera_ray));
 }
