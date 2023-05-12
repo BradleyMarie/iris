@@ -14,24 +14,27 @@ AreaLight::AreaLight(const Geometry& geometry, const Matrix* model_to_world,
 std::optional<Light::SampleResult> AreaLight::Sample(
     const Point& hit_point, Sampler sampler, iris::VisibilityTester& tester,
     SpectralAllocator& allocator) const {
-  auto sampled_point = geometry_.SampleFace(face_, sampler);
-  if (!sampled_point) {
+  auto model_hit_point =
+      model_to_world_ ? model_to_world_->Multiply(hit_point) : hit_point;
+
+  auto sample = geometry_.SampleBySolidAngle(model_hit_point, face_, sampler);
+  if (!sample || sample->pdf <= 0.0) {
     return std::nullopt;
   }
 
   auto world_sample_point = model_to_world_
-                                ? model_to_world_->Multiply(*sampled_point)
-                                : *sampled_point;
+                                ? model_to_world_->Multiply(sample->point)
+                                : sample->point;
 
   auto to_light = Normalize(world_sample_point - hit_point);
 
-  visual_t pdf;
-  auto* emission = Emission(Ray(hit_point, to_light), tester, allocator, &pdf);
+  auto* emission =
+      Emission(Ray(hit_point, to_light), tester, allocator, nullptr);
   if (!emission) {
     return std::nullopt;
   }
 
-  return Light::SampleResult{*emission, to_light, pdf};
+  return Light::SampleResult{*emission, to_light, sample->pdf};
 }
 
 const Spectrum* AreaLight::Emission(const Ray& to_light,

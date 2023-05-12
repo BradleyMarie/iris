@@ -58,8 +58,11 @@ class Triangle final : public Geometry {
   virtual const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const override;
 
-  virtual std::optional<Point> SampleFace(face_t face,
-                                          Sampler& sampler) const override;
+  virtual std::optional<Point> SampleBySurfaceArea(
+      face_t face, Sampler& sampler) const override;
+
+  virtual std::optional<SampleBySolidAngleResult> SampleBySolidAngle(
+      const Point& point, face_t face, Sampler& sampler) const override;
 
   virtual std::optional<visual_t> ComputeArea(face_t face) const override;
 
@@ -156,7 +159,8 @@ const EmissiveMaterial* Triangle::GetEmissiveMaterial(
   return shared_->emissive_materials[face].Get();
 }
 
-std::optional<Point> Triangle::SampleFace(face_t face, Sampler& sampler) const {
+std::optional<Point> Triangle::SampleBySurfaceArea(face_t face,
+                                                   Sampler& sampler) const {
   geometric_t u = sampler.Next();
   geometric_t v = sampler.Next();
 
@@ -171,6 +175,24 @@ std::optional<Point> Triangle::SampleFace(face_t face, Sampler& sampler) const {
                     shared_->points[std::get<0>(vertices_)];
 
   return shared_->points[std::get<0>(vertices_)] + v0_to_v1 * u + v0_to_v2 * v;
+}
+
+std::optional<Geometry::SampleBySolidAngleResult> Triangle::SampleBySolidAngle(
+    const Point& point, face_t face, Sampler& sampler) const {
+  auto sample = SampleBySurfaceArea(face, sampler);
+
+  geometric_t distance_to_sample_squared;
+  Vector to_sample = Normalize(*sample - point, &distance_to_sample_squared);
+
+  geometric_t cos_theta =
+      DotProduct(to_sample, Normalize(ComputeSurfaceNormal()));
+  if (face == kFrontFace) {
+    cos_theta = -cos_theta;
+  }
+
+  visual_t pdf = distance_to_sample_squared / (cos_theta * *ComputeArea(face));
+
+  return Geometry::SampleBySolidAngleResult{*sample, pdf};
 }
 
 std::optional<visual_t> Triangle::ComputeArea(face_t face) const {

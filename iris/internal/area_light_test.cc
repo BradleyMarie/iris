@@ -66,7 +66,7 @@ TEST(AreaLightTest, AreaLightSampleRngFails) {
   iris::emissive_materials::MockEmissiveMaterial emissive_material;
 
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleFace(testing::_, testing::_))
+  EXPECT_CALL(*geometry, SampleBySolidAngle(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   iris::internal::AreaLight light(*geometry, nullptr, 1);
 
@@ -86,8 +86,9 @@ TEST(AreaLightTest, AreaLightSampleNotVisible) {
   iris::emissive_materials::MockEmissiveMaterial emissive_material;
 
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleFace(testing::_, testing::_))
-      .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, 1.0)));
+  EXPECT_CALL(*geometry, SampleBySolidAngle(testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(iris::Geometry::SampleBySolidAngleResult{
+          iris::Point(0.0, 0.0, 1.0), 1.0}));
   iris::internal::AreaLight light(*geometry, nullptr, 1);
 
   iris::random::MockRandom random;
@@ -106,8 +107,9 @@ TEST(AreaLightTest, AreaLightSampleWorld) {
       .WillOnce(testing::Return(&spectrum));
 
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleFace(testing::_, testing::_))
-      .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, 1.0)));
+  EXPECT_CALL(*geometry, SampleBySolidAngle(testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(iris::Geometry::SampleBySolidAngleResult{
+          iris::Point(0.0, 0.0, 1.0), 1.0}));
   EXPECT_CALL(*geometry,
               ComputeSurfaceNormal(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Vector(0.0, 0.0, -1.0)));
@@ -137,8 +139,9 @@ TEST(AreaLightTest, AreaLightSampleWithTransform) {
 
   auto transform = iris::Matrix::Scalar(1.0, 1.0, -1.0).value();
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleFace(testing::_, testing::_))
-      .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, -1.0)));
+  EXPECT_CALL(*geometry, SampleBySolidAngle(testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(iris::Geometry::SampleBySolidAngleResult{
+          iris::Point(0.0, 0.0, -1.0), 1.0}));
   EXPECT_CALL(*geometry,
               ComputeSurfaceNormal(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Vector(0.0, 0.0, 1.0)));

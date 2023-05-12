@@ -25,7 +25,8 @@ Vector LambertianBrdf::Sample(const Vector& incoming, Sampler& sampler) const {
 std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
                                             const Vector& outgoing,
                                             SampleSource sample_source) const {
-  return (incoming.z < 0) == (outgoing.z < 0) ? 0.0 : std::abs(outgoing.z);
+  return (incoming.z < 0) == (outgoing.z < 0) ? 0.0
+                                              : std::abs(outgoing.z * M_1_PI);
 }
 
 const Reflector* LambertianBrdf::Reflectance(

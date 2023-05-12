@@ -75,12 +75,20 @@ TEST(GeometryTest, GetEmissiveMaterial) {
   EXPECT_EQ(nullptr, geom.GetEmissiveMaterial(0, nullptr));
 }
 
-TEST(GeometryTest, SampleFace) {
+TEST(GeometryTest, SampleBySurfaceArea) {
   iris::geometry::MockBasicGeometry geom;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   iris::Sampler sampler(rng);
-  EXPECT_FALSE(geom.SampleFace(0, sampler));
+  EXPECT_FALSE(geom.SampleBySurfaceArea(0, sampler));
+}
+
+TEST(GeometryTest, SampleBySolidAngle) {
+  iris::geometry::MockBasicGeometry geom;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+  iris::Sampler sampler(rng);
+  EXPECT_FALSE(geom.SampleBySolidAngle(iris::Point(0.0, 0.0, 0.0), 0, sampler));
 }
 
 TEST(GeometryTest, ComputeArea) {
