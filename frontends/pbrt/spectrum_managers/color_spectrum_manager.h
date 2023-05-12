@@ -14,6 +14,8 @@ class ColorColorMatcher final : public ColorMatcher {
 
 class ColorSpectrumManager final : public SpectrumManager {
  public:
+  ColorSpectrumManager(bool all_spectra_are_reflective);
+
   ReferenceCounted<Spectrum> AllocateSpectrum(const Color& color) override;
 
   ReferenceCounted<Spectrum> AllocateSpectrum(
@@ -25,6 +27,9 @@ class ColorSpectrumManager final : public SpectrumManager {
       const std::map<visual, visual>& wavelengths) override;
 
   void Clear() override;
+
+ private:
+  visual_t spectral_scalar_;
 };
 
 }  // namespace iris::pbrt_frontend::spectrum_managers

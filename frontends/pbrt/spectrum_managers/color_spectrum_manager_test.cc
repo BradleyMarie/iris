@@ -6,7 +6,7 @@
 static iris::pbrt_frontend::spectrum_managers::ColorColorMatcher
     g_color_matcher;
 static iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager
-    g_spectrum_manager;
+    g_spectrum_manager(false);
 
 TEST(ColorColorMatcher, Match) {
   iris::pbrt_frontend::Color color({0.25, 0.5, 0.75},
@@ -37,6 +37,15 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromSpectrum) {
   EXPECT_NEAR(128.75, spectrum->Intensity(0.5), 0.001);
   EXPECT_NEAR(101.325, spectrum->Intensity(1.5), 0.001);
   EXPECT_NEAR(97.154, spectrum->Intensity(2.5), 0.001);
+}
+
+TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrum) {
+  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
+      true);
+  auto spectrum = spectrum_manager.AllocateSpectrum({{1.0, 1.0}});
+  EXPECT_NEAR(1.204, spectrum->Intensity(0.5), 0.1);
+  EXPECT_NEAR(0.948, spectrum->Intensity(1.5), 0.1);
+  EXPECT_NEAR(0.909, spectrum->Intensity(2.5), 0.1);
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromColor) {

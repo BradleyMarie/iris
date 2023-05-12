@@ -31,6 +31,11 @@ ABSL_FLAG(
     "If empty, CPU profiling is disabled and no output is generated.");
 #endif  // INSTRUMENTED_BUILD
 
+ABSL_FLAG(
+    bool, all_spectra_are_reflective, true,
+    "If true, reproduce a bug in PBRT where the reflective CIE color matching "
+    "function is always used to convert sampled spectra to XYZ colors.");
+
 ABSL_FLAG(iris::geometric_t, epsilon, 0.001,
           "The amount of error tolerated in distance calculations. Must be "
           "finite and greater than or equal to zero.");
@@ -104,7 +109,8 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   } else {
     spectral_manager = std::make_unique<
-        iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager>();
+        iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager>(
+        absl::GetFlag(FLAGS_all_spectra_are_reflective));
     color_matcher = std::make_unique<
         iris::pbrt_frontend::spectrum_managers::ColorColorMatcher>();
   }

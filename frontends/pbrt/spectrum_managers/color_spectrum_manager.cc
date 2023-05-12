@@ -11,6 +11,16 @@ namespace {
 
 static iris::color_matchers::CieColorMatcher g_color_matcher;
 
+visual_t ComputeSpectralScalar(bool all_spectra_are_reflective) {
+  if (!all_spectra_are_reflective) {
+    return 1.0;
+  }
+
+  std::map<visual, visual> wavelengths = {{1.0, 1.0}};
+  iris::spectra::SampledSpectrum sampled_spectrum(wavelengths);
+  return 1.0 / g_color_matcher.Match(sampled_spectrum)[1];
+}
+
 };  // namespace
 
 std::array<visual_t, 3> ColorColorMatcher::Match(
@@ -23,6 +33,9 @@ iris::Color::Space ColorColorMatcher::ColorSpace() const {
   return iris::Color::LINEAR_SRGB;
 }
 
+ColorSpectrumManager::ColorSpectrumManager(bool all_spectra_are_reflective)
+    : spectral_scalar_(ComputeSpectralScalar(all_spectra_are_reflective)) {}
+
 ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
     const Color& color) {
   return iris::MakeReferenceCounted<
@@ -34,8 +47,9 @@ ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
   iris::spectra::SampledSpectrum sampled_spectrum(wavelengths);
 
   auto values = g_color_matcher.Match(sampled_spectrum);
-  iris::Color xyz_color(values[0], values[1], values[2],
-                        g_color_matcher.ColorSpace());
+  iris::Color xyz_color(
+      values[0] * spectral_scalar_, values[1] * spectral_scalar_,
+      values[2] * spectral_scalar_, g_color_matcher.ColorSpace());
   auto rgb_color = xyz_color.ConvertTo(iris::Color::LINEAR_SRGB);
 
   return iris::MakeReferenceCounted<
