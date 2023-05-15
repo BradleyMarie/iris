@@ -58,8 +58,8 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
   ASSERT_TRUE(sample);
   EXPECT_EQ(0.25, sample->image_uv[0]);
   EXPECT_EQ(0.75, sample->image_uv[1]);
-  EXPECT_NEAR(sample->image_uv[0] + 1.0, (*sample->image_uv_dxdy)[0], 0.01);
-  EXPECT_NEAR(sample->image_uv[1] + 1.0, (*sample->image_uv_dxdy)[1], 0.01);
+  EXPECT_NEAR(sample->image_uv[1] + 1.0, sample->image_uv_dxdy[1], 0.01);
+  EXPECT_NEAR(sample->image_uv[0] + 1.0, sample->image_uv_dxdy[0], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(1.0, sample->weight);
   EXPECT_EQ(sequence_ptr, &sample->rng);
@@ -91,8 +91,8 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
   ASSERT_TRUE(sample);
   EXPECT_EQ(0.25, sample->image_uv[0]);
   EXPECT_EQ(0.75, sample->image_uv[1]);
-  EXPECT_NEAR(sample->image_uv[0] + 1.0, (*sample->image_uv_dxdy)[0], 0.01);
-  EXPECT_NEAR(sample->image_uv[1] + 1.0, (*sample->image_uv_dxdy)[1], 0.01);
+  EXPECT_NEAR(sample->image_uv[0] + 1.0, sample->image_uv_dxdy[0], 0.01);
+  EXPECT_NEAR(sample->image_uv[1] + 1.0, sample->image_uv_dxdy[1], 0.01);
   ASSERT_TRUE(sample->lens_uv);
   EXPECT_EQ(0.125, (*sample->lens_uv)[0]);
   EXPECT_EQ(0.375, (*sample->lens_uv)[1]);

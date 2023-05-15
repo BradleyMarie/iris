@@ -60,7 +60,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
                   .Times(samples_per_pixel)
                   .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
                       {0.0, 0.0},
-                      std::nullopt,
+                      {1.0, 1.0},
                       std::nullopt,
                       static_cast<iris::visual_t>(1.0) /
                           static_cast<iris::visual_t>(samples_per_pixel),
@@ -82,7 +82,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
                 .Times(samples_per_pixel)
                 .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
                     {0.0, 0.0},
-                    std::nullopt,
+                    {1.0, 1.0},
                     std::nullopt,
                     static_cast<iris::visual_t>(1.0) /
                         static_cast<iris::visual_t>(samples_per_pixel),

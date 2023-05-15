@@ -15,7 +15,7 @@ class MockCamera final : public Camera {
  public:
   MOCK_METHOD(RayDifferential, Compute,
               ((const std::array<geometric_t, 2>&),
-               (const std::array<geometric_t, 2>*),
+               (const std::array<geometric_t, 2>&),
                (const std::array<geometric_t, 2>*)),
               (const override));
   MOCK_METHOD(bool, HasLens, (), (const override));

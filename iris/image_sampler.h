@@ -18,9 +18,9 @@ class ImageSampler {
 
   struct Sample {
     const std::array<geometric_t, 2> image_uv;
-    const std::optional<std::array<geometric_t, 2>> image_uv_dxdy;
+    const std::array<geometric_t, 2> image_uv_dxdy;
     const std::optional<std::array<geometric_t, 2>> lens_uv;
-    visual_t weight;
+    const visual_t weight;
     Random& rng;
   };
 

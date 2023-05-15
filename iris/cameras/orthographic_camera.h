@@ -19,7 +19,7 @@ class OrthographicCamera final : public Camera {
 
   RayDifferential Compute(
       const std::array<geometric_t, 2>& image_uv,
-      const std::array<geometric_t, 2>* image_uv_dxdy,
+      const std::array<geometric_t, 2>& image_uv_dxdy,
       const std::array<geometric_t, 2>* lens_uv) const override;
   bool HasLens() const override;
 
