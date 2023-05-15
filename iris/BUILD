@@ -92,7 +92,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
-        ":ray",
+        ":ray_differential",
     ],
 )
 
@@ -269,7 +269,7 @@ cc_library(
     deps = [
         ":light_sampler",
         ":random",
-        ":ray",
+        ":ray_differential",
         ":ray_tracer",
         ":spectral_allocator",
         ":spectrum",
@@ -474,6 +474,24 @@ cc_test(
     deps = [
         ":random",
         "//iris/random:mock_random",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ray_differential",
+    hdrs = ["ray_differential.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ray",
+    ],
+)
+
+cc_test(
+    name = "ray_differential_test",
+    srcs = ["ray_differential_test.cc"],
+    deps = [
+        ":ray_differential",
         "@com_google_googletest//:gtest_main",
     ],
 )

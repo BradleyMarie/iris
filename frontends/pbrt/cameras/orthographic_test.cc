@@ -59,9 +59,9 @@ TEST(Orthographic, WithXAspectRatio) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
+  auto top_left = camera->Compute({0.0, 0.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(-2.0, 1.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
+  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(2.0, -1.0, 0.0), bottom_right.origin);
 }
 
@@ -77,9 +77,9 @@ TEST(Orthographic, WithYAspectRatio) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
+  auto top_left = camera->Compute({0.0, 0.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(-1.0, 2.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
+  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(1.0, -2.0, 0.0), bottom_right.origin);
 }
 
@@ -95,9 +95,9 @@ TEST(Orthographic, FromFrameX) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 2u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
+  auto top_left = camera->Compute({0.0, 0.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(-2.0, 1.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
+  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(2.0, -1.0, 0.0), bottom_right.origin);
 }
 
@@ -113,8 +113,8 @@ TEST(Orthographic, FromFrameY) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(2u, 1u));
-  auto top_left = camera->Compute({0.0, 0.0}, nullptr);
+  auto top_left = camera->Compute({0.0, 0.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(-1.0, 2.0, 0.0), top_left.origin);
-  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr);
+  auto bottom_right = camera->Compute({1.0, 1.0}, nullptr, nullptr);
   EXPECT_EQ(iris::Point(1.0, -2.0, 0.0), bottom_right.origin);
 }

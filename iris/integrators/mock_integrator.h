@@ -7,7 +7,7 @@
 #include "iris/integrator.h"
 #include "iris/light_sampler.h"
 #include "iris/random.h"
-#include "iris/ray.h"
+#include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
@@ -19,8 +19,8 @@ namespace integrators {
 class MockIntegrator final : public Integrator {
  public:
   MOCK_METHOD(const Spectrum*, Integrate,
-              (const Ray&, RayTracer&, LightSampler&, VisibilityTester&,
-               SpectralAllocator&, Random&),
+              (const RayDifferential&, RayTracer&, LightSampler&,
+               VisibilityTester&, SpectralAllocator&, Random&),
               (override));
   MOCK_METHOD(std::unique_ptr<Integrator>, Duplicate, (), (const override));
 };

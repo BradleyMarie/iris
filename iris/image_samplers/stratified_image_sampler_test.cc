@@ -28,6 +28,8 @@ TEST(StraifiedImageSamplerTest, SampleNoLens) {
   auto sample = sampler.NextSample(false, rng);
   EXPECT_EQ(sample->image_uv[0], 0.625);
   EXPECT_EQ(sample->image_uv[1], 0.125);
+  EXPECT_NEAR(sample->image_uv[0] + 0.25, (*sample->image_uv_dxdy)[0], 0.01);
+  EXPECT_NEAR(sample->image_uv[1] + 0.25, (*sample->image_uv_dxdy)[1], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(sample->weight, 0.25);
   EXPECT_EQ(&rng, &sample->rng);
@@ -51,6 +53,8 @@ TEST(StraifiedImageSamplerTest, SampleWithLens) {
   EXPECT_TRUE((*sample->lens_uv)[0] < 1.0);
   EXPECT_TRUE((*sample->lens_uv)[1] >= 0.0);
   EXPECT_TRUE((*sample->lens_uv)[1] < 1.0);
+  EXPECT_NEAR(sample->image_uv[0] + 0.25, (*sample->image_uv_dxdy)[0], 0.01);
+  EXPECT_NEAR(sample->image_uv[1] + 0.25, (*sample->image_uv_dxdy)[1], 0.01);
   EXPECT_EQ(sample->weight, 0.25);
   EXPECT_EQ(&rng, &sample->rng);
 }
@@ -70,6 +74,8 @@ TEST(StraifiedImageSamplerTest, SampleWithJitter) {
   EXPECT_TRUE(sample->image_uv[0] < 0.75);
   EXPECT_TRUE(sample->image_uv[1] >= 0.0);
   EXPECT_TRUE(sample->image_uv[1] < 0.25);
+  EXPECT_NEAR(sample->image_uv[0] + 0.25, (*sample->image_uv_dxdy)[0], 0.01);
+  EXPECT_NEAR(sample->image_uv[1] + 0.25, (*sample->image_uv_dxdy)[1], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(sample->weight, 0.25);
   EXPECT_EQ(&rng, &sample->rng);

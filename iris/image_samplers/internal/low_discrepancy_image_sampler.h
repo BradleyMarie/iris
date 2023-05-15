@@ -2,6 +2,7 @@
 #define _IRIS_IMAGE_SAMPLERS_INTERNAL_LOW_DISCREPANCY_IMAGE_SAMPLER_
 
 #include <array>
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -21,6 +22,8 @@ class LowDiscrepancyImageSampler final : public ImageSampler {
         desired_samples_per_pixel_(desired_samples_per_pixel),
         image_dimensions_(0, 0),
         pixel_(0, 0),
+        subpixel_size_x_(0.0),
+        subpixel_size_y_(0.0),
         sample_index_(0) {}
 
   void StartPixel(std::pair<size_t, size_t> image_dimensions,
@@ -34,6 +37,8 @@ class LowDiscrepancyImageSampler final : public ImageSampler {
   const uint32_t desired_samples_per_pixel_;
   std::pair<size_t, size_t> image_dimensions_;
   std::pair<size_t, size_t> pixel_;
+  geometric_t subpixel_size_x_;
+  geometric_t subpixel_size_y_;
   unsigned sample_index_;
 };
 

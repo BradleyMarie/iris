@@ -4,14 +4,16 @@
 #include <array>
 
 #include "iris/float.h"
-#include "iris/ray.h"
+#include "iris/ray_differential.h"
 
 namespace iris {
 
 class Camera {
  public:
-  virtual Ray Compute(const std::array<geometric_t, 2>& image_uv,
-                      const std::array<geometric_t, 2>* lens_uv) const = 0;
+  virtual RayDifferential Compute(
+      const std::array<geometric_t, 2>& image_uv,
+      const std::array<geometric_t, 2>* image_uv_dxdy,
+      const std::array<geometric_t, 2>* lens_uv) const = 0;
   virtual bool HasLens() const = 0;
   virtual ~Camera() {}
 };

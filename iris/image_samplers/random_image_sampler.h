@@ -30,6 +30,8 @@ class RandomImageSampler final : public ImageSampler {
   geometric_t pixel_start_y_;
   geometric_t pixel_size_x_;
   geometric_t pixel_size_y_;
+  geometric_t subpixel_size_x_;
+  geometric_t subpixel_size_y_;
   uint32_t sample_index_;
 };
 

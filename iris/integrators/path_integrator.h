@@ -7,7 +7,7 @@
 #include "iris/integrator.h"
 #include "iris/light_sampler.h"
 #include "iris/random.h"
-#include "iris/ray.h"
+#include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
@@ -22,7 +22,8 @@ class PathIntegrator final : public Integrator {
                  visual always_continue_path_throughput, uint8_t min_bounces,
                  uint8_t max_bounces) noexcept;
 
-  virtual const Spectrum* Integrate(const Ray& ray, RayTracer& ray_tracer,
+  virtual const Spectrum* Integrate(const RayDifferential& ray,
+                                    RayTracer& ray_tracer,
                                     LightSampler& light_sampler,
                                     VisibilityTester& visibility_tester,
                                     SpectralAllocator& spectral_allocator,

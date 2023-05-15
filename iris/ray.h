@@ -11,7 +11,7 @@
 
 namespace iris {
 
-struct Ray final {
+struct Ray {
   explicit Ray(const Point& origin, const Vector& direction) noexcept
       : origin(origin), direction(direction) {}
 

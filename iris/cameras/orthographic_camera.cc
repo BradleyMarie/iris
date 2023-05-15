@@ -14,15 +14,32 @@ OrthographicCamera::OrthographicCamera(
   assert(std::isfinite(half_frame_size[1]) && 0.0 < half_frame_size[1]);
 }
 
-Ray OrthographicCamera::Compute(
+RayDifferential OrthographicCamera::Compute(
     const std::array<geometric_t, 2>& image_uv,
+    const std::array<geometric_t, 2>* image_uv_dxdy,
     const std::array<geometric_t, 2>* lens_uv) const {
-  Point origin(
+  Point base_origin(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),
       std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv[1]), 0.0);
   Vector direction(0.0, 0.0, 1.0);
-  Ray camera_ray(origin, direction);
-  return Normalize(camera_to_world_.Multiply(camera_ray));
+
+  Ray base = camera_to_world_.Multiply(Ray(base_origin, direction));
+  if (!image_uv_dxdy) {
+    return Normalize(RayDifferential(base));
+  }
+
+  Point dx_origin(
+      std::lerp(-half_frame_size_[0], half_frame_size_[0], (*image_uv_dxdy)[0]),
+      base_origin.y, 0.0);
+  Ray dx = camera_to_world_.Multiply(Ray(dx_origin, direction));
+
+  Point dy_origin(
+      base_origin.x,
+      std::lerp(half_frame_size_[1], -half_frame_size_[1], (*image_uv_dxdy)[1]),
+      0.0);
+  Ray dy = camera_to_world_.Multiply(Ray(dy_origin, direction));
+
+  return Normalize(RayDifferential(base, dx, dy));
 }
 
 bool OrthographicCamera::HasLens() const { return false; }

@@ -6,7 +6,7 @@
 #include "iris/camera.h"
 #include "iris/float.h"
 #include "iris/matrix.h"
-#include "iris/ray.h"
+#include "iris/ray_differential.h"
 #include "iris/vector.h"
 
 namespace iris {
@@ -18,8 +18,10 @@ class PerspectiveCamera final : public Camera {
                     const std::array<geometric_t, 2>& half_frame_size,
                     geometric_t half_fov) noexcept;
 
-  Ray Compute(const std::array<geometric_t, 2>& image_uv,
-              const std::array<geometric_t, 2>* lens_uv) const override;
+  RayDifferential Compute(
+      const std::array<geometric_t, 2>& image_uv,
+      const std::array<geometric_t, 2>* image_uv_dxdy,
+      const std::array<geometric_t, 2>* lens_uv) const override;
   bool HasLens() const override;
 
  private:

@@ -51,13 +51,18 @@ std::optional<ImageSampler::Sample> StratifiedImageSampler::NextSample(
                                  subpixel_size_x_, pixel_start_x_);
   geometric_t image_v = std::fma(static_cast<geometric_t>(y_index) + y_sample,
                                  subpixel_size_y_, pixel_start_y_);
+  geometric_t image_u_dx = image_u + subpixel_size_x_;
+  geometric_t image_v_dv = image_v + subpixel_size_y_;
 
-  if (!sample_lens) {
-    return ImageSampler::Sample{{image_u, image_v}, {}, sample_weight_, rng};
+  std::optional<std::array<geometric_t, 2>> lens_uv;
+  if (sample_lens) {
+    lens_uv.emplace(
+        std::array<geometric_t, 2>{rng.NextGeometric(), rng.NextGeometric()});
   }
 
   return ImageSampler::Sample{{image_u, image_v},
-                              {{rng.NextGeometric(), rng.NextGeometric()}},
+                              {{image_u_dx, image_v_dv}},
+                              lens_uv,
                               sample_weight_,
                               rng};
 }

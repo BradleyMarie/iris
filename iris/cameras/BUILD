@@ -9,7 +9,7 @@ cc_library(
     deps = [
         "//iris:camera",
         "//iris:float",
-        "//iris:ray",
+        "//iris:ray_differential",
         "@com_google_googletest//:gtest",
     ],
 )
@@ -22,7 +22,7 @@ cc_library(
         "//iris:camera",
         "//iris:float",
         "//iris:matrix",
-        "//iris:ray",
+        "//iris:ray_differential",
     ],
 )
 
@@ -43,7 +43,7 @@ cc_library(
         "//iris:camera",
         "//iris:float",
         "//iris:matrix",
-        "//iris:ray",
+        "//iris:ray_differential",
         "//iris:vector",
     ],
 )

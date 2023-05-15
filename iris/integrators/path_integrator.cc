@@ -27,7 +27,8 @@ PathIntegrator::PathIntegrator(visual maximum_path_continue_probability,
   attenuations_.reserve(max_bounces);
 }
 
-const Spectrum* PathIntegrator::Integrate(const Ray& ray, RayTracer& ray_tracer,
+const Spectrum* PathIntegrator::Integrate(const RayDifferential& ray,
+                                          RayTracer& ray_tracer,
                                           LightSampler& light_sampler,
                                           VisibilityTester& visibility_tester,
                                           SpectralAllocator& spectral_allocator,
@@ -38,7 +39,7 @@ const Spectrum* PathIntegrator::Integrate(const Ray& ray, RayTracer& ray_tracer,
 
   visual_t path_throughput = 1.0;
   bool add_light_emissions = true;
-  Ray trace_ray = ray;
+  RayDifferential trace_ray = ray;
   for (uint8_t bounces = 0;; bounces++) {
     auto trace_result = ray_tracer.Trace(trace_ray);
 
@@ -94,8 +95,8 @@ const Spectrum* PathIntegrator::Integrate(const Ray& ray, RayTracer& ray_tracer,
     }
 
     path_builder.Bounce(&bsdf_sample->reflector, attenuation);
-    new (&trace_ray) Ray(trace_result.surface_intersection->hit_point,
-                         bsdf_sample->direction);
+    new (&trace_ray) RayDifferential(iris::Ray(
+        trace_result.surface_intersection->hit_point, bsdf_sample->direction));
   }
 
   return path_builder.Build(spectral_allocator);

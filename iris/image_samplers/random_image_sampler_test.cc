@@ -26,6 +26,8 @@ TEST(RandomImageSamplerTest, SampleNoLens) {
   EXPECT_TRUE(sample->image_uv[0] < 1.0);
   EXPECT_TRUE(sample->image_uv[1] >= 0.0);
   EXPECT_TRUE(sample->image_uv[1] < 0.5);
+  EXPECT_NEAR(sample->image_uv[0] + 0.5, (*sample->image_uv_dxdy)[0], 0.01);
+  EXPECT_NEAR(sample->image_uv[1] + 0.5, (*sample->image_uv_dxdy)[1], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(sample->weight, 1.0);
   EXPECT_EQ(&rng, &sample->rng);
@@ -54,6 +56,8 @@ TEST(RandomImageSamplerTest, SampleWithLens) {
   EXPECT_TRUE((*sample->lens_uv)[0] < 1.0);
   EXPECT_TRUE((*sample->lens_uv)[1] >= 0.0);
   EXPECT_TRUE((*sample->lens_uv)[1] < 1.0);
+  EXPECT_NEAR(sample->image_uv[0] + 0.5, (*sample->image_uv_dxdy)[0], 0.01);
+  EXPECT_NEAR(sample->image_uv[1] + 0.5, (*sample->image_uv_dxdy)[1], 0.01);
   EXPECT_EQ(sample->weight, 1.0);
   EXPECT_EQ(&rng, &sample->rng);
 

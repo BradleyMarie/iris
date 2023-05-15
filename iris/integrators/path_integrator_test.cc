@@ -12,14 +12,15 @@
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
 
+static const iris::RayDifferential kTraceRay(
+    iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)));
+
 TEST(PathIntegratorTest, NoHits) {
   iris::random::MockRandom rng;
 
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 1u, 8u);
   EXPECT_EQ(nullptr, integrator.Integrate(
-                         iris::Ray(iris::Point(0.0, 0.0, 1.0),
-                                   iris::Vector(0.0, 0.0, 1.0)),
-                         iris::testing::GetNoHitsRayTracer(),
+                         kTraceRay, iris::testing::GetNoHitsRayTracer(),
                          iris::testing::GetEmptyLightSampler(),
                          iris::testing::GetAlwaysVisibleVisibilityTester(),
                          iris::testing::GetSpectralAllocator(), rng));
@@ -35,13 +36,12 @@ TEST(PathIntegratorTest, HitsEmissiveWithNoReflectance) {
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 1u, 8u);
   iris::testing::ScopedNoHitsRayTracer(
       environmental_light, [&](auto& ray_tracer) {
-        EXPECT_EQ(&spectrum,
-                  integrator.Integrate(
-                      iris::Ray(iris::Point(0.0, 0.0, 1.0),
-                                iris::Vector(0.0, 0.0, 1.0)),
-                      ray_tracer, iris::testing::GetEmptyLightSampler(),
-                      iris::testing::GetAlwaysVisibleVisibilityTester(),
-                      iris::testing::GetSpectralAllocator(), rng));
+        EXPECT_EQ(
+            &spectrum,
+            integrator.Integrate(
+                kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
+                iris::testing::GetAlwaysVisibleVisibilityTester(),
+                iris::testing::GetSpectralAllocator(), rng));
       });
 }
 
@@ -75,19 +75,17 @@ TEST(PathIntegratorTest, BounceLimit) {
 
   iris::integrators::PathIntegrator integrator0(1.0, 1.0, 0u, 0u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
-    EXPECT_EQ(nullptr, integrator0.Integrate(
-                           iris::Ray(iris::Point(0.0, 0.0, 1.0),
-                                     iris::Vector(0.0, 0.0, 1.0)),
-                           ray_tracer, iris::testing::GetEmptyLightSampler(),
-                           iris::testing::GetAlwaysVisibleVisibilityTester(),
-                           iris::testing::GetSpectralAllocator(), rng));
+    EXPECT_EQ(nullptr,
+              integrator0.Integrate(
+                  kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
+                  iris::testing::GetAlwaysVisibleVisibilityTester(),
+                  iris::testing::GetSpectralAllocator(), rng));
   });
 
   iris::integrators::PathIntegrator integrator1(1.0, 1.0, 1u, 1u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
     auto* result = integrator1.Integrate(
-        iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)),
-        ray_tracer, iris::testing::GetEmptyLightSampler(),
+        kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
         iris::testing::GetAlwaysVisibleVisibilityTester(),
         iris::testing::GetSpectralAllocator(), rng);
     EXPECT_TRUE(result);
@@ -110,12 +108,11 @@ TEST(PathIntegratorTest, NoBsdf) {
 
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 3u, 3u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
-    EXPECT_EQ(nullptr, integrator.Integrate(
-                           iris::Ray(iris::Point(0.0, 0.0, 1.0),
-                                     iris::Vector(0.0, 0.0, 1.0)),
-                           ray_tracer, iris::testing::GetEmptyLightSampler(),
-                           iris::testing::GetAlwaysVisibleVisibilityTester(),
-                           iris::testing::GetSpectralAllocator(), rng));
+    EXPECT_EQ(nullptr,
+              integrator.Integrate(
+                  kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
+                  iris::testing::GetAlwaysVisibleVisibilityTester(),
+                  iris::testing::GetSpectralAllocator(), rng));
   });
 }
 
@@ -146,12 +143,11 @@ TEST(PathIntegratorTest, BsdfSampleFails) {
 
   iris::integrators::PathIntegrator integrator0(1.0, 1.0, 3u, 3u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
-    EXPECT_EQ(nullptr, integrator0.Integrate(
-                           iris::Ray(iris::Point(0.0, 0.0, 1.0),
-                                     iris::Vector(0.0, 0.0, 1.0)),
-                           ray_tracer, iris::testing::GetEmptyLightSampler(),
-                           iris::testing::GetAlwaysVisibleVisibilityTester(),
-                           iris::testing::GetSpectralAllocator(), rng));
+    EXPECT_EQ(nullptr,
+              integrator0.Integrate(
+                  kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
+                  iris::testing::GetAlwaysVisibleVisibilityTester(),
+                  iris::testing::GetSpectralAllocator(), rng));
   });
 }
 
@@ -195,8 +191,7 @@ TEST(PathIntegratorTest, TwoSpecularBouncesHitsEmissive) {
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 4u, 8u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
     auto* result = integrator.Integrate(
-        iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)),
-        ray_tracer, iris::testing::GetEmptyLightSampler(),
+        kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
         iris::testing::GetAlwaysVisibleVisibilityTester(),
         iris::testing::GetSpectralAllocator(), rng);
     EXPECT_TRUE(result);
@@ -245,8 +240,7 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 4u, 8u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
     auto* result = integrator.Integrate(
-        iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)),
-        ray_tracer, iris::testing::GetEmptyLightSampler(),
+        kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
         iris::testing::GetAlwaysVisibleVisibilityTester(),
         iris::testing::GetSpectralAllocator(), rng);
     EXPECT_TRUE(result);
@@ -286,8 +280,7 @@ TEST(PathIntegratorTest, SpecularBounceRouletteFails) {
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 0u, 1u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
     auto* result = integrator.Integrate(
-        iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)),
-        ray_tracer, iris::testing::GetEmptyLightSampler(),
+        kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
         iris::testing::GetAlwaysVisibleVisibilityTester(),
         iris::testing::GetSpectralAllocator(), rng);
     EXPECT_EQ(nullptr, result);
@@ -326,8 +319,7 @@ TEST(PathIntegratorTest, OneSpecularBounceRoulettePasses) {
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 0u, 1u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
     auto* result = integrator.Integrate(
-        iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)),
-        ray_tracer, iris::testing::GetEmptyLightSampler(),
+        kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
         iris::testing::GetAlwaysVisibleVisibilityTester(),
         iris::testing::GetSpectralAllocator(), rng);
     ASSERT_TRUE(result);
@@ -381,8 +373,7 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
   iris::integrators::PathIntegrator integrator(0.2, 1.0, 0u, 3u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
     auto* result = integrator.Integrate(
-        iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)),
-        ray_tracer, iris::testing::GetEmptyLightSampler(),
+        kTraceRay, ray_tracer, iris::testing::GetEmptyLightSampler(),
         iris::testing::GetAlwaysVisibleVisibilityTester(),
         iris::testing::GetSpectralAllocator(), rng);
     ASSERT_TRUE(result);
@@ -431,8 +422,7 @@ TEST(PathIntegratorTest, DirectLighting) {
 
     iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
       auto* result = integrator0.Integrate(
-          iris::Ray(iris::Point(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)),
-          ray_tracer, light_sampler,
+          kTraceRay, ray_tracer, light_sampler,
           iris::testing::GetAlwaysVisibleVisibilityTester(),
           iris::testing::GetSpectralAllocator(), rng);
       EXPECT_TRUE(result);

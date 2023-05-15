@@ -23,7 +23,8 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
   iris::Renderer renderer(*scene_builder, *light_scene_builder,
                           std::move(scene_objects));
 
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  iris::RayDifferential trace_ray(
+      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0)));
   std::pair<size_t, size_t> image_dimensions = std::make_pair(32, 33);
   uint32_t samples_per_pixel = 2;
   size_t pixels = image_dimensions.first * image_dimensions.second;
@@ -60,6 +61,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
                   .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
                       {0.0, 0.0},
                       std::nullopt,
+                      std::nullopt,
                       static_cast<iris::visual_t>(1.0) /
                           static_cast<iris::visual_t>(samples_per_pixel),
                       rng}));
@@ -81,6 +83,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
                 .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
                     {0.0, 0.0},
                     std::nullopt,
+                    std::nullopt,
                     static_cast<iris::visual_t>(1.0) /
                         static_cast<iris::visual_t>(samples_per_pixel),
                     rng}));
@@ -99,7 +102,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
       .Times(actual_num_threads)
       .WillRepeatedly(testing::Return(false));
 
-  EXPECT_CALL(camera, Compute(testing::_, testing::_))
+  EXPECT_CALL(camera, Compute(testing::_, testing::_, testing::_))
       .Times(samples)
       .WillRepeatedly(testing::Return(trace_ray));
 

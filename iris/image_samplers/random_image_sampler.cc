@@ -8,6 +8,8 @@ RandomImageSampler::RandomImageSampler(uint32_t samples_per_pixel) noexcept
       sample_weight_(std::pow(samples_per_pixel, -1.0)),
       pixel_start_x_(0.0),
       pixel_start_y_(0.0),
+      subpixel_size_x_(0.0),
+      subpixel_size_y_(0.0),
       sample_index_(0) {}
 
 void RandomImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
@@ -20,6 +22,16 @@ void RandomImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
                   static_cast<geometric_t>(image_dimensions.second);
   pixel_size_y_ = static_cast<geometric_t>(1.0) /
                   static_cast<geometric_t>(image_dimensions.first);
+  subpixel_size_x_ = pixel_size_x_;
+  subpixel_size_y_ = pixel_size_y_;
+
+  if (samples_per_pixel_ != 0) {
+    geometric_t samples_per_dimension =
+        std::sqrt(static_cast<double>(samples_per_pixel_));
+    subpixel_size_x_ /= samples_per_dimension;
+    subpixel_size_y_ /= samples_per_dimension;
+  }
+
   sample_index_ = 0;
 }
 
@@ -33,14 +45,19 @@ std::optional<ImageSampler::Sample> RandomImageSampler::NextSample(
       std::fma(rng.NextGeometric(), pixel_size_x_, pixel_start_x_);
   geometric_t image_v =
       std::fma(rng.NextGeometric(), pixel_size_y_, pixel_start_y_);
+  geometric_t image_u_dx = image_u + subpixel_size_x_;
+  geometric_t image_v_dv = image_v + subpixel_size_y_;
   sample_index_ += 1;
 
-  if (!sample_lens) {
-    return ImageSampler::Sample{{image_u, image_v}, {}, sample_weight_, rng};
+  std::optional<std::array<geometric_t, 2>> lens_uv;
+  if (sample_lens) {
+    lens_uv.emplace(
+        std::array<geometric_t, 2>{rng.NextGeometric(), rng.NextGeometric()});
   }
 
   return ImageSampler::Sample{{image_u, image_v},
-                              {{rng.NextGeometric(), rng.NextGeometric()}},
+                              {{image_u_dx, image_v_dv}},
+                              lens_uv,
                               sample_weight_,
                               rng};
 }
