@@ -86,12 +86,9 @@ void RenderChunk(const Scene& scene,
 
         if (spectrum) {
           auto sample_components = color_matcher.Match(*spectrum);
-          pixel_components[0] = std::fma(
-              sample_components[0], image_sample->weight, pixel_components[0]);
-          pixel_components[1] = std::fma(
-              sample_components[1], image_sample->weight, pixel_components[1]);
-          pixel_components[2] = std::fma(
-              sample_components[2], image_sample->weight, pixel_components[2]);
+          pixel_components[0] += sample_components[0] * image_sample->weight;
+          pixel_components[1] += sample_components[1] * image_sample->weight;
+          pixel_components[2] += sample_components[2] * image_sample->weight;
         }
 
         arena.Clear();

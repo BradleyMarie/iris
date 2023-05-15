@@ -29,10 +29,10 @@ class StratifiedImageSampler final : public ImageSampler {
   const uint16_t y_samples_;
   const bool jittered_;
   const visual_t sample_weight_;
-  geometric_t pixel_start_x_;
-  geometric_t pixel_start_y_;
-  geometric_t subpixel_size_x_;
-  geometric_t subpixel_size_y_;
+  uint64_t num_subpixels_x_;
+  uint64_t num_subpixels_y_;
+  uint64_t subpixel_x_;
+  uint64_t subpixel_y_;
   uint32_t sample_index_;
 };
 

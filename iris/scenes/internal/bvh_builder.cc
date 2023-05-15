@@ -139,13 +139,10 @@ std::optional<geometric_t> FindBestSplitOnAxis(
     return std::nullopt;
   }
 
-  geometric min = centroid_bounds.lower[split_axis];
-  geometric max = centroid_bounds.upper[split_axis];
-  geometric range = max - min;
-  geometric_t relative_split = static_cast<geometric_t>(1 + best_split) /
-                               static_cast<geometric_t>(kNumSplitsToEvaluate);
-
-  return std::fma(relative_split, range, min);
+  return std::lerp(centroid_bounds.lower[split_axis],
+                   centroid_bounds.upper[split_axis],
+                   static_cast<geometric>(1 + best_split) /
+                       static_cast<geometric>(kNumSplitsToEvaluate));
 }
 
 PartitionResult Partition(

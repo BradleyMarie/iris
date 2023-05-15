@@ -26,12 +26,11 @@ class RandomImageSampler final : public ImageSampler {
  private:
   const uint32_t samples_per_pixel_;
   const visual_t sample_weight_;
-  geometric_t pixel_start_x_;
-  geometric_t pixel_start_y_;
-  geometric_t pixel_size_x_;
-  geometric_t pixel_size_y_;
-  geometric_t subpixel_size_x_;
-  geometric_t subpixel_size_y_;
+  double num_pixels_x_;
+  double num_pixels_y_;
+  double pixel_x_;
+  double pixel_y_;
+  double subpixel_size_;
   uint32_t sample_index_;
 };
 
