@@ -129,7 +129,7 @@ TEST(Perspective, WithXAspectRatio) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
-  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, nullptr);
+  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, std::nullopt);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
   EXPECT_NEAR(top_right.direction.x, top_right.direction.y * 2.0, 0.001);
 }
@@ -146,7 +146,7 @@ TEST(Perspective, WithYAspectRatio) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
-  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, nullptr);
+  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, std::nullopt);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
   EXPECT_NEAR(top_right.direction.x * 2.0, top_right.direction.y, 0.001);
 }
@@ -163,7 +163,7 @@ TEST(Perspective, FromFrameX) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 2u));
-  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, nullptr);
+  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, std::nullopt);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
   EXPECT_NEAR(top_right.direction.x, top_right.direction.y * 2.0, 0.001);
 }
@@ -180,7 +180,7 @@ TEST(Perspective, FromFrameY) {
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(2u, 1u));
-  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, nullptr);
+  auto top_right = camera->Compute({1.0, 0.0}, {1.0, 0.0}, std::nullopt);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), top_right.origin);
   EXPECT_NEAR(top_right.direction.x * 2.0, top_right.direction.y, 0.001);
 }

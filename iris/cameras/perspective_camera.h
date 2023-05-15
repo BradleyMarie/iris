@@ -2,6 +2,7 @@
 #define _IRIS_CAMERA_PERSPECTIVE_CAMERA_
 
 #include <array>
+#include <optional>
 
 #include "iris/camera.h"
 #include "iris/float.h"
@@ -21,7 +22,7 @@ class PerspectiveCamera final : public Camera {
   RayDifferential Compute(
       const std::array<geometric_t, 2>& image_uv,
       const std::array<geometric_t, 2>& image_uv_dxdy,
-      const std::array<geometric_t, 2>* lens_uv) const override;
+      const std::optional<std::array<geometric_t, 2>>& lens_uv) const override;
   bool HasLens() const override;
 
  private:

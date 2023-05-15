@@ -22,7 +22,7 @@ PerspectiveCamera::PerspectiveCamera(
 RayDifferential PerspectiveCamera::Compute(
     const std::array<geometric_t, 2>& image_uv,
     const std::array<geometric_t, 2>& image_uv_dxdy,
-    const std::array<geometric_t, 2>* lens_uv) const {
+    const std::optional<std::array<geometric_t, 2>>& lens_uv) const {
   Point origin(0.0, 0.0, 0.0);
   Vector base_direction(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),

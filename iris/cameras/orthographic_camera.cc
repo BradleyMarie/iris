@@ -17,7 +17,7 @@ OrthographicCamera::OrthographicCamera(
 RayDifferential OrthographicCamera::Compute(
     const std::array<geometric_t, 2>& image_uv,
     const std::array<geometric_t, 2>& image_uv_dxdy,
-    const std::array<geometric_t, 2>* lens_uv) const {
+    const std::optional<std::array<geometric_t, 2>>& lens_uv) const {
   Point base_origin(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),
       std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv[1]), 0.0);

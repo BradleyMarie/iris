@@ -76,7 +76,7 @@ void RenderChunk(const Scene& scene,
 
         auto ray =
             camera.Compute(image_sample->image_uv, image_sample->image_uv_dxdy,
-                           has_lens ? &image_sample->lens_uv.value() : nullptr);
+                           image_sample->lens_uv);
 
         LightSampler light_sampler(light_scene, image_sample->rng,
                                    light_sample_allocator);
