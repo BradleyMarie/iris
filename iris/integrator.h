@@ -15,8 +15,7 @@ namespace iris {
 
 class Integrator {
  public:
-  virtual const Spectrum* Integrate(const RayDifferential& ray,
-                                    RayTracer& ray_tracer,
+  virtual const Spectrum* Integrate(RayDifferential ray, RayTracer& ray_tracer,
                                     LightSampler& light_sampler,
                                     VisibilityTester& visibility_tester,
                                     SpectralAllocator& spectral_allocator,

@@ -22,8 +22,7 @@ class PathIntegrator final : public Integrator {
                  visual always_continue_path_throughput, uint8_t min_bounces,
                  uint8_t max_bounces) noexcept;
 
-  virtual const Spectrum* Integrate(const RayDifferential& ray,
-                                    RayTracer& ray_tracer,
+  virtual const Spectrum* Integrate(RayDifferential ray, RayTracer& ray_tracer,
                                     LightSampler& light_sampler,
                                     VisibilityTester& visibility_tester,
                                     SpectralAllocator& spectral_allocator,

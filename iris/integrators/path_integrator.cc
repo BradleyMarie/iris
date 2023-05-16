@@ -6,6 +6,7 @@
 #include "iris/integrators/internal/path_builder.h"
 #include "iris/integrators/internal/russian_roulette.h"
 #include "iris/integrators/internal/sample_direct_lighting.h"
+#include "iris/integrators/internal/sample_indirect_lighting.h"
 
 namespace iris {
 namespace integrators {
@@ -27,7 +28,7 @@ PathIntegrator::PathIntegrator(visual maximum_path_continue_probability,
   attenuations_.reserve(max_bounces);
 }
 
-const Spectrum* PathIntegrator::Integrate(const RayDifferential& ray,
+const Spectrum* PathIntegrator::Integrate(RayDifferential ray,
                                           RayTracer& ray_tracer,
                                           LightSampler& light_sampler,
                                           VisibilityTester& visibility_tester,
@@ -39,9 +40,8 @@ const Spectrum* PathIntegrator::Integrate(const RayDifferential& ray,
 
   visual_t path_throughput = 1.0;
   bool add_light_emissions = true;
-  RayDifferential trace_ray = ray;
   for (uint8_t bounces = 0;; bounces++) {
-    auto trace_result = ray_tracer.Trace(trace_ray);
+    auto trace_result = ray_tracer.Trace(ray);
 
     if (add_light_emissions) {
       path_builder.Add(trace_result.emission, spectral_allocator);
@@ -53,7 +53,7 @@ const Spectrum* PathIntegrator::Integrate(const RayDifferential& ray,
     }
 
     auto* direct_lighting = internal::SampleDirectLighting(
-        light_sampler, trace_ray, *trace_result.surface_intersection, rng,
+        light_sampler, ray, *trace_result.surface_intersection, rng,
         visibility_tester, spectral_allocator);
     path_builder.Add(direct_lighting, spectral_allocator);
 
@@ -61,9 +61,9 @@ const Spectrum* PathIntegrator::Integrate(const RayDifferential& ray,
       break;
     }
 
-    auto bsdf_sample = trace_result.surface_intersection->bsdf.Sample(
-        trace_ray.direction, iris::Sampler(rng), spectral_allocator);
-
+    auto bsdf_sample = internal::SampleIndirectLighting(
+        *trace_result.surface_intersection, iris::Sampler(rng),
+        spectral_allocator, /*modified*/ ray);
     if (!bsdf_sample) {
       break;
     }
@@ -95,8 +95,6 @@ const Spectrum* PathIntegrator::Integrate(const RayDifferential& ray,
     }
 
     path_builder.Bounce(&bsdf_sample->reflector, attenuation);
-    new (&trace_ray) RayDifferential(iris::Ray(
-        trace_result.surface_intersection->hit_point, bsdf_sample->direction));
   }
 
   return path_builder.Build(spectral_allocator);

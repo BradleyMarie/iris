@@ -35,6 +35,7 @@ cc_library(
         "//iris/integrators/internal:path_builder",
         "//iris/integrators/internal:russian_roulette",
         "//iris/integrators/internal:sample_direct_lighting",
+        "//iris/integrators/internal:sample_indirect_lighting",
     ],
 )
 

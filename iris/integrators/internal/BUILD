@@ -77,3 +77,28 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "sample_indirect_lighting",
+    srcs = ["sample_indirect_lighting.cc"],
+    hdrs = ["sample_indirect_lighting.h"],
+    deps = [
+        "//iris:ray_differential",
+        "//iris:ray_tracer",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+    ],
+)
+
+cc_test(
+    name = "sample_indirect_lighting_test",
+    srcs = ["sample_indirect_lighting_test.cc"],
+    deps = [
+        ":sample_indirect_lighting",
+        "//iris/bxdfs:mock_bxdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:spectral_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
