@@ -81,7 +81,7 @@ const Spectrum* EstimateDirectLighting(
     Sampler light_sampler, VisibilityTester& visibility_tester,
     SpectralAllocator& allocator) {
   auto bsdf_sample = intersection.bsdf.Sample(
-      traced_ray.direction, std::move(bsdf_sampler), allocator);
+      traced_ray.direction, std::nullopt, std::move(bsdf_sampler), allocator);
 
   if (bsdf_sample && !bsdf_sample->pdf) {
     return nullptr;

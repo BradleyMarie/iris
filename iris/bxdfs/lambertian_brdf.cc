@@ -7,7 +7,10 @@
 namespace iris {
 namespace bxdfs {
 
-Vector LambertianBrdf::Sample(const Vector& incoming, Sampler& sampler) const {
+Bxdf::SampleResult LambertianBrdf::Sample(
+    const Vector& incoming,
+    const std::optional<Bxdf::Differentials>& differentials,
+    Sampler& sampler) const {
   auto radius_squared = sampler.Next();
   auto radius = std::sqrt(radius_squared);
 
@@ -19,7 +22,7 @@ Vector LambertianBrdf::Sample(const Vector& incoming, Sampler& sampler) const {
   auto y = radius * sin_theta;
   auto z = std::sqrt(static_cast<geometric>(1.0) - radius_squared);
 
-  return Vector(x, y, std::copysign(z, -incoming.z));
+  return {Vector(x, y, std::copysign(z, -incoming.z))};
 }
 
 std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,

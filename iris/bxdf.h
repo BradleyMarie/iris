@@ -13,7 +13,19 @@ namespace iris {
 
 class Bxdf {
  public:
-  virtual Vector Sample(const Vector& incoming, Sampler& sampler) const = 0;
+  struct Differentials {
+    const Vector dx;
+    const Vector dy;
+  };
+
+  struct SampleResult {
+    const Vector direction;
+    const std::optional<Differentials> differentials;
+  };
+
+  virtual SampleResult Sample(const Vector& incoming,
+                              const std::optional<Differentials>& differentials,
+                              Sampler& sampler) const = 0;
 
   enum class SampleSource {
     BXDF,

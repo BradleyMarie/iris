@@ -16,12 +16,16 @@ TEST(CompositeBxdfTest, Sample) {
 
   iris::bxdfs::MockBxdf bxdf0;
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1, Sample(iris::Vector(1.0, 0.0, 0.0), testing::_))
-      .WillOnce(testing::Return(iris::Vector(1.0, 0.0, 0.0)));
+  EXPECT_CALL(bxdf1,
+              Sample(iris::Vector(1.0, 0.0, 0.0), testing::_, testing::_))
+      .WillOnce(testing::Return(
+          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
 
   auto composite = iris::bxdfs::MakeComposite(bxdf0, bxdf1);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
-            composite.Sample(iris::Vector(1.0, 0.0, 0.0), sampler));
+  auto sample =
+      composite.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt, sampler);
+  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample.direction);
+  EXPECT_FALSE(sample.differentials);
 }
 
 TEST(CompositeBxdfTest, PdfOneBxdf) {

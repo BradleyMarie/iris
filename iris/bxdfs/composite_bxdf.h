@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cassert>
+#include <optional>
 
 #include "iris/bxdf.h"
 #include "iris/float.h"
@@ -22,9 +23,11 @@ class CompositeBxdf final : public Bxdf {
     (void(bxdfs_[i++] = &bxdfs), ...);
   }
 
-  Vector Sample(const Vector& incoming, Sampler& sampler) const override {
+  SampleResult Sample(const Vector& incoming,
+                      const std::optional<Differentials>& differentials,
+                      Sampler& sampler) const override {
     size_t index = sampler.NextIndex(sizeof...(Bxdfs));
-    return bxdfs_[index]->Sample(incoming, sampler);
+    return bxdfs_[index]->Sample(incoming, differentials, sampler);
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,

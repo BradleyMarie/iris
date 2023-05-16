@@ -42,9 +42,29 @@ Bsdf::Bsdf(const Bxdf& bxdf, const Vector& surface_normal,
     : Bsdf(bxdf,
            ComputeState(surface_normal, shading_normal, normalize).data()) {}
 
+std::optional<Bxdf::Differentials> Bsdf::ToLocal(
+    const std::optional<Bsdf::Differentials>& differentials) const {
+  if (!differentials) {
+    return std::nullopt;
+  }
+
+  return Bxdf::Differentials{ToLocal(differentials->dx),
+                             ToLocal(differentials->dy)};
+}
+
 Vector Bsdf::ToLocal(const Vector& vector) const {
   return Vector(DotProduct(x_, vector), DotProduct(y_, vector),
                 DotProduct(z_, vector));
+}
+
+std::optional<Bsdf::Differentials> Bsdf::ToWorld(
+    const std::optional<Bxdf::Differentials>& differentials) const {
+  if (!differentials) {
+    return std::nullopt;
+  }
+
+  return Bsdf::Differentials{ToWorld(differentials->dx),
+                             ToWorld(differentials->dy)};
 }
 
 Vector Bsdf::ToWorld(const Vector& vector) const {
@@ -54,14 +74,17 @@ Vector Bsdf::ToWorld(const Vector& vector) const {
 }
 
 std::optional<Bsdf::SampleResult> Bsdf::Sample(
-    const Vector& incoming, Sampler sampler,
-    SpectralAllocator& allocator) const {
+    const Vector& incoming, const std::optional<Differentials>& differentials,
+    Sampler sampler, SpectralAllocator& allocator) const {
   auto local_incoming = ToLocal(incoming);
-  auto local_outgoing = bxdf_.Sample(local_incoming, sampler);
-  auto world_outgoing = ToWorld(local_outgoing);
+  auto local_incoming_differentials = ToLocal(differentials);
+  auto local_outgoing =
+      bxdf_.Sample(local_incoming, local_incoming_differentials, sampler);
+  auto world_outgoing = ToWorld(local_outgoing.direction);
+  auto world_outgoing_differentials = ToWorld(local_outgoing.differentials);
 
-  auto pdf =
-      bxdf_.Pdf(local_incoming, local_outgoing, Bxdf::SampleSource::BXDF);
+  auto pdf = bxdf_.Pdf(local_incoming, local_outgoing.direction,
+                       Bxdf::SampleSource::BXDF);
   if (pdf.has_value() && *pdf <= 0.0) {
     return std::nullopt;
   }
@@ -70,13 +93,14 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
                      (DotProduct(world_outgoing, surface_normal_) > 0);
   auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
 
-  auto reflector = bxdf_.Reflectance(local_incoming, local_outgoing,
+  auto reflector = bxdf_.Reflectance(local_incoming, local_outgoing.direction,
                                      Bxdf::SampleSource::BXDF, type, allocator);
   if (!reflector) {
     return std::nullopt;
   }
 
-  return Bsdf::SampleResult{*reflector, world_outgoing, pdf};
+  return Bsdf::SampleResult{*reflector, world_outgoing,
+                            world_outgoing_differentials, pdf};
 }
 
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(

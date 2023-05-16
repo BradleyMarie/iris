@@ -17,8 +17,10 @@ TEST(LambertianBrdfTest, Sample) {
   iris::Sampler sampler(rng);
 
   iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, -1.0), sampler);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  auto result =
+      bxdf.Sample(iris::Vector(0.0, 0.0, -1.0), std::nullopt, sampler);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result.direction);
+  EXPECT_FALSE(result.differentials);
 }
 
 TEST(LambertianBrdfTest, DiffusePdfTransmitted) {

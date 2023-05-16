@@ -15,7 +15,9 @@ class LambertianBrdf final : public Bxdf {
  public:
   LambertianBrdf(const Reflector& reflector) noexcept : reflector_(reflector) {}
 
-  Vector Sample(const Vector& incoming, Sampler& sampler) const override;
+  SampleResult Sample(const Vector& incoming,
+                      const std::optional<Differentials>& differentials,
+                      Sampler& sampler) const override;
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
                               SampleSource sample_source) const override;

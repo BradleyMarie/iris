@@ -18,14 +18,21 @@ class Bsdf final {
   Bsdf(const Bxdf& bxdf, const Vector& surface_normal,
        const Vector& shading_normal, bool normalize = false) noexcept;
 
+  struct Differentials {
+    const Vector dx;
+    const Vector dy;
+  };
+
   struct SampleResult {
     const Reflector& reflector;
     const Vector direction;
+    const std::optional<Differentials> differentials;
     const std::optional<visual_t> pdf;
   };
 
-  std::optional<SampleResult> Sample(const Vector& incoming, Sampler sampler,
-                                     SpectralAllocator& allocator) const;
+  std::optional<SampleResult> Sample(
+      const Vector& incoming, const std::optional<Differentials>& differentials,
+      Sampler sampler, SpectralAllocator& allocator) const;
 
   struct ReflectanceResult {
     const Reflector& reflector;
@@ -44,7 +51,12 @@ class Bsdf final {
         z_(vectors[2]),
         surface_normal_(vectors[3]) {}
 
+  std::optional<Bxdf::Differentials> ToLocal(
+      const std::optional<Differentials>& differentials) const;
   Vector ToLocal(const Vector& vector) const;
+
+  std::optional<Differentials> ToWorld(
+      const std::optional<Bxdf::Differentials>& differentials) const;
   Vector ToWorld(const Vector& vector) const;
 
   const Bxdf& bxdf_;
