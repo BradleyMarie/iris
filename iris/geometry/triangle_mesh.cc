@@ -44,8 +44,8 @@ class Triangle final : public Geometry {
       const void* additional_data) const override;
 
   virtual std::optional<TextureCoordinates> ComputeTextureCoordinates(
-      const Point& hit_point, face_t face,
-      const void* additional_data) const override;
+      const Point& hit_point, const std::optional<Differentials>& differentials,
+      face_t face, const void* additional_data) const override;
 
   virtual std::variant<Vector, const NormalMap*> ComputeShadingNormal(
       face_t face, const void* additional_data) const override;
@@ -77,6 +77,8 @@ class Triangle final : public Geometry {
 
   Vector ComputeSurfaceNormal() const;
 
+  std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
+
   const std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
   const std::shared_ptr<const SharedData> shared_;
 };
@@ -101,8 +103,37 @@ Vector Triangle::ComputeSurfaceNormal(const Point& hit_point, face_t face,
   return -normalized;
 }
 
+std::array<geometric_t, 2> Triangle::UVCoordinates(const Point& point) const {
+  Vector v0_to_v1 = shared_->points[std::get<1>(vertices_)] -
+                    shared_->points[std::get<0>(vertices_)];
+  Vector v0_to_v2 = shared_->points[std::get<2>(vertices_)] -
+                    shared_->points[std::get<0>(vertices_)];
+  Vector v0_to_p = point - shared_->points[std::get<0>(vertices_)];
+
+  geometric_t d00 = DotProduct(v0_to_v1, v0_to_v1);
+  geometric_t d01 = DotProduct(v0_to_v1, v0_to_v2);
+  geometric_t d11 = DotProduct(v0_to_v2, v0_to_v2);
+  geometric_t d20 = DotProduct(v0_to_p, v0_to_v1);
+  geometric_t d21 = DotProduct(v0_to_p, v0_to_v2);
+  geometric_t denom = d00 * d11 - d01 * d01;
+
+  geometric_t b1 = (d11 * d20 - d01 * d21) / denom;
+  geometric_t b2 = (d00 * d21 - d01 * d20) / denom;
+  geometric_t b0 = static_cast<geometric_t>(1.0) - b1 - b2;
+
+  geometric_t u = shared_->uv[std::get<0>(vertices_)].first * b0 +
+                  shared_->uv[std::get<1>(vertices_)].first * b1 +
+                  shared_->uv[std::get<2>(vertices_)].first * b2;
+  geometric_t v = shared_->uv[std::get<0>(vertices_)].second * b0 +
+                  shared_->uv[std::get<1>(vertices_)].second * b1 +
+                  shared_->uv[std::get<2>(vertices_)].second * b2;
+
+  return {u, v};
+}
+
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
-    const Point& hit_point, face_t face, const void* additional_data) const {
+    const Point& hit_point, const std::optional<Differentials>& differentials,
+    face_t face, const void* additional_data) const {
   if (shared_->uv.empty()) {
     return std::nullopt;
   }
@@ -118,7 +149,15 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
       shared_->uv[std::get<1>(vertices_)].second * (*barycentric)[1] +
       shared_->uv[std::get<2>(vertices_)].second * (*barycentric)[2];
 
-  return TextureCoordinates{{u, v}};
+  if (!differentials) {
+    return TextureCoordinates{{u, v}};
+  }
+
+  auto uv_dx = UVCoordinates(differentials->dx);
+  auto uv_dy = UVCoordinates(differentials->dy);
+
+  return TextureCoordinates{
+      {u, v}, {{uv_dx[0] - u, uv_dy[0] - u, uv_dx[1] - v, uv_dy[1] - v}}};
 }
 
 std::variant<Vector, const NormalMap*> Triangle::ComputeShadingNormal(

@@ -7,6 +7,20 @@
 namespace iris {
 namespace geometry {
 
+static inline bool operator==(
+    const std::optional<Geometry::Differentials>& d0,
+    const std::optional<Geometry::Differentials>& d1) {
+  if (!d0 && !d1) {
+    return true;
+  }
+
+  if (!d0 || !d1) {
+    return false;
+  }
+
+  return d0->dx == d1->dx && d0->dy == d1->dy;
+}
+
 class MockBasicGeometry : public Geometry {
  public:
   MOCK_METHOD(Hit*, Trace, (const Ray&, HitAllocator&), (const override));
@@ -19,7 +33,9 @@ class MockBasicGeometry : public Geometry {
 class MockGeometry : public MockBasicGeometry {
  public:
   MOCK_METHOD(std::optional<TextureCoordinates>, ComputeTextureCoordinates,
-              (const Point&, face_t, const void*), (const override));
+              (const Point&, const std::optional<Differentials>&, face_t,
+               const void*),
+              (const override));
   MOCK_METHOD((std::variant<Vector, const NormalMap*>), ComputeShadingNormal,
               (face_t, const void*), (const override));
   MOCK_METHOD(const Material*, GetMaterial, (face_t, const void*),

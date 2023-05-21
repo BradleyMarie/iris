@@ -10,17 +10,15 @@
 namespace iris {
 
 struct TextureCoordinates final {
-  struct Derivatives {
+  struct Differentials {
     geometric_t du_dx;
     geometric_t du_dy;
     geometric_t dv_dx;
     geometric_t dv_dy;
-    Vector dp_du;
-    Vector dp_dv;
   };
 
   const std::array<geometric_t, 2> uv;
-  const std::optional<Derivatives> derivatives;
+  const std::optional<Differentials> differentials;
 
   TextureCoordinates Scale(geometric u_scale, geometric v_scale,
                            geometric u_offset, geometric v_offset) const {
@@ -33,16 +31,15 @@ struct TextureCoordinates final {
     new_uv[0] = uv[0] * u_scale + u_offset;
     new_uv[1] = uv[1] * v_scale + v_offset;
 
-    if (!derivatives) {
+    if (!differentials) {
       return {new_uv};
     }
 
-    TextureCoordinates::Derivatives new_derivatives{
-        derivatives->du_dx * u_scale, derivatives->du_dy * u_scale,
-        derivatives->dv_dx * v_scale, derivatives->dv_dy * v_scale,
-        derivatives->dp_du / u_scale, derivatives->dp_dv / v_scale};
+    TextureCoordinates::Differentials new_differentials{
+        differentials->du_dx * u_scale, differentials->du_dy * u_scale,
+        differentials->dv_dx * v_scale, differentials->dv_dy * v_scale};
 
-    return {new_uv, new_derivatives};
+    return {new_uv, new_differentials};
   }
 };
 

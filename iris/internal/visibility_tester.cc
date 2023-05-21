@@ -77,7 +77,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
 
   TextureCoordinates texture_coordinates =
       geometry
-          .ComputeTextureCoordinates(model_hit_point, face,
+          .ComputeTextureCoordinates(model_hit_point, std::nullopt, face,
                                      scene_hit->additional_data)
           .value_or(TextureCoordinates{0.0, 0.0});
 

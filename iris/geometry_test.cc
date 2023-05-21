@@ -48,9 +48,9 @@ TEST(GeometryTest, Trace) {
 
 TEST(GeometryTest, ComputeTextureCoordinates) {
   iris::geometry::MockBasicGeometry geom;
-  EXPECT_FALSE(
-      geom.ComputeTextureCoordinates(iris::Point(0.0, 0.0, 0.0), 0, nullptr)
-          .has_value());
+  EXPECT_FALSE(geom.ComputeTextureCoordinates(iris::Point(0.0, 0.0, 0.0),
+                                              std::nullopt, 0, nullptr)
+                   .has_value());
 }
 
 TEST(GeometryTest, ComputeShadingNormal) {

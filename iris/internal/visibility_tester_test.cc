@@ -23,7 +23,7 @@ std::unique_ptr<iris::EmissiveMaterial> MakeEmissiveMaterial(
               const iris::TextureCoordinates& texture_coordinates,
               iris::SpectralAllocator& spectral_allocator) {
             EXPECT_EQ(expected, texture_coordinates.uv);
-            EXPECT_FALSE(texture_coordinates.derivatives);
+            EXPECT_FALSE(texture_coordinates.differentials);
             return spectrum;
           }));
   return result;
@@ -274,11 +274,13 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return nullptr;
           }));
-  EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
-                                                   1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
@@ -324,11 +326,13 @@ TEST(VisibilityTesterTest, NoSpectrum) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return emissive_material.get();
           }));
-  EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
-                                                   1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
@@ -375,11 +379,13 @@ TEST(VisibilityTesterTest, Succeeds) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return emissive_material.get();
           }));
-  EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
-                                                   1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
@@ -429,11 +435,13 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return emissive_material.get();
           }));
-  EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
-                                                   1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
@@ -494,11 +502,13 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return emissive_material.get();
           }));
-  EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(0.5, 0.0, 0.0),
-                                                   1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(0.5, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
@@ -559,11 +569,13 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return emissive_material.get();
           }));
-  EXPECT_CALL(*geometry, ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
-                                                   1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::TextureCoordinates{{0.5, 0.5}};
           }));

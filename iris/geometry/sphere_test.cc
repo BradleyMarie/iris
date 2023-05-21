@@ -141,7 +141,7 @@ TEST(Sphere, ComputeSurfaceNormal) {
 TEST(Sphere, ComputeTextureCoordinatesNone) {
   auto sphere = SimpleSphere();
   auto texture_coordinates = sphere->ComputeTextureCoordinates(
-      iris::Point(0.0, 0.0, 0.0), FRONT_FACE, nullptr);
+      iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, nullptr);
   EXPECT_FALSE(texture_coordinates);
 }
 

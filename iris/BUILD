@@ -526,7 +526,7 @@ cc_library(
         ":bxdf_allocator",
         ":environmental_light",
         ":float",
-        ":ray",
+        ":ray_differential",
         ":scene",
         ":spectral_allocator",
         ":spectrum",

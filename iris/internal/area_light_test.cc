@@ -20,8 +20,8 @@ std::unique_ptr<iris::geometry::MockGeometry> MakeGeometry(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 1u, 2u);
           }));
-  EXPECT_CALL(*geometry,
-              ComputeTextureCoordinates(testing::_, testing::_, testing::_))
+  EXPECT_CALL(*geometry, ComputeTextureCoordinates(testing::_, testing::_,
+                                                   testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(*geometry, ComputeArea(1u)).WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, nullptr))

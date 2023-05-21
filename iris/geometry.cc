@@ -18,7 +18,8 @@ Hit* Geometry::Trace(HitAllocator& hit_allocator) const {
 }
 
 std::optional<TextureCoordinates> Geometry::ComputeTextureCoordinates(
-    const Point& hit_point, face_t face, const void* additional_data) const {
+    const Point& hit_point, const std::optional<Differentials>& differentials,
+    face_t face, const void* additional_data) const {
   return std::nullopt;
 }
 

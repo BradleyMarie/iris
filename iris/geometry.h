@@ -28,8 +28,14 @@ class Geometry : public ReferenceCountable {
   virtual Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                       const void* additional_data) const = 0;
 
+  struct Differentials {
+    const Point dx;
+    const Point dy;
+  };
+
   virtual std::optional<TextureCoordinates> ComputeTextureCoordinates(
-      const Point& hit_point, face_t face, const void* additional_data) const;
+      const Point& hit_point, const std::optional<Differentials>& differentials,
+      face_t face, const void* additional_data) const;
 
   virtual std::variant<Vector, const NormalMap*> ComputeShadingNormal(
       face_t face, const void* additional_data) const;

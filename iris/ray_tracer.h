@@ -6,7 +6,7 @@
 #include "iris/bsdf.h"
 #include "iris/environmental_light.h"
 #include "iris/float.h"
-#include "iris/ray.h"
+#include "iris/ray_differential.h"
 #include "iris/scene.h"
 #include "iris/spectrum.h"
 
@@ -27,19 +27,25 @@ class RayTracer final {
         ray_tracer_(ray_tracer),
         arena_(arena) {}
 
+  struct Differentials {
+    const Point dx;
+    const Point dy;
+  };
+
   struct SurfaceIntersection {
-    Bsdf bsdf;
-    Point hit_point;
-    Vector surface_normal;
-    Vector shading_normal;
+    const Bsdf bsdf;
+    const Point hit_point;
+    const std::optional<Differentials> differentials;
+    const Vector surface_normal;
+    const Vector shading_normal;
   };
 
   struct TraceResult {
-    const Spectrum* emission;
-    std::optional<SurfaceIntersection> surface_intersection;
+    const Spectrum* const emission;
+    const std::optional<SurfaceIntersection> surface_intersection;
   };
 
-  TraceResult Trace(const Ray& ray);
+  TraceResult Trace(const RayDifferential& ray);
 
  private:
   RayTracer(const RayTracer&) = delete;
