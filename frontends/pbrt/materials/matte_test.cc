@@ -29,7 +29,8 @@ TEST(Matte, Empty) {
 }
 
 TEST(Matte, WithDefaults) {
-  std::stringstream input("\"float Kd\" 1.0 \"float sigma\" 0.5");
+  std::stringstream input(
+      "\"float Kd\" 1.0 \"float sigma\" 0.5 \"float bumpmap\" 0.5");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -42,12 +43,12 @@ TEST(Matte, WithDefaults) {
   auto result1 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
   EXPECT_TRUE(result1.first);
-  EXPECT_FALSE(result1.second);
+  EXPECT_TRUE(result1.second);
 
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
   EXPECT_EQ(result1.first, result2.first);
-  EXPECT_FALSE(result2.second);
+  EXPECT_TRUE(result2.second);
 }
 
 TEST(Matte, OverridesDefaults) {
@@ -66,11 +67,12 @@ TEST(Matte, OverridesDefaults) {
   EXPECT_TRUE(result1.first);
   EXPECT_FALSE(result1.second);
 
-  std::stringstream input1("\"float Kd\" 1.0 \"float sigma\" 0.5");
+  std::stringstream input1(
+      "\"float Kd\" 1.0 \"float sigma\" 0.5 \"float bumpmap\" 0.5");
   iris::pbrt_frontend::Tokenizer tokenizer1(input1);
 
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer1, spectrum_manager, texture_manager, texture_manager);
   EXPECT_NE(result1.first, result2.first);
-  EXPECT_FALSE(result2.second);
+  EXPECT_TRUE(result2.second);
 }

@@ -13,6 +13,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:matte_material",
+        "//iris/normal_maps:bump_normal_map",
         "//iris/reflectors:uniform_reflector",
         "//iris/textures:constant_texture",
     ],

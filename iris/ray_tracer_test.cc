@@ -385,9 +385,12 @@ TEST(RayTracerTest, WithNormalMap) {
   auto material = MakeMaterial({0.0, 0.0});
 
   iris::normal_maps::MockNormalMap normal_map;
-  EXPECT_CALL(normal_map, Evaluate(testing::_, iris::Vector(1.0, 0.0, 0.0)))
+  EXPECT_CALL(normal_map, Evaluate(testing::_, testing::IsFalse(),
+                                   iris::Vector(1.0, 0.0, 0.0)))
       .WillOnce(testing::Invoke(
           [&](const iris::TextureCoordinates& texture_coordinates,
+              const std::optional<iris::NormalMap::Differentials>&
+                  differentials,
               const iris::Vector& surface_normal) {
             EXPECT_EQ(0.0, texture_coordinates.uv[0]);
             EXPECT_EQ(0.0, texture_coordinates.uv[1]);
@@ -443,6 +446,21 @@ TEST(RayTracerTest, WithDifferentials) {
   iris::Ray ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0));
   auto material = MakeMaterial({1.0, 1.0}, true);
 
+  iris::normal_maps::MockNormalMap normal_map;
+  EXPECT_CALL(normal_map, Evaluate(testing::_, testing::IsTrue(),
+                                   iris::Vector(1.0, 0.0, 0.0)))
+      .WillOnce(testing::Invoke(
+          [&](const iris::TextureCoordinates& texture_coordinates,
+              const std::optional<iris::NormalMap::Differentials>&
+                  differentials,
+              const iris::Vector& surface_normal) {
+            EXPECT_EQ(1.0, texture_coordinates.uv[0]);
+            EXPECT_EQ(1.0, texture_coordinates.uv[1]);
+            EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), differentials->dp_dx);
+            EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), differentials->dp_dy);
+            return iris::Vector(1.0, 0.0, 0.0);
+          }));
+
   auto geometry =
       MakeGeometry(ray, iris::Point(0.0, 0.0, 0.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
@@ -462,7 +480,7 @@ TEST(RayTracerTest, WithDifferentials) {
       .WillOnce(
           testing::Invoke([&](iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return nullptr;
+            return &normal_map;
           }));
 
   auto builder = iris::SceneObjects::Builder();

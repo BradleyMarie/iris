@@ -58,6 +58,17 @@ std::optional<RayTracer::Differentials> MakeDifferentials(
            model_to_world->Multiply(differentials->dy)}};
 }
 
+std::optional<NormalMap::Differentials> MakeNormalMapDifferentials(
+    const Point& model_hit_point,
+    const std::optional<Geometry::Differentials>& differentials) {
+  if (!differentials) {
+    return std::nullopt;
+  }
+
+  return {{differentials->dx - model_hit_point,
+           differentials->dy - model_hit_point}};
+}
+
 std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
     const iris::internal::Hit& hit,
     const std::optional<Geometry::Differentials> differentials,
@@ -81,7 +92,10 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
       std::holds_alternative<const NormalMap*>(shading_normal_variant)
           ? std::get<const NormalMap*>(shading_normal_variant)
                 ? std::get<const NormalMap*>(shading_normal_variant)
-                      ->Evaluate(texture_coordinates, model_surface_normal)
+                      ->Evaluate(texture_coordinates,
+                                 MakeNormalMapDifferentials(model_hit_point,
+                                                            differentials),
+                                 model_surface_normal)
                 : model_surface_normal
           : std::get<Vector>(shading_normal_variant);
 

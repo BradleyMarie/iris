@@ -1,6 +1,7 @@
 #include "frontends/pbrt/materials/matte.h"
 
 #include "iris/materials/matte_material.h"
+#include "iris/normal_maps/bump_normal_map.h"
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/textures/constant_texture.h"
 
@@ -12,7 +13,7 @@ static const iris::visual kDefaultSigma = 0.0;
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
-        {"bump", Parameter::FLOAT_TEXTURE},
+        {"bumpmap", Parameter::FLOAT_TEXTURE},
         {"Kd", Parameter::REFLECTOR_TEXTURE},
         {"sigma", Parameter::FLOAT_TEXTURE},
 };
@@ -71,6 +72,7 @@ std::shared_ptr<ObjectBuilder<
 MatteObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
+  ReferenceCounted<NormalMap> normal_map;
   auto diffuse_texture =
       texture_manager.AllocateUniformReflectorTexture(kDefaultReflectance);
   auto sigma_texture =
@@ -86,11 +88,15 @@ MatteObjectBuilder::Build(
     sigma_texture = sigma->second.GetFloatTextures(1).front();
   }
 
-  // TODO: Construct Bump Map
+  auto bump = parameters.find("bumpmap");
+  if (bump != parameters.end()) {
+    normal_map = iris::MakeReferenceCounted<normals::BumpNormalMap>(
+        bump->second.GetFloatTextures(1).front());
+  }
 
-  return std::make_unique<NestedMatteObjectBuilder>(
-      std::move(diffuse_texture), std::move(sigma_texture),
-      ReferenceCounted<NormalMap>());
+  return std::make_unique<NestedMatteObjectBuilder>(std::move(diffuse_texture),
+                                                    std::move(sigma_texture),
+                                                    std::move(normal_map));
 }
 
 std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>
@@ -103,6 +109,7 @@ NestedMatteObjectBuilder::Build(
 
   auto diffuse_texture = diffuse_;
   auto sigma_texture = sigma_;
+  auto normal_map = default_.second;
 
   auto kd = parameters.find("Kd");
   if (kd != parameters.end()) {
@@ -114,12 +121,16 @@ NestedMatteObjectBuilder::Build(
     sigma_texture = sigma->second.GetFloatTextures(1).front();
   }
 
-  // TODO: Construct Bump Map
+  auto bump = parameters.find("bumpmap");
+  if (bump != parameters.end()) {
+    normal_map = iris::MakeReferenceCounted<normals::BumpNormalMap>(
+        bump->second.GetFloatTextures(1).front());
+  }
 
   return std::make_pair(
       iris::MakeReferenceCounted<iris::materials::MatteMaterial>(
           std::move(diffuse_texture), std::move(sigma_texture)),
-      ReferenceCounted<NormalMap>());
+      std::move(normal_map));
 }
 
 }  // namespace
