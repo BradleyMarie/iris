@@ -24,8 +24,8 @@ TEST(CompositeBxdfTest, Sample) {
   auto composite = iris::bxdfs::MakeComposite(bxdf0, bxdf1);
   auto sample =
       composite.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt, sampler);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample.direction);
-  EXPECT_FALSE(sample.differentials);
+  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample->direction);
+  EXPECT_FALSE(sample->differentials);
 }
 
 TEST(CompositeBxdfTest, PdfOneBxdf) {

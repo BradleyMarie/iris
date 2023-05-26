@@ -23,9 +23,9 @@ class CompositeBxdf final : public Bxdf {
     (void(bxdfs_[i++] = &bxdfs), ...);
   }
 
-  SampleResult Sample(const Vector& incoming,
-                      const std::optional<Differentials>& differentials,
-                      Sampler& sampler) const override {
+  std::optional<SampleResult> Sample(
+      const Vector& incoming, const std::optional<Differentials>& differentials,
+      Sampler& sampler) const override {
     size_t index = sampler.NextIndex(sizeof...(Bxdfs));
     return bxdfs_[index]->Sample(incoming, differentials, sampler);
   }

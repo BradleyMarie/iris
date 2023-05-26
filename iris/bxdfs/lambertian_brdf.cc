@@ -7,7 +7,7 @@
 namespace iris {
 namespace bxdfs {
 
-Bxdf::SampleResult LambertianBrdf::Sample(
+std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     Sampler& sampler) const {
@@ -22,14 +22,18 @@ Bxdf::SampleResult LambertianBrdf::Sample(
   auto y = radius * sin_theta;
   auto z = std::sqrt(static_cast<geometric>(1.0) - radius_squared);
 
-  return {Vector(x, y, std::copysign(z, -incoming.z))};
+  return {{Vector(x, y, std::copysign(z, incoming.z))}};
 }
 
 std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
                                             const Vector& outgoing,
                                             SampleSource sample_source) const {
-  return (incoming.z < 0) == (outgoing.z < 0) ? 0.0
-                                              : std::abs(outgoing.z * M_1_PI);
+  if ((incoming.z < static_cast<geometric_t>(0.0)) !=
+      (outgoing.z < static_cast<geometric_t>(0.0))) {
+    return static_cast<geometric_t>(0.0);
+  }
+
+  return std::abs(outgoing.z * M_1_PI);
 }
 
 const Reflector* LambertianBrdf::Reflectance(
@@ -39,7 +43,8 @@ const Reflector* LambertianBrdf::Reflectance(
     return nullptr;
   }
 
-  if ((incoming.z < 0) == (outgoing.z < 0)) {
+  if ((incoming.z < static_cast<geometric_t>(0.0)) !=
+      (outgoing.z < static_cast<geometric_t>(0.0))) {
     return nullptr;
   }
 

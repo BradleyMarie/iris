@@ -23,7 +23,11 @@ std::pair<Vector, Vector> MaybeNormalize(const Vector& surface_normal,
                                          const Vector& shading_normal,
                                          bool normalize) {
   auto vectors = std::make_pair(surface_normal, shading_normal);
-  return normalize ? Normalize(vectors) : vectors;
+  if (!normalize) {
+    return vectors;
+  }
+
+  return Normalize(vectors);
 }
 
 std::array<Vector, 4> ComputeState(const Vector& surface_normal,
@@ -48,8 +52,8 @@ std::optional<Bxdf::Differentials> Bsdf::ToLocal(
     return std::nullopt;
   }
 
-  return Bxdf::Differentials{ToLocal(differentials->dx),
-                             ToLocal(differentials->dy)};
+  return Bxdf::Differentials{ToLocal(-differentials->dx),
+                             ToLocal(-differentials->dy)};
 }
 
 Vector Bsdf::ToLocal(const Vector& vector) const {
@@ -76,29 +80,33 @@ Vector Bsdf::ToWorld(const Vector& vector) const {
 std::optional<Bsdf::SampleResult> Bsdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     Sampler sampler, SpectralAllocator& allocator) const {
-  auto local_incoming = ToLocal(incoming);
+  auto local_incoming = ToLocal(-incoming);
   auto local_incoming_differentials = ToLocal(differentials);
-  auto local_outgoing =
-      bxdf_.Sample(local_incoming, local_incoming_differentials, sampler);
-  auto world_outgoing = ToWorld(local_outgoing.direction);
-  auto world_outgoing_differentials = ToWorld(local_outgoing.differentials);
 
-  auto pdf = bxdf_.Pdf(local_incoming, local_outgoing.direction,
+  auto sample_result =
+      bxdf_.Sample(local_incoming, local_incoming_differentials, sampler);
+  if (!sample_result) {
+    return std::nullopt;
+  }
+
+  auto pdf = bxdf_.Pdf(local_incoming, sample_result->direction,
                        Bxdf::SampleSource::BXDF);
   if (pdf.has_value() && *pdf <= 0.0) {
     return std::nullopt;
   }
 
+  auto world_outgoing = ToWorld(sample_result->direction);
   bool transmitted = (DotProduct(incoming, surface_normal_) > 0) ==
                      (DotProduct(world_outgoing, surface_normal_) > 0);
   auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
 
-  auto reflector = bxdf_.Reflectance(local_incoming, local_outgoing.direction,
+  auto reflector = bxdf_.Reflectance(local_incoming, sample_result->direction,
                                      Bxdf::SampleSource::BXDF, type, allocator);
   if (!reflector) {
     return std::nullopt;
   }
 
+  auto world_outgoing_differentials = ToWorld(sample_result->differentials);
   return Bsdf::SampleResult{*reflector, world_outgoing,
                             world_outgoing_differentials, pdf};
 }
@@ -106,7 +114,7 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
     const Vector& incoming, const Vector& outgoing,
     SpectralAllocator& allocator) const {
-  auto local_incoming = ToLocal(incoming);
+  auto local_incoming = ToLocal(-incoming);
   auto local_outgoing = ToLocal(outgoing);
   auto pdf =
       bxdf_.Pdf(local_incoming, local_outgoing, Bxdf::SampleSource::LIGHT);

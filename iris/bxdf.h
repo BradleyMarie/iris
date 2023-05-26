@@ -23,9 +23,9 @@ class Bxdf {
     const std::optional<Differentials> differentials;
   };
 
-  virtual SampleResult Sample(const Vector& incoming,
-                              const std::optional<Differentials>& differentials,
-                              Sampler& sampler) const = 0;
+  virtual std::optional<SampleResult> Sample(
+      const Vector& incoming, const std::optional<Differentials>& differentials,
+      Sampler& sampler) const = 0;
 
   enum class SampleSource {
     BXDF,
