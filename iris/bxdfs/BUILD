@@ -7,6 +7,7 @@ cc_library(
     hdrs = ["composite_bxdf.h"],
     deps = [
         "//iris:bxdf",
+        "//iris:bxdf_allocator",
         "//iris:float",
         "//iris:reflector",
         "//iris:sampler",
@@ -23,6 +24,7 @@ cc_test(
         ":mock_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "@com_google_googletest//:gtest_main",
     ],

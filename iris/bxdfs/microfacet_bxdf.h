@@ -48,7 +48,7 @@ template <typename M, typename F>
            std::derived_from<F, Fresnel>
 class MicrofacetBrdf final : public Bxdf {
  public:
-  MicrofacetBrdf(const Reflector* reflectance, const M& distribution,
+  MicrofacetBrdf(const Reflector& reflectance, const M& distribution,
                  const F& fresnel) noexcept
       : reflectance_(reflectance),
         distribution_(distribution),
@@ -113,7 +113,7 @@ class MicrofacetBrdf final : public Bxdf {
 
     const Reflector* reflectance = allocator.Scale(
         fresnel_.Evaluate(DotProduct(incoming, half_angle), allocator),
-        reflectance_);
+        &reflectance_);
 
     return allocator.Scale(
         reflectance,
@@ -122,7 +122,7 @@ class MicrofacetBrdf final : public Bxdf {
   }
 
  private:
-  const Reflector* reflectance_;
+  const Reflector& reflectance_;
   const M distribution_;
   const F fresnel_;
 };

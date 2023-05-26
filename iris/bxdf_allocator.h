@@ -17,7 +17,7 @@ class BxdfAllocator {
 
   template <typename T, typename... Args>
   requires(
-      std::is_trivially_destructible<T>::value&& std::derived_from<T, Bxdf>)
+      std::is_trivially_destructible<T>::value && std::derived_from<T, Bxdf>)
       const Bxdf& Allocate(Args&&... args) {
     auto* result = new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
     return *result;

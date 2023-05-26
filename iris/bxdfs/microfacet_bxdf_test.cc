@@ -114,7 +114,7 @@ TEST(MicrofacetBrdf, SampleZero) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution;
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_FALSE(brdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt, sampler));
 }
@@ -129,7 +129,7 @@ TEST(MicrofacetBrdf, SampleZeroDp) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution(iris::Vector(0.0, 0.0, -1.0));
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_FALSE(brdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt, sampler));
 }
@@ -144,7 +144,7 @@ TEST(MicrofacetBrdf, SampleOppositeHemispheres) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution(iris::Vector(1.0, 0.0, -1.0));
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_FALSE(brdf.Sample(iris::Vector(1.0, 0.0, 1.0), std::nullopt, sampler));
 }
@@ -159,7 +159,7 @@ TEST(MicrofacetBrdf, Sample) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution;
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   auto sample = brdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt, sampler);
   ASSERT_TRUE(sample);
@@ -171,7 +171,7 @@ TEST(MicrofacetBrdf, PdfOpposite) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution;
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(0.0,
             brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
@@ -183,7 +183,7 @@ TEST(MicrofacetBrdf, Pdf) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution;
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(0.125,
             brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
@@ -195,7 +195,7 @@ TEST(MicrofacetBrdf, ReflectanceWrongHemishphere) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution;
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(nullptr, brdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
                                       iris::Vector(0.0, 0.0, 1.0),
@@ -208,7 +208,7 @@ TEST(MicrofacetBrdf, ReflectanceOppositeHemispheres) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution;
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(nullptr, brdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
                                       iris::Vector(0.0, 0.0, -1.0),
@@ -221,7 +221,7 @@ TEST(MicrofacetBrdf, Reflectance) {
   iris::reflectors::UniformReflector reflector(0.5);
   TestMicrofacetDistribution distribution;
   TestFresnel fresnel;
-  iris::bxdfs::MicrofacetBrdf brdf(&reflector, distribution, fresnel);
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   const auto* reflectance = brdf.Reflectance(
       iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),

@@ -33,6 +33,12 @@ TEST(Parse, Matte) {
   iris::pbrt_frontend::materials::Parse(tokenizer);
 }
 
+TEST(Parse, Plastic) {
+  std::stringstream input("\"plastic\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::materials::Parse(tokenizer);
+}
+
 TEST(ParseNamed, TooFewParameters) {
   std::stringstream input("");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -125,6 +131,19 @@ TEST(ParseNamed, WithArgs) {
 
 TEST(ParseNamed, Matte) {
   std::stringstream input("\"name\" \"string type\" \"matte\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::MaterialManager material_manager;
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  iris::pbrt_frontend::materials::ParseNamed(tokenizer, material_manager,
+                                             spectrum_manager, texture_manager);
+  EXPECT_NE(nullptr, material_manager.Get("name"));
+}
+
+TEST(ParseNamed, Plastic) {
+  std::stringstream input("\"name\" \"string type\" \"plastic\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::MaterialManager material_manager;

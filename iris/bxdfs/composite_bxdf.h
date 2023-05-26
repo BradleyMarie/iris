@@ -6,6 +6,7 @@
 #include <optional>
 
 #include "iris/bxdf.h"
+#include "iris/bxdf_allocator.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
 #include "iris/sampler.h"
@@ -14,10 +15,12 @@
 
 namespace iris {
 namespace bxdfs {
+namespace internal {
 
-template <typename... Bxdfs>
+template <size_t NumBsdfs>
 class CompositeBxdf final : public Bxdf {
  public:
+  template <typename... Bxdfs>
   CompositeBxdf(Bxdfs&&... bxdfs) {
     size_t i = 0;
     (void(bxdfs_[i++] = &bxdfs), ...);
@@ -26,7 +29,7 @@ class CompositeBxdf final : public Bxdf {
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       Sampler& sampler) const override {
-    size_t index = sampler.NextIndex(sizeof...(Bxdfs));
+    size_t index = sampler.NextIndex(NumBsdfs);
     return bxdfs_[index]->Sample(incoming, differentials, sampler);
   }
 
@@ -44,10 +47,9 @@ class CompositeBxdf final : public Bxdf {
     if (num_diffuse != 0) {
       visual_t specular_pdf =
           (sample_source == Bxdf::SampleSource::LIGHT) ? 0.0 : 1.0;
-      result =
-          (diffuse_pdf + static_cast<visual_t>(sizeof...(Bxdfs) - num_diffuse) *
-                             specular_pdf) /
-          static_cast<visual_t>(sizeof...(Bxdfs));
+      result = (diffuse_pdf +
+                static_cast<visual_t>(NumBsdfs - num_diffuse) * specular_pdf) /
+               static_cast<visual_t>(NumBsdfs);
     }
 
     return result;
@@ -67,13 +69,16 @@ class CompositeBxdf final : public Bxdf {
   }
 
  private:
-  std::array<const Bxdf*, sizeof...(Bxdfs)> bxdfs_;
-  static_assert(sizeof...(Bxdfs) != 0);
+  std::array<const Bxdf*, NumBsdfs> bxdfs_;
+  static_assert(NumBsdfs != 0);
 };
 
+}  // namespace internal
+
 template <typename... Bxdfs>
-CompositeBxdf<Bxdfs...> MakeComposite(Bxdfs&&... bxdfs) {
-  return CompositeBxdf<Bxdfs...>(bxdfs...);
+const Bxdf& MakeComposite(BxdfAllocator& allocator, Bxdfs&&... bxdfs) {
+  return allocator.Allocate<internal::CompositeBxdf<sizeof...(Bxdfs)>>(
+      bxdfs...);
 }
 
 }  // namespace bxdfs
