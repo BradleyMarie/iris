@@ -24,6 +24,10 @@ TextureManager::AllocateUniformFloatTexture(visual value) {
 
 ReferenceCounted<Reflector> TextureManager::AllocateUniformReflector(
     visual reflectance) {
+  if (reflectance <= 0.0) {
+    return ReferenceCounted<Reflector>();
+  }
+
   auto iter = uniform_value_reflectors_.find(reflectance);
   if (iter != uniform_value_reflectors_.end()) {
     return iter->second;

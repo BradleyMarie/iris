@@ -20,6 +20,12 @@ TEST(TextureManager, AllocateUniformFloatReflector) {
   EXPECT_EQ(reflector0.Get(), reflector1.Get());
 }
 
+TEST(TextureManager, AllocateUniformFloatReflectorZero) {
+  iris::pbrt_frontend::TextureManager texture_manager;
+  auto reflector = texture_manager.AllocateUniformReflector(0.0);
+  EXPECT_FALSE(reflector.Get());
+}
+
 TEST(TextureManager, AllocateUniformFloatReflectorTexture) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto texture0 = texture_manager.AllocateUniformReflectorTexture(1.0);

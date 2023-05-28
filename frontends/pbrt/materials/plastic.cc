@@ -111,7 +111,7 @@ PlasticObjectBuilder::Build(
   }
 
   auto remaproughness = parameters.find("remaproughness");
-  if (roughness != parameters.end()) {
+  if (remaproughness != parameters.end()) {
     remap_roughness = remaproughness->second.GetBoolValues(1).front();
   }
 
@@ -156,7 +156,7 @@ NestedPlasticObjectBuilder::Build(
   }
 
   auto remaproughness = parameters.find("remaproughness");
-  if (roughness != parameters.end()) {
+  if (remaproughness != parameters.end()) {
     remap_roughness = remaproughness->second.GetBoolValues(1).front();
   }
 
