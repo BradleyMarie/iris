@@ -142,6 +142,27 @@ class UnboundedScaledReflector final : public Reflector {
   const visual_t scalar_;
 };
 
+class UnboundedSumReflector final : public Reflector {
+ public:
+  UnboundedSumReflector(const Reflector& addend0, const Reflector& addend1)
+      : addend0_(addend0), addend1_(addend1) {}
+
+  visual_t Reflectance(visual_t wavelength) const {
+    visual_t sum =
+        addend0_.Reflectance(wavelength) + addend1_.Reflectance(wavelength);
+    return sum;
+  }
+
+  visual_t Albedo() const {
+    visual_t sum = addend0_.Albedo() + addend1_.Albedo();
+    return sum;
+  }
+
+ private:
+  const Reflector& addend0_;
+  const Reflector& addend1_;
+};
+
 }  // namespace
 
 const Spectrum* SpectralAllocator::Add(const Spectrum* addend0,
@@ -218,6 +239,19 @@ const Reflector* SpectralAllocator::Scale(const Reflector* reflector,
   }
 
   return &arena_.Allocate<ScaledReflectors>(*reflector, *attenuation);
+}
+
+const Reflector* SpectralAllocator::UnboundedAdd(const Reflector* addend0,
+                                                 const Reflector* addend1) {
+  if (!addend0) {
+    return addend1;
+  }
+
+  if (!addend1) {
+    return addend0;
+  }
+
+  return &arena_.Allocate<UnboundedSumReflector>(*addend0, *addend1);
 }
 
 const Reflector* SpectralAllocator::UnboundedScale(const Reflector* reflector,

@@ -63,7 +63,7 @@ class CompositeBxdf final : public Bxdf {
     for (const auto* bxdf : bxdfs_) {
       auto reflectance = bxdf->Reflectance(incoming, outgoing, sample_source,
                                            hemisphere, allocator);
-      result = allocator.Add(result, reflectance);
+      result = allocator.UnboundedAdd(result, reflectance);
     }
     return result;
   }
