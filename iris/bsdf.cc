@@ -12,7 +12,7 @@ std::pair<Vector, Vector> CreateLocalCoordinateSpace(
   Vector orthogonal0 =
       CrossProduct(surface_normal, Vector(values[0], values[1], values[2]));
   Vector orthogonal1 = CrossProduct(orthogonal0, surface_normal);
-  return std::make_pair(orthogonal1, orthogonal0);
+  return std::make_pair(Normalize(orthogonal1), Normalize(orthogonal0));
 }
 
 std::pair<Vector, Vector> Normalize(const std::pair<Vector, Vector>& vectors) {
