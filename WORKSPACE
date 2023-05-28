@@ -8,16 +8,16 @@ http_archive(
 
 http_archive(
     name = "com_google_absl",
-    sha256 = "0e50379019fc4f51bf0a79d908e04fabc384b5875786576531f40bd42ad7f611",
-    strip_prefix = "abseil-cpp-2ed6963f2b67a68d94303cafb571d3d039a49f9a",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/2ed6963f2b67a68d94303cafb571d3d039a49f9a.zip"],
+    sha256 = "f5002978a2a908e8a67cf91a95efb1cd7e16cc75f41d1bae01c9393602c4015e",
+    strip_prefix = "abseil-cpp-8e45685002488b55f24cb67a795eaa8d1c3297a1",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/8e45685002488b55f24cb67a795eaa8d1c3297a1.zip"],
 )
 
 http_archive(
     name = "com_google_googletest",
-    sha256 = "b4870bf121ff7795ba20d20bcdd8627b8e088f2d1dab299a031c1034eddc93d5",
-    strip_prefix = "googletest-release-1.11.0",
-    url = "https://github.com/google/googletest/archive/refs/tags/release-1.11.0.tar.gz",
+    sha256 = "ffa17fbc5953900994e2deec164bb8949879ea09b411e07f215bfbb1f87f4632",
+    strip_prefix = "googletest-1.13.0",
+    url = "https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip",
 )
 
 http_archive(
