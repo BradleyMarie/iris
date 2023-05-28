@@ -1,6 +1,7 @@
 #ifndef _IRIS_BXDFS_MICROFACET_BXDF_
 #define _IRIS_BXDFS_MICROFACET_BXDF_
 
+#include <algorithm>
 #include <concepts>
 
 #include "iris/bxdf.h"
@@ -19,7 +20,7 @@ class MicrofacetDistribution {
  public:
   visual_t G(const Vector& incoming, const Vector& outgoing) const;
   visual_t G1(const Vector& vector) const;
-  visual_t Pdf(const Vector& outgoing, const Vector& half_angle) const;
+  visual_t Pdf(const Vector& incoming, const Vector& half_angle) const;
 
   virtual visual_t D(const Vector& vector) const = 0;
   virtual visual_t Lambda(const Vector& vector) const = 0;
@@ -29,8 +30,9 @@ class MicrofacetDistribution {
 
 class TrowbridgeReitzDistribution : public MicrofacetDistribution {
  public:
-  TrowbridgeReitzDistribution(visual alpha_x, visual alpha_y)
-      : alpha_x_(alpha_x), alpha_y_(alpha_y) {}
+  TrowbridgeReitzDistribution(visual_t alpha_x, visual_t alpha_y)
+      : alpha_x_(std::max(static_cast<visual>(0.001), alpha_x)),
+        alpha_y_(std::max(static_cast<visual>(0.001), alpha_y)) {}
 
   virtual visual_t D(const Vector& vector) const override;
   virtual visual_t Lambda(const Vector& vector) const override;
@@ -40,7 +42,7 @@ class TrowbridgeReitzDistribution : public MicrofacetDistribution {
   static visual_t RoughnessToAlpha(visual_t roughness);
 
  private:
-  visual alpha_x_, alpha_y_;
+  visual_t alpha_x_, alpha_y_;
 };
 
 template <typename M, typename F>
@@ -84,9 +86,9 @@ class MicrofacetBrdf final : public Bxdf {
     }
 
     Vector half_angle = Normalize(outgoing + incoming);
-    return distribution_.Pdf(outgoing, half_angle) /
+    return distribution_.Pdf(incoming, half_angle) /
            (static_cast<visual_t>(4.0) *
-            static_cast<visual_t>(DotProduct(outgoing, half_angle)));
+            static_cast<visual_t>(DotProduct(incoming, half_angle)));
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
@@ -108,17 +110,22 @@ class MicrofacetBrdf final : public Bxdf {
     }
 
     Vector half_angle = Normalize(outgoing + incoming);
+    visual_t dp = DotProduct(incoming, half_angle);
+    const Reflector* fresnel = fresnel_.Evaluate(dp, allocator);
+    if (!fresnel) {
+      return nullptr;
+    }
+
+    const Reflector* reflectance = allocator.Scale(&reflectance_, fresnel);
+
     visual_t cos_theta_i = internal::AbsCosTheta(incoming);
     visual_t cos_theta_o = internal::AbsCosTheta(outgoing);
+    visual_t d = distribution_.D(half_angle);
+    visual_t g = distribution_.G(incoming, outgoing);
+    visual_t attenuation =
+        d * g / (static_cast<visual_t>(4.0) * cos_theta_i * cos_theta_o);
 
-    const Reflector* reflectance = allocator.Scale(
-        fresnel_.Evaluate(DotProduct(incoming, half_angle), allocator),
-        &reflectance_);
-
-    return allocator.Scale(
-        reflectance,
-        distribution_.D(half_angle) * distribution_.G(incoming, outgoing) /
-            (static_cast<visual_t>(4.0) * cos_theta_i * cos_theta_o));
+    return allocator.UnboundedScale(reflectance, attenuation);
   }
 
  private:

@@ -82,10 +82,10 @@ visual_t MicrofacetDistribution::G1(const Vector& vector) const {
          (static_cast<visual_t>(1.0) + Lambda(vector));
 }
 
-visual_t MicrofacetDistribution::Pdf(const Vector& outgoing,
+visual_t MicrofacetDistribution::Pdf(const Vector& incoming,
                                      const Vector& half_angle) const {
-  return D(half_angle) * G1(outgoing) * AbsDotProduct(outgoing, half_angle) /
-         internal::AbsCosTheta(outgoing);
+  return D(half_angle) * G1(incoming) * AbsDotProduct(incoming, half_angle) /
+         internal::AbsCosTheta(incoming);
 }
 
 visual_t TrowbridgeReitzDistribution::D(const Vector& vector) const {
@@ -96,32 +96,34 @@ visual_t TrowbridgeReitzDistribution::D(const Vector& vector) const {
 
   auto cos_squared_theta = internal::CosSquaredTheta(vector);
   auto cos_4_theta = cos_squared_theta * cos_squared_theta;
-  auto [sin_squared_phi, cos_squared_phi] = internal::SinCosSquaredPhi(vector);
-  geometric_t e = static_cast<geometric_t>(1.0) +
-                  (cos_squared_phi / (alpha_x_ * alpha_x_) +
-                   sin_squared_phi / (alpha_y_ * alpha_y_)) *
-                      tan_squared_theta;
-
-  return static_cast<geometric_t>(1.0) /
-         (static_cast<geometric_t>(M_PI) * alpha_x_ * alpha_y_ * cos_4_theta *
-          e * e);
-}
-
-visual_t TrowbridgeReitzDistribution::Lambda(const Vector& vector) const {
-  auto abs_tan_theta = std::abs(internal::TanTheta(vector));
-  if (std::isinf(abs_tan_theta)) {
+  if (cos_4_theta < static_cast<geometric_t>(1e-16)) {
     return 0.0;
   }
 
   auto [sin_squared_phi, cos_squared_phi] = internal::SinCosSquaredPhi(vector);
-  auto alpha = std::sqrt(cos_squared_phi * alpha_x_ * alpha_x_ +
-                         sin_squared_phi * alpha_y_ * alpha_y_);
-  auto alpha_tan_theta = alpha * abs_tan_theta;
+  geometric_t e = tan_squared_theta * (cos_squared_phi / (alpha_x_ * alpha_x_) +
+                                       sin_squared_phi / (alpha_y_ * alpha_y_));
+  geometric_t e_plus_1 = static_cast<geometric_t>(1.0) + e;
 
-  return (static_cast<geometric_t>(-1.0) +
-          std::sqrt(static_cast<geometric_t>(1.0) +
-                    alpha_tan_theta * alpha_tan_theta)) *
-         static_cast<geometric_t>(0.5);
+  return static_cast<geometric_t>(1.0) /
+         (static_cast<geometric_t>(M_PI) * alpha_x_ * alpha_y_ * cos_4_theta *
+          e_plus_1 * e_plus_1);
+}
+
+visual_t TrowbridgeReitzDistribution::Lambda(const Vector& vector) const {
+  auto tan_squared_theta = internal::TanSquaredTheta(vector);
+  if (std::isinf(tan_squared_theta)) {
+    return 0.0;
+  }
+
+  auto [sin_squared_phi, cos_squared_phi] = internal::SinCosSquaredPhi(vector);
+  auto alpha_squared = cos_squared_phi * alpha_x_ * alpha_x_ +
+                       sin_squared_phi * alpha_y_ * alpha_y_;
+
+  return (std::sqrt(static_cast<visual_t>(1.0) +
+                    alpha_squared * tan_squared_theta) -
+          static_cast<visual_t>(1.0)) *
+         static_cast<visual_t>(0.5);
 }
 
 Vector TrowbridgeReitzDistribution::Sample(const Vector& incoming,

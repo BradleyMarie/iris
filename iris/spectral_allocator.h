@@ -22,6 +22,10 @@ class SpectralAllocator {
   const Reflector* Scale(const Reflector* reflector,
                          const Reflector* attenuation);
 
+  // Prefer the bounded version of Scale if possible.
+  const Reflector* UnboundedScale(const Reflector* reflector,
+                                  visual_t attenuation);
+
  private:
   SpectralAllocator(const SpectralAllocator&) = delete;
   SpectralAllocator& operator=(const SpectralAllocator&) = delete;

@@ -146,3 +146,30 @@ TEST(SpectralAllocator, ReflectorsScale) {
       .WillRepeatedly(testing::Return(0.5));
   EXPECT_EQ(0.25, allocator.Scale(&reflector, &reflector)->Reflectance(1.0));
 }
+
+TEST(SpectralAllocator, ReflectorUnboundedScaleNullptr) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::reflectors::MockReflector reflector;
+  EXPECT_EQ(nullptr, allocator.UnboundedScale(
+                         static_cast<const iris::Reflector*>(nullptr), 0.0));
+  EXPECT_EQ(nullptr, allocator.UnboundedScale(&reflector, 0.0));
+}
+
+TEST(SpectralAllocator, ReflectorUnboundedScaleIdentity) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::reflectors::MockReflector reflector;
+  EXPECT_EQ(&reflector, allocator.UnboundedScale(&reflector, 1.0));
+}
+
+TEST(SpectralAllocator, ReflectorUnboundedScale) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::reflectors::MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.5));
+  EXPECT_EQ(1.0, allocator.UnboundedScale(&reflector, 2.0)->Reflectance(1.0));
+}

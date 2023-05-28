@@ -89,37 +89,57 @@ class SumReflector final : public Reflector {
 
 class ScaledReflector final : public Reflector {
  public:
-  ScaledReflector(const Reflector& spectrum, visual_t scalar)
-      : spectrum_(spectrum), scalar_(scalar) {
+  ScaledReflector(const Reflector& reflector, visual_t scalar)
+      : reflector_(reflector), scalar_(scalar) {
     assert(scalar > 0.0 && scalar < 1.0);
   }
 
   visual_t Reflectance(visual_t wavelength) const {
-    return spectrum_.Reflectance(wavelength) * scalar_;
+    return reflector_.Reflectance(wavelength) * scalar_;
   }
 
-  visual_t Albedo() const { return spectrum_.Albedo() * scalar_; }
+  visual_t Albedo() const { return reflector_.Albedo() * scalar_; }
 
  private:
-  const Reflector& spectrum_;
+  const Reflector& reflector_;
   const visual_t scalar_;
 };
 
 class ScaledReflectors final : public Reflector {
  public:
-  ScaledReflectors(const Reflector& spectrum, const Reflector& attenuation)
-      : spectrum_(spectrum), attenuation_(attenuation) {}
+  ScaledReflectors(const Reflector& reflector, const Reflector& attenuation)
+      : reflector_(reflector), attenuation_(attenuation) {}
 
   visual_t Reflectance(visual_t wavelength) const {
-    return spectrum_.Reflectance(wavelength) *
+    return reflector_.Reflectance(wavelength) *
            attenuation_.Reflectance(wavelength);
   }
 
-  visual_t Albedo() const { return spectrum_.Albedo() * attenuation_.Albedo(); }
+  visual_t Albedo() const {
+    return reflector_.Albedo() * attenuation_.Albedo();
+  }
 
  private:
-  const Reflector& spectrum_;
+  const Reflector& reflector_;
   const Reflector& attenuation_;
+};
+
+class UnboundedScaledReflector final : public Reflector {
+ public:
+  UnboundedScaledReflector(const Reflector& reflector, visual_t scalar)
+      : reflector_(reflector), scalar_(scalar) {
+    assert(scalar > 0.0);
+  }
+
+  visual_t Reflectance(visual_t wavelength) const {
+    return reflector_.Reflectance(wavelength) * scalar_;
+  }
+
+  visual_t Albedo() const { return reflector_.Albedo() * scalar_; }
+
+ private:
+  const Reflector& reflector_;
+  const visual_t scalar_;
 };
 
 }  // namespace
@@ -198,6 +218,21 @@ const Reflector* SpectralAllocator::Scale(const Reflector* reflector,
   }
 
   return &arena_.Allocate<ScaledReflectors>(*reflector, *attenuation);
+}
+
+const Reflector* SpectralAllocator::UnboundedScale(const Reflector* reflector,
+                                                   visual_t attenuation) {
+  assert(attenuation >= 0.0);
+
+  if (!reflector || attenuation <= 0.0) {
+    return nullptr;
+  }
+
+  if (attenuation != 1.0) {
+    return &arena_.Allocate<UnboundedScaledReflector>(*reflector, attenuation);
+  }
+
+  return reflector;
 }
 
 }  // namespace iris
