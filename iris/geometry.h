@@ -48,18 +48,11 @@ class Geometry : public ReferenceCountable {
   virtual const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const;
 
-  virtual std::optional<Point> SampleBySurfaceArea(face_t face,
-                                                   Sampler& sampler) const;
+  virtual std::optional<Point> SampleSurfaceArea(face_t face,
+                                                 Sampler& sampler) const;
 
-  struct SampleBySolidAngleResult {
-    const Point point;
-    const visual_t pdf;
-  };
-
-  virtual std::optional<SampleBySolidAngleResult> SampleBySolidAngle(
-      const Point& point, face_t face, Sampler& sampler) const;
-
-  virtual std::optional<visual_t> ComputeArea(face_t face) const;
+  virtual std::optional<visual_t> ComputePdfBySolidAngle(
+      const Point& origin, face_t face, const Point& on_face) const;
 
   virtual BoundingBox ComputeBounds(const Matrix& model_to_world) const = 0;
 

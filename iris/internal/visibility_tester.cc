@@ -49,9 +49,7 @@ bool VisibilityTester::Intersects(const Ray& ray, const Geometry& geometry,
 
 std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
     const Ray& ray, const Geometry& geometry, const Matrix* model_to_world,
-    face_t face, visual_t geometry_area, visual_t* pdf) {
-  assert(std::isfinite(geometry_area) && geometry_area > 0.0);
-
+    face_t face) {
   // Optimization: Check that the face is visible along the ray before tracing
   // the entire scene
   if (!Intersects(ray, geometry, model_to_world, face)) {
@@ -94,24 +92,15 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
     return std::nullopt;
   }
 
-  // Optionally compute PDF
-  if (pdf) {
-    Vector model_surface_normal = geometry.ComputeSurfaceNormal(
-        model_hit_point, face, scene_hit->additional_data);
-    Vector world_surface_normal =
-        model_to_world ? Normalize(model_to_world->InverseTransposeMultiply(
-                             model_surface_normal))
-                       : model_surface_normal;
-
-    Vector world_to_light = world_hit_point - ray.origin;
-    auto distance_to_light_squared = DotProduct(world_to_light, world_to_light);
-
-    *pdf = distance_to_light_squared /
-           (PositiveDotProduct(world_surface_normal, -ray.direction) *
-            geometry_area);
+  Point model_origin =
+      model_to_world ? model_to_world->InverseMultiply(ray.origin) : ray.origin;
+  auto pdf =
+      geometry.ComputePdfBySolidAngle(model_origin, face, model_hit_point);
+  if (pdf.value_or(0.0) <= 0.0) {
+    return std::nullopt;
   }
 
-  return VisibilityTester::VisibleResult{*spectrum, world_hit_point};
+  return VisibilityTester::VisibleResult{*spectrum, world_hit_point, *pdf};
 }
 
 }  // namespace internal

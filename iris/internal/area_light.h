@@ -31,7 +31,6 @@ class AreaLight final : public Light {
   const Geometry& geometry_;
   const Matrix* model_to_world_;
   const face_t face_;
-  visual_t surface_area_;
 };
 
 }  // namespace iris::internal

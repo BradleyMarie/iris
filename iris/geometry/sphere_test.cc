@@ -187,7 +187,7 @@ TEST(Sphere, GetEmissiveMaterial) {
   EXPECT_EQ(back_emissive_material.Get(), back);
 }
 
-TEST(Sphere, SampleBySurfaceArea) {
+TEST(Sphere, SampleSurfaceArea) {
   auto sphere = SimpleSphere();
 
   iris::random::MockRandom rng0;
@@ -198,7 +198,7 @@ TEST(Sphere, SampleBySurfaceArea) {
   }
 
   iris::Sampler sampler0(rng0);
-  auto point0 = sphere->SampleBySurfaceArea(FRONT_FACE, sampler0);
+  auto point0 = sphere->SampleSurfaceArea(FRONT_FACE, sampler0);
   EXPECT_EQ(iris::Point(2.0, 0.0, 3.0), point0.value());
 
   iris::random::MockRandom rng1;
@@ -209,7 +209,7 @@ TEST(Sphere, SampleBySurfaceArea) {
   }
 
   iris::Sampler sampler1(rng1);
-  auto point1 = sphere->SampleBySurfaceArea(FRONT_FACE, sampler1);
+  auto point1 = sphere->SampleSurfaceArea(FRONT_FACE, sampler1);
   EXPECT_EQ(iris::Point(0.0, 0.0, 1.0), point1.value());
 
   iris::random::MockRandom rng2;
@@ -220,51 +220,22 @@ TEST(Sphere, SampleBySurfaceArea) {
   }
 
   iris::Sampler sampler2(rng2);
-  auto point2 = sphere->SampleBySurfaceArea(FRONT_FACE, sampler2);
+  auto point2 = sphere->SampleSurfaceArea(FRONT_FACE, sampler2);
   EXPECT_EQ(iris::Point(0.0, 0.0, 5.0), point2.value());
 }
 
-TEST(Sphere, SampleBySolidAngle) {
+TEST(Sphere, ComputePdfBySolidAngle) {
   auto sphere = SimpleSphere();
 
-  iris::random::MockRandom rng0;
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  iris::Sampler sampler0(rng0);
+  auto pdf0 = sphere->ComputePdfBySolidAngle(
+      iris::Point(0.0, 0.0, 3.0), BACK_FACE, iris::Point(0.0, 0.0, 1.0));
+  ASSERT_TRUE(pdf0);
+  EXPECT_NEAR(0.0795, *pdf0, 0.01);
 
-  EXPECT_FALSE(sphere->SampleBySolidAngle(iris::Point(0.0, 0.0, 3.0),
-                                          FRONT_FACE, sampler0));
-
-  iris::random::MockRandom rng1;
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  iris::Sampler sampler1(rng1);
-
-  EXPECT_FALSE(sphere->SampleBySolidAngle(iris::Point(0.0, 0.0, 0.0), BACK_FACE,
-                                          sampler1));
-
-  iris::random::MockRandom rng2;
-  EXPECT_CALL(rng2, NextGeometric()).WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler2(rng2);
-
-  auto sample2 = sphere->SampleBySolidAngle(iris::Point(0.0, 0.0, 3.0),
-                                            BACK_FACE, sampler2);
-  ASSERT_TRUE(sample2);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 1.0), sample2->point);
-  EXPECT_NEAR(0.0795, sample2->pdf, 0.01);
-
-  iris::random::MockRandom rng3;
-  EXPECT_CALL(rng3, NextGeometric()).WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler3(rng3);
-
-  auto sample3 = sphere->SampleBySolidAngle(iris::Point(0.0, 0.0, 0.0),
-                                            FRONT_FACE, sampler3);
-  ASSERT_TRUE(sample3);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 1.0), sample3->point);
-  EXPECT_NEAR(0.6250, sample3->pdf, 0.01);
-}
-
-TEST(Sphere, ComputeArea) {
-  auto sphere = SimpleSphere();
-  EXPECT_NEAR(50.2654825, sphere->ComputeArea(FRONT_FACE).value(), 0.001);
+  auto pdf1 = sphere->ComputePdfBySolidAngle(
+      iris::Point(0.0, 0.0, 0.0), FRONT_FACE, iris::Point(0.0, 0.0, 1.0));
+  ASSERT_TRUE(pdf1);
+  EXPECT_NEAR(0.6250, *pdf1, 0.01);
 }
 
 TEST(Sphere, GetBoundsWithTransform) {

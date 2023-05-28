@@ -15,8 +15,6 @@ iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
 iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
   static const std::vector<iris::face_t> faces = {1};
   auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*result, ComputeArea(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(*result, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(emissive));
   EXPECT_CALL(*result, GetFaces()).WillRepeatedly(testing::Return(faces));

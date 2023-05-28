@@ -43,12 +43,10 @@ class MockGeometry : public MockBasicGeometry {
   MOCK_METHOD(bool, IsEmissive, (face_t), (const override));
   MOCK_METHOD(const EmissiveMaterial*, GetEmissiveMaterial,
               (face_t, const void*), (const override));
-  MOCK_METHOD(std::optional<Point>, SampleByArea, (face_t, Sampler&),
+  MOCK_METHOD(std::optional<Point>, SampleSurfaceArea, (face_t, Sampler&),
               (const override));
-  MOCK_METHOD(std::optional<Geometry::SampleBySolidAngleResult>,
-              SampleBySolidAngle, (const Point&, face_t, Sampler& sampler),
-              (const override));
-  MOCK_METHOD(std::optional<visual_t>, ComputeArea, (face_t), (const override));
+  MOCK_METHOD(std::optional<visual_t>, ComputePdfBySolidAngle,
+              (const Point&, face_t, const Point&), (const override));
 };
 
 }  // namespace geometry

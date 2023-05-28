@@ -51,8 +51,7 @@ TEST(VisibilityTesterTest, MissesGeometry) {
   iris::internal::VisibilityTester visibility_tester(*scene, 50.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1, 1.0,
-                                         nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1));
 }
 
 TEST(VisibilityTesterTest, WrongFace) {
@@ -77,8 +76,7 @@ TEST(VisibilityTesterTest, WrongFace) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 2, 1.0,
-                                         nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 2));
 }
 
 TEST(VisibilityTesterTest, SucceedsSecondHit) {
@@ -106,8 +104,7 @@ TEST(VisibilityTesterTest, SucceedsSecondHit) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1, 1.0,
-                                         nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1));
 }
 
 TEST(VisibilityTesterTest, SceneTraceMisses) {
@@ -129,8 +126,7 @@ TEST(VisibilityTesterTest, SceneTraceMisses) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1, 1.0,
-                                         nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1));
 }
 
 TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
@@ -170,8 +166,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1, 1.0,
-                                         nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1));
 }
 
 TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
@@ -205,8 +200,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
-                                         1.0, nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1));
 }
 
 TEST(VisibilityTesterTest, SceneTraceWrongFace) {
@@ -247,8 +241,8 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1u,
-                                         1.0, nullptr));
+  EXPECT_FALSE(
+      visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1u));
 }
 
 TEST(VisibilityTesterTest, NoEmissiveMaterial) {
@@ -297,8 +291,7 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
-                                         1.0, nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1));
 }
 
 TEST(VisibilityTesterTest, NoSpectrum) {
@@ -349,8 +342,117 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
-                                         1.0, nullptr));
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1));
+}
+
+TEST(VisibilityTesterTest, NoPdf) {
+  iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
+  iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
+
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
+  auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+
+  auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+  EXPECT_CALL(*geometry, IsEmissive(testing::_))
+      .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
+  EXPECT_CALL(*geometry, GetFaces())
+      .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
+  EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
+      .WillRepeatedly(testing::Invoke(
+          [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
+            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
+      .WillOnce(
+          testing::Invoke([&](iris::face_t face, const void* additional_data) {
+            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+            return emissive_material.get();
+          }));
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
+            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+            return std::nullopt;
+          }));
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
+                                                iris::Point(1.0, 0.0, 0.0)))
+      .WillOnce(testing::Return(std::nullopt));
+  auto geometry_ptr = geometry.Get();
+
+  auto builder = iris::SceneObjects::Builder();
+  builder.Add(std::move(geometry));
+
+  auto objects = builder.Build();
+  auto scene = iris::scenes::ListScene::Builder::Create()->Build(objects);
+
+  iris::internal::RayTracer ray_tracer;
+  iris::internal::Arena arena;
+  iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
+                                                     arena);
+
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1));
+}
+
+TEST(VisibilityTesterTest, NegativePdf) {
+  iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
+  iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
+
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
+  auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+
+  auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+  EXPECT_CALL(*geometry, IsEmissive(testing::_))
+      .WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
+                                                  iris::Point(0.0, 1.0, 2.0))));
+  EXPECT_CALL(*geometry, GetFaces())
+      .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
+  EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
+      .WillRepeatedly(testing::Invoke(
+          [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
+            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
+      .WillOnce(
+          testing::Invoke([&](iris::face_t face, const void* additional_data) {
+            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+            return emissive_material.get();
+          }));
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+                                        testing::IsFalse(), 1u, testing::_))
+      .WillOnce(testing::Invoke(
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
+            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+            return std::nullopt;
+          }));
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
+                                                iris::Point(1.0, 0.0, 0.0)))
+      .WillOnce(testing::Return(-1.0));
+  auto geometry_ptr = geometry.Get();
+
+  auto builder = iris::SceneObjects::Builder();
+  builder.Add(std::move(geometry));
+
+  auto objects = builder.Build();
+  auto scene = iris::scenes::ListScene::Builder::Create()->Build(objects);
+
+  iris::internal::RayTracer ray_tracer;
+  iris::internal::Arena arena;
+  iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
+                                                     arena);
+
+  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1));
 }
 
 TEST(VisibilityTesterTest, Succeeds) {
@@ -389,6 +491,9 @@ TEST(VisibilityTesterTest, Succeeds) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
+                                                iris::Point(1.0, 0.0, 0.0)))
+      .WillOnce(testing::Return(1.0));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -402,8 +507,7 @@ TEST(VisibilityTesterTest, Succeeds) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
-                                          1.0, nullptr);
+  auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1);
   ASSERT_TRUE(result);
   EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
@@ -445,14 +549,9 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
-  EXPECT_CALL(*geometry,
-              ComputeSurfaceNormal(iris::Point(1.0, 0.0, 0.0), 1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return iris::Vector(-1.0, 0.0, 0.0);
-          }));
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
+                                                iris::Point(1.0, 0.0, 0.0)))
+      .WillOnce(testing::Return(2.0));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -466,13 +565,11 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  iris::visual_t pdf;
-  auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
-                                          0.5, &pdf);
+  auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1);
   ASSERT_TRUE(result);
   EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
-  EXPECT_EQ(2.0, pdf);
+  EXPECT_EQ(2.0, result->pdf);
 }
 
 TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
@@ -512,14 +609,9 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
-  EXPECT_CALL(*geometry,
-              ComputeSurfaceNormal(iris::Point(0.5, 0.0, 0.0), 1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](const iris::Point& hit_point, iris::face_t face,
-                              const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return iris::Vector(-1.0, 0.0, 0.0);
-          }));
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
+                                                iris::Point(0.5, 0.0, 0.0)))
+      .WillOnce(testing::Return(2.0));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -534,13 +626,11 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  iris::visual_t pdf;
-  auto result =
-      visibility_tester.Visible(world_ray, *geometry_ptr, matrix, 1, 0.5, &pdf);
+  auto result = visibility_tester.Visible(world_ray, *geometry_ptr, matrix, 1);
   ASSERT_TRUE(result);
   EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
-  EXPECT_EQ(2.0, pdf);
+  EXPECT_EQ(2.0, result->pdf);
 }
 
 TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
@@ -579,6 +669,9 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::TextureCoordinates{{0.5, 0.5}};
           }));
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
+                                                iris::Point(1.0, 0.0, 0.0)))
+      .WillOnce(testing::Return(2.0));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -592,9 +685,9 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   iris::internal::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer,
                                                      arena);
 
-  auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1,
-                                          1.0, nullptr);
+  auto result = visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1);
   ASSERT_TRUE(result);
   EXPECT_EQ(spectrum.get(), &result->emission);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), result->hit_point);
+  EXPECT_EQ(2.0, result->pdf);
 }

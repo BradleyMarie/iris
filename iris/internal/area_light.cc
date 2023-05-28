@@ -6,35 +6,28 @@ namespace iris::internal {
 
 AreaLight::AreaLight(const Geometry& geometry, const Matrix* model_to_world,
                      face_t face) noexcept
-    : geometry_(geometry),
-      model_to_world_(model_to_world),
-      face_(face),
-      surface_area_(geometry.ComputeArea(face).value()) {}
+    : geometry_(geometry), model_to_world_(model_to_world), face_(face) {}
 
 std::optional<Light::SampleResult> AreaLight::Sample(
     const Point& hit_point, Sampler sampler, iris::VisibilityTester& tester,
     SpectralAllocator& allocator) const {
-  auto model_hit_point =
-      model_to_world_ ? model_to_world_->Multiply(hit_point) : hit_point;
-
-  auto sample = geometry_.SampleBySolidAngle(model_hit_point, face_, sampler);
-  if (!sample || sample->pdf <= 0.0) {
+  auto sample = geometry_.SampleSurfaceArea(face_, sampler);
+  if (!sample) {
     return std::nullopt;
   }
 
-  auto world_sample_point = model_to_world_
-                                ? model_to_world_->Multiply(sample->point)
-                                : sample->point;
+  auto world_sample_point =
+      model_to_world_ ? model_to_world_->Multiply(*sample) : *sample;
 
   auto to_light = Normalize(world_sample_point - hit_point);
 
-  auto* emission =
-      Emission(Ray(hit_point, to_light), tester, allocator, nullptr);
+  visual_t pdf;
+  auto* emission = Emission(Ray(hit_point, to_light), tester, allocator, &pdf);
   if (!emission) {
     return std::nullopt;
   }
 
-  return Light::SampleResult{*emission, to_light, sample->pdf};
+  return Light::SampleResult{*emission, to_light, pdf};
 }
 
 const Spectrum* AreaLight::Emission(const Ray& to_light,
@@ -44,11 +37,14 @@ const Spectrum* AreaLight::Emission(const Ray& to_light,
   internal::VisibilityTester& internal_tester =
       static_cast<internal::VisibilityTester&>(tester);
 
-  auto result = internal_tester.Visible(to_light, geometry_, model_to_world_,
-                                        face_, surface_area_, pdf);
-
+  auto result =
+      internal_tester.Visible(to_light, geometry_, model_to_world_, face_);
   if (!result) {
     return nullptr;
+  }
+
+  if (pdf) {
+    *pdf = result->pdf;
   }
 
   return &result->emission;

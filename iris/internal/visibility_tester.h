@@ -23,12 +23,12 @@ class VisibilityTester final : public iris::VisibilityTester {
   struct VisibleResult {
     const Spectrum& emission;
     Point hit_point;
+    visual_t pdf;
   };
 
   std::optional<VisibleResult> Visible(const Ray& ray, const Geometry& geometry,
                                        const Matrix* model_to_world,
-                                       face_t face, visual_t geometry_area,
-                                       visual_t* pdf);
+                                       face_t face);
 
  private:
   VisibilityTester(const VisibilityTester&) = delete;

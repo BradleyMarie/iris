@@ -435,21 +435,21 @@ TEST(Triangle, GetEmissiveMaterial) {
   EXPECT_EQ(back_emissive_material.Get(), back);
 }
 
-TEST(Triangle, SampleBySurfaceArea) {
+TEST(Triangle, SampleSurfaceArea) {
   auto triangle = SimpleTriangle();
 
   iris::random::MockRandom rng0;
   EXPECT_CALL(rng0, NextGeometric()).WillRepeatedly(testing::Return(0.0));
 
   iris::Sampler sampler0(rng0);
-  auto point0 = triangle->SampleBySurfaceArea(FRONT_FACE, sampler0);
+  auto point0 = triangle->SampleSurfaceArea(FRONT_FACE, sampler0);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), point0.value());
 
   iris::random::MockRandom rng1;
   EXPECT_CALL(rng1, NextGeometric()).WillRepeatedly(testing::Return(1.0));
 
   iris::Sampler sampler1(rng1);
-  auto point1 = triangle->SampleBySurfaceArea(FRONT_FACE, sampler1);
+  auto point1 = triangle->SampleSurfaceArea(FRONT_FACE, sampler1);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), point1.value());
 
   iris::random::MockRandom rng2;
@@ -460,7 +460,7 @@ TEST(Triangle, SampleBySurfaceArea) {
   }
 
   iris::Sampler sampler2(rng2);
-  auto point2 = triangle->SampleBySurfaceArea(FRONT_FACE, sampler2);
+  auto point2 = triangle->SampleSurfaceArea(FRONT_FACE, sampler2);
   EXPECT_EQ(iris::Point(1.0, 0.0, 0.0), point2.value());
 
   iris::random::MockRandom rng3;
@@ -471,49 +471,38 @@ TEST(Triangle, SampleBySurfaceArea) {
   }
 
   iris::Sampler sampler3(rng3);
-  auto point3 = triangle->SampleBySurfaceArea(FRONT_FACE, sampler3);
+  auto point3 = triangle->SampleSurfaceArea(FRONT_FACE, sampler3);
   EXPECT_EQ(iris::Point(0.0, 1.0, 0.0), point3.value());
 
   iris::random::MockRandom rng4;
   EXPECT_CALL(rng4, NextGeometric()).WillRepeatedly(testing::Return(0.25));
 
   iris::Sampler sampler4(rng4);
-  auto point4 = triangle->SampleBySurfaceArea(FRONT_FACE, sampler4);
+  auto point4 = triangle->SampleSurfaceArea(FRONT_FACE, sampler4);
   EXPECT_EQ(iris::Point(0.25, 0.25, 0.0), point4.value());
 
   iris::random::MockRandom rng5;
   EXPECT_CALL(rng5, NextGeometric()).WillRepeatedly(testing::Return(0.75));
 
   iris::Sampler sampler5(rng5);
-  auto point5 = triangle->SampleBySurfaceArea(FRONT_FACE, sampler5);
+  auto point5 = triangle->SampleSurfaceArea(FRONT_FACE, sampler5);
   EXPECT_EQ(iris::Point(0.25, 0.25, 0.0), point5.value());
 }
 
-TEST(Triangle, SampleBySolidAngle) {
+TEST(Triangle, ComputePdfBySolidAngle) {
   auto triangle = SimpleTriangle();
 
-  iris::random::MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillRepeatedly(testing::Return(0.0));
+  auto pdf0 = triangle->ComputePdfBySolidAngle(
+      iris::Point(0.0, 0.0, 1.0), FRONT_FACE, iris::Point(0.0, 0.0, 0.0));
+  EXPECT_NEAR(2.0, pdf0.value(), 0.001);
 
-  iris::Sampler sampler0(rng0);
-  auto sample0 = triangle->SampleBySolidAngle(iris::Point(0.0, 0.0, -1.0),
-                                              FRONT_FACE, sampler0);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), sample0->point);
-  EXPECT_NEAR(-2.0, sample0->pdf, 0.1);
+  auto pdf1 = triangle->ComputePdfBySolidAngle(
+      iris::Point(0.0, 0.0, 1.0), FRONT_FACE, iris::Point(1.0, 0.0, 0.0));
+  EXPECT_NEAR(5.6568541, pdf1.value(), 0.001);
 
-  iris::random::MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillRepeatedly(testing::Return(1.0));
-
-  iris::Sampler sampler1(rng1);
-  auto sample1 = triangle->SampleBySolidAngle(iris::Point(0.0, 0.0, -1.0),
-                                              BACK_FACE, sampler1);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), sample1->point);
-  EXPECT_NEAR(2.0, sample1->pdf, 0.1);
-}
-
-TEST(Triangle, ComputeArea) {
-  auto triangle = SimpleTriangle();
-  EXPECT_EQ(0.5, triangle->ComputeArea(FRONT_FACE));
+  auto pdf2 = triangle->ComputePdfBySolidAngle(
+      iris::Point(0.0, 0.0, 1.0), FRONT_FACE, iris::Point(0.25, 0.25, 0.0));
+  EXPECT_NEAR(2.3864853, pdf2.value(), 0.001);
 }
 
 TEST(Triangle, GetBoundsWithTransform) {

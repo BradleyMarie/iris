@@ -58,13 +58,11 @@ class Triangle final : public Geometry {
   virtual const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const override;
 
-  virtual std::optional<Point> SampleBySurfaceArea(
+  virtual std::optional<Point> SampleSurfaceArea(
       face_t face, Sampler& sampler) const override;
 
-  virtual std::optional<SampleBySolidAngleResult> SampleBySolidAngle(
-      const Point& point, face_t face, Sampler& sampler) const override;
-
-  virtual std::optional<visual_t> ComputeArea(face_t face) const override;
+  virtual std::optional<visual_t> ComputePdfBySolidAngle(
+      const Point& origin, face_t face, const Point& on_face) const override;
 
   virtual BoundingBox ComputeBounds(
       const Matrix& model_to_world) const override;
@@ -74,6 +72,8 @@ class Triangle final : public Geometry {
  private:
   virtual Hit* Trace(const Ray& ray,
                      HitAllocator& hit_allocator) const override;
+
+  visual_t ComputeArea(face_t face) const;
 
   Vector ComputeSurfaceNormal() const;
 
@@ -198,8 +198,8 @@ const EmissiveMaterial* Triangle::GetEmissiveMaterial(
   return shared_->emissive_materials[face].Get();
 }
 
-std::optional<Point> Triangle::SampleBySurfaceArea(face_t face,
-                                                   Sampler& sampler) const {
+std::optional<Point> Triangle::SampleSurfaceArea(face_t face,
+                                                 Sampler& sampler) const {
   geometric_t u = sampler.Next();
   geometric_t v = sampler.Next();
 
@@ -216,12 +216,10 @@ std::optional<Point> Triangle::SampleBySurfaceArea(face_t face,
   return shared_->points[std::get<0>(vertices_)] + v0_to_v1 * u + v0_to_v2 * v;
 }
 
-std::optional<Geometry::SampleBySolidAngleResult> Triangle::SampleBySolidAngle(
-    const Point& point, face_t face, Sampler& sampler) const {
-  auto sample = SampleBySurfaceArea(face, sampler);
-
+std::optional<visual_t> Triangle::ComputePdfBySolidAngle(
+    const Point& origin, face_t face, const Point& on_face) const {
   geometric_t distance_to_sample_squared;
-  Vector to_sample = Normalize(*sample - point, &distance_to_sample_squared);
+  Vector to_sample = Normalize(on_face - origin, &distance_to_sample_squared);
 
   geometric_t cos_theta =
       DotProduct(to_sample, Normalize(ComputeSurfaceNormal()));
@@ -229,12 +227,10 @@ std::optional<Geometry::SampleBySolidAngleResult> Triangle::SampleBySolidAngle(
     cos_theta = -cos_theta;
   }
 
-  visual_t pdf = distance_to_sample_squared / (cos_theta * *ComputeArea(face));
-
-  return Geometry::SampleBySolidAngleResult{*sample, pdf};
+  return distance_to_sample_squared / (cos_theta * ComputeArea(face));
 }
 
-std::optional<visual_t> Triangle::ComputeArea(face_t face) const {
+visual_t Triangle::ComputeArea(face_t face) const {
   Vector surface_normal = ComputeSurfaceNormal();
   return surface_normal.Length() * 0.5;
 }

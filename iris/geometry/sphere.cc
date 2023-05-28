@@ -49,13 +49,11 @@ class Sphere final : public Geometry {
   virtual const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const override;
 
-  virtual std::optional<Point> SampleBySurfaceArea(
+  virtual std::optional<Point> SampleSurfaceArea(
       face_t face, Sampler& sampler) const override;
 
-  virtual std::optional<visual_t> ComputeArea(face_t face) const override;
-
-  virtual std::optional<SampleBySolidAngleResult> SampleBySolidAngle(
-      const Point& point, face_t face, Sampler& sampler) const override;
+  virtual std::optional<visual_t> ComputePdfBySolidAngle(
+      const Point& origin, face_t face, const Point& on_face) const override;
 
   virtual BoundingBox ComputeBounds(
       const Matrix& model_to_world) const override;
@@ -106,8 +104,8 @@ const EmissiveMaterial* Sphere::GetEmissiveMaterial(
   return emissive_materials_[face].Get();
 }
 
-std::optional<Point> Sphere::SampleBySurfaceArea(face_t face,
-                                                 Sampler& sampler) const {
+std::optional<Point> Sphere::SampleSurfaceArea(face_t face,
+                                               Sampler& sampler) const {
   geometric_t z = std::lerp(-radius_, radius_, sampler.Next());
   geometric_t phi = std::lerp(-M_PI, M_PI, sampler.Next());
 
@@ -119,45 +117,28 @@ std::optional<Point> Sphere::SampleBySurfaceArea(face_t face,
   return center_ + iris::Vector(x, y, z);
 }
 
-std::optional<Geometry::SampleBySolidAngleResult> Sphere::SampleBySolidAngle(
-    const Point& point, face_t face, Sampler& sampler) const {
-  Vector to_center = center_ - point;
-  geometric_t distance_to_center_squared = DotProduct(to_center, to_center);
+std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
+    const Point& origin, face_t face, const Point& on_face) const {
+  if (face == kFrontFace) {
+    Vector to_center = center_ - origin;
+    geometric_t distance_to_center_squared = DotProduct(to_center, to_center);
 
-  bool inside_sphere = distance_to_center_squared < radius_squared_;
-  if ((inside_sphere && face == kFrontFace) ||
-      (!inside_sphere && face == kBackFace)) {
-    return std::nullopt;
-  }
-
-  auto sample_point = SampleBySurfaceArea(face, sampler);
-  Vector to_sample = *sample_point - point;
-
-  visual_t pdf;
-  if (face == kBackFace) {
-    geometric_t distance_to_sample_squared;
-    Vector normalized_to_sample =
-        Normalize(to_sample, &distance_to_sample_squared);
-    Vector surface_normal =
-        ComputeSurfaceNormal(*sample_point, kFrontFace, nullptr);
-    geometric_t cos_theta = DotProduct(surface_normal, normalized_to_sample);
-    pdf =
-        distance_to_sample_squared / (cos_theta * 4.0 * M_PI * radius_squared_);
-  } else {
     geometric_t sin_theta_squared =
         radius_squared_ / distance_to_center_squared;
     geometric_t cos_theta_squared =
         std::max(static_cast<geometric_t>(0.0),
                  static_cast<geometric_t>(1.0) - sin_theta_squared);
     geometric_t cos_theta = std::sqrt(cos_theta_squared);
-    pdf = 1.0 / (2.0 * M_PI * (1.0 - cos_theta));
+    return 1.0 / (2.0 * M_PI * (1.0 - cos_theta));
   }
 
-  return Geometry::SampleBySolidAngleResult{*sample_point, pdf};
-}
+  geometric_t distance_to_sample_squared;
+  Vector to_face = Normalize(on_face - origin, &distance_to_sample_squared);
+  Vector surface_normal = ComputeSurfaceNormal(on_face, kFrontFace, nullptr);
+  geometric_t cos_theta = DotProduct(surface_normal, to_face);
 
-std::optional<visual_t> Sphere::ComputeArea(face_t face) const {
-  return 4.0 * M_PI * radius_squared_;
+  return distance_to_sample_squared /
+         (cos_theta * 4.0 * M_PI * radius_squared_);
 }
 
 BoundingBox Sphere::ComputeBounds(const Matrix& model_to_world) const {
