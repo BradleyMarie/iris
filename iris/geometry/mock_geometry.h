@@ -36,7 +36,7 @@ class MockGeometry : public MockBasicGeometry {
               (const Point&, const std::optional<Differentials>&, face_t,
                const void*),
               (const override));
-  MOCK_METHOD((std::variant<Vector, const NormalMap*>), ComputeShadingNormal,
+  MOCK_METHOD((Geometry::ComputeShadingNormalResult), ComputeShadingNormal,
               (face_t, const void*), (const override));
   MOCK_METHOD(const Material*, GetMaterial, (face_t, const void*),
               (const override));

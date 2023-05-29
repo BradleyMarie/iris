@@ -55,9 +55,9 @@ TEST(GeometryTest, ComputeTextureCoordinates) {
 
 TEST(GeometryTest, ComputeShadingNormal) {
   iris::geometry::MockBasicGeometry geom;
-  auto normal = geom.ComputeShadingNormal(0, nullptr);
-  ASSERT_TRUE(std::holds_alternative<const iris::NormalMap*>(normal));
-  EXPECT_EQ(nullptr, std::get<const iris::NormalMap*>(normal));
+  auto shading_normal = geom.ComputeShadingNormal(0, nullptr);
+  EXPECT_FALSE(shading_normal.geometry);
+  EXPECT_EQ(nullptr, shading_normal.normal_map);
 }
 
 TEST(GeometryTest, GetMaterial) {

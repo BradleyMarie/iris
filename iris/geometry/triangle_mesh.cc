@@ -47,7 +47,7 @@ class Triangle final : public Geometry {
       const Point& hit_point, const std::optional<Differentials>& differentials,
       face_t face, const void* additional_data) const override;
 
-  virtual std::variant<Vector, const NormalMap*> ComputeShadingNormal(
+  virtual Geometry::ComputeShadingNormalResult ComputeShadingNormal(
       face_t face, const void* additional_data) const override;
 
   virtual const Material* GetMaterial(
@@ -76,6 +76,9 @@ class Triangle final : public Geometry {
   visual_t ComputeArea(face_t face) const;
 
   Vector ComputeSurfaceNormal() const;
+
+  std::optional<Vector> MaybeComputeShadingNormal(
+      face_t face, const void* additional_data) const;
 
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
@@ -160,14 +163,10 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
       {u, v}, {{uv_dx[0] - u, uv_dy[0] - u, uv_dx[1] - v, uv_dy[1] - v}}};
 }
 
-std::variant<Vector, const NormalMap*> Triangle::ComputeShadingNormal(
+std::optional<Vector> Triangle::MaybeComputeShadingNormal(
     face_t face, const void* additional_data) const {
-  if (shared_->normal_maps[face]) {
-    return shared_->normal_maps[face].Get();
-  }
-
   if (shared_->normals.empty()) {
-    return nullptr;
+    return std::nullopt;
   }
 
   const auto* barycentric = static_cast<const AdditionalData*>(additional_data);
@@ -182,6 +181,12 @@ std::variant<Vector, const NormalMap*> Triangle::ComputeShadingNormal(
   }
 
   return -normalized;
+}
+
+Geometry::ComputeShadingNormalResult Triangle::ComputeShadingNormal(
+    face_t face, const void* additional_data) const {
+  return {MaybeComputeShadingNormal(face, additional_data),
+          shared_->normal_maps[face].Get()};
 }
 
 const Material* Triangle::GetMaterial(face_t face,

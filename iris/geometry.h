@@ -37,7 +37,12 @@ class Geometry : public ReferenceCountable {
       const Point& hit_point, const std::optional<Differentials>& differentials,
       face_t face, const void* additional_data) const;
 
-  virtual std::variant<Vector, const NormalMap*> ComputeShadingNormal(
+  struct ComputeShadingNormalResult {
+    std::optional<Vector> geometry;
+    const NormalMap* normal_map;
+  };
+
+  virtual ComputeShadingNormalResult ComputeShadingNormal(
       face_t face, const void* additional_data) const;
 
   virtual const Material* GetMaterial(face_t face,

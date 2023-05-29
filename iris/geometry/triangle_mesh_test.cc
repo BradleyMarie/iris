@@ -341,23 +341,25 @@ TEST(Triangle, ComputeShadingNormalNone) {
 
   auto front_normal =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, nullptr);
-  EXPECT_EQ(nullptr, std::get<const iris::NormalMap*>(front_normal));
+  EXPECT_FALSE(front_normal.geometry);
+  EXPECT_EQ(nullptr, front_normal.normal_map);
 
   auto back_normal =
       triangles.front()->ComputeShadingNormal(BACK_FACE, nullptr);
-  EXPECT_EQ(nullptr, std::get<const iris::NormalMap*>(back_normal));
+  EXPECT_FALSE(back_normal.geometry);
+  EXPECT_EQ(nullptr, back_normal.normal_map);
 }
 
 TEST(Triangle, ComputeShadingNormalFromMap) {
   auto triangle = SimpleTriangle();
 
   auto front_normal = triangle->ComputeShadingNormal(FRONT_FACE, nullptr);
-  EXPECT_EQ(front_normal_map.Get(),
-            std::get<const iris::NormalMap*>(front_normal));
+  EXPECT_FALSE(front_normal.geometry);
+  EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 
   auto back_normal = triangle->ComputeShadingNormal(BACK_FACE, nullptr);
-  EXPECT_EQ(back_normal_map.Get(),
-            std::get<const iris::NormalMap*>(back_normal));
+  EXPECT_FALSE(back_normal.geometry);
+  EXPECT_EQ(back_normal_map.Get(), back_normal.normal_map);
 }
 
 TEST(Triangle, ComputeShadingNormalFromNormals) {
@@ -375,29 +377,35 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
   AdditionalData additional_data0({1.0, 0.0, 0.0});
   auto front_normal0 =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data0);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), std::get<iris::Vector>(front_normal0));
+  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), front_normal0.geometry);
+  EXPECT_EQ(nullptr, front_normal0.normal_map);
 
   auto back_normal0 =
       triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data0);
-  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0), std::get<iris::Vector>(back_normal0));
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0), back_normal0.geometry);
+  EXPECT_EQ(nullptr, back_normal0.normal_map);
 
   AdditionalData additional_data1({0.0, 1.0, 0.0});
   auto front_normal1 =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data1);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), std::get<iris::Vector>(front_normal1));
+  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), front_normal1.geometry);
+  EXPECT_EQ(nullptr, front_normal1.normal_map);
 
   auto back_normal1 =
       triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data1);
-  EXPECT_EQ(iris::Vector(0.0, -1.0, 0.0), std::get<iris::Vector>(back_normal1));
+  EXPECT_EQ(iris::Vector(0.0, -1.0, 0.0), back_normal1.geometry);
+  EXPECT_EQ(nullptr, back_normal1.normal_map);
 
   AdditionalData additional_data2({0.0, 0.0, 1.0});
   auto front_normal2 =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data2);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), std::get<iris::Vector>(front_normal2));
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), front_normal2.geometry);
+  EXPECT_EQ(nullptr, front_normal2.normal_map);
 
   auto back_normal2 =
       triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data2);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), std::get<iris::Vector>(back_normal2));
+  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), back_normal2.geometry);
+  EXPECT_EQ(nullptr, back_normal2.normal_map);
 }
 
 TEST(Triangle, GetMaterial) {

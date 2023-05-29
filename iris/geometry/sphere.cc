@@ -39,7 +39,7 @@ class Sphere final : public Geometry {
       const Point& hit_point, const std::optional<Differentials>& differentials,
       face_t face, const void* additional_data) const override;
 
-  virtual std::variant<Vector, const NormalMap*> ComputeShadingNormal(
+  virtual Geometry::ComputeShadingNormalResult ComputeShadingNormal(
       face_t face, const void* additional_data) const override;
 
   virtual const Material* GetMaterial(
@@ -86,9 +86,9 @@ std::optional<TextureCoordinates> Sphere::ComputeTextureCoordinates(
   return std::nullopt;
 }
 
-std::variant<Vector, const NormalMap*> Sphere::ComputeShadingNormal(
+Geometry::ComputeShadingNormalResult Sphere::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
-  return normal_maps_[face].Get();
+  return {std::nullopt, normal_maps_[face].Get()};
 }
 
 const Material* Sphere::GetMaterial(face_t face,

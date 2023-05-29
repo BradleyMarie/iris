@@ -149,12 +149,12 @@ TEST(Sphere, ComputeShadingNormal) {
   auto sphere = SimpleSphere();
 
   auto front_normal = sphere->ComputeShadingNormal(FRONT_FACE, nullptr);
-  EXPECT_EQ(front_normal_map.Get(),
-            std::get<const iris::NormalMap*>(front_normal));
+  EXPECT_FALSE(front_normal.geometry);
+  EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 
   auto back_normal = sphere->ComputeShadingNormal(BACK_FACE, nullptr);
-  EXPECT_EQ(back_normal_map.Get(),
-            std::get<const iris::NormalMap*>(back_normal));
+  EXPECT_FALSE(back_normal.geometry);
+  EXPECT_EQ(back_normal_map.Get(), back_normal.normal_map);
 }
 
 TEST(Sphere, GetMaterial) {
