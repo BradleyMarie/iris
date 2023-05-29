@@ -1,6 +1,7 @@
 #include "iris/geometry/sphere.h"
 
 #define _USE_MATH_CONSTANTS
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
@@ -49,8 +50,8 @@ class Sphere final : public Geometry {
   virtual const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const override;
 
-  virtual std::optional<Point> SampleSurfaceArea(
-      face_t face, Sampler& sampler) const override;
+  virtual std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
+      const Point& origin, face_t face, Sampler& sampler) const override;
 
   virtual std::optional<visual_t> ComputePdfBySolidAngle(
       const Point& origin, face_t face, const Point& on_face) const override;
@@ -104,8 +105,41 @@ const EmissiveMaterial* Sphere::GetEmissiveMaterial(
   return emissive_materials_[face].Get();
 }
 
-std::optional<Point> Sphere::SampleSurfaceArea(face_t face,
-                                               Sampler& sampler) const {
+std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
+    const Point& origin, face_t face, Sampler& sampler) const {
+  Vector to_center = center_ - origin;
+  geometric_t distance_to_center_squared = DotProduct(to_center, to_center);
+
+  if (face == kFrontFace) {
+    if (distance_to_center_squared < radius_squared_) {
+      return std::variant<std::monostate, Point, Vector>();
+    }
+
+    geometric_t distance_to_center;
+    Vector vz = Normalize(to_center, nullptr, &distance_to_center);
+    auto [vx, vy] = CoordinateSystem(vz);
+
+    geometric_t sin_theta =
+        std::min(static_cast<geometric_t>(1.0), radius_ / distance_to_center);
+    geometric_t cos_theta =
+        std::sqrt(static_cast<geometric_t>(1.0) - sin_theta * sin_theta);
+
+    geometric_t sampled_cos_theta =
+        std::lerp(cos_theta, static_cast<geometric_t>(1.0), sampler.Next());
+    geometric_t sampled_sin_theta = std::sqrt(
+        static_cast<geometric_t>(1.0) - sampled_cos_theta * sampled_cos_theta);
+
+    geometric_t sampled_phi = std::lerp(-M_PI, M_PI, sampler.Next());
+
+    return sampled_sin_theta *
+               (std::cos(sampled_phi) * vx + std::sin(sampled_phi) * vy) +
+           sampled_cos_theta * vz;
+  }
+
+  if (distance_to_center_squared >= radius_squared_) {
+    return std::variant<std::monostate, Point, Vector>();
+  }
+
   geometric_t z = std::lerp(-radius_, radius_, sampler.Next());
   geometric_t phi = std::lerp(-M_PI, M_PI, sampler.Next());
 

@@ -3,6 +3,23 @@
 #include "iris/internal/visibility_tester.h"
 
 namespace iris::internal {
+namespace {
+
+std::optional<Vector> ToLight(
+    const Point& model_origin,
+    const std::variant<std::monostate, Point, Vector>& sample) {
+  if (const auto* to_geometry = std::get_if<Vector>(&sample)) {
+    return *to_geometry;
+  }
+
+  if (const auto* on_geometry = std::get_if<Point>(&sample)) {
+    return *on_geometry - model_origin;
+  }
+
+  return std::nullopt;
+}
+
+}  // namespace
 
 AreaLight::AreaLight(const Geometry& geometry, const Matrix* model_to_world,
                      face_t face) noexcept
@@ -11,15 +28,18 @@ AreaLight::AreaLight(const Geometry& geometry, const Matrix* model_to_world,
 std::optional<Light::SampleResult> AreaLight::Sample(
     const Point& hit_point, Sampler sampler, iris::VisibilityTester& tester,
     SpectralAllocator& allocator) const {
-  auto sample = geometry_.SampleSurfaceArea(face_, sampler);
-  if (!sample) {
+  Point model_origin =
+      model_to_world_ ? model_to_world_->InverseMultiply(hit_point) : hit_point;
+
+  auto model_to_light = ToLight(
+      model_origin, geometry_.SampleBySolidAngle(model_origin, face_, sampler));
+  if (!model_to_light) {
     return std::nullopt;
   }
 
-  auto world_sample_point =
-      model_to_world_ ? model_to_world_->Multiply(*sample) : *sample;
-
-  auto to_light = Normalize(world_sample_point - hit_point);
+  auto to_light =
+      Normalize(model_to_world_ ? model_to_world_->Multiply(*model_to_light)
+                                : *model_to_light);
 
   visual_t pdf;
   auto* emission = Emission(Ray(hit_point, to_light), tester, allocator, &pdf);

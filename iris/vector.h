@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <type_traits>
+#include <utility>
 
 #include "iris/float.h"
 
@@ -122,6 +123,28 @@ static inline Vector Normalize(const Vector& vector,
   }
 
   return vector / old_length;
+}
+
+static inline std::pair<Vector, Vector> CoordinateSystem(const Vector& vector) {
+  assert(std::abs(DotProduct(vector, vector) - 1.0) < 0.01);
+
+  geometric nx, ny, nz;
+  if (std::abs(vector.x) > std::abs(vector.y)) {
+    geometric_t length = std::sqrt(vector.x * vector.x + vector.z * vector.z);
+    nx = -vector.z / length;
+    ny = 0.0;
+    nz = vector.x / length;
+  } else {
+    geometric_t length = std::sqrt(vector.y * vector.y + vector.z * vector.z);
+    nx = 0.0;
+    ny = vector.z / length;
+    nz = -vector.y / length;
+  }
+
+  Vector v1(nx, ny, nz);
+  Vector v2 = CrossProduct(vector, v1);
+
+  return {v1, v2};
 }
 
 inline Vector::Axis Vector::DiminishedAxis() const {

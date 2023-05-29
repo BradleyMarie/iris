@@ -5,16 +5,6 @@
 namespace iris {
 namespace {
 
-std::pair<Vector, Vector> CreateLocalCoordinateSpace(
-    const Vector& surface_normal) {
-  geometric values[] = {0.0, 0.0, 0.0};
-  values[surface_normal.DiminishedAxis()] = 1.0;
-  Vector orthogonal0 =
-      CrossProduct(surface_normal, Vector(values[0], values[1], values[2]));
-  Vector orthogonal1 = CrossProduct(orthogonal0, surface_normal);
-  return std::make_pair(Normalize(orthogonal1), Normalize(orthogonal0));
-}
-
 std::pair<Vector, Vector> Normalize(const std::pair<Vector, Vector>& vectors) {
   return std::make_pair(Normalize(vectors.first), Normalize(vectors.second));
 }
@@ -34,7 +24,7 @@ std::array<Vector, 4> ComputeState(const Vector& surface_normal,
                                    const Vector& shading_normal,
                                    bool normalize) {
   auto vectors = MaybeNormalize(surface_normal, shading_normal, normalize);
-  auto coordinate_space = CreateLocalCoordinateSpace(vectors.second);
+  auto coordinate_space = CoordinateSystem(vectors.second);
   return {coordinate_space.first, coordinate_space.second, vectors.second,
           vectors.first};
 }

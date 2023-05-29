@@ -58,8 +58,8 @@ class Triangle final : public Geometry {
   virtual const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const override;
 
-  virtual std::optional<Point> SampleSurfaceArea(
-      face_t face, Sampler& sampler) const override;
+  virtual std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
+      const Point& origin, face_t face, Sampler& sampler) const override;
 
   virtual std::optional<visual_t> ComputePdfBySolidAngle(
       const Point& origin, face_t face, const Point& on_face) const override;
@@ -198,8 +198,8 @@ const EmissiveMaterial* Triangle::GetEmissiveMaterial(
   return shared_->emissive_materials[face].Get();
 }
 
-std::optional<Point> Triangle::SampleSurfaceArea(face_t face,
-                                                 Sampler& sampler) const {
+std::variant<std::monostate, Point, Vector> Triangle::SampleBySolidAngle(
+    const Point& origin, face_t face, Sampler& sampler) const {
   geometric_t u = sampler.Next();
   geometric_t v = sampler.Next();
 

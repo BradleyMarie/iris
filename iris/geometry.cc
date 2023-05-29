@@ -40,9 +40,9 @@ const EmissiveMaterial* Geometry::GetEmissiveMaterial(
 
 bool Geometry::IsEmissive(face_t face) const { return false; }
 
-std::optional<Point> Geometry::SampleSurfaceArea(face_t face,
-                                                 Sampler& sampler) const {
-  return std::nullopt;
+std::variant<std::monostate, Point, Vector> Geometry::SampleBySolidAngle(
+    const Point& origin, face_t face, Sampler& sampler) const {
+  return std::variant<std::monostate, Point, Vector>();
 }
 
 std::optional<visual_t> Geometry::ComputePdfBySolidAngle(

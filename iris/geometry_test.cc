@@ -75,12 +75,13 @@ TEST(GeometryTest, GetEmissiveMaterial) {
   EXPECT_EQ(nullptr, geom.GetEmissiveMaterial(0, nullptr));
 }
 
-TEST(GeometryTest, SampleSurfaceArea) {
+TEST(GeometryTest, SampleBySolidAngle) {
   iris::geometry::MockBasicGeometry geom;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   iris::Sampler sampler(rng);
-  EXPECT_FALSE(geom.SampleSurfaceArea(0, sampler));
+  EXPECT_TRUE(std::holds_alternative<std::monostate>(
+      geom.SampleBySolidAngle(iris::Point(0.0, 0.0, 0.0), 0, sampler)));
 }
 
 TEST(GeometryTest, ComputePdfBySolidAngle) {

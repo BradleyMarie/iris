@@ -68,8 +68,10 @@ TEST(AreaLightTest, AreaLightSampleRngFails) {
   iris::emissive_materials::MockEmissiveMaterial emissive_material;
 
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleSurfaceArea(testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
+  EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 0.0),
+                                            testing::_, testing::_))
+      .WillRepeatedly(testing::Return(
+          std::variant<std::monostate, iris::Point, iris::Vector>()));
   iris::internal::AreaLight light(*geometry, nullptr, 1);
 
   iris::random::MockRandom random;
@@ -88,7 +90,8 @@ TEST(AreaLightTest, AreaLightSampleNotVisible) {
   iris::emissive_materials::MockEmissiveMaterial emissive_material;
 
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleSurfaceArea(testing::_, testing::_))
+  EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 0.0),
+                                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, 1.0)));
   iris::internal::AreaLight light(*geometry, nullptr, 1);
 
@@ -108,7 +111,8 @@ TEST(AreaLightTest, AreaLightSampleWorld) {
       .WillOnce(testing::Return(&spectrum));
 
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleSurfaceArea(testing::_, testing::_))
+  EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 2.0),
+                                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, 1.0)));
   EXPECT_CALL(*geometry,
               ComputePdfBySolidAngle(testing::_, testing::_, testing::_))
@@ -139,7 +143,8 @@ TEST(AreaLightTest, AreaLightSampleWithTransform) {
 
   auto transform = iris::Matrix::Scalar(1.0, 1.0, -1.0).value();
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry, SampleSurfaceArea(testing::_, testing::_))
+  EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 2.0),
+                                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, -1.0)));
   EXPECT_CALL(*geometry,
               ComputePdfBySolidAngle(testing::_, testing::_, testing::_))
@@ -158,5 +163,36 @@ TEST(AreaLightTest, AreaLightSampleWithTransform) {
         EXPECT_EQ(&spectrum, &result->emission);
         EXPECT_EQ(1.0, result->pdf);
         EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result->to_light);
+      });
+}
+
+TEST(AreaLightTest, AreaLightSampleVector) {
+  iris::spectra::MockSpectrum spectrum;
+  iris::emissive_materials::MockEmissiveMaterial emissive_material;
+
+  EXPECT_CALL(emissive_material, Evaluate(testing::_, testing::_))
+      .WillOnce(testing::Return(&spectrum));
+
+  auto geometry = MakeGeometry(&emissive_material);
+  EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 2.0),
+                                            testing::_, testing::_))
+      .WillRepeatedly(testing::Return(iris::Vector(0.0, 0.0, -1.0)));
+  EXPECT_CALL(*geometry,
+              ComputePdfBySolidAngle(testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  iris::internal::AreaLight light(*geometry, nullptr, 1);
+
+  iris::random::MockRandom random;
+  EXPECT_CALL(random, DiscardGeometric(2));
+
+  iris::testing::ScopedSingleGeometryVisibilityTester(
+      *geometry, nullptr, [&](auto& visibility_tester) {
+        auto result = light.Sample(iris::Point(0.0, 0.0, 2.0),
+                                   iris::Sampler(random), visibility_tester,
+                                   iris::testing::GetSpectralAllocator());
+        EXPECT_TRUE(result);
+        EXPECT_EQ(&spectrum, &result->emission);
+        EXPECT_EQ(1.0, result->pdf);
+        EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->to_light);
       });
 }

@@ -96,6 +96,20 @@ TEST(VectorTest, Normalize) {
   EXPECT_EQ(2.0, length);
 }
 
+TEST(VectorTest, CoordinateSystem) {
+  auto sys0 = iris::CoordinateSystem(iris::Vector(1.0, 0.0, 0.0));
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), sys0.first);
+  EXPECT_EQ(iris::Vector(0.0, -1.0, 0.0), sys0.second);
+
+  auto sys1 = iris::CoordinateSystem(iris::Vector(0.0, 1.0, 0.0));
+  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), sys1.first);
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0), sys1.second);
+
+  auto sys2 = iris::CoordinateSystem(iris::Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), sys2.first);
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0), sys2.second);
+}
+
 TEST(VectorTest, DiminishedAxis) {
   EXPECT_EQ(iris::Vector::X_AXIS,
             iris::Vector(1.0, -2.0, 3.0).DiminishedAxis());
