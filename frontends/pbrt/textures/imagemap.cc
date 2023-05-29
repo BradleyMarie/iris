@@ -27,6 +27,16 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"vscale", Parameter::FLOAT},       {"wrap", Parameter::STRING},
 };
 
+visual_t InverseGamma(visual_t value) {
+  if (value <= static_cast<visual_t>(0.04045)) {
+    return value / static_cast<visual_t>(12.92);
+  }
+
+  return std::pow(
+      (value + static_cast<visual_t>(0.055)) / static_cast<visual_t>(1.055),
+      static_cast<visual_t>(2.4));
+}
+
 enum class ImageWrapping {
   BLACK,
   CLAMP,
@@ -169,6 +179,8 @@ class ImageFloatTextureBuilder final
              const std::string& name) const override {
     Parameters parsed_params = ParseParameters(parameters);
 
+    stbi_ldr_to_hdr_gamma(1.0);
+
     int nx, ny;
     float* values = stbi_loadf(parsed_params.filename, &nx, &ny, nullptr,
                                /*desired_channels=*/1);
@@ -181,8 +193,8 @@ class ImageFloatTextureBuilder final
     std::vector<visual> scaled_values;
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
-        scaled_values.push_back(values[(ny - y - 1) * nx + x] *
-                                parsed_params.scale);
+        visual_t value = InverseGamma(values[(ny - y - 1) * nx + x]);
+        scaled_values.push_back(value * parsed_params.scale);
       }
     }
 
@@ -238,6 +250,8 @@ class ImageSpectrumTextureBuilder final
       exit(EXIT_FAILURE);
     }
 
+    stbi_ldr_to_hdr_gamma(1.0);
+
     int nx, ny, channels;
     float* values = stbi_loadf(parsed_params.filename, &nx, &ny, &channels,
                                /*desired_channels=*/3);
@@ -250,12 +264,12 @@ class ImageSpectrumTextureBuilder final
     std::vector<ReferenceCounted<Reflector>> scaled_reflectors;
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
-        visual_t r =
-            values[3 * ((ny - y - 1) * nx + x) + 0] * parsed_params.scale;
-        visual_t g =
-            values[3 * ((ny - y - 1) * nx + x) + 1] * parsed_params.scale;
-        visual_t b =
-            values[3 * ((ny - y - 1) * nx + x) + 2] * parsed_params.scale;
+        visual_t r = InverseGamma(values[3 * ((ny - y - 1) * nx + x) + 0]) *
+                     parsed_params.scale;
+        visual_t g = InverseGamma(values[3 * ((ny - y - 1) * nx + x) + 1]) *
+                     parsed_params.scale;
+        visual_t b = InverseGamma(values[3 * ((ny - y - 1) * nx + x) + 2]) *
+                     parsed_params.scale;
         if (r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0) {
           std::cerr << "ERROR: Image file contained an out of range value"
                     << stbi_failure_reason() << std::endl;
