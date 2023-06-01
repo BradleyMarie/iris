@@ -140,6 +140,9 @@ TEST(BorderedImageTexture2D, Test) {
   EXPECT_EQ(reflectors[0],
             texture.Evaluate(iris::TextureCoordinates{{0.25, 0.25}}));
   EXPECT_EQ(0.0, texture.Evaluate(iris::TextureCoordinates{{-0.25, 0.25}}));
+  EXPECT_EQ(0.25, texture.Evaluate(iris::TextureCoordinates{{0.0, 0.0}}));
+  EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{0.5, 0.5}}));
+  EXPECT_EQ(1.0, texture.Evaluate(iris::TextureCoordinates{{1.0, 1.0}}));
 }
 
 TEST(ClampedImageTexture2D, Test) {
@@ -155,6 +158,9 @@ TEST(ClampedImageTexture2D, Test) {
       image, std::nullopt, std::nullopt, std::nullopt, std::nullopt);
   EXPECT_EQ(reflectors[3],
             texture.Evaluate(iris::TextureCoordinates{{1.25, 1.25}}));
+  EXPECT_EQ(1.0, texture.Evaluate(iris::TextureCoordinates{{0.0, 0.0}}));
+  EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{0.5, 0.5}}));
+  EXPECT_EQ(4.0, texture.Evaluate(iris::TextureCoordinates{{1.0, 1.0}}));
 }
 
 TEST(RepeatedImageTexture2D, Test) {
@@ -170,4 +176,7 @@ TEST(RepeatedImageTexture2D, Test) {
       image, std::nullopt, std::nullopt, std::nullopt, std::nullopt);
   EXPECT_EQ(reflectors[0],
             texture.Evaluate(iris::TextureCoordinates{{1.25, 1.25}}));
+  EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{0.0, 0.0}}));
+  EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{0.5, 0.5}}));
+  EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{1.0, 1.0}}));
 }

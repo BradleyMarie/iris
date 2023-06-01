@@ -18,7 +18,12 @@ template <typename T>
 class Image2D final {
  public:
   Image2D(std::vector<T> image, std::pair<size_t, size_t> size)
-      : image_(std::move(image)), size_(size) {
+      : image_(std::move(image)),
+        size_(size),
+        texel_size_(static_cast<geometric_t>(1.0) /
+                        static_cast<geometric_t>(size.first),
+                    static_cast<geometric_t>(1.0) /
+                        static_cast<geometric_t>(size.second)) {
     assert(!image_.empty());
     assert(size_.first != 0);
     assert(size_.second != 0);
@@ -50,24 +55,47 @@ class Image2D final {
   }
 
   const T& GetRepeated(geometric_t u, geometric_t v) {
-    u = std::fmod(std::floor(u) + u, static_cast<geometric_t>(1.0));
-    if (u < 0.0) {
-      u += 1.0;
-    }
-
-    v = std::fmod(std::floor(v) + v, static_cast<geometric_t>(1.0));
-    if (v < 0.0) {
-      v += 1.0;
-    }
-
+    u = u - std::floor(u);
+    v = v - std::floor(v);
     return Get(v * size_.first, u * size_.second);
   }
 
-  std::pair<size_t, size_t> Size() const { return size_; }
+  const std::pair<size_t, size_t>& Size() const { return size_; }
+
+  struct SampleCoordinates {
+    geometric_t low_coordinates[2][2];
+    geometric_t high_coordinates[2][2];
+    geometric_t left_right_interpolation;
+    geometric_t low_high_interpolation;
+  };
+
+  SampleCoordinates ComputeSampleCoordinates(geometric_t u, geometric_t v) {
+    geometric_t base_u = u - texel_size_.second * 0.5;
+    geometric_t base_v = v - texel_size_.first * 0.5;
+
+    SampleCoordinates coords;
+    coords.low_coordinates[0][0] = base_u;
+    coords.low_coordinates[0][1] = base_v;
+    coords.low_coordinates[1][0] = base_u + texel_size_.second;
+    coords.low_coordinates[1][1] = base_v;
+    coords.high_coordinates[0][0] = base_u;
+    coords.high_coordinates[0][1] = base_v + texel_size_.first;
+    coords.high_coordinates[1][0] = base_u + texel_size_.second;
+    coords.high_coordinates[1][1] = base_v + texel_size_.first;
+    coords.left_right_interpolation = std::fmod(
+        (u - std ::floor(u)) * static_cast<geometric_t>(size_.second) + 0.5,
+        1.0);
+    coords.low_high_interpolation = std::fmod(
+        (v - std ::floor(v)) * static_cast<geometric_t>(size_.first) + 0.5,
+        1.0);
+
+    return coords;
+  }
 
  private:
   const std::vector<T> image_;
   const std::pair<size_t, size_t> size_;
+  const std::pair<geometric_t, geometric_t> texel_size_;
 };
 
 template <typename Return, typename... Args>
@@ -154,7 +182,22 @@ class BorderedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    return image_->GetBordered(coordinates.uv[0], coordinates.uv[1], border_);
+    auto coords =
+        image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
+
+    const auto& bottom_left = image_->GetBordered(
+        coords.low_coordinates[0][0], coords.low_coordinates[0][1], border_);
+    const auto& bottom_right = image_->GetBordered(
+        coords.low_coordinates[1][0], coords.low_coordinates[1][1], border_);
+    const auto& top_left = image_->GetBordered(
+        coords.high_coordinates[0][0], coords.high_coordinates[0][1], border_);
+    const auto& top_right = image_->GetBordered(
+        coords.high_coordinates[1][0], coords.high_coordinates[1][1], border_);
+
+    auto bottom =
+        std::lerp(bottom_left, bottom_right, coords.left_right_interpolation);
+    auto top = std::lerp(top_left, top_right, coords.left_right_interpolation);
+    return std::lerp(bottom, top, coords.low_high_interpolation);
   }
 
  private:
@@ -175,7 +218,22 @@ class ClampedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    return image_->GetClamped(coordinates.uv[0], coordinates.uv[1]);
+    auto coords =
+        image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
+
+    const auto& bottom_left = image_->GetClamped(coords.low_coordinates[0][0],
+                                                 coords.low_coordinates[0][1]);
+    const auto& bottom_right = image_->GetClamped(coords.low_coordinates[1][0],
+                                                  coords.low_coordinates[1][1]);
+    const auto& top_left = image_->GetClamped(coords.high_coordinates[0][0],
+                                              coords.high_coordinates[0][1]);
+    const auto& top_right = image_->GetClamped(coords.high_coordinates[1][0],
+                                               coords.high_coordinates[1][1]);
+
+    auto bottom =
+        std::lerp(bottom_left, bottom_right, coords.left_right_interpolation);
+    auto top = std::lerp(top_left, top_right, coords.left_right_interpolation);
+    return std::lerp(bottom, top, coords.low_high_interpolation);
   }
 
  private:
@@ -195,7 +253,22 @@ class RepeatedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    return image_->GetRepeated(coordinates.uv[0], coordinates.uv[1]);
+    auto coords =
+        image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
+
+    const auto& bottom_left = image_->GetRepeated(coords.low_coordinates[0][0],
+                                                  coords.low_coordinates[0][1]);
+    const auto& bottom_right = image_->GetRepeated(
+        coords.low_coordinates[1][0], coords.low_coordinates[1][1]);
+    const auto& top_left = image_->GetRepeated(coords.high_coordinates[0][0],
+                                               coords.high_coordinates[0][1]);
+    const auto& top_right = image_->GetRepeated(coords.high_coordinates[1][0],
+                                                coords.high_coordinates[1][1]);
+
+    auto bottom =
+        std::lerp(bottom_left, bottom_right, coords.left_right_interpolation);
+    auto top = std::lerp(top_left, top_right, coords.left_right_interpolation);
+    return std::lerp(bottom, top, coords.low_high_interpolation);
   }
 
  private:
