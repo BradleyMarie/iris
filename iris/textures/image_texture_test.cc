@@ -64,6 +64,95 @@ TEST(Image2D, GetRepeated) {
   EXPECT_EQ(3.0, image.GetRepeated(0.25, 1.75));
 }
 
+TEST(Image2D, ComputeSampleCoordinates) {
+  std::vector<float> values = {1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 2.0, 2.0};
+  iris::textures::Image2D<float> image(values, {2, 4});
+
+  auto result0 = image.ComputeSampleCoordinates(0.0, 0.0);
+  EXPECT_EQ(result0.low_coordinates[0][0], -0.125);
+  EXPECT_EQ(result0.low_coordinates[0][1], -0.25);
+  EXPECT_EQ(result0.low_coordinates[1][0], 0.125);
+  EXPECT_EQ(result0.low_coordinates[1][1], -0.25);
+  EXPECT_EQ(result0.high_coordinates[0][0], -0.125);
+  EXPECT_EQ(result0.high_coordinates[0][1], 0.25);
+  EXPECT_EQ(result0.high_coordinates[1][0], 0.125);
+  EXPECT_EQ(result0.high_coordinates[1][1], 0.25);
+  EXPECT_EQ(result0.left_right_interpolation, 0.5);
+  EXPECT_EQ(result0.low_high_interpolation, 0.5);
+
+  auto result1 = image.ComputeSampleCoordinates(0.5, 0.5);
+  EXPECT_EQ(result1.low_coordinates[0][0], 0.375);
+  EXPECT_EQ(result1.low_coordinates[0][1], 0.25);
+  EXPECT_EQ(result1.low_coordinates[1][0], 0.625);
+  EXPECT_EQ(result1.low_coordinates[1][1], 0.25);
+  EXPECT_EQ(result1.high_coordinates[0][0], 0.375);
+  EXPECT_EQ(result1.high_coordinates[0][1], 0.75);
+  EXPECT_EQ(result1.high_coordinates[1][0], 0.625);
+  EXPECT_EQ(result1.high_coordinates[1][1], 0.75);
+  EXPECT_EQ(result1.left_right_interpolation, 0.5);
+  EXPECT_EQ(result1.low_high_interpolation, 0.5);
+
+  auto result2 = image.ComputeSampleCoordinates(1.5, 0.5);
+  EXPECT_EQ(result2.low_coordinates[0][0], 1.375);
+  EXPECT_EQ(result2.low_coordinates[0][1], 0.25);
+  EXPECT_EQ(result2.low_coordinates[1][0], 1.625);
+  EXPECT_EQ(result2.low_coordinates[1][1], 0.25);
+  EXPECT_EQ(result2.high_coordinates[0][0], 1.375);
+  EXPECT_EQ(result2.high_coordinates[0][1], 0.75);
+  EXPECT_EQ(result2.high_coordinates[1][0], 1.625);
+  EXPECT_EQ(result2.high_coordinates[1][1], 0.75);
+  EXPECT_EQ(result2.left_right_interpolation, 0.5);
+  EXPECT_EQ(result2.low_high_interpolation, 0.5);
+
+  auto result4 = image.ComputeSampleCoordinates(0.5, 1.5);
+  EXPECT_EQ(result4.low_coordinates[0][0], 0.375);
+  EXPECT_EQ(result4.low_coordinates[0][1], 1.25);
+  EXPECT_EQ(result4.low_coordinates[1][0], 0.625);
+  EXPECT_EQ(result4.low_coordinates[1][1], 1.25);
+  EXPECT_EQ(result4.high_coordinates[0][0], 0.375);
+  EXPECT_EQ(result4.high_coordinates[0][1], 1.75);
+  EXPECT_EQ(result4.high_coordinates[1][0], 0.625);
+  EXPECT_EQ(result4.high_coordinates[1][1], 1.75);
+  EXPECT_EQ(result4.left_right_interpolation, 0.5);
+  EXPECT_EQ(result4.low_high_interpolation, 0.5);
+
+  auto result5 = image.ComputeSampleCoordinates(0.125, 0.25);
+  EXPECT_EQ(result5.low_coordinates[0][0], 0.0);
+  EXPECT_EQ(result5.low_coordinates[0][1], 0.0);
+  EXPECT_EQ(result5.low_coordinates[1][0], 0.25);
+  EXPECT_EQ(result5.low_coordinates[1][1], 0.0);
+  EXPECT_EQ(result5.high_coordinates[0][0], 0.0);
+  EXPECT_EQ(result5.high_coordinates[0][1], 0.5);
+  EXPECT_EQ(result5.high_coordinates[1][0], 0.25);
+  EXPECT_EQ(result5.high_coordinates[1][1], 0.5);
+  EXPECT_EQ(result5.left_right_interpolation, 0.0);
+  EXPECT_EQ(result5.low_high_interpolation, 0.0);
+
+  auto result6 = image.ComputeSampleCoordinates(1.125, 1.25);
+  EXPECT_EQ(result6.low_coordinates[0][0], 1.0);
+  EXPECT_EQ(result6.low_coordinates[0][1], 1.0);
+  EXPECT_EQ(result6.low_coordinates[1][0], 1.25);
+  EXPECT_EQ(result6.low_coordinates[1][1], 1.0);
+  EXPECT_EQ(result6.high_coordinates[0][0], 1.0);
+  EXPECT_EQ(result6.high_coordinates[0][1], 1.5);
+  EXPECT_EQ(result6.high_coordinates[1][0], 1.25);
+  EXPECT_EQ(result6.high_coordinates[1][1], 1.5);
+  EXPECT_EQ(result6.left_right_interpolation, 0.0);
+  EXPECT_EQ(result6.low_high_interpolation, 0.0);
+
+  auto result7 = image.ComputeSampleCoordinates(-0.875, -0.75);
+  EXPECT_EQ(result7.low_coordinates[0][0], -1.0);
+  EXPECT_EQ(result7.low_coordinates[0][1], -1.0);
+  EXPECT_EQ(result7.low_coordinates[1][0], -0.75);
+  EXPECT_EQ(result7.low_coordinates[1][1], -1.0);
+  EXPECT_EQ(result7.high_coordinates[0][0], -1.0);
+  EXPECT_EQ(result7.high_coordinates[0][1], -0.5);
+  EXPECT_EQ(result7.high_coordinates[1][0], -0.75);
+  EXPECT_EQ(result7.high_coordinates[1][1], -0.5);
+  EXPECT_EQ(result7.left_right_interpolation, 0.0);
+  EXPECT_EQ(result7.low_high_interpolation, 0.0);
+}
+
 TEST(BorderedSpectralImageTexture2D, Test) {
   std::vector<iris::ReferenceCounted<iris::Reflector>> reflectors;
   reflectors.push_back(
@@ -179,4 +268,6 @@ TEST(RepeatedImageTexture2D, Test) {
   EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{0.0, 0.0}}));
   EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{0.5, 0.5}}));
   EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{1.0, 1.0}}));
+  EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{1.5, 1.5}}));
+  EXPECT_EQ(2.5, texture.Evaluate(iris::TextureCoordinates{{2.0, 2.0}}));
 }
