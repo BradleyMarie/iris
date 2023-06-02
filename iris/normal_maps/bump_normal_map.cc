@@ -15,28 +15,35 @@ Vector BumpNormalMap::Evaluate(
     return surface_normal;
   }
 
-  auto displacement = bumps_->Evaluate(texture_coordinates);
+  visual_t displacement = bumps_->Evaluate(texture_coordinates);
 
   TextureCoordinates texture_coordinates_dx{
       {texture_coordinates.uv[0] + texture_coordinates.differentials->du_dx,
        texture_coordinates.uv[1] + texture_coordinates.differentials->dv_dx},
       texture_coordinates.differentials};
-  auto displacement_dx =
-      bumps_->Evaluate(texture_coordinates_dx) - displacement;
+  visual_t displacement_x = bumps_->Evaluate(texture_coordinates_dx);
 
   TextureCoordinates texture_coordinates_dy{
       {texture_coordinates.uv[0] + texture_coordinates.differentials->du_dy,
        texture_coordinates.uv[1] + texture_coordinates.differentials->dv_dy},
       texture_coordinates.differentials};
-  auto displacement_dy =
-      bumps_->Evaluate(texture_coordinates_dy) - displacement;
+  visual_t displacement_y = bumps_->Evaluate(texture_coordinates_dy);
 
-  Vector dn_dx =
-      Normalize(differentials->dp_dx + surface_normal * displacement_dx);
-  Vector dn_dy =
-      Normalize(differentials->dp_dy + surface_normal * displacement_dy);
+  geometric_t duv_dx = std::sqrt(texture_coordinates.differentials->du_dx *
+                                     texture_coordinates.differentials->du_dx +
+                                 texture_coordinates.differentials->dv_dx *
+                                     texture_coordinates.differentials->dv_dx);
+  geometric_t duv_dy = std::sqrt(texture_coordinates.differentials->du_dy *
+                                     texture_coordinates.differentials->du_dy +
+                                 texture_coordinates.differentials->dv_dy *
+                                     texture_coordinates.differentials->dv_dy);
 
-  Vector shading_normal = Normalize(CrossProduct(dn_dx, dn_dy));
+  Vector dn_dx = Normalize(differentials->dp_dx) +
+                 surface_normal * (displacement_x - displacement) / duv_dx;
+  Vector dn_dy = Normalize(differentials->dp_dy) +
+                 surface_normal * (displacement_y - displacement) / duv_dy;
+
+  Vector shading_normal = Normalize(CrossProduct(dn_dy, dn_dx));
 
   if (DotProduct(shading_normal, surface_normal) < 0.0) {
     return -shading_normal;
