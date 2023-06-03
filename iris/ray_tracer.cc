@@ -9,102 +9,66 @@
 namespace iris {
 namespace {
 
-std::pair<Vector, Vector> Transform(const Matrix& model_to_world,
-                                    const std::pair<Vector, Vector>& vectors) {
-  return std::make_pair(
-      Normalize(model_to_world.InverseTransposeMultiply(vectors.first)),
-      Normalize(model_to_world.InverseTransposeMultiply(vectors.second)));
-}
-
-std::pair<Vector, Vector> MaybeTransform(const Matrix* model_to_world,
-                                         const Vector& surface_normal,
-                                         const Vector& shading_normal) {
-  auto vectors = std::make_pair(surface_normal, shading_normal);
+Vector MaybeTransformNormal(const Matrix* model_to_world,
+                            const Vector& surface_normal) {
   if (!model_to_world) {
-    return vectors;
+    return surface_normal;
   }
 
-  return Transform(*model_to_world, vectors);
-}
-
-std::pair<Ray, Ray> Transform(const Matrix& model_to_world,
-                              const std::pair<Ray, Ray>& rays) {
-  return std::make_pair(Normalize(model_to_world.InverseMultiply(rays.first)),
-                        Normalize(model_to_world.InverseMultiply(rays.second)));
-}
-
-std::pair<Ray, Ray> MaybeTransform(const Matrix* model_to_world, const Ray& dx,
-                                   const Ray& dy) {
-  auto rays = std::make_pair(dx, dy);
-  if (!model_to_world) {
-    return rays;
-  }
-
-  return Transform(*model_to_world, rays);
+  return Normalize(model_to_world->InverseTransposeMultiply(surface_normal));
 }
 
 std::optional<RayTracer::Differentials> MakeDifferentials(
-    const Matrix* model_to_world,
     const std::optional<Geometry::Differentials>& differentials) {
   if (!differentials) {
     return std::nullopt;
   }
 
-  if (!model_to_world) {
-    return {{differentials->dx, differentials->dy}};
-  }
-
-  return {{model_to_world->Multiply(differentials->dx),
-           model_to_world->Multiply(differentials->dy)}};
+  return {{differentials->dx, differentials->dy}};
 }
 
 std::optional<NormalMap::Differentials> MakeNormalMapDifferentials(
-    const Point& model_hit_point,
+    const Point& hit_point,
     const std::optional<Geometry::Differentials>& differentials,
     const NormalMap* normal_map) {
   if (!differentials || !normal_map) {
     return std::nullopt;
   }
 
-  return {{differentials->dx - model_hit_point,
-           differentials->dy - model_hit_point}};
-}
+  Vector dp_dx = differentials->dx - hit_point;
+  Vector dp_dy = differentials->dy - hit_point;
 
-std::pair<Vector, geometric_t> SelectNormal(const Vector& geometry_normal,
-                                            const Vector& shading_normal) {
-  geometric_t cos_theta =
-      std::max(static_cast<geometric_t>(-1.0),
-               std::min(DotProduct(geometry_normal, shading_normal),
-                        static_cast<geometric_t>(1.0)));
-
-  if (cos_theta < static_cast<geometric_t>(0.0)) {
-    return {-shading_normal, -cos_theta};
-  }
-
-  return {shading_normal, cos_theta};
+  return {{dp_dx, dp_dy}};
 }
 
 std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
-    const Vector& geometry_normal,
-    const std::optional<NormalMap::Differentials>& differentials,
-    const std::optional<Vector>& maybe_shading_normal) {
-  if (!maybe_shading_normal) {
-    return {geometry_normal, differentials};
+    const Vector& world_surface_normal,
+    const std::optional<NormalMap::Differentials>& world_differentials,
+    const Matrix* model_to_world,
+    const std::optional<Vector>& maybe_model_shading_normal) {
+  if (!maybe_model_shading_normal) {
+    return {world_surface_normal, world_differentials};
   }
 
-  auto [shading_normal, cos_theta] =
-      SelectNormal(geometry_normal, *maybe_shading_normal);
+  auto world_shading_normal =
+      MaybeTransformNormal(model_to_world, *maybe_model_shading_normal);
+  if (!world_differentials) {
+    return {world_shading_normal, world_differentials};
+  }
 
-  if (!differentials) {
-    return {shading_normal, differentials};
+  geometric_t cos_theta =
+      DotProduct(world_surface_normal, world_shading_normal);
+  if (cos_theta >= static_cast<geometric_t>(1.0)) {
+    return {world_surface_normal, world_differentials};
   }
 
   geometric_t sin_theta =
       std::sqrt(static_cast<geometric_t>(1.0) - cos_theta * cos_theta);
-
-  Vector axis = Normalize(CrossProduct(geometry_normal, shading_normal));
-
   geometric_t one_minus_cos_theta = static_cast<geometric_t>(1.0) - cos_theta;
+
+  Vector axis =
+      Normalize(CrossProduct(world_surface_normal, world_shading_normal));
+
   Vector rx(cos_theta + axis.x * axis.x * one_minus_cos_theta,
             axis.x * axis.y * one_minus_cos_theta - axis.z * sin_theta,
             axis.x * axis.z * one_minus_cos_theta + axis.y * sin_theta);
@@ -115,21 +79,22 @@ std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
             axis.z * axis.y * one_minus_cos_theta + axis.x * sin_theta,
             cos_theta + axis.z * axis.z * one_minus_cos_theta);
 
-  return {shading_normal,
-          {{Vector(DotProduct(rx, differentials->dp_dx),
-                   DotProduct(ry, differentials->dp_dx),
-                   DotProduct(rz, differentials->dp_dx)),
-            Vector(DotProduct(rx, differentials->dp_dy),
-                   DotProduct(ry, differentials->dp_dy),
-                   DotProduct(rz, differentials->dp_dy))}}};
+  Vector dp_dx(DotProduct(rx, world_differentials->dp_dx),
+               DotProduct(ry, world_differentials->dp_dx),
+               DotProduct(rz, world_differentials->dp_dx));
+  Vector dp_dy(DotProduct(rx, world_differentials->dp_dy),
+               DotProduct(ry, world_differentials->dp_dy),
+               DotProduct(rz, world_differentials->dp_dy));
+
+  return {world_shading_normal, {{dp_dx, dp_dy}}};
 }
 
 std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
     const iris::internal::Hit& hit,
-    const std::optional<Geometry::Differentials> differentials,
+    const std::optional<Geometry::Differentials> world_differentials,
     const TextureCoordinates& texture_coordinates, const Point& world_hit_point,
-    const Point& model_hit_point, const Vector& model_surface_normal,
-    SpectralAllocator& spectral_allocator, BxdfAllocator& bxdf_allocator) {
+    const Vector& world_surface_normal, SpectralAllocator& spectral_allocator,
+    BxdfAllocator& bxdf_allocator) {
   auto* material = hit.geometry->GetMaterial(hit.front, hit.additional_data);
   if (!material) {
     return std::nullopt;
@@ -144,26 +109,25 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
   auto shading_normal =
       hit.geometry->ComputeShadingNormal(hit.front, hit.additional_data);
 
-  auto model_shading_normals = TransformNormals(
-      model_surface_normal,
-      MakeNormalMapDifferentials(model_hit_point, differentials,
-                                 shading_normal.normal_map),
-      shading_normal.geometry);
+  auto world_normal_map_differentials = MakeNormalMapDifferentials(
+      world_hit_point, world_differentials, shading_normal.normal_map);
 
-  Vector model_shading_normal =
+  auto world_shading_normals =
+      TransformNormals(world_surface_normal, world_normal_map_differentials,
+                       hit.model_to_world, shading_normal.geometry);
+
+  Vector world_shading_normal =
       shading_normal.normal_map
           ? shading_normal.normal_map->Evaluate(texture_coordinates,
-                                                model_shading_normals.second,
-                                                model_shading_normals.first)
-          : model_shading_normals.first;
-
-  auto vectors = MaybeTransform(hit.model_to_world, model_surface_normal,
-                                model_shading_normal);
+                                                world_shading_normals.second,
+                                                world_shading_normals.first)
+          : world_shading_normals.first;
+  assert(DotProduct(world_surface_normal, world_shading_normal) > 0.0);
 
   return RayTracer::SurfaceIntersection{
-      Bsdf(*bxdf, vectors.first, vectors.second), world_hit_point,
-      MakeDifferentials(hit.model_to_world, differentials), vectors.first,
-      vectors.second};
+      Bsdf(*bxdf, world_surface_normal, world_shading_normal), world_hit_point,
+      MakeDifferentials(world_differentials), world_surface_normal,
+      world_shading_normal};
 }
 
 RayTracer::TraceResult HandleMiss(const Ray& ray,
@@ -178,28 +142,39 @@ RayTracer::TraceResult HandleMiss(const Ray& ray,
       std::nullopt};
 }
 
-Point PlaneIntersection(const Ray& ray, const Point& point,
-                        const Vector& normal) {
+geometric_t PlaneIntersection(const Ray& ray, const Point& point,
+                              const Vector& normal) {
   Vector to_plane = point - ray.origin;
   geometric_t distance =
       DotProduct(to_plane, normal) / DotProduct(ray.direction, normal);
-  return ray.Endpoint(distance);
+  return distance;
 }
 
-std::optional<Geometry::Differentials> ComputeDifferentials(
-    const Matrix* model_to_world, const RayDifferential& world_ray,
-    const Point& model_hit_point, const Vector& model_surface_normal) {
+std::optional<Geometry::Differentials> ComputeGeometryDifferentials(
+    const RayDifferential& world_ray, const Point& world_hit_point,
+    const Vector& world_surface_normal) {
   if (!world_ray.differentials) {
     return std::nullopt;
   }
 
-  auto model_rays = MaybeTransform(model_to_world, world_ray.differentials->dx,
-                                   world_ray.differentials->dy);
+  geometric_t distance_dx = PlaneIntersection(
+      world_ray.differentials->dx, world_hit_point, world_surface_normal);
+  geometric_t distance_dy = PlaneIntersection(
+      world_ray.differentials->dy, world_hit_point, world_surface_normal);
 
-  return {{PlaneIntersection(model_rays.first, model_hit_point,
-                             model_surface_normal),
-           PlaneIntersection(model_rays.second, model_hit_point,
-                             model_surface_normal)}};
+  return {{world_ray.differentials->dx.Endpoint(distance_dx),
+           world_ray.differentials->dy.Endpoint(distance_dy)}};
+}
+
+std::optional<Geometry::Differentials> MaybeTransformDifferentials(
+    const std::optional<Geometry::Differentials>& world_differentials,
+    const Matrix* model_to_world) {
+  if (!world_differentials || !model_to_world) {
+    return world_differentials;
+  }
+
+  return {{model_to_world->InverseMultiply(world_differentials->dx),
+           model_to_world->InverseMultiply(world_differentials->dy)}};
 }
 
 }  // namespace
@@ -222,13 +197,18 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
 
   Vector model_surface_normal = hit->geometry->ComputeSurfaceNormal(
       model_hit_point, hit->front, hit->additional_data);
+  Vector world_surface_normal =
+      MaybeTransformNormal(hit->model_to_world, model_surface_normal);
 
-  auto differentials = ComputeDifferentials(
-      hit->model_to_world, ray, model_hit_point, model_surface_normal);
+  auto world_differentials =
+      ComputeGeometryDifferentials(ray, world_hit_point, world_surface_normal);
+  auto model_differentials =
+      MaybeTransformDifferentials(world_differentials, hit->model_to_world);
+  assert(DotProduct(ray.direction, world_surface_normal) < 0.0);
 
   TextureCoordinates texture_coordinates =
       hit->geometry
-          ->ComputeTextureCoordinates(model_hit_point, differentials,
+          ->ComputeTextureCoordinates(model_hit_point, model_differentials,
                                       hit->front, hit->additional_data)
           .value_or(TextureCoordinates{0.0, 0.0});
 
@@ -241,9 +221,8 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
 
   BxdfAllocator bxdf_allocator(arena_);
   auto surface_intersection = MakeSurfaceIntersection(
-      *hit, differentials, texture_coordinates, world_hit_point,
-      model_hit_point, model_surface_normal, spectral_allocator,
-      bxdf_allocator);
+      *hit, world_differentials, texture_coordinates, world_hit_point,
+      world_surface_normal, spectral_allocator, bxdf_allocator);
 
   return RayTracer::TraceResult{spectrum, surface_intersection};
 }

@@ -71,8 +71,8 @@ TEST(PathIntegratorTest, BounceLimit) {
   iris::testing::RayTracerPathNode path[] = {
       {1.0, nullptr, &specular0, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)},
-      {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, 1.0),
-       iris::Vector(0.0, 0.0, 1.0)}};
+      {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, -1.0),
+       iris::Vector(0.0, 0.0, -1.0)}};
 
   iris::integrators::PathIntegrator integrator0(1.0, 1.0, 0u, 0u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
@@ -104,8 +104,8 @@ TEST(PathIntegratorTest, NoBsdf) {
   iris::testing::RayTracerPathNode path[] = {
       {1.0, nullptr, nullptr, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)},
-      {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, 1.0),
-       iris::Vector(0.0, 0.0, 1.0)}};
+      {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, -1.0),
+       iris::Vector(0.0, 0.0, -1.0)}};
 
   iris::integrators::PathIntegrator integrator(1.0, 1.0, 3u, 3u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
@@ -140,8 +140,8 @@ TEST(PathIntegratorTest, BsdfSampleFails) {
   iris::testing::RayTracerPathNode path[] = {
       {1.0, nullptr, &specular0, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)},
-      {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, 1.0),
-       iris::Vector(0.0, 0.0, 1.0)}};
+      {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, -1.0),
+       iris::Vector(0.0, 0.0, -1.0)}};
 
   iris::integrators::PathIntegrator integrator0(1.0, 1.0, 3u, 3u);
   iris::testing::ScopedHitsRayTracer(nullptr, path, [&](auto& ray_tracer) {
@@ -165,7 +165,7 @@ TEST(PathIntegratorTest, TwoSpecularBouncesHitsEmissive) {
           iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, -1.0)}));
   EXPECT_CALL(specular1, Sample(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, 1.0)}));
+          iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, -1.0)}));
   EXPECT_CALL(specular0, Pdf(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(specular1, Pdf(testing::_, testing::_, testing::_))
@@ -187,8 +187,8 @@ TEST(PathIntegratorTest, TwoSpecularBouncesHitsEmissive) {
   iris::testing::RayTracerPathNode path[] = {
       {1.0, nullptr, &specular0, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)},
-      {1.0, nullptr, &specular1, iris::Vector(0.0, 0.0, 1.0),
-       iris::Vector(0.0, 0.0, 1.0)},
+      {1.0, nullptr, &specular1, iris::Vector(0.0, 0.0, -1.0),
+       iris::Vector(0.0, 0.0, -1.0)},
       {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)}};
 
@@ -215,7 +215,7 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
           iris::Normalize(iris::Vector(1.0, 0.0, -1.0))}));
   EXPECT_CALL(specular, Sample(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, 1.0)}));
+          iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, -1.0)}));
   EXPECT_CALL(diffuse, Pdf(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(0.5));
   EXPECT_CALL(specular, Pdf(testing::_, testing::_, testing::_))
@@ -237,8 +237,8 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
   iris::testing::RayTracerPathNode path[] = {
       {1.0, nullptr, &diffuse, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)},
-      {1.0, nullptr, &specular, iris::Vector(0.0, 0.0, 1.0),
-       iris::Vector(0.0, 0.0, 1.0)},
+      {1.0, nullptr, &specular, iris::Vector(0.0, 0.0, -1.0),
+       iris::Vector(0.0, 0.0, -1.0)},
       {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)}};
 
@@ -351,7 +351,7 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
           iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, -1.0)}));
   EXPECT_CALL(specular1, Sample(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, 1.0)}));
+          iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, -1.0)}));
   EXPECT_CALL(specular0, Pdf(testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(specular1, Pdf(testing::_, testing::_, testing::_))
@@ -374,8 +374,8 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
   iris::testing::RayTracerPathNode path[] = {
       {1.0, nullptr, &specular0, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)},
-      {1.0, nullptr, &specular1, iris::Vector(0.0, 0.0, 1.0),
-       iris::Vector(0.0, 0.0, 1.0)},
+      {1.0, nullptr, &specular1, iris::Vector(0.0, 0.0, -1.0),
+       iris::Vector(0.0, 0.0, -1.0)},
       {1.0, &spectrum, nullptr, iris::Vector(0.0, 0.0, -1.0),
        iris::Vector(0.0, 0.0, -1.0)}};
 

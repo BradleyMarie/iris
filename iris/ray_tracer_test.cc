@@ -32,7 +32,7 @@ void MakeBasicGeometryImpl(
           testing::Invoke([](const iris::Point& hit_point, iris::face_t face,
                              const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return iris::Vector(1.0, 0.0, 0.0);
+            return iris::Vector(-1.0, 0.0, 0.0);
           }));
 }
 
@@ -231,9 +231,9 @@ TEST(RayTracerTest, Minimal) {
   ASSERT_TRUE(result.surface_intersection);
   EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
   EXPECT_FALSE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->shading_normal);
 }
 
@@ -280,9 +280,9 @@ TEST(RayTracerTest, WithTextureCoordinates) {
   ASSERT_TRUE(result.surface_intersection);
   EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
   EXPECT_FALSE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->shading_normal);
 }
 
@@ -329,9 +329,9 @@ TEST(RayTracerTest, WithMaterial) {
   ASSERT_TRUE(result.surface_intersection);
   EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
   EXPECT_FALSE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->shading_normal);
 }
 
@@ -359,7 +359,7 @@ TEST(RayTracerTest, WithNormal) {
           testing::Invoke([&](iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::Geometry::ComputeShadingNormalResult{
-                iris::Vector(0.0, 1.0, 0.0), nullptr};
+                iris::Normalize(iris::Vector(-1.0, -1.0, 0.0)), nullptr};
           }));
 
   auto builder = iris::SceneObjects::Builder();
@@ -378,58 +378,9 @@ TEST(RayTracerTest, WithNormal) {
   ASSERT_TRUE(result.surface_intersection);
   EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
   EXPECT_FALSE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0),
-            result.surface_intersection->shading_normal);
-}
-
-TEST(RayTracerTest, WithReversedNormal) {
-  iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({0.0, 0.0});
-
-  auto geometry =
-      MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
-      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
-                                                  iris::Point(0.0, 1.0, 2.0))));
-  EXPECT_CALL(*geometry,
-              ComputeTextureCoordinates(iris::Point(1.0, 1.0, 1.0),
-                                        testing::IsFalse(), 2u, testing::_))
-      .WillOnce(testing::Invoke(
-          [](const iris::Point& hit_point,
-             const std::optional<iris::Geometry::Differentials>& differentials,
-             iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
-  EXPECT_CALL(*geometry, ComputeShadingNormal(2u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return iris::Geometry::ComputeShadingNormalResult{
-                iris::Vector(-1.0, 0.0, 0.0), nullptr};
-          }));
-
-  auto builder = iris::SceneObjects::Builder();
-  builder.Add(std::move(geometry));
-
-  auto objects = builder.Build();
-  auto scene = iris::scenes::ListScene::Builder::Create()->Build(objects);
-
-  iris::internal::RayTracer internal_ray_tracer;
-  iris::internal::Arena arena;
-  iris::RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
-
-  auto result = ray_tracer.Trace(iris::RayDifferential(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0))));
-  EXPECT_FALSE(result.emission);
-  ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
-  EXPECT_FALSE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
-            result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Normalize(iris::Vector(-1.0, -1.0, 0.0)),
             result.surface_intersection->shading_normal);
 }
 
@@ -439,7 +390,7 @@ TEST(RayTracerTest, WithNormalMap) {
 
   iris::normal_maps::MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(testing::_, testing::IsFalse(),
-                                   iris::Vector(1.0, 0.0, 0.0)))
+                                   iris::Vector(-1.0, 0.0, 0.0)))
       .WillOnce(testing::Invoke(
           [&](const iris::TextureCoordinates& texture_coordinates,
               const std::optional<iris::NormalMap::Differentials>&
@@ -448,7 +399,7 @@ TEST(RayTracerTest, WithNormalMap) {
             EXPECT_EQ(0.0, texture_coordinates.uv[0]);
             EXPECT_EQ(0.0, texture_coordinates.uv[1]);
             EXPECT_FALSE(texture_coordinates.differentials);
-            return iris::Vector(0.0, 0.0, 1.0);
+            return iris::Normalize(iris::Vector(-1.0, -1.0, 0.0));
           }));
 
   auto geometry =
@@ -490,19 +441,19 @@ TEST(RayTracerTest, WithNormalMap) {
   ASSERT_TRUE(result.surface_intersection);
   EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
   EXPECT_FALSE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0),
+  EXPECT_EQ(iris::Normalize(iris::Vector(-1.0, -1.0, 0.0)),
             result.surface_intersection->shading_normal);
 }
 
 TEST(RayTracerTest, WithDifferentials) {
-  iris::Ray ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0));
+  iris::Ray ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   auto material = MakeMaterial({1.0, 1.0}, true);
 
   iris::normal_maps::MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(testing::_, testing::IsTrue(),
-                                   iris::Vector(1.0, 0.0, 0.0)))
+                                   iris::Vector(-1.0, 0.0, 0.0)))
       .WillOnce(testing::Invoke(
           [&](const iris::TextureCoordinates& texture_coordinates,
               const std::optional<iris::NormalMap::Differentials>&
@@ -512,16 +463,16 @@ TEST(RayTracerTest, WithDifferentials) {
             EXPECT_EQ(1.0, texture_coordinates.uv[1]);
             EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), differentials->dp_dx);
             EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), differentials->dp_dy);
-            return iris::Vector(1.0, 0.0, 0.0);
+            return iris::Vector(-1.0, 0.0, 0.0);
           }));
 
   auto geometry =
-      MakeGeometry(ray, iris::Point(0.0, 0.0, 0.0), material.get(), nullptr);
+      MakeGeometry(ray, iris::Point(2.0, 0.0, 0.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
-              ComputeTextureCoordinates(iris::Point(0.0, 0.0, 0.0),
+              ComputeTextureCoordinates(iris::Point(2.0, 0.0, 0.0),
                                         testing::IsTrue(), 2u, testing::_))
       .WillOnce(testing::Invoke(
           [](const iris::Point& hit_point,
@@ -549,25 +500,25 @@ TEST(RayTracerTest, WithDifferentials) {
   iris::RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
   auto result = ray_tracer.Trace(iris::RayDifferential(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(-1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(-1.0, 0.0, 0.0))));
+      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
   ASSERT_TRUE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 1.0),
+  EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
-  EXPECT_EQ(iris::Point(0.0, 1.0, 0.0),
+  EXPECT_EQ(iris::Point(2.0, 1.0, 0.0),
             result.surface_intersection->differentials->dy);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->shading_normal);
 }
 
 TEST(RayTracerTest, WithNormalAndDifferentials) {
-  iris::Ray ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0));
+  iris::Ray ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
   auto material = MakeMaterial({1.0, 1.0}, true);
 
   iris::normal_maps::MockNormalMap normal_map;
@@ -581,22 +532,22 @@ TEST(RayTracerTest, WithNormalAndDifferentials) {
               const iris::Vector& surface_normal) {
             EXPECT_EQ(1.0, texture_coordinates.uv[0]);
             EXPECT_EQ(1.0, texture_coordinates.uv[1]);
-            EXPECT_NEAR(-0.57735025, differentials->dp_dx.x, 0.001);
-            EXPECT_NEAR(-0.21132485, differentials->dp_dx.y, 0.001);
-            EXPECT_NEAR(0.788675129, differentials->dp_dx.z, 0.001);
-            EXPECT_NEAR(-0.57735025, differentials->dp_dy.x, 0.001);
-            EXPECT_NEAR(0.788675129, differentials->dp_dy.y, 0.001);
-            EXPECT_NEAR(-0.21132485, differentials->dp_dy.z, 0.001);
-            return iris::Vector(1.0, 0.0, 0.0);
+            EXPECT_NEAR(0.57735025, differentials->dp_dx.x, 0.001);
+            EXPECT_NEAR(-0.78867506, differentials->dp_dx.y, 0.001);
+            EXPECT_NEAR(0.211324810, differentials->dp_dx.z, 0.001);
+            EXPECT_NEAR(0.57735025, differentials->dp_dy.x, 0.001);
+            EXPECT_NEAR(0.211324810, differentials->dp_dy.y, 0.001);
+            EXPECT_NEAR(-0.78867506, differentials->dp_dy.z, 0.001);
+            return iris::Vector(-1.0, 0.0, 0.0);
           }));
 
   auto geometry =
-      MakeGeometry(ray, iris::Point(0.0, 0.0, 0.0), material.get(), nullptr);
+      MakeGeometry(ray, iris::Point(2.0, 0.0, 0.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
-              ComputeTextureCoordinates(iris::Point(0.0, 0.0, 0.0),
+              ComputeTextureCoordinates(iris::Point(2.0, 0.0, 0.0),
                                         testing::IsTrue(), 2u, testing::_))
       .WillOnce(testing::Invoke(
           [](const iris::Point& hit_point,
@@ -624,43 +575,43 @@ TEST(RayTracerTest, WithNormalAndDifferentials) {
   iris::RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
   auto result = ray_tracer.Trace(iris::RayDifferential(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(-1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(-1.0, 0.0, 0.0))));
+      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
   ASSERT_TRUE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 1.0),
+  EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
-  EXPECT_EQ(iris::Point(0.0, 1.0, 0.0),
+  EXPECT_EQ(iris::Point(2.0, 1.0, 0.0),
             result.surface_intersection->differentials->dy);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->shading_normal);
 }
 
 TEST(RayTracerTest, WithTransform) {
-  iris::Ray ray(iris::Point(1.0, 0.0, -1.0), iris::Vector(-1.0, 0.0, 0.0));
+  iris::Ray ray(iris::Point(1.0, 0.0, -1.0), iris::Vector(1.0, 0.0, 0.0));
   auto material = MakeMaterial({1.0, 1.0}, true);
 
   auto geometry =
-      MakeGeometry(ray, iris::Point(0.0, 0.0, -1.0), material.get(), nullptr);
+      MakeGeometry(ray, iris::Point(2.0, 0.0, -1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry,
               ComputeBounds(iris::Matrix::Translation(0.0, 0.0, 1.0).value()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
-              ComputeTextureCoordinates(iris::Point(0.0, 0.0, -1.0),
+              ComputeTextureCoordinates(iris::Point(2.0, 0.0, -1.0),
                                         testing::IsTrue(), 2u, testing::_))
       .WillOnce(testing::Invoke(
           [](const iris::Point& hit_point,
              const std::optional<iris::Geometry::Differentials>& differentials,
              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), differentials->dx);
-            EXPECT_EQ(iris::Point(0.0, 1.0, -1.0), differentials->dy);
+            EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), differentials->dx);
+            EXPECT_EQ(iris::Point(2.0, 1.0, -1.0), differentials->dy);
             return iris::TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, testing::_))
@@ -683,19 +634,19 @@ TEST(RayTracerTest, WithTransform) {
   iris::RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
   auto result = ray_tracer.Trace(iris::RayDifferential(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(-1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(-1.0, 0.0, 0.0))));
+      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
   ASSERT_TRUE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Point(0.0, 0.0, 1.0),
+  EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
-  EXPECT_EQ(iris::Point(0.0, 1.0, 0.0),
+  EXPECT_EQ(iris::Point(2.0, 1.0, 0.0),
             result.surface_intersection->differentials->dy);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0),
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->shading_normal);
 }
