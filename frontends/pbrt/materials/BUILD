@@ -10,8 +10,6 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/normal_maps:bump_normal_map",
-        "//iris/textures:constant_texture",
-        "//iris/textures:scaled_texture",
         "//iris/textures:texture2d",
     ],
 )

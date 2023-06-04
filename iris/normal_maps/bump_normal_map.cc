@@ -38,9 +38,9 @@ Vector BumpNormalMap::Evaluate(
                                  texture_coordinates.differentials->dv_dy *
                                      texture_coordinates.differentials->dv_dy);
 
-  Vector dn_dx = Normalize(differentials->dp_dx) +
+  Vector dn_dx = differentials->dp_dx +
                  surface_normal * (displacement_x - displacement) / duv_dx;
-  Vector dn_dy = Normalize(differentials->dp_dy) +
+  Vector dn_dy = differentials->dp_dy +
                  surface_normal * (displacement_y - displacement) / duv_dy;
 
   Vector shading_normal = Normalize(CrossProduct(dn_dy, dn_dx));
