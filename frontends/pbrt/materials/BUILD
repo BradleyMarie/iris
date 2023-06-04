@@ -3,19 +3,41 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "bumpmap",
+    srcs = ["bumpmap.cc"],
+    hdrs = ["bumpmap.h"],
+    deps = [
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris/normal_maps:bump_normal_map",
+        "//iris/textures:constant_texture",
+        "//iris/textures:scaled_texture",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "bumpmap_test",
+    srcs = ["bumpmap_test.cc"],
+    deps = [
+        ":bumpmap",
+        "//iris/textures:constant_texture",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "matte",
     srcs = ["matte.cc"],
     hdrs = ["matte.h"],
     deps = [
+        ":bumpmap",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:texture_manager",
         "//iris:material",
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:matte_material",
-        "//iris/normal_maps:bump_normal_map",
-        "//iris/reflectors:uniform_reflector",
-        "//iris/textures:constant_texture",
     ],
 )
 
@@ -63,15 +85,13 @@ cc_library(
     srcs = ["plastic.cc"],
     hdrs = ["plastic.h"],
     deps = [
+        ":bumpmap",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:texture_manager",
         "//iris:material",
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:plastic_material",
-        "//iris/normal_maps:bump_normal_map",
-        "//iris/reflectors:uniform_reflector",
-        "//iris/textures:constant_texture",
     ],
 )
 

@@ -6,7 +6,8 @@
 namespace iris::pbrt_frontend {
 
 std::shared_ptr<ObjectBuilder<
-    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+    std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+               ReferenceCounted<NormalMap>>,
     TextureManager&>>
 MaterialManager::Get(std::string_view name) const {
   temp_key_ = name;
@@ -23,7 +24,8 @@ MaterialManager::Get(std::string_view name) const {
 void MaterialManager::Put(
     std::string_view name,
     std::shared_ptr<ObjectBuilder<
-        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                   ReferenceCounted<NormalMap>>,
         TextureManager&>>
         texture) {
   temp_key_ = name;

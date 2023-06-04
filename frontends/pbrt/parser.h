@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -75,8 +76,9 @@ class Parser {
 
   struct AttributeEntry {
     std::shared_ptr<
-        ObjectBuilder<std::pair<iris::ReferenceCounted<iris::Material>,
-                                iris::ReferenceCounted<iris::NormalMap>>,
+        ObjectBuilder<std::tuple<iris::ReferenceCounted<iris::Material>,
+                                 iris::ReferenceCounted<iris::NormalMap>,
+                                 iris::ReferenceCounted<iris::NormalMap>>,
                       TextureManager&>>
         material;
     std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,

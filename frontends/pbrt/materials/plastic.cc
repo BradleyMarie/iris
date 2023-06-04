@@ -1,9 +1,7 @@
 #include "frontends/pbrt/materials/plastic.h"
 
+#include "frontends/pbrt/materials/bumpmap.h"
 #include "iris/materials/plastic_material.h"
-#include "iris/normal_maps/bump_normal_map.h"
-#include "iris/reflectors/uniform_reflector.h"
-#include "iris/textures/constant_texture.h"
 
 namespace iris::pbrt_frontend::materials {
 namespace {
@@ -24,15 +22,17 @@ static const std::unordered_map<std::string_view, Parameter::Type>
 
 class PlasticObjectBuilder
     : public ObjectBuilder<
-          std::shared_ptr<ObjectBuilder<std::pair<ReferenceCounted<Material>,
-                                                  ReferenceCounted<NormalMap>>,
+          std::shared_ptr<ObjectBuilder<std::tuple<ReferenceCounted<Material>,
+                                                   ReferenceCounted<NormalMap>,
+                                                   ReferenceCounted<NormalMap>>,
                                         TextureManager&>>,
           TextureManager&> {
  public:
   PlasticObjectBuilder() noexcept : ObjectBuilder(g_parameters) {}
 
   std::shared_ptr<ObjectBuilder<
-      std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+      std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                 ReferenceCounted<NormalMap>>,
       TextureManager&>>
   Build(const std::unordered_map<std::string_view, Parameter>& parameters,
         TextureManager& texture_manager) const override;
@@ -40,7 +40,8 @@ class PlasticObjectBuilder
 
 class NestedPlasticObjectBuilder
     : public ObjectBuilder<
-          std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+          std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                     ReferenceCounted<NormalMap>>,
           TextureManager&> {
  public:
   NestedPlasticObjectBuilder(
@@ -52,20 +53,22 @@ class NestedPlasticObjectBuilder
           specular,
       iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
           roughness,
-      bool remap_roughness, iris::ReferenceCounted<iris::NormalMap> bump)
+      bool remap_roughness, iris::ReferenceCounted<iris::NormalMap> front_bump,
+      iris::ReferenceCounted<iris::NormalMap> back_bump)
       : ObjectBuilder(g_parameters),
         diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
         roughness_(std::move(roughness)),
         remap_roughness_(remap_roughness),
-        default_(std::make_pair(
+        default_(std::make_tuple(
             iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
                 diffuse_, specular_, roughness_, remap_roughness_),
-            bump)) {}
+            front_bump, back_bump)) {}
 
-  std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>> Build(
-      const std::unordered_map<std::string_view, Parameter>& parameters,
-      TextureManager& texture_manager) const override;
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+             ReferenceCounted<NormalMap>>
+  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
+        TextureManager& texture_manager) const override;
 
  private:
   iris::ReferenceCounted<iris::textures::PointerTexture2D<
@@ -77,16 +80,20 @@ class NestedPlasticObjectBuilder
   iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       roughness_;
   bool remap_roughness_;
-  std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>> default_;
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+             ReferenceCounted<NormalMap>>
+      default_;
 };
 
 std::shared_ptr<ObjectBuilder<
-    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+    std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+               ReferenceCounted<NormalMap>>,
     TextureManager&>>
 PlasticObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
-  ReferenceCounted<NormalMap> normal_map;
+  ReferenceCounted<NormalMap> front_normal_map;
+  ReferenceCounted<NormalMap> back_normal_map;
   auto diffuse_texture =
       texture_manager.AllocateUniformReflectorTexture(kDefaultDiffuse);
   auto specular_texture =
@@ -117,16 +124,19 @@ PlasticObjectBuilder::Build(
 
   auto bump = parameters.find("bumpmap");
   if (bump != parameters.end()) {
-    normal_map = iris::MakeReferenceCounted<normals::BumpNormalMap>(
-        bump->second.GetFloatTextures(1).front());
+    auto normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
+    front_normal_map = normal_maps.first;
+    back_normal_map = normal_maps.second;
   }
 
   return std::make_unique<NestedPlasticObjectBuilder>(
       std::move(diffuse_texture), std::move(specular_texture),
-      std::move(roughness_texture), remap_roughness, std::move(normal_map));
+      std::move(roughness_texture), remap_roughness,
+      std::move(front_normal_map), std::move(back_normal_map));
 }
 
-std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>
+std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+           ReferenceCounted<NormalMap>>
 NestedPlasticObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
@@ -138,7 +148,8 @@ NestedPlasticObjectBuilder::Build(
   auto specular_texture = specular_;
   auto roughness_texture = roughness_;
   bool remap_roughness = remap_roughness_;
-  auto normal_map = default_.second;
+  auto front_normal_map = std::get<1>(default_);
+  auto back_normal_map = std::get<2>(default_);
 
   auto kd = parameters.find("Kd");
   if (kd != parameters.end()) {
@@ -162,22 +173,24 @@ NestedPlasticObjectBuilder::Build(
 
   auto bump = parameters.find("bumpmap");
   if (bump != parameters.end()) {
-    normal_map = iris::MakeReferenceCounted<normals::BumpNormalMap>(
-        bump->second.GetFloatTextures(1).front());
+    auto normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
+    front_normal_map = normal_maps.first;
+    back_normal_map = normal_maps.second;
   }
 
-  return std::make_pair(
+  return std::make_tuple(
       iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
           std::move(diffuse_texture), std::move(specular_texture),
           std::move(roughness_texture), remap_roughness),
-      std::move(normal_map));
+      std::move(front_normal_map), std::move(back_normal_map));
 }
 
 }  // namespace
 
 const std::unique_ptr<const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                   ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>>
     g_plastic_builder = std::make_unique<PlasticObjectBuilder>();

@@ -1,7 +1,7 @@
 #include "frontends/pbrt/materials/matte.h"
 
+#include "frontends/pbrt/materials/bumpmap.h"
 #include "iris/materials/matte_material.h"
-#include "iris/normal_maps/bump_normal_map.h"
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/textures/constant_texture.h"
 
@@ -20,15 +20,17 @@ static const std::unordered_map<std::string_view, Parameter::Type>
 
 class MatteObjectBuilder
     : public ObjectBuilder<
-          std::shared_ptr<ObjectBuilder<std::pair<ReferenceCounted<Material>,
-                                                  ReferenceCounted<NormalMap>>,
+          std::shared_ptr<ObjectBuilder<std::tuple<ReferenceCounted<Material>,
+                                                   ReferenceCounted<NormalMap>,
+                                                   ReferenceCounted<NormalMap>>,
                                         TextureManager&>>,
           TextureManager&> {
  public:
   MatteObjectBuilder() noexcept : ObjectBuilder(g_parameters) {}
 
   std::shared_ptr<ObjectBuilder<
-      std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+      std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                 ReferenceCounted<NormalMap>>,
       TextureManager&>>
   Build(const std::unordered_map<std::string_view, Parameter>& parameters,
         TextureManager& texture_manager) const override;
@@ -36,7 +38,8 @@ class MatteObjectBuilder
 
 class NestedMatteObjectBuilder
     : public ObjectBuilder<
-          std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+          std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                     ReferenceCounted<NormalMap>>,
           TextureManager&> {
  public:
   NestedMatteObjectBuilder(
@@ -45,34 +48,40 @@ class NestedMatteObjectBuilder
           diffuse,
       iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
           sigma,
-      iris::ReferenceCounted<iris::NormalMap> bump)
+      iris::ReferenceCounted<iris::NormalMap> front_normal_map,
+      iris::ReferenceCounted<iris::NormalMap> back_normal_map)
       : ObjectBuilder(g_parameters),
         diffuse_(std::move(diffuse)),
         sigma_(std::move(sigma)),
-        default_(std::make_pair(
+        default_(std::make_tuple(
             iris::MakeReferenceCounted<iris::materials::MatteMaterial>(diffuse_,
                                                                        sigma_),
-            bump)) {}
+            std::move(front_normal_map), std::move(back_normal_map))) {}
 
-  std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>> Build(
-      const std::unordered_map<std::string_view, Parameter>& parameters,
-      TextureManager& texture_manager) const override;
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+             ReferenceCounted<NormalMap>>
+  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
+        TextureManager& texture_manager) const override;
 
  private:
   iris::ReferenceCounted<iris::textures::PointerTexture2D<
       iris::Reflector, iris::SpectralAllocator>>
       diffuse_;
   iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>> sigma_;
-  std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>> default_;
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+             ReferenceCounted<NormalMap>>
+      default_;
 };
 
 std::shared_ptr<ObjectBuilder<
-    std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+    std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+               ReferenceCounted<NormalMap>>,
     TextureManager&>>
 MatteObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
-  ReferenceCounted<NormalMap> normal_map;
+  ReferenceCounted<NormalMap> front_normal_map;
+  ReferenceCounted<NormalMap> back_normal_map;
   auto diffuse_texture =
       texture_manager.AllocateUniformReflectorTexture(kDefaultReflectance);
   auto sigma_texture =
@@ -90,16 +99,18 @@ MatteObjectBuilder::Build(
 
   auto bump = parameters.find("bumpmap");
   if (bump != parameters.end()) {
-    normal_map = iris::MakeReferenceCounted<normals::BumpNormalMap>(
-        bump->second.GetFloatTextures(1).front());
+    auto normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
+    front_normal_map = normal_maps.first;
+    back_normal_map = normal_maps.second;
   }
 
-  return std::make_unique<NestedMatteObjectBuilder>(std::move(diffuse_texture),
-                                                    std::move(sigma_texture),
-                                                    std::move(normal_map));
+  return std::make_unique<NestedMatteObjectBuilder>(
+      std::move(diffuse_texture), std::move(sigma_texture),
+      std::move(front_normal_map), std::move(back_normal_map));
 }
 
-std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>
+std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+           ReferenceCounted<NormalMap>>
 NestedMatteObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
@@ -109,7 +120,8 @@ NestedMatteObjectBuilder::Build(
 
   auto diffuse_texture = diffuse_;
   auto sigma_texture = sigma_;
-  auto normal_map = default_.second;
+  auto front_normal_map = std::get<1>(default_);
+  auto back_normal_map = std::get<2>(default_);
 
   auto kd = parameters.find("Kd");
   if (kd != parameters.end()) {
@@ -123,21 +135,23 @@ NestedMatteObjectBuilder::Build(
 
   auto bump = parameters.find("bumpmap");
   if (bump != parameters.end()) {
-    normal_map = iris::MakeReferenceCounted<normals::BumpNormalMap>(
-        bump->second.GetFloatTextures(1).front());
+    auto normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
+    front_normal_map = normal_maps.first;
+    back_normal_map = normal_maps.second;
   }
 
-  return std::make_pair(
+  return std::make_tuple(
       iris::MakeReferenceCounted<iris::materials::MatteMaterial>(
           std::move(diffuse_texture), std::move(sigma_texture)),
-      std::move(normal_map));
+      std::move(front_normal_map), std::move(back_normal_map));
 }
 
 }  // namespace
 
 const std::unique_ptr<const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                   ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>>
     g_matte_builder = std::make_unique<MatteObjectBuilder>();

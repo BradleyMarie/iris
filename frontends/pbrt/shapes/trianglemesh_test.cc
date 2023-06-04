@@ -17,7 +17,7 @@ TEST(TriangleMesh, NoIndices) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing required trianglemesh parameter: indices");
 }
@@ -35,7 +35,7 @@ TEST(TriangleMesh, InvalidIndicesCount) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid number of parameters in parameter list: indices");
 }
@@ -53,7 +53,7 @@ TEST(TriangleMesh, OutOfRangeIndices0) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Out of range value for parameter: indices");
 }
@@ -71,7 +71,7 @@ TEST(TriangleMesh, OutOfRangeIndices1) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Out of range value for parameter: indices");
 }
@@ -89,7 +89,7 @@ TEST(TriangleMesh, OutOfRangeIndices2) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Out of range value for parameter: indices");
 }
@@ -107,7 +107,7 @@ TEST(TriangleMesh, MissingP) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing required trianglemesh parameter: P");
 }
@@ -127,7 +127,7 @@ TEST(TriangleMesh, OddUv) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid number of parameters in parameter list: uv");
 }
@@ -147,7 +147,7 @@ TEST(TriangleMesh, TooManyUv) {
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_trianglemesh_builder,
                   tokenizer, spectrum_manager, texture_manager, material,
-                  normal, emissive, emissive, iris::Matrix::Identity()),
+                  normal, normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid number of parameters in parameter list: uv");
 }
@@ -169,8 +169,8 @@ TEST(TriangleMesh, AllParameters) {
 
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::shapes::g_trianglemesh_builder, tokenizer,
-      spectrum_manager, texture_manager, material, normal, emissive, emissive,
-      transformation);
+      spectrum_manager, texture_manager, material, normal, normal, emissive,
+      emissive, transformation);
   EXPECT_EQ(1u, result.first.size());
   EXPECT_EQ(iris::Matrix::Identity(), result.second);
 }

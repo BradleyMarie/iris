@@ -15,7 +15,8 @@ static const std::unordered_map<
     std::string_view,
     const std::unique_ptr<const ObjectBuilder<
         std::shared_ptr<ObjectBuilder<
-            std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+            std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                       ReferenceCounted<NormalMap>>,
             TextureManager&>>,
         TextureManager&>>&>
     g_materials = {{"matte", g_matte_builder}, {"plastic", g_plastic_builder}};
@@ -24,7 +25,8 @@ static const std::unordered_map<
 
 const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                   ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>&
 Parse(Tokenizer& tokenizer) {
@@ -125,7 +127,8 @@ void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
 
 const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::pair<ReferenceCounted<Material>, ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                   ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>&
 Default() {

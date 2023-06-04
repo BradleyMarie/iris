@@ -19,13 +19,15 @@ TEST(Matte, Empty) {
 
   auto result1 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_TRUE(result1.first);
-  EXPECT_FALSE(result1.second);
+  EXPECT_TRUE(std::get<0>(result1));
+  EXPECT_FALSE(std::get<1>(result1));
+  EXPECT_FALSE(std::get<2>(result1));
 
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_EQ(result1.first, result2.first);
-  EXPECT_FALSE(result2.second);
+  EXPECT_EQ(std::get<0>(result1), std::get<0>(result1));
+  EXPECT_FALSE(std::get<1>(result1));
+  EXPECT_FALSE(std::get<2>(result1));
 }
 
 TEST(Matte, WithDefaults) {
@@ -43,13 +45,15 @@ TEST(Matte, WithDefaults) {
 
   auto result1 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_TRUE(result1.first);
-  EXPECT_TRUE(result1.second);
+  EXPECT_TRUE(std::get<0>(result1));
+  EXPECT_TRUE(std::get<1>(result1));
+  EXPECT_TRUE(std::get<2>(result1));
 
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_EQ(result1.first, result2.first);
-  EXPECT_TRUE(result2.second);
+  EXPECT_EQ(std::get<0>(result1), std::get<0>(result1));
+  EXPECT_TRUE(std::get<1>(result1));
+  EXPECT_TRUE(std::get<2>(result1));
 }
 
 TEST(Matte, OverridesDefaults) {
@@ -65,8 +69,9 @@ TEST(Matte, OverridesDefaults) {
 
   auto result1 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer0, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_TRUE(result1.first);
-  EXPECT_FALSE(result1.second);
+  EXPECT_TRUE(std::get<0>(result1));
+  EXPECT_FALSE(std::get<1>(result1));
+  EXPECT_FALSE(std::get<2>(result1));
 
   std::stringstream input1(
       "\"float Kd\" 1.0 \"float Ks\" 1.0 \"float roughness\" 0.5 \"bool "
@@ -75,6 +80,7 @@ TEST(Matte, OverridesDefaults) {
 
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer1, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_NE(result1.first, result2.first);
-  EXPECT_TRUE(result2.second);
+  EXPECT_NE(std::get<0>(result1), std::get<0>(result2));
+  EXPECT_TRUE(std::get<1>(result2));
+  EXPECT_TRUE(std::get<2>(result2));
 }

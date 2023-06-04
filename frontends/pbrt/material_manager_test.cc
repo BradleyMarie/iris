@@ -5,20 +5,23 @@
 
 class TestObjectBuilder
     : public iris::pbrt_frontend::ObjectBuilder<
-          std::pair<iris::ReferenceCounted<iris::Material>,
-                    iris::ReferenceCounted<iris::NormalMap>>,
+          std::tuple<iris::ReferenceCounted<iris::Material>,
+                     iris::ReferenceCounted<iris::NormalMap>,
+                     iris::ReferenceCounted<iris::NormalMap>>,
           iris::pbrt_frontend::TextureManager&> {
  public:
   TestObjectBuilder() : ObjectBuilder({}) {}
 
-  std::pair<iris::ReferenceCounted<iris::Material>,
-            iris::ReferenceCounted<iris::NormalMap>>
+  std::tuple<iris::ReferenceCounted<iris::Material>,
+             iris::ReferenceCounted<iris::NormalMap>,
+             iris::ReferenceCounted<iris::NormalMap>>
   Build(const std::unordered_map<std::string_view,
                                  iris::pbrt_frontend::Parameter>& parameters,
         iris::pbrt_frontend::TextureManager& texture_manager) const override {
     iris::ReferenceCounted<iris::Material> material;
-    iris::ReferenceCounted<iris::NormalMap> normal_map;
-    return {material, normal_map};
+    iris::ReferenceCounted<iris::NormalMap> normal_map0;
+    iris::ReferenceCounted<iris::NormalMap> normal_map1;
+    return {material, normal_map0, normal_map1};
   }
 };
 

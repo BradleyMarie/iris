@@ -14,6 +14,7 @@ extern const std::unique_ptr<const ObjectBuilder<
     std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
     const ReferenceCounted<iris::Material>&,
     const ReferenceCounted<iris::NormalMap>&,
+    const ReferenceCounted<iris::NormalMap>&,
     const ReferenceCounted<EmissiveMaterial>&,
     const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>
     g_sphere_builder;
