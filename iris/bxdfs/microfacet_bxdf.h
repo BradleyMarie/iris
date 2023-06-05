@@ -110,7 +110,7 @@ class MicrofacetBrdf final : public Bxdf {
     }
 
     Vector half_angle = Normalize(outgoing + incoming);
-    visual_t dp = DotProduct(incoming, half_angle);
+    visual_t dp = ClampedDotProduct(incoming, half_angle);
     const Reflector* fresnel = fresnel_.Evaluate(dp, allocator);
     if (!fresnel) {
       return nullptr;

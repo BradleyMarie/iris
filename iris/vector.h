@@ -96,6 +96,13 @@ static inline geometric_t AbsDotProduct(const Vector& operand0,
   return std::abs(DotProduct(operand0, operand1));
 }
 
+static inline geometric_t ClampedDotProduct(const Vector& operand0,
+                                            const Vector& operand1) {
+  return std::max(
+      static_cast<visual_t>(-1.0),
+      std::min(static_cast<visual_t>(1.0), DotProduct(operand0, operand1)));
+}
+
 static inline geometric_t PositiveDotProduct(const Vector& operand0,
                                              const Vector& operand1) {
   return std::max(static_cast<geometric_t>(0.0),

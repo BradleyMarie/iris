@@ -18,6 +18,15 @@ Vector MaybeTransformNormal(const Matrix* model_to_world,
   return Normalize(model_to_world->InverseTransposeMultiply(surface_normal));
 }
 
+std::optional<Vector> MaybeTransformNormal(
+    const Matrix* model_to_world, const std::optional<Vector>& surface_normal) {
+  if (!surface_normal) {
+    return std::nullopt;
+  }
+
+  return MaybeTransformNormal(model_to_world, *surface_normal);
+}
+
 std::optional<RayTracer::Differentials> MakeDifferentials(
     const std::optional<Geometry::Differentials>& differentials) {
   if (!differentials) {
@@ -27,39 +36,45 @@ std::optional<RayTracer::Differentials> MakeDifferentials(
   return {{differentials->dx, differentials->dy}};
 }
 
-std::optional<NormalMap::Differentials> MakeNormalMapDifferentials(
-    const Point& hit_point,
-    const std::optional<Geometry::Differentials>& differentials,
-    const NormalMap* normal_map) {
-  if (!differentials || !normal_map) {
-    return std::nullopt;
-  }
-
-  Vector dp_dx = differentials->dx - hit_point;
-  Vector dp_dy = differentials->dy - hit_point;
-
-  return {{dp_dx, dp_dy}};
-}
-
 std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
-    const Vector& world_surface_normal,
-    const std::optional<NormalMap::Differentials>& world_differentials,
+    const Point& world_hit_point, const Vector& world_surface_normal,
     const Matrix* model_to_world,
-    const std::optional<Vector>& maybe_model_shading_normal) {
-  if (!maybe_model_shading_normal) {
-    return {world_surface_normal, world_differentials};
+    const std::optional<Geometry::Differentials> world_differentials,
+    const Geometry::ComputeShadingNormalResult& shading_normals) {
+  auto world_shading_normal =
+      MaybeTransformNormal(model_to_world, shading_normals.surface_normal)
+          .value_or(world_surface_normal);
+
+  if (!shading_normals.normal_map) {
+    return {world_shading_normal, std::nullopt};
   }
 
-  auto world_shading_normal =
-      MaybeTransformNormal(model_to_world, *maybe_model_shading_normal);
-  if (!world_differentials) {
-    return {world_shading_normal, world_differentials};
+  if (shading_normals.dp_duv.has_value()) {
+    if (!model_to_world) {
+      return {
+          world_shading_normal,
+          {{NormalMap::Differentials::DU_DV,
+            {shading_normals.dp_duv->first, shading_normals.dp_duv->second}}}};
+    }
+
+    return {world_shading_normal,
+            {{NormalMap::Differentials::DU_DV,
+              {model_to_world->Multiply(shading_normals.dp_duv->first),
+               model_to_world->Multiply(shading_normals.dp_duv->second)}}}};
   }
+
+  if (!world_differentials) {
+    return {world_shading_normal, std::nullopt};
+  }
+
+  Vector dp_dx = world_differentials->dx - world_hit_point;
+  Vector dp_dy = world_differentials->dy - world_hit_point;
 
   geometric_t cos_theta =
-      DotProduct(world_surface_normal, world_shading_normal);
+      ClampedDotProduct(world_surface_normal, world_shading_normal);
   if (cos_theta >= static_cast<geometric_t>(1.0)) {
-    return {world_surface_normal, world_differentials};
+    return {world_shading_normal,
+            {{NormalMap::Differentials::DX_DY, {dp_dx, dp_dy}}}};
   }
 
   geometric_t sin_theta =
@@ -79,14 +94,14 @@ std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
             axis.z * axis.y * one_minus_cos_theta + axis.x * sin_theta,
             cos_theta + axis.z * axis.z * one_minus_cos_theta);
 
-  Vector dp_dx(DotProduct(rx, world_differentials->dp_dx),
-               DotProduct(ry, world_differentials->dp_dx),
-               DotProduct(rz, world_differentials->dp_dx));
-  Vector dp_dy(DotProduct(rx, world_differentials->dp_dy),
-               DotProduct(ry, world_differentials->dp_dy),
-               DotProduct(rz, world_differentials->dp_dy));
+  Vector transformed_dp_dx(DotProduct(rx, dp_dx), DotProduct(ry, dp_dx),
+                           DotProduct(rz, dp_dx));
+  Vector transformed_dp_dy(DotProduct(rx, dp_dy), DotProduct(ry, dp_dy),
+                           DotProduct(rz, dp_dy));
 
-  return {world_shading_normal, {{dp_dx, dp_dy}}};
+  return {world_shading_normal,
+          {{NormalMap::Differentials::DX_DY,
+            {transformed_dp_dx, transformed_dp_dy}}}};
 }
 
 std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
@@ -106,21 +121,21 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
     return std::nullopt;
   }
 
-  auto shading_normal =
+  auto shading_normals =
       hit.geometry->ComputeShadingNormal(hit.front, hit.additional_data);
 
-  auto world_normal_map_differentials = MakeNormalMapDifferentials(
-      world_hit_point, world_differentials, shading_normal.normal_map);
+  auto world_shading_normals = TransformNormals(
+      world_hit_point, world_surface_normal, hit.model_to_world,
+      world_differentials, shading_normals);
 
-  auto world_shading_normals =
-      TransformNormals(world_surface_normal, world_normal_map_differentials,
-                       hit.model_to_world, shading_normal.geometry);
-
+  // When the object is transformed, it is arguably more correct to apply the
+  // normal map in model space instead of world space. This might be good to
+  // change in the future.
   Vector world_shading_normal =
-      shading_normal.normal_map
-          ? shading_normal.normal_map->Evaluate(texture_coordinates,
-                                                world_shading_normals.second,
-                                                world_shading_normals.first)
+      shading_normals.normal_map
+          ? shading_normals.normal_map->Evaluate(texture_coordinates,
+                                                 world_shading_normals.second,
+                                                 world_shading_normals.first)
           : world_shading_normals.first;
   assert(DotProduct(world_surface_normal, world_shading_normal) > 0.0);
 

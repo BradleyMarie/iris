@@ -56,7 +56,8 @@ TEST(GeometryTest, ComputeTextureCoordinates) {
 TEST(GeometryTest, ComputeShadingNormal) {
   iris::geometry::MockBasicGeometry geom;
   auto shading_normal = geom.ComputeShadingNormal(0, nullptr);
-  EXPECT_FALSE(shading_normal.geometry);
+  EXPECT_FALSE(shading_normal.surface_normal);
+  EXPECT_FALSE(shading_normal.dp_duv);
   EXPECT_EQ(nullptr, shading_normal.normal_map);
 }
 

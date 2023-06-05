@@ -330,6 +330,50 @@ TEST(Triangle, ComputeTextureCoordinates) {
   EXPECT_EQ(1.0, texture_coordinates3->differentials->dv_dy);
 }
 
+TEST(Triangle, ComputeShadingNormalNoUVs) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
+      front_emissive_material, back_emissive_material,
+      iris::ReferenceCounted<iris::NormalMap>(),
+      iris::ReferenceCounted<iris::NormalMap>());
+
+  auto front_normal =
+      triangles.front()->ComputeShadingNormal(FRONT_FACE, nullptr);
+  EXPECT_FALSE(front_normal.surface_normal);
+  EXPECT_FALSE(front_normal.dp_duv);
+  EXPECT_EQ(nullptr, front_normal.normal_map);
+
+  auto back_normal =
+      triangles.front()->ComputeShadingNormal(BACK_FACE, nullptr);
+  EXPECT_FALSE(back_normal.surface_normal);
+  EXPECT_FALSE(back_normal.dp_duv);
+  EXPECT_EQ(nullptr, back_normal.normal_map);
+}
+
+TEST(Triangle, ComputeShadingNormalUVsDegenerate) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}}}, back_material,
+      front_material, front_emissive_material, back_emissive_material,
+      iris::ReferenceCounted<iris::NormalMap>(),
+      iris::ReferenceCounted<iris::NormalMap>());
+
+  auto front_normal =
+      triangles.front()->ComputeShadingNormal(FRONT_FACE, nullptr);
+  EXPECT_FALSE(front_normal.surface_normal);
+  EXPECT_FALSE(front_normal.dp_duv);
+  EXPECT_EQ(nullptr, front_normal.normal_map);
+
+  auto back_normal =
+      triangles.front()->ComputeShadingNormal(BACK_FACE, nullptr);
+  EXPECT_FALSE(back_normal.surface_normal);
+  EXPECT_FALSE(back_normal.dp_duv);
+  EXPECT_EQ(nullptr, back_normal.normal_map);
+}
+
 TEST(Triangle, ComputeShadingNormalNone) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
@@ -341,12 +385,26 @@ TEST(Triangle, ComputeShadingNormalNone) {
 
   auto front_normal =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, nullptr);
-  EXPECT_FALSE(front_normal.geometry);
+  EXPECT_FALSE(front_normal.surface_normal);
+  ASSERT_TRUE(front_normal.dp_duv);
+  EXPECT_EQ(1.0, front_normal.dp_duv->first.x);
+  EXPECT_EQ(0.0, front_normal.dp_duv->first.y);
+  EXPECT_EQ(0.0, front_normal.dp_duv->first.z);
+  EXPECT_EQ(0.0, front_normal.dp_duv->second.x);
+  EXPECT_EQ(1.0, front_normal.dp_duv->second.y);
+  EXPECT_EQ(0.0, front_normal.dp_duv->second.z);
   EXPECT_EQ(nullptr, front_normal.normal_map);
 
   auto back_normal =
       triangles.front()->ComputeShadingNormal(BACK_FACE, nullptr);
-  EXPECT_FALSE(back_normal.geometry);
+  EXPECT_FALSE(back_normal.surface_normal);
+  ASSERT_TRUE(back_normal.dp_duv);
+  EXPECT_EQ(1.0, back_normal.dp_duv->first.x);
+  EXPECT_EQ(0.0, back_normal.dp_duv->first.y);
+  EXPECT_EQ(0.0, back_normal.dp_duv->first.z);
+  EXPECT_EQ(0.0, back_normal.dp_duv->second.x);
+  EXPECT_EQ(1.0, back_normal.dp_duv->second.y);
+  EXPECT_EQ(0.0, back_normal.dp_duv->second.z);
   EXPECT_EQ(nullptr, back_normal.normal_map);
 }
 
@@ -354,11 +412,25 @@ TEST(Triangle, ComputeShadingNormalFromMap) {
   auto triangle = SimpleTriangle();
 
   auto front_normal = triangle->ComputeShadingNormal(FRONT_FACE, nullptr);
-  EXPECT_FALSE(front_normal.geometry);
+  EXPECT_FALSE(front_normal.surface_normal);
+  ASSERT_TRUE(front_normal.dp_duv);
+  EXPECT_EQ(1.0, front_normal.dp_duv->first.x);
+  EXPECT_EQ(0.0, front_normal.dp_duv->first.y);
+  EXPECT_EQ(0.0, front_normal.dp_duv->first.z);
+  EXPECT_EQ(0.0, front_normal.dp_duv->second.x);
+  EXPECT_EQ(1.0, front_normal.dp_duv->second.y);
+  EXPECT_EQ(0.0, front_normal.dp_duv->second.z);
   EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 
   auto back_normal = triangle->ComputeShadingNormal(BACK_FACE, nullptr);
-  EXPECT_FALSE(back_normal.geometry);
+  EXPECT_FALSE(back_normal.surface_normal);
+  ASSERT_TRUE(back_normal.dp_duv);
+  EXPECT_EQ(1.0, back_normal.dp_duv->first.x);
+  EXPECT_EQ(0.0, back_normal.dp_duv->first.y);
+  EXPECT_EQ(0.0, back_normal.dp_duv->first.z);
+  EXPECT_EQ(0.0, back_normal.dp_duv->second.x);
+  EXPECT_EQ(1.0, back_normal.dp_duv->second.y);
+  EXPECT_EQ(0.0, back_normal.dp_duv->second.z);
   EXPECT_EQ(back_normal_map.Get(), back_normal.normal_map);
 }
 
@@ -377,34 +449,76 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
   AdditionalData additional_data0({1.0, 0.0, 0.0});
   auto front_normal0 =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data0);
-  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), front_normal0.geometry);
+  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), front_normal0.surface_normal);
+  ASSERT_TRUE(front_normal0.dp_duv);
+  EXPECT_EQ(1.0, front_normal0.dp_duv->first.x);
+  EXPECT_EQ(0.0, front_normal0.dp_duv->first.y);
+  EXPECT_EQ(0.0, front_normal0.dp_duv->first.z);
+  EXPECT_EQ(0.0, front_normal0.dp_duv->second.x);
+  EXPECT_EQ(1.0, front_normal0.dp_duv->second.y);
+  EXPECT_EQ(0.0, front_normal0.dp_duv->second.z);
   EXPECT_EQ(nullptr, front_normal0.normal_map);
 
   auto back_normal0 =
       triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data0);
-  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0), back_normal0.geometry);
+  EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0), back_normal0.surface_normal);
+  ASSERT_TRUE(back_normal0.dp_duv);
+  EXPECT_EQ(1.0, back_normal0.dp_duv->first.x);
+  EXPECT_EQ(0.0, back_normal0.dp_duv->first.y);
+  EXPECT_EQ(0.0, back_normal0.dp_duv->first.z);
+  EXPECT_EQ(0.0, back_normal0.dp_duv->second.x);
+  EXPECT_EQ(1.0, back_normal0.dp_duv->second.y);
+  EXPECT_EQ(0.0, back_normal0.dp_duv->second.z);
   EXPECT_EQ(nullptr, back_normal0.normal_map);
 
   AdditionalData additional_data1({0.0, 1.0, 0.0});
   auto front_normal1 =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data1);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), front_normal1.geometry);
+  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), front_normal1.surface_normal);
+  ASSERT_TRUE(front_normal1.dp_duv);
+  EXPECT_EQ(1.0, front_normal1.dp_duv->first.x);
+  EXPECT_EQ(0.0, front_normal1.dp_duv->first.y);
+  EXPECT_EQ(0.0, front_normal1.dp_duv->first.z);
+  EXPECT_EQ(0.0, front_normal1.dp_duv->second.x);
+  EXPECT_EQ(1.0, front_normal1.dp_duv->second.y);
+  EXPECT_EQ(0.0, front_normal1.dp_duv->second.z);
   EXPECT_EQ(nullptr, front_normal1.normal_map);
 
   auto back_normal1 =
       triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data1);
-  EXPECT_EQ(iris::Vector(0.0, -1.0, 0.0), back_normal1.geometry);
+  EXPECT_EQ(iris::Vector(0.0, -1.0, 0.0), back_normal1.surface_normal);
+  ASSERT_TRUE(back_normal1.dp_duv);
+  EXPECT_EQ(1.0, back_normal1.dp_duv->first.x);
+  EXPECT_EQ(0.0, back_normal1.dp_duv->first.y);
+  EXPECT_EQ(0.0, back_normal1.dp_duv->first.z);
+  EXPECT_EQ(0.0, back_normal1.dp_duv->second.x);
+  EXPECT_EQ(1.0, back_normal1.dp_duv->second.y);
+  EXPECT_EQ(0.0, back_normal1.dp_duv->second.z);
   EXPECT_EQ(nullptr, back_normal1.normal_map);
 
   AdditionalData additional_data2({0.0, 0.0, 1.0});
   auto front_normal2 =
       triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data2);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), front_normal2.geometry);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), front_normal2.surface_normal);
+  ASSERT_TRUE(front_normal2.dp_duv);
+  EXPECT_EQ(1.0, front_normal2.dp_duv->first.x);
+  EXPECT_EQ(0.0, front_normal2.dp_duv->first.y);
+  EXPECT_EQ(0.0, front_normal2.dp_duv->first.z);
+  EXPECT_EQ(0.0, front_normal2.dp_duv->second.x);
+  EXPECT_EQ(1.0, front_normal2.dp_duv->second.y);
+  EXPECT_EQ(0.0, front_normal2.dp_duv->second.z);
   EXPECT_EQ(nullptr, front_normal2.normal_map);
 
   auto back_normal2 =
       triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data2);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), back_normal2.geometry);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), back_normal2.surface_normal);
+  ASSERT_TRUE(back_normal2.dp_duv);
+  EXPECT_EQ(1.0, back_normal2.dp_duv->first.x);
+  EXPECT_EQ(0.0, back_normal2.dp_duv->first.y);
+  EXPECT_EQ(0.0, back_normal2.dp_duv->first.z);
+  EXPECT_EQ(0.0, back_normal2.dp_duv->second.x);
+  EXPECT_EQ(1.0, back_normal2.dp_duv->second.y);
+  EXPECT_EQ(0.0, back_normal2.dp_duv->second.z);
   EXPECT_EQ(nullptr, back_normal2.normal_map);
 }
 

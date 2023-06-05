@@ -38,7 +38,8 @@ class Geometry : public ReferenceCountable {
       face_t face, const void* additional_data) const;
 
   struct ComputeShadingNormalResult {
-    std::optional<Vector> geometry;
+    std::optional<Vector> surface_normal;
+    std::optional<std::pair<Vector, Vector>> dp_duv;
     const NormalMap* normal_map;
   };
 

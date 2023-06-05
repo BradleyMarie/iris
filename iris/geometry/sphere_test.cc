@@ -149,11 +149,13 @@ TEST(Sphere, ComputeShadingNormal) {
   auto sphere = SimpleSphere();
 
   auto front_normal = sphere->ComputeShadingNormal(FRONT_FACE, nullptr);
-  EXPECT_FALSE(front_normal.geometry);
+  EXPECT_FALSE(front_normal.surface_normal);
+  EXPECT_FALSE(front_normal.dp_duv);
   EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 
   auto back_normal = sphere->ComputeShadingNormal(BACK_FACE, nullptr);
-  EXPECT_FALSE(back_normal.geometry);
+  EXPECT_FALSE(back_normal.surface_normal);
+  EXPECT_FALSE(front_normal.dp_duv);
   EXPECT_EQ(back_normal_map.Get(), back_normal.normal_map);
 }
 

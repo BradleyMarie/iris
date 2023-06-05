@@ -88,7 +88,7 @@ std::optional<TextureCoordinates> Sphere::ComputeTextureCoordinates(
 
 Geometry::ComputeShadingNormalResult Sphere::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
-  return {std::nullopt, normal_maps_[face].Get()};
+  return {std::nullopt, std::nullopt, normal_maps_[face].Get()};
 }
 
 const Material* Sphere::GetMaterial(face_t face,

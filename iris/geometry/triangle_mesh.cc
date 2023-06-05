@@ -80,6 +80,8 @@ class Triangle final : public Geometry {
   std::optional<Vector> MaybeComputeShadingNormal(
       face_t face, const void* additional_data) const;
 
+  std::optional<std::pair<Vector, Vector>> MaybeComputeNormalTangents() const;
+
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
   const std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
@@ -183,10 +185,41 @@ std::optional<Vector> Triangle::MaybeComputeShadingNormal(
   return -normalized;
 }
 
+std::optional<std::pair<Vector, Vector>> Triangle::MaybeComputeNormalTangents()
+    const {
+  if (shared_->uv.empty()) {
+    return std::nullopt;
+  }
+
+  geometric_t duv02_u = shared_->uv[std::get<0>(vertices_)].first -
+                        shared_->uv[std::get<2>(vertices_)].first;
+  geometric_t duv02_v = shared_->uv[std::get<0>(vertices_)].second -
+                        shared_->uv[std::get<2>(vertices_)].second;
+  geometric_t duv12_u = shared_->uv[std::get<1>(vertices_)].first -
+                        shared_->uv[std::get<2>(vertices_)].first;
+  geometric_t duv12_v = shared_->uv[std::get<1>(vertices_)].second -
+                        shared_->uv[std::get<2>(vertices_)].second;
+
+  Vector dp02 = shared_->points[std::get<0>(vertices_)] -
+                shared_->points[std::get<2>(vertices_)];
+  Vector dp12 = shared_->points[std::get<1>(vertices_)] -
+                shared_->points[std::get<2>(vertices_)];
+
+  geometric_t determinant = duv02_u * duv12_v - duv02_v * duv12_u;
+  if (std::abs(determinant) < 1e-8) {
+    return std::nullopt;
+  }
+
+  Vector dp_du = (duv12_v * dp02 - duv02_v * dp12) / determinant;
+  Vector dp_dv = (-duv12_u * dp02 + duv02_u * dp12) / determinant;
+
+  return std::make_pair(dp_du, dp_dv);
+}
+
 Geometry::ComputeShadingNormalResult Triangle::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
   return {MaybeComputeShadingNormal(face, additional_data),
-          shared_->normal_maps[face].Get()};
+          MaybeComputeNormalTangents(), shared_->normal_maps[face].Get()};
 }
 
 const Material* Triangle::GetMaterial(face_t face,

@@ -1,6 +1,7 @@
 #include "iris/bxdfs/fresnel.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 #include "iris/reflectors/uniform_reflector.h"
@@ -11,9 +12,8 @@ namespace {
 
 visual_t FrDielectric(visual_t cos_theta_incident, visual_t eta_incident,
                       visual_t eta_transmission) {
-  cos_theta_incident =
-      std::max(static_cast<visual_t>(-1.0),
-               std::min(cos_theta_incident, static_cast<visual_t>(1.0)));
+  assert(cos_theta_incident >= static_cast<visual_t>(-1.0));
+  assert(cos_theta_incident <= static_cast<visual_t>(1.0));
 
   if (cos_theta_incident <= static_cast<visual_t>(0.0)) {
     std::swap(eta_incident, eta_transmission);

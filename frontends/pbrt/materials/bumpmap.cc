@@ -17,13 +17,13 @@ class PbrtFrontBumpMap final : public NormalMap {
       return std::nullopt;
     }
 
-    Vector ss = Normalize(differentials->dp_dx);
+    Vector ss = Normalize(differentials->dp.first);
     Vector ts = CrossProduct(ss, surface_normal);
 
     Vector dp_dy = Normalize(ts);
     Vector dp_dx = CrossProduct(dp_dy, surface_normal);
 
-    return Differentials{dp_dx, dp_dy};
+    return Differentials{differentials->type, {dp_dx, dp_dy}};
   }
 
  public:

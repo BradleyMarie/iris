@@ -25,7 +25,7 @@ std::optional<TextureCoordinates> Geometry::ComputeTextureCoordinates(
 
 Geometry::ComputeShadingNormalResult Geometry::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
-  return {std::nullopt, nullptr};
+  return {std::nullopt, std::nullopt, nullptr};
 }
 
 const Material* Geometry::GetMaterial(face_t face,

@@ -63,7 +63,7 @@ class AlwaysHitsGeometry : public Geometry {
 
   ComputeShadingNormalResult ComputeShadingNormal(
       face_t face, const void* additional_data) const override {
-    return {world_shading_normal_, nullptr};
+    return {world_shading_normal_, std::nullopt, nullptr};
   }
 
   const Material* GetMaterial(face_t face,

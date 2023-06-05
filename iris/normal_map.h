@@ -2,6 +2,7 @@
 #define _IRIS_NORMAL_MAP_
 
 #include <optional>
+#include <utility>
 
 #include "iris/float.h"
 #include "iris/reference_countable.h"
@@ -13,8 +14,11 @@ namespace iris {
 class NormalMap : public ReferenceCountable {
  public:
   struct Differentials {
-    const Vector dp_dx;
-    const Vector dp_dy;
+    const enum Type {
+      DX_DY = 0,
+      DU_DV = 1,
+    } type;
+    const std::pair<Vector, Vector> dp;
   };
 
   virtual Vector Evaluate(const TextureCoordinates& texture_coordinates,
