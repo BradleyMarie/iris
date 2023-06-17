@@ -3,6 +3,25 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "alpha_adapter",
+    hdrs = ["alpha_adapter.h"],
+    deps = [
+        "//iris:reference_counted",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "alpha_adapter_test",
+    srcs = ["alpha_adapter_test.cc"],
+    deps = [
+        ":alpha_adapter",
+        "//iris:reference_counted",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
@@ -34,6 +53,7 @@ cc_library(
     srcs = ["plymesh.cc"],
     hdrs = ["plymesh.h"],
     deps = [
+        ":alpha_adapter",
         "//frontends/pbrt:object_builder",
         "//iris:geometry",
         "//iris:matrix",
@@ -88,6 +108,7 @@ cc_library(
     srcs = ["trianglemesh.cc"],
     hdrs = ["trianglemesh.h"],
     deps = [
+        ":alpha_adapter",
         "//frontends/pbrt:object_builder",
         "//iris:geometry",
         "//iris:matrix",

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 
+#include "frontends/pbrt/shapes/alpha_adapter.h"
 #include "iris/geometry/triangle_mesh.h"
 #include "plyodine/readers/triangle_mesh_reader.h"
 
@@ -13,7 +14,6 @@ static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
         {"alpha", Parameter::FLOAT_TEXTURE},
         {"filename", Parameter::FILE_PATH},
-        {"shadowalpha", Parameter::FLOAT_TEXTURE},
 };
 
 class TriangleMeshReader final
@@ -107,10 +107,17 @@ PlyMeshBuilder::Build(
     exit(EXIT_FAILURE);
   }
 
+  ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask;
+  auto alpha = parameters.find("alpha");
+  if (alpha != parameters.end()) {
+    alpha_mask = MakeReferenceCounted<internal::AlphaAdapter>(
+        alpha->second.GetFloatTextures().front());
+  }
+
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      reader.positions, reader.faces, reader.normals, reader.uvs, material,
-      material, front_emissive_material, back_emissive_material,
-      front_normal_map, back_normal_map);
+      reader.positions, reader.faces, reader.normals, reader.uvs,
+      std::move(alpha_mask), material, material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   return std::make_pair(std::move(triangles), Matrix::Identity());
 }

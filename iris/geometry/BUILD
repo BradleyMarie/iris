@@ -43,6 +43,7 @@ cc_library(
     deps = [
         "//iris:geometry",
         "//iris:reference_counted",
+        "//iris/textures:texture2d",
     ],
 )
 

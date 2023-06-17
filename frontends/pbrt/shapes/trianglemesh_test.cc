@@ -154,6 +154,7 @@ TEST(TriangleMesh, TooManyUv) {
 
 TEST(TriangleMesh, AllParameters) {
   std::stringstream input(
+      "\"float alpha\" [0.0]"
       "\"integer indices\" [0 1 2]"
       "\"point P\" [1 2 3 4 5 6 7 8 9]"
       "\"vector N\" [1 2 3 4 5 6 7 8 9]"

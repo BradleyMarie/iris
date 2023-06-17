@@ -13,6 +13,7 @@
 #include "iris/normal_map.h"
 #include "iris/point.h"
 #include "iris/reference_counted.h"
+#include "iris/textures/texture2d.h"
 #include "iris/vector.h"
 
 namespace iris {
@@ -23,6 +24,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
     std::span<const Vector> normals,
     std::span<const std::pair<geometric, geometric>> uv,
+    ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<Material> back_material,
     ReferenceCounted<EmissiveMaterial> front_emissive_material,

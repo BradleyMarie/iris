@@ -26,11 +26,26 @@ iris::ReferenceCounted<iris::NormalMap> front_normal_map =
 iris::ReferenceCounted<iris::NormalMap> back_normal_map =
     iris::MakeReferenceCounted<iris::normal_maps::MockNormalMap>();
 
+class AlphaHits : public iris::textures::ValueTexture2D<bool> {
+ public:
+  bool Evaluate(const iris::TextureCoordinates& coords) const override {
+    return true;
+  }
+};
+
+class AlphaMisses : public iris::textures::ValueTexture2D<bool> {
+ public:
+  bool Evaluate(const iris::TextureCoordinates& coords) const override {
+    return false;
+  }
+};
+
 iris::ReferenceCounted<iris::Geometry> SimpleTriangle() {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
         iris::Point(0.0, 1.0, 0.0)}},
       {{{0, 1, 2}, {0, 1, 1}}}, {}, {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
       front_material, back_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
   EXPECT_EQ(triangles.size(), 1u);
@@ -101,9 +116,10 @@ TEST(Triangle, HitsXDominantFront) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
         iris::Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      {{{0, 1, 2}}}, {}, {},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   iris::Point origin(1.0, 0.25, 0.25);
   iris::Vector direction(-1.0, 0.0, 0.0);
@@ -131,9 +147,10 @@ TEST(Triangle, HitsXDominantBack) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
         iris::Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      {{{0, 1, 2}}}, {}, {},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   iris::Point origin(-1.0, 0.25, 0.25);
   iris::Vector direction(1.0, 0.0, 0.0);
@@ -161,9 +178,10 @@ TEST(Triangle, HitsYDominantFront) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 0.0, 1.0),
         iris::Point(1.0, 0.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      {{{0, 1, 2}}}, {}, {},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   iris::Point origin(0.25, 1.0, 0.25);
   iris::Vector direction(0.0, -1.0, 0.0);
@@ -191,9 +209,10 @@ TEST(Triangle, HitsYDominantBack) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 0.0, 1.0),
         iris::Point(1.0, 0.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      {{{0, 1, 2}}}, {}, {},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   iris::Point origin(0.25, -1.0, 0.25);
   iris::Vector direction(0.0, 1.0, 0.0);
@@ -267,6 +286,59 @@ TEST(Triangle, HitsZDominantBack) {
   EXPECT_EQ(0.25, additional_data->at(2));
 }
 
+TEST(Triangle, AlphaHits) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
+        iris::Point(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}}},
+      iris::MakeReferenceCounted<AlphaHits>(), back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
+
+  iris::Point origin(1.0, 0.25, 0.25);
+  iris::Vector direction(-1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  EXPECT_TRUE(triangles.front()->Trace(hit_allocator));
+}
+
+TEST(Triangle, AlphaMisses) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
+        iris::Point(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}}},
+      iris::MakeReferenceCounted<AlphaMisses>(), back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
+
+  iris::Point origin(1.0, 0.25, 0.25);
+  iris::Vector direction(-1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  EXPECT_FALSE(triangles.front()->Trace(hit_allocator));
+}
+
+TEST(Triangle, AlphaNoUVHits) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
+        iris::Point(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {}, {}, iris::MakeReferenceCounted<AlphaMisses>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
+
+  iris::Point origin(1.0, 0.25, 0.25);
+  iris::Vector direction(-1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  EXPECT_TRUE(triangles.front()->Trace(hit_allocator));
+}
+
 TEST(Triangle, ComputeSurfaceNormal) {
   auto triangle = SimpleTriangle();
 
@@ -283,9 +355,10 @@ TEST(Triangle, ComputeTextureCoordinatesNone) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
         iris::Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      {{{0, 1, 2}}}, {}, {},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   auto texture_coordinates = triangles.front()->ComputeTextureCoordinates(
       iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, nullptr);
@@ -334,9 +407,10 @@ TEST(Triangle, ComputeShadingNormalNoUVs) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
         iris::Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, back_material, front_material,
-      front_emissive_material, back_emissive_material,
-      iris::ReferenceCounted<iris::NormalMap>(),
+      {{{0, 1, 2}}}, {}, {},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
 
   auto front_normal =
@@ -356,9 +430,10 @@ TEST(Triangle, ComputeShadingNormalUVsDegenerate) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
         iris::Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}}}, back_material,
-      front_material, front_emissive_material, back_emissive_material,
-      iris::ReferenceCounted<iris::NormalMap>(),
+      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}}},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
 
   auto front_normal =
@@ -378,9 +453,10 @@ TEST(Triangle, ComputeShadingNormalNone) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
         iris::Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}}, back_material,
-      front_material, front_emissive_material, back_emissive_material,
-      iris::ReferenceCounted<iris::NormalMap>(),
+      {{{0, 1, 2}}}, {}, {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
 
   auto front_normal =
@@ -441,9 +517,10 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
       {{{0, 1, 2}}},
       {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
         iris::Vector(0.0, 0.0, 1.0)}},
-      {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}}, back_material, front_material,
-      front_emissive_material, back_emissive_material,
-      iris::ReferenceCounted<iris::NormalMap>(),
+      {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
 
   AdditionalData additional_data0({1.0, 0.0, 0.0});
@@ -539,8 +616,10 @@ TEST(Triangle, IsEmissive) {
       {{{0, 1, 2}}},
       {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
         iris::Vector(0.0, 0.0, 1.0)}},
-      {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}}, back_material, front_material,
-      front_emissive_material, iris::ReferenceCounted<iris::EmissiveMaterial>(),
+      {{{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}}},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      iris::ReferenceCounted<iris::EmissiveMaterial>(),
       iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
   EXPECT_TRUE(triangles.front()->IsEmissive(FRONT_FACE));

@@ -1,5 +1,6 @@
 #include "frontends/pbrt/shapes/trianglemesh.h"
 
+#include "frontends/pbrt/shapes/alpha_adapter.h"
 #include "iris/geometry/triangle_mesh.h"
 
 namespace iris::pbrt_frontend::shapes {
@@ -7,13 +8,9 @@ namespace {
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
-        {"alpha", Parameter::FLOAT_TEXTURE},
-        {"indices", Parameter::INTEGER},
-        {"shadowalpha", Parameter::FLOAT_TEXTURE},
-        {"N", Parameter::VECTOR3},
-        {"P", Parameter::POINT3},
-        {"S", Parameter::VECTOR3},
-        {"uv", Parameter::FLOAT},
+        {"alpha", Parameter::FLOAT_TEXTURE}, {"indices", Parameter::INTEGER},
+        {"N", Parameter::VECTOR3},           {"P", Parameter::POINT3},
+        {"S", Parameter::VECTOR3},           {"uv", Parameter::FLOAT},
 };
 
 class TriangleMeshBuilder
@@ -106,6 +103,13 @@ TriangleMeshBuilder::Build(
     points.push_back(model_to_world.Multiply(entry));
   }
 
+  ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask;
+  auto alpha = parameters.find("alpha");
+  if (alpha != parameters.end()) {
+    alpha_mask = MakeReferenceCounted<internal::AlphaAdapter>(
+        alpha->second.GetFloatTextures().front());
+  }
+
   std::vector<Vector> normals;
   auto n = parameters.find("N");
   if (n != parameters.end() && !n->second.GetVector3Values(0u, 0u).empty()) {
@@ -132,14 +136,14 @@ TriangleMeshBuilder::Build(
   }
 
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      points, indices, normals, uvs, material, material,
+      points, indices, normals, uvs, std::move(alpha_mask), material, material,
       front_emissive_material, back_emissive_material, front_normal_map,
       back_normal_map);
 
   return std::make_pair(std::move(triangles), Matrix::Identity());
 }
 
-};  // namespace
+}  // namespace
 
 extern const std::unique_ptr<const ObjectBuilder<
     std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,

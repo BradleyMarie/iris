@@ -25,6 +25,7 @@ class Triangle final : public Geometry {
     std::vector<Point> points;
     std::vector<Vector> normals;
     std::vector<std::pair<geometric, geometric>> uv;
+    ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask;
     ReferenceCounted<Material> materials[2];
     ReferenceCounted<EmissiveMaterial> emissive_materials[2];
     ReferenceCounted<NormalMap> normal_maps[2];
@@ -82,6 +83,9 @@ class Triangle final : public Geometry {
 
   std::optional<std::pair<Vector, Vector>> MaybeComputeNormalTangents() const;
 
+  std::optional<TextureCoordinates> ComputeTextureCoordinates(
+      const std::optional<Differentials>& differentials,
+      const void* additional_data) const;
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
   const std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
@@ -137,8 +141,8 @@ std::array<geometric_t, 2> Triangle::UVCoordinates(const Point& point) const {
 }
 
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
-    const Point& hit_point, const std::optional<Differentials>& differentials,
-    face_t face, const void* additional_data) const {
+    const std::optional<Differentials>& differentials,
+    const void* additional_data) const {
   if (shared_->uv.empty()) {
     return std::nullopt;
   }
@@ -163,6 +167,12 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
 
   return TextureCoordinates{
       {u, v}, {{uv_dx[0] - u, uv_dy[0] - u, uv_dx[1] - v, uv_dy[1] - v}}};
+}
+
+std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
+    const Point& hit_point, const std::optional<Differentials>& differentials,
+    face_t face, const void* additional_data) const {
+  return ComputeTextureCoordinates(differentials, additional_data);
 }
 
 std::optional<Vector> Triangle::MaybeComputeShadingNormal(
@@ -373,6 +383,15 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
                                  b1 * inverse_determinant,
                                  b2 * inverse_determinant};
 
+  if (shared_->alpha_mask) {
+    auto texture_coordinates =
+        ComputeTextureCoordinates(std::nullopt, &additional_data);
+    if (texture_coordinates &&
+        !shared_->alpha_mask->Evaluate(*texture_coordinates)) {
+      return nullptr;
+    }
+  }
+
   geometric_t dp = DotProduct(ray.direction, ComputeSurfaceNormal());
 
   face_t front_face, back_face;
@@ -395,6 +414,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
     std::span<const Vector> normals,
     std::span<const std::pair<geometric, geometric>> uv,
+    ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<Material> back_material,
     ReferenceCounted<EmissiveMaterial> front_emissive_material,
@@ -406,6 +426,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
           std::vector<Point>(points.begin(), points.end()),
           std::vector<Vector>(normals.begin(), normals.end()),
           std::vector<std::pair<geometric, geometric>>(uv.begin(), uv.end()),
+          std::move(alpha_mask),
           {std::move(front_material), std::move(back_material)},
           {std::move(front_emissive_material),
            std::move(back_emissive_material)},

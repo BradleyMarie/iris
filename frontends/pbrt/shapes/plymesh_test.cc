@@ -62,6 +62,7 @@ TEST(PlyMesh, Quads) {
 
 TEST(PlyMesh, Triangles) {
   std::stringstream input(
+      "\"float alpha\" [0.0]"
       "\"string filename\" \"frontends/pbrt/shapes/test_data/triangles.ply\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
