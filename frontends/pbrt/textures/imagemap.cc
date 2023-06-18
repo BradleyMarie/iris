@@ -191,6 +191,8 @@ class ImageFloatTextureBuilder final
     }
 
     std::vector<visual> scaled_values;
+    scaled_values.reserve(nx * ny);
+
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
         visual_t value = InverseGamma(values[(ny - y - 1) * nx + x]);
@@ -262,6 +264,8 @@ class ImageSpectrumTextureBuilder final
     }
 
     std::vector<ReferenceCounted<Reflector>> scaled_reflectors;
+    scaled_reflectors.reserve(nx * ny);
+
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
         visual_t r = InverseGamma(values[3 * ((ny - y - 1) * nx + x) + 0]) *
