@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "frontends/pbrt/materials/matte.h"
+#include "frontends/pbrt/materials/mirror.h"
 #include "frontends/pbrt/materials/plastic.h"
 #include "frontends/pbrt/quoted_string.h"
 
@@ -19,7 +20,9 @@ static const std::unordered_map<
                        ReferenceCounted<NormalMap>>,
             TextureManager&>>,
         TextureManager&>>&>
-    g_materials = {{"matte", g_matte_builder}, {"plastic", g_plastic_builder}};
+    g_materials = {{"matte", g_matte_builder},
+                   {"mirror", g_mirror_builder},
+                   {"plastic", g_plastic_builder}};
 
 }  // namespace
 

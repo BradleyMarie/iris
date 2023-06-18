@@ -51,12 +51,39 @@ cc_test(
 )
 
 cc_library(
+    name = "mirror",
+    srcs = ["mirror.cc"],
+    hdrs = ["mirror.h"],
+    deps = [
+        ":bumpmap",
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:texture_manager",
+        "//iris:material",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris/materials:mirror_material",
+    ],
+)
+
+cc_test(
+    name = "mirror_test",
+    srcs = ["mirror_test.cc"],
+    deps = [
+        ":mirror",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":matte",
+        ":mirror",
         ":plastic",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt:object_builder",

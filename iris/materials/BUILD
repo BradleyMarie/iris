@@ -34,6 +34,37 @@ cc_test(
 )
 
 cc_library(
+    name = "mirror_material",
+    srcs = ["mirror_material.cc"],
+    hdrs = ["mirror_material.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:mirror_brdf",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "mirror_material_test",
+    srcs = ["mirror_material_test.cc"],
+    deps = [
+        ":mirror_material",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "mock_material",
     testonly = True,
     hdrs = ["mock_material.h"],
