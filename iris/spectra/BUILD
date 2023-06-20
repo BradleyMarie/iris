@@ -31,3 +31,22 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "uniform_spectrum",
+    srcs = ["uniform_spectrum.cc"],
+    hdrs = ["uniform_spectrum.h"],
+    deps = [
+        "//iris:float",
+        "//iris:spectrum",
+    ],
+)
+
+cc_test(
+    name = "uniform_spectrum_test",
+    srcs = ["uniform_spectrum_test.cc"],
+    deps = [
+        ":uniform_spectrum",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

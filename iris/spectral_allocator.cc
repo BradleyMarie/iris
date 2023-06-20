@@ -40,16 +40,16 @@ class ScaledSpectrum final : public Spectrum {
 
 class ScaledSpectra final : public Spectrum {
  public:
-  ScaledSpectra(const Spectrum& spectrum, const Spectrum& attenuation)
-      : spectrum_(spectrum), attenuation_(attenuation) {}
+  ScaledSpectra(const Spectrum& spectrum0, const Spectrum& spectrum1)
+      : spectrum0_(spectrum0), spectrum1_(spectrum1) {}
 
   visual_t Intensity(visual_t wavelength) const {
-    return spectrum_.Intensity(wavelength) * attenuation_.Intensity(wavelength);
+    return spectrum0_.Intensity(wavelength) * spectrum1_.Intensity(wavelength);
   }
 
  private:
-  const Spectrum& spectrum_;
-  const Spectrum& attenuation_;
+  const Spectrum& spectrum0_;
+  const Spectrum& spectrum1_;
 };
 
 class ReflectedSpectrum final : public Spectrum {
@@ -193,6 +193,15 @@ const Spectrum* SpectralAllocator::Scale(const Spectrum* spectrum,
   }
 
   return nullptr;
+}
+
+const Spectrum* SpectralAllocator::Scale(const Spectrum* spectrum0,
+                                         const Spectrum* spectrum1) {
+  if (!spectrum0 || !spectrum1) {
+    return nullptr;
+  }
+
+  return &arena_.Allocate<ScaledSpectra>(*spectrum0, *spectrum1);
 }
 
 const Spectrum* SpectralAllocator::Reflect(const Spectrum* spectrum,
