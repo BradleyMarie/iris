@@ -4,6 +4,7 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <set>
 #include <span>
 #include <utility>
 #include <vector>
@@ -43,6 +44,8 @@ class SceneObjects {
     std::map<Matrix, size_t> matrix_to_transform_index_ = {
         {Matrix::Identity(), 0}};
     std::vector<Matrix> matrices_ = {Matrix::Identity()};
+    std::set<std::pair<const Geometry*, size_t>> geometry_filter_;
+    std::set<const Light*> light_filter_;
     std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
     std::vector<ReferenceCounted<Light>> lights_;
     ReferenceCounted<EnvironmentalLight> environmental_light_;

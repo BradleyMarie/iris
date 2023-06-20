@@ -8,7 +8,8 @@
 iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
   auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*result, ComputeBounds(iris::Matrix::Identity()))
-      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0))));
+      .WillRepeatedly(
+          testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0))));
   return result;
 }
 
@@ -44,13 +45,20 @@ TEST(SceneObjects, Build) {
   builder.Add(iris::ReferenceCounted<iris::Geometry>(), matrix0);
 
   builder.Add(light0);
+  builder.Add(light0);
+  builder.Add(light1);
   builder.Add(light1);
 
   builder.Add(geom0, matrix1);
+  builder.Add(geom0, matrix1);
+  builder.Add(geom1, matrix2);
   builder.Add(geom1, matrix2);
   builder.Add(geom2, matrix2);
+  builder.Add(geom2, matrix2);
+  builder.Add(geom3, matrix0);
   builder.Add(geom3, matrix0);
 
+  builder.Add(geom4);
   builder.Add(geom4);
 
   builder.Set(environmental_light);
@@ -81,11 +89,17 @@ TEST(SceneObjects, Build) {
   light1 = iris::MakeReferenceCounted<iris::lights::MockLight>();
 
   builder.Add(light0);
+  builder.Add(light0);
+  builder.Add(light1);
   builder.Add(light1);
 
   builder.Add(geom0, matrix1);
+  builder.Add(geom0, matrix1);
+  builder.Add(geom1, matrix2);
   builder.Add(geom1, matrix2);
   builder.Add(geom2, matrix2);
+  builder.Add(geom2, matrix2);
+  builder.Add(geom3, matrix0);
   builder.Add(geom3, matrix0);
 
   scene_objects = builder.Build();
