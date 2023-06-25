@@ -250,9 +250,10 @@ TEST(MatrixManager, LookAt) {
 
   iris::pbrt_frontend::MatrixManager matrix_manager;
 
-  EXPECT_EQ(
-      iris::Matrix::LookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0).value(),
-      matrix_manager.Get().start);
+  EXPECT_EQ(iris::Matrix::LookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0)
+                .value()
+                .Inverse(),
+            matrix_manager.Get().start);
 }
 
 TEST(MatrixManager, TransformNotInvertible) {

@@ -39,7 +39,7 @@ TEST(OrthographicCameraTest, NoTransform) {
 
 TEST(OrthographicCameraTest, Transformed) {
   iris::cameras::OrthographicCamera camera(
-      iris::Matrix::Translation(1.0, 2.0, 3.0).value(),
+      iris::Matrix::Translation(1.0, 2.0, 3.0).value().Inverse(),
       std::array<iris::geometric_t, 2>({0.5, 0.5}));
 
   auto top_left = camera.Compute({0.0, 0.0}, {0.0, 0.0}, std::nullopt);
@@ -69,7 +69,7 @@ TEST(OrthographicCameraTest, Transformed) {
 
 TEST(OrthographicCameraTest, Derivatives) {
   iris::cameras::OrthographicCamera camera(
-      iris::Matrix::Translation(1.0, 2.0, 3.0).value(),
+      iris::Matrix::Translation(1.0, 2.0, 3.0).value().Inverse(),
       std::array<iris::geometric_t, 2>({0.5, 0.5}));
 
   std::array<iris::geometric_t, 2> derivatives({1.0, 1.0});

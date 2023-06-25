@@ -50,6 +50,8 @@ struct Matrix final {
   static Matrix Multiply(const Matrix& left, const Matrix& right);
   Matrix Multiply(const Matrix& matrix) const;
 
+  Matrix Inverse() const;
+
   const std::array<geometric, 4>& operator[](size_t index) const {
     return m[index];
   }

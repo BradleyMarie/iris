@@ -15,7 +15,7 @@ namespace cameras {
 class OrthographicCamera final : public Camera {
  public:
   OrthographicCamera(
-      const Matrix& camera_to_world,
+      const Matrix& world_to_camera,
       const std::array<geometric_t, 2>& half_frame_size) noexcept;
 
   RayDifferential Compute(
@@ -25,7 +25,7 @@ class OrthographicCamera final : public Camera {
   bool HasLens() const override;
 
  private:
-  const Matrix camera_to_world_;
+  const Matrix world_to_camera_;
   const std::array<geometric_t, 2> half_frame_size_;
 };
 

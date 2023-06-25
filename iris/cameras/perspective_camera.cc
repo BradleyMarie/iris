@@ -7,10 +7,10 @@ namespace iris {
 namespace cameras {
 
 PerspectiveCamera::PerspectiveCamera(
-    const Matrix& camera_to_world,
+    const Matrix& world_to_camera,
     const std::array<geometric_t, 2>& half_frame_size,
     geometric_t half_fov) noexcept
-    : camera_to_world_(camera_to_world),
+    : world_to_camera_(world_to_camera),
       half_frame_size_(half_frame_size),
       image_plane_distance_(std::min(half_frame_size[0], half_frame_size[1]) /
                             std::tan(half_fov)) {
@@ -28,18 +28,18 @@ RayDifferential PerspectiveCamera::Compute(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),
       std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv[1]),
       image_plane_distance_);
-  Ray base = camera_to_world_.Multiply(Ray(origin, base_direction));
+  Ray base = world_to_camera_.InverseMultiply(Ray(origin, base_direction));
 
   Vector dx_direction(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv_dxdy[0]),
       base_direction.y, image_plane_distance_);
-  Ray dx = camera_to_world_.Multiply(Ray(origin, dx_direction));
+  Ray dx = world_to_camera_.InverseMultiply(Ray(origin, dx_direction));
 
   Vector dy_direction(
       base_direction.x,
       std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv_dxdy[1]),
       image_plane_distance_);
-  Ray dy = camera_to_world_.Multiply(Ray(origin, dy_direction));
+  Ray dy = world_to_camera_.InverseMultiply(Ray(origin, dy_direction));
 
   return Normalize(RayDifferential(base, dx, dy));
 }

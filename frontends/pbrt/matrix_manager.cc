@@ -116,7 +116,8 @@ void MatrixManager::LookAt(Tokenizer& tokenizer) {
     exit(EXIT_FAILURE);
   }
 
-  Transform(look_at.value());
+  // This transformation is inverted in PBRT
+  Transform(look_at.value().Inverse());
 }
 
 void MatrixManager::CoordinateSystem(Tokenizer& tokenizer) {

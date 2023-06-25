@@ -523,6 +523,10 @@ Matrix Matrix::Multiply(const Matrix& matrix) const {
   return Matrix(Multiply4x4(m, matrix.m), Multiply4x4(matrix.i, i));
 }
 
+Matrix Matrix::Inverse() const {
+  return Matrix(i, m);
+}
+
 bool operator<(const Matrix& left, const Matrix& right) {
   for (size_t i = 0; i < 4; i++) {
     for (size_t j = 0; j < 4; j++) {

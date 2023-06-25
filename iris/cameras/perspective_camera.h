@@ -15,7 +15,7 @@ namespace cameras {
 
 class PerspectiveCamera final : public Camera {
  public:
-  PerspectiveCamera(const Matrix& camera_to_world,
+  PerspectiveCamera(const Matrix& world_to_camera,
                     const std::array<geometric_t, 2>& half_frame_size,
                     geometric_t half_fov) noexcept;
 
@@ -26,7 +26,7 @@ class PerspectiveCamera final : public Camera {
   bool HasLens() const override;
 
  private:
-  const Matrix camera_to_world_;
+  const Matrix world_to_camera_;
   const std::array<geometric_t, 2> half_frame_size_;
   const geometric_t image_plane_distance_;
 };

@@ -447,6 +447,43 @@ TEST(MatrixTest, MultiplyMatrix) {
   EXPECT_EQ(1.0, matrix.i[3][3]);
 }
 
+TEST(MatrixTest, Inverse) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value().Inverse();
+  EXPECT_EQ(1.0, matrix.m[0][0]);
+  EXPECT_EQ(0.0, matrix.m[0][1]);
+  EXPECT_EQ(0.0, matrix.m[0][2]);
+  EXPECT_EQ(-1.0, matrix.m[0][3]);
+  EXPECT_EQ(0.0, matrix.m[1][0]);
+  EXPECT_EQ(1.0, matrix.m[1][1]);
+  EXPECT_EQ(0.0, matrix.m[1][2]);
+  EXPECT_EQ(-2.0, matrix.m[1][3]);
+  EXPECT_EQ(0.0, matrix.m[2][0]);
+  EXPECT_EQ(0.0, matrix.m[2][1]);
+  EXPECT_EQ(1.0, matrix.m[2][2]);
+  EXPECT_EQ(-3.0, matrix.m[2][3]);
+  EXPECT_EQ(0.0, matrix.m[3][0]);
+  EXPECT_EQ(0.0, matrix.m[3][1]);
+  EXPECT_EQ(0.0, matrix.m[3][2]);
+  EXPECT_EQ(1.0, matrix.m[3][3]);
+
+  EXPECT_EQ(1.0, matrix.i[0][0]);
+  EXPECT_EQ(0.0, matrix.i[0][1]);
+  EXPECT_EQ(0.0, matrix.i[0][2]);
+  EXPECT_EQ(1.0, matrix.i[0][3]);
+  EXPECT_EQ(0.0, matrix.i[1][0]);
+  EXPECT_EQ(1.0, matrix.i[1][1]);
+  EXPECT_EQ(0.0, matrix.i[1][2]);
+  EXPECT_EQ(2.0, matrix.i[1][3]);
+  EXPECT_EQ(0.0, matrix.i[2][0]);
+  EXPECT_EQ(0.0, matrix.i[2][1]);
+  EXPECT_EQ(1.0, matrix.i[2][2]);
+  EXPECT_EQ(3.0, matrix.i[2][3]);
+  EXPECT_EQ(0.0, matrix.i[3][0]);
+  EXPECT_EQ(0.0, matrix.i[3][1]);
+  EXPECT_EQ(0.0, matrix.i[3][2]);
+  EXPECT_EQ(1.0, matrix.i[3][3]);
+}
+
 TEST(MatrixTest, Subscript) {
   std::array<std::array<iris::geometric, 4>, 4> ortho = {
       {{2.0, 0.0, 0.0, -3.0},

@@ -55,7 +55,7 @@ TEST(PerspectiveCameraTest, Center) {
 
 TEST(PerspectiveCameraTest, ScaledCenter) {
   iris::cameras::PerspectiveCamera camera(
-      iris::Matrix::Scalar(2.0, 1.0, 2.0).value(),
+      iris::Matrix::Scalar(2.0, 1.0, 2.0).value().Inverse(),
       std::array<iris::geometric_t, 2>({1.0, 1.0}), M_PI_4);
   auto ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, std::nullopt);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), ray.origin);
@@ -66,7 +66,7 @@ TEST(PerspectiveCameraTest, ScaledCenter) {
 
 TEST(PerspectiveCameraTest, TranslatedCenter) {
   iris::cameras::PerspectiveCamera camera(
-      iris::Matrix::Translation(1.0, 2.0, 3.0).value(),
+      iris::Matrix::Translation(1.0, 2.0, 3.0).value().Inverse(),
       std::array<iris::geometric_t, 2>({1.0, 1.0}), M_PI_4);
   auto ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, std::nullopt);
   EXPECT_EQ(iris::Point(1.0, 2.0, 3.0), ray.origin);

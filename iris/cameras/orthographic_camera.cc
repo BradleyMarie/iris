@@ -7,9 +7,9 @@ namespace iris {
 namespace cameras {
 
 OrthographicCamera::OrthographicCamera(
-    const Matrix& camera_to_world,
+    const Matrix& world_to_camera,
     const std::array<geometric_t, 2>& half_frame_size) noexcept
-    : camera_to_world_(camera_to_world), half_frame_size_(half_frame_size) {
+    : world_to_camera_(world_to_camera), half_frame_size_(half_frame_size) {
   assert(std::isfinite(half_frame_size[0]) && 0.0 < half_frame_size[0]);
   assert(std::isfinite(half_frame_size[1]) && 0.0 < half_frame_size[1]);
 }
@@ -22,18 +22,18 @@ RayDifferential OrthographicCamera::Compute(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),
       std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv[1]), 0.0);
   Vector direction(0.0, 0.0, 1.0);
-  Ray base = camera_to_world_.Multiply(Ray(base_origin, direction));
+  Ray base = world_to_camera_.InverseMultiply(Ray(base_origin, direction));
 
   Point dx_origin(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv_dxdy[0]),
       base_origin.y, 0.0);
-  Ray dx = camera_to_world_.Multiply(Ray(dx_origin, direction));
+  Ray dx = world_to_camera_.InverseMultiply(Ray(dx_origin, direction));
 
   Point dy_origin(
       base_origin.x,
       std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv_dxdy[1]),
       0.0);
-  Ray dy = camera_to_world_.Multiply(Ray(dy_origin, direction));
+  Ray dy = world_to_camera_.InverseMultiply(Ray(dy_origin, direction));
 
   return Normalize(RayDifferential(base, dx, dy));
 }
