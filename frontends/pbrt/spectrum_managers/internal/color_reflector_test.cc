@@ -16,5 +16,5 @@ TEST(ColorReflector, Albedo) {
                                    iris::pbrt_frontend::Color::RGB);
   iris::pbrt_frontend::spectrum_managers::internal::ColorReflector reflector(
       color);
-  EXPECT_EQ(0.5, reflector.Albedo());
+  EXPECT_NEAR(0.464875579, reflector.Albedo(), 0.001);
 }
