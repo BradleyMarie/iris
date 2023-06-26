@@ -97,14 +97,14 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
 }
 
 std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeAboveCosts(
-    std::array<BVHSplit, kNumSplitsToEvaluate> splits) {
+    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits) {
   std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
   ComputeCosts(splits.rbegin(), splits.rend() - 1, result.rbegin());
   return result;
 }
 
 std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
-    std::array<BVHSplit, kNumSplitsToEvaluate> splits) {
+    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits) {
   std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
   ComputeCosts(splits.begin(), splits.end() - 1, result.begin());
   return result;
@@ -123,14 +123,18 @@ std::optional<geometric_t> FindBestSplitOnAxis(
   auto above_costs = ComputeAboveCosts(splits);
   geometric_t node_surface_area = node_bounds.SurfaceArea();
 
+  std::array<geometric_t, kNumSplitsToEvaluate - 1> costs;
   geometric_t best_cost = std::numeric_limits<geometric_t>::infinity();
-  size_t best_split = kNumSplitsToEvaluate;
-  for (size_t i = 1; i < (kNumSplitsToEvaluate - 1); i++) {
-    geometric_t cost = static_cast<geometric_t>(1.0) +
-                       (above_costs[i] + below_costs[i]) / node_surface_area;
-    if (cost < best_cost) {
-      best_cost = cost;
-      best_split = i;
+  size_t num_best_costs = 1;
+  for (size_t i = 0; i < costs.size(); i++) {
+    costs[i] = static_cast<geometric_t>(1.0) +
+               (above_costs[i] + below_costs[i]) / node_surface_area;
+
+    if (costs[i] < best_cost) {
+      best_cost = costs[i];
+      num_best_costs = 1;
+    } else if (costs[i] == best_cost) {
+      num_best_costs += 1;
     }
   }
 
@@ -139,10 +143,23 @@ std::optional<geometric_t> FindBestSplitOnAxis(
     return std::nullopt;
   }
 
+  size_t best_split = num_best_costs / 2;
+  for (size_t i = 0; i < costs.size(); i++) {
+    if (costs[i] != best_cost) {
+      continue;
+    }
+
+    num_best_costs -= 1;
+
+    if (num_best_costs == 0) {
+      best_split = i;
+    }
+  }
+
   return std::lerp(centroid_bounds.lower[split_axis],
                    centroid_bounds.upper[split_axis],
-                   static_cast<geometric>(1 + best_split) /
-                       static_cast<geometric>(kNumSplitsToEvaluate));
+                   static_cast<geometric_t>(1 + best_split) /
+                       static_cast<geometric_t>(kNumSplitsToEvaluate));
 }
 
 PartitionResult Partition(
@@ -224,6 +241,14 @@ size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
     }
 
     auto result = Partition(geometry, split_axis, *split, indices);
+    if (result.above.empty() || result.below.empty()) {
+      // It's unclear how to write a unit test to exercise this branch; however,
+      // since FindBestSplitOnAxis has been observed returning splits that do
+      // not partition properly this branch is needed to cover that edge case.
+      return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
+                         geometry_sort_order);
+    }
+
     below_indices = result.below;
     above_indices = result.above;
   }

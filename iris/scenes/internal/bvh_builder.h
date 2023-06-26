@@ -50,10 +50,10 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
     Vector::Axis split_axis);
 
 std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeAboveCosts(
-    std::array<BVHSplit, kNumSplitsToEvaluate> splits);
+    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits);
 
 std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
-    std::array<BVHSplit, kNumSplitsToEvaluate> splits);
+    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits);
 
 std::optional<geometric_t> FindBestSplitOnAxis(
     const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&

@@ -288,6 +288,43 @@ TEST(FindBestSplitOnAxis, LotsOfOverlappedGeometry) {
   EXPECT_NEAR(1.0, *best_split, 0.0000001);
 }
 
+TEST(FindBestSplitOnAxis, AllOverlappedGeometry) {
+  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
+                        const iris::Matrix*>>
+      geometry;
+  std::vector<size_t> indices;
+  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
+       i++) {
+    auto mock_geometry =
+        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+    auto bound_offset =
+        1.0 / static_cast<iris::geometric_t>(
+                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
+    iris::BoundingBox bounds0(
+        iris::Point(0.0, -0.5 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        iris::Point(1.0, 99.5 + bound_offset * i + 0.5 * bound_offset, 1.0));
+    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+        .WillRepeatedly(testing::Return(bounds0));
+    geometry.emplace_back(mock_geometry, nullptr);
+    indices.push_back(i);
+  }
+
+  auto mock_geometry =
+      iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+  EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  geometry.emplace_back(mock_geometry, nullptr);
+
+  auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
+      WrapGeometry(geometry), indices,
+      iris::scenes::internal::internal::ComputeBounds(WrapGeometry(geometry),
+                                                      indices),
+      iris::scenes::internal::internal::ComputeCentroidBounds(
+          WrapGeometry(geometry), indices),
+      iris::Vector::Y_AXIS);
+  ASSERT_TRUE(best_split.has_value());
+  EXPECT_NEAR(50.0, *best_split, 0.0000001);
+}
+
 TEST(Partition, LotsOfOverlappedGeometry) {
   std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
                         const iris::Matrix*>>
