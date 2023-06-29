@@ -59,6 +59,7 @@ class Parser {
   bool ObjectEnd();
   bool ObjectInstance();
   bool PixelFilter();
+  bool ReverseOrientation();
   bool Sampler();
   bool Shape();
   bool Texture();
@@ -84,6 +85,7 @@ class Parser {
     std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,
               iris::ReferenceCounted<iris::EmissiveMaterial>>
         emissive_material;
+    bool reverse_orientation;
   };
 
   std::vector<AttributeEntry> attributes_;

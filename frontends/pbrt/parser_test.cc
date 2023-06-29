@@ -555,6 +555,18 @@ TEST(PixelFilter, Duplicate) {
               "Directive specified twice for a render: PixelFilter");
 }
 
+TEST(ReverseOrientation, Succeeds) {
+  std::stringstream input("ReverseOrientation Shape");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(parser.ParseFrom(tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: Shape");
+}
+
 TEST(Sampler, AfterWorldBegin) {
   std::stringstream input("WorldBegin Sampler");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

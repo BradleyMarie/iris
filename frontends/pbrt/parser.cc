@@ -367,6 +367,12 @@ bool Parser::PixelFilter() {
   return true;
 }
 
+bool Parser::ReverseOrientation() {
+  attributes_.back().reverse_orientation =
+      !attributes_.back().reverse_orientation;
+  return true;
+}
+
 bool Parser::Sampler() {
   if (world_begin_encountered_) {
     std::cerr << "ERROR: Directive cannot be specified between WorldBegin and "
@@ -404,7 +410,8 @@ bool Parser::Shape() {
       *tokenizers_.back().tokenizer, *spectrum_manager_, *texture_manager_,
       attributes_.back().material, attributes_.back().emissive_material.first,
       attributes_.back().emissive_material.second,
-      current_object_ ? Matrix::Identity() : matrix_manager_->Get().start);
+      current_object_ ? Matrix::Identity() : matrix_manager_->Get().start,
+      attributes_.back().reverse_orientation);
 
   if (current_object_) {
     auto& objects = objects_[*current_object_];
@@ -501,7 +508,11 @@ void Parser::InitializeDefault() {
   auto default_material =
       BuildObject(materials::Default(), empty_tokenizer, *spectrum_manager_,
                   *texture_manager_, *texture_manager_);
-  attributes_.emplace_back(default_material);
+  attributes_.emplace_back(
+      default_material,
+      std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,
+                iris::ReferenceCounted<iris::EmissiveMaterial>>(),
+      false);
 }
 
 std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
@@ -532,6 +543,7 @@ std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
           {"ObjectEnd", &Parser::ObjectEnd},
           {"ObjectInstance", &Parser::ObjectInstance},
           {"PixelFilter", &Parser::PixelFilter},
+          {"ReverseOrientation", &Parser::ReverseOrientation},
           {"Sampler", &Parser::Sampler},
           {"Shape", &Parser::Shape},
           {"Texture", &Parser::Texture},

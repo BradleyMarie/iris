@@ -34,7 +34,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
         TextureManager&>>& material_builder,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
-    const Matrix& model_to_world) {
+    const Matrix& model_to_world, bool reverse_orientation) {
   auto type = tokenizer.Next();
   if (!type) {
     std::cerr << "ERROR: Too few parameters to directive: Shape" << std::endl;
@@ -80,6 +80,13 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
   }
 
   auto material = material_builder->Build(material_parameters, texture_manager);
+
+  if (reverse_orientation) {
+    return iter->second->Build(shape_parameters, std::get<0>(material),
+                               std::get<2>(material), std::get<1>(material),
+                               back_emissive_material, front_emissive_material,
+                               model_to_world);
+  }
 
   return iter->second->Build(shape_parameters, std::get<0>(material),
                              std::get<1>(material), std::get<2>(material),

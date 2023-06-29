@@ -13,7 +13,7 @@ TEST(Parse, TooFewParameters) {
                   tokenizer, spectrum_manager, texture_manager, nullptr,
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
-                  iris::Matrix::Identity()),
+                  iris::Matrix::Identity(), false),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Shape");
 }
@@ -28,7 +28,7 @@ TEST(Parse, NotAString) {
                   tokenizer, spectrum_manager, texture_manager, nullptr,
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
-                  iris::Matrix::Identity()),
+                  iris::Matrix::Identity(), false),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to Shape must be a string");
 }
@@ -43,7 +43,7 @@ TEST(Parse, InvalidType) {
                   tokenizer, spectrum_manager, texture_manager, nullptr,
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
-                  iris::Matrix::Identity()),
+                  iris::Matrix::Identity(), false),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported type for directive Shape: NotAType");
 }
