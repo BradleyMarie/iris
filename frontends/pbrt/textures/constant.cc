@@ -43,7 +43,7 @@ void ConstantFloatTextureBuilder::Build(
 }
 
 static const std::unordered_map<std::string_view, Parameter::Type>
-    g_spectrum_parameters = {{"value", Parameter::SPECTRUM}};
+    g_spectrum_parameters = {{"value", Parameter::REFLECTOR}};
 
 class ConstantSpectrumTextureBuilder final
     : public ObjectBuilder<void, TextureManager&, SpectrumManager&,
