@@ -178,6 +178,7 @@ cc_library(
         "//frontends/pbrt/cameras:parse",
         "//frontends/pbrt/film:parse",
         "//frontends/pbrt/integrators:parse",
+        "//frontends/pbrt/lights:parse",
         "//frontends/pbrt/materials:parse",
         "//frontends/pbrt/samplers:parse",
         "//frontends/pbrt/shapes:parse",

@@ -52,6 +52,7 @@ class Parser {
   bool Film();
   bool Include();
   bool Integrator();
+  bool LightSource();
   bool MakeNamedMaterial();
   bool Material();
   bool NamedMaterial();

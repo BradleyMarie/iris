@@ -288,6 +288,18 @@ TEST(Integrator, TooFewArguments) {
               "ERROR: Too few parameters to directive: Integrator");
 }
 
+TEST(LightSource, BeforeWorldBegin) {
+  std::stringstream input("LightSource");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::Parser parser(
+      std::make_unique<
+          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
+  EXPECT_EXIT(
+      parser.ParseFrom(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Directive cannot be specified before WorldBegin: LightSource");
+}
+
 TEST(MakeNamedMaterial, TooFewArguments) {
   std::stringstream input("MakeNamedMaterial");
   iris::pbrt_frontend::Tokenizer tokenizer(input);

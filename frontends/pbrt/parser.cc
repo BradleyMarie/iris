@@ -9,6 +9,7 @@
 #include "frontends/pbrt/cameras/parse.h"
 #include "frontends/pbrt/film/parse.h"
 #include "frontends/pbrt/integrators/parse.h"
+#include "frontends/pbrt/lights/parse.h"
 #include "frontends/pbrt/materials/parse.h"
 #include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/samplers/parse.h"
@@ -180,6 +181,31 @@ bool Parser::Integrator() {
   light_scene_builder_ = std::move(object.light_scene_builder);
 
   integrator_encountered_ = true;
+
+  return true;
+}
+
+bool Parser::LightSource() {
+  if (!world_begin_encountered_) {
+    std::cerr
+        << "ERROR: Directive cannot be specified before WorldBegin: LightSource"
+        << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  const auto& builder = lights::Parse(*tokenizers_.back().tokenizer);
+  auto light = BuildObject(
+      builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
+      *texture_manager_, *spectrum_manager_,
+      current_object_ ? Matrix::Identity() : matrix_manager_->Get().start);
+
+  if (std::holds_alternative<ReferenceCounted<EnvironmentalLight>>(light)) {
+    // TODO: Merge environmental lights
+    scene_objects_builder_.Set(
+        std::get<ReferenceCounted<EnvironmentalLight>>(light));
+  } else {
+    scene_objects_builder_.Add(std::get<ReferenceCounted<iris::Light>>(light));
+  }
 
   return true;
 }
@@ -536,6 +562,7 @@ std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
           {"Film", &Parser::Film},
           {"Include", &Parser::Include},
           {"Integrator", &Parser::Integrator},
+          {"LightSource", &Parser::LightSource},
           {"MakeNamedMaterial", &Parser::MakeNamedMaterial},
           {"Material", &Parser::Material},
           {"NamedMaterial", &Parser::NamedMaterial},
