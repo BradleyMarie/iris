@@ -55,8 +55,10 @@ class Image2D final {
   }
 
   const T& GetRepeated(geometric_t u, geometric_t v) {
-    u = u - std::floor(u);
-    v = v - std::floor(v);
+    static constexpr geometric_t max_value = std::nextafter(
+        static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
+    u = std::min(max_value, u - std::floor(u));
+    v = std::min(max_value, v - std::floor(v));
     return Get(v * size_.first, u * size_.second);
   }
 
