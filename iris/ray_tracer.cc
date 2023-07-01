@@ -127,6 +127,8 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
   auto world_shading_normals = TransformNormals(
       world_hit_point, world_surface_normal, hit.model_to_world,
       world_differentials, shading_normals);
+  assert(DotProduct(-world_surface_normal, world_shading_normals.first) <
+         0.001);
 
   // When the object is transformed, it is arguably more correct to apply the
   // normal map in model space instead of world space. This might be good to
@@ -137,7 +139,7 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
                                                  world_shading_normals.second,
                                                  world_shading_normals.first)
           : world_shading_normals.first;
-  assert(DotProduct(world_surface_normal, world_shading_normal) > 0.0);
+  assert(DotProduct(-world_surface_normal, world_shading_normal) < 0.001);
 
   return RayTracer::SurfaceIntersection{
       Bsdf(*bxdf, world_surface_normal, world_shading_normal), world_hit_point,
@@ -214,12 +216,13 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
       model_hit_point, hit->front, hit->additional_data);
   Vector world_surface_normal =
       MaybeTransformNormal(hit->model_to_world, model_surface_normal);
+  assert(DotProduct(world_surface_normal, ray.direction) < 0.001);
 
   auto world_differentials =
       ComputeGeometryDifferentials(ray, world_hit_point, world_surface_normal);
   auto model_differentials =
       MaybeTransformDifferentials(world_differentials, hit->model_to_world);
-  assert(DotProduct(ray.direction, world_surface_normal) < 0.0);
+  assert(DotProduct(ray.direction, world_surface_normal) < 0.001);
 
   TextureCoordinates texture_coordinates =
       hit->geometry
