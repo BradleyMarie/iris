@@ -678,7 +678,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
   iris::normal_maps::MockNormalMap normal_map;
   EXPECT_CALL(normal_map,
               Evaluate(testing::_, testing::IsTrue(),
-                       iris::Normalize(iris::Vector(1.0, 1.0, 1.0))))
+                       iris::Normalize(iris::Vector(-1.0, -1.0, -1.0))))
       .WillOnce(testing::Invoke(
           [&](const iris::TextureCoordinates& texture_coordinates,
               const std::optional<iris::NormalMap::Differentials>&
@@ -688,12 +688,12 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
             EXPECT_EQ(1.0, texture_coordinates.uv[1]);
             EXPECT_EQ(iris::NormalMap::Differentials::DX_DY,
                       differentials->type);
-            EXPECT_NEAR(0.57735025, differentials->dp.first.x, 0.001);
-            EXPECT_NEAR(-0.78867506, differentials->dp.first.y, 0.001);
-            EXPECT_NEAR(0.211324810, differentials->dp.first.z, 0.001);
-            EXPECT_NEAR(0.57735025, differentials->dp.second.x, 0.001);
-            EXPECT_NEAR(0.211324810, differentials->dp.second.y, 0.001);
-            EXPECT_NEAR(-0.78867506, differentials->dp.second.z, 0.001);
+            EXPECT_NEAR(-0.57735025, differentials->dp.first.x, 0.001);
+            EXPECT_NEAR(-0.21132485, differentials->dp.first.y, 0.001);
+            EXPECT_NEAR(+0.78867506, differentials->dp.first.z, 0.001);
+            EXPECT_NEAR(-0.57735025, differentials->dp.second.x, 0.001);
+            EXPECT_NEAR(+0.78867506, differentials->dp.second.y, 0.001);
+            EXPECT_NEAR(-0.21132481, differentials->dp.second.z, 0.001);
             return iris::Vector(-1.0, 0.0, 0.0);
           }));
 
@@ -717,7 +717,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
           testing::Invoke([&](iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::Geometry::ComputeShadingNormalResult{
-                iris::Normalize(iris::Vector(1.0, 1.0, 1.0)), std::nullopt,
+                iris::Normalize(iris::Vector(-1.0, -1.0, -1.0)), std::nullopt,
                 &normal_map};
           }));
 
