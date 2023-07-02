@@ -46,7 +46,8 @@ std::variant<std::monostate, Point, Vector> Geometry::SampleBySolidAngle(
 }
 
 std::optional<visual_t> Geometry::ComputePdfBySolidAngle(
-    const Point& origin, face_t face, const Point& on_face) const {
+    const Point& origin, face_t face, const void* additional_data,
+    const Point& on_face) const {
   return std::nullopt;
 }
 

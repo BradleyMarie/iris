@@ -46,7 +46,8 @@ class MockGeometry : public MockBasicGeometry {
   MOCK_METHOD((std::variant<std::monostate, Point, Vector>), SampleBySolidAngle,
               (const Point&, face_t, Sampler&), (const override));
   MOCK_METHOD(std::optional<visual_t>, ComputePdfBySolidAngle,
-              (const Point&, face_t, const Point&), (const override));
+              (const Point&, face_t, const void*, const Point&),
+              (const override));
 };
 
 }  // namespace geometry

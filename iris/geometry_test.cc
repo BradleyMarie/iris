@@ -87,6 +87,6 @@ TEST(GeometryTest, SampleBySolidAngle) {
 
 TEST(GeometryTest, ComputePdfBySolidAngle) {
   iris::geometry::MockBasicGeometry geom;
-  EXPECT_FALSE(geom.ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 0,
-                                           iris::Point(0.0, 0.0, 0.0)));
+  EXPECT_FALSE(geom.ComputePdfBySolidAngle(
+      iris::Point(0.0, 0.0, 0.0), 0, nullptr, iris::Point(0.0, 0.0, 0.0)));
 }

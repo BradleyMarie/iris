@@ -58,7 +58,8 @@ class Geometry : public ReferenceCountable {
       const Point& origin, face_t face, Sampler& sampler) const;
 
   virtual std::optional<visual_t> ComputePdfBySolidAngle(
-      const Point& origin, face_t face, const Point& on_face) const;
+      const Point& origin, face_t face, const void* additional_data,
+      const Point& on_face) const;
 
   virtual BoundingBox ComputeBounds(const Matrix& model_to_world) const = 0;
 

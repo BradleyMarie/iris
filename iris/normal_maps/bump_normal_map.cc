@@ -75,7 +75,7 @@ Vector BumpNormalMap::Evaluate(
   Vector dn_dx = differentials->dp.first + surface_normal * result.first;
   Vector dn_dy = differentials->dp.second + surface_normal * result.second;
 
-  Vector shading_normal = Normalize(CrossProduct(dn_dy, dn_dx));
+  Vector shading_normal = CrossProduct(dn_dy, dn_dx);
   if (DotProduct(shading_normal, surface_normal) < 0.0) {
     return -shading_normal;
   }

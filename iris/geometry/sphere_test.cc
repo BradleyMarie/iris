@@ -131,11 +131,11 @@ TEST(Sphere, ComputeSurfaceNormal) {
 
   auto front_normal = sphere->ComputeSurfaceNormal(iris::Point(0.0, 0.0, 0.0),
                                                    FRONT_FACE, nullptr);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), front_normal);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, -3.0), front_normal);
 
   auto back_normal = sphere->ComputeSurfaceNormal(iris::Point(0.0, 0.0, 0.0),
                                                   BACK_FACE, nullptr);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), back_normal);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 3.0), back_normal);
 }
 
 TEST(Sphere, ComputeTextureCoordinatesNone) {
@@ -237,13 +237,15 @@ TEST(Sphere, SampleBySolidAngle) {
 TEST(Sphere, ComputePdfBySolidAngle) {
   auto sphere = SimpleSphere();
 
-  auto pdf0 = sphere->ComputePdfBySolidAngle(
-      iris::Point(0.0, 0.0, 3.0), BACK_FACE, iris::Point(0.0, 0.0, 1.0));
+  auto pdf0 =
+      sphere->ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 3.0), BACK_FACE,
+                                     nullptr, iris::Point(0.0, 0.0, 1.0));
   ASSERT_TRUE(pdf0);
   EXPECT_NEAR(0.0795, *pdf0, 0.01);
 
-  auto pdf1 = sphere->ComputePdfBySolidAngle(
-      iris::Point(0.0, 0.0, 0.0), FRONT_FACE, iris::Point(0.0, 0.0, 1.0));
+  auto pdf1 =
+      sphere->ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), FRONT_FACE,
+                                     nullptr, iris::Point(0.0, 0.0, 1.0));
   ASSERT_TRUE(pdf1);
   EXPECT_NEAR(0.6250, *pdf1, 0.01);
 }

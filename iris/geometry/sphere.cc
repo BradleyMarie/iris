@@ -54,7 +54,8 @@ class Sphere final : public Geometry {
       const Point& origin, face_t face, Sampler& sampler) const override;
 
   virtual std::optional<visual_t> ComputePdfBySolidAngle(
-      const Point& origin, face_t face, const Point& on_face) const override;
+      const Point& origin, face_t face, const void* additional_data,
+      const Point& on_face) const override;
 
   virtual BoundingBox ComputeBounds(
       const Matrix& model_to_world) const override;
@@ -77,7 +78,7 @@ Vector Sphere::ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                     const void* additional_data) const {
   Vector normal =
       (face == kFrontFace) ? hit_point - center_ : center_ - hit_point;
-  return Normalize(normal);
+  return normal;
 }
 
 std::optional<TextureCoordinates> Sphere::ComputeTextureCoordinates(
@@ -152,7 +153,8 @@ std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
 }
 
 std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
-    const Point& origin, face_t face, const Point& on_face) const {
+    const Point& origin, face_t face, const void* additional_data,
+    const Point& on_face) const {
   if (face == kFrontFace) {
     Vector to_center = center_ - origin;
     geometric_t distance_to_center_squared = DotProduct(to_center, to_center);
@@ -169,7 +171,7 @@ std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
   geometric_t distance_to_sample_squared;
   Vector to_face = Normalize(on_face - origin, &distance_to_sample_squared);
   Vector surface_normal = ComputeSurfaceNormal(on_face, kFrontFace, nullptr);
-  geometric_t cos_theta = DotProduct(surface_normal, to_face);
+  geometric_t cos_theta = DotProduct(Normalize(surface_normal), to_face);
 
   return distance_to_sample_squared /
          (cos_theta * 4.0 * M_PI * radius_squared_);

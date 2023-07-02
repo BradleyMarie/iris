@@ -94,8 +94,8 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
 
   Point model_origin =
       model_to_world ? model_to_world->InverseMultiply(ray.origin) : ray.origin;
-  auto pdf =
-      geometry.ComputePdfBySolidAngle(model_origin, face, model_hit_point);
+  auto pdf = geometry.ComputePdfBySolidAngle(
+      model_origin, face, scene_hit->additional_data, model_hit_point);
   if (pdf.value_or(0.0) <= 0.0) {
     return std::nullopt;
   }

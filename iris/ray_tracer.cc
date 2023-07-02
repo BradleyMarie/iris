@@ -9,13 +9,18 @@
 namespace iris {
 namespace {
 
-Vector MaybeTransformNormal(const Matrix* model_to_world,
+Vector MaybeTransformVector(const Matrix* model_to_world,
                             const Vector& surface_normal) {
   if (!model_to_world) {
     return surface_normal;
   }
 
-  return Normalize(model_to_world->InverseTransposeMultiply(surface_normal));
+  return model_to_world->InverseTransposeMultiply(surface_normal);
+}
+
+Vector MaybeTransformNormal(const Matrix* model_to_world,
+                            const Vector& surface_normal) {
+  return Normalize(MaybeTransformVector(model_to_world, surface_normal));
 }
 
 std::optional<Vector> MaybeTransformNormal(
@@ -135,9 +140,9 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
   // change in the future.
   Vector world_shading_normal =
       shading_normals.normal_map
-          ? shading_normals.normal_map->Evaluate(texture_coordinates,
-                                                 world_shading_normals.second,
-                                                 world_shading_normals.first)
+          ? Normalize(shading_normals.normal_map->Evaluate(
+                texture_coordinates, world_shading_normals.second,
+                world_shading_normals.first))
           : world_shading_normals.first;
   assert(DotProduct(-world_surface_normal, world_shading_normal) < 0.001);
 

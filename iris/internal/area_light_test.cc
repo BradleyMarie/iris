@@ -35,8 +35,8 @@ TEST(AreaLightTest, AreaLightEmission) {
       .WillOnce(testing::Return(&spectrum));
 
   auto geometry = MakeGeometry(&emissive_material);
-  EXPECT_CALL(*geometry,
-              ComputePdfBySolidAngle(testing::_, testing::_, testing::_))
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(testing::_, testing::_,
+                                                testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   iris::internal::AreaLight light(*geometry, nullptr, 1);
 
@@ -114,8 +114,8 @@ TEST(AreaLightTest, AreaLightSampleWorld) {
   EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 2.0),
                                             testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, 1.0)));
-  EXPECT_CALL(*geometry,
-              ComputePdfBySolidAngle(testing::_, testing::_, testing::_))
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(testing::_, testing::_,
+                                                testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   iris::internal::AreaLight light(*geometry, nullptr, 1);
 
@@ -146,8 +146,8 @@ TEST(AreaLightTest, AreaLightSampleWithTransform) {
   EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 2.0),
                                             testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Point(0.0, 0.0, -1.0)));
-  EXPECT_CALL(*geometry,
-              ComputePdfBySolidAngle(testing::_, testing::_, testing::_))
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(testing::_, testing::_,
+                                                testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   iris::internal::AreaLight light(*geometry, &transform, 1);
 
@@ -177,8 +177,8 @@ TEST(AreaLightTest, AreaLightSampleVector) {
   EXPECT_CALL(*geometry, SampleBySolidAngle(iris::Point(0.0, 0.0, 2.0),
                                             testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Vector(0.0, 0.0, -1.0)));
-  EXPECT_CALL(*geometry,
-              ComputePdfBySolidAngle(testing::_, testing::_, testing::_))
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(testing::_, testing::_,
+                                                testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   iris::internal::AreaLight light(*geometry, nullptr, 1);
 

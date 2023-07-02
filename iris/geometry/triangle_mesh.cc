@@ -31,7 +31,10 @@ class Triangle final : public Geometry {
     ReferenceCounted<NormalMap> normal_maps[2];
   };
 
-  typedef std::array<geometric_t, 3> AdditionalData;
+  struct AdditionalData {
+    std::array<geometric_t, 3> barycentric_coordinates;
+    Vector surface_normal;
+  };
 
   static constexpr face_t kFrontFace = 0u;
   static constexpr face_t kBackFace = 1u;
@@ -63,7 +66,8 @@ class Triangle final : public Geometry {
       const Point& origin, face_t face, Sampler& sampler) const override;
 
   virtual std::optional<visual_t> ComputePdfBySolidAngle(
-      const Point& origin, face_t face, const Point& on_face) const override;
+      const Point& origin, face_t face, const void* additional_data,
+      const Point& on_face) const override;
 
   virtual BoundingBox ComputeBounds(
       const Matrix& model_to_world) const override;
@@ -74,9 +78,8 @@ class Triangle final : public Geometry {
   virtual Hit* Trace(const Ray& ray,
                      HitAllocator& hit_allocator) const override;
 
-  visual_t ComputeArea(face_t face) const;
-
-  Vector ComputeSurfaceNormal() const;
+  std::tuple<Vector, face_t, face_t> ComputeSurfaceNormalAndFaces(
+      const Ray& ray) const;
 
   std::optional<Vector> MaybeComputeShadingNormal(
       face_t face, const void* additional_data) const;
@@ -85,31 +88,33 @@ class Triangle final : public Geometry {
 
   std::optional<TextureCoordinates> ComputeTextureCoordinates(
       const std::optional<Differentials>& differentials,
-      const void* additional_data) const;
+      const std::array<geometric_t, 3>& barycentric_coordinates) const;
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
   const std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
   const std::shared_ptr<const SharedData> shared_;
 };
 
-Vector Triangle::ComputeSurfaceNormal() const {
+std::tuple<Vector, face_t, face_t> Triangle::ComputeSurfaceNormalAndFaces(
+    const Ray& ray) const {
   Vector v0_to_v1 = shared_->points[std::get<1>(vertices_)] -
                     shared_->points[std::get<0>(vertices_)];
   Vector v0_to_v2 = shared_->points[std::get<2>(vertices_)] -
                     shared_->points[std::get<0>(vertices_)];
-  return CrossProduct(v0_to_v1, v0_to_v2);
+  Vector surface_normal = CrossProduct(v0_to_v1, v0_to_v2);
+
+  if (DotProduct(surface_normal, ray.direction) < 0.0) {
+    return {surface_normal, kFrontFace, kBackFace};
+  }
+
+  return {-surface_normal, kBackFace, kFrontFace};
 }
 
 Vector Triangle::ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                       const void* additional_data) const {
-  Vector surface_normal = ComputeSurfaceNormal();
-  Vector normalized = Normalize(surface_normal);
-
-  if (face == kFrontFace) {
-    return normalized;
-  }
-
-  return -normalized;
+  const AdditionalData* additional =
+      static_cast<const AdditionalData*>(additional_data);
+  return additional->surface_normal;
 }
 
 std::array<geometric_t, 2> Triangle::UVCoordinates(const Point& point) const {
@@ -142,21 +147,19 @@ std::array<geometric_t, 2> Triangle::UVCoordinates(const Point& point) const {
 
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
     const std::optional<Differentials>& differentials,
-    const void* additional_data) const {
+    const std::array<geometric_t, 3>& barycentric_coordinates) const {
   if (shared_->uv.empty()) {
     return std::nullopt;
   }
 
-  const auto* barycentric = static_cast<const AdditionalData*>(additional_data);
-
   geometric_t u =
-      shared_->uv[std::get<0>(vertices_)].first * (*barycentric)[0] +
-      shared_->uv[std::get<1>(vertices_)].first * (*barycentric)[1] +
-      shared_->uv[std::get<2>(vertices_)].first * (*barycentric)[2];
+      shared_->uv[std::get<0>(vertices_)].first * barycentric_coordinates[0] +
+      shared_->uv[std::get<1>(vertices_)].first * barycentric_coordinates[1] +
+      shared_->uv[std::get<2>(vertices_)].first * barycentric_coordinates[2];
   geometric_t v =
-      shared_->uv[std::get<0>(vertices_)].second * (*barycentric)[0] +
-      shared_->uv[std::get<1>(vertices_)].second * (*barycentric)[1] +
-      shared_->uv[std::get<2>(vertices_)].second * (*barycentric)[2];
+      shared_->uv[std::get<0>(vertices_)].second * barycentric_coordinates[0] +
+      shared_->uv[std::get<1>(vertices_)].second * barycentric_coordinates[1] +
+      shared_->uv[std::get<2>(vertices_)].second * barycentric_coordinates[2];
 
   if (!differentials) {
     return TextureCoordinates{{u, v}};
@@ -172,7 +175,10 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
     const Point& hit_point, const std::optional<Differentials>& differentials,
     face_t face, const void* additional_data) const {
-  return ComputeTextureCoordinates(differentials, additional_data);
+  const AdditionalData* additional =
+      static_cast<const AdditionalData*>(additional_data);
+  return ComputeTextureCoordinates(differentials,
+                                   additional->barycentric_coordinates);
 }
 
 std::optional<Vector> Triangle::MaybeComputeShadingNormal(
@@ -181,18 +187,20 @@ std::optional<Vector> Triangle::MaybeComputeShadingNormal(
     return std::nullopt;
   }
 
-  const auto* barycentric = static_cast<const AdditionalData*>(additional_data);
-  Vector shading_normal =
-      shared_->normals[std::get<0>(vertices_)] * (*barycentric)[0] +
-      shared_->normals[std::get<1>(vertices_)] * (*barycentric)[1] +
-      shared_->normals[std::get<2>(vertices_)] * (*barycentric)[2];
-  Vector normalized = Normalize(shading_normal);
+  const auto* additional = static_cast<const AdditionalData*>(additional_data);
+  Vector shading_normal = shared_->normals[std::get<0>(vertices_)] *
+                              additional->barycentric_coordinates[0] +
+                          shared_->normals[std::get<1>(vertices_)] *
+                              additional->barycentric_coordinates[1] +
+                          shared_->normals[std::get<2>(vertices_)] *
+                              additional->barycentric_coordinates[2];
 
-  if (face == kFrontFace) {
-    return normalized;
+  if (DotProduct(additional->surface_normal, shading_normal) >
+      static_cast<geometric_t>(0.0)) {
+    return shading_normal;
   }
 
-  return -normalized;
+  return -shading_normal;
 }
 
 std::optional<std::pair<Vector, Vector>> Triangle::MaybeComputeNormalTangents()
@@ -265,22 +273,19 @@ std::variant<std::monostate, Point, Vector> Triangle::SampleBySolidAngle(
 }
 
 std::optional<visual_t> Triangle::ComputePdfBySolidAngle(
-    const Point& origin, face_t face, const Point& on_face) const {
+    const Point& origin, face_t face, const void* additional_data,
+    const Point& on_face) const {
   geometric_t distance_to_sample_squared;
   Vector to_sample = Normalize(on_face - origin, &distance_to_sample_squared);
 
+  const auto* additional = static_cast<const AdditionalData*>(additional_data);
+
   geometric_t cos_theta =
-      DotProduct(to_sample, Normalize(ComputeSurfaceNormal()));
-  if (face == kFrontFace) {
-    cos_theta = -cos_theta;
-  }
+      AbsDotProduct(to_sample, Normalize(additional->surface_normal));
+  geometric_t surface_area =
+      additional->surface_normal.Length() * static_cast<geometric_t>(0.5);
 
-  return distance_to_sample_squared / (cos_theta * ComputeArea(face));
-}
-
-visual_t Triangle::ComputeArea(face_t face) const {
-  Vector surface_normal = ComputeSurfaceNormal();
-  return surface_normal.Length() * 0.5;
+  return distance_to_sample_squared / (cos_theta * surface_area);
 }
 
 BoundingBox Triangle::ComputeBounds(const Matrix& model_to_world) const {
@@ -379,32 +384,25 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
   geometric_t inverse_determinant = (geometric_t)1.0 / determinant;
   distance *= inverse_determinant;
 
-  AdditionalData additional_data{b0 * inverse_determinant,
-                                 b1 * inverse_determinant,
-                                 b2 * inverse_determinant};
+  std::array<geometric_t, 3> barycentric_coordinates{b0 * inverse_determinant,
+                                                     b1 * inverse_determinant,
+                                                     b2 * inverse_determinant};
 
   if (shared_->alpha_mask) {
     auto texture_coordinates =
-        ComputeTextureCoordinates(std::nullopt, &additional_data);
+        ComputeTextureCoordinates(std::nullopt, barycentric_coordinates);
     if (texture_coordinates &&
         !shared_->alpha_mask->Evaluate(*texture_coordinates)) {
       return nullptr;
     }
   }
 
-  geometric_t dp = DotProduct(ray.direction, ComputeSurfaceNormal());
+  auto normal_and_faces = ComputeSurfaceNormalAndFaces(ray);
 
-  face_t front_face, back_face;
-  if (dp < 0.0) {
-    front_face = kFrontFace;
-    back_face = kBackFace;
-  } else {
-    front_face = kBackFace;
-    back_face = kFrontFace;
-  }
-
-  return &hit_allocator.Allocate(nullptr, distance, front_face, back_face,
-                                 additional_data);
+  return &hit_allocator.Allocate(
+      nullptr, distance, std::get<1>(normal_and_faces),
+      std::get<2>(normal_and_faces),
+      AdditionalData{barycentric_coordinates, std::get<0>(normal_and_faces)});
 }
 
 }  // namespace

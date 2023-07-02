@@ -381,8 +381,9 @@ TEST(VisibilityTesterTest, NoPdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
-  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
-                                                iris::Point(1.0, 0.0, 0.0)))
+  EXPECT_CALL(*geometry,
+              ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
+                                     iris::Point(1.0, 0.0, 0.0)))
       .WillOnce(testing::Return(std::nullopt));
   auto geometry_ptr = geometry.Get();
 
@@ -436,8 +437,9 @@ TEST(VisibilityTesterTest, NegativePdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
-  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
-                                                iris::Point(1.0, 0.0, 0.0)))
+  EXPECT_CALL(*geometry,
+              ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
+                                     iris::Point(1.0, 0.0, 0.0)))
       .WillOnce(testing::Return(-1.0));
   auto geometry_ptr = geometry.Get();
 
@@ -491,8 +493,9 @@ TEST(VisibilityTesterTest, Succeeds) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
-  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
-                                                iris::Point(1.0, 0.0, 0.0)))
+  EXPECT_CALL(*geometry,
+              ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
+                                     iris::Point(1.0, 0.0, 0.0)))
       .WillOnce(testing::Return(1.0));
   auto geometry_ptr = geometry.Get();
 
@@ -549,8 +552,9 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
-  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
-                                                iris::Point(1.0, 0.0, 0.0)))
+  EXPECT_CALL(*geometry,
+              ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
+                                     iris::Point(1.0, 0.0, 0.0)))
       .WillOnce(testing::Return(2.0));
   auto geometry_ptr = geometry.Get();
 
@@ -609,8 +613,9 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return std::nullopt;
           }));
-  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
-                                                iris::Point(0.5, 0.0, 0.0)))
+  EXPECT_CALL(*geometry,
+              ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
+                                     iris::Point(0.5, 0.0, 0.0)))
       .WillOnce(testing::Return(2.0));
   auto geometry_ptr = geometry.Get();
 
@@ -669,8 +674,9 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::TextureCoordinates{{0.5, 0.5}};
           }));
-  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u,
-                                                iris::Point(1.0, 0.0, 0.0)))
+  EXPECT_CALL(*geometry,
+              ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
+                                     iris::Point(1.0, 0.0, 0.0)))
       .WillOnce(testing::Return(2.0));
   auto geometry_ptr = geometry.Get();
 

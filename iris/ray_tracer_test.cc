@@ -32,7 +32,7 @@ void MakeBasicGeometryImpl(
           testing::Invoke([](const iris::Point& hit_point, iris::face_t face,
                              const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return iris::Vector(-1.0, 0.0, 0.0);
+            return iris::Vector(-2.0, 0.0, 0.0);
           }));
 }
 
@@ -359,8 +359,7 @@ TEST(RayTracerTest, WithNormal) {
           testing::Invoke([&](iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::Geometry::ComputeShadingNormalResult{
-                iris::Normalize(iris::Vector(-1.0, -1.0, 0.0)), std::nullopt,
-                nullptr};
+                iris::Vector(-1.0, -1.0, 0.0), std::nullopt, nullptr};
           }));
 
   auto builder = iris::SceneObjects::Builder();
@@ -400,7 +399,7 @@ TEST(RayTracerTest, WithNormalMap) {
             EXPECT_EQ(0.0, texture_coordinates.uv[0]);
             EXPECT_EQ(0.0, texture_coordinates.uv[1]);
             EXPECT_FALSE(texture_coordinates.differentials);
-            return iris::Normalize(iris::Vector(-1.0, -1.0, 0.0));
+            return iris::Vector(-1.0, -1.0, 0.0);
           }));
 
   auto geometry =
@@ -639,8 +638,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
           testing::Invoke([&](iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::Geometry::ComputeShadingNormalResult{
-                iris::Normalize(iris::Vector(-1.0, 0.0, 0.0)), std::nullopt,
-                &normal_map};
+                iris::Vector(-1.0, 0.0, 0.0), std::nullopt, &normal_map};
           }));
 
   auto builder = iris::SceneObjects::Builder();
@@ -717,8 +715,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
           testing::Invoke([&](iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::Geometry::ComputeShadingNormalResult{
-                iris::Normalize(iris::Vector(-1.0, -1.0, -1.0)), std::nullopt,
-                &normal_map};
+                iris::Vector(-1.0, -1.0, -1.0), std::nullopt, &normal_map};
           }));
 
   auto builder = iris::SceneObjects::Builder();

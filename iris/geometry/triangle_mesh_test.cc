@@ -7,7 +7,11 @@
 #include "iris/random/mock_random.h"
 #include "iris/testing/hit_allocator.h"
 
-typedef std::array<iris::geometric_t, 3> AdditionalData;
+struct AdditionalData {
+  std::array<iris::geometric_t, 3> barycentric_coordinates;
+  iris::Vector surface_normal;
+};
+
 static const iris::face_t FRONT_FACE = 0u;
 static const iris::face_t BACK_FACE = 1u;
 
@@ -138,9 +142,12 @@ TEST(Triangle, HitsXDominantFront) {
   const auto* additional_data =
       static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
   ASSERT_NE(nullptr, additional_data);
-  EXPECT_EQ(0.50, additional_data->at(0));
-  EXPECT_EQ(0.25, additional_data->at(1));
-  EXPECT_EQ(0.25, additional_data->at(2));
+  EXPECT_EQ(0.50, additional_data->barycentric_coordinates.at(0));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(1));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(2));
+  EXPECT_NEAR(1.0, additional_data->surface_normal.x, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.y, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.z, 0.001);
 }
 
 TEST(Triangle, HitsXDominantBack) {
@@ -169,9 +176,12 @@ TEST(Triangle, HitsXDominantBack) {
   const auto* additional_data =
       static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
   ASSERT_NE(nullptr, additional_data);
-  EXPECT_EQ(0.50, additional_data->at(0));
-  EXPECT_EQ(0.25, additional_data->at(1));
-  EXPECT_EQ(0.25, additional_data->at(2));
+  EXPECT_EQ(0.50, additional_data->barycentric_coordinates.at(0));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(1));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(2));
+  EXPECT_NEAR(-1.0, additional_data->surface_normal.x, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.y, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.z, 0.001);
 }
 
 TEST(Triangle, HitsYDominantFront) {
@@ -200,9 +210,12 @@ TEST(Triangle, HitsYDominantFront) {
   const auto* additional_data =
       static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
   ASSERT_NE(nullptr, additional_data);
-  EXPECT_EQ(0.50, additional_data->at(0));
-  EXPECT_EQ(0.25, additional_data->at(1));
-  EXPECT_EQ(0.25, additional_data->at(2));
+  EXPECT_EQ(0.50, additional_data->barycentric_coordinates.at(0));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(1));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(2));
+  EXPECT_NEAR(0.0, additional_data->surface_normal.x, 0.001);
+  EXPECT_NEAR(1.0, additional_data->surface_normal.y, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.z, 0.001);
 }
 
 TEST(Triangle, HitsYDominantBack) {
@@ -231,9 +244,12 @@ TEST(Triangle, HitsYDominantBack) {
   const auto* additional_data =
       static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
   ASSERT_NE(nullptr, additional_data);
-  EXPECT_EQ(0.50, additional_data->at(0));
-  EXPECT_EQ(0.25, additional_data->at(1));
-  EXPECT_EQ(0.25, additional_data->at(2));
+  EXPECT_EQ(0.50, additional_data->barycentric_coordinates.at(0));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(1));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(2));
+  EXPECT_NEAR(0.0, additional_data->surface_normal.x, 0.001);
+  EXPECT_NEAR(-1.0, additional_data->surface_normal.y, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.z, 0.001);
 }
 
 TEST(Triangle, HitsZDominantFront) {
@@ -256,9 +272,12 @@ TEST(Triangle, HitsZDominantFront) {
   const auto* additional_data =
       static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
   ASSERT_NE(nullptr, additional_data);
-  EXPECT_EQ(0.50, additional_data->at(0));
-  EXPECT_EQ(0.25, additional_data->at(1));
-  EXPECT_EQ(0.25, additional_data->at(2));
+  EXPECT_EQ(0.50, additional_data->barycentric_coordinates.at(0));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(1));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(2));
+  EXPECT_NEAR(0.0, additional_data->surface_normal.x, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.y, 0.001);
+  EXPECT_NEAR(1.0, additional_data->surface_normal.z, 0.001);
 }
 
 TEST(Triangle, HitsZDominantBack) {
@@ -281,9 +300,12 @@ TEST(Triangle, HitsZDominantBack) {
   const auto* additional_data =
       static_cast<const AdditionalData*>(iris::testing::AdditionalData(*hit));
   ASSERT_NE(nullptr, additional_data);
-  EXPECT_EQ(0.50, additional_data->at(0));
-  EXPECT_EQ(0.25, additional_data->at(1));
-  EXPECT_EQ(0.25, additional_data->at(2));
+  EXPECT_EQ(0.50, additional_data->barycentric_coordinates.at(0));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(1));
+  EXPECT_EQ(0.25, additional_data->barycentric_coordinates.at(2));
+  EXPECT_NEAR(0.0, additional_data->surface_normal.x, 0.001);
+  EXPECT_NEAR(0.0, additional_data->surface_normal.y, 0.001);
+  EXPECT_NEAR(-1.0, additional_data->surface_normal.z, 0.001);
 }
 
 TEST(Triangle, AlphaHits) {
@@ -342,12 +364,15 @@ TEST(Triangle, AlphaNoUVHits) {
 TEST(Triangle, ComputeSurfaceNormal) {
   auto triangle = SimpleTriangle();
 
-  auto front_normal = triangle->ComputeSurfaceNormal(iris::Point(0.0, 0.0, 0.0),
-                                                     FRONT_FACE, nullptr);
+  AdditionalData additional_data0{{1.0, 0.0, 0.0}, iris::Vector(0.0, 0.0, 1.0)};
+  auto front_normal = triangle->ComputeSurfaceNormal(
+      iris::Point(0.0, 0.0, 0.0), FRONT_FACE, &additional_data0);
   EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), front_normal);
 
-  auto back_normal = triangle->ComputeSurfaceNormal(iris::Point(0.0, 0.0, 0.0),
-                                                    BACK_FACE, nullptr);
+  AdditionalData additional_data1{{1.0, 0.0, 0.0},
+                                  iris::Vector(0.0, 0.0, -1.0)};
+  auto back_normal = triangle->ComputeSurfaceNormal(
+      iris::Point(0.0, 0.0, 0.0), BACK_FACE, &additional_data1);
   EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), back_normal);
 }
 
@@ -368,28 +393,28 @@ TEST(Triangle, ComputeTextureCoordinatesNone) {
 TEST(Triangle, ComputeTextureCoordinates) {
   auto triangle = SimpleTriangle();
 
-  AdditionalData additional_data0({1.0, 0.0, 0.0});
+  AdditionalData additional_data0{{1.0, 0.0, 0.0}, iris::Vector(0.0, 0.0, 1.0)};
   auto texture_coordinates0 = triangle->ComputeTextureCoordinates(
       iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, &additional_data0);
   EXPECT_EQ(0.0, texture_coordinates0->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates0->uv[1]);
   EXPECT_FALSE(texture_coordinates0->differentials);
 
-  AdditionalData additional_data1({0.0, 1.0, 0.0});
+  AdditionalData additional_data1{{0.0, 1.0, 0.0}, iris::Vector(0.0, 0.0, 1.0)};
   auto texture_coordinates1 = triangle->ComputeTextureCoordinates(
       iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, &additional_data1);
   EXPECT_EQ(1.0, texture_coordinates1->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates1->uv[1]);
   EXPECT_FALSE(texture_coordinates1->differentials);
 
-  AdditionalData additional_data2({0.0, 0.0, 1.0});
+  AdditionalData additional_data2{{0.0, 0.0, 1.0}, iris::Vector(0.0, 0.0, 1.0)};
   auto texture_coordinates2 = triangle->ComputeTextureCoordinates(
       iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, &additional_data2);
   EXPECT_EQ(0.0, texture_coordinates2->uv[0]);
   EXPECT_EQ(1.0, texture_coordinates2->uv[1]);
   EXPECT_FALSE(texture_coordinates2->differentials);
 
-  AdditionalData additional_data3({1.0, 0.0, 0.0});
+  AdditionalData additional_data3{{1.0, 0.0, 0.0}, iris::Vector(0.0, 0.0, 1.0)};
   auto texture_coordinates3 = triangle->ComputeTextureCoordinates(
       iris::Point(0.0, 0.0, 0.0),
       {{iris::Point(1.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0)}}, FRONT_FACE,
@@ -523,9 +548,10 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
       back_emissive_material, iris::ReferenceCounted<iris::NormalMap>(),
       iris::ReferenceCounted<iris::NormalMap>());
 
-  AdditionalData additional_data0({1.0, 0.0, 0.0});
-  auto front_normal0 =
-      triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data0);
+  AdditionalData additional_data0_front{{1.0, 0.0, 0.0},
+                                        iris::Vector(1.0, 0.0, 0.0)};
+  auto front_normal0 = triangles.front()->ComputeShadingNormal(
+      FRONT_FACE, &additional_data0_front);
   EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), front_normal0.surface_normal);
   ASSERT_TRUE(front_normal0.dp_duv);
   EXPECT_EQ(1.0, front_normal0.dp_duv->first.x);
@@ -536,8 +562,10 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
   EXPECT_EQ(0.0, front_normal0.dp_duv->second.z);
   EXPECT_EQ(nullptr, front_normal0.normal_map);
 
-  auto back_normal0 =
-      triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data0);
+  AdditionalData additional_data0_back{{1.0, 0.0, 0.0},
+                                       iris::Vector(-1.0, 0.0, 0.0)};
+  auto back_normal0 = triangles.front()->ComputeShadingNormal(
+      BACK_FACE, &additional_data0_back);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0), back_normal0.surface_normal);
   ASSERT_TRUE(back_normal0.dp_duv);
   EXPECT_EQ(1.0, back_normal0.dp_duv->first.x);
@@ -548,9 +576,10 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
   EXPECT_EQ(0.0, back_normal0.dp_duv->second.z);
   EXPECT_EQ(nullptr, back_normal0.normal_map);
 
-  AdditionalData additional_data1({0.0, 1.0, 0.0});
-  auto front_normal1 =
-      triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data1);
+  AdditionalData additional_data1_front{{0.0, 1.0, 0.0},
+                                        iris::Vector(0.0, 1.0, 0.0)};
+  auto front_normal1 = triangles.front()->ComputeShadingNormal(
+      FRONT_FACE, &additional_data1_front);
   EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), front_normal1.surface_normal);
   ASSERT_TRUE(front_normal1.dp_duv);
   EXPECT_EQ(1.0, front_normal1.dp_duv->first.x);
@@ -561,8 +590,10 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
   EXPECT_EQ(0.0, front_normal1.dp_duv->second.z);
   EXPECT_EQ(nullptr, front_normal1.normal_map);
 
-  auto back_normal1 =
-      triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data1);
+  AdditionalData additional_data1_back{{0.0, 1.0, 0.0},
+                                       iris::Vector(0.0, -1.0, 0.0)};
+  auto back_normal1 = triangles.front()->ComputeShadingNormal(
+      BACK_FACE, &additional_data1_back);
   EXPECT_EQ(iris::Vector(0.0, -1.0, 0.0), back_normal1.surface_normal);
   ASSERT_TRUE(back_normal1.dp_duv);
   EXPECT_EQ(1.0, back_normal1.dp_duv->first.x);
@@ -573,9 +604,10 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
   EXPECT_EQ(0.0, back_normal1.dp_duv->second.z);
   EXPECT_EQ(nullptr, back_normal1.normal_map);
 
-  AdditionalData additional_data2({0.0, 0.0, 1.0});
-  auto front_normal2 =
-      triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data2);
+  AdditionalData additional_data2_front{{0.0, 0.0, 1.0},
+                                        iris::Vector(0.0, 0.0, 1.0)};
+  auto front_normal2 = triangles.front()->ComputeShadingNormal(
+      FRONT_FACE, &additional_data2_front);
   EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), front_normal2.surface_normal);
   ASSERT_TRUE(front_normal2.dp_duv);
   EXPECT_EQ(1.0, front_normal2.dp_duv->first.x);
@@ -586,8 +618,10 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
   EXPECT_EQ(0.0, front_normal2.dp_duv->second.z);
   EXPECT_EQ(nullptr, front_normal2.normal_map);
 
-  auto back_normal2 =
-      triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data2);
+  AdditionalData additional_data2_back{{0.0, 0.0, 1.0},
+                                       iris::Vector(0.0, 0.0, -1.0)};
+  auto back_normal2 = triangles.front()->ComputeShadingNormal(
+      BACK_FACE, &additional_data2_back);
   EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), back_normal2.surface_normal);
   ASSERT_TRUE(back_normal2.dp_duv);
   EXPECT_EQ(1.0, back_normal2.dp_duv->first.x);
@@ -698,17 +732,21 @@ TEST(Triangle, SampleBySolidAngle) {
 
 TEST(Triangle, ComputePdfBySolidAngle) {
   auto triangle = SimpleTriangle();
+  AdditionalData additional_data{{0.0, 0.0, 1.0}, iris::Vector(0.0, 0.0, 1.0)};
 
-  auto pdf0 = triangle->ComputePdfBySolidAngle(
-      iris::Point(0.0, 0.0, 1.0), FRONT_FACE, iris::Point(0.0, 0.0, 0.0));
+  auto pdf0 = triangle->ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 1.0),
+                                               FRONT_FACE, &additional_data,
+                                               iris::Point(0.0, 0.0, 0.0));
   EXPECT_NEAR(2.0, pdf0.value(), 0.001);
 
-  auto pdf1 = triangle->ComputePdfBySolidAngle(
-      iris::Point(0.0, 0.0, 1.0), FRONT_FACE, iris::Point(1.0, 0.0, 0.0));
+  auto pdf1 = triangle->ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 1.0),
+                                               FRONT_FACE, &additional_data,
+                                               iris::Point(1.0, 0.0, 0.0));
   EXPECT_NEAR(5.6568541, pdf1.value(), 0.001);
 
-  auto pdf2 = triangle->ComputePdfBySolidAngle(
-      iris::Point(0.0, 0.0, 1.0), FRONT_FACE, iris::Point(0.25, 0.25, 0.0));
+  auto pdf2 = triangle->ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 1.0),
+                                               FRONT_FACE, &additional_data,
+                                               iris::Point(0.25, 0.25, 0.0));
   EXPECT_NEAR(2.3864853, pdf2.value(), 0.001);
 }
 
