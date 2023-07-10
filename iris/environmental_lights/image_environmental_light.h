@@ -2,9 +2,9 @@
 #define _IRIS_ENVIRONMENTAL_LIGHTS_IMAGE_ENVIRONMENTAL_LIGHT_
 
 #include <span>
-#include <vector>
 
 #include "iris/environmental_light.h"
+#include "iris/environmental_lights/internal/distribution_2d.h"
 #include "iris/float.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
@@ -18,11 +18,11 @@ namespace environmental_lights {
 
 class ImageEnvironmentalLight final : public EnvironmentalLight {
  public:
-  ImageEnvironmentalLight(
-      std::span<const std::pair<ReferenceCounted<Spectrum>, visual>>
-          spectra_and_luminance,
-      std::pair<size_t, size_t> size, ReferenceCounted<Spectrum> scalar,
-      const Matrix& model_to_world);
+  ImageEnvironmentalLight(std::span<const ReferenceCounted<Spectrum>> spectra,
+                          std::span<const visual> luma,
+                          std::pair<size_t, size_t> size,
+                          ReferenceCounted<Spectrum> scalar,
+                          const Matrix& model_to_world);
 
   std::optional<SampleResult> Sample(
       Sampler& sampler, SpectralAllocator& allocator) const override;
@@ -31,13 +31,11 @@ class ImageEnvironmentalLight final : public EnvironmentalLight {
                            visual_t* pdf) const override;
 
  private:
-  Matrix model_to_world_;
-  ReferenceCounted<Spectrum> scalar_;
-  std::pair<size_t, size_t> size_;
   std::vector<ReferenceCounted<Spectrum>> spectra_;
-  std::vector<visual> pdf_;
-  std::vector<visual> cdf_;
-  std::vector<size_t> spectra_indices_;
+  internal::Distribution2D distribution_;
+  std::pair<size_t, size_t> size_;
+  ReferenceCounted<Spectrum> scalar_;
+  Matrix model_to_world_;
 };
 
 }  // namespace environmental_lights

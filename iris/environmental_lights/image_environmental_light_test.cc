@@ -14,14 +14,12 @@ static const iris::ReferenceCounted<iris::Spectrum> kScalar =
     iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(2.0);
 
 TEST(ImageEnvironmentalLight, SampleTwo) {
-  std::vector<std::pair<iris::ReferenceCounted<iris::Spectrum>, iris::visual>>
-      spectra = {{kSpectrum0, 0.0},
-                 {kSpectrum0, 0.0},
-                 {kSpectrum1, 1.0},
-                 {kSpectrum2, 2.0}};
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {0.0, 0.0, 1.0, 2.0};
   std::pair<size_t, size_t> size(2, 2);
   iris::environmental_lights::ImageEnvironmentalLight light(
-      spectra, size, kScalar, iris::Matrix::Identity());
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillRepeatedly(testing::Return(0.25));
@@ -29,22 +27,20 @@ TEST(ImageEnvironmentalLight, SampleTwo) {
 
   auto result = light.Sample(sampler, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_EQ(2.0, result->emission.Intensity(1.0));
-  EXPECT_NEAR(0.01827821, result->pdf, 0.001);
-  EXPECT_NEAR(+0.6532813, result->to_light.x, 0.001);
-  EXPECT_NEAR(-0.6532815, result->to_light.y, 0.001);
+  EXPECT_EQ(1.0, result->emission.Intensity(1.0));
+  EXPECT_NEAR(0.07311284, result->pdf, 0.001);
+  EXPECT_NEAR(-0.6532813, result->to_light.x, 0.001);
+  EXPECT_NEAR(+0.6532815, result->to_light.y, 0.001);
   EXPECT_NEAR(-0.3826835, result->to_light.z, 0.001);
 }
 
 TEST(ImageEnvironmentalLight, SampleFour) {
-  std::vector<std::pair<iris::ReferenceCounted<iris::Spectrum>, iris::visual>>
-      spectra = {{kSpectrum0, 0.0},
-                 {kSpectrum0, 0.0},
-                 {kSpectrum1, 1.0},
-                 {kSpectrum2, 2.0}};
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {0.0, 0.0, 1.0, 2.0};
   std::pair<size_t, size_t> size(2, 2);
   iris::environmental_lights::ImageEnvironmentalLight light(
-      spectra, size, kScalar, iris::Matrix::Identity());
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillRepeatedly(testing::Return(0.75));
@@ -52,22 +48,20 @@ TEST(ImageEnvironmentalLight, SampleFour) {
 
   auto result = light.Sample(sampler, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_EQ(4.0, result->emission.Intensity(1.0));
-  EXPECT_NEAR(0.08825504, result->pdf, 0.001);
-  EXPECT_NEAR(-0.2705979, result->to_light.x, 0.001);
-  EXPECT_NEAR(+0.2705979, result->to_light.y, 0.001);
+  EXPECT_EQ(2.0, result->emission.Intensity(1.0));
+  EXPECT_NEAR(0.35302019, result->pdf, 0.001);
+  EXPECT_NEAR(+0.1464466, result->to_light.x, 0.001);
+  EXPECT_NEAR(-0.3535532, result->to_light.y, 0.001);
   EXPECT_NEAR(-0.9238796, result->to_light.z, 0.001);
 }
 
 TEST(ImageEnvironmentalLight, EmissionZero) {
-  std::vector<std::pair<iris::ReferenceCounted<iris::Spectrum>, iris::visual>>
-      spectra = {{kSpectrum0, 0.0},
-                 {kSpectrum0, 0.0},
-                 {kSpectrum1, 1.0},
-                 {kSpectrum2, 2.0}};
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {0.0, 0.0, 1.0, 2.0};
   std::pair<size_t, size_t> size(2, 2);
   iris::environmental_lights::ImageEnvironmentalLight light(
-      spectra, size, kScalar, iris::Matrix::Identity());
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
 
   auto result = light.Emission(iris::Normalize(iris::Vector(1.0, 1.0, 1.0)),
                                iris::testing::GetSpectralAllocator(), nullptr);
@@ -75,37 +69,33 @@ TEST(ImageEnvironmentalLight, EmissionZero) {
 }
 
 TEST(ImageEnvironmentalLight, EmissionOne) {
-  std::vector<std::pair<iris::ReferenceCounted<iris::Spectrum>, iris::visual>>
-      spectra = {{kSpectrum0, 0.0},
-                 {kSpectrum0, 0.0},
-                 {kSpectrum1, 1.0},
-                 {kSpectrum2, 2.0}};
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {0.0, 0.0, 1.0, 2.0};
   std::pair<size_t, size_t> size(2, 2);
   iris::environmental_lights::ImageEnvironmentalLight light(
-      spectra, size, kScalar, iris::Matrix::Identity());
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
 
   iris::visual_t pdf;
   auto result = light.Emission(iris::Normalize(iris::Vector(1.0, 1.0, -1.0)),
                                iris::testing::GetSpectralAllocator(), &pdf);
   ASSERT_TRUE(result);
   EXPECT_EQ(2.0, result->Intensity(1.0));
-  EXPECT_NEAR(0.0137880, pdf, 0.001);
+  EXPECT_NEAR(0.08272840, pdf, 0.001);
 }
 
 TEST(ImageEnvironmentalLight, EmissionFour) {
-  std::vector<std::pair<iris::ReferenceCounted<iris::Spectrum>, iris::visual>>
-      spectra = {{kSpectrum0, 0.0},
-                 {kSpectrum0, 0.0},
-                 {kSpectrum1, 1.0},
-                 {kSpectrum2, 2.0}};
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {0.0, 0.0, 1.0, 2.0};
   std::pair<size_t, size_t> size(2, 2);
   iris::environmental_lights::ImageEnvironmentalLight light(
-      spectra, size, kScalar, iris::Matrix::Identity());
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
 
   iris::visual_t pdf;
   auto result = light.Emission(iris::Normalize(iris::Vector(-1.0, -1.0, -1.0)),
                                iris::testing::GetSpectralAllocator(), &pdf);
   ASSERT_TRUE(result);
   EXPECT_EQ(4.0, result->Intensity(1.0));
-  EXPECT_NEAR(0.0275761, pdf, 0.001);
+  EXPECT_NEAR(0.16545681, pdf, 0.001);
 }

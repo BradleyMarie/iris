@@ -35,8 +35,8 @@ std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
 InfiniteBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     SpectrumManager& spectrum_manager, const Matrix& model_to_world) const {
-  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>>
-      spectra_and_luminance = {{kWhiteSpectrum, 1.0}};
+  std::vector<ReferenceCounted<Spectrum>> spectra = {kWhiteSpectrum};
+  std::vector<visual> luma = {1.0};
   std::pair<size_t, size_t> size(1, 1);
   ReferenceCounted<Spectrum> scalar = kWhiteSpectrum;
 
@@ -47,7 +47,8 @@ InfiniteBuilder::Build(
 
   auto mapname_iter = parameters.find("mapname");
   if (mapname_iter != parameters.end()) {
-    spectra_and_luminance.clear();
+    spectra.clear();
+    luma.clear();
 
     const char* filename = mapname_iter->second.GetFilePaths().front().c_str();
 
@@ -82,12 +83,11 @@ InfiniteBuilder::Build(
             exit(EXIT_FAILURE);
           }
 
-          // TODO: Compute a better value for luma
-          visual luma = (r + g + b) / static_cast<visual>(3.0);
+          spectra.push_back(
+              spectrum_manager.AllocateSpectrum(Color{{r, g, b}, Color::RGB}));
 
-          spectra_and_luminance.push_back(
-              {spectrum_manager.AllocateSpectrum(Color{{r, g, b}, Color::RGB}),
-               luma});
+          // TODO: Compute a better value for luma
+          luma.push_back((r + g + b) / static_cast<visual>(3.0));
         }
       }
 
@@ -113,7 +113,7 @@ InfiniteBuilder::Build(
   }
 
   return MakeReferenceCounted<environmental_lights::ImageEnvironmentalLight>(
-      spectra_and_luminance, size, scalar, model_to_world);
+      spectra, luma, size, scalar, model_to_world);
 }
 
 };  // namespace

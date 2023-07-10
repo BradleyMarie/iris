@@ -196,3 +196,91 @@ TEST(Distribution1D, AllZeroPdfDiscrete) {
   auto value1 = dist.PdfDiscrete(0u);
   EXPECT_EQ(0.0, value1);
 }
+
+TEST(Distribution1D, SampleContinuousWithZeroes) {
+  std::vector<iris::visual> values = {0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0};
+  iris::environmental_lights::internal::Distribution1D dist(values);
+
+  {
+    testing::InSequence sequence;
+
+    iris::random::MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.0));
+    EXPECT_CALL(rng, DiscardGeometric(1));
+    iris::Sampler sampler(rng);
+
+    size_t offset;
+    iris::geometric_t sample = dist.SampleContinuous(sampler, nullptr, &offset);
+    EXPECT_EQ(0.125, sample);
+    EXPECT_EQ(1u, offset);
+  }
+
+  {
+    testing::InSequence sequence;
+
+    iris::random::MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.25));
+    EXPECT_CALL(rng, DiscardGeometric(1));
+    iris::Sampler sampler(rng);
+
+    size_t offset;
+    iris::geometric_t sample = dist.SampleContinuous(sampler, nullptr, &offset);
+    EXPECT_EQ(0.375, sample);
+    EXPECT_EQ(3u, offset);
+  }
+
+  {
+    testing::InSequence sequence;
+
+    iris::random::MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.9999999));
+    EXPECT_CALL(rng, DiscardGeometric(1));
+    iris::Sampler sampler(rng);
+
+    size_t offset;
+    iris::geometric_t sample = dist.SampleContinuous(sampler, nullptr, &offset);
+    EXPECT_NEAR(0.875, sample, 0.001);
+    EXPECT_EQ(6u, offset);
+  }
+}
+
+TEST(Distribution1D, SampleDiscreteWithZeroes) {
+  std::vector<iris::visual> values = {0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0};
+  iris::environmental_lights::internal::Distribution1D dist(values);
+
+  {
+    testing::InSequence sequence;
+
+    iris::random::MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.0));
+    EXPECT_CALL(rng, DiscardGeometric(1));
+    iris::Sampler sampler(rng);
+
+    size_t sample = dist.SampleDiscrete(sampler);
+    EXPECT_EQ(1u, sample);
+  }
+
+  {
+    testing::InSequence sequence;
+
+    iris::random::MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.25));
+    EXPECT_CALL(rng, DiscardGeometric(1));
+    iris::Sampler sampler(rng);
+
+    size_t sample = dist.SampleDiscrete(sampler);
+    EXPECT_EQ(3u, sample);
+  }
+
+  {
+    testing::InSequence sequence;
+
+    iris::random::MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.9999999));
+    EXPECT_CALL(rng, DiscardGeometric(1));
+    iris::Sampler sampler(rng);
+
+    size_t sample = dist.SampleDiscrete(sampler);
+    EXPECT_EQ(6u, sample);
+  }
+}

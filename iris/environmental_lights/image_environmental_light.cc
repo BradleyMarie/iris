@@ -4,143 +4,118 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <functional>
-#include <map>
 
 namespace iris {
 namespace environmental_lights {
 namespace {
 
-std::pair<geometric_t, geometric_t> DirectionToUV(const Vector& direction) {
-  Vector normalized = Normalize(direction);
+constexpr visual_t kTwoPiSquared = 2.0 * M_PI * M_PI;
+constexpr geometric_t kTwoPi = 2.0 * M_PI;
+constexpr geometric_t kPi = M_PI;
+constexpr geometric_t kOne = 1.0;
 
+std::pair<geometric_t, geometric_t> DirectionToUV(const Vector& direction) {
   geometric_t cos_theta =
-      std::clamp(normalized.z, static_cast<geometric_t>(-1.0),
+      std::clamp(direction.z, static_cast<geometric_t>(-1.0),
                  static_cast<geometric_t>(1.0));
   geometric_t theta = std::acos(cos_theta);
 
-  geometric_t phi = std::atan2(normalized.y, normalized.x);
+  geometric_t phi = std::atan2(direction.y, direction.x);
   if (phi < static_cast<geometric_t>(0.0)) {
-    phi += static_cast<geometric_t>(2.0 * M_PI);
+    phi += kTwoPi;
   }
 
-  return std::make_pair(
-      std::clamp(phi / static_cast<geometric_t>(2.0 * M_PI),
-                 static_cast<geometric_t>(0.0), static_cast<geometric_t>(1.0)),
-      std::clamp(theta / static_cast<geometric_t>(M_PI),
-                 static_cast<geometric_t>(0.0), static_cast<geometric_t>(1.0)));
+  static constexpr geometric_t limit = std::nextafter(
+      static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
+  return std::make_pair(std::clamp(phi / static_cast<geometric_t>(2.0 * M_PI),
+                                   static_cast<geometric_t>(0.0), limit),
+                        std::clamp(theta / static_cast<geometric_t>(M_PI),
+                                   static_cast<geometric_t>(0.0), limit));
+}
+
+std::vector<visual> ScaleLuma(std::span<const visual> luma,
+                              std::pair<size_t, size_t> size) {
+  assert(size.first * size.second == luma.size());
+
+  std::vector<visual> scaled_values;
+  scaled_values.reserve(luma.size());
+  for (size_t index = 0; index < luma.size(); index += 1) {
+    size_t y = index / size.second;
+    visual_t v = (static_cast<visual_t>(y) + static_cast<visual_t>(0.5)) /
+                 static_cast<visual_t>(size.first);
+    scaled_values.push_back(luma[index] * std::sin(kPi * v));
+  }
+
+  return scaled_values;
+}
+
+visual_t SafeDivide(visual_t numerator, visual_t denominator) {
+  if (denominator == static_cast<visual_t>(0.0)) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  return numerator / denominator;
 }
 
 }  // namespace
 
 ImageEnvironmentalLight::ImageEnvironmentalLight(
-    std::span<const std::pair<ReferenceCounted<Spectrum>, visual>>
-        spectra_and_luminance,
-    std::pair<size_t, size_t> size, ReferenceCounted<Spectrum> scalar,
-    const Matrix& model_to_world)
-    : model_to_world_(model_to_world), scalar_(std::move(scalar)), size_(size) {
-  assert(!spectra_and_luminance.empty());
-  assert(spectra_and_luminance.size() == size.first * size.second);
-
-  spectra_.reserve(spectra_and_luminance.size());
-  pdf_.reserve(spectra_and_luminance.size());
-  cdf_.reserve(spectra_and_luminance.size());
-  spectra_indices_.reserve(spectra_and_luminance.size());
-
-  visual_t cumulative_luma;
-  for (size_t index = 0; index < spectra_and_luminance.size(); index++) {
-    visual_t v = (static_cast<visual_t>(index / size.second) +
-                  static_cast<visual_t>(0.5)) /
-                 static_cast<visual_t>(size.first);
-    visual_t sin_theta = std::sin(static_cast<visual_t>(M_PI) * v);
-
-    spectra_.push_back(std::move(spectra_and_luminance[index].first));
-    pdf_.push_back(std::max(static_cast<visual>(0.0),
-                            sin_theta * spectra_and_luminance[index].second));
-    cumulative_luma += pdf_.back();
-  }
-
-  std::multimap<visual, size_t> sorted_pixels;
-  for (size_t index = 0u; index < spectra_.size(); index++) {
-    pdf_[index] /= cumulative_luma;
-    sorted_pixels.emplace(pdf_[index], index);
-  }
-
-  visual cdf = 0.0;
-  for (const auto& [pdf, index] : sorted_pixels) {
-    if (pdf <= 0.0) {
-      continue;
-    }
-
-    cdf = std::min(static_cast<visual>(1.0), cdf + pdf);
-    cdf_.push_back(cdf);
-    spectra_indices_.push_back(index);
-  }
-
-  cdf_.back() = 1.0;
+    std::span<const ReferenceCounted<Spectrum>> spectra,
+    std::span<const visual> luma, std::pair<size_t, size_t> size,
+    ReferenceCounted<Spectrum> scalar, const Matrix& model_to_world)
+    : spectra_(spectra.begin(), spectra.end()),
+      distribution_(ScaleLuma(luma, size), size),
+      size_(size),
+      scalar_(std::move(scalar)),
+      model_to_world_(model_to_world) {
+  assert(!spectra.empty());
+  assert(spectra.size() == size.first * size.second);
+  assert(!luma.empty());
+  assert(luma.size() == size.first * size.second);
 }
 
 std::optional<EnvironmentalLight::SampleResult> ImageEnvironmentalLight::Sample(
     Sampler& sampler, SpectralAllocator& allocator) const {
-  geometric_t sample = sampler.Next();
-  auto iter =
-      std::lower_bound(cdf_.begin(), cdf_.end(), static_cast<visual>(sample));
-  assert(iter != cdf_.end());
+  visual_t pdf;
+  size_t offset;
+  auto [u, v] = distribution_.Sample(sampler, &pdf, &offset);
 
-  size_t sample_index = iter - cdf_.begin();
-  size_t pixel_index = spectra_indices_[*iter];
-
-  const Spectrum* spectrum =
-      allocator.Scale(spectra_[pixel_index].Get(), scalar_.Get());
+  const Spectrum* spectrum = spectra_[offset].Get();
   if (!spectrum) {
     return std::nullopt;
   }
 
-  size_t x = pixel_index % size_.second;
-  size_t y = pixel_index / size_.second;
-
-  geometric_t pixel_u = (sample - *iter) / cdf_[sample_index];
-  geometric_t pixel_v = sampler.Next();
-
-  geometric_t phi = static_cast<geometric_t>(2.0 * M_PI) *
-                    (static_cast<geometric_t>(x) + pixel_u) /
-                    static_cast<geometric_t>(size_.second);
-  geometric_t theta = static_cast<geometric_t>(M_PI) *
-                      (static_cast<geometric_t>(y) + pixel_v) /
-                      static_cast<geometric_t>(size_.first);
-
+  geometric_t phi = u * kTwoPi;
   geometric_t cos_phi = std::cos(phi);
   geometric_t sin_phi = std::sin(phi);
+
+  geometric_t theta = v * kPi;
   geometric_t cos_theta = std::cos(theta);
   geometric_t sin_theta = std::sin(theta);
 
   Vector model_to_light(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
-  visual_t pdf = pdf_[pixel_index] /
-                 static_cast<visual_t>(
-                     static_cast<geometric_t>(2.0 * M_PI * M_PI) * sin_theta);
 
   return EnvironmentalLight::SampleResult{
-      *spectrum, model_to_world_.Multiply(model_to_light), pdf};
+      *spectrum, model_to_world_.Multiply(model_to_light),
+      SafeDivide(pdf, kTwoPiSquared * sin_theta)};
 }
 
 const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
                                                   SpectralAllocator& allocator,
                                                   visual_t* pdf) const {
-  Vector model_to_light = model_to_world_.InverseMultiply(to_light);
-  auto uv = DirectionToUV(model_to_light);
-
-  size_t x = uv.first * static_cast<geometric_t>(size_.second);
-  size_t y = uv.second * static_cast<geometric_t>(size_.first);
-  size_t index = x + y * size_.second;
+  Vector model_to_light = Normalize(model_to_world_.InverseMultiply(to_light));
+  auto [u, v] = DirectionToUV(model_to_light);
 
   if (pdf) {
     geometric_t cos_theta = model_to_light.z;
     geometric_t sin_theta =
-        sqrt(static_cast<geometric_t>(1.0) -
-             std::min(static_cast<geometric_t>(1.0), cos_theta * cos_theta));
-    *pdf =
-        pdf_[index] / static_cast<geometric_t>(2.0 * M_PI * M_PI) * sin_theta;
+        std::sqrt(kOne - std::min(kOne, cos_theta * cos_theta));
+    *pdf = SafeDivide(distribution_.Pdf(u, v), kTwoPiSquared * sin_theta);
   }
+
+  size_t x = u * static_cast<geometric_t>(size_.second);
+  size_t y = v * static_cast<geometric_t>(size_.first);
+  size_t index = y * size_.second + x;
 
   return allocator.Scale(spectra_[index].Get(), scalar_.Get());
 }

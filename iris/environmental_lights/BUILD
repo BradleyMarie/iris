@@ -15,6 +15,7 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:spectrum",
         "//iris:vector",
+        "//iris/environmental_lights/internal:distribution_2d",
     ],
 )
 
