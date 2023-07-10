@@ -12,15 +12,17 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"pixelsamples", Parameter::INTEGER},
 };
 
-class RandomObjectBuilder : public ObjectBuilder<Result> {
+class RandomObjectBuilder
+    : public ObjectBuilder<std::unique_ptr<iris::ImageSampler>> {
  public:
   RandomObjectBuilder() : ObjectBuilder(g_parameters) {}
 
-  Result Build(const std::unordered_map<std::string_view, Parameter>&
-                   parameters) const override;
+  std::unique_ptr<iris::ImageSampler> Build(
+      const std::unordered_map<std::string_view, Parameter>& parameters)
+      const override;
 };
 
-Result RandomObjectBuilder::Build(
+std::unique_ptr<iris::ImageSampler> RandomObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters) const {
   uint32_t pixel_samples = 16;
 
@@ -36,14 +38,13 @@ Result RandomObjectBuilder::Build(
     pixel_samples = value;
   }
 
-  return {
-      std::make_unique<iris::image_samplers::RandomImageSampler>(pixel_samples),
-      nullptr};
+  return std::make_unique<iris::image_samplers::RandomImageSampler>(
+      pixel_samples);
 }
 
 }  // namespace
 
-const std::unique_ptr<const ObjectBuilder<Result>> g_random_builder(
-    std::make_unique<RandomObjectBuilder>());
+const std::unique_ptr<const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>>
+    g_random_builder(std::make_unique<RandomObjectBuilder>());
 
 }  // namespace iris::pbrt_frontend::samplers

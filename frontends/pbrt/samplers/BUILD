@@ -7,8 +7,8 @@ cc_library(
     srcs = ["halton.cc"],
     hdrs = ["halton.h"],
     deps = [
-        ":result",
         "//frontends/pbrt:object_builder",
+        "//iris:image_sampler",
         "//iris/image_samplers:halton_image_sampler",
     ],
 )
@@ -32,11 +32,11 @@ cc_library(
     deps = [
         ":halton",
         ":random",
-        ":result",
         ":sobol",
         ":stratified",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:tokenizer",
+        "//iris:image_sampler",
     ],
 )
 
@@ -50,20 +50,12 @@ cc_test(
 )
 
 cc_library(
-    name = "result",
-    hdrs = ["result.h"],
-    deps = [
-        "//iris:image_sampler",
-    ],
-)
-
-cc_library(
     name = "random",
     srcs = ["random.cc"],
     hdrs = ["random.h"],
     deps = [
-        ":result",
         "//frontends/pbrt:object_builder",
+        "//iris:image_sampler",
         "//iris/image_samplers:random_image_sampler",
     ],
 )
@@ -84,8 +76,8 @@ cc_library(
     srcs = ["sobol.cc"],
     hdrs = ["sobol.h"],
     deps = [
-        ":result",
         "//frontends/pbrt:object_builder",
+        "//iris:image_sampler",
         "//iris/image_samplers:sobol_image_sampler",
     ],
 )
@@ -106,8 +98,8 @@ cc_library(
     srcs = ["stratified.cc"],
     hdrs = ["stratified.h"],
     deps = [
-        ":result",
         "//frontends/pbrt:object_builder",
+        "//iris:image_sampler",
         "//iris/image_samplers:stratified_image_sampler",
     ],
 )

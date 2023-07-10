@@ -13,8 +13,7 @@ TEST(Halton, Empty) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_halton_builder, tokenizer,
       spectrum_manager, texture_manager);
-  EXPECT_TRUE(result.image_sampler);
-  EXPECT_TRUE(result.check_fully_sampled);
+  EXPECT_TRUE(result);
 }
 
 TEST(Halton, TooLowPixelSamples) {
@@ -55,8 +54,7 @@ TEST(Halton, AllSpecified) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_halton_builder, tokenizer,
       spectrum_manager, texture_manager);
-  EXPECT_TRUE(result.image_sampler);
-  EXPECT_TRUE(result.check_fully_sampled);
+  EXPECT_TRUE(result);
 }
 
 TEST(Halton, Bounds) {
@@ -66,13 +64,9 @@ TEST(Halton, Bounds) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::samplers::g_halton_builder, tokenizer,
-      spectrum_manager, texture_manager);
-  EXPECT_TRUE(result.image_sampler);
-  EXPECT_TRUE(result.check_fully_sampled);
-
-  EXPECT_EXIT(result.check_fully_sampled({8193, 8193}),
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::samplers::g_halton_builder, tokenizer,
+                  spectrum_manager, texture_manager),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Halton sampler only supports a maximum of 138084 "
               "samples per pixel");

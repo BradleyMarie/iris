@@ -105,7 +105,6 @@ class Parser {
   SceneObjects::Builder scene_objects_builder_;
   std::pair<size_t, size_t> image_dimensions_;
   std::unique_ptr<iris::ImageSampler> image_sampler_;
-  std::function<void(std::pair<size_t, size_t>)> check_fully_sampled_function_;
   std::unique_ptr<iris::Integrator> integrator_;
   std::unique_ptr<iris::LightScene::Builder> light_scene_builder_;
   std::filesystem::path output_filename_;

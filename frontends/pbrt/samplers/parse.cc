@@ -12,8 +12,9 @@
 namespace iris::pbrt_frontend::samplers {
 namespace {
 
-static const std::unordered_map<
-    std::string_view, const std::unique_ptr<const ObjectBuilder<Result>>&>
+static const std::unordered_map<std::string_view,
+                                const std::unique_ptr<const ObjectBuilder<
+                                    std::unique_ptr<iris::ImageSampler>>>&>
     g_samplers = {{"halton", g_halton_builder},
                   {"random", g_random_builder},
                   {"sobol", g_sobol_builder},
@@ -21,7 +22,8 @@ static const std::unordered_map<
 
 }  // namespace
 
-const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer) {
+const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>& Parse(
+    Tokenizer& tokenizer) {
   auto type = tokenizer.Next();
   if (!type) {
     std::cerr << "ERROR: Too few parameters to directive: Sampler" << std::endl;
@@ -44,6 +46,8 @@ const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer) {
   return *iter->second;
 }
 
-const ObjectBuilder<Result>& Default() { return *g_halton_builder; }
+const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>& Default() {
+  return *g_halton_builder;
+}
 
 }  // namespace iris::pbrt_frontend::samplers

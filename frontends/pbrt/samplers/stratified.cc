@@ -14,15 +14,17 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"ysamples", Parameter::INTEGER},
 };
 
-class StratifiedObjectBuilder : public ObjectBuilder<Result> {
+class StratifiedObjectBuilder
+    : public ObjectBuilder<std::unique_ptr<iris::ImageSampler>> {
  public:
   StratifiedObjectBuilder() : ObjectBuilder(g_parameters) {}
 
-  Result Build(const std::unordered_map<std::string_view, Parameter>&
-                   parameters) const override;
+  std::unique_ptr<iris::ImageSampler> Build(
+      const std::unordered_map<std::string_view, Parameter>& parameters)
+      const override;
 };
 
-Result StratifiedObjectBuilder::Build(
+std::unique_ptr<iris::ImageSampler> StratifiedObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters) const {
   bool jittered = true;
   uint16_t x_samples = 2;
@@ -57,14 +59,13 @@ Result StratifiedObjectBuilder::Build(
     y_samples = value;
   }
 
-  return {std::make_unique<iris::image_samplers::StratifiedImageSampler>(
-              x_samples, y_samples, jittered),
-          nullptr};
+  return std::make_unique<iris::image_samplers::StratifiedImageSampler>(
+      x_samples, y_samples, jittered);
 }
 
 }  // namespace
 
-const std::unique_ptr<const ObjectBuilder<Result>> g_stratified_builder(
-    std::make_unique<StratifiedObjectBuilder>());
+const std::unique_ptr<const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>>
+    g_stratified_builder(std::make_unique<StratifiedObjectBuilder>());
 
 }  // namespace iris::pbrt_frontend::samplers

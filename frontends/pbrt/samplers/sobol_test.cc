@@ -13,8 +13,7 @@ TEST(Sobol, Empty) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_sobol_builder, tokenizer,
       spectrum_manager, texture_manager);
-  EXPECT_TRUE(result.image_sampler);
-  EXPECT_FALSE(result.check_fully_sampled);
+  EXPECT_TRUE(result);
 }
 
 TEST(Sobol, TooLowPixelSamples) {
@@ -55,6 +54,5 @@ TEST(Sobol, AllSpecified) {
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_sobol_builder, tokenizer,
       spectrum_manager, texture_manager);
-  EXPECT_TRUE(result.image_sampler);
-  EXPECT_FALSE(result.check_fully_sampled);
+  EXPECT_TRUE(result);
 }

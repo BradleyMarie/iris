@@ -12,15 +12,17 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"pixelsamples", Parameter::INTEGER},
 };
 
-class SobolObjectBuilder : public ObjectBuilder<Result> {
+class SobolObjectBuilder
+    : public ObjectBuilder<std::unique_ptr<iris::ImageSampler>> {
  public:
   SobolObjectBuilder() : ObjectBuilder(g_parameters) {}
 
-  Result Build(const std::unordered_map<std::string_view, Parameter>&
-                   parameters) const override;
+  std::unique_ptr<iris::ImageSampler> Build(
+      const std::unordered_map<std::string_view, Parameter>& parameters)
+      const override;
 };
 
-Result SobolObjectBuilder::Build(
+std::unique_ptr<iris::ImageSampler> SobolObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters) const {
   uint32_t pixel_samples = 16;
 
@@ -36,13 +38,12 @@ Result SobolObjectBuilder::Build(
     pixel_samples = value;
   }
 
-  return {iris::image_samplers::MakeSobolImageSampler(pixel_samples),
-          nullptr};
+  return iris::image_samplers::MakeSobolImageSampler(pixel_samples);
 }
 
 }  // namespace
 
-const std::unique_ptr<const ObjectBuilder<Result>> g_sobol_builder(
-    std::make_unique<SobolObjectBuilder>());
+const std::unique_ptr<const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>>
+    g_sobol_builder(std::make_unique<SobolObjectBuilder>());
 
 }  // namespace iris::pbrt_frontend::samplers
