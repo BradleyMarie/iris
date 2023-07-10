@@ -22,14 +22,15 @@ std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
   auto y = radius * sin_theta;
   auto z = std::sqrt(static_cast<geometric>(1.0) - radius_squared);
 
-  return {{Vector(x, y, std::copysign(z, incoming.z))}};
+  return SampleResult{Vector(x, y, std::copysign(z, incoming.z)), std::nullopt,
+                      this};
 }
 
 std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
                                             const Vector& outgoing,
-                                            SampleSource sample_source) const {
-  if ((incoming.z < static_cast<geometric_t>(0.0)) !=
-      (outgoing.z < static_cast<geometric_t>(0.0))) {
+                                            const Bxdf* sample_source,
+                                            Hemisphere hemisphere) const {
+  if (hemisphere != Hemisphere::BRDF) {
     return static_cast<geometric_t>(0.0);
   }
 
@@ -37,14 +38,9 @@ std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
 }
 
 const Reflector* LambertianBrdf::Reflectance(
-    const Vector& incoming, const Vector& outgoing, SampleSource sample_source,
+    const Vector& incoming, const Vector& outgoing, const Bxdf* sample_source,
     Hemisphere hemisphere, SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BRDF) {
-    return nullptr;
-  }
-
-  if ((incoming.z < static_cast<geometric_t>(0.0)) !=
-      (outgoing.z < static_cast<geometric_t>(0.0))) {
     return nullptr;
   }
 

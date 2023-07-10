@@ -79,19 +79,20 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
     return std::nullopt;
   }
 
-  auto pdf = bxdf_.Pdf(local_incoming, sample_result->direction,
-                       Bxdf::SampleSource::BXDF);
-  if (pdf.has_value() && *pdf <= 0.0) {
-    return std::nullopt;
-  }
-
   auto world_outgoing = ToWorld(sample_result->direction);
   bool transmitted = (DotProduct(incoming, surface_normal_) > 0) ==
                      (DotProduct(world_outgoing, surface_normal_) > 0);
   auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
 
-  auto reflector = bxdf_.Reflectance(local_incoming, sample_result->direction,
-                                     Bxdf::SampleSource::BXDF, type, allocator);
+  auto pdf = bxdf_.Pdf(local_incoming, sample_result->direction,
+                       sample_result->sample_source, type);
+  if (pdf.has_value() && *pdf <= 0.0) {
+    return std::nullopt;
+  }
+
+  auto reflector =
+      bxdf_.Reflectance(local_incoming, sample_result->direction,
+                        sample_result->sample_source, type, allocator);
   if (!reflector) {
     return std::nullopt;
   }
@@ -104,20 +105,19 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
     const Vector& incoming, const Vector& outgoing,
     SpectralAllocator& allocator) const {
+  bool transmitted = (DotProduct(incoming, surface_normal_) > 0) ==
+                     (DotProduct(outgoing, surface_normal_) > 0);
+  auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
+
   auto local_incoming = ToLocal(-incoming);
   auto local_outgoing = ToLocal(outgoing);
-  auto pdf =
-      bxdf_.Pdf(local_incoming, local_outgoing, Bxdf::SampleSource::LIGHT);
+  auto pdf = bxdf_.Pdf(local_incoming, local_outgoing, nullptr, type);
   if (pdf.value_or(0.0) <= 0.0) {
     return std::nullopt;
   }
 
-  bool transmitted = (DotProduct(incoming, surface_normal_) > 0) ==
-                     (DotProduct(outgoing, surface_normal_) > 0);
-  auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
-  auto* reflector =
-      bxdf_.Reflectance(local_incoming, local_outgoing,
-                        Bxdf::SampleSource::LIGHT, type, allocator);
+  auto* reflector = bxdf_.Reflectance(local_incoming, local_outgoing, nullptr,
+                                      type, allocator);
   if (!reflector) {
     return std::nullopt;
   }

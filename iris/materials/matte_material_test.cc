@@ -32,9 +32,8 @@ TEST(MatteMaterialTest, Evaluate) {
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::SampleSource::BXDF, iris::Bxdf::Hemisphere::BRDF,
-      iris::testing::GetSpectralAllocator());
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), nullptr,
+      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(M_1_PI, returned_reflector->Reflectance(1.0), 0.0001);
 }

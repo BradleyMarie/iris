@@ -75,13 +75,15 @@ class MicrofacetBrdf final : public Bxdf {
       return std::nullopt;
     }
 
-    return {{outgoing}};
+    return SampleResult{outgoing, std::nullopt, this};
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              SampleSource sample_source) const override {
-    if ((incoming.z < static_cast<geometric_t>(0.0)) !=
-        (outgoing.z < static_cast<geometric_t>(0.0))) {
+                              const Bxdf* sample_source,
+                              Hemisphere hemisphere) const override {
+    if (hemisphere != Hemisphere::BRDF ||
+        (incoming.z == static_cast<geometric_t>(0.0)) ||
+        (outgoing.z == static_cast<geometric_t>(0.0))) {
       return static_cast<geometric_t>(0.0);
     }
 
@@ -92,20 +94,11 @@ class MicrofacetBrdf final : public Bxdf {
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               SampleSource sample_source,
-                               Hemisphere hemisphere,
+                               const Bxdf* sample_source, Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
-    if (hemisphere != Hemisphere::BRDF) {
-      return nullptr;
-    }
-
-    if ((incoming.z == static_cast<geometric_t>(0.0)) ||
+    if (hemisphere != Hemisphere::BRDF ||
+        (incoming.z == static_cast<geometric_t>(0.0)) ||
         (outgoing.z == static_cast<geometric_t>(0.0))) {
-      return nullptr;
-    }
-
-    if ((incoming.z < static_cast<geometric_t>(0.0)) !=
-        (outgoing.z < static_cast<geometric_t>(0.0))) {
       return nullptr;
     }
 

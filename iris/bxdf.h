@@ -21,29 +21,26 @@ class Bxdf {
   struct SampleResult {
     const Vector direction;
     const std::optional<Differentials> differentials;
+    const Bxdf* sample_source;
   };
 
   virtual std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       Sampler& sampler) const = 0;
 
-  enum class SampleSource {
-    BXDF,
-    LIGHT,
-  };
-
-  virtual std::optional<visual_t> Pdf(const Vector& incoming,
-                                      const Vector& outgoing,
-                                      SampleSource sample_source) const = 0;
-
   enum class Hemisphere {
     BRDF,
     BTDF,
   };
 
+  virtual std::optional<visual_t> Pdf(const Vector& incoming,
+                                      const Vector& outgoing,
+                                      const Bxdf* sample_source,
+                                      Hemisphere hemisphere) const = 0;
+
   virtual const Reflector* Reflectance(const Vector& incoming,
                                        const Vector& outgoing,
-                                       SampleSource sample_source,
+                                       const Bxdf* sample_source,
                                        Hemisphere hemisphere,
                                        SpectralAllocator& allocator) const = 0;
 

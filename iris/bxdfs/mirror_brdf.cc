@@ -9,24 +9,20 @@ std::optional<Bxdf::SampleResult> MirrorBrdf::Sample(
     Sampler& sampler) const {
   Vector reflected(-incoming.x, -incoming.y, incoming.z);
   if (!differentials) {
-    return Bxdf::SampleResult{reflected};
+    return Bxdf::SampleResult{reflected, std::nullopt, this};
   }
 
   Differentials outgoing_diffs = {
       Vector(-differentials->dx.x, -differentials->dx.y, differentials->dx.z),
       Vector(-differentials->dy.x, -differentials->dy.y, differentials->dy.z)};
-  return Bxdf::SampleResult{{reflected}, {outgoing_diffs}};
+  return Bxdf::SampleResult{reflected, outgoing_diffs, this};
 }
 
 std::optional<visual_t> MirrorBrdf::Pdf(const Vector& incoming,
                                         const Vector& outgoing,
-                                        SampleSource sample_source) const {
-  if (sample_source == SampleSource::LIGHT) {
-    return static_cast<geometric_t>(0.0);
-  }
-
-  if (incoming.x != -outgoing.x || incoming.y != -outgoing.y ||
-      incoming.z != outgoing.z) {
+                                        const Bxdf* sample_source,
+                                        Hemisphere hemisphere) const {
+  if (sample_source != this || hemisphere != Hemisphere::BRDF) {
     return static_cast<geometric_t>(0.0);
   }
 
@@ -35,19 +31,10 @@ std::optional<visual_t> MirrorBrdf::Pdf(const Vector& incoming,
 
 const Reflector* MirrorBrdf::Reflectance(const Vector& incoming,
                                          const Vector& outgoing,
-                                         SampleSource sample_source,
+                                         const Bxdf* sample_source,
                                          Hemisphere hemisphere,
                                          SpectralAllocator& allocator) const {
-  if (sample_source == SampleSource::LIGHT) {
-    return nullptr;
-  }
-
-  if (hemisphere != Hemisphere::BRDF) {
-    return nullptr;
-  }
-
-  if (incoming.x != -outgoing.x || incoming.y != -outgoing.y ||
-      incoming.z != outgoing.z) {
+  if (sample_source != this || hemisphere != Hemisphere::BRDF) {
     return nullptr;
   }
 

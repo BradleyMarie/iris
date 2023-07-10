@@ -20,11 +20,11 @@ class LambertianBrdf final : public Bxdf {
       Sampler& sampler) const override;
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              SampleSource sample_source) const override;
+                              const Bxdf* sample_source,
+                              Hemisphere hemisphere) const override;
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               SampleSource sample_source,
-                               Hemisphere hemisphere,
+                               const Bxdf* sample_source, Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override;
 
  private:

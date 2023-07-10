@@ -23,8 +23,7 @@ TEST(MirrorMaterialTest, Evaluate) {
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::SampleSource::BXDF, iris::Bxdf::Hemisphere::BRDF,
-      iris::testing::GetSpectralAllocator());
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), result,
+      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   EXPECT_EQ(reflector.Get(), returned_reflector);
 }

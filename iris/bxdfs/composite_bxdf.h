@@ -34,30 +34,27 @@ class CompositeBxdf final : public Bxdf {
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              SampleSource sample_source) const override {
+                              const Bxdf* sample_source,
+                              Hemisphere hemisphere) const override {
     visual_t diffuse_pdf = 0.0;
     size_t num_diffuse = 0;
     for (const auto* bxdf : bxdfs_) {
-      auto pdf = bxdf->Pdf(incoming, outgoing, sample_source);
+      auto pdf = bxdf->Pdf(incoming, outgoing, sample_source, hemisphere);
       diffuse_pdf += pdf.value_or(0.0);
       num_diffuse += pdf.has_value();
     }
 
     std::optional<visual_t> result;
     if (num_diffuse != 0) {
-      visual_t specular_pdf =
-          (sample_source == Bxdf::SampleSource::LIGHT) ? 0.0 : 1.0;
-      result = (diffuse_pdf +
-                static_cast<visual_t>(NumBsdfs - num_diffuse) * specular_pdf) /
-               static_cast<visual_t>(NumBsdfs);
+      visual_t specular_pdf = static_cast<visual_t>(NumBsdfs - num_diffuse);
+      result = (diffuse_pdf + specular_pdf) / static_cast<visual_t>(NumBsdfs);
     }
 
     return result;
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               SampleSource sample_source,
-                               Hemisphere hemisphere,
+                               const Bxdf* sample_source, Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
     const Reflector* result = nullptr;
     for (const auto* bxdf : bxdfs_) {
