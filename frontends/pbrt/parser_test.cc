@@ -687,8 +687,8 @@ TEST(Render, TooManySamples) {
           iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer),
               testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: At resolution 640x480 Halton sampler only supports 11507 "
-              "samples per pixel");
+              "ERROR: Halton sampler only supports a maximum of 138084 samples "
+              "per pixel");
 }
 
 TEST(Render, EmptyScene) {

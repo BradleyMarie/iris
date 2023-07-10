@@ -8,6 +8,8 @@
 namespace iris::pbrt_frontend::samplers {
 namespace {
 
+static const size_t kResolution = 128u;
+
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
         {"pixelsamples", Parameter::INTEGER},
@@ -41,12 +43,11 @@ Result HaltonObjectBuilder::Build(
     assert(dimensions.first <= std::numeric_limits<unsigned>::max());
     assert(dimensions.second <= std::numeric_limits<unsigned>::max());
 
-    Halton_enum enumerator(static_cast<unsigned>(dimensions.first),
-                           static_cast<unsigned>(dimensions.second));
+    Halton_enum enumerator(static_cast<unsigned>(kResolution),
+                           static_cast<unsigned>(kResolution));
 
     if (pixel_samples > enumerator.get_max_samples_per_pixel()) {
-      std::cerr << "ERROR: At resolution " << dimensions.second << "x"
-                << dimensions.first << " Halton sampler only supports "
+      std::cerr << "ERROR: Halton sampler only supports a maximum of "
                 << enumerator.get_max_samples_per_pixel()
                 << " samples per pixel" << std::endl;
       exit(EXIT_FAILURE);

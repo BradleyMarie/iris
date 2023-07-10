@@ -60,7 +60,7 @@ TEST(Halton, AllSpecified) {
 }
 
 TEST(Halton, Bounds) {
-  std::stringstream input("");
+  std::stringstream input("\"integer pixelsamples\" 138085");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -72,10 +72,8 @@ TEST(Halton, Bounds) {
   EXPECT_TRUE(result.image_sampler);
   EXPECT_TRUE(result.check_fully_sampled);
 
-  result.check_fully_sampled({8192, 8192});
-
   EXPECT_EXIT(result.check_fully_sampled({8193, 8193}),
               testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: At resolution 8193x8193 Halton sampler only supports 13 "
+              "ERROR: Halton sampler only supports a maximum of 138084 "
               "samples per pixel");
 }

@@ -11,8 +11,8 @@ TEST(HaltonSequenceTest, StartLimits) {
 
 TEST(HaltonSequenceTest, StartSampleLimit) {
   iris::image_samplers::internal::HaltonSequence sequence;
-  EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 0));
-  EXPECT_FALSE(sequence.Start({255, 255}, {0, 0}, 23014));
+  EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 138083));
+  EXPECT_FALSE(sequence.Start({255, 255}, {0, 0}, 138084));
 }
 
 TEST(HaltonSequenceTest, Samples) {

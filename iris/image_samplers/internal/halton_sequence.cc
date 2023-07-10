@@ -3,8 +3,12 @@
 namespace iris {
 namespace image_samplers {
 namespace internal {
+namespace {
 
-const static int64_t kMaxImageDimensionSize = 59049u;
+static const size_t kResolution = 128u;
+static const Halton_enum kHaltonEnumerator(kResolution, kResolution);
+
+}  // namespace
 
 HaltonSequence::HaltonSequence()
     : sampler_(std::make_unique<Halton_sampler>()), image_dimensions_(0, 0) {
@@ -14,24 +18,19 @@ HaltonSequence::HaltonSequence()
 bool HaltonSequence::Start(std::pair<size_t, size_t> image_dimensions,
                            std::pair<size_t, size_t> pixel,
                            unsigned sample_index) {
-  assert(image_dimensions.second <= kMaxImageDimensionSize);
-  assert(image_dimensions.second <= kMaxImageDimensionSize);
   assert(pixel.first < image_dimensions.first);
   assert(pixel.second < image_dimensions.second);
 
-  if (!enumerator_ || image_dimensions != image_dimensions_) {
-    enumerator_.emplace(static_cast<unsigned>(image_dimensions.second),
-                        static_cast<unsigned>(image_dimensions.first));
-  }
-
-  if (sample_index >= enumerator_->get_max_samples_per_pixel()) {
-    enumerator_.reset();
+  if (sample_index >= kHaltonEnumerator.get_max_samples_per_pixel()) {
     return false;
   }
 
-  sample_index_ =
-      enumerator_->get_index(sample_index, static_cast<unsigned>(pixel.second),
-                             static_cast<unsigned>(pixel.first));
+  x_offset_ = (pixel.second / kResolution) * kResolution;
+  y_offset_ = (pixel.first / kResolution) * kResolution;
+
+  sample_index_ = kHaltonEnumerator.get_index(
+      sample_index, static_cast<unsigned>(pixel.second % kResolution),
+      static_cast<unsigned>(pixel.first % kResolution));
 
   image_dimensions_ = image_dimensions;
   dimension_ = 0;
@@ -47,10 +46,10 @@ std::optional<geometric_t> HaltonSequence::Next() {
   geometric_t sample = sampler_->sample(dimension_, sample_index_);
 
   if (dimension_ == 0) {
-    sample = enumerator_->scale_x(sample) /
+    sample = (kHaltonEnumerator.scale_x(sample) + x_offset_) /
              static_cast<geometric_t>(image_dimensions_.second);
   } else if (dimension_ == 1) {
-    sample = enumerator_->scale_y(sample) /
+    sample = (kHaltonEnumerator.scale_y(sample) + y_offset_) /
              static_cast<geometric_t>(image_dimensions_.first);
   }
 
@@ -60,7 +59,7 @@ std::optional<geometric_t> HaltonSequence::Next() {
 }
 
 visual_t HaltonSequence::SampleWeight(uint32_t desired_num_samples) const {
-  auto max_num_samples = enumerator_->get_max_samples_per_pixel();
+  auto max_num_samples = kHaltonEnumerator.get_max_samples_per_pixel();
   auto num_samples = desired_num_samples < max_num_samples ? desired_num_samples
                                                            : max_num_samples;
   return static_cast<visual_t>(1.0) / static_cast<visual_t>(num_samples);
