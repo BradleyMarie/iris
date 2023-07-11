@@ -7,6 +7,9 @@
 
 #ifdef __linux__
 #include <sys/ioctl.h>
+#endif
+
+#ifdef _XOPEN_SOURCE
 #include <unistd.h>
 #endif
 
@@ -39,6 +42,11 @@ ABSL_FLAG(
 ABSL_FLAG(iris::geometric_t, epsilon, 0.001,
           "The amount of error tolerated in distance calculations. Must be "
           "finite and greater than or equal to zero.");
+
+#ifdef _XOPEN_SOURCE
+ABSL_FLAG(unsigned short, nice_increment, 19,
+          "The number of steps to increment the nice value of iris.");
+#endif
 
 ABSL_FLAG(unsigned int, num_threads, 0,
           "The number of threads to use for rendering. If zero, the "
@@ -114,6 +122,13 @@ int main(int argc, char** argv) {
     color_matcher = std::make_unique<
         iris::pbrt_frontend::spectrum_managers::ColorColorMatcher>();
   }
+
+#ifdef _XOPEN_SOURCE
+  if (nice(absl::GetFlag(FLAGS_nice_increment)) == -1) {
+    std::cerr << "WARNING: Failed to lower the adjust of the process"
+              << std::endl;
+  }
+#endif
 
 #ifdef INSTRUMENTED_BUILD
   const auto& cpu_profile = absl::GetFlag(FLAGS_cpu_profile);
