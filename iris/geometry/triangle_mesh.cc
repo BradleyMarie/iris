@@ -11,12 +11,12 @@ std::array<geometric_t, 3> Subtract(const Point& point0, const Point& point1) {
 
 std::array<geometric_t, 3> PermuteXDominant(
     const std::array<geometric_t, 3>& point) {
-  return std::array<geometric_t, 3>{point[2], point[1], point[0]};
+  return std::array<geometric_t, 3>{point[1], point[2], point[0]};
 }
 
 std::array<geometric_t, 3> PermuteYDominant(
     const std::array<geometric_t, 3>& point) {
-  return std::array<geometric_t, 3>{point[0], point[2], point[1]};
+  return std::array<geometric_t, 3>{point[2], point[0], point[1]};
 }
 
 class Triangle final : public Geometry {
@@ -188,12 +188,13 @@ std::optional<Vector> Triangle::MaybeComputeShadingNormal(
   }
 
   const auto* additional = static_cast<const AdditionalData*>(additional_data);
-  Vector shading_normal = shared_->normals[std::get<0>(vertices_)] *
-                              additional->barycentric_coordinates[0] +
-                          shared_->normals[std::get<1>(vertices_)] *
-                              additional->barycentric_coordinates[1] +
-                          shared_->normals[std::get<2>(vertices_)] *
-                              additional->barycentric_coordinates[2];
+  auto b0 = additional->barycentric_coordinates[0];
+  auto b1 = additional->barycentric_coordinates[1];
+  auto b2 = additional->barycentric_coordinates[2];
+
+  Vector shading_normal = shared_->normals[std::get<0>(vertices_)] * b0 +
+                          shared_->normals[std::get<1>(vertices_)] * b1 +
+                          shared_->normals[std::get<2>(vertices_)] * b2;
 
   if (DotProduct(additional->surface_normal, shading_normal) >
       static_cast<geometric_t>(0.0)) {
@@ -314,8 +315,8 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
       v1 = PermuteXDominant(v1);
       v2 = PermuteXDominant(v2);
 
-      shear_x = -ray.direction.z / ray.direction.x;
-      shear_y = -ray.direction.y / ray.direction.x;
+      shear_x = -ray.direction.y / ray.direction.x;
+      shear_y = -ray.direction.z / ray.direction.x;
       direction_z = ray.direction.x;
       break;
     case Vector::Y_AXIS:
@@ -323,8 +324,8 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
       v1 = PermuteYDominant(v1);
       v2 = PermuteYDominant(v2);
 
-      shear_x = -ray.direction.x / ray.direction.y;
-      shear_y = -ray.direction.z / ray.direction.y;
+      shear_x = -ray.direction.z / ray.direction.y;
+      shear_y = -ray.direction.x / ray.direction.y;
       direction_z = ray.direction.y;
       break;
     case Vector::Z_AXIS:
@@ -374,19 +375,8 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
     return nullptr;
   }
 
-  geometric_t shear_z = (geometric_t)1.0 / direction_z;
-  v0[2] = v0[2] * shear_z;
-  v1[2] = v1[2] * shear_z;
-  v2[2] = v2[2] * shear_z;
-
-  geometric_t distance = b0 * v0[2] + b1 * v1[2] + b2 * v2[2];
-
-  geometric_t inverse_determinant = (geometric_t)1.0 / determinant;
-  distance *= inverse_determinant;
-
-  std::array<geometric_t, 3> barycentric_coordinates{b0 * inverse_determinant,
-                                                     b1 * inverse_determinant,
-                                                     b2 * inverse_determinant};
+  std::array<geometric_t, 3> barycentric_coordinates = {
+      b0 / determinant, b1 / determinant, b2 / determinant};
 
   if (shared_->alpha_mask) {
     auto texture_coordinates =
@@ -397,6 +387,9 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
     }
   }
 
+  geometric_t distance = barycentric_coordinates[0] * (v0[2] / direction_z) +
+                         barycentric_coordinates[1] * (v1[2] / direction_z) +
+                         barycentric_coordinates[2] * (v2[2] / direction_z);
   auto normal_and_faces = ComputeSurfaceNormalAndFaces(ray);
 
   return &hit_allocator.Allocate(
