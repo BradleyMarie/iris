@@ -72,9 +72,7 @@ class MicrofacetBrdf final : public Bxdf {
       return std::nullopt;
     }
 
-    Vector aligned_outgoing = outgoing.AlignWith(surface_normal);
-
-    return SampleResult{aligned_outgoing, std::nullopt, this};
+    return SampleResult{outgoing, std::nullopt, this};
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
@@ -83,16 +81,12 @@ class MicrofacetBrdf final : public Bxdf {
                               Hemisphere hemisphere) const override {
     if (hemisphere != Hemisphere::BRDF ||
         incoming.z == static_cast<geometric_t>(0.0) ||
-        outgoing.z == static_cast<geometric_t>(0.0)) {
+        outgoing.z == static_cast<geometric_t>(0.0) ||
+        std::signbit(incoming.z) != std::signbit(outgoing.z)) {
       return static_cast<visual_t>(0.0);
     }
 
-    Vector aligned_outgoing = outgoing.AlignWith(surface_normal);
-    if (std::signbit(incoming.z) != std::signbit(aligned_outgoing.z)) {
-      return static_cast<visual_t>(0.0);
-    }
-
-    Vector half_angle = Normalize(aligned_outgoing + incoming);
+    Vector half_angle = Normalize(outgoing + incoming);
     visual_t dot_product = DotProduct(incoming, half_angle);
 
     return distribution_.Pdf(incoming, half_angle) /
@@ -104,7 +98,8 @@ class MicrofacetBrdf final : public Bxdf {
                                SpectralAllocator& allocator) const override {
     if (hemisphere != Hemisphere::BRDF ||
         (incoming.z == static_cast<geometric_t>(0.0)) ||
-        (outgoing.z == static_cast<geometric_t>(0.0))) {
+        (outgoing.z == static_cast<geometric_t>(0.0)) ||
+        std::signbit(incoming.z) != std::signbit(outgoing.z)) {
       return nullptr;
     }
 
