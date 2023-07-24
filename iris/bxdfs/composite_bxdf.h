@@ -28,18 +28,21 @@ class CompositeBxdf final : public Bxdf {
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      Sampler& sampler) const override {
+      const Vector& surface_normal, Sampler& sampler) const override {
     size_t index = sampler.NextIndex(NumBsdfs);
-    return bxdfs_[index]->Sample(incoming, differentials, sampler);
+    return bxdfs_[index]->Sample(incoming, differentials, surface_normal,
+                                 sampler);
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
+                              const Vector& surface_normal,
                               const Bxdf* sample_source,
                               Hemisphere hemisphere) const override {
     visual_t diffuse_pdf = 0.0;
     size_t num_diffuse = 0;
     for (const auto* bxdf : bxdfs_) {
-      auto pdf = bxdf->Pdf(incoming, outgoing, sample_source, hemisphere);
+      auto pdf = bxdf->Pdf(incoming, outgoing, surface_normal, sample_source,
+                           hemisphere);
       diffuse_pdf += pdf.value_or(0.0);
       num_diffuse += pdf.has_value();
     }

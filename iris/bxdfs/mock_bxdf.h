@@ -18,10 +18,11 @@ class MockBxdf final : public Bxdf {
  public:
   MOCK_METHOD(std::optional<SampleResult>, Sample,
               (const Vector&, const std::optional<Differentials>& differentials,
-               Sampler&),
+               const Vector&, Sampler&),
               (const override));
   MOCK_METHOD(std::optional<visual_t>, Pdf,
-              (const Vector&, const Vector&, const Bxdf*, Hemisphere),
+              (const Vector&, const Vector&, const Vector&, const Bxdf*,
+               Hemisphere),
               (const override));
   MOCK_METHOD(const Reflector*, Reflectance,
               (const Vector&, const Vector&, const Bxdf*, Hemisphere,

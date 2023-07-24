@@ -74,7 +74,8 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
   auto local_incoming_differentials = ToLocal(differentials);
 
   auto sample_result =
-      bxdf_.Sample(local_incoming, local_incoming_differentials, sampler);
+      bxdf_.Sample(local_incoming, local_incoming_differentials,
+                   local_surface_normal_, sampler);
   if (!sample_result) {
     return std::nullopt;
   }
@@ -84,8 +85,9 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
                      (DotProduct(world_outgoing, surface_normal_) > 0);
   auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
 
-  auto pdf = bxdf_.Pdf(local_incoming, sample_result->direction,
-                       sample_result->sample_source, type);
+  auto pdf =
+      bxdf_.Pdf(local_incoming, sample_result->direction, local_surface_normal_,
+                sample_result->sample_source, type);
   if (pdf.has_value() && *pdf <= 0.0) {
     return std::nullopt;
   }
@@ -111,7 +113,8 @@ std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
 
   auto local_incoming = ToLocal(-incoming);
   auto local_outgoing = ToLocal(outgoing);
-  auto pdf = bxdf_.Pdf(local_incoming, local_outgoing, nullptr, type);
+  auto pdf = bxdf_.Pdf(local_incoming, local_outgoing, local_surface_normal_,
+                       nullptr, type);
   if (pdf.value_or(0.0) <= 0.0) {
     return std::nullopt;
   }

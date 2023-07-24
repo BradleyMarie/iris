@@ -6,7 +6,7 @@ namespace bxdfs {
 std::optional<Bxdf::SampleResult> MirrorBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
-    Sampler& sampler) const {
+    const Vector& surface_normal, Sampler& sampler) const {
   Vector reflected(-incoming.x, -incoming.y, incoming.z);
   if (!differentials) {
     return Bxdf::SampleResult{reflected, std::nullopt, this};
@@ -20,10 +20,11 @@ std::optional<Bxdf::SampleResult> MirrorBrdf::Sample(
 
 std::optional<visual_t> MirrorBrdf::Pdf(const Vector& incoming,
                                         const Vector& outgoing,
+                                        const Vector& surface_normal,
                                         const Bxdf* sample_source,
                                         Hemisphere hemisphere) const {
   if (sample_source != this || hemisphere != Hemisphere::BRDF) {
-    return static_cast<geometric_t>(0.0);
+    return static_cast<visual_t>(0.0);
   }
 
   return std::nullopt;

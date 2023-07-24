@@ -26,7 +26,7 @@ class Bxdf {
 
   virtual std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      Sampler& sampler) const = 0;
+      const Vector& surface_normal, Sampler& sampler) const = 0;
 
   enum class Hemisphere {
     BRDF,
@@ -35,6 +35,7 @@ class Bxdf {
 
   virtual std::optional<visual_t> Pdf(const Vector& incoming,
                                       const Vector& outgoing,
+                                      const Vector& surface_normal,
                                       const Bxdf* sample_source,
                                       Hemisphere hemisphere) const = 0;
 

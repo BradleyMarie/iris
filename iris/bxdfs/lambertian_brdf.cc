@@ -10,7 +10,7 @@ namespace bxdfs {
 std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
-    Sampler& sampler) const {
+    const Vector& surface_normal, Sampler& sampler) const {
   auto radius_squared = sampler.Next();
   auto radius = std::sqrt(radius_squared);
 
@@ -21,17 +21,18 @@ std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
   auto x = radius * cos_theta;
   auto y = radius * sin_theta;
   auto z = std::sqrt(static_cast<geometric>(1.0) - radius_squared);
+  Vector outgoing(x, y, std::copysign(z, incoming.z));
 
-  return SampleResult{Vector(x, y, std::copysign(z, incoming.z)), std::nullopt,
-                      this};
+  return SampleResult{outgoing.AlignWith(surface_normal), std::nullopt, this};
 }
 
 std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
                                             const Vector& outgoing,
+                                            const Vector& surface_normal,
                                             const Bxdf* sample_source,
                                             Hemisphere hemisphere) const {
   if (hemisphere != Hemisphere::BRDF) {
-    return static_cast<geometric_t>(0.0);
+    return static_cast<visual_t>(0.0);
   }
 
   return std::abs(outgoing.z * M_1_PI);

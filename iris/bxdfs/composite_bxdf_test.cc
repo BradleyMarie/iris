@@ -18,14 +18,14 @@ TEST(CompositeBxdfTest, Sample) {
 
   iris::bxdfs::MockBxdf bxdf0;
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1,
-              Sample(iris::Vector(1.0, 0.0, 0.0), testing::_, testing::_))
+  EXPECT_CALL(bxdf1, Sample(iris::Vector(1.0, 0.0, 0.0), testing::_,
+                            iris::Vector(0.0, 0.0, 1.0), testing::_))
       .WillOnce(testing::Return(
           iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf0, bxdf1);
-  auto sample =
-      composite.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt, sampler);
+  auto sample = composite.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
+                                 iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample->direction);
   EXPECT_FALSE(sample->differentials);
   EXPECT_EQ(nullptr, sample->sample_source);
@@ -33,100 +33,115 @@ TEST(CompositeBxdfTest, Sample) {
 
 TEST(CompositeBxdfTest, PdfOneBxdf) {
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
 
   iris::bxdfs::internal::CompositeBxdf<1> composite(bxdf);
   EXPECT_EQ(std::nullopt, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
-                                        iris::Vector(-1.0, 0.0, 0.0), nullptr,
+                                        iris::Vector(-1.0, 0.0, 0.0),
+                                        iris::Vector(0.0, 0.0, 1.0), nullptr,
                                         iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, PdfTwoBxdfsEmpty) {
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillRepeatedly(testing::Return(std::nullopt));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf, bxdf);
   EXPECT_EQ(std::nullopt, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
-                                        iris::Vector(-1.0, 0.0, 0.0), nullptr,
+                                        iris::Vector(-1.0, 0.0, 0.0),
+                                        iris::Vector(0.0, 0.0, 1.0), nullptr,
                                         iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, PdfTwoBxdfs) {
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf0,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf1,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(2.0));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf0, bxdf1);
   EXPECT_EQ(1.5, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
-                               iris::Vector(-1.0, 0.0, 0.0), nullptr,
+                               iris::Vector(-1.0, 0.0, 0.0),
+                               iris::Vector(0.0, 0.0, 1.0), nullptr,
                                iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, LightPdfTwoBxdfs) {
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf0,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(0.0));
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf1,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(2.0));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf0, bxdf1);
   EXPECT_EQ(1.0, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
-                               iris::Vector(-1.0, 0.0, 0.0), nullptr,
+                               iris::Vector(-1.0, 0.0, 0.0),
+                               iris::Vector(0.0, 0.0, 1.0), nullptr,
                                iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingOne) {
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf0,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(1.0));
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf1,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf0, bxdf1);
   EXPECT_EQ(1.0, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
-                               iris::Vector(-1.0, 0.0, 0.0), nullptr,
+                               iris::Vector(-1.0, 0.0, 0.0),
+                               iris::Vector(0.0, 0.0, 1.0), nullptr,
                                iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingBoth) {
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf0,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf1,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf0, bxdf1);
-  EXPECT_FALSE(composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
-                             iris::Vector(-1.0, 0.0, 0.0), nullptr,
-                             iris::Bxdf::Hemisphere::BRDF));
+  EXPECT_FALSE(composite.Pdf(
+      iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+      iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, Reflectance) {
@@ -154,19 +169,22 @@ TEST(CompositeBxdfTest, Reflectance) {
 
 TEST(CompositeBxdfTest, MakeComposite) {
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf0,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1,
-              Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
-                  nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(
+      bxdf1,
+      Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
+          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(2.0));
 
   const auto& composite = iris::bxdfs::MakeComposite(
       iris::testing::GetBxdfAllocator(), bxdf0, bxdf1);
   EXPECT_EQ(1.5, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
-                               iris::Vector(-1.0, 0.0, 0.0), nullptr,
+                               iris::Vector(-1.0, 0.0, 0.0),
+                               iris::Vector(0.0, 0.0, 1.0), nullptr,
                                iris::Bxdf::Hemisphere::BRDF));
 }

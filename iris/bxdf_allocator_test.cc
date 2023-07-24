@@ -16,7 +16,8 @@ TEST(BxdfAllocatorTest, Allocate) {
       allocator.Allocate<iris::bxdfs::LambertianBrdf>(reflector);
   EXPECT_NEAR(M_1_PI,
               bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                       nullptr, iris::Bxdf::Hemisphere::BRDF)
+                       iris::Vector(0.0, 0.0, 1.0), nullptr,
+                       iris::Bxdf::Hemisphere::BRDF)
                   .value(),
               0.01);
 }

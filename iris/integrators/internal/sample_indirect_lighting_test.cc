@@ -11,10 +11,12 @@ TEST(SampleIndirectLighting, NoSample) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_))
+  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
+                           testing::_))
       .WillOnce(testing::Return(
           iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(bxdf,
+              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillOnce(testing::Return(0.0));
 
   iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 1.0, 0.0),
@@ -42,10 +44,12 @@ TEST(SampleIndirectLighting, Sample) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_))
+  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
+                           testing::_))
       .WillRepeatedly(testing::Return(
           iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, 1.0)}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(bxdf,
+              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
@@ -78,11 +82,13 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_))
+  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
+                           testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, 1.0),
           {{iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 0.0, 1.0)}}}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(bxdf,
+              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
@@ -118,10 +124,12 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_))
+  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
+                           testing::_))
       .WillRepeatedly(testing::Return(
           iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, 1.0)}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(bxdf,
+              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
@@ -158,10 +166,11 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
 
   iris::bxdfs::MockBxdf bxdf;
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
-                           testing::_))
+                           testing::_, testing::_))
       .WillRepeatedly(testing::Return(
           iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, 1.0)}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(bxdf,
+              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
@@ -200,11 +209,12 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
 
   iris::bxdfs::MockBxdf bxdf;
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
-                           testing::_))
+                           testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, 1.0),
           {{iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0)}}}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(bxdf,
+              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))

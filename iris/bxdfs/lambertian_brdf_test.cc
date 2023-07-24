@@ -8,7 +8,7 @@
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 
-TEST(LambertianBrdfTest, Sample) {
+TEST(LambertianBrdfTest, SampleAligned) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
@@ -17,8 +17,24 @@ TEST(LambertianBrdfTest, Sample) {
   iris::Sampler sampler(rng);
 
   iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt, sampler);
+  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
+                            iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result->direction);
+  EXPECT_FALSE(result->differentials);
+}
+
+TEST(LambertianBrdfTest, SampleUnaligned) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.0));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::LambertianBrdf bxdf(reflector);
+  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
+                            iris::Vector(0.0, 0.0, -1.0), sampler);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->direction);
   EXPECT_FALSE(result->differentials);
 }
 
@@ -27,7 +43,8 @@ TEST(LambertianBrdfTest, DiffusePdfTransmitted) {
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   EXPECT_EQ(0.0,
             bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     &bxdf, iris::Bxdf::Hemisphere::BTDF));
+                     iris::Vector(0.0, 0.0, -1.0), &bxdf,
+                     iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(LambertianBrdfTest, DiffusePdfReflected) {
@@ -35,7 +52,8 @@ TEST(LambertianBrdfTest, DiffusePdfReflected) {
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   EXPECT_NEAR(
       M_1_PI,
-      *bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      *bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+                iris::Vector(0.0, 0.0, -1.0), &bxdf,
                 iris::Bxdf::Hemisphere::BRDF),
       0.001);
 }

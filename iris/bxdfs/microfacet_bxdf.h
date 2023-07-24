@@ -2,6 +2,7 @@
 #define _IRIS_BXDFS_MICROFACET_BXDF_
 
 #include <algorithm>
+#include <cmath>
 #include <concepts>
 
 #include "iris/bxdf.h"
@@ -58,39 +59,44 @@ class MicrofacetBrdf final : public Bxdf {
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      Sampler& sampler) const override {
+      const Vector& surface_normal, Sampler& sampler) const override {
     if (incoming.z == static_cast<geometric_t>(0.0)) {
       return std::nullopt;
     }
 
     Vector half_angle =
         distribution_.Sample(incoming, sampler.Next(), sampler.Next());
-    if (DotProduct(incoming, half_angle) <= static_cast<geometric_t>(0.0)) {
-      return std::nullopt;
-    }
 
     Vector outgoing = internal::Reflect(incoming, half_angle);
-    if ((incoming.z < static_cast<geometric_t>(0.0)) !=
-        (outgoing.z < static_cast<geometric_t>(0.0))) {
+    if (std::signbit(incoming.z) != std::signbit(outgoing.z)) {
       return std::nullopt;
     }
 
-    return SampleResult{outgoing, std::nullopt, this};
+    Vector aligned_outgoing = outgoing.AlignWith(surface_normal);
+
+    return SampleResult{aligned_outgoing, std::nullopt, this};
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
+                              const Vector& surface_normal,
                               const Bxdf* sample_source,
                               Hemisphere hemisphere) const override {
     if (hemisphere != Hemisphere::BRDF ||
-        (incoming.z == static_cast<geometric_t>(0.0)) ||
-        (outgoing.z == static_cast<geometric_t>(0.0))) {
-      return static_cast<geometric_t>(0.0);
+        incoming.z == static_cast<geometric_t>(0.0) ||
+        outgoing.z == static_cast<geometric_t>(0.0)) {
+      return static_cast<visual_t>(0.0);
     }
 
-    Vector half_angle = Normalize(outgoing + incoming);
+    Vector aligned_outgoing = outgoing.AlignWith(surface_normal);
+    if (std::signbit(incoming.z) != std::signbit(aligned_outgoing.z)) {
+      return static_cast<visual_t>(0.0);
+    }
+
+    Vector half_angle = Normalize(aligned_outgoing + incoming);
+    visual_t dot_product = DotProduct(incoming, half_angle);
+
     return distribution_.Pdf(incoming, half_angle) /
-           (static_cast<visual_t>(4.0) *
-            static_cast<visual_t>(DotProduct(incoming, half_angle)));
+           (static_cast<visual_t>(4.0) * dot_product);
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,

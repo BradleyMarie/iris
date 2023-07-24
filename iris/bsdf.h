@@ -49,7 +49,8 @@ class Bsdf final {
         x_(vectors[0]),
         y_(vectors[1]),
         z_(vectors[2]),
-        surface_normal_(vectors[3]) {}
+        surface_normal_(vectors[3]),
+        local_surface_normal_(ToLocal(surface_normal_)) {}
 
   std::optional<Bxdf::Differentials> ToLocal(
       const std::optional<Differentials>& differentials) const;
@@ -62,6 +63,7 @@ class Bsdf final {
   const Bxdf& bxdf_;
   const Vector x_, y_, z_;
   const Vector surface_normal_;
+  const Vector local_surface_normal_;
 };
 
 }  // namespace iris
