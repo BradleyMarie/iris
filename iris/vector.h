@@ -40,6 +40,8 @@ struct Vector final {
 
   geometric_t Length() const;
 
+  Vector AlignWith(const Vector& vector) const;
+
   const geometric x;
   const geometric y;
   const geometric z;
@@ -167,6 +169,14 @@ inline Vector::Axis Vector::DominantAxis() const {
 
 inline geometric_t Vector::Length() const {
   return std::sqrt(DotProduct(*this, *this));
+}
+
+inline Vector Vector::AlignWith(const Vector& vector) const {
+  if (DotProduct(*this, vector) >= static_cast<geometric_t>(0.0)) {
+    return *this;
+  }
+
+  return -*this;
 }
 
 }  // namespace iris

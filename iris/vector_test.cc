@@ -131,3 +131,9 @@ TEST(VectorTest, DominantAxis) {
   EXPECT_EQ(iris::Vector::Y_AXIS, iris::Vector(-2.0, 3.0, 1.0).DominantAxis());
   EXPECT_EQ(iris::Vector::Z_AXIS, iris::Vector(1.0, -2.0, 3.0).DominantAxis());
 }
+
+TEST(VectorTest, AlignWith) {
+  auto v0 = iris::Vector(1.0, 1.0, 1.0);
+  EXPECT_EQ(v0, v0.AlignWith(v0));
+  EXPECT_EQ(-v0, v0.AlignWith(-v0));
+}
