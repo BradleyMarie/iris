@@ -15,6 +15,7 @@
 #include "frontends/pbrt/samplers/parse.h"
 #include "frontends/pbrt/shapes/parse.h"
 #include "frontends/pbrt/textures/parse.h"
+#include "iris/geometry/bvh_aggregate.h"
 #include "iris/scenes/bvh_scene.h"
 
 namespace iris::pbrt_frontend {
@@ -197,7 +198,7 @@ bool Parser::LightSource() {
   auto light = BuildObject(
       builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
       *texture_manager_, *spectrum_manager_,
-      current_object_ ? Matrix::Identity() : matrix_manager_->Get().start);
+      current_object_name_ ? Matrix::Identity() : matrix_manager_->Get().start);
 
   if (std::holds_alternative<ReferenceCounted<EnvironmentalLight>>(light)) {
     // TODO: Merge environmental lights
@@ -267,7 +268,7 @@ bool Parser::ObjectBegin() {
     exit(EXIT_FAILURE);
   }
 
-  if (current_object_) {
+  if (current_object_name_) {
     std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
               << std::endl;
     exit(EXIT_FAILURE);
@@ -287,7 +288,7 @@ bool Parser::ObjectBegin() {
     exit(EXIT_FAILURE);
   }
 
-  current_object_ = *unquoted;
+  current_object_name_ = *unquoted;
 
   return true;
 }
@@ -300,13 +301,17 @@ bool Parser::ObjectEnd() {
     exit(EXIT_FAILURE);
   }
 
-  if (!current_object_) {
+  if (!current_object_name_) {
     std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  current_object_.reset();
+  objects_[*current_object_name_] =
+      geometry::AllocateBVHAggregate(current_object_geometry_);
+
+  current_object_name_.reset();
+  current_object_geometry_.clear();
 
   return true;
 }
@@ -319,7 +324,7 @@ bool Parser::ObjectInstance() {
     exit(EXIT_FAILURE);
   }
 
-  if (current_object_) {
+  if (current_object_name_) {
     std::cerr << "ERROR: ObjectInstance cannot be specified between "
                  "ObjectBegin and ObjectEnd"
               << std::endl;
@@ -347,9 +352,7 @@ bool Parser::ObjectInstance() {
     exit(EXIT_FAILURE);
   }
 
-  for (const auto& geometry : iter->second) {
-    scene_objects_builder_.Add(geometry, matrix_manager_->Get().start);
-  }
+  scene_objects_builder_.Add(iter->second, matrix_manager_->Get().start);
 
   return true;
 }
@@ -433,12 +436,12 @@ bool Parser::Shape() {
       *tokenizers_.back().tokenizer, *spectrum_manager_, *texture_manager_,
       attributes_.back().material, attributes_.back().emissive_material.first,
       attributes_.back().emissive_material.second,
-      current_object_ ? Matrix::Identity() : matrix_manager_->Get().start,
+      current_object_name_ ? Matrix::Identity() : matrix_manager_->Get().start,
       attributes_.back().reverse_orientation);
 
-  if (current_object_) {
-    auto& objects = objects_[*current_object_];
-    objects.insert(objects.end(), shapes.begin(), shapes.end());
+  if (current_object_name_) {
+    current_object_geometry_.insert(current_object_geometry_.end(),
+                                    shapes.begin(), shapes.end());
   } else {
     for (const auto& geometry : shapes) {
       scene_objects_builder_.Add(geometry, transform);
@@ -617,7 +620,8 @@ std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
   attributes_.clear();
   objects_.clear();
   spectrum_manager_->Clear();
-  current_object_.reset();
+  current_object_name_.reset();
+  current_object_geometry_.clear();
   material_manager_.reset();
   matrix_manager_.reset();
   texture_manager_.reset();

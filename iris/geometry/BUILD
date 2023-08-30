@@ -2,6 +2,31 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
+cc_test(
+    name = "bvh_aggregate_test",
+    srcs = ["bvh_aggregate_test.cc"],
+    deps = [
+        ":bvh_aggregate",
+        ":mock_geometry",
+        ":sphere",
+        "//iris/materials:mock_material",
+        "//iris/testing:hit_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "bvh_aggregate",
+    srcs = ["bvh_aggregate.cc"],
+    hdrs = ["bvh_aggregate.h"],
+    deps = [
+        "//iris:geometry",
+        "//iris:reference_counted",
+        "//iris/scenes/internal:bvh_builder",
+        "//iris/scenes/internal:bvh_traversal",
+    ],
+)
+
 cc_library(
     name = "mock_geometry",
     testonly = True,

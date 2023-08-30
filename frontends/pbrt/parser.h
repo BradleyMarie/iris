@@ -91,9 +91,10 @@ class Parser {
 
   std::vector<AttributeEntry> attributes_;
 
-  std::unordered_map<std::string, std::vector<iris::ReferenceCounted<Geometry>>>
+  std::unordered_map<std::string, iris::ReferenceCounted<iris::Geometry>>
       objects_;
-  std::optional<std::string> current_object_;
+  std::optional<std::string> current_object_name_;
+  std::vector<iris::ReferenceCounted<Geometry>> current_object_geometry_;
 
   std::unique_ptr<SpectrumManager> spectrum_manager_;
   std::unique_ptr<MaterialManager> material_manager_;

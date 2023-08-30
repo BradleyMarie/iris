@@ -39,6 +39,8 @@ class BVHNode {
     offset_ = static_cast<uint32_t>(offset);
   }
 
+  const BoundingBox& Bounds() const { return bounds_; }
+
   inline bool Intersects(const Ray& ray, geometric_t minimum_distance,
                          geometric_t maximum_distance) const {
     assert(minimum_distance <= maximum_distance);

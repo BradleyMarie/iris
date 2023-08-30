@@ -6,6 +6,10 @@ cc_library(
     name = "bvh_builder",
     srcs = ["bvh_builder.cc"],
     hdrs = ["bvh_builder.h"],
+    visibility = [
+        "//iris/geometry:__subpackages__",
+        "//iris/scenes:__subpackages__",
+    ],
     deps = [
         ":bvh_node",
         "//iris:geometry",
@@ -47,7 +51,12 @@ cc_library(
     name = "bvh_traversal",
     srcs = ["bvh_traversal.cc"],
     hdrs = ["bvh_traversal.h"],
+    visibility = [
+        "//iris/geometry:__subpackages__",
+        "//iris/scenes:__subpackages__",
+    ],
     deps = [
+        "//iris:hit_allocator",
         "//iris:intersector",
         "//iris:scene_objects",
         "//iris/scenes/internal:bvh_builder",
@@ -64,6 +73,7 @@ cc_test(
         "//iris:scene_objects",
         "//iris/geometry:mock_geometry",
         "//iris/scenes/internal:bvh_builder",
+        "//iris/testing:hit_allocator",
         "//iris/testing:intersector",
         "@com_google_googletest//:gtest_main",
     ],

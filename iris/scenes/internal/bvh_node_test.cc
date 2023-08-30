@@ -2,6 +2,15 @@
 
 #include "googletest/include/gtest/gtest.h"
 
+TEST(Bounds, LeafNode) {
+  iris::BoundingBox expected_bounds(iris::Point(0.0, 0.0, 0.0),
+                                    iris::Point(1.0, 1.0, 1.0));
+  auto node =
+      iris::scenes::internal::BVHNode::MakeLeafNode(expected_bounds, 100u, 3u);
+  EXPECT_EQ(expected_bounds.lower, node.Bounds().lower);
+  EXPECT_EQ(expected_bounds.upper, node.Bounds().upper);
+}
+
 TEST(BVHNodeTest, LeafNode) {
   iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
                            iris::Point(1.0, 1.0, 1.0));

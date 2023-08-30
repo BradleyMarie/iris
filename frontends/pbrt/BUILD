@@ -186,6 +186,7 @@ cc_library(
         "//iris:image_sampler",
         "//iris:integrator",
         "//iris:light_scene",
+        "//iris/geometry:bvh_aggregate",
         "//iris/scenes:bvh_scene",
     ],
 )
