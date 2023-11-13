@@ -3,6 +3,16 @@
 #include "frontends/pbrt/build_objects.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+std::string RunfilePath(const std::string& path) {
+  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+  const char* base_path = "__main__/frontends/pbrt/shapes/test_data/";
+  return std::string("\"") + runfiles->Rlocation(base_path + path) +
+         std::string("\"");
+}
 
 TEST(PlyMesh, NoIndices) {
   std::stringstream input("");
@@ -23,8 +33,7 @@ TEST(PlyMesh, NoIndices) {
 }
 
 TEST(PlyMesh, Empty) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/shapes/test_data/empty.ply\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("empty.ply"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -43,8 +52,7 @@ TEST(PlyMesh, Empty) {
 }
 
 TEST(PlyMesh, Quads) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/shapes/test_data/quads.ply\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("quads.ply"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -61,9 +69,8 @@ TEST(PlyMesh, Quads) {
 }
 
 TEST(PlyMesh, Triangles) {
-  std::stringstream input(
-      "\"float alpha\" [0.0]"
-      "\"string filename\" \"frontends/pbrt/shapes/test_data/triangles.ply\"");
+  std::stringstream input("\"float alpha\" [0.0] \"string filename\" " +
+                          RunfilePath("triangles.ply"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;

@@ -2,6 +2,18 @@
 
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+std::string UnquotedRunfilePath(const std::string& path) {
+  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+  const char* base_path = "__main__/frontends/pbrt/test_data/";
+  return runfiles->Rlocation(base_path + path);
+}
+std::string RunfilePath(const std::string& path) {
+  return std::string("\"") + UnquotedRunfilePath(path) + std::string("\"");
+}
 
 TEST(Parameter, BoolWrongType) {
   std::stringstream input("\"integer name\" [1]");
@@ -91,9 +103,9 @@ TEST(Parameter, FilePathWrongType) {
 }
 
 TEST(Parameter, FilePathTooFew) {
-  std::stringstream input(
-      "\"string name\" [\"frontends/pbrt/test_data/include_empty.pbrt\" "
-      "\"frontends/pbrt/test_data/include_empty.pbrt\"]");
+  std::stringstream input("\"string name\" [ " +
+                          RunfilePath("include_empty.pbrt") + " " +
+                          RunfilePath("include_empty.pbrt") + "]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::ParameterList parameter_list;
   ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
@@ -111,9 +123,9 @@ TEST(Parameter, FilePathTooFew) {
 }
 
 TEST(Parameter, FilePathTooMany) {
-  std::stringstream input(
-      "\"string name\" [\"frontends/pbrt/test_data/include_empty.pbrt\" "
-      "\"frontends/pbrt/test_data/include_empty.pbrt\"]");
+  std::stringstream input("\"string name\" [ " +
+                          RunfilePath("include_empty.pbrt") + " " +
+                          RunfilePath("include_empty.pbrt") + "]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::ParameterList parameter_list;
   ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
@@ -148,8 +160,8 @@ TEST(Parameter, FilePathDoesNotExist) {
 }
 
 TEST(Parameter, FilePathT) {
-  std::stringstream input(
-      "\"string name\" [\"frontends/pbrt/test_data/include_empty.pbrt\"]");
+  std::stringstream input("\"string name\" [" +
+                          RunfilePath("include_empty.pbrt") + "]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::ParameterList parameter_list;
   ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
@@ -163,7 +175,7 @@ TEST(Parameter, FilePathT) {
 
   EXPECT_EQ(1u, parameter.GetFilePaths(1u, 1u).size());
   EXPECT_EQ(std::filesystem::weakly_canonical(
-                "frontends/pbrt/test_data/include_empty.pbrt"),
+                UnquotedRunfilePath("include_empty.pbrt")),
             parameter.GetFilePaths(1u, 1u).at(0));
 }
 

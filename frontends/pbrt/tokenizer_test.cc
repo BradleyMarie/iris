@@ -3,6 +3,15 @@
 #include <sstream>
 
 #include "googletest/include/gtest/gtest.h"
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+std::string RunfilePath(const std::string& path) {
+  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+  const char* base_path = "__main__/frontends/pbrt/test_data/";
+  return runfiles->Rlocation(base_path + path);
+}
 
 TEST(Tokenizer, Empty) {
   std::stringstream input;
@@ -48,16 +57,15 @@ TEST(Tokenizer, SearchRoot) {
 TEST(Tokenizer, FilePath) {
   std::stringstream input("");
   iris::pbrt_frontend::Tokenizer tokenizer(
-      input, std::filesystem::weakly_canonical(
-                 "frontends/pbrt/test_data/include_empty.pbrt"));
-  EXPECT_EQ(std::filesystem::weakly_canonical(
-                "frontends/pbrt/test_data/include_empty.pbrt")
+      input,
+      std::filesystem::weakly_canonical(RunfilePath("include_empty.pbrt")));
+  EXPECT_EQ(std::filesystem::weakly_canonical(RunfilePath("include_empty.pbrt"))
                 .parent_path(),
             tokenizer.SearchRoot());
   ASSERT_TRUE(tokenizer.FilePath());
-  EXPECT_EQ(std::filesystem::weakly_canonical(
-                "frontends/pbrt/test_data/include_empty.pbrt"),
-            tokenizer.FilePath().value());
+  EXPECT_EQ(
+      std::filesystem::weakly_canonical(RunfilePath("include_empty.pbrt")),
+      tokenizer.FilePath().value());
 }
 
 TEST(Tokenizer, QuotedString) {

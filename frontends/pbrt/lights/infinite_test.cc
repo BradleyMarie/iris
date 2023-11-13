@@ -3,6 +3,16 @@
 #include "frontends/pbrt/build_objects.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+std::string RunfilePath(const std::string& path) {
+  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+  const char* base_path = "__main__/frontends/pbrt/lights/test_data/";
+  return std::string("\"") + runfiles->Rlocation(base_path + path) +
+         std::string("\"");
+}
 
 TEST(Infinite, Empty) {
   std::stringstream input("");
@@ -20,8 +30,7 @@ TEST(Infinite, Empty) {
 }
 
 TEST(Infinite, BadFiletype) {
-  std::stringstream input(
-      "\"string mapname\" \"frontends/pbrt/lights/test_data/image.txt\"");
+  std::stringstream input("\"string mapname\" " + RunfilePath("image.txt"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -38,8 +47,7 @@ TEST(Infinite, BadFiletype) {
 }
 
 TEST(Infinite, NoExtension) {
-  std::stringstream input(
-      "\"string mapname\" \"frontends/pbrt/lights/test_data/image\"");
+  std::stringstream input("\"string mapname\" " + RunfilePath("image"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -56,9 +64,8 @@ TEST(Infinite, NoExtension) {
 }
 
 TEST(Infinite, AllSpecifiedEXR) {
-  std::stringstream input(
-      "\"spectrum L\" [1.0 1.0]"
-      "\"string mapname\" \"frontends/pbrt/lights/test_data/image.exr\"");
+  std::stringstream input("\"spectrum L\" [1.0 1.0] \"string mapname\" " +
+                          RunfilePath("image.exr"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -73,8 +80,7 @@ TEST(Infinite, AllSpecifiedEXR) {
 }
 
 TEST(Infinite, Unimplemented) {
-  std::stringstream input(
-      "\"string mapname\" \"frontends/pbrt/lights/test_data/image.png\"");
+  std::stringstream input("\"string mapname\" " + RunfilePath("image.png"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;

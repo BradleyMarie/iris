@@ -6,6 +6,16 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/color_matchers/mock_color_matcher.h"
 #include "iris/random/mersenne_twister_random.h"
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+std::string RunfilePath(const std::string& path) {
+  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+  const char* base_path = "__main__/frontends/pbrt/test_data/";
+  return std::string("\"") + runfiles->Rlocation(base_path + path) +
+         std::string("\"");
+}
 
 TEST(Parser, Empty) {
   std::stringstream input("");
@@ -213,8 +223,8 @@ TEST(Include, NotQuoted) {
 }
 
 TEST(Include, Circular) {
-  std::stringstream input(
-      "Include \"frontends/pbrt/test_data/include_circular_first.pbrt\"");
+  std::stringstream input("Include " +
+                          RunfilePath("include_circular_first.pbrt"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::Parser parser(
@@ -226,8 +236,8 @@ TEST(Include, Circular) {
 }
 
 TEST(Include, CircularSelf) {
-  std::stringstream input(
-      "Include \"frontends/pbrt/test_data/include_circular_self.pbrt\"");
+  std::stringstream input("Include " +
+                          RunfilePath("include_circular_self.pbrt"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::Parser parser(
@@ -239,8 +249,7 @@ TEST(Include, CircularSelf) {
 }
 
 TEST(Include, Empty) {
-  std::stringstream input(
-      "Include \"frontends/pbrt/test_data/include_empty.pbrt\"");
+  std::stringstream input("Include " + RunfilePath("include_empty.pbrt"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::Parser parser(

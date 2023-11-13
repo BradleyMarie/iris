@@ -3,8 +3,18 @@
 #include "frontends/pbrt/build_objects.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
 
 static const std::string kName = "name";
+
+std::string RunfilePath(const std::string& path) {
+  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+  const char* base_path = "__main__/frontends/pbrt/textures/test_data/";
+  return std::string("\"") + runfiles->Rlocation(base_path + path) +
+         std::string("\"");
+}
 
 TEST(Image, Empty) {
   std::stringstream input("");
@@ -24,8 +34,7 @@ TEST(Image, Empty) {
 }
 
 TEST(Image, BadFiletype) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.txt\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.txt"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -42,8 +51,7 @@ TEST(Image, BadFiletype) {
 }
 
 TEST(Image, NoExtension) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -60,9 +68,8 @@ TEST(Image, NoExtension) {
 }
 
 TEST(Image, BadUScale) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"float uscale\" 0.0");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"float uscale\" 0.0");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -79,9 +86,8 @@ TEST(Image, BadUScale) {
 }
 
 TEST(Image, BadVScale) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"float vscale\" 0.0");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"float vscale\" 0.0");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -98,9 +104,8 @@ TEST(Image, BadVScale) {
 }
 
 TEST(Image, BadWrapping) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"string wrap\" \"abc\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"string wrap\" \"abc\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -117,9 +122,8 @@ TEST(Image, BadWrapping) {
 }
 
 TEST(Image, BlackWrapping) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"string wrap\" \"black\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"string wrap\" \"black\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -133,9 +137,8 @@ TEST(Image, BlackWrapping) {
 }
 
 TEST(Image, ClampWrapping) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"string wrap\" \"clamp\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"string wrap\" \"clamp\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -149,9 +152,8 @@ TEST(Image, ClampWrapping) {
 }
 
 TEST(Image, RepeatWrapping) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"string wrap\" \"repeat\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"string wrap\" \"repeat\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -165,15 +167,14 @@ TEST(Image, RepeatWrapping) {
 }
 
 TEST(Image, FloatAllParams) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"bool gamma\" \"false\""
-      "\"float scale\" 1.0"
-      "\"float udelta\" 0.0"
-      "\"float uscale\" 1.0"
-      "\"float vdelta\" 0.0"
-      "\"float vscale\" 1.0"
-      "\"string wrap\" \"repeat\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"bool gamma\" \"false\""
+                          " \"float scale\" 1.0"
+                          " \"float udelta\" 0.0"
+                          " \"float uscale\" 1.0"
+                          " \"float vdelta\" 0.0"
+                          " \"float vscale\" 1.0"
+                          " \"string wrap\" \"repeat\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -187,9 +188,8 @@ TEST(Image, FloatAllParams) {
 }
 
 TEST(Image, SpectrumBadScale) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"float scale\" 2.0");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"float scale\" 2.0");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -206,15 +206,14 @@ TEST(Image, SpectrumBadScale) {
 }
 
 TEST(Image, SpectrumAllParams) {
-  std::stringstream input(
-      "\"string filename\" \"frontends/pbrt/textures/test_data/image.png\" "
-      "\"bool gamma\" \"false\""
-      "\"float scale\" 1.0"
-      "\"float udelta\" 0.0"
-      "\"float uscale\" 1.0"
-      "\"float vdelta\" 0.0"
-      "\"float vscale\" 1.0"
-      "\"string wrap\" \"repeat\"");
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"bool gamma\" \"false\""
+                          " \"float scale\" 1.0"
+                          " \"float udelta\" 0.0"
+                          " \"float uscale\" 1.0"
+                          " \"float vdelta\" 0.0"
+                          " \"float vscale\" 1.0"
+                          " \"string wrap\" \"repeat\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;

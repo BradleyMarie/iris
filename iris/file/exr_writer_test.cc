@@ -4,6 +4,16 @@
 #include <sstream>
 
 #include "googletest/include/gtest/gtest.h"
+#include "tools/cpp/runfiles/runfiles.h"
+
+using bazel::tools::cpp::runfiles::Runfiles;
+
+std::ifstream RunfilePath(const std::string& path) {
+  std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
+  const char* base_path = "__main__/iris/file/test_data/";
+  return std::ifstream(runfiles->Rlocation(base_path + path),
+                       std::ios::in | std::ofstream::binary);
+}
 
 TEST(ExrWriterTest, Black) {
   iris::Framebuffer framebuffer(std::make_pair(5, 7));
@@ -11,8 +21,7 @@ TEST(ExrWriterTest, Black) {
   std::stringstream output;
   iris::file::WriteExr(framebuffer, output);
 
-  std::ifstream reference("iris/file/test_data/black.exr",
-                          std::ios::in | std::ofstream::binary);
+  std::ifstream reference = RunfilePath("black.exr");
   std::ostringstream reference_string;
   reference_string << reference.rdbuf();
 
@@ -31,8 +40,7 @@ TEST(ExrWriterTest, White) {
   std::stringstream output;
   iris::file::WriteExr(framebuffer, output);
 
-  std::ifstream reference("iris/file/test_data/white.exr",
-                          std::ios::in | std::ofstream::binary);
+  std::ifstream reference = RunfilePath("white.exr");
   std::ostringstream reference_string;
   reference_string << reference.rdbuf();
 

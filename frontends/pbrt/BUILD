@@ -136,9 +136,6 @@ cc_library(
     name = "parameter",
     srcs = ["parameter.cc"],
     hdrs = ["parameter.h"],
-    data = [
-        "test_data/include_empty.pbrt",
-    ],
     deps = [
         ":color",
         ":parameter_list",
@@ -155,9 +152,13 @@ cc_library(
 cc_test(
     name = "parameter_test",
     srcs = ["parameter_test.cc"],
+    data = [
+        "test_data/include_empty.pbrt",
+    ],
     deps = [
         ":parameter",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@bazel_tools//tools/cpp/runfiles",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -206,6 +207,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris/color_matchers:mock_color_matcher",
         "//iris/random:mersenne_twister_random",
+        "@bazel_tools//tools/cpp/runfiles",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -299,16 +301,17 @@ cc_library(
     name = "tokenizer",
     srcs = ["tokenizer.cc"],
     hdrs = ["tokenizer.h"],
-    data = [
-        "test_data/include_empty.pbrt",
-    ],
 )
 
 cc_test(
     name = "tokenizer_test",
     srcs = ["tokenizer_test.cc"],
+    data = [
+        "test_data/include_empty.pbrt",
+    ],
     deps = [
         ":tokenizer",
+        "@bazel_tools//tools/cpp/runfiles",
         "@com_google_googletest//:gtest_main",
     ],
 )
