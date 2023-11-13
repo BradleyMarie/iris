@@ -12,7 +12,7 @@ TEST(PfmWriterTest, Black) {
   iris::file::WritePfm(framebuffer, iris::Color::CIE_XYZ, output);
 
   std::ifstream reference("iris/file/test_data/black.pfm",
-                          std::ofstream::binary);
+                          std::ios::in | std::ofstream::binary);
   std::ostringstream reference_string;
   reference_string << reference.rdbuf();
 
@@ -32,7 +32,7 @@ TEST(PfmWriterTest, White) {
   iris::file::WritePfm(framebuffer, iris::Color::CIE_XYZ, output);
 
   std::ifstream reference("iris/file/test_data/white.pfm",
-                          std::ofstream::binary);
+                          std::ios::in | std::ofstream::binary);
   std::ostringstream reference_string;
   reference_string << reference.rdbuf();
 

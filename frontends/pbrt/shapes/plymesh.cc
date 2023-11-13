@@ -91,7 +91,8 @@ PlyMeshBuilder::Build(
     exit(EXIT_FAILURE);
   }
 
-  std::ifstream file_stream(filename_iter->second.GetFilePaths(1).front());
+  std::ifstream file_stream(filename_iter->second.GetFilePaths(1).front(),
+                            std::ios::in | std::ios::binary);
   if (file_stream.fail()) {
     std::cerr
         << "ERROR: Could not open file specified by plymesh parameter: filename"

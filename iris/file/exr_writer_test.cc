@@ -12,7 +12,7 @@ TEST(ExrWriterTest, Black) {
   iris::file::WriteExr(framebuffer, output);
 
   std::ifstream reference("iris/file/test_data/black.exr",
-                          std::ofstream::binary);
+                          std::ios::in | std::ofstream::binary);
   std::ostringstream reference_string;
   reference_string << reference.rdbuf();
 
@@ -32,7 +32,7 @@ TEST(ExrWriterTest, White) {
   iris::file::WriteExr(framebuffer, output);
 
   std::ifstream reference("iris/file/test_data/white.exr",
-                          std::ofstream::binary);
+                          std::ios::in | std::ofstream::binary);
   std::ostringstream reference_string;
   reference_string << reference.rdbuf();
 

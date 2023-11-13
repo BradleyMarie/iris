@@ -21,7 +21,8 @@ void WritePfm(const Framebuffer& framebuffer, Color::Space color_space,
               std::ostream& output) {
   auto size = framebuffer.Size();
 
-  std::stringstream header_builder;
+  std::stringstream header_builder(std::ios::in | std::ios::out |
+                                   std::ios::binary);
   header_builder << "PF\n"
                  << size.second << " " << size.first << "\n"
                  << ByteOrderMark() << "\n";
