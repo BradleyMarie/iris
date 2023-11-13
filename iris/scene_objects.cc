@@ -1,10 +1,10 @@
+#undef NDEBUG  // Enable assertions at runtime
 #include "iris/scene_objects.h"
 
 #include <limits>
 #include <map>
 #include <set>
 
-#include "absl/log/check.h"
 #include "iris/internal/area_light.h"
 #include "iris/internal/environmental_light.h"
 
@@ -43,7 +43,7 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
     matrices_.push_back(matrix);
   }
 
-  CHECK(matrix_insertion_result.first->second <=
+  assert(matrix_insertion_result.first->second <=
         std::numeric_limits<uintptr_t>::max());
   uintptr_t matrix_index =
       static_cast<uintptr_t>(matrix_insertion_result.first->second);

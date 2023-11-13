@@ -414,7 +414,6 @@ cc_library(
         ":point",
         ":ray",
         ":vector",
-        "@com_google_absl//absl/status:statusor",
     ],
 )
 
@@ -557,9 +556,6 @@ cc_library(
     srcs = ["reference_countable.cc"],
     hdrs = ["reference_countable.h"],
     visibility = ["//visibility:public"],
-    deps = [
-        "@com_google_absl//absl/log:check",
-    ],
 )
 
 cc_library(
@@ -641,7 +637,6 @@ cc_library(
     deps = [
         ":float",
         ":random",
-        "@com_google_absl//absl/log:check",
     ],
 )
 

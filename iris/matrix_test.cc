@@ -42,18 +42,18 @@ TEST(MatrixTest, Identity) {
 }
 
 TEST(MatrixTest, TranslationErrors) {
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Translation(
-          std::numeric_limits<iris::geometric>::infinity(), 1.0, 1.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Translation(
-          1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Translation(
-          1.0, 1.0, std::numeric_limits<iris::geometric>::infinity())
-          .status()));
+  EXPECT_STREQ(iris::Matrix::Translation(
+                   std::numeric_limits<iris::geometric>::infinity(), 1.0, 1.0)
+                   .error(),
+               "x must be finite");
+  EXPECT_STREQ(iris::Matrix::Translation(
+                   1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0)
+                   .error(),
+               "y must be finite");
+  EXPECT_STREQ(iris::Matrix::Translation(
+                   1.0, 1.0, std::numeric_limits<iris::geometric>::infinity())
+                   .error(),
+               "z must be finite");
 }
 
 TEST(MatrixTest, Translation) {
@@ -94,24 +94,24 @@ TEST(MatrixTest, Translation) {
 }
 
 TEST(MatrixTest, ScalarErrors) {
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Scalar(std::numeric_limits<iris::geometric>::infinity(),
-                           1.0, 1.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Scalar(
-          1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Scalar(1.0, 1.0,
-                           std::numeric_limits<iris::geometric>::infinity())
-          .status()));
-  EXPECT_TRUE(
-      absl::IsInvalidArgument(iris::Matrix::Scalar(0.0, 1.0, 1.0).status()));
-  EXPECT_TRUE(
-      absl::IsInvalidArgument(iris::Matrix::Scalar(1.0, 0.0, 1.0).status()));
-  EXPECT_TRUE(
-      absl::IsInvalidArgument(iris::Matrix::Scalar(1.0, 1.0, 0.0).status()));
+  EXPECT_STREQ(iris::Matrix::Scalar(
+                   std::numeric_limits<iris::geometric>::infinity(), 1.0, 1.0)
+                   .error(),
+               "x must be finite");
+  EXPECT_STREQ(iris::Matrix::Scalar(
+                   1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0)
+                   .error(),
+               "y must be finite");
+  EXPECT_STREQ(iris::Matrix::Scalar(
+                   1.0, 1.0, std::numeric_limits<iris::geometric>::infinity())
+                   .error(),
+               "z must be finite");
+  EXPECT_STREQ(iris::Matrix::Scalar(0.0, 1.0, 1.0).error(),
+               "x must be non-zero");
+  EXPECT_STREQ(iris::Matrix::Scalar(1.0, 0.0, 1.0).error(),
+               "y must be non-zero");
+  EXPECT_STREQ(iris::Matrix::Scalar(1.0, 1.0, 0.0).error(),
+               "z must be non-zero");
 }
 
 TEST(MatrixTest, Scalar) {
@@ -152,24 +152,28 @@ TEST(MatrixTest, Scalar) {
 }
 
 TEST(MatrixTest, RotationErrors) {
-  EXPECT_TRUE(absl::IsInvalidArgument(
+  EXPECT_STREQ(
       iris::Matrix::Rotation(std::numeric_limits<iris::geometric>::infinity(),
                              1.0, 1.0, 1.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
+          .error(),
+      "theta must be finite");
+  EXPECT_STREQ(
       iris::Matrix::Rotation(
           1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0, 1.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
+          .error(),
+      "x must be finite");
+  EXPECT_STREQ(
       iris::Matrix::Rotation(
           1.0, 1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
+          .error(),
+      "y must be finite");
+  EXPECT_STREQ(
       iris::Matrix::Rotation(1.0, 1.0, 1.0,
                              std::numeric_limits<iris::geometric>::infinity())
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Rotation(1.0, 0.0, 0.0, 0.0).status()));
+          .error(),
+      "z must be finite");
+  EXPECT_STREQ(iris::Matrix::Rotation(1.0, 0.0, 0.0, 0.0).error(),
+               "One of x, y, or z must be non-zero");
 }
 
 TEST(MatrixTest, Rotation) {
@@ -228,42 +232,42 @@ TEST(MatrixTest, Rotation) {
 }
 
 TEST(MatrixTest, OrthographicErrors) {
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(
-          std::numeric_limits<iris::geometric>::infinity(), 2.0, 1.0, 2.0, 1.0,
-          2.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(
-          1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0, 2.0, 1.0,
-          2.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(
-          1.0, 2.0, std::numeric_limits<iris::geometric>::infinity(), 2.0, 1.0,
-          2.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(
-          1.0, 2.0, 1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0,
-          2.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(
-          1.0, 2.0, 1.0, 2.0, std::numeric_limits<iris::geometric>::infinity(),
-          2.0)
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(
-          1.0, 2.0, 1.0, 2.0, 1.0,
-          std::numeric_limits<iris::geometric>::infinity())
-          .status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(1.0, 1.0, 1.0, 2.0, 1.0, 2.0).status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(1.0, 2.0, 1.0, 1.0, 1.0, 2.0).status()));
-  EXPECT_TRUE(absl::IsInvalidArgument(
-      iris::Matrix::Orthographic(1.0, 2.0, 1.0, 2.0, 1.0, 1.0).status()));
+  EXPECT_STREQ(iris::Matrix::Orthographic(
+                   std::numeric_limits<iris::geometric>::infinity(), 2.0, 1.0,
+                   2.0, 1.0, 2.0)
+                   .error(),
+               "left must be finite");
+  EXPECT_STREQ(iris::Matrix::Orthographic(
+                   1.0, std::numeric_limits<iris::geometric>::infinity(), 1.0,
+                   2.0, 1.0, 2.0)
+                   .error(),
+               "right must be finite");
+  EXPECT_STREQ(iris::Matrix::Orthographic(
+                   1.0, 2.0, std::numeric_limits<iris::geometric>::infinity(),
+                   2.0, 1.0, 2.0)
+                   .error(),
+               "bottom must be finite");
+  EXPECT_STREQ(iris::Matrix::Orthographic(
+                   1.0, 2.0, 1.0,
+                   std::numeric_limits<iris::geometric>::infinity(), 1.0, 2.0)
+                   .error(),
+               "top must be finite");
+  EXPECT_STREQ(iris::Matrix::Orthographic(
+                   1.0, 2.0, 1.0, 2.0,
+                   std::numeric_limits<iris::geometric>::infinity(), 2.0)
+                   .error(),
+               "near must be finite");
+  EXPECT_STREQ(iris::Matrix::Orthographic(
+                   1.0, 2.0, 1.0, 2.0, 1.0,
+                   std::numeric_limits<iris::geometric>::infinity())
+                   .error(),
+               "far must be finite");
+  EXPECT_STREQ(iris::Matrix::Orthographic(1.0, 1.0, 1.0, 2.0, 1.0, 2.0).error(),
+               "left must not equal right");
+  EXPECT_STREQ(iris::Matrix::Orthographic(1.0, 2.0, 1.0, 1.0, 1.0, 2.0).error(),
+               "bottom must not equal top");
+  EXPECT_STREQ(iris::Matrix::Orthographic(1.0, 2.0, 1.0, 2.0, 1.0, 1.0).error(),
+               "near must not equal far");
 }
 
 TEST(MatrixTest, Orthographic) {
@@ -351,8 +355,9 @@ TEST(MatrixTest, CreateErrors) {
            {0.0, 0.0, 1.0, 0.0},
            {0.0, 0.0, 0.0, 1.0}}};
       matrix[i][j] = std::numeric_limits<iris::geometric>::infinity();
-      EXPECT_TRUE(
-          absl::IsInvalidArgument(iris::Matrix::Create(matrix).status()));
+      EXPECT_EQ(iris::Matrix::Create(matrix).error(),
+                "m[" + std::to_string(i) + "][" + std::to_string(j) +
+                    "] must be finite");
     }
   }
 
@@ -361,7 +366,8 @@ TEST(MatrixTest, CreateErrors) {
        {0.0, 0.0, 0.0, 0.0},
        {0.0, 0.0, 0.0, 0.0},
        {0.0, 0.0, 0.0, 0.0}}};
-  EXPECT_TRUE(absl::IsInvalidArgument(iris::Matrix::Create(matrix).status()));
+  EXPECT_STREQ(iris::Matrix::Create(matrix).error(),
+               "Matrix must be invertible");
 }
 
 TEST(MatrixTest, Create) {

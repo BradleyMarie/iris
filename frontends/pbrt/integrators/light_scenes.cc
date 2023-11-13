@@ -1,5 +1,6 @@
 #include "frontends/pbrt/integrators/light_scenes.h"
 
+#include <iostream>
 #include <unordered_map>
 
 #include "iris/light_scenes/all_light_scene.h"

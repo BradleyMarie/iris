@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <utility>
 
-#include "absl/log/check.h"
 #include "iris/bounding_box.h"
 #include "iris/ray.h"
 
@@ -17,27 +16,10 @@ class BVHNode {
   BVHNode(const BVHNode& node) = default;
 
   static BVHNode MakeInteriorNode(const BoundingBox& bounds,
-                                  Vector::Axis split_axis) {
-    return BVHNode(bounds, /*offset=*/0u, /*num_shapes=*/0u,
-                   /*axis=*/static_cast<uint16_t>(split_axis));
-  }
-
+                                  Vector::Axis split_axis);
   static BVHNode MakeLeafNode(const BoundingBox& bounds, size_t shape_offset,
-                              size_t num_shapes) {
-    assert(num_shapes != 0);
-    CHECK(shape_offset < std::numeric_limits<uint32_t>::max());
-    CHECK(num_shapes < std::numeric_limits<uint16_t>::max());
-    return BVHNode(bounds, /*offset=*/static_cast<uint32_t>(shape_offset),
-                   /*num_shapes=*/static_cast<uint16_t>(num_shapes),
-                   /*axis=*/0u);
-  }
-
-  void SetRightChildOffset(size_t offset) {
-    assert(offset_ == 0);
-    assert(num_shapes_ == 0);
-    CHECK(offset < std::numeric_limits<uint32_t>::max());
-    offset_ = static_cast<uint32_t>(offset);
-  }
+                              size_t num_shapes);
+  void SetRightChildOffset(size_t offset);
 
   const BoundingBox& Bounds() const { return bounds_; }
 

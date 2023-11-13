@@ -5,6 +5,7 @@
 #include <charconv>
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 #include <unordered_map>
 
 #include "frontends/pbrt/quoted_string.h"
@@ -108,8 +109,9 @@ void MatrixManager::LookAt(Tokenizer& tokenizer) {
   auto look_at =
       Matrix::LookAt(values[0], values[1], values[2], values[3], values[4],
                      values[5], values[6], values[7], values[8]);
-  if (!look_at.ok()) {
-    assert(look_at.status().message() == "up");
+  if (!look_at.has_value()) {
+    assert(look_at.error() ==
+           std::string_view("up and look_at must be perpendicular"));
     std::cerr << "ERROR: Up parameter to LookAt must not be parallel with look "
                  "direction"
               << std::endl;
@@ -179,7 +181,7 @@ void MatrixManager::Transform(Tokenizer& tokenizer) {
       std::array<geometric, 4>{values[12], values[13], values[14], values[15]}};
 
   auto matrix = Matrix::Create(values2d);
-  if (!matrix.ok()) {
+  if (!matrix.has_value()) {
     std::cerr << "ERROR: Uninvertible matrix specified for Transform directive"
               << std::endl;
     exit(EXIT_FAILURE);
@@ -197,7 +199,7 @@ void MatrixManager::ConcatTransform(Tokenizer& tokenizer) {
       std::array<geometric, 4>{values[12], values[13], values[14], values[15]}};
 
   auto matrix = Matrix::Create(values2d);
-  if (!matrix.ok()) {
+  if (!matrix.has_value()) {
     std::cerr
         << "ERROR: Uninvertible matrix specified for ConcatTransform directive"
         << std::endl;
@@ -268,7 +270,7 @@ bool MatrixManager::TryParse(Tokenizer& tokenizer) {
     return false;
   }
 
-  static const std::unordered_map<absl::string_view,
+  static const std::unordered_map<std::string_view,
                                   void (MatrixManager::*)(Tokenizer&)>
       callbacks = {
           {"ActiveTransform", &MatrixManager::ActiveTransform},

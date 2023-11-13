@@ -33,6 +33,8 @@ class Sampler {
   geometric_t Next();
 
  private:
+  std::optional<geometric_t> NextImpl();
+
   Random& rng_;
   uint_fast8_t samples_;
   std::optional<geometric_t> next_;

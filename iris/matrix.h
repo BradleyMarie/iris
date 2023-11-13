@@ -2,8 +2,8 @@
 #define _IRIS_MATRIX_
 
 #include <array>
+#include <expected>
 
-#include "absl/status/statusor.h"
 #include "iris/bounding_box.h"
 #include "iris/float.h"
 #include "iris/point.h"
@@ -17,21 +17,23 @@ struct Matrix final {
 
   static const Matrix& Identity();
 
-  static absl::StatusOr<Matrix> Translation(geometric x, geometric y,
-                                            geometric z);
-  static absl::StatusOr<Matrix> Scalar(geometric x, geometric y, geometric z);
-  static absl::StatusOr<Matrix> Rotation(geometric theta, geometric x,
-                                         geometric y, geometric z);
-  static absl::StatusOr<Matrix> LookAt(geometric eye_x, geometric eye_y,
-                                       geometric eye_z, geometric look_at_x,
-                                       geometric look_at_y, geometric look_at_z,
-                                       geometric up_x, geometric up_y,
-                                       geometric up_z);
-  static absl::StatusOr<Matrix> Orthographic(geometric left, geometric right,
-                                             geometric bottom, geometric top,
-                                             geometric near, geometric far);
+  static std::expected<Matrix, const char*> Translation(geometric x,
+                                                        geometric y,
+                                                        geometric z);
+  static std::expected<Matrix, const char*> Scalar(geometric x, geometric y,
+                                                   geometric z);
+  static std::expected<Matrix, const char*> Rotation(geometric theta,
+                                                     geometric x, geometric y,
+                                                     geometric z);
+  static std::expected<Matrix, const char*> LookAt(
+      geometric eye_x, geometric eye_y, geometric eye_z, geometric look_at_x,
+      geometric look_at_y, geometric look_at_z, geometric up_x, geometric up_y,
+      geometric up_z);
+  static std::expected<Matrix, const char*> Orthographic(
+      geometric left, geometric right, geometric bottom, geometric top,
+      geometric near, geometric far);
 
-  static absl::StatusOr<Matrix> Create(
+  static std::expected<Matrix, const char*> Create(
       const std::array<std::array<geometric, 4>, 4>& m);
 
   BoundingBox Multiply(const BoundingBox& bounding_box) const;

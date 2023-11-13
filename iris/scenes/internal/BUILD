@@ -30,11 +30,11 @@ cc_test(
 
 cc_library(
     name = "bvh_node",
+    srcs = ["bvh_node.cc"],
     hdrs = ["bvh_node.h"],
     deps = [
         "//iris:bounding_box",
         "//iris:ray",
-        "@com_google_absl//absl/log:check",
     ],
 )
 

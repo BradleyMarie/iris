@@ -1,4 +1,4 @@
-#include "iris/visibility_tester.h"
+#include "iris/testing/visibility_tester.h"
 
 #include <cmath>
 

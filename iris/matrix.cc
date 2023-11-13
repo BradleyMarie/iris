@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cmath>
 #include <optional>
-#include <string>
 
 namespace iris {
 namespace {
@@ -178,37 +177,46 @@ Matrix::Matrix(const std::array<std::array<geometric, 4>, 4>& m,
          i[3][0] != 0.0 || i[3][1] != 0.0 || i[3][2] != 0.0 || i[3][3] != 0.0);
 }
 
-absl::StatusOr<Matrix> Matrix::Create(
+std::expected<Matrix, const char*> Matrix::Create(
     const std::array<std::array<geometric, 4>, 4>& m) {
+  static const char* errors[4][4] = {
+      {"m[0][0] must be finite", "m[0][1] must be finite",
+       "m[0][2] must be finite", "m[0][3] must be finite"},
+      {"m[1][0] must be finite", "m[1][1] must be finite",
+       "m[1][2] must be finite", "m[1][3] must be finite"},
+      {"m[2][0] must be finite", "m[2][1] must be finite",
+       "m[2][2] must be finite", "m[2][3] must be finite"},
+      {"m[3][0] must be finite", "m[3][1] must be finite",
+       "m[3][2] must be finite", "m[3][3] must be finite"}};
+
   for (size_t i = 0; i < m.size(); i++) {
     for (size_t j = 0; j < m[i].size(); j++) {
       if (!std::isfinite(m[i][j])) {
-        return absl::InvalidArgumentError("m[" + std::to_string(i) + "][" +
-                                          std::to_string(j) + "]");
+        return std::unexpected(errors[i][j]);
       }
     }
   }
 
   auto inverse = Invert(m);
   if (!inverse) {
-    return absl::InvalidArgumentError("Could not invert matrix");
+    return std::unexpected("Matrix must be invertible");
   }
 
   return Matrix(m, inverse.value());
 }
 
-absl::StatusOr<Matrix> Matrix::Translation(geometric x, geometric y,
-                                           geometric z) {
+std::expected<Matrix, const char*> Matrix::Translation(geometric x, geometric y,
+                                                       geometric z) {
   if (!std::isfinite(x)) {
-    return absl::InvalidArgumentError("x");
+    return std::unexpected("x must be finite");
   }
 
   if (!std::isfinite(y)) {
-    return absl::InvalidArgumentError("y");
+    return std::unexpected("y must be finite");
   }
 
   if (!std::isfinite(z)) {
-    return absl::InvalidArgumentError("z");
+    return std::unexpected("z must be finite");
   }
 
   std::array<std::array<geometric, 4>, 4> matrix = {{{1.0, 0.0, 0.0, x},
@@ -223,17 +231,30 @@ absl::StatusOr<Matrix> Matrix::Translation(geometric x, geometric y,
   return Matrix(matrix, inverse);
 }
 
-absl::StatusOr<Matrix> Matrix::Scalar(geometric x, geometric y, geometric z) {
-  if (!std::isfinite(x) || x == 0.0) {
-    return absl::InvalidArgumentError("x");
+std::expected<Matrix, const char*> Matrix::Scalar(geometric x, geometric y,
+                                                  geometric z) {
+  if (!std::isfinite(x)) {
+    return std::unexpected("x must be finite");
   }
 
-  if (!std::isfinite(y) || y == 0.0) {
-    return absl::InvalidArgumentError("y");
+  if (x == 0.0) {
+    return std::unexpected("x must be non-zero");
   }
 
-  if (!std::isfinite(z) || z == 0.0) {
-    return absl::InvalidArgumentError("z");
+  if (!std::isfinite(y)) {
+    return std::unexpected("y must be finite");
+  }
+
+  if (y == 0.0) {
+    return std::unexpected("y must be non-zero");
+  }
+
+  if (!std::isfinite(z)) {
+    return std::unexpected("z must be finite");
+  }
+
+  if (z == 0.0) {
+    return std::unexpected("z must be non-zero");
   }
 
   std::array<std::array<geometric, 4>, 4> matrix = {{{x, 0.0, 0.0, 0.0},
@@ -249,26 +270,27 @@ absl::StatusOr<Matrix> Matrix::Scalar(geometric x, geometric y, geometric z) {
   return Matrix(matrix, inverse);
 }
 
-absl::StatusOr<Matrix> Matrix::Rotation(geometric theta, geometric x,
-                                        geometric y, geometric z) {
+std::expected<Matrix, const char*> Matrix::Rotation(geometric theta,
+                                                    geometric x, geometric y,
+                                                    geometric z) {
   if (!std::isfinite(theta)) {
-    return absl::InvalidArgumentError("theta");
+    return std::unexpected("theta must be finite");
   }
 
   if (!std::isfinite(x)) {
-    return absl::InvalidArgumentError("x");
+    return std::unexpected("x must be finite");
   }
 
   if (!std::isfinite(y)) {
-    return absl::InvalidArgumentError("y");
+    return std::unexpected("y must be finite");
   }
 
   if (!std::isfinite(z)) {
-    return absl::InvalidArgumentError("z");
+    return std::unexpected("z must be finite");
   }
 
   if (x == 0.0 && y == 0.0 && z == 0.0) {
-    return absl::InvalidArgumentError("One of x, y, or z must be non-zero");
+    return std::unexpected("One of x, y, or z must be non-zero");
   }
 
   intermediate_t theta_intermediate = static_cast<intermediate_t>(theta);
@@ -318,54 +340,52 @@ absl::StatusOr<Matrix> Matrix::Rotation(geometric theta, geometric x,
   return Matrix(matrix, inverse);
 }
 
-absl::StatusOr<Matrix> Matrix::LookAt(geometric eye_x, geometric eye_y,
-                                      geometric eye_z, geometric look_at_x,
-                                      geometric look_at_y, geometric look_at_z,
-                                      geometric up_x, geometric up_y,
-                                      geometric up_z) {
+std::expected<Matrix, const char*> Matrix::LookAt(
+    geometric eye_x, geometric eye_y, geometric eye_z, geometric look_at_x,
+    geometric look_at_y, geometric look_at_z, geometric up_x, geometric up_y,
+    geometric up_z) {
   if (!std::isfinite(eye_x)) {
-    return absl::InvalidArgumentError("eye_x");
+    return std::unexpected("eye_x must be finite");
   }
 
   if (!std::isfinite(eye_y)) {
-    return absl::InvalidArgumentError("eye_y");
+    return std::unexpected("eye_y must be finite");
   }
 
   if (!std::isfinite(eye_z)) {
-    return absl::InvalidArgumentError("eye_z");
+    return std::unexpected("eye_z must be finite");
   }
 
   if (!std::isfinite(look_at_x)) {
-    return absl::InvalidArgumentError("look_at_x");
+    return std::unexpected("look_at_x must be finite");
   }
 
   if (!std::isfinite(look_at_y)) {
-    return absl::InvalidArgumentError("look_at_y");
+    return std::unexpected("look_at_y must be finite");
   }
 
   if (!std::isfinite(look_at_z)) {
-    return absl::InvalidArgumentError("look_at_z");
+    return std::unexpected("look_at_z must be finite");
   }
 
   if (!std::isfinite(up_x)) {
-    return absl::InvalidArgumentError("up_x");
+    return std::unexpected("up_x must be finite");
   }
 
   if (!std::isfinite(up_y)) {
-    return absl::InvalidArgumentError("up_y");
+    return std::unexpected("up_y must be finite");
   }
 
   if (!std::isfinite(up_z)) {
-    return absl::InvalidArgumentError("up_z");
+    return std::unexpected("up_z must be finite");
   }
 
   if (eye_x == look_at_x && eye_y == look_at_y && eye_z == look_at_z) {
-    return absl::InvalidArgumentError("eye and look_at are the same point");
+    return std::unexpected("eye and look_at are the same point");
   }
 
   if (up_x == 0.0 && up_y == 0.0 && up_z == 0.0) {
-    return absl::InvalidArgumentError(
-        "One of up_x, up_y, or up_z must be non-zero");
+    return std::unexpected("One of up_x, up_y, or up_z must be non-zero");
   }
 
   intermediate_t intermediate_eye_x = eye_x;
@@ -399,7 +419,7 @@ absl::StatusOr<Matrix> Matrix::LookAt(geometric eye_x, geometric eye_y,
   intermediate_t right_z = intermediate_up_x * look_direction_y -
                            intermediate_up_y * look_direction_x;
   if (right_x == 0.0 && right_y == 0.0 && right_z == 0.0) {
-    return absl::InvalidArgumentError("up");
+    return std::unexpected("up and look_at must be perpendicular");
   }
 
   intermediate_t right_magnitude =
@@ -427,43 +447,43 @@ absl::StatusOr<Matrix> Matrix::LookAt(geometric eye_x, geometric eye_y,
   return Matrix::Create(matrix).value();
 }
 
-absl::StatusOr<Matrix> Matrix::Orthographic(geometric left, geometric right,
-                                            geometric bottom, geometric top,
-                                            geometric near, geometric far) {
+std::expected<Matrix, const char*> Matrix::Orthographic(
+    geometric left, geometric right, geometric bottom, geometric top,
+    geometric near, geometric far) {
   if (!std::isfinite(left)) {
-    return absl::InvalidArgumentError("left");
+    return std::unexpected("left must be finite");
   }
 
   if (!std::isfinite(right)) {
-    return absl::InvalidArgumentError("right");
+    return std::unexpected("right must be finite");
   }
 
   if (!std::isfinite(bottom)) {
-    return absl::InvalidArgumentError("bottom");
+    return std::unexpected("bottom must be finite");
   }
 
   if (!std::isfinite(top)) {
-    return absl::InvalidArgumentError("top");
+    return std::unexpected("top must be finite");
   }
 
   if (!std::isfinite(near)) {
-    return absl::InvalidArgumentError("near");
+    return std::unexpected("near must be finite");
   }
 
   if (!std::isfinite(far)) {
-    return absl::InvalidArgumentError("far");
+    return std::unexpected("far must be finite");
   }
 
   if (left == right) {
-    return absl::InvalidArgumentError("left cannot equal right");
+    return std::unexpected("left must not equal right");
   }
 
   if (bottom == top) {
-    return absl::InvalidArgumentError("botom cannot equal top");
+    return std::unexpected("bottom must not equal top");
   }
 
   if (near == far) {
-    return absl::InvalidArgumentError("near cannot equal far");
+    return std::unexpected("near must not equal far");
   }
 
   intermediate_t left_intermediate = left;
@@ -523,9 +543,7 @@ Matrix Matrix::Multiply(const Matrix& matrix) const {
   return Matrix(Multiply4x4(m, matrix.m), Multiply4x4(matrix.i, i));
 }
 
-Matrix Matrix::Inverse() const {
-  return Matrix(i, m);
-}
+Matrix Matrix::Inverse() const { return Matrix(i, m); }
 
 bool operator<(const Matrix& left, const Matrix& right) {
   for (size_t i = 0; i < 4; i++) {
