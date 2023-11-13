@@ -618,7 +618,7 @@ void Halton_sampler::init_random(Random_number_generator& rand)
         perms[base].resize(base);
         for (unsigned i = 0; i < base; ++i)
             perms[base][i] = i;
-        std::random_shuffle(perms[base].begin(), perms[base].end(), rand);
+        std::shuffle(perms[base].begin(), perms[base].end(), rand);
     }
     init_tables(perms);
 }
