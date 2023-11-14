@@ -12,8 +12,6 @@
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
 
-auto g_bxdf = std::make_unique<iris::bxdfs::MockBxdf>();
-auto g_spectrum = std::make_unique<iris::spectra::MockSpectrum>();
 static const uint32_t g_data = 0xDEADBEEF;
 
 void MakeBasicGeometryImpl(
@@ -70,16 +68,18 @@ iris::ReferenceCounted<iris::geometry::MockGeometry> MakeGeometry(
 std::unique_ptr<iris::Material> MakeMaterial(
     std::array<iris::geometric_t, 2> expected, bool has_differentials = false) {
   auto material = std::make_unique<iris::materials::MockMaterial>();
+  auto bxdf = std::make_unique<iris::bxdfs::MockBxdf>();
+
   EXPECT_CALL(*material, Evaluate(testing::_, testing::_, testing::_))
       .WillOnce(testing::Invoke(
-          [expected, has_differentials](
+          [expected, has_differentials, bxdf = std::move(bxdf)](
               const iris::TextureCoordinates& texture_coordinates,
               iris::SpectralAllocator& spectral_allocator,
               iris::BxdfAllocator& allocator) {
             EXPECT_EQ(expected, texture_coordinates.uv);
             EXPECT_EQ(has_differentials,
                       texture_coordinates.differentials.has_value());
-            return g_bxdf.get();
+            return bxdf.get();
           }));
 
   return material;
@@ -145,6 +145,7 @@ TEST(RayTracerTest, NoBsdf) {
 TEST(RayTracerTest, WithEmissiveMaterial) {
   iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0));
 
+  auto spectrum = std::make_unique<iris::spectra::MockSpectrum>();
   iris::emissive_materials::MockEmissiveMaterial emissive_material;
   EXPECT_CALL(emissive_material, Evaluate(testing::_, testing::_))
       .WillOnce(testing::Invoke(
@@ -153,7 +154,7 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
             EXPECT_EQ(0.0, texture_coordinates.uv[0]);
             EXPECT_EQ(0.0, texture_coordinates.uv[1]);
             EXPECT_FALSE(texture_coordinates.differentials);
-            return g_spectrum.get();
+            return spectrum.get();
           }));
 
   auto geometry = MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), nullptr,
@@ -184,7 +185,7 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
 
   auto result = ray_tracer.Trace(iris::RayDifferential(
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0))));
-  EXPECT_EQ(g_spectrum.get(), result.emission);
+  EXPECT_EQ(spectrum.get(), result.emission);
   EXPECT_FALSE(result.surface_intersection);
 }
 

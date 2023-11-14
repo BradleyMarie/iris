@@ -21,7 +21,7 @@ std::optional<visual_t> RussianRoulette::Evaluate(
     Random& rng, visual_t path_throughput) const {
   if (always_continue_path_throughput_ <= path_throughput) {
     rng.DiscardVisual(1);
-    return 1.0;
+    return static_cast<visual_t>(1.0);
   }
 
   visual continue_probability =

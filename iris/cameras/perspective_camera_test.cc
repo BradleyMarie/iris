@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/cameras/perspective_camera.h"
 
-#define _USE_MATH_CONSTANTS
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"

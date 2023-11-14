@@ -9,7 +9,8 @@ TEST(LightSampleAllocatorTest, Allocate) {
   iris::LightSampleAllocator allocator(arena);
 
   iris::lights::MockLight light0;
-  auto& light_sample0 = allocator.Allocate(light0, 0.5);
+  auto& light_sample0 =
+      allocator.Allocate(light0, static_cast<iris::visual_t>(0.5));
   EXPECT_EQ(&light0, &light_sample0.light);
   EXPECT_EQ(0.5, *light_sample0.pdf);
   EXPECT_EQ(nullptr, light_sample0.next);

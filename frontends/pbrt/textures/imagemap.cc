@@ -1,7 +1,9 @@
 #include "frontends/pbrt/textures/imagemap.h"
 
+#include <fstream>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -61,7 +63,7 @@ ImageWrapping ParseImageWrapping(const std::string& value) {
 }
 
 struct Parameters {
-  const char* filename = nullptr;
+  std::filesystem::path filename;
   float gamma = 2.2;
   visual_t scale = 1.0;
   geometric u_delta = 0.0;
@@ -82,7 +84,7 @@ Parameters ParseParameters(
     exit(EXIT_FAILURE);
   }
 
-  result.filename = filename_iter->second.GetFilePaths().front().c_str();
+  result.filename = filename_iter->second.GetFilePaths().front();
 
   auto scale_iter = parameters.find("scale");
   if (scale_iter != parameters.end()) {
@@ -140,9 +142,8 @@ Parameters ParseParameters(
         ParseImageWrapping(wrap_iter->second.GetStringValues().front());
   }
 
-  const char* filename = filename_iter->second.GetFilePaths().front().c_str();
-  std::string_view filename_view = filename;
-  if (filename_view.ends_with(".png") || filename_view.ends_with(".tga")) {
+  auto extension = result.filename.extension();
+  if (extension == ".png" || extension == ".tga") {
     auto gamma_iter = parameters.find("gamma");
     if (gamma_iter != parameters.end()) {
       if (!gamma_iter->second.GetBoolValues().front()) {
@@ -150,16 +151,17 @@ Parameters ParseParameters(
       }
     }
   } else {
-    std::string_view extension =
-        filename_iter->second.GetFilePaths().front().extension().c_str();
+    std::stringstream stream;
     if (extension.empty()) {
-      std::cerr
-          << "ERROR: Unsupported image file (no extension): "
-          << filename_iter->second.GetFilePaths().front().filename().c_str()
-          << std::endl;
+      stream << result.filename.filename();
+      std::string filename = stream.str();
+      std::cerr << "ERROR: Unsupported image file (no extension): "
+                << filename.substr(1, filename.size() - 2) << std::endl;
     } else {
-      std::cerr << "ERROR: Unsupported image file type: " << extension
-                << std::endl;
+      stream << extension;
+      std::string ext = stream.str();
+      std::cerr << "ERROR: Unsupported image file type: "
+                << ext.substr(1, ext.size() - 2) << std::endl;
     }
 
     exit(EXIT_FAILURE);
@@ -181,9 +183,25 @@ class ImageFloatTextureBuilder final
 
     stbi_ldr_to_hdr_gamma(1.0);
 
+    std::ifstream stream(parsed_params.filename.native(),
+                         std::ios::in | std::ios::binary);
+
+    std::vector<stbi_uc> contents;
+    char c;
+    while (stream.get(c)) {
+      contents.push_back(static_cast<stbi_uc>(c));
+    }
+
+    if (contents.size() > std::numeric_limits<int>::max()) {
+      std::cerr << "ERROR: Image loading failed with error: file is too large"
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
     int nx, ny;
-    float* values = stbi_loadf(parsed_params.filename, &nx, &ny, nullptr,
-                               /*desired_channels=*/1);
+    float* values = stbi_loadf_from_memory(
+        contents.data(), static_cast<int>(contents.size()), &nx, &ny, nullptr,
+        /*desired_channels=*/1);
     if (!values) {
       std::cerr << "ERROR: Image loading failed with error: "
                 << stbi_failure_reason() << std::endl;
@@ -208,12 +226,12 @@ class ImageFloatTextureBuilder final
 
     switch (parsed_params.wrap) {
       case ImageWrapping::BLACK:
-        texture_manager.Put(name,
-                            iris::MakeReferenceCounted<
-                                iris::textures::BorderedImageTexture2D<visual>>(
-                                std::move(image), 0.0, parsed_params.u_scale,
-                                parsed_params.v_scale, parsed_params.u_delta,
-                                parsed_params.v_delta));
+        texture_manager.Put(
+            name, iris::MakeReferenceCounted<
+                      iris::textures::BorderedImageTexture2D<visual>>(
+                      std::move(image), static_cast<iris::geometric>(0.0),
+                      parsed_params.u_scale, parsed_params.v_scale,
+                      parsed_params.u_delta, parsed_params.v_delta));
         break;
       case ImageWrapping::CLAMP:
         texture_manager.Put(
@@ -254,9 +272,25 @@ class ImageSpectrumTextureBuilder final
 
     stbi_ldr_to_hdr_gamma(1.0);
 
+    std::ifstream stream(parsed_params.filename.native(),
+                         std::ios::in | std::ios::binary);
+
+    std::vector<stbi_uc> contents;
+    char c;
+    while (stream.get(c)) {
+      contents.push_back(static_cast<stbi_uc>(c));
+    }
+
+    if (contents.size() > std::numeric_limits<int>::max()) {
+      std::cerr << "ERROR: Image loading failed with error: file is too large"
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
     int nx, ny, channels;
-    float* values = stbi_loadf(parsed_params.filename, &nx, &ny, &channels,
-                               /*desired_channels=*/3);
+    float* values = stbi_loadf_from_memory(
+        contents.data(), static_cast<int>(contents.size()), &nx, &ny, &channels,
+        /*desired_channels=*/3);
     if (!values) {
       std::cerr << "ERROR: Image loading failed with error: "
                 << stbi_failure_reason() << std::endl;

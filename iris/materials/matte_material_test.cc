@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/materials/matte_material.h"
 
-#define _USE_MATH_CONSTANTS
 #include <cmath>
 #include <memory>
 
@@ -16,19 +16,20 @@ TEST(MatteMaterialTest, Evaluate) {
       iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
   EXPECT_CALL(*reflector, Reflectance(testing::_))
       .Times(1)
-      .WillOnce(testing::Return(1.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
 
   auto reflectance =
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(reflector);
   auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(1.0);
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.0));
   iris::materials::MatteMaterial material(std::move(reflectance),
                                           std::move(sigma));
 
-  auto* result = material.Evaluate(iris::TextureCoordinates{},
-                                   iris::testing::GetSpectralAllocator(),
-                                   iris::testing::GetBxdfAllocator());
+  auto* result = material.Evaluate(
+      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
+      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(

@@ -16,7 +16,8 @@ visual_t ComputeSpectralScalar(bool all_spectra_are_reflective) {
     return 1.0;
   }
 
-  std::map<visual, visual> wavelengths = {{1.0, 1.0}};
+  std::map<visual, visual> wavelengths = {
+      {static_cast<visual>(1.0), static_cast<visual>(1.0)}};
   iris::spectra::SampledSpectrum sampled_spectrum(wavelengths);
   return 1.0 / g_color_matcher.Match(sampled_spectrum)[1];
 }

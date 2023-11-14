@@ -8,7 +8,8 @@
 TEST(ConstantEmissiveMaterialTest, Evaluate) {
   auto spectrum = iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
   iris::emissive_materials::ConstantEmissiveMaterial material(spectrum);
-  EXPECT_EQ(spectrum.Get(),
-            material.Evaluate(iris::TextureCoordinates{},
-                              iris::testing::GetSpectralAllocator()));
+  EXPECT_EQ(
+      spectrum.Get(),
+      material.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        iris::testing::GetSpectralAllocator()));
 }

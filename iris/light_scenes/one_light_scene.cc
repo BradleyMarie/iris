@@ -15,9 +15,9 @@ std::unique_ptr<LightScene> OneLightScene::Builder::Build(
 OneLightScene::OneLightScene(const SceneObjects& scene_objects) noexcept
     : scene_objects_(scene_objects),
       pdf_((scene_objects.NumLights() > 1)
-               ? std::optional<visual_t>(
+               ? std::optional<visual_t>(static_cast<visual_t>(
                      static_cast<intermediate_t>(1.0) /
-                     static_cast<intermediate_t>(scene_objects.NumLights()))
+                     static_cast<intermediate_t>(scene_objects.NumLights())))
                : std::nullopt) {}
 
 LightSample* OneLightScene::Sample(const Point& hit_point, Random& rng,

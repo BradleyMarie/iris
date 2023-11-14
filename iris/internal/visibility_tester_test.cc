@@ -440,7 +440,7 @@ TEST(VisibilityTesterTest, NegativePdf) {
   EXPECT_CALL(*geometry,
               ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
                                      iris::Point(1.0, 0.0, 0.0)))
-      .WillOnce(testing::Return(-1.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(-1.0)));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -496,7 +496,7 @@ TEST(VisibilityTesterTest, Succeeds) {
   EXPECT_CALL(*geometry,
               ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
                                      iris::Point(1.0, 0.0, 0.0)))
-      .WillOnce(testing::Return(1.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -555,7 +555,7 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   EXPECT_CALL(*geometry,
               ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
                                      iris::Point(1.0, 0.0, 0.0)))
-      .WillOnce(testing::Return(2.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -616,7 +616,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   EXPECT_CALL(*geometry,
               ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
                                      iris::Point(0.5, 0.0, 0.0)))
-      .WillOnce(testing::Return(2.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();
@@ -677,7 +677,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   EXPECT_CALL(*geometry,
               ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), 1u, testing::_,
                                      iris::Point(1.0, 0.0, 0.0)))
-      .WillOnce(testing::Return(2.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
   auto geometry_ptr = geometry.Get();
 
   auto builder = iris::SceneObjects::Builder();

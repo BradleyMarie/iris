@@ -5,11 +5,13 @@
 
 TEST(ConstantValueTexture2DTest, Test) {
   iris::textures::ConstantValueTexture2D<float> texture(1.0);
-  EXPECT_EQ(1.0, texture.Evaluate(iris::TextureCoordinates{}));
+  EXPECT_EQ(1.0, texture.Evaluate(
+                     iris::TextureCoordinates{{0.0, 0.0}, std::nullopt}));
 }
 
 TEST(PointerValueTexture2DTest, Test) {
   auto value = iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
   iris::textures::ConstantPointerTexture2D<iris::Spectrum> texture(value);
-  EXPECT_EQ(value.Get(), texture.Evaluate(iris::TextureCoordinates{}));
+  EXPECT_EQ(value.Get(), texture.Evaluate(iris::TextureCoordinates{
+                             {0.0, 0.0}, std::nullopt}));
 }

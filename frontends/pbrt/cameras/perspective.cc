@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "frontends/pbrt/cameras/perspective.h"
 
 #include <optional>
@@ -43,7 +44,7 @@ PerspectiveObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    fov = value;
+    fov = static_cast<geometric_t>(value);
   }
 
   auto frameaspectratio = parameters.find("frameaspectratio");
@@ -55,7 +56,7 @@ PerspectiveObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    aspect_ratio = value;
+    aspect_ratio = static_cast<geometric_t>(value);
   }
 
   auto halffov = parameters.find("halffov");
@@ -67,7 +68,7 @@ PerspectiveObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    half_fov = value;
+    half_fov = static_cast<geometric_t>(value);
   }
 
   if (fov && half_fov) {
@@ -77,13 +78,13 @@ PerspectiveObjectBuilder::Build(
   }
 
   if (fov) {
-    half_fov = fov.value() * 0.5;
+    half_fov = static_cast<geometric_t>(fov.value() * 0.5);
   }
 
   if (half_fov) {
-    *half_fov *= M_PI / 180.0;
+    *half_fov *= static_cast<geometric_t>(M_PI / 180.0);
   } else {
-    half_fov = M_PI_4;
+    half_fov = static_cast<geometric_t>(M_PI_4);
   }
 
   return [aspect_ratio, half_fov, screen_window,

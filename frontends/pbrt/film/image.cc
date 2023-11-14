@@ -71,7 +71,7 @@ Result ImageObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    diagonal = value;
+    diagonal = static_cast<iris::visual_t>(value);
   }
 
   auto filename_iter = parameters.find("filename");
@@ -88,7 +88,7 @@ Result ImageObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    max_sample_luminance = value;
+    max_sample_luminance = static_cast<iris::visual_t>(value);
   }
 
   auto scale_iter = parameters.find("scale");
@@ -100,7 +100,7 @@ Result ImageObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    scale = value;
+    scale = static_cast<iris::visual_t>(value);
   }
 
   auto x_resolution_iter = parameters.find("xresolution");

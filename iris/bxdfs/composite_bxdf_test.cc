@@ -73,7 +73,7 @@ TEST(CompositeBxdfTest, PdfTwoBxdfs) {
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
-      .WillOnce(testing::Return(2.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf0, bxdf1);
   EXPECT_EQ(1.5, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
@@ -88,13 +88,13 @@ TEST(CompositeBxdfTest, LightPdfTwoBxdfs) {
       bxdf0,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
-      .WillOnce(testing::Return(0.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
   iris::bxdfs::MockBxdf bxdf1;
   EXPECT_CALL(
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
-      .WillOnce(testing::Return(2.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
 
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdf0, bxdf1);
   EXPECT_EQ(1.0, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
@@ -109,7 +109,7 @@ TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingOne) {
       bxdf0,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
-      .WillOnce(testing::Return(1.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
   iris::bxdfs::MockBxdf bxdf1;
   EXPECT_CALL(
       bxdf1,
@@ -179,7 +179,7 @@ TEST(CompositeBxdfTest, MakeComposite) {
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
-      .WillOnce(testing::Return(2.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
 
   const auto& composite = iris::bxdfs::MakeComposite(
       iris::testing::GetBxdfAllocator(), bxdf0, bxdf1);

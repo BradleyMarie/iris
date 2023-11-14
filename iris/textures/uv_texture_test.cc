@@ -7,7 +7,11 @@ class TestUVPointerTexture2D
     : public iris::textures::UVPointerTexture2D<iris::Reflector> {
  public:
   TestUVPointerTexture2D(const iris::Reflector& reflector)
-      : UVPointerTexture2D(1.0, 2.0, 3.0, 4.0), reflector_(reflector) {}
+      : UVPointerTexture2D(static_cast<iris::geometric>(1.0),
+                           static_cast<iris::geometric>(2.0),
+                           static_cast<iris::geometric>(3.0),
+                           static_cast<iris::geometric>(4.0)),
+        reflector_(reflector) {}
 
  protected:
   const iris::Reflector* NestedEvaluate(
@@ -24,7 +28,11 @@ class TestUVPointerTexture2D
 class TestUVValueTexture2D : public iris::textures::UVValueTexture2D<float> {
  public:
   TestUVValueTexture2D(float value)
-      : UVValueTexture2D(1.0, 2.0, 3.0, 4.0), value_(value) {}
+      : UVValueTexture2D(static_cast<iris::geometric>(1.0),
+                         static_cast<iris::geometric>(2.0),
+                         static_cast<iris::geometric>(3.0),
+                         static_cast<iris::geometric>(4.0)),
+        value_(value) {}
 
  protected:
   float NestedEvaluate(

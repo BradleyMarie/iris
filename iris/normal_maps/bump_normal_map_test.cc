@@ -7,17 +7,20 @@
 
 TEST(BumpNormalMap, EvaluateNoDifferentials) {
   auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(0.0);
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
   iris::normals::BumpNormalMap normal_map(std::move(bump));
 
-  auto result = normal_map.Evaluate(iris::TextureCoordinates{}, std::nullopt,
-                                    iris::Vector(0.0, 0.0, 1.0));
+  auto result =
+      normal_map.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                          std::nullopt, iris::Vector(0.0, 0.0, 1.0));
   EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateNoNormalMapDifferentials) {
   auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(0.0);
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
   iris::normals::BumpNormalMap normal_map(std::move(bump));
 
   auto result = normal_map.Evaluate(
@@ -28,11 +31,12 @@ TEST(BumpNormalMap, EvaluateNoNormalMapDifferentials) {
 
 TEST(BumpNormalMap, EvaluateNoTextureCoordinateDifferentials) {
   auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(0.0);
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
   iris::normals::BumpNormalMap normal_map(std::move(bump));
 
   auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{},
+      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
       {{iris::NormalMap::Differentials::DX_DY,
         {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
       iris::Vector(0.0, 0.0, 1.0));
@@ -41,7 +45,8 @@ TEST(BumpNormalMap, EvaluateNoTextureCoordinateDifferentials) {
 
 TEST(BumpNormalMap, EvaluateConstantValueXY) {
   auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(0.0);
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
   iris::normals::BumpNormalMap normal_map(std::move(bump));
 
   auto result = normal_map.Evaluate(
@@ -54,7 +59,8 @@ TEST(BumpNormalMap, EvaluateConstantValueXY) {
 
 TEST(BumpNormalMap, EvaluateConstantValueUV) {
   auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(0.0);
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
   iris::normals::BumpNormalMap normal_map(std::move(bump));
 
   auto result = normal_map.Evaluate(

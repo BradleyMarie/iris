@@ -16,6 +16,9 @@ namespace textures {
 
 template <typename T>
 class Image2D final {
+ private:
+  static const geometric_t max_value_;
+
  public:
   Image2D(std::vector<T> image, std::pair<size_t, size_t> size)
       : image_(std::move(image)),
@@ -47,18 +50,14 @@ class Image2D final {
   }
 
   const T& GetClamped(geometric_t u, geometric_t v) {
-    static constexpr geometric_t max_value = std::nextafter(
-        static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
-    u = std::max(static_cast<geometric_t>(0.0), std::min(u, max_value));
-    v = std::max(static_cast<geometric_t>(0.0), std::min(v, max_value));
+    u = std::max(static_cast<geometric_t>(0.0), std::min(u, max_value_));
+    v = std::max(static_cast<geometric_t>(0.0), std::min(v, max_value_));
     return Get(v * size_.first, u * size_.second);
   }
 
   const T& GetRepeated(geometric_t u, geometric_t v) {
-    static constexpr geometric_t max_value = std::nextafter(
-        static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
-    u = std::min(max_value, u - std::floor(u));
-    v = std::min(max_value, v - std::floor(v));
+    u = std::min(max_value_, u - std::floor(u));
+    v = std::min(max_value_, v - std::floor(v));
     return Get(v * size_.first, u * size_.second);
   }
 
@@ -99,6 +98,10 @@ class Image2D final {
   const std::pair<size_t, size_t> size_;
   const std::pair<geometric_t, geometric_t> texel_size_;
 };
+
+template <typename T>
+const geometric_t Image2D<T>::max_value_ = std::nextafter(
+    static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
 
 template <typename Return, typename... Args>
 class BorderedSpectralImageTexture2D final

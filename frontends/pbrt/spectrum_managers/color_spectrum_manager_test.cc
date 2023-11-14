@@ -49,21 +49,24 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromColorZero) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromSpectrum) {
-  auto spectrum = g_spectrum_manager.AllocateSpectrum({{1.0, 1.0}});
+  auto spectrum = g_spectrum_manager.AllocateSpectrum(
+      {{static_cast<iris::visual>(1.0), static_cast<iris::visual>(1.0)}});
   EXPECT_NEAR(128.75, spectrum->Intensity(0.5), 0.001);
   EXPECT_NEAR(101.325, spectrum->Intensity(1.5), 0.001);
   EXPECT_NEAR(97.154, spectrum->Intensity(2.5), 0.001);
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromSpectrumZero) {
-  auto spectrum = g_spectrum_manager.AllocateSpectrum({{1.0, 0.0}});
+  auto spectrum = g_spectrum_manager.AllocateSpectrum(
+      {{static_cast<iris::visual>(1.0), static_cast<iris::visual>(0.0)}});
   EXPECT_FALSE(spectrum);
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrum) {
   iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
       true);
-  auto spectrum = spectrum_manager.AllocateSpectrum({{1.0, 1.0}});
+  auto spectrum = spectrum_manager.AllocateSpectrum(
+      {{static_cast<iris::visual>(1.0), static_cast<iris::visual>(1.0)}});
   EXPECT_NEAR(1.204, spectrum->Intensity(0.5), 0.1);
   EXPECT_NEAR(0.948, spectrum->Intensity(1.5), 0.1);
   EXPECT_NEAR(0.909, spectrum->Intensity(2.5), 0.1);
@@ -72,7 +75,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrum) {
 TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrumZero) {
   iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
       true);
-  auto spectrum = spectrum_manager.AllocateSpectrum({{1.0, 0.0}});
+  auto spectrum = spectrum_manager.AllocateSpectrum(
+      {{static_cast<iris::visual>(1.0), static_cast<iris::visual>(0.0)}});
   EXPECT_FALSE(spectrum);
 }
 
@@ -102,13 +106,15 @@ TEST(ColorSpectrumManager, AllocateReflectorFromColorZero) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromSpectrum) {
-  auto reflector = g_spectrum_manager.AllocateReflector({{1.0, 1.0}});
+  auto reflector = g_spectrum_manager.AllocateReflector(
+      {{static_cast<iris::visual>(1.0), static_cast<iris::visual>(1.0)}});
   EXPECT_NEAR(1.000, reflector->Reflectance(0.5), 0.001);
   EXPECT_NEAR(0.948, reflector->Reflectance(1.5), 0.001);
   EXPECT_NEAR(0.909, reflector->Reflectance(2.5), 0.001);
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromSpectrumZero) {
-  auto reflector = g_spectrum_manager.AllocateReflector({{1.0, 0.0}});
+  auto reflector = g_spectrum_manager.AllocateReflector(
+      {{static_cast<iris::visual>(1.0), static_cast<iris::visual>(0.0)}});
   EXPECT_FALSE(reflector);
 }

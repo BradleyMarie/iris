@@ -11,29 +11,32 @@ typedef std::array<iris::geometric_t, 3> AdditionalData;
 static const iris::face_t FRONT_FACE = 0u;
 static const iris::face_t BACK_FACE = 1u;
 
-iris::ReferenceCounted<iris::Material> front_material =
-    iris::MakeReferenceCounted<iris::materials::MockMaterial>();
-iris::ReferenceCounted<iris::Material> back_material =
-    iris::MakeReferenceCounted<iris::materials::MockMaterial>();
-iris::ReferenceCounted<iris::EmissiveMaterial> front_emissive_material =
-    iris::MakeReferenceCounted<
-        iris::emissive_materials::MockEmissiveMaterial>();
-iris::ReferenceCounted<iris::EmissiveMaterial> back_emissive_material =
-    iris::MakeReferenceCounted<
-        iris::emissive_materials::MockEmissiveMaterial>();
-iris::ReferenceCounted<iris::NormalMap> front_normal_map =
-    iris::MakeReferenceCounted<iris::normal_maps::MockNormalMap>();
-iris::ReferenceCounted<iris::NormalMap> back_normal_map =
-    iris::MakeReferenceCounted<iris::normal_maps::MockNormalMap>();
+class Sphere : public ::testing::Test {
+ protected:
+  iris::ReferenceCounted<iris::Material> front_material =
+      iris::MakeReferenceCounted<iris::materials::MockMaterial>();
+  iris::ReferenceCounted<iris::Material> back_material =
+      iris::MakeReferenceCounted<iris::materials::MockMaterial>();
+  iris::ReferenceCounted<iris::EmissiveMaterial> front_emissive_material =
+      iris::MakeReferenceCounted<
+          iris::emissive_materials::MockEmissiveMaterial>();
+  iris::ReferenceCounted<iris::EmissiveMaterial> back_emissive_material =
+      iris::MakeReferenceCounted<
+          iris::emissive_materials::MockEmissiveMaterial>();
+  iris::ReferenceCounted<iris::NormalMap> front_normal_map =
+      iris::MakeReferenceCounted<iris::normal_maps::MockNormalMap>();
+  iris::ReferenceCounted<iris::NormalMap> back_normal_map =
+      iris::MakeReferenceCounted<iris::normal_maps::MockNormalMap>();
 
-iris::ReferenceCounted<iris::Geometry> SimpleSphere() {
-  return iris::geometry::AllocateSphere(
-      iris::Point(0.0, 0.0, 3.0), 2.0, front_material, back_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
-}
+  iris::ReferenceCounted<iris::Geometry> SimpleSphere() {
+    return iris::geometry::AllocateSphere(
+        iris::Point(0.0, 0.0, 3.0), 2.0, front_material, back_material,
+        front_emissive_material, back_emissive_material, front_normal_map,
+        back_normal_map);
+  }
+};
 
-TEST(Sphere, MissesCompletely) {
+TEST_F(Sphere, MissesCompletely) {
   auto sphere = SimpleSphere();
 
   iris::Point origin(0.0, 100.0, 100.0);
@@ -45,7 +48,7 @@ TEST(Sphere, MissesCompletely) {
   EXPECT_EQ(nullptr, hit);
 }
 
-TEST(Sphere, MissesOnEdge) {
+TEST_F(Sphere, MissesOnEdge) {
   auto sphere = SimpleSphere();
 
   iris::Point origin(0.0, 2.0, 0.0);
@@ -57,7 +60,7 @@ TEST(Sphere, MissesOnEdge) {
   EXPECT_EQ(nullptr, hit);
 }
 
-TEST(Sphere, Inside) {
+TEST_F(Sphere, Inside) {
   auto sphere = SimpleSphere();
 
   iris::Point origin(0.0, 0.0, 2.0);
@@ -80,7 +83,7 @@ TEST(Sphere, Inside) {
   EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit->next));
 }
 
-TEST(Sphere, InFront) {
+TEST_F(Sphere, InFront) {
   auto sphere = SimpleSphere();
 
   iris::Point origin(0.0, 0.0, 0.0);
@@ -103,7 +106,7 @@ TEST(Sphere, InFront) {
   EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit->next));
 }
 
-TEST(Sphere, Behind) {
+TEST_F(Sphere, Behind) {
   auto sphere = SimpleSphere();
 
   iris::Point origin(0.0, 0.0, 6.0);
@@ -126,7 +129,7 @@ TEST(Sphere, Behind) {
   EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit->next));
 }
 
-TEST(Sphere, ComputeSurfaceNormal) {
+TEST_F(Sphere, ComputeSurfaceNormal) {
   auto sphere = SimpleSphere();
 
   auto front_normal = sphere->ComputeSurfaceNormal(iris::Point(0.0, 0.0, 0.0),
@@ -138,14 +141,14 @@ TEST(Sphere, ComputeSurfaceNormal) {
   EXPECT_EQ(iris::Vector(0.0, 0.0, 3.0), back_normal);
 }
 
-TEST(Sphere, ComputeTextureCoordinatesNone) {
+TEST_F(Sphere, ComputeTextureCoordinatesNone) {
   auto sphere = SimpleSphere();
   auto texture_coordinates = sphere->ComputeTextureCoordinates(
       iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, nullptr);
   EXPECT_FALSE(texture_coordinates);
 }
 
-TEST(Sphere, ComputeShadingNormal) {
+TEST_F(Sphere, ComputeShadingNormal) {
   auto sphere = SimpleSphere();
 
   auto front_normal = sphere->ComputeShadingNormal(FRONT_FACE, nullptr);
@@ -159,7 +162,7 @@ TEST(Sphere, ComputeShadingNormal) {
   EXPECT_EQ(back_normal_map.Get(), back_normal.normal_map);
 }
 
-TEST(Sphere, GetMaterial) {
+TEST_F(Sphere, GetMaterial) {
   auto sphere = SimpleSphere();
 
   auto front = sphere->GetMaterial(FRONT_FACE, nullptr);
@@ -169,7 +172,7 @@ TEST(Sphere, GetMaterial) {
   EXPECT_EQ(back_material.Get(), back);
 }
 
-TEST(Sphere, IsEmissive) {
+TEST_F(Sphere, IsEmissive) {
   auto sphere = iris::geometry::AllocateSphere(
       iris::Point(0.0, 0.0, 0.0), 1.0, back_material, front_material,
       front_emissive_material, iris::ReferenceCounted<iris::EmissiveMaterial>(),
@@ -179,7 +182,7 @@ TEST(Sphere, IsEmissive) {
   EXPECT_FALSE(sphere->IsEmissive(BACK_FACE));
 }
 
-TEST(Sphere, GetEmissiveMaterial) {
+TEST_F(Sphere, GetEmissiveMaterial) {
   auto sphere = SimpleSphere();
 
   auto front = sphere->GetEmissiveMaterial(FRONT_FACE, nullptr);
@@ -189,7 +192,7 @@ TEST(Sphere, GetEmissiveMaterial) {
   EXPECT_EQ(back_emissive_material.Get(), back);
 }
 
-TEST(Sphere, SampleBySolidAngle) {
+TEST_F(Sphere, SampleBySolidAngle) {
   auto sphere = SimpleSphere();
 
   iris::random::MockRandom rng0;
@@ -234,7 +237,7 @@ TEST(Sphere, SampleBySolidAngle) {
   EXPECT_EQ(iris::Point(2.0, 0.0, 3.0), std::get<iris::Point>(sample3));
 }
 
-TEST(Sphere, ComputePdfBySolidAngle) {
+TEST_F(Sphere, ComputePdfBySolidAngle) {
   auto sphere = SimpleSphere();
 
   auto pdf0 =
@@ -250,7 +253,7 @@ TEST(Sphere, ComputePdfBySolidAngle) {
   EXPECT_NEAR(0.6250, *pdf1, 0.01);
 }
 
-TEST(Sphere, GetBoundsWithTransform) {
+TEST_F(Sphere, GetBoundsWithTransform) {
   auto sphere = SimpleSphere();
   auto transform = iris::Matrix::Scalar(2.0, 2.0, 1.0).value();
   auto bounds = sphere->ComputeBounds(transform);
@@ -258,7 +261,7 @@ TEST(Sphere, GetBoundsWithTransform) {
   EXPECT_EQ(iris::Point(4.0, 4.0, 5.0), bounds.upper);
 }
 
-TEST(Sphere, GetFaces) {
+TEST_F(Sphere, GetFaces) {
   auto sphere = SimpleSphere();
   auto faces = sphere->GetFaces();
   ASSERT_EQ(2u, faces.size());

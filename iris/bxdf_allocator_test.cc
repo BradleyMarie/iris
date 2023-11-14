@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/bxdf_allocator.h"
 
-#define _USE_MATH_CONSTANTS
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"

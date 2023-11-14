@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/bxdfs/lambertian_brdf.h"
 
-#define _USE_MATH_CONSTANTS
 #include <cassert>
 #include <cmath>
 
@@ -35,7 +35,7 @@ std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
     return static_cast<visual_t>(0.0);
   }
 
-  return std::abs(outgoing.z * M_1_PI);
+  return static_cast<visual_t>(std::abs(outgoing.z * M_1_PI));
 }
 
 const Reflector* LambertianBrdf::Reflectance(

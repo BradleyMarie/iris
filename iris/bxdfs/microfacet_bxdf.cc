@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/bxdfs/microfacet_bxdf.h"
 
-#define _USE_MATH_CONSTANTS
 #include <algorithm>
 #include <cassert>
 #include <cmath>

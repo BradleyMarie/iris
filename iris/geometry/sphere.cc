@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/geometry/sphere.h"
 
-#define _USE_MATH_CONSTANTS
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -165,7 +165,7 @@ std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
         std::max(static_cast<geometric_t>(0.0),
                  static_cast<geometric_t>(1.0) - sin_theta_squared);
     geometric_t cos_theta = std::sqrt(cos_theta_squared);
-    return 1.0 / (2.0 * M_PI * (1.0 - cos_theta));
+    return static_cast<visual_t>(1.0 / (2.0 * M_PI * (1.0 - cos_theta)));
   }
 
   geometric_t distance_to_sample_squared;
@@ -173,8 +173,8 @@ std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
   Vector surface_normal = ComputeSurfaceNormal(on_face, kFrontFace, nullptr);
   geometric_t cos_theta = DotProduct(Normalize(surface_normal), to_face);
 
-  return distance_to_sample_squared /
-         (cos_theta * 4.0 * M_PI * radius_squared_);
+  return static_cast<visual_t>(distance_to_sample_squared /
+                               (cos_theta * 4.0 * M_PI * radius_squared_));
 }
 
 BoundingBox Sphere::ComputeBounds(const Matrix& model_to_world) const {

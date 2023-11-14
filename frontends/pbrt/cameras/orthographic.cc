@@ -39,7 +39,7 @@ OrthographicObjectBuilder::Build(
       exit(EXIT_FAILURE);
     }
 
-    aspect_ratio = value;
+    aspect_ratio = static_cast<geometric_t>(value);
   }
 
   return [aspect_ratio,
@@ -50,11 +50,11 @@ OrthographicObjectBuilder::Build(
 
     std::array<geometric_t, 2> half_frame_size;
     if (actual_aspect_ratio > 1.0) {
-      half_frame_size[0] = actual_aspect_ratio;
-      half_frame_size[1] = 1.0;
+      half_frame_size[0] = static_cast<geometric_t>(actual_aspect_ratio);
+      half_frame_size[1] = static_cast<geometric_t>(1.0);
     } else {
-      half_frame_size[0] = 1.0;
-      half_frame_size[1] = 1.0 / actual_aspect_ratio;
+      half_frame_size[0] = static_cast<geometric_t>(1.0);
+      half_frame_size[1] = static_cast<geometric_t>(1.0 / actual_aspect_ratio);
     }
 
     return std::make_unique<iris::cameras::OrthographicCamera>(

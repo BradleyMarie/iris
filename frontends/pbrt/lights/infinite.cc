@@ -1,5 +1,9 @@
 #include "frontends/pbrt/lights/infinite.h"
 
+#include <fstream>
+#include <sstream>
+#include <vector>
+
 #include "iris/environmental_lights/image_environmental_light.h"
 #include "iris/spectra/uniform_spectrum.h"
 #include "third_party/stb/stb_image.h"
@@ -16,7 +20,7 @@ static const std::unordered_map<std::string_view, Parameter::Type>
 };
 
 static const ReferenceCounted<Spectrum> kWhiteSpectrum =
-    MakeReferenceCounted<spectra::UniformSpectrum>(1.0);
+    MakeReferenceCounted<spectra::UniformSpectrum>(static_cast<visual>(1.0));
 
 class InfiniteBuilder
     : public ObjectBuilder<std::variant<ReferenceCounted<Light>,
@@ -50,20 +54,29 @@ InfiniteBuilder::Build(
     spectra.clear();
     luma.clear();
 
-    const char* filename = mapname_iter->second.GetFilePaths().front().c_str();
-
-    std::string_view filename_view = filename;
-    if (filename_view.ends_with(".png") || filename_view.ends_with(".tga")) {
-      std::cerr
-          << "ERROR: Unimplemented image file type: "
-          << mapname_iter->second.GetFilePaths().front().extension().c_str()
-          << std::endl;
+    const auto extension =
+        mapname_iter->second.GetFilePaths().front().extension();
+    if (extension == ".png") {
+      std::cerr << "ERROR: Unimplemented image file type: .png" << std::endl;
       exit(EXIT_FAILURE);
-    } else if (filename_view.ends_with(".exr")) {
+    } else if (extension == ".tga") {
+      std::cerr << "ERROR: Unimplemented image file type: .tga" << std::endl;
+      exit(EXIT_FAILURE);
+    } else if (extension == ".exr") {
+      std::ifstream stream(mapname_iter->second.GetFilePaths().front().native(),
+                           std::ios::in | std::ios::binary);
+
+      std::vector<unsigned char> contents;
+      char c;
+      while (stream.get(c)) {
+        contents.push_back(static_cast<unsigned char>(c));
+      }
+
       float* values;
       int width, height;
       const char* error_message;
-      int error = LoadEXR(&values, &width, &height, filename, &error_message);
+      int error = LoadEXRFromMemory(&values, &width, &height, contents.data(),
+                                    contents.size(), &error_message);
       if (error < 0) {
         std::cerr << "ERROR: Image loading failed with error: " << error_message
                   << std::endl;
@@ -96,16 +109,17 @@ InfiniteBuilder::Build(
       size.first = static_cast<size_t>(height);
       size.second = static_cast<size_t>(width);
     } else {
-      std::string_view extension =
-          mapname_iter->second.GetFilePaths().front().extension().c_str();
+      std::stringstream stream;
       if (extension.empty()) {
-        std::cerr
-            << "ERROR: Unsupported image file (no extension): "
-            << mapname_iter->second.GetFilePaths().front().filename().c_str()
-            << std::endl;
+        stream << mapname_iter->second.GetFilePaths().front().filename();
+        std::string filename = stream.str();
+        std::cerr << "ERROR: Unsupported image file (no extension): "
+                  << filename.substr(1, filename.size() - 2) << std::endl;
       } else {
-        std::cerr << "ERROR: Unsupported image file type: " << extension
-                  << std::endl;
+        stream << extension;
+        std::string ext = stream.str();
+        std::cerr << "ERROR: Unsupported image file type: "
+                  << ext.substr(1, ext.size() - 2) << std::endl;
       }
 
       exit(EXIT_FAILURE);

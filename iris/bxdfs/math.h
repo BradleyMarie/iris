@@ -45,7 +45,8 @@ static inline std::pair<geometric_t, geometric_t> SinCosPhi(
     const Vector& vector) {
   geometric_t sin_theta = SinTheta(vector);
   if (sin_theta == 0.0) {
-    return std::make_pair(0.0, 1.0);
+    return std::make_pair(static_cast<geometric_t>(0.0),
+                          static_cast<geometric_t>(1.0));
   }
 
   geometric_t sin_phi =

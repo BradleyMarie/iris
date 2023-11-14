@@ -12,8 +12,6 @@
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
 
-static const iris::spectra::MockSpectrum g_spectrum;
-
 void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
                  std::function<void(size_t, size_t)> progress_callback) {
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
@@ -106,6 +104,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
       .Times(samples)
       .WillRepeatedly(testing::Return(trace_ray));
 
+  iris::spectra::MockSpectrum spectrum;
   iris::integrators::MockIntegrator integrator;
   EXPECT_CALL(integrator, Duplicate())
       .Times(actual_num_threads)
@@ -113,7 +112,7 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
         auto result = std::make_unique<iris::integrators::MockIntegrator>();
         EXPECT_CALL(*result, Integrate(trace_ray, testing::_, testing::_,
                                        testing::_, testing::_, testing::_))
-            .WillRepeatedly(testing::Return(&g_spectrum));
+            .WillRepeatedly(testing::Return(&spectrum));
         return result;
       }));
 

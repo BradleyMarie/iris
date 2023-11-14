@@ -7,11 +7,14 @@
 
 static const iris::ReferenceCounted<iris::Spectrum> kSpectrum0;
 static const iris::ReferenceCounted<iris::Spectrum> kSpectrum1 =
-    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(1.0);
+    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(
+        static_cast<iris::visual>(1.0));
 static const iris::ReferenceCounted<iris::Spectrum> kSpectrum2 =
-    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(2.0);
+    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(
+        static_cast<iris::visual>(2.0));
 static const iris::ReferenceCounted<iris::Spectrum> kScalar =
-    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(2.0);
+    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(
+        static_cast<iris::visual>(2.0));
 
 TEST(ImageEnvironmentalLight, SampleTwo) {
   std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
@@ -22,7 +25,8 @@ TEST(ImageEnvironmentalLight, SampleTwo) {
       spectra, luma, size, kScalar, iris::Matrix::Identity());
 
   iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillRepeatedly(testing::Return(0.25));
+  EXPECT_CALL(rng, NextGeometric())
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.25)));
   iris::Sampler sampler(rng);
 
   auto result = light.Sample(sampler, iris::testing::GetSpectralAllocator());

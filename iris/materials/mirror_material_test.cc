@@ -17,9 +17,9 @@ TEST(MirrorMaterialTest, Evaluate) {
           iris::Reflector, iris::SpectralAllocator>>(reflector);
   iris::materials::MirrorMaterial material(std::move(reflectance));
 
-  auto* result = material.Evaluate(iris::TextureCoordinates{},
-                                   iris::testing::GetSpectralAllocator(),
-                                   iris::testing::GetBxdfAllocator());
+  auto* result = material.Evaluate(
+      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
+      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(

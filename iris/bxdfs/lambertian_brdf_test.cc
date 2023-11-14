@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/bxdfs/lambertian_brdf.h"
 
-#define _USE_MATH_CONSTANTS
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"

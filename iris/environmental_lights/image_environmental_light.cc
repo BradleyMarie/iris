@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "iris/environmental_lights/image_environmental_light.h"
 
-#define _USE_MATH_CONSTANTS
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -14,6 +14,9 @@ constexpr geometric_t kTwoPi = 2.0 * M_PI;
 constexpr geometric_t kPi = M_PI;
 constexpr geometric_t kOne = 1.0;
 
+static const geometric_t kLimit = std::nextafter(static_cast<geometric_t>(1.0),
+                                                 static_cast<geometric_t>(0.0));
+
 std::pair<geometric_t, geometric_t> DirectionToUV(const Vector& direction) {
   geometric_t cos_theta =
       std::clamp(direction.z, static_cast<geometric_t>(-1.0),
@@ -25,12 +28,10 @@ std::pair<geometric_t, geometric_t> DirectionToUV(const Vector& direction) {
     phi += kTwoPi;
   }
 
-  static constexpr geometric_t limit = std::nextafter(
-      static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
   return std::make_pair(std::clamp(phi / static_cast<geometric_t>(2.0 * M_PI),
-                                   static_cast<geometric_t>(0.0), limit),
+                                   static_cast<geometric_t>(0.0), kLimit),
                         std::clamp(theta / static_cast<geometric_t>(M_PI),
-                                   static_cast<geometric_t>(0.0), limit));
+                                   static_cast<geometric_t>(0.0), kLimit));
 }
 
 std::vector<visual> ScaleLuma(std::span<const visual> luma,

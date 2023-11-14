@@ -131,7 +131,8 @@ TriangleMeshBuilder::Build(
     }
 
     for (size_t i = 0; i < uv_array.size(); i += 2) {
-      uvs.emplace_back(uv_array[i], uv_array[i + 1]);
+      uvs.emplace_back(static_cast<geometric>(uv_array[i]),
+                       static_cast<geometric>(uv_array[i + 1]));
     }
   }
 

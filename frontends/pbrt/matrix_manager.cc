@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "frontends/pbrt/matrix_manager.h"
 
 #include <array>
@@ -25,8 +26,8 @@ std::array<geometric, N> ParseFloats(Tokenizer& tokenizer,
       exit(EXIT_FAILURE);
     }
 
-    if (std::from_chars(token->begin(), token->end(), result[i]).ec !=
-        std::errc{}) {
+    if (std::from_chars(token->data(), token->data() + token->size(), result[i])
+            .ec != std::errc{}) {
       std::cerr << "ERROR: Failed to parse " << type_name
                 << " parameter: " << *token << std::endl;
       exit(EXIT_FAILURE);

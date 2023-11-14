@@ -7,9 +7,11 @@
 
 TEST(LowDiscrepancySequenceTest, NextIndex) {
   iris::image_samplers::internal::MockLowDiscrepancySequence sequence;
-  EXPECT_CALL(sequence, Next()).WillOnce(testing::Return(0.5));
+  EXPECT_CALL(sequence, Next())
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
   EXPECT_EQ(2u, sequence.NextIndex(4));
-  EXPECT_CALL(sequence, Next()).WillOnce(testing::Return(1.0));
+  EXPECT_CALL(sequence, Next())
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_EQ(3u, sequence.NextIndex(4));
 }
 
@@ -21,7 +23,8 @@ TEST(LowDiscrepancySequenceTest, DiscardIndex) {
 
 TEST(LowDiscrepancySequenceTest, NextGeometric) {
   iris::image_samplers::internal::MockLowDiscrepancySequence sequence;
-  EXPECT_CALL(sequence, Next()).WillOnce(testing::Return(0.5));
+  EXPECT_CALL(sequence, Next())
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
   EXPECT_EQ(0.5, sequence.NextGeometric());
 }
 
@@ -33,7 +36,8 @@ TEST(LowDiscrepancySequenceTest, DiscardGeometric) {
 
 TEST(LowDiscrepancySequenceTest, NextVisual) {
   iris::image_samplers::internal::MockLowDiscrepancySequence sequence;
-  EXPECT_CALL(sequence, Next()).WillOnce(testing::Return(0.5));
+  EXPECT_CALL(sequence, Next())
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
   EXPECT_EQ(0.5, sequence.NextVisual());
 }
 

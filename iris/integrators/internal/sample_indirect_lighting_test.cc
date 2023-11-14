@@ -17,7 +17,7 @@ TEST(SampleIndirectLighting, NoSample) {
           iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(0.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
 
   iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 1.0, 0.0),
                   iris::Vector(0.0, 1.0, 0.0));

@@ -47,19 +47,21 @@ TEST(DeltaLight, WithReflectance) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
 
   iris::spectra::MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(testing::_)).WillOnce(testing::Return(1.0));
+  EXPECT_CALL(spectrum, Intensity(testing::_))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
 
   iris::Vector to_light(0.0, 0.866025, 0.5);
 
   iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
   iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.25));
+  EXPECT_CALL(reflector, Reflectance(1.0))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
 
   iris::bxdfs::MockBxdf bxdf;
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(100.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(100.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillOnce(testing::Return(&reflector));
@@ -87,7 +89,7 @@ TEST(FromLightSample, NoReflectance) {
   iris::bxdfs::MockBxdf bxdf;
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(100.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(100.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillOnce(testing::Return(nullptr));
@@ -108,19 +110,22 @@ TEST(FromLightSample, WithReflectance) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
 
   iris::spectra::MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(testing::_)).WillOnce(testing::Return(1.0));
+  EXPECT_CALL(spectrum, Intensity(testing::_))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
 
   iris::Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::Light::SampleResult light_sample{spectrum, to_light, 1.0};
+  iris::Light::SampleResult light_sample{spectrum, to_light,
+                                         static_cast<iris::visual_t>(1.0)};
 
   iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.5));
+  EXPECT_CALL(reflector, Reflectance(1.0))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
 
   iris::bxdfs::MockBxdf bxdf;
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(2.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillOnce(testing::Return(&reflector));
@@ -145,7 +150,8 @@ TEST(FromBsdfSample, NoEmission) {
 
   iris::reflectors::MockReflector reflector;
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
+  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
+                                       static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
 
@@ -172,7 +178,8 @@ TEST(FromBsdfSample, ZeroPdf) {
 
   iris::reflectors::MockReflector reflector;
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
+  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
+                                       static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
 
@@ -200,7 +207,8 @@ TEST(FromBsdfSample, NegativePdf) {
 
   iris::reflectors::MockReflector reflector;
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
+  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
+                                       static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
 
@@ -227,9 +235,11 @@ TEST(FromBsdfSample, WithEmission) {
   iris::Vector to_light(0.0, 0.866025, 0.5);
 
   iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.5));
+  EXPECT_CALL(reflector, Reflectance(1.0))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
+  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
+                                       static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
 
@@ -239,7 +249,8 @@ TEST(FromBsdfSample, WithEmission) {
       std::nullopt, surface_normal, surface_normal};
 
   iris::spectra::MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(testing::_)).WillOnce(testing::Return(1.0));
+  EXPECT_CALL(spectrum, Intensity(testing::_))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
 
   iris::lights::MockLight light;
   EXPECT_CALL(light, Emission(iris::Ray(trace_ray.Endpoint(1.0), to_light),
@@ -271,7 +282,7 @@ TEST(EstimateDirectLighting, NoSamples) {
       .WillOnce(testing::Return(iris::Bxdf::SampleResult{to_light}));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(0.0));
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
 
   iris::lights::MockLight light;
   EXPECT_CALL(light, Sample(hit_point, testing::_, testing::_, testing::_))
@@ -339,7 +350,7 @@ TEST(EstimateDirectLighting, DeltaLight) {
       .WillOnce(testing::Return(iris::Bxdf::SampleResult{to_light}));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillRepeatedly(testing::Return(&reflector));
@@ -360,8 +371,10 @@ TEST(EstimateDirectLighting, DeltaLight) {
       iris::testing::GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
 
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.25));
-  EXPECT_CALL(spectrum, Intensity(testing::_)).WillOnce(testing::Return(1.0));
+  EXPECT_CALL(reflector, Reflectance(1.0))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
+  EXPECT_CALL(spectrum, Intensity(testing::_))
+      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
 }
 
@@ -383,13 +396,14 @@ TEST(EstimateDirectLighting, FullTest) {
       .WillOnce(testing::Return(iris::Bxdf::SampleResult{to_light}));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::spectra::MockSpectrum spectrum;
-  iris::Light::SampleResult light_sample{spectrum, to_light, 1.0};
+  iris::Light::SampleResult light_sample{spectrum, to_light,
+                                         static_cast<iris::visual_t>(1.0)};
 
   iris::lights::MockLight light;
   EXPECT_CALL(light, Sample(hit_point, testing::_, testing::_, testing::_))
@@ -408,9 +422,9 @@ TEST(EstimateDirectLighting, FullTest) {
   ASSERT_NE(nullptr, result);
 
   EXPECT_CALL(reflector, Reflectance(1.0))
-      .WillRepeatedly(testing::Return(0.25));
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.25)));
   EXPECT_CALL(spectrum, Intensity(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
 }
 
@@ -448,7 +462,7 @@ TEST(SampleDirectLighting, OneZeroPdfSample) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
   iris::testing::LightSampleListEntry list[] = {
-      {&light, 0.0},
+      {&light, static_cast<iris::visual_t>(0.0)},
   };
 
   iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
@@ -478,7 +492,7 @@ TEST(SampleDirectLighting, OneDeltaLight) {
       .WillOnce(testing::Return(iris::Bxdf::SampleResult{to_light}));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillRepeatedly(testing::Return(&reflector));
@@ -504,8 +518,10 @@ TEST(SampleDirectLighting, OneDeltaLight) {
                              iris::testing::GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 
-    EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.25));
-    EXPECT_CALL(spectrum, Intensity(testing::_)).WillOnce(testing::Return(1.0));
+    EXPECT_CALL(reflector, Reflectance(1.0))
+        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
+    EXPECT_CALL(spectrum, Intensity(testing::_))
+        .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
     EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
   });
 }
@@ -528,7 +544,7 @@ TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
       .WillOnce(testing::Return(iris::Bxdf::SampleResult{to_light}));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillRepeatedly(testing::Return(&reflector));
@@ -544,7 +560,7 @@ TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
   iris::testing::LightSampleListEntry list[] = {
-      {&light, 0.5},
+      {&light, static_cast<iris::visual_t>(0.5)},
   };
 
   iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
@@ -554,8 +570,10 @@ TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
                              iris::testing::GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 
-    EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.25));
-    EXPECT_CALL(spectrum, Intensity(testing::_)).WillOnce(testing::Return(1.0));
+    EXPECT_CALL(reflector, Reflectance(1.0))
+        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
+    EXPECT_CALL(spectrum, Intensity(testing::_))
+        .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
     EXPECT_NEAR(0.25, result->Intensity(1.0), 0.001);
   });
 }
@@ -578,7 +596,7 @@ TEST(SampleDirectLighting, TwoDeltaLights) {
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{to_light}));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
                                 testing::_))
       .WillRepeatedly(testing::Return(&reflector));
@@ -595,7 +613,7 @@ TEST(SampleDirectLighting, TwoDeltaLights) {
 
   iris::testing::LightSampleListEntry list[] = {
       {&light, std::nullopt},
-      {&light, 0.5},
+      {&light, static_cast<iris::visual_t>(0.5)},
   };
 
   iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
@@ -606,9 +624,9 @@ TEST(SampleDirectLighting, TwoDeltaLights) {
     ASSERT_NE(nullptr, result);
 
     EXPECT_CALL(reflector, Reflectance(1.0))
-        .WillRepeatedly(testing::Return(0.25));
+        .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.25)));
     EXPECT_CALL(spectrum, Intensity(testing::_))
-        .WillRepeatedly(testing::Return(1.0));
+        .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
     EXPECT_NEAR(0.375, result->Intensity(1.0), 0.001);
   });
 }

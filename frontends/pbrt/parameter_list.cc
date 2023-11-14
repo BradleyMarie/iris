@@ -122,7 +122,8 @@ std::optional<bool> ParseBoolToken(std::string_view token) {
 
 std::optional<long double> ParseFloatToken(std::string_view token) {
   long double value;
-  if (std::from_chars(token.begin(), token.end(), value).ec != std::errc{}) {
+  if (std::from_chars(token.data(), token.data() + token.size(), value).ec !=
+      std::errc{}) {
     return std::nullopt;
   }
   if (!std::isfinite(value)) {
@@ -133,7 +134,8 @@ std::optional<long double> ParseFloatToken(std::string_view token) {
 
 std::optional<int64_t> ParseIntegerToken(std::string_view token) {
   int64_t value;
-  if (std::from_chars(token.begin(), token.end(), value).ec != std::errc{}) {
+  if (std::from_chars(token.data(), token.data() + token.size(), value).ec !=
+      std::errc{}) {
     return std::nullopt;
   }
   return value;
