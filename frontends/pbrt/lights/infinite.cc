@@ -14,9 +14,9 @@ namespace {
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
-        {"L", Parameter::SPECTRUM},
-        {"mapname", Parameter::FILE_PATH},
-        {"samples", Parameter::INTEGER},
+        {"L", Parameter::SPECTRUM},       {"mapname", Parameter::FILE_PATH},
+        {"nsamples", Parameter::INTEGER}, {"samples", Parameter::INTEGER},
+        {"scale", Parameter::SPECTRUM},
 };
 
 static const ReferenceCounted<Spectrum> kWhiteSpectrum =
@@ -45,8 +45,15 @@ InfiniteBuilder::Build(
   ReferenceCounted<Spectrum> scalar = kWhiteSpectrum;
 
   auto l_iter = parameters.find("L");
-  if (l_iter != parameters.end()) {
+  auto scale_iter = parameters.find("scale");
+  if (l_iter != parameters.end() && scale_iter != parameters.end()) {
+    std::cerr << "ERROR: Cannot specify parameters together: L, scale"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  } else if (l_iter != parameters.end()) {
     scalar = l_iter->second.GetSpectra().front();
+  } else if (scale_iter != parameters.end()) {
+    scalar = scale_iter->second.GetSpectra().front();
   }
 
   auto mapname_iter = parameters.find("mapname");

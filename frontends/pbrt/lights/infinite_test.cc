@@ -29,6 +29,23 @@ TEST(Infinite, Empty) {
       std::get<iris::ReferenceCounted<iris::EnvironmentalLight>>(result));
 }
 
+TEST(Infinite, BadScale) {
+  std::stringstream input("\"color scale\" [1 1 1] \"color L\" [1 1 1]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::lights::g_infinite_builder, tokenizer,
+          spectrum_manager, texture_manager,
+          static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+          iris::Matrix::Identity()),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Cannot specify parameters together: L, scale");
+}
+
 TEST(Infinite, BadFiletype) {
   std::stringstream input("\"string mapname\" " + RunfilePath("image.txt"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
