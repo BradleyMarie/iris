@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <optional>
 #include <utility>
 
 #include "iris/float.h"
@@ -72,6 +73,29 @@ static inline std::pair<geometric_t, geometric_t> SinCosSquaredPhi(
 static inline Vector Reflect(const Vector& vector, const Vector& normal) {
   return static_cast<geometric_t>(2.0) * DotProduct(vector, normal) * normal -
          vector;
+}
+
+static inline std::optional<Vector> Refract(
+    const Vector& vector, const Vector& normal,
+    geometric_t relative_refractive_index) {
+  geometric_t cos_theta_incident = ClampedDotProduct(vector, normal);
+  geometric_t sin_theta_squared_incident =
+      static_cast<geometric_t>(1.0) - cos_theta_incident * cos_theta_incident;
+  geometric_t sin_theta_squared_transmitted = relative_refractive_index *
+                                              relative_refractive_index *
+                                              sin_theta_squared_incident;
+
+  if (sin_theta_squared_transmitted >= static_cast<geometric_t>(1.0)) {
+    return std::nullopt;
+  }
+
+  geometric_t cos_theta_transmitted =
+      std::sqrt(static_cast<geometric_t>(1.0) - sin_theta_squared_transmitted);
+
+  return (relative_refractive_index * cos_theta_incident -
+          cos_theta_transmitted) *
+             normal -
+         (vector * relative_refractive_index);
 }
 
 }  // namespace internal

@@ -69,3 +69,17 @@ TEST(Math, Reflect) {
   EXPECT_EQ(-vector.y, reflected.y);
   EXPECT_EQ(vector.z, reflected.z);
 }
+
+TEST(Math, Refract) {
+  auto vector = iris::Normalize(iris::Vector(-1.0, -1.0, 1.0));
+  auto refracted =
+      iris::bxdfs::internal::Refract(vector, iris::Vector(0.0, 0.0, 1.0), 1.0);
+  ASSERT_TRUE(refracted);
+  EXPECT_EQ(-vector.x, refracted->x);
+  EXPECT_EQ(-vector.y, refracted->y);
+  EXPECT_EQ(-vector.z, refracted->z);
+
+  auto reflected =
+      iris::bxdfs::internal::Refract(vector, iris::Vector(0.0, 0.0, 1.0), 10.0);
+  EXPECT_FALSE(reflected);
+}

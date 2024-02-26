@@ -23,3 +23,10 @@ TEST(FresnelDielectric, TotalInternalReflection) {
       fresnel.Evaluate(-0.5, iris::testing::GetSpectralAllocator());
   EXPECT_EQ(1.0, reflector->Reflectance(1.0));
 }
+
+TEST(FresnelDielectric, Complement) {
+  iris::bxdfs::FresnelDielectric fresnel(1.0, 2.0);
+  auto* reflector =
+      fresnel.Complement(1.0, iris::testing::GetSpectralAllocator());
+  EXPECT_NEAR(0.88888, reflector->Reflectance(1.0), 0.001);
+}

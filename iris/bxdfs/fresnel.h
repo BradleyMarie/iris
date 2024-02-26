@@ -11,6 +11,8 @@ class Fresnel {
  public:
   virtual const Reflector* Evaluate(visual_t cos_theta_incident,
                                     SpectralAllocator& allocator) const = 0;
+  virtual const Reflector* Complement(visual_t cos_theta_incident,
+                                      SpectralAllocator& allocator) const = 0;
 };
 
 class FresnelDielectric : public Fresnel {
@@ -20,6 +22,8 @@ class FresnelDielectric : public Fresnel {
 
   const Reflector* Evaluate(visual_t cos_theta_incident,
                             SpectralAllocator& allocator) const override;
+  const Reflector* Complement(visual_t cos_theta_incident,
+                              SpectralAllocator& allocator) const override;
 
  private:
   visual_t eta_incident_, eta_transmitted_;
