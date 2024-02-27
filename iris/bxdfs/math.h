@@ -92,9 +92,8 @@ static inline std::optional<Vector> Refract(
   geometric_t cos_theta_transmitted =
       std::sqrt(static_cast<geometric_t>(1.0) - sin_theta_squared_transmitted);
 
-  return (relative_refractive_index * cos_theta_incident -
-          cos_theta_transmitted) *
-             normal -
+  return (normal * (relative_refractive_index * cos_theta_incident -
+                    cos_theta_transmitted)) -
          (vector * relative_refractive_index);
 }
 
