@@ -11,16 +11,16 @@ std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  auto radius_squared = sampler.Next();
-  auto radius = std::sqrt(radius_squared);
+  geometric_t radius_squared = sampler.Next();
+  geometric_t radius = std::sqrt(radius_squared);
 
-  auto theta = sampler.Next() * static_cast<geometric>(2.0 * M_PI);
-  auto sin_theta = std::sin(theta);
-  auto cos_theta = std::cos(theta);
+  geometric_t theta = sampler.Next() * static_cast<geometric_t>(2.0 * M_PI);
+  geometric_t sin_theta = std::sin(theta);
+  geometric_t cos_theta = std::cos(theta);
 
-  auto x = radius * cos_theta;
-  auto y = radius * sin_theta;
-  auto z = std::sqrt(static_cast<geometric>(1.0) - radius_squared);
+  geometric_t x = radius * cos_theta;
+  geometric_t y = radius * sin_theta;
+  geometric_t z = std::sqrt(static_cast<geometric_t>(1.0) - radius_squared);
   Vector outgoing(x, y, std::copysign(z, incoming.z));
 
   return SampleResult{outgoing.AlignWith(surface_normal), std::nullopt, this};
