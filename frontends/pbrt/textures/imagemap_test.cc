@@ -108,6 +108,25 @@ TEST(Image, BadVScale) {
       "ERROR: Out of range value for parameter: vscale");
 }
 
+TEST(Image, BadMaxAnisotropy) {
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"float maxanisotropy\" 0.0");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
+          static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+          kName),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: maxanisotropy");
+}
+
 TEST(Image, BadMapping) {
   std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
                           " \"string mapping\" \"abc\"");
@@ -253,6 +272,8 @@ TEST(Image, SpectrumBadScale) {
 
 TEST(Image, SpectrumAllParams) {
   std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"string mapping\" \"uv\""
+                          " \"float maxanisotropy\" 8.0"
                           " \"bool gamma\" \"false\""
                           " \"float scale\" 1.0"
                           " \"float udelta\" 0.0"

@@ -16,19 +16,19 @@ namespace {
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_float_parameters = {
         {"filename", Parameter::FILE_PATH}, {"gamma", Parameter::BOOL},
-        {"mapping", Parameter::STRING},     {"scale", Parameter::FLOAT},
-        {"udelta", Parameter::FLOAT},       {"uscale", Parameter::FLOAT},
-        {"vdelta", Parameter::FLOAT},       {"vscale", Parameter::FLOAT},
-        {"wrap", Parameter::STRING},
+        {"mapping", Parameter::STRING},     {"maxanisotropy", Parameter::FLOAT},
+        {"scale", Parameter::FLOAT},        {"udelta", Parameter::FLOAT},
+        {"uscale", Parameter::FLOAT},       {"vdelta", Parameter::FLOAT},
+        {"vscale", Parameter::FLOAT},       {"wrap", Parameter::STRING},
 };
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_spectrum_parameters = {
         {"filename", Parameter::FILE_PATH}, {"gamma", Parameter::BOOL},
-        {"mapping", Parameter::STRING},     {"scale", Parameter::FLOAT},
-        {"udelta", Parameter::FLOAT},       {"uscale", Parameter::FLOAT},
-        {"vdelta", Parameter::FLOAT},       {"vscale", Parameter::FLOAT},
-        {"wrap", Parameter::STRING},
+        {"mapping", Parameter::STRING},     {"maxanisotropy", Parameter::FLOAT},
+        {"scale", Parameter::FLOAT},        {"udelta", Parameter::FLOAT},
+        {"uscale", Parameter::FLOAT},       {"vdelta", Parameter::FLOAT},
+        {"vscale", Parameter::FLOAT},       {"wrap", Parameter::STRING},
 };
 
 visual_t InverseGamma(visual_t value) {
@@ -84,6 +84,7 @@ struct Parameters {
   std::filesystem::path filename;
   float gamma = 2.2;
   TextureMapping mapping = TextureMapping::UV;
+  visual_t maxanisotropy = 8.0;
   visual_t scale = 1.0;
   geometric u_delta = 0.0;
   geometric u_scale = 1.0;
@@ -109,6 +110,17 @@ Parameters ParseParameters(
   if (mapping_iter != parameters.end()) {
     result.mapping =
         ParseTextureMapping(mapping_iter->second.GetStringValues().front());
+  }
+
+  auto maxanisotropy_iter = parameters.find("maxanisotropy");
+  if (maxanisotropy_iter != parameters.end()) {
+    result.maxanisotropy = maxanisotropy_iter->second.GetFloatValues().front();
+    if (!std::isfinite(result.maxanisotropy) ||
+        result.maxanisotropy <= static_cast<visual_t>(0.0)) {
+      std::cerr << "ERROR: Out of range value for parameter: maxanisotropy"
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   auto scale_iter = parameters.find("scale");
