@@ -59,7 +59,8 @@ Parse(Tokenizer& tokenizer) {
   return *iter->second;
 }
 
-void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
+void ParseNamed(Tokenizer& tokenizer, const std::filesystem::path& search_root,
+                MaterialManager& material_manager,
                 SpectrumManager& spectrum_manager,
                 TextureManager& texture_manager) {
   auto type = tokenizer.Next();
@@ -103,8 +104,8 @@ void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
   }
 
   Parameter type_parameter;
-  type_parameter.LoadFrom(*type_iter->second, tokenizer.SearchRoot(),
-                          Parameter::STRING, spectrum_manager, texture_manager);
+  type_parameter.LoadFrom(*type_iter->second, search_root, Parameter::STRING,
+                          spectrum_manager, texture_manager);
 
   auto material_builder =
       g_materials.find(type_parameter.GetStringValues(1).front());
@@ -119,11 +120,10 @@ void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
   std::unordered_set<std::string_view> parameters_parsed;
   std::unordered_map<std::string_view, Parameter> parameters;
   for (const auto& [parameter_name, parameter_list] : parameter_lists) {
-    auto parameter =
-        material_builder->second
-            ->Parse(*parameter_list, tokenizer.SearchRoot(), spectrum_manager,
-                    texture_manager, parameters_parsed)
-            .value();
+    auto parameter = material_builder->second
+                         ->Parse(*parameter_list, search_root, spectrum_manager,
+                                 texture_manager, parameters_parsed)
+                         .value();
     parameters[parameter_name] = std::move(parameter);
   }
 

@@ -139,8 +139,10 @@ int main(int argc, char** argv) {
 
   std::unique_ptr<iris::pbrt_frontend::Tokenizer> tokenizer;
   std::unique_ptr<std::ifstream> file_input;
+  std::filesystem::path search_root;
   if (unparsed.size() == 1) {
     tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(std::cin);
+    search_root = std::filesystem::current_path();
   } else {
     file_input = std::make_unique<std::ifstream>(unparsed.at(1));
     if (file_input->fail()) {
@@ -149,13 +151,15 @@ int main(int argc, char** argv) {
       exit(EXIT_FAILURE);
     }
 
-    tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(
-        *file_input, std::filesystem::weakly_canonical(unparsed.at(1)));
+    auto file_path = std::filesystem::weakly_canonical(unparsed.at(1));
+    tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(*file_input,
+                                                                 file_path);
+    search_root = file_path.parent_path();
   }
 
   iris::pbrt_frontend::Parser parser(std::move(spectral_manager));
   for (size_t render_index = 0;; render_index += 1) {
-    auto result = parser.ParseFrom(*tokenizer);
+    auto result = parser.ParseFrom(*tokenizer, search_root);
     if (!result) {
       if (render_index == 0) {
         std::cerr << "ERROR: Render input was empty." << std::endl;

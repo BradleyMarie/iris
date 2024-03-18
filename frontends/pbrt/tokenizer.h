@@ -11,14 +11,11 @@ namespace iris::pbrt_frontend {
 
 class Tokenizer {
  public:
-  Tokenizer(std::istream& stream) noexcept
-      : stream_(&stream), search_root_(std::filesystem::current_path()) {}
+  Tokenizer(std::istream& stream) noexcept : stream_(&stream) {}
 
   Tokenizer(std::istream& stream,
             const std::filesystem::path& file_path) noexcept
-      : stream_(&stream),
-        file_path_(file_path),
-        search_root_(file_path.parent_path()) {
+      : stream_(&stream), file_path_(file_path) {
     assert(std::filesystem::is_regular_file(file_path));
     assert(std::filesystem::exists(file_path));
     assert(std::filesystem::weakly_canonical(file_path) == file_path);
@@ -33,7 +30,6 @@ class Tokenizer {
   std::optional<std::string_view> Peek();
   std::optional<std::string_view> Next();
 
-  const std::filesystem::path& SearchRoot() const { return search_root_; }
   const std::optional<std::filesystem::path>& FilePath() const {
     return file_path_;
   }
@@ -43,7 +39,6 @@ class Tokenizer {
 
   std::istream* stream_;
   std::optional<std::filesystem::path> file_path_;
-  std::filesystem::path search_root_;
   std::string next_;
   std::string peeked_;
   std::optional<bool> peeked_valid_;

@@ -14,18 +14,21 @@ TEST(Matte, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result0 = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::materials::g_matte_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager);
   EXPECT_TRUE(result0);
 
   auto result1 = iris::pbrt_frontend::BuildObject(
-      *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
+      *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
   EXPECT_FALSE(std::get<3>(result1));
 
   auto result2 = iris::pbrt_frontend::BuildObject(
-      *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
+      *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, texture_manager);
   EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
   EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
   EXPECT_FALSE(std::get<2>(result1));
@@ -41,18 +44,21 @@ TEST(Matte, WithDefaults) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result0 = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::materials::g_matte_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager);
   EXPECT_TRUE(result0);
 
   auto result1 = iris::pbrt_frontend::BuildObject(
-      *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
+      *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_TRUE(std::get<2>(result1));
   EXPECT_TRUE(std::get<3>(result1));
 
   auto result2 = iris::pbrt_frontend::BuildObject(
-      *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
+      *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, texture_manager);
   EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
   EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));
@@ -67,11 +73,13 @@ TEST(Matte, OverridesDefaults) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result0 = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::materials::g_matte_builder, tokenizer0,
-      spectrum_manager, texture_manager, texture_manager);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager);
   EXPECT_TRUE(result0);
 
   auto result1 = iris::pbrt_frontend::BuildObject(
-      *result0, tokenizer0, spectrum_manager, texture_manager, texture_manager);
+      *result0, tokenizer0, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
@@ -82,7 +90,8 @@ TEST(Matte, OverridesDefaults) {
   iris::pbrt_frontend::Tokenizer tokenizer1(input1);
 
   auto result2 = iris::pbrt_frontend::BuildObject(
-      *result0, tokenizer1, spectrum_manager, texture_manager, texture_manager);
+      *result0, tokenizer1, std::filesystem::current_path(), spectrum_manager,
+      texture_manager, texture_manager);
   EXPECT_NE(std::get<0>(result1), std::get<0>(result2));
   EXPECT_NE(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));

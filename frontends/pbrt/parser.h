@@ -37,7 +37,8 @@ class Parser {
     std::function<void(Framebuffer&, std::ofstream&)> output_write_function;
   };
 
-  std::optional<Result> ParseFrom(Tokenizer& tokenizer);
+  std::optional<Result> ParseFrom(Tokenizer& tokenizer,
+                                  const std::filesystem::path& search_root);
 
  private:
   std::optional<std::string_view> PeekToken();
@@ -74,6 +75,8 @@ class Parser {
   };
 
   std::vector<TokenizerEntry> tokenizers_;
+  const std::filesystem::path* search_root_;
+
   std::string texture_name_;
 
   struct AttributeEntry {

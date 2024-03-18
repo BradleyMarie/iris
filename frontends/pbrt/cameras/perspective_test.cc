@@ -15,7 +15,8 @@ TEST(Perspective, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   EXPECT_TRUE(result);
 }
 
@@ -25,12 +26,12 @@ TEST(Perspective, FovTooLow) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: fov");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_perspective_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: fov");
 }
 
 TEST(Perspective, FovTooHigh) {
@@ -39,12 +40,12 @@ TEST(Perspective, FovTooHigh) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: fov");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_perspective_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: fov");
 }
 
 TEST(Perspective, HalfTooLow) {
@@ -53,12 +54,12 @@ TEST(Perspective, HalfTooLow) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: halffov");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_perspective_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: halffov");
 }
 
 TEST(Perspective, HalfTooHigh) {
@@ -67,12 +68,12 @@ TEST(Perspective, HalfTooHigh) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: halffov");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_perspective_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: halffov");
 }
 
 TEST(Perspective, FovAndHalfFov) {
@@ -81,12 +82,12 @@ TEST(Perspective, FovAndHalfFov) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Cannot specify parameters together: fov, halffov");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_perspective_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Cannot specify parameters together: fov, halffov");
 }
 
 TEST(Perspective, AspectRatioNegative) {
@@ -95,12 +96,12 @@ TEST(Perspective, AspectRatioNegative) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: frameaspectratio");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_perspective_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: frameaspectratio");
 }
 
 TEST(Perspective, AspectRatioZero) {
@@ -109,12 +110,12 @@ TEST(Perspective, AspectRatioZero) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: frameaspectratio");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_perspective_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: frameaspectratio");
 }
 
 TEST(Perspective, WithXAspectRatio) {
@@ -125,7 +126,8 @@ TEST(Perspective, WithXAspectRatio) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
@@ -142,7 +144,8 @@ TEST(Perspective, WithYAspectRatio) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
@@ -159,7 +162,8 @@ TEST(Perspective, FromFrameX) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 2u));
@@ -176,7 +180,8 @@ TEST(Perspective, FromFrameY) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(2u, 1u));
@@ -193,7 +198,8 @@ TEST(Perspective, WithHalfFov) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 }
 
@@ -205,6 +211,7 @@ TEST(Perspective, WithFov) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_perspective_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 }

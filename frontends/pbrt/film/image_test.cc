@@ -11,8 +11,8 @@ TEST(Image, Empty) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::film::g_image_builder, tokenizer, spectrum_manager,
-      texture_manager);
+      *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+      std::filesystem::current_path(), spectrum_manager, texture_manager);
   EXPECT_EQ("pbrt.exr", result.filename);
   EXPECT_EQ(480u, result.resolution.first);
   EXPECT_EQ(640u, result.resolution.second);
@@ -31,11 +31,12 @@ TEST(Image, NegativeCropWindow0) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, NegativeCropWindow1) {
@@ -45,11 +46,12 @@ TEST(Image, NegativeCropWindow1) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, NegativeCropWindow2) {
@@ -59,11 +61,12 @@ TEST(Image, NegativeCropWindow2) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, NegativeCropWindow3) {
@@ -73,11 +76,12 @@ TEST(Image, NegativeCropWindow3) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, TooLargeCropWindow0) {
@@ -87,11 +91,12 @@ TEST(Image, TooLargeCropWindow0) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, TooLargeCropWindow1) {
@@ -101,11 +106,12 @@ TEST(Image, TooLargeCropWindow1) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, TooLargeCropWindow2) {
@@ -115,11 +121,12 @@ TEST(Image, TooLargeCropWindow2) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, TooLargeCropWindow3) {
@@ -129,11 +136,12 @@ TEST(Image, TooLargeCropWindow3) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: cropwindow");
 }
 
 TEST(Image, BadCropWindow0) {
@@ -143,11 +151,12 @@ TEST(Image, BadCropWindow0) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Invalid values for parameter list: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Invalid values for parameter list: cropwindow");
 }
 
 TEST(Image, BadCropWindow1) {
@@ -157,11 +166,12 @@ TEST(Image, BadCropWindow1) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Invalid values for parameter list: cropwindow");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Invalid values for parameter list: cropwindow");
 }
 
 TEST(Image, Diagonal) {
@@ -171,11 +181,12 @@ TEST(Image, Diagonal) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: diagonal");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: diagonal");
 }
 
 TEST(Image, MaxSampleLuminance) {
@@ -185,11 +196,12 @@ TEST(Image, MaxSampleLuminance) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: maxsampleluminance");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: maxsampleluminance");
 }
 
 TEST(Image, Scale) {
@@ -199,11 +211,12 @@ TEST(Image, Scale) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: scale");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: scale");
 }
 
 TEST(Image, XResolutionNegative) {
@@ -213,11 +226,12 @@ TEST(Image, XResolutionNegative) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: xresolution");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: xresolution");
 }
 
 TEST(Image, XResolutionTooLarge) {
@@ -227,11 +241,12 @@ TEST(Image, XResolutionTooLarge) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: xresolution");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: xresolution");
 }
 
 TEST(Image, YResolutionNegative) {
@@ -241,11 +256,12 @@ TEST(Image, YResolutionNegative) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: yresolution");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: yresolution");
 }
 
 TEST(Image, YResolutionTooLarge) {
@@ -255,11 +271,12 @@ TEST(Image, YResolutionTooLarge) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: yresolution");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: yresolution");
 }
 
 TEST(Image, BadExtension) {
@@ -269,11 +286,12 @@ TEST(Image, BadExtension) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::film::g_image_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported file extension for parameter: filename");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Unsupported file extension for parameter: filename");
 }
 
 TEST(Image, AllParameters) {
@@ -290,8 +308,8 @@ TEST(Image, AllParameters) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::film::g_image_builder, tokenizer, spectrum_manager,
-      texture_manager);
+      *iris::pbrt_frontend::film::g_image_builder, tokenizer,
+      std::filesystem::current_path(), spectrum_manager, texture_manager);
   EXPECT_EQ("iris.pfm", result.filename);
   EXPECT_EQ(250u, result.resolution.first);
   EXPECT_EQ(500u, result.resolution.second);

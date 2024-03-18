@@ -14,7 +14,7 @@ TEST(Diffuse, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result0 = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-      spectrum_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0.first);
   EXPECT_FALSE(result0.second);
@@ -29,7 +29,7 @@ TEST(Diffuse, TooLowSamples) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-          spectrum_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager)),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: samples");
@@ -44,7 +44,7 @@ TEST(Diffuse, TooHighSamples) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-          spectrum_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager)),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: samples");
@@ -60,7 +60,7 @@ TEST(Diffuse, SetsAll) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result0 = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-      spectrum_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0.first);
   EXPECT_TRUE(result0.second);

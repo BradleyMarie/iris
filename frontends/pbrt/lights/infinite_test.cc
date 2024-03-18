@@ -22,7 +22,7 @@ TEST(Infinite, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::lights::g_infinite_builder, tokenizer,
-      spectrum_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       iris::Matrix::Identity());
   EXPECT_TRUE(
@@ -39,7 +39,7 @@ TEST(Infinite, BadScale) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::lights::g_infinite_builder, tokenizer,
-          spectrum_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           iris::Matrix::Identity()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -56,7 +56,7 @@ TEST(Infinite, BadFiletype) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::lights::g_infinite_builder, tokenizer,
-          spectrum_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           iris::Matrix::Identity()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -73,7 +73,7 @@ TEST(Infinite, NoExtension) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::lights::g_infinite_builder, tokenizer,
-          spectrum_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           iris::Matrix::Identity()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -89,7 +89,7 @@ TEST(Infinite, AllSpecifiedEXR) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::lights::g_infinite_builder, tokenizer,
-      spectrum_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       iris::Matrix::Identity());
   EXPECT_TRUE(
@@ -106,7 +106,7 @@ TEST(Infinite, Unimplemented) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::lights::g_infinite_builder, tokenizer,
-          spectrum_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           iris::Matrix::Identity()),
       testing::ExitedWithCode(EXIT_FAILURE),

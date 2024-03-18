@@ -15,7 +15,8 @@ TEST(Orthographic, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   EXPECT_TRUE(result);
 }
 
@@ -25,12 +26,12 @@ TEST(Orthographic, AspectRatioNegative) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: frameaspectratio");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_orthographic_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: frameaspectratio");
 }
 
 TEST(Orthographic, AspectRatioZero) {
@@ -39,12 +40,12 @@ TEST(Orthographic, AspectRatioZero) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
-          spectrum_manager, texture_manager, g_transformation),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: frameaspectratio");
+  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
+                  *iris::pbrt_frontend::cameras::g_orthographic_builder,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, g_transformation),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: frameaspectratio");
 }
 
 TEST(Orthographic, WithXAspectRatio) {
@@ -55,7 +56,8 @@ TEST(Orthographic, WithXAspectRatio) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
@@ -73,7 +75,8 @@ TEST(Orthographic, WithYAspectRatio) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 1u));
@@ -91,7 +94,8 @@ TEST(Orthographic, FromFrameX) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(1u, 2u));
@@ -109,7 +113,8 @@ TEST(Orthographic, FromFrameY) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
-      spectrum_manager, texture_manager, g_transformation);
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
   ASSERT_TRUE(result);
 
   auto camera = result(std::make_pair(2u, 1u));

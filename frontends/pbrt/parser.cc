@@ -30,8 +30,8 @@ bool Parser::AreaLightSource() {
 
   const auto& builder = area_lights::Parse(*tokenizers_.back().tokenizer);
   attributes_.back().emissive_material =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
-                  *texture_manager_, *spectrum_manager_);
+      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_, *spectrum_manager_);
 
   return true;
 }
@@ -79,9 +79,9 @@ bool Parser::Camera() {
   }
 
   const auto& builder = cameras::Parse(*tokenizers_.back().tokenizer);
-  camera_ =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
-                  *texture_manager_, matrix_manager_->Get());
+  camera_ = BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
+                        *spectrum_manager_, *texture_manager_,
+                        matrix_manager_->Get());
 
   camera_encountered_ = true;
 
@@ -103,8 +103,9 @@ bool Parser::Film() {
   }
 
   const auto& builder = film::Parse(*tokenizers_.back().tokenizer);
-  auto result = BuildObject(builder, *tokenizers_.back().tokenizer,
-                            *spectrum_manager_, *texture_manager_);
+  auto result =
+      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_);
 
   image_dimensions_ = result.resolution;
   output_filename_ = result.filename;
@@ -130,7 +131,7 @@ bool Parser::Include() {
 
   std::filesystem::path file_path(*unquoted);
   if (file_path.is_relative()) {
-    file_path = tokenizers_.back().tokenizer->SearchRoot() / file_path;
+    file_path = *search_root_ / file_path;
   }
 
   file_path = std::filesystem::weakly_canonical(file_path);
@@ -143,9 +144,6 @@ bool Parser::Include() {
       exit(EXIT_FAILURE);
     }
   }
-
-  std::filesystem::path search_path = file_path;
-  search_path.remove_filename();
 
   auto file = std::make_unique<std::ifstream>(file_path);
   if (file->fail()) {
@@ -176,8 +174,9 @@ bool Parser::Integrator() {
   }
 
   const auto& builder = integrators::Parse(*tokenizers_.back().tokenizer);
-  auto object = BuildObject(builder, *tokenizers_.back().tokenizer,
-                            *spectrum_manager_, *texture_manager_);
+  auto object =
+      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_);
   integrator_ = std::move(object.integrator);
   light_scene_builder_ = std::move(object.light_scene_builder);
 
@@ -196,7 +195,7 @@ bool Parser::LightSource() {
 
   const auto& builder = lights::Parse(*tokenizers_.back().tokenizer);
   auto light = BuildObject(
-      builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
+      builder, *tokenizers_.back().tokenizer, *search_root_, *spectrum_manager_,
       *texture_manager_, *spectrum_manager_,
       current_object_name_ ? Matrix::Identity() : matrix_manager_->Get().start);
 
@@ -212,8 +211,9 @@ bool Parser::LightSource() {
 }
 
 bool Parser::MakeNamedMaterial() {
-  materials::ParseNamed(*tokenizers_.back().tokenizer, *material_manager_,
-                        *spectrum_manager_, *texture_manager_);
+  materials::ParseNamed(*tokenizers_.back().tokenizer, *search_root_,
+                        *material_manager_, *spectrum_manager_,
+                        *texture_manager_);
   return true;
 }
 
@@ -227,8 +227,8 @@ bool Parser::Material() {
 
   const auto& builder = materials::Parse(*tokenizers_.back().tokenizer);
   attributes_.back().material =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
-                  *texture_manager_, *texture_manager_);
+      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_, *texture_manager_);
 
   return true;
 }
@@ -417,8 +417,9 @@ bool Parser::Sampler() {
   }
 
   const auto& builder = samplers::Parse(*tokenizers_.back().tokenizer);
-  image_sampler_ = BuildObject(builder, *tokenizers_.back().tokenizer,
-                               *spectrum_manager_, *texture_manager_);
+  image_sampler_ =
+      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_);
 
   sampler_encountered_ = true;
 
@@ -433,8 +434,9 @@ bool Parser::Shape() {
   }
 
   auto [shapes, transform] = shapes::Parse(
-      *tokenizers_.back().tokenizer, *spectrum_manager_, *texture_manager_,
-      attributes_.back().material, attributes_.back().emissive_material.first,
+      *tokenizers_.back().tokenizer, *search_root_, *spectrum_manager_,
+      *texture_manager_, attributes_.back().material,
+      attributes_.back().emissive_material.first,
       attributes_.back().emissive_material.second,
       current_object_name_ ? Matrix::Identity() : matrix_manager_->Get().start,
       attributes_.back().reverse_orientation);
@@ -461,8 +463,9 @@ bool Parser::Texture() {
 
   const auto& builder =
       textures::Parse(*tokenizers_.back().tokenizer, texture_name_);
-  BuildObject(builder, *tokenizers_.back().tokenizer, *spectrum_manager_,
-              *texture_manager_, *texture_manager_, *spectrum_manager_,
+  BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
+              *spectrum_manager_, *texture_manager_, *texture_manager_,
+              *spectrum_manager_,
               static_cast<const std::string&>(texture_name_));
 
   return true;
@@ -509,28 +512,31 @@ void Parser::InitializeDefault() {
   std::stringstream empty("");
   iris::pbrt_frontend::Tokenizer empty_tokenizer(empty);
 
-  auto default_film = BuildObject(film::Default(), empty_tokenizer,
-                                  *spectrum_manager_, *texture_manager_);
+  auto default_film =
+      BuildObject(film::Default(), empty_tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_);
   image_dimensions_ = default_film.resolution;
   output_filename_ = default_film.filename;
   write_function_ = std::move(default_film.write_function);
 
-  auto default_integrator = BuildObject(integrators::Default(), empty_tokenizer,
-                                        *spectrum_manager_, *texture_manager_);
+  auto default_integrator =
+      BuildObject(integrators::Default(), empty_tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_);
   integrator_ = std::move(default_integrator.integrator);
   light_scene_builder_ = std::move(default_integrator.light_scene_builder);
 
-  image_sampler_ = BuildObject(samplers::Default(), empty_tokenizer,
-                               *spectrum_manager_, *texture_manager_);
+  image_sampler_ =
+      BuildObject(samplers::Default(), empty_tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_);
 
-  auto default_camera =
-      BuildObject(cameras::Default(), empty_tokenizer, *spectrum_manager_,
-                  *texture_manager_, matrix_manager_->Get());
+  auto default_camera = BuildObject(cameras::Default(), empty_tokenizer,
+                                    *search_root_, *spectrum_manager_,
+                                    *texture_manager_, matrix_manager_->Get());
   camera_ = std::move(default_camera);
 
   auto default_material =
-      BuildObject(materials::Default(), empty_tokenizer, *spectrum_manager_,
-                  *texture_manager_, *texture_manager_);
+      BuildObject(materials::Default(), empty_tokenizer, *search_root_,
+                  *spectrum_manager_, *texture_manager_, *texture_manager_);
   attributes_.emplace_back(
       default_material,
       std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,
@@ -538,7 +544,8 @@ void Parser::InitializeDefault() {
       false);
 }
 
-std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
+std::optional<Parser::Result> Parser::ParseFrom(
+    Tokenizer& tokenizer, const std::filesystem::path& search_root) {
   material_manager_ = std::make_unique<MaterialManager>();
   matrix_manager_ = std::make_unique<MatrixManager>();
   texture_manager_ = std::make_unique<TextureManager>();
@@ -576,6 +583,7 @@ std::optional<Parser::Result> Parser::ParseFrom(Tokenizer& tokenizer) {
       };
 
   tokenizers_.emplace_back(&tokenizer, nullptr, nullptr);
+  search_root_ = &search_root;
 
   InitializeDefault();
 

@@ -10,7 +10,8 @@ TEST(Parse, TooFewParameters) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   EXPECT_EXIT(iris::pbrt_frontend::shapes::Parse(
-                  tokenizer, spectrum_manager, texture_manager, nullptr,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, nullptr,
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::Matrix::Identity(), false),
@@ -25,7 +26,8 @@ TEST(Parse, NotAString) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   EXPECT_EXIT(iris::pbrt_frontend::shapes::Parse(
-                  tokenizer, spectrum_manager, texture_manager, nullptr,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, nullptr,
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::Matrix::Identity(), false),
@@ -40,7 +42,8 @@ TEST(Parse, InvalidType) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
   EXPECT_EXIT(iris::pbrt_frontend::shapes::Parse(
-                  tokenizer, spectrum_manager, texture_manager, nullptr,
+                  tokenizer, std::filesystem::current_path(), spectrum_manager,
+                  texture_manager, nullptr,
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::ReferenceCounted<iris::EmissiveMaterial>(),
                   iris::Matrix::Identity(), false),

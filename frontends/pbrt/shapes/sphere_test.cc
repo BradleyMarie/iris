@@ -16,8 +16,9 @@ TEST(Sphere, Empty) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::shapes::g_sphere_builder, tokenizer,
-      spectrum_manager, texture_manager, material, material, normal, normal,
-      emissive, emissive, iris::Matrix::Identity());
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      material, material, normal, normal, emissive, emissive,
+      iris::Matrix::Identity());
 }
 
 TEST(Sphere, WithRadius) {
@@ -32,6 +33,7 @@ TEST(Sphere, WithRadius) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::shapes::g_sphere_builder, tokenizer,
-      spectrum_manager, texture_manager, material, material, normal, normal,
-      emissive, emissive, iris::Matrix::Identity());
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      material, material, normal, normal, emissive, emissive,
+      iris::Matrix::Identity());
 }

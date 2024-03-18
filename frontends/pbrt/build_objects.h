@@ -1,6 +1,7 @@
 #ifndef _FRONTENDS_PBRT_BUILD_OBJECTS_
 #define _FRONTENDS_PBRT_BUILD_OBJECTS_
 
+#include <filesystem>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -15,18 +16,18 @@ namespace iris::pbrt_frontend {
 
 template <typename T, typename... BuildArgs>
 T BuildObject(const ObjectBuilder<T, BuildArgs...>& builder,
-              Tokenizer& tokenizer, SpectrumManager& spectrum_manager,
+              Tokenizer& tokenizer, const std::filesystem::path& search_root,
+              SpectrumManager& spectrum_manager,
               TextureManager& texture_manager, BuildArgs&&... build_args) {
   std::unordered_set<std::string_view> parameters_parsed;
   std::unordered_map<std::string_view, Parameter> parameters;
 
   ParameterList parameter_list;
   while (parameter_list.ParseFrom(tokenizer)) {
-    auto parameter =
-        builder
-            .Parse(parameter_list, tokenizer.SearchRoot(), spectrum_manager,
-                   texture_manager, parameters_parsed)
-            .value();
+    auto parameter = builder
+                         .Parse(parameter_list, search_root, spectrum_manager,
+                                texture_manager, parameters_parsed)
+                         .value();
     auto name = *parameters_parsed.find(parameter_list.GetName());
     parameters[name] = std::move(parameter);
   }

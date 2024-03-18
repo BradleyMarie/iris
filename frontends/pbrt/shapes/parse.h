@@ -11,8 +11,8 @@
 namespace iris::pbrt_frontend::shapes {
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
-    Tokenizer& tokenizer, SpectrumManager& spectrum_manager,
-    TextureManager& texture_manager,
+    Tokenizer& tokenizer, const std::filesystem::path& search_root,
+    SpectrumManager& spectrum_manager, TextureManager& texture_manager,
     const std::shared_ptr<ObjectBuilder<
         std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
                    ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,

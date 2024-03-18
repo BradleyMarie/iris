@@ -34,5 +34,6 @@ TEST(ObjectBuilder, Success) {
   iris::pbrt_frontend::TextureManager texture_manager;
   EXPECT_EQ(1337,
             iris::pbrt_frontend::BuildObject(
-                object_builder, tokenizer, spectrum_manager, texture_manager));
+                object_builder, tokenizer, std::filesystem::current_path(),
+                spectrum_manager, texture_manager));
 }

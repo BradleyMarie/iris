@@ -12,7 +12,7 @@ TEST(Stratified, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
-      spectrum_manager, texture_manager);
+      std::filesystem::current_path(), spectrum_manager, texture_manager);
   EXPECT_TRUE(result);
 }
 
@@ -23,11 +23,12 @@ TEST(Stratified, TooLowXSamples) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::samplers::g_stratified_builder,
-                  tokenizer, spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: xsamples");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: xsamples");
 }
 
 TEST(Stratified, TooHighXSamples) {
@@ -37,11 +38,12 @@ TEST(Stratified, TooHighXSamples) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::samplers::g_stratified_builder,
-                  tokenizer, spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: xsamples");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: xsamples");
 }
 
 TEST(Stratified, TooLowYSamples) {
@@ -51,11 +53,12 @@ TEST(Stratified, TooLowYSamples) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::samplers::g_stratified_builder,
-                  tokenizer, spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: ysamples");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: ysamples");
 }
 
 TEST(Stratified, TooHighYSamples) {
@@ -65,11 +68,12 @@ TEST(Stratified, TooHighYSamples) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::samplers::g_stratified_builder,
-                  tokenizer, spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: ysamples");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: ysamples");
 }
 
 TEST(Stratified, AllSpecified) {
@@ -83,6 +87,6 @@ TEST(Stratified, AllSpecified) {
 
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::samplers::g_stratified_builder, tokenizer,
-      spectrum_manager, texture_manager);
+      std::filesystem::current_path(), spectrum_manager, texture_manager);
   EXPECT_TRUE(result);
 }

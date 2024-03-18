@@ -12,7 +12,7 @@ TEST(Path, Empty) {
   iris::pbrt_frontend::TextureManager texture_manager;
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-      spectrum_manager, texture_manager);
+      std::filesystem::current_path(), spectrum_manager, texture_manager);
   EXPECT_NE(nullptr, result.integrator.get());
   EXPECT_NE(nullptr, result.light_scene_builder.get());
   EXPECT_FALSE(result.pixel_bounds);
@@ -25,11 +25,12 @@ TEST(Path, TooLowMaxDepth) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: maxdepth");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: maxdepth");
 }
 
 TEST(Path, TooHighMaxDepth) {
@@ -39,11 +40,12 @@ TEST(Path, TooHighMaxDepth) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: maxdepth");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: maxdepth");
 }
 
 TEST(Path, NegativeRrthreshold) {
@@ -53,11 +55,12 @@ TEST(Path, NegativeRrthreshold) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: rrthreshold");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: rrthreshold");
 }
 
 TEST(Path, BadLightSampleStrategy) {
@@ -70,7 +73,7 @@ TEST(Path, BadLightSampleStrategy) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-          spectrum_manager, texture_manager),
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Unsupported value for parameter lightsamplestrategy: aaa");
 }
@@ -82,11 +85,12 @@ TEST(Path, BadPixelBounds) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-                  spectrum_manager, texture_manager),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Negative value in parameter list: pixelbounds");
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
+          std::filesystem::current_path(), spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Negative value in parameter list: pixelbounds");
 }
 
 TEST(Path, AllSpecified) {
@@ -100,7 +104,7 @@ TEST(Path, AllSpecified) {
 
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-      spectrum_manager, texture_manager);
+      std::filesystem::current_path(), spectrum_manager, texture_manager);
   EXPECT_NE(nullptr, result.integrator.get());
   EXPECT_NE(nullptr, result.light_scene_builder.get());
   EXPECT_EQ(1u, result.pixel_bounds.value().at(0));

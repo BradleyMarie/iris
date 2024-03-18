@@ -59,11 +59,11 @@ TEST(ParseNamed, TooFewParameters) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(
-      iris::pbrt_frontend::materials::ParseNamed(
-          tokenizer, material_manager, spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Too few parameters to directive: MakeNamedMaterial");
+  EXPECT_EXIT(iris::pbrt_frontend::materials::ParseNamed(
+                  tokenizer, std::filesystem::current_path(), material_manager,
+                  spectrum_manager, texture_manager),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Too few parameters to directive: MakeNamedMaterial");
 }
 
 TEST(ParseNamed, NotAString) {
@@ -74,11 +74,11 @@ TEST(ParseNamed, NotAString) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(
-      iris::pbrt_frontend::materials::ParseNamed(
-          tokenizer, material_manager, spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Parameter to MakeNamedMaterial must be a string");
+  EXPECT_EXIT(iris::pbrt_frontend::materials::ParseNamed(
+                  tokenizer, std::filesystem::current_path(), material_manager,
+                  spectrum_manager, texture_manager),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Parameter to MakeNamedMaterial must be a string");
 }
 
 TEST(ParseNamed, Duplicated) {
@@ -89,11 +89,11 @@ TEST(ParseNamed, Duplicated) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(
-      iris::pbrt_frontend::materials::ParseNamed(
-          tokenizer, material_manager, spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: A parameter was specified twice: a");
+  EXPECT_EXIT(iris::pbrt_frontend::materials::ParseNamed(
+                  tokenizer, std::filesystem::current_path(), material_manager,
+                  spectrum_manager, texture_manager),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: A parameter was specified twice: a");
 }
 
 TEST(ParseNamed, NoType) {
@@ -104,11 +104,11 @@ TEST(ParseNamed, NoType) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  EXPECT_EXIT(
-      iris::pbrt_frontend::materials::ParseNamed(
-          tokenizer, material_manager, spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Missing required parameter to MakeNamedMaterial: type");
+  EXPECT_EXIT(iris::pbrt_frontend::materials::ParseNamed(
+                  tokenizer, std::filesystem::current_path(), material_manager,
+                  spectrum_manager, texture_manager),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Missing required parameter to MakeNamedMaterial: type");
 }
 
 TEST(ParseNamed, BadType) {
@@ -121,7 +121,8 @@ TEST(ParseNamed, BadType) {
 
   EXPECT_EXIT(
       iris::pbrt_frontend::materials::ParseNamed(
-          tokenizer, material_manager, spectrum_manager, texture_manager),
+          tokenizer, std::filesystem::current_path(), material_manager,
+          spectrum_manager, texture_manager),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Unsupported type for directive MakeNamedMaterial: NotAType");
 }
@@ -136,8 +137,9 @@ TEST(ParseNamed, WithArgs) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  iris::pbrt_frontend::materials::ParseNamed(tokenizer, material_manager,
-                                             spectrum_manager, texture_manager);
+  iris::pbrt_frontend::materials::ParseNamed(
+      tokenizer, std::filesystem::current_path(), material_manager,
+      spectrum_manager, texture_manager);
   EXPECT_NE(nullptr, material_manager.Get("name"));
 }
 
@@ -149,8 +151,9 @@ TEST(ParseNamed, Glass) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  iris::pbrt_frontend::materials::ParseNamed(tokenizer, material_manager,
-                                             spectrum_manager, texture_manager);
+  iris::pbrt_frontend::materials::ParseNamed(
+      tokenizer, std::filesystem::current_path(), material_manager,
+      spectrum_manager, texture_manager);
   EXPECT_NE(nullptr, material_manager.Get("name"));
 }
 
@@ -162,8 +165,9 @@ TEST(ParseNamed, Matte) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  iris::pbrt_frontend::materials::ParseNamed(tokenizer, material_manager,
-                                             spectrum_manager, texture_manager);
+  iris::pbrt_frontend::materials::ParseNamed(
+      tokenizer, std::filesystem::current_path(), material_manager,
+      spectrum_manager, texture_manager);
   EXPECT_NE(nullptr, material_manager.Get("name"));
 }
 
@@ -175,8 +179,9 @@ TEST(ParseNamed, Mirror) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  iris::pbrt_frontend::materials::ParseNamed(tokenizer, material_manager,
-                                             spectrum_manager, texture_manager);
+  iris::pbrt_frontend::materials::ParseNamed(
+      tokenizer, std::filesystem::current_path(), material_manager,
+      spectrum_manager, texture_manager);
   EXPECT_NE(nullptr, material_manager.Get("name"));
 }
 
@@ -188,8 +193,9 @@ TEST(ParseNamed, Plastic) {
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
 
-  iris::pbrt_frontend::materials::ParseNamed(tokenizer, material_manager,
-                                             spectrum_manager, texture_manager);
+  iris::pbrt_frontend::materials::ParseNamed(
+      tokenizer, std::filesystem::current_path(), material_manager,
+      spectrum_manager, texture_manager);
   EXPECT_NE(nullptr, material_manager.Get("name"));
 }
 

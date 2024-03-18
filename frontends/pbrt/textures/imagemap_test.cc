@@ -26,7 +26,8 @@ TEST(Image, Empty) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-          spectrum_manager, texture_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -43,7 +44,8 @@ TEST(Image, BadFiletype) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-          spectrum_manager, texture_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -60,7 +62,8 @@ TEST(Image, NoExtension) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-          spectrum_manager, texture_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -78,7 +81,8 @@ TEST(Image, BadUScale) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-          spectrum_manager, texture_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -96,7 +100,8 @@ TEST(Image, BadVScale) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-          spectrum_manager, texture_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -114,7 +119,8 @@ TEST(Image, BadMapping) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-          spectrum_manager, texture_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -131,7 +137,8 @@ TEST(Image, UVMapping) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       kName);
 }
@@ -147,7 +154,8 @@ TEST(Image, BadWrapping) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-          spectrum_manager, texture_manager, texture_manager,
+          std::filesystem::current_path(), spectrum_manager, texture_manager,
+          texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -164,7 +172,8 @@ TEST(Image, BlackWrapping) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       kName);
 }
@@ -179,7 +188,8 @@ TEST(Image, ClampWrapping) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       kName);
 }
@@ -194,7 +204,8 @@ TEST(Image, RepeatWrapping) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       kName);
 }
@@ -215,7 +226,8 @@ TEST(Image, FloatAllParams) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       kName);
 }
@@ -231,7 +243,8 @@ TEST(Image, SpectrumBadScale) {
   EXPECT_EXIT(
       iris::pbrt_frontend::BuildObject(
           *iris::pbrt_frontend::textures::g_spectrum_imagemap_builder,
-          tokenizer, spectrum_manager, texture_manager, texture_manager,
+          tokenizer, std::filesystem::current_path(), spectrum_manager,
+          texture_manager, texture_manager,
           static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
           kName),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -254,7 +267,8 @@ TEST(Image, SpectrumAllParams) {
 
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_spectrum_imagemap_builder, tokenizer,
-      spectrum_manager, texture_manager, texture_manager,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      texture_manager,
       static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
       kName);
 }

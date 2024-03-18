@@ -21,7 +21,8 @@ const ObjectBuilder<
     TextureManager&>&
 Parse(Tokenizer& tokenizer);
 
-void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
+void ParseNamed(Tokenizer& tokenizer, const std::filesystem::path& search_root,
+                MaterialManager& material_manager,
                 SpectrumManager& spectrum_manager,
                 TextureManager& texture_manager);
 
