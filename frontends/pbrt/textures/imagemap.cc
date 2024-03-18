@@ -16,17 +16,19 @@ namespace {
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_float_parameters = {
         {"filename", Parameter::FILE_PATH}, {"gamma", Parameter::BOOL},
-        {"scale", Parameter::FLOAT},        {"udelta", Parameter::FLOAT},
-        {"uscale", Parameter::FLOAT},       {"vdelta", Parameter::FLOAT},
-        {"vscale", Parameter::FLOAT},       {"wrap", Parameter::STRING},
+        {"mapping", Parameter::STRING},     {"scale", Parameter::FLOAT},
+        {"udelta", Parameter::FLOAT},       {"uscale", Parameter::FLOAT},
+        {"vdelta", Parameter::FLOAT},       {"vscale", Parameter::FLOAT},
+        {"wrap", Parameter::STRING},
 };
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_spectrum_parameters = {
         {"filename", Parameter::FILE_PATH}, {"gamma", Parameter::BOOL},
-        {"scale", Parameter::FLOAT},        {"udelta", Parameter::FLOAT},
-        {"uscale", Parameter::FLOAT},       {"vdelta", Parameter::FLOAT},
-        {"vscale", Parameter::FLOAT},       {"wrap", Parameter::STRING},
+        {"mapping", Parameter::STRING},     {"scale", Parameter::FLOAT},
+        {"udelta", Parameter::FLOAT},       {"uscale", Parameter::FLOAT},
+        {"vdelta", Parameter::FLOAT},       {"vscale", Parameter::FLOAT},
+        {"wrap", Parameter::STRING},
 };
 
 visual_t InverseGamma(visual_t value) {
@@ -62,9 +64,26 @@ ImageWrapping ParseImageWrapping(const std::string& value) {
   exit(EXIT_FAILURE);
 }
 
+enum class TextureMapping {
+  CYLINDRICAL,
+  PLANAR,
+  SPHERICAL,
+  UV,
+};
+
+TextureMapping ParseTextureMapping(const std::string& value) {
+  if (value == "uv") {
+    return TextureMapping::UV;
+  }
+
+  std::cerr << "ERROR: Out of range value for parameter: mapping" << std::endl;
+  exit(EXIT_FAILURE);
+}
+
 struct Parameters {
   std::filesystem::path filename;
   float gamma = 2.2;
+  TextureMapping mapping = TextureMapping::UV;
   visual_t scale = 1.0;
   geometric u_delta = 0.0;
   geometric u_scale = 1.0;
@@ -85,6 +104,12 @@ Parameters ParseParameters(
   }
 
   result.filename = filename_iter->second.GetFilePaths().front();
+
+  auto mapping_iter = parameters.find("mapping");
+  if (mapping_iter != parameters.end()) {
+    result.mapping =
+        ParseTextureMapping(mapping_iter->second.GetStringValues().front());
+  }
 
   auto scale_iter = parameters.find("scale");
   if (scale_iter != parameters.end()) {

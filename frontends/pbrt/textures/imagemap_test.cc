@@ -103,6 +103,39 @@ TEST(Image, BadVScale) {
       "ERROR: Out of range value for parameter: vscale");
 }
 
+TEST(Image, BadMapping) {
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"string mapping\" \"abc\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  EXPECT_EXIT(
+      iris::pbrt_frontend::BuildObject(
+          *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
+          spectrum_manager, texture_manager, texture_manager,
+          static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+          kName),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: mapping");
+}
+
+TEST(Image, UVMapping) {
+  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
+                          " \"string mapping\" \"uv\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
+      spectrum_manager, texture_manager, texture_manager,
+      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
+      kName);
+}
+
 TEST(Image, BadWrapping) {
   std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
                           " \"string wrap\" \"abc\"");
