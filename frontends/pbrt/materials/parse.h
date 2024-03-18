@@ -15,8 +15,8 @@ namespace iris::pbrt_frontend::materials {
 
 const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>&
 Parse(Tokenizer& tokenizer);
@@ -27,8 +27,8 @@ void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
 
 const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>&
 Default();

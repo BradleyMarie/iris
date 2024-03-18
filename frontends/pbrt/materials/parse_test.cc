@@ -27,6 +27,12 @@ TEST(Parse, InvalidType) {
               "ERROR: Unsupported type for directive Material: NotAType");
 }
 
+TEST(Parse, Glass) {
+  std::stringstream input("\"glass\"");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::materials::Parse(tokenizer);
+}
+
 TEST(Parse, Matte) {
   std::stringstream input("\"matte\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -124,6 +130,19 @@ TEST(ParseNamed, WithArgs) {
   std::stringstream input(
       "\"name\" \"string type\" \"matte\" \"float Kd\" 1.0 \"float sigma\" "
       "1.0");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::MaterialManager material_manager;
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+
+  iris::pbrt_frontend::materials::ParseNamed(tokenizer, material_manager,
+                                             spectrum_manager, texture_manager);
+  EXPECT_NE(nullptr, material_manager.Get("name"));
+}
+
+TEST(ParseNamed, Glass) {
+  std::stringstream input("\"name\" \"string type\" \"glass\"");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::MaterialManager material_manager;

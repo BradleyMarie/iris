@@ -15,6 +15,7 @@ static const std::unordered_map<
     const std::unique_ptr<const ObjectBuilder<
         std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
         const ReferenceCounted<iris::Material>&,
+        const ReferenceCounted<iris::Material>&,
         const ReferenceCounted<iris::NormalMap>&,
         const ReferenceCounted<iris::NormalMap>&,
         const ReferenceCounted<EmissiveMaterial>&,
@@ -29,8 +30,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
     Tokenizer& tokenizer, SpectrumManager& spectrum_manager,
     TextureManager& texture_manager,
     const std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>& material_builder,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
@@ -82,16 +83,16 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
   auto material = material_builder->Build(material_parameters, texture_manager);
 
   if (reverse_orientation) {
-    return iter->second->Build(shape_parameters, std::get<0>(material),
-                               std::get<2>(material), std::get<1>(material),
-                               back_emissive_material, front_emissive_material,
-                               model_to_world);
+    return iter->second->Build(shape_parameters, std::get<1>(material),
+                               std::get<0>(material), std::get<3>(material),
+                               std::get<2>(material), back_emissive_material,
+                               front_emissive_material, model_to_world);
   }
 
   return iter->second->Build(shape_parameters, std::get<0>(material),
                              std::get<1>(material), std::get<2>(material),
-                             front_emissive_material, back_emissive_material,
-                             model_to_world);
+                             std::get<3>(material), front_emissive_material,
+                             back_emissive_material, model_to_world);
 }
 
 }  // namespace iris::pbrt_frontend::shapes

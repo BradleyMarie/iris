@@ -26,8 +26,8 @@ TEST(PlyMesh, NoIndices) {
 
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
-                  spectrum_manager, texture_manager, material, normal, normal,
-                  emissive, emissive, iris::Matrix::Identity()),
+                  spectrum_manager, texture_manager, material, material, normal,
+                  normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing required plymesh parameter: filename");
 }
@@ -44,8 +44,8 @@ TEST(PlyMesh, Empty) {
 
   EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
                   *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
-                  spectrum_manager, texture_manager, material, normal, normal,
-                  emissive, emissive, iris::Matrix::Identity()),
+                  spectrum_manager, texture_manager, material, material, normal,
+                  normal, emissive, emissive, iris::Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: PLY file parsing failed with message: The first line of "
               "the input must exactly contain the magic string");
@@ -63,8 +63,8 @@ TEST(PlyMesh, Quads) {
 
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
-      spectrum_manager, texture_manager, material, normal, normal, emissive,
-      emissive, iris::Matrix::Identity());
+      spectrum_manager, texture_manager, material, material, normal, normal,
+      emissive, emissive, iris::Matrix::Identity());
   EXPECT_EQ(12u, result.first.size());
 }
 
@@ -81,7 +81,7 @@ TEST(PlyMesh, Triangles) {
 
   auto result = iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
-      spectrum_manager, texture_manager, material, normal, normal, emissive,
-      emissive, iris::Matrix::Identity());
+      spectrum_manager, texture_manager, material, material, normal, normal,
+      emissive, emissive, iris::Matrix::Identity());
   EXPECT_EQ(4u, result.first.size());
 }

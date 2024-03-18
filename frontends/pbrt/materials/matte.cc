@@ -20,17 +20,18 @@ static const std::unordered_map<std::string_view, Parameter::Type>
 
 class MatteObjectBuilder
     : public ObjectBuilder<
-          std::shared_ptr<ObjectBuilder<std::tuple<ReferenceCounted<Material>,
-                                                   ReferenceCounted<NormalMap>,
-                                                   ReferenceCounted<NormalMap>>,
-                                        TextureManager&>>,
+          std::shared_ptr<ObjectBuilder<
+              std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                         ReferenceCounted<NormalMap>,
+                         ReferenceCounted<NormalMap>>,
+              TextureManager&>>,
           TextureManager&> {
  public:
   MatteObjectBuilder() noexcept : ObjectBuilder(g_parameters) {}
 
   std::shared_ptr<ObjectBuilder<
-      std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                 ReferenceCounted<NormalMap>>,
+      std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                 ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
       TextureManager&>>
   Build(const std::unordered_map<std::string_view, Parameter>& parameters,
         TextureManager& texture_manager) const override;
@@ -38,8 +39,8 @@ class MatteObjectBuilder
 
 class NestedMatteObjectBuilder
     : public ObjectBuilder<
-          std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                     ReferenceCounted<NormalMap>>,
+          std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                     ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
           TextureManager&> {
  public:
   NestedMatteObjectBuilder(
@@ -58,8 +59,8 @@ class NestedMatteObjectBuilder
                                                                        sigma_),
             std::move(front_normal_map), std::move(back_normal_map))) {}
 
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-             ReferenceCounted<NormalMap>>
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+             ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
   Build(const std::unordered_map<std::string_view, Parameter>& parameters,
         TextureManager& texture_manager) const override;
 
@@ -74,8 +75,8 @@ class NestedMatteObjectBuilder
 };
 
 std::shared_ptr<ObjectBuilder<
-    std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-               ReferenceCounted<NormalMap>>,
+    std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+               ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
     TextureManager&>>
 MatteObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
@@ -109,13 +110,14 @@ MatteObjectBuilder::Build(
       std::move(front_normal_map), std::move(back_normal_map));
 }
 
-std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-           ReferenceCounted<NormalMap>>
+std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+           ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
 NestedMatteObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
   if (parameters.empty()) {
-    return default_;
+    return std::make_tuple(std::get<0>(default_), std::get<0>(default_),
+                           std::get<1>(default_), std::get<2>(default_));
   }
 
   auto diffuse_texture = diffuse_;
@@ -140,18 +142,19 @@ NestedMatteObjectBuilder::Build(
     back_normal_map = normal_maps.second;
   }
 
-  return std::make_tuple(
-      iris::MakeReferenceCounted<iris::materials::MatteMaterial>(
-          std::move(diffuse_texture), std::move(sigma_texture)),
-      std::move(front_normal_map), std::move(back_normal_map));
+  auto material = iris::MakeReferenceCounted<iris::materials::MatteMaterial>(
+      std::move(diffuse_texture), std::move(sigma_texture));
+
+  return std::make_tuple(material, material, std::move(front_normal_map),
+                         std::move(back_normal_map));
 }
 
 }  // namespace
 
 const std::unique_ptr<const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>>
     g_matte_builder = std::make_unique<MatteObjectBuilder>();

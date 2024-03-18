@@ -20,14 +20,16 @@ TEST(Matte, Empty) {
   auto result1 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
-  EXPECT_FALSE(std::get<1>(result1));
+  EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
+  EXPECT_FALSE(std::get<3>(result1));
 
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_EQ(std::get<0>(result1), std::get<0>(result1));
-  EXPECT_FALSE(std::get<1>(result1));
-  EXPECT_FALSE(std::get<2>(result1));
+  EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
+  EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
+  EXPECT_FALSE(std::get<2>(result2));
+  EXPECT_FALSE(std::get<3>(result2));
 }
 
 TEST(Matte, WithDefaults) {
@@ -46,12 +48,14 @@ TEST(Matte, WithDefaults) {
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_TRUE(std::get<2>(result1));
+  EXPECT_TRUE(std::get<3>(result1));
 
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer, spectrum_manager, texture_manager, texture_manager);
-  EXPECT_EQ(std::get<0>(result1), std::get<0>(result1));
-  EXPECT_TRUE(std::get<1>(result1));
-  EXPECT_TRUE(std::get<2>(result1));
+  EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
+  EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
+  EXPECT_TRUE(std::get<2>(result2));
+  EXPECT_TRUE(std::get<3>(result2));
 }
 
 TEST(Matte, OverridesDefaults) {
@@ -68,8 +72,9 @@ TEST(Matte, OverridesDefaults) {
   auto result1 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer0, spectrum_manager, texture_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
-  EXPECT_FALSE(std::get<1>(result1));
+  EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
+  EXPECT_FALSE(std::get<3>(result1));
 
   std::stringstream input1("\"float Kr\" 1.0 \"float bumpmap\" 0.5");
   iris::pbrt_frontend::Tokenizer tokenizer1(input1);
@@ -77,6 +82,7 @@ TEST(Matte, OverridesDefaults) {
   auto result2 = iris::pbrt_frontend::BuildObject(
       *result0, tokenizer1, spectrum_manager, texture_manager, texture_manager);
   EXPECT_NE(std::get<0>(result1), std::get<0>(result2));
-  EXPECT_TRUE(std::get<1>(result2));
+  EXPECT_NE(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));
+  EXPECT_TRUE(std::get<3>(result2));
 }

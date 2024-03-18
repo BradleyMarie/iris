@@ -17,6 +17,7 @@ class TriangleMeshBuilder
     : public ObjectBuilder<
           std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
           const ReferenceCounted<iris::Material>&,
+          const ReferenceCounted<iris::Material>&,
           const ReferenceCounted<iris::NormalMap>&,
           const ReferenceCounted<iris::NormalMap>&,
           const ReferenceCounted<EmissiveMaterial>&,
@@ -26,7 +27,8 @@ class TriangleMeshBuilder
 
   std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const ReferenceCounted<iris::Material>& material,
+      const ReferenceCounted<iris::Material>& front_material,
+      const ReferenceCounted<iris::Material>& back_material,
       const ReferenceCounted<iris::NormalMap>& front_normal_map,
       const ReferenceCounted<iris::NormalMap>& back_normal_map,
       const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
@@ -37,7 +39,8 @@ class TriangleMeshBuilder
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>
 TriangleMeshBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const ReferenceCounted<iris::Material>& material,
+    const ReferenceCounted<iris::Material>& front_material,
+    const ReferenceCounted<iris::Material>& back_material,
     const ReferenceCounted<iris::NormalMap>& front_normal_map,
     const ReferenceCounted<iris::NormalMap>& back_normal_map,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
@@ -137,9 +140,9 @@ TriangleMeshBuilder::Build(
   }
 
   auto triangles = iris::geometry::AllocateTriangleMesh(
-      points, indices, normals, uvs, std::move(alpha_mask), material, material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      points, indices, normals, uvs, std::move(alpha_mask), front_material,
+      back_material, front_emissive_material, back_emissive_material,
+      front_normal_map, back_normal_map);
 
   return std::make_pair(std::move(triangles), Matrix::Identity());
 }
@@ -148,6 +151,7 @@ TriangleMeshBuilder::Build(
 
 extern const std::unique_ptr<const ObjectBuilder<
     std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
+    const ReferenceCounted<iris::Material>&,
     const ReferenceCounted<iris::Material>&,
     const ReferenceCounted<iris::NormalMap>&,
     const ReferenceCounted<iris::NormalMap>&,

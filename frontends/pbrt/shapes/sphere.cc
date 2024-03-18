@@ -14,6 +14,7 @@ class SphereBuilder
     : public ObjectBuilder<
           std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
           const ReferenceCounted<iris::Material>&,
+          const ReferenceCounted<iris::Material>&,
           const ReferenceCounted<iris::NormalMap>&,
           const ReferenceCounted<iris::NormalMap>&,
           const ReferenceCounted<EmissiveMaterial>&,
@@ -23,7 +24,8 @@ class SphereBuilder
 
   std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const ReferenceCounted<iris::Material>& material,
+      const ReferenceCounted<iris::Material>& front_material,
+      const ReferenceCounted<iris::Material>& back_material,
       const ReferenceCounted<iris::NormalMap>& front_normal_map,
       const ReferenceCounted<iris::NormalMap>& back_normal_map,
       const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
@@ -33,7 +35,8 @@ class SphereBuilder
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> SphereBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const ReferenceCounted<iris::Material>& material,
+    const ReferenceCounted<iris::Material>& front_material,
+    const ReferenceCounted<iris::Material>& back_material,
     const ReferenceCounted<iris::NormalMap>& front_normal_map,
     const ReferenceCounted<iris::NormalMap>& back_normal_map,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
@@ -52,8 +55,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> SphereBuilder::Build(
   }
 
   auto sphere = iris::geometry::AllocateSphere(
-      Point(0.0, 0.0, 0.0), radius, material, material, front_emissive_material,
-      back_emissive_material, front_normal_map, back_normal_map);
+      Point(0.0, 0.0, 0.0), radius, front_material, back_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
 
   return std::make_pair(std::vector<ReferenceCounted<Geometry>>({sphere}),
                         model_to_world);
@@ -63,6 +67,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> SphereBuilder::Build(
 
 extern const std::unique_ptr<const ObjectBuilder<
     std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
+    const ReferenceCounted<iris::Material>&,
     const ReferenceCounted<iris::Material>&,
     const ReferenceCounted<iris::NormalMap>&,
     const ReferenceCounted<iris::NormalMap>&,

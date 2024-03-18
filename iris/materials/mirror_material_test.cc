@@ -9,6 +9,19 @@
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
 
+TEST(MirrorMaterialTest, EvaluateEmpty) {
+  auto reflectance =
+      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
+          iris::Reflector, iris::SpectralAllocator>>(
+          iris::ReferenceCounted<iris::Reflector>());
+  iris::materials::MirrorMaterial material(std::move(reflectance));
+
+  ASSERT_FALSE(
+      material.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        iris::testing::GetSpectralAllocator(),
+                        iris::testing::GetBxdfAllocator()));
+}
+
 TEST(MirrorMaterialTest, Evaluate) {
   auto reflector =
       iris::MakeReferenceCounted<iris::reflectors::MockReflector>();

@@ -14,8 +14,8 @@ namespace iris::pbrt_frontend::materials {
 
 extern const std::unique_ptr<const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>>
     g_mirror_builder;

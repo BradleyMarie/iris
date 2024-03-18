@@ -6,6 +6,7 @@
 class TestObjectBuilder
     : public iris::pbrt_frontend::ObjectBuilder<
           std::tuple<iris::ReferenceCounted<iris::Material>,
+                     iris::ReferenceCounted<iris::Material>,
                      iris::ReferenceCounted<iris::NormalMap>,
                      iris::ReferenceCounted<iris::NormalMap>>,
           iris::pbrt_frontend::TextureManager&> {
@@ -13,15 +14,17 @@ class TestObjectBuilder
   TestObjectBuilder() : ObjectBuilder({}) {}
 
   std::tuple<iris::ReferenceCounted<iris::Material>,
+             iris::ReferenceCounted<iris::Material>,
              iris::ReferenceCounted<iris::NormalMap>,
              iris::ReferenceCounted<iris::NormalMap>>
   Build(const std::unordered_map<std::string_view,
                                  iris::pbrt_frontend::Parameter>& parameters,
         iris::pbrt_frontend::TextureManager& texture_manager) const override {
-    iris::ReferenceCounted<iris::Material> material;
+    iris::ReferenceCounted<iris::Material> material0;
+    iris::ReferenceCounted<iris::Material> material1;
     iris::ReferenceCounted<iris::NormalMap> normal_map0;
     iris::ReferenceCounted<iris::NormalMap> normal_map1;
-    return {material, normal_map0, normal_map1};
+    return {material0, material1, normal_map0, normal_map1};
   }
 };
 

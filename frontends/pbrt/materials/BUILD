@@ -25,6 +25,32 @@ cc_test(
 )
 
 cc_library(
+    name = "glass",
+    srcs = ["glass.cc"],
+    hdrs = ["glass.h"],
+    deps = [
+        ":bumpmap",
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:texture_manager",
+        "//iris:material",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris/materials:glass_material",
+    ],
+)
+
+cc_test(
+    name = "glass_test",
+    srcs = ["glass_test.cc"],
+    deps = [
+        ":glass",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "matte",
     srcs = ["matte.cc"],
     hdrs = ["matte.h"],
@@ -82,6 +108,7 @@ cc_library(
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":glass",
         ":matte",
         ":mirror",
         ":plastic",

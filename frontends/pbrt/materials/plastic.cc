@@ -22,17 +22,18 @@ static const std::unordered_map<std::string_view, Parameter::Type>
 
 class PlasticObjectBuilder
     : public ObjectBuilder<
-          std::shared_ptr<ObjectBuilder<std::tuple<ReferenceCounted<Material>,
-                                                   ReferenceCounted<NormalMap>,
-                                                   ReferenceCounted<NormalMap>>,
-                                        TextureManager&>>,
+          std::shared_ptr<ObjectBuilder<
+              std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                         ReferenceCounted<NormalMap>,
+                         ReferenceCounted<NormalMap>>,
+              TextureManager&>>,
           TextureManager&> {
  public:
   PlasticObjectBuilder() noexcept : ObjectBuilder(g_parameters) {}
 
   std::shared_ptr<ObjectBuilder<
-      std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                 ReferenceCounted<NormalMap>>,
+      std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                 ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
       TextureManager&>>
   Build(const std::unordered_map<std::string_view, Parameter>& parameters,
         TextureManager& texture_manager) const override;
@@ -40,8 +41,8 @@ class PlasticObjectBuilder
 
 class NestedPlasticObjectBuilder
     : public ObjectBuilder<
-          std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                     ReferenceCounted<NormalMap>>,
+          std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                     ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
           TextureManager&> {
  public:
   NestedPlasticObjectBuilder(
@@ -65,8 +66,8 @@ class NestedPlasticObjectBuilder
                 diffuse_, specular_, roughness_, remap_roughness_),
             front_bump, back_bump)) {}
 
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-             ReferenceCounted<NormalMap>>
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+             ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
   Build(const std::unordered_map<std::string_view, Parameter>& parameters,
         TextureManager& texture_manager) const override;
 
@@ -86,8 +87,8 @@ class NestedPlasticObjectBuilder
 };
 
 std::shared_ptr<ObjectBuilder<
-    std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-               ReferenceCounted<NormalMap>>,
+    std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+               ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
     TextureManager&>>
 PlasticObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
@@ -135,13 +136,14 @@ PlasticObjectBuilder::Build(
       std::move(front_normal_map), std::move(back_normal_map));
 }
 
-std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-           ReferenceCounted<NormalMap>>
+std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+           ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
 NestedPlasticObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
   if (parameters.empty()) {
-    return default_;
+    return std::make_tuple(std::get<0>(default_), std::get<0>(default_),
+                           std::get<1>(default_), std::get<2>(default_));
   }
 
   auto diffuse_texture = diffuse_;
@@ -178,19 +180,20 @@ NestedPlasticObjectBuilder::Build(
     back_normal_map = normal_maps.second;
   }
 
-  return std::make_tuple(
-      iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
-          std::move(diffuse_texture), std::move(specular_texture),
-          std::move(roughness_texture), remap_roughness),
-      std::move(front_normal_map), std::move(back_normal_map));
+  auto material = iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
+      std::move(diffuse_texture), std::move(specular_texture),
+      std::move(roughness_texture), remap_roughness);
+
+  return std::make_tuple(material, material, std::move(front_normal_map),
+                         std::move(back_normal_map));
 }
 
 }  // namespace
 
 const std::unique_ptr<const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>>
     g_plastic_builder = std::make_unique<PlasticObjectBuilder>();

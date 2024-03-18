@@ -1,5 +1,5 @@
-#ifndef _FRONTENDS_PBRT_MATERIALS_PLASTIC_
-#define _FRONTENDS_PBRT_MATERIALS_PLASTIC_
+#ifndef _FRONTENDS_PBRT_MATERIALS_GLASS_
+#define _FRONTENDS_PBRT_MATERIALS_GLASS_
 
 #include <memory>
 #include <tuple>
@@ -18,8 +18,8 @@ extern const std::unique_ptr<const ObjectBuilder<
                    ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>>
-    g_plastic_builder;
+    g_glass_builder;
 
 }  // namespace iris::pbrt_frontend::materials
 
-#endif  // _FRONTENDS_PBRT_MATERIALS_PLASTIC_
+#endif  // _FRONTENDS_PBRT_MATERIALS_GLASS_

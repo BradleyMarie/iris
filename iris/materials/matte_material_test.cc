@@ -11,6 +11,23 @@
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
 
+TEST(MatteMaterialTest, EvaluateEmpty) {
+  auto reflectance =
+      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
+          iris::Reflector, iris::SpectralAllocator>>(
+          iris::ReferenceCounted<iris::Reflector>());
+  auto sigma = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.0));
+  iris::materials::MatteMaterial material(std::move(reflectance),
+                                          std::move(sigma));
+
+  ASSERT_FALSE(
+      material.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        iris::testing::GetSpectralAllocator(),
+                        iris::testing::GetBxdfAllocator()));
+}
+
 TEST(MatteMaterialTest, Evaluate) {
   auto reflector =
       iris::MakeReferenceCounted<iris::reflectors::MockReflector>();

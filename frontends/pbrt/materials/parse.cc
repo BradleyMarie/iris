@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "frontends/pbrt/materials/glass.h"
 #include "frontends/pbrt/materials/matte.h"
 #include "frontends/pbrt/materials/mirror.h"
 #include "frontends/pbrt/materials/plastic.h"
@@ -16,11 +17,13 @@ static const std::unordered_map<
     std::string_view,
     const std::unique_ptr<const ObjectBuilder<
         std::shared_ptr<ObjectBuilder<
-            std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+            std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                       ReferenceCounted<NormalMap>,
                        ReferenceCounted<NormalMap>>,
             TextureManager&>>,
         TextureManager&>>&>
-    g_materials = {{"matte", g_matte_builder},
+    g_materials = {{"glass", g_glass_builder},
+                   {"matte", g_matte_builder},
                    {"mirror", g_mirror_builder},
                    {"plastic", g_plastic_builder}};
 
@@ -28,8 +31,8 @@ static const std::unordered_map<
 
 const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>&
 Parse(Tokenizer& tokenizer) {
@@ -130,8 +133,8 @@ void ParseNamed(Tokenizer& tokenizer, MaterialManager& material_manager,
 
 const ObjectBuilder<
     std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-                   ReferenceCounted<NormalMap>>,
+        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
         TextureManager&>>,
     TextureManager&>&
 Default() {
