@@ -278,6 +278,28 @@ TEST(MatrixManager, Transform) {
             matrix_manager.Get().start);
 }
 
+TEST(MatrixManager, TransformWithBrackets) {
+  std::stringstream input("Transform [ 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1 ]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::MatrixManager matrix_manager;
+  EXPECT_TRUE(matrix_manager.TryParse(tokenizer));
+
+  EXPECT_EQ(iris::Matrix::Scalar(2.0, 2.0, 2.0).value(),
+            matrix_manager.Get().start);
+}
+
+TEST(MatrixManager, TransformNotTerminated) {
+  std::stringstream input("Transform [ 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::MatrixManager matrix_manager;
+
+  EXPECT_EXIT(matrix_manager.TryParse(tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unterminated parameter list for Transform directive");
+}
+
 TEST(MatrixManager, ConcatTransformNotInvertible) {
   std::stringstream input("ConcatTransform 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -298,6 +320,29 @@ TEST(MatrixManager, ConcatTransform) {
 
   EXPECT_EQ(iris::Matrix::Scalar(2.0, 2.0, 2.0).value(),
             matrix_manager.Get().start);
+}
+
+TEST(MatrixManager, ConcatTransformWithBrackets) {
+  std::stringstream input(
+      "ConcatTransform [ 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1 ]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::MatrixManager matrix_manager;
+  EXPECT_TRUE(matrix_manager.TryParse(tokenizer));
+
+  EXPECT_EQ(iris::Matrix::Scalar(2.0, 2.0, 2.0).value(),
+            matrix_manager.Get().start);
+}
+
+TEST(MatrixManager, ConcatTransformNotTerminated) {
+  std::stringstream input("ConcatTransform [ 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::MatrixManager matrix_manager;
+
+  EXPECT_EXIT(
+      matrix_manager.TryParse(tokenizer), testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Unterminated parameter list for ConcatTransform directive");
 }
 
 TEST(MatrixManager, CoordinateSystemBad) {

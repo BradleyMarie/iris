@@ -14,9 +14,26 @@
 namespace iris::pbrt_frontend {
 namespace {
 
+bool MaybeConsumeBracket(Tokenizer& tokenizer) {
+  auto next_token = tokenizer.Peek();
+  if (!next_token) {
+    return false;
+  }
+
+  if (next_token != "[") {
+    return false;
+  }
+
+  tokenizer.Next();
+
+  return true;
+}
+
 template <size_t N>
 std::array<geometric, N> ParseFloats(Tokenizer& tokenizer,
                                      std::string_view type_name) {
+  bool bracketed = MaybeConsumeBracket(tokenizer);
+
   std::array<geometric, N> result;
   for (size_t i = 0; i < N; i++) {
     auto token = tokenizer.Next();
@@ -39,6 +56,16 @@ std::array<geometric, N> ParseFloats(Tokenizer& tokenizer,
       exit(EXIT_FAILURE);
     }
   }
+
+  if (bracketed) {
+    auto token = tokenizer.Next();
+    if (!token || *token != "]") {
+      std::cerr << "ERROR: Unterminated parameter list for " << type_name
+                << " directive" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+
   return result;
 }
 
