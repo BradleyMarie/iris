@@ -37,6 +37,7 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:spectral_allocator",
+        "//iris/bxdfs/internal:math",
         "//iris/reflectors:uniform_reflector",
     ],
 )
@@ -161,5 +162,35 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:vector",
         "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "specular_bxdf",
+    srcs = ["specular_bxdf.cc"],
+    hdrs = ["specular_bxdf.h"],
+    deps = [
+        ":fresnel",
+        ":math",
+        "//iris:bxdf",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+        "//iris/bxdfs/internal:math",
+    ],
+)
+
+cc_test(
+    name = "specular_bxdf_test",
+    srcs = ["specular_bxdf_test.cc"],
+    deps = [
+        ":specular_bxdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/reflectors:uniform_reflector",
+        "//iris/testing:spectral_allocator",
+        "@com_google_googletest//:gtest_main",
     ],
 )
