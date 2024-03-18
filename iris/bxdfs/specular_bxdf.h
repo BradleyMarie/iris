@@ -60,14 +60,8 @@ class SpecularBrdf final : public Bxdf {
       return nullptr;
     }
 
-    // TODO: Rework Fresnel interface so that MirrorBrdf can be dropped for this
-    const Reflector* fresnel =
-        fresnel_.Evaluate(internal::CosTheta(outgoing), allocator);
-    const Reflector* reflectance =
-        allocator.Scale(&reflectance_, static_cast<visual_t>(1.0) /
-                                           internal::AbsCosTheta(outgoing));
-
-    return allocator.Scale(reflectance, fresnel);
+    return fresnel_.AttenuateReflectance(
+        reflectance_, internal::CosTheta(outgoing), allocator);
   }
 
  private:
@@ -143,9 +137,8 @@ class SpecularBtdf final : public Bxdf {
       return nullptr;
     }
 
-    const Reflector* fresnel =
-        fresnel_.Complement(internal::CosTheta(outgoing), allocator);
-    const Reflector* transmittance = allocator.Scale(&transmittance_, fresnel);
+    const Reflector* transmittance = fresnel_.AttenuateTransmittance(
+        transmittance_, internal::CosTheta(outgoing), allocator);
 
     geometric_t attenuation =
         eta_incident_over_transmitted_ * eta_incident_over_transmitted_;

@@ -30,15 +30,14 @@ class TestMicrofacetDistribution final
 
 class TestReflectionFresnel final : public iris::bxdfs::Fresnel {
  public:
-  const iris::Reflector* Evaluate(
-      iris::visual_t cos_theta_incident,
+  const iris::Reflector* AttenuateReflectance(
+      const iris::Reflector& reflectance, iris::visual_t cos_theta_incident,
       iris::SpectralAllocator& allocator) const override {
-    static const iris::reflectors::UniformReflector perfect_reflector(1.0);
-    return &perfect_reflector;
+    return &reflectance;
   }
 
-  const iris::Reflector* Complement(
-      iris::visual_t cos_theta_incident,
+  const iris::Reflector* AttenuateTransmittance(
+      const iris::Reflector& transmittance, iris::visual_t cos_theta_incident,
       iris::SpectralAllocator& allocator) const override {
     return nullptr;
   }
@@ -46,17 +45,16 @@ class TestReflectionFresnel final : public iris::bxdfs::Fresnel {
 
 class TestTransmissionFresnel final : public iris::bxdfs::Fresnel {
  public:
-  const iris::Reflector* Evaluate(
-      iris::visual_t cos_theta_incident,
+  const iris::Reflector* AttenuateReflectance(
+      const iris::Reflector& reflectance, iris::visual_t cos_theta_incident,
       iris::SpectralAllocator& allocator) const override {
     return nullptr;
   }
 
-  const iris::Reflector* Complement(
-      iris::visual_t cos_theta_incident,
+  const iris::Reflector* AttenuateTransmittance(
+      const iris::Reflector& transmittance, iris::visual_t cos_theta_incident,
       iris::SpectralAllocator& allocator) const override {
-    static const iris::reflectors::UniformReflector perfect_reflector(1.0);
-    return &perfect_reflector;
+    return &transmittance;
   }
 };
 

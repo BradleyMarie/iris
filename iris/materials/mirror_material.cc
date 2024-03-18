@@ -1,6 +1,6 @@
 #include "iris/materials/mirror_material.h"
 
-#include "iris/bxdfs/mirror_brdf.h"
+#include "iris/bxdfs/specular_bxdf.h"
 
 namespace iris {
 namespace materials {
@@ -15,7 +15,8 @@ const Bxdf* MirrorMaterial::Evaluate(
     return nullptr;
   }
 
-  return &bxdf_allocator.Allocate<bxdfs::MirrorBrdf>(*reflector);
+  return &bxdf_allocator.Allocate<bxdfs::SpecularBrdf<bxdfs::FresnelNoOp>>(
+      *reflector, bxdfs::FresnelNoOp());
 }
 
 }  // namespace materials

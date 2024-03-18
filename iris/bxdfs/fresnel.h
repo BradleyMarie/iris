@@ -9,21 +9,40 @@ namespace bxdfs {
 
 class Fresnel {
  public:
-  virtual const Reflector* Evaluate(visual_t cos_theta_incident,
-                                    SpectralAllocator& allocator) const = 0;
-  virtual const Reflector* Complement(visual_t cos_theta_incident,
-                                      SpectralAllocator& allocator) const = 0;
+  virtual const Reflector* AttenuateReflectance(
+      const Reflector& reflectance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const = 0;
+  virtual const Reflector* AttenuateTransmittance(
+      const Reflector& transmittance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const = 0;
 };
 
-class FresnelDielectric : public Fresnel {
+class FresnelNoOp final : public Fresnel {
+ public:
+  const Reflector* AttenuateReflectance(
+      const Reflector& reflectance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override {
+    return &reflectance;
+  }
+
+  const Reflector* AttenuateTransmittance(
+      const Reflector& transmittance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override {
+    return &transmittance;
+  }
+};
+
+class FresnelDielectric final : public Fresnel {
  public:
   FresnelDielectric(visual_t eta_incident, visual_t eta_transmitted)
       : eta_incident_(eta_incident), eta_transmitted_(eta_transmitted) {}
 
-  const Reflector* Evaluate(visual_t cos_theta_incident,
-                            SpectralAllocator& allocator) const override;
-  const Reflector* Complement(visual_t cos_theta_incident,
-                              SpectralAllocator& allocator) const override;
+  const Reflector* AttenuateReflectance(
+      const Reflector& reflectance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override;
+  const Reflector* AttenuateTransmittance(
+      const Reflector& transmittance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override;
 
  private:
   visual_t eta_incident_, eta_transmitted_;

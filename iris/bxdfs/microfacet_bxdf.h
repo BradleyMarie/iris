@@ -105,12 +105,11 @@ class MicrofacetBrdf final : public Bxdf {
 
     Vector half_angle = Normalize(outgoing + incoming);
     visual_t dp = ClampedDotProduct(incoming, half_angle);
-    const Reflector* fresnel = fresnel_.Evaluate(dp, allocator);
-    if (!fresnel) {
+    const Reflector* reflectance =
+        fresnel_.AttenuateReflectance(reflectance_, dp, allocator);
+    if (!reflectance) {
       return nullptr;
     }
-
-    const Reflector* reflectance = allocator.Scale(&reflectance_, fresnel);
 
     visual_t cos_theta_incident = internal::AbsCosTheta(incoming);
     visual_t cos_theta_outgoing = internal::AbsCosTheta(outgoing);
@@ -224,8 +223,9 @@ class MicrofacetBtdf final : public Bxdf {
       return nullptr;
     }
 
-    const Reflector* fresnel = fresnel_.Complement(dp_incoming, allocator);
-    if (!fresnel) {
+    const Reflector* reflectance =
+        fresnel_.AttenuateTransmittance(reflectance_, dp_incoming, allocator);
+    if (!reflectance) {
       return nullptr;
     }
 
@@ -233,8 +233,6 @@ class MicrofacetBtdf final : public Bxdf {
     visual_t sqrt_denorm = dp_incoming + scaled_dp_outgoing;
     visual_t scale =
         static_cast<visual_t>(1.0) / (refractive_ratio * refractive_ratio);
-
-    const Reflector* reflectance = allocator.Scale(&reflectance_, fresnel);
 
     visual_t cos_theta_incident = internal::CosTheta(incoming);
     visual_t cos_theta_outgoing = internal::CosTheta(outgoing);

@@ -46,7 +46,8 @@ cc_library(
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
-        "//iris/bxdfs:mirror_brdf",
+        "//iris/bxdfs:fresnel",
+        "//iris/bxdfs:specular_bxdf",
         "//iris/textures:texture2d",
     ],
 )
