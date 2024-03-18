@@ -31,9 +31,15 @@ class TriangleMeshReader final
     positions.emplace_back(
         model_to_world_.Multiply(Point(position[0], position[1], position[2])));
 
-    if (maybe_normal) {
-      normals.emplace_back(model_to_world_.InverseTransposeMultiply(
-          Vector((*maybe_normal)[0], (*maybe_normal)[1], (*maybe_normal)[2])));
+    if (parse_normals && maybe_normal) {
+      if ((*maybe_normal)[0] == 0.0 && (*maybe_normal)[1] == 0.0 &&
+          (*maybe_normal)[2] == 0.0) {
+        parse_normals = false;
+        normals.clear();
+      } else {
+        normals.emplace_back(model_to_world_.InverseTransposeMultiply(Vector(
+            (*maybe_normal)[0], (*maybe_normal)[1], (*maybe_normal)[2])));
+      }
     }
 
     if (maybe_uv) {
@@ -49,6 +55,7 @@ class TriangleMeshReader final
   std::vector<Vector> normals;
   std::vector<std::pair<geometric, geometric>> uvs;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> faces;
+  bool parse_normals = true;
 
  private:
   const Matrix& model_to_world_;
@@ -106,8 +113,9 @@ PlyMeshBuilder::Build(
   TriangleMeshReader reader(model_to_world);
   auto result = reader.ReadFrom(file_stream);
   if (!result) {
-    std::cerr << "ERROR: PLY file parsing failed with message: "
-              << result.error() << std::endl;
+    std::cerr << "ERROR: PLY file parsing for file "
+              << filename_iter->second.GetFilePaths(1).front().string()
+              << " failed with message: " << result.error() << std::endl;
     exit(EXIT_FAILURE);
   }
 
