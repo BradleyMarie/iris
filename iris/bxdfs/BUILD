@@ -54,9 +54,9 @@ cc_test(
 )
 
 cc_library(
-    name = "lambertian_brdf",
-    srcs = ["lambertian_brdf.cc"],
-    hdrs = ["lambertian_brdf.h"],
+    name = "lambertian_bxdf",
+    srcs = ["lambertian_bxdf.cc"],
+    hdrs = ["lambertian_bxdf.h"],
     deps = [
         "//iris:bxdf",
         "//iris:float",
@@ -68,10 +68,10 @@ cc_library(
 )
 
 cc_test(
-    name = "lambertian_brdf_test",
-    srcs = ["lambertian_brdf_test.cc"],
+    name = "lambertian_bxdf_test",
+    srcs = ["lambertian_bxdf_test.cc"],
     deps = [
-        ":lambertian_brdf",
+        ":lambertian_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",

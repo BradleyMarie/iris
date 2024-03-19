@@ -40,6 +40,7 @@ struct Vector final {
 
   geometric_t Length() const;
 
+  Vector AlignAgainst(const Vector& vector) const;
   Vector AlignWith(const Vector& vector) const;
 
   const geometric x;
@@ -169,6 +170,14 @@ inline Vector::Axis Vector::DominantAxis() const {
 
 inline geometric_t Vector::Length() const {
   return std::sqrt(DotProduct(*this, *this));
+}
+
+inline Vector Vector::AlignAgainst(const Vector& vector) const {
+  if (DotProduct(*this, vector) <= static_cast<geometric_t>(0.0)) {
+    return *this;
+  }
+
+  return -*this;
 }
 
 inline Vector Vector::AlignWith(const Vector& vector) const {

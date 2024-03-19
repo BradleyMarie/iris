@@ -46,7 +46,7 @@ cc_library(
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
-        "//iris/bxdfs:lambertian_brdf",
+        "//iris/bxdfs:lambertian_bxdf",
         "//iris/textures:texture2d",
     ],
 )
@@ -124,7 +124,7 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:composite_bxdf",
-        "//iris/bxdfs:lambertian_brdf",
+        "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/textures:texture2d",
     ],
@@ -135,6 +135,42 @@ cc_test(
     srcs = ["plastic_material_test.cc"],
     deps = [
         ":plastic_material",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "translucent_material",
+    srcs = ["translucent_material.cc"],
+    hdrs = ["translucent_material.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:composite_bxdf",
+        "//iris/bxdfs:lambertian_bxdf",
+        "//iris/bxdfs:microfacet_bxdf",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "translucent_material_test",
+    srcs = ["translucent_material_test.cc"],
+    deps = [
+        ":translucent_material",
+        "//iris/bxdfs:composite_bxdf",
+        "//iris/bxdfs:lambertian_bxdf",
+        "//iris/bxdfs:microfacet_bxdf",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",

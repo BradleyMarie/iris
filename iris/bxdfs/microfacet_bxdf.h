@@ -133,10 +133,10 @@ template <typename M, typename F>
            std::derived_from<F, Fresnel>
 class MicrofacetBtdf final : public Bxdf {
  public:
-  MicrofacetBtdf(const Reflector& reflectance, const geometric_t eta_incident,
+  MicrofacetBtdf(const Reflector& transmittance, const geometric_t eta_incident,
                  const geometric_t eta_transmitted, const M& distribution,
                  const F& fresnel) noexcept
-      : reflectance_(reflectance),
+      : transmittance_(transmittance),
         eta_incident_over_transmitted_(eta_incident / eta_transmitted),
         eta_transmitted_over_incident_(eta_transmitted / eta_incident),
         distribution_(distribution),
@@ -223,9 +223,9 @@ class MicrofacetBtdf final : public Bxdf {
       return nullptr;
     }
 
-    const Reflector* reflectance =
-        fresnel_.AttenuateTransmittance(reflectance_, dp_incoming, allocator);
-    if (!reflectance) {
+    const Reflector* transmittance =
+        fresnel_.AttenuateTransmittance(transmittance_, dp_incoming, allocator);
+    if (!transmittance) {
       return nullptr;
     }
 
@@ -245,7 +245,7 @@ class MicrofacetBtdf final : public Bxdf {
         cos_theta_incident * cos_theta_outgoing * sqrt_denorm * sqrt_denorm;
     visual_t attenuation = std::abs(numer / denom);
 
-    return allocator.UnboundedScale(reflectance, attenuation);
+    return allocator.UnboundedScale(transmittance, attenuation);
   }
 
  private:
@@ -271,7 +271,7 @@ class MicrofacetBtdf final : public Bxdf {
     return Normalize(Vector(x, y, z));
   }
 
-  const Reflector& reflectance_;
+  const Reflector& transmittance_;
   const geometric_t eta_incident_over_transmitted_;
   const geometric_t eta_transmitted_over_incident_;
   const M distribution_;

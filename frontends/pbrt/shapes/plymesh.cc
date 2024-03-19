@@ -113,9 +113,8 @@ PlyMeshBuilder::Build(
   TriangleMeshReader reader(model_to_world);
   auto result = reader.ReadFrom(file_stream);
   if (!result) {
-    std::cerr << "ERROR: PLY file parsing for file "
-              << filename_iter->second.GetFilePaths(1).front().string()
-              << " failed with message: " << result.error() << std::endl;
+    std::cerr << "ERROR: PLY file parsing failed with message: "
+              << result.error() << std::endl;
     exit(EXIT_FAILURE);
   }
 

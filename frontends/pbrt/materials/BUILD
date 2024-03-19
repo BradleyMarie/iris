@@ -112,6 +112,7 @@ cc_library(
         ":matte",
         ":mirror",
         ":plastic",
+        ":translucent",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
@@ -152,6 +153,32 @@ cc_test(
     srcs = ["plastic_test.cc"],
     deps = [
         ":plastic",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "translucent",
+    srcs = ["translucent.cc"],
+    hdrs = ["translucent.h"],
+    deps = [
+        ":bumpmap",
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:texture_manager",
+        "//iris:material",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris/materials:translucent_material",
+    ],
+)
+
+cc_test(
+    name = "translucent_test",
+    srcs = ["translucent_test.cc"],
+    deps = [
+        ":translucent",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",

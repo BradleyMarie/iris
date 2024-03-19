@@ -8,6 +8,7 @@
 #include "frontends/pbrt/materials/matte.h"
 #include "frontends/pbrt/materials/mirror.h"
 #include "frontends/pbrt/materials/plastic.h"
+#include "frontends/pbrt/materials/translucent.h"
 #include "frontends/pbrt/quoted_string.h"
 
 namespace iris::pbrt_frontend::materials {
@@ -25,7 +26,8 @@ static const std::unordered_map<
     g_materials = {{"glass", g_glass_builder},
                    {"matte", g_matte_builder},
                    {"mirror", g_mirror_builder},
-                   {"plastic", g_plastic_builder}};
+                   {"plastic", g_plastic_builder},
+                   {"translucent", g_translucent_builder}};
 
 }  // namespace
 

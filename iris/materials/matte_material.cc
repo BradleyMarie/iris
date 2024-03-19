@@ -1,6 +1,6 @@
 #include "iris/materials/matte_material.h"
 
-#include "iris/bxdfs/lambertian_brdf.h"
+#include "iris/bxdfs/lambertian_bxdf.h"
 
 namespace iris {
 namespace materials {

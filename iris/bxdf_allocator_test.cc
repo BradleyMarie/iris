@@ -4,7 +4,7 @@
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/lambertian_brdf.h"
+#include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/internal/arena.h"
 #include "iris/reflectors/mock_reflector.h"
 

@@ -1,7 +1,7 @@
 #include "iris/materials/plastic_material.h"
 
 #include "iris/bxdfs/composite_bxdf.h"
-#include "iris/bxdfs/lambertian_brdf.h"
+#include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
 
 namespace iris {
@@ -31,24 +31,11 @@ const Bxdf* PlasticMaterial::Evaluate(
     microfacet_brdf = &bxdf_allocator.Allocate<bxdfs::MicrofacetBrdf<
         bxdfs::TrowbridgeReitzDistribution, bxdfs::FresnelDielectric>>(
         *specular, bxdfs::TrowbridgeReitzDistribution(roughness, roughness),
-        bxdfs::FresnelDielectric(static_cast<visual_t>(1.5),
-                                 static_cast<visual_t>(1.0)));
+        bxdfs::FresnelDielectric(static_cast<visual_t>(1.0),
+                                 static_cast<visual_t>(1.5)));
   }
 
-  if (lambertian_brdf != nullptr && microfacet_brdf != nullptr) {
-    return &bxdfs::MakeComposite(bxdf_allocator, *lambertian_brdf,
-                                 *microfacet_brdf);
-  }
-
-  if (lambertian_brdf != nullptr) {
-    return lambertian_brdf;
-  }
-
-  if (microfacet_brdf != nullptr) {
-    return microfacet_brdf;
-  }
-
-  return nullptr;
+  return bxdfs::MakeComposite(bxdf_allocator, lambertian_brdf, microfacet_brdf);
 }
 
 }  // namespace materials

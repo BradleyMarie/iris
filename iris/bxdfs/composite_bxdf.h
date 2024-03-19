@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cassert>
+#include <concepts>
 #include <optional>
 
 #include "iris/bxdf.h"
@@ -17,19 +18,20 @@ namespace iris {
 namespace bxdfs {
 namespace internal {
 
-template <size_t NumBsdfs>
+template <size_t NumBxdfs>
 class CompositeBxdf final : public Bxdf {
  public:
-  template <typename... Bxdfs>
-  CompositeBxdf(Bxdfs&&... bxdfs) {
-    size_t i = 0;
-    (void(bxdfs_[i++] = &bxdfs), ...);
+  CompositeBxdf(const Bxdf* bxdfs[]) {
+    for (size_t i = 0; i < NumBxdfs; i++) {
+      bxdfs_[i] = bxdfs[i];
+      assert(bxdfs_[i]);
+    }
   }
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
-    size_t index = sampler.NextIndex(NumBsdfs);
+    size_t index = sampler.NextIndex(NumBxdfs);
     return bxdfs_[index]->Sample(incoming, differentials, surface_normal,
                                  sampler);
   }
@@ -49,8 +51,8 @@ class CompositeBxdf final : public Bxdf {
 
     std::optional<visual_t> result;
     if (num_diffuse != 0) {
-      visual_t specular_pdf = static_cast<visual_t>(NumBsdfs - num_diffuse);
-      result = (diffuse_pdf + specular_pdf) / static_cast<visual_t>(NumBsdfs);
+      visual_t specular_pdf = static_cast<visual_t>(NumBxdfs - num_diffuse);
+      result = (diffuse_pdf + specular_pdf) / static_cast<visual_t>(NumBxdfs);
     }
 
     return result;
@@ -69,16 +71,53 @@ class CompositeBxdf final : public Bxdf {
   }
 
  private:
-  std::array<const Bxdf*, NumBsdfs> bxdfs_;
-  static_assert(NumBsdfs != 0);
+  std::array<const Bxdf*, NumBxdfs> bxdfs_;
+  static_assert(NumBxdfs != 0);
 };
+
+template <std::size_t I, std::size_t N>
+const Bxdf* MakeComposite(BxdfAllocator& allocator,
+                          std::array<const Bxdf*, N>& storage) {
+  if constexpr (I == 0) {
+    return nullptr;
+  } else if constexpr (I == 1) {
+    return storage[0];
+  } else {
+    return &allocator.Allocate<internal::CompositeBxdf<I>>(storage.data());
+  }
+}
+
+template <std::size_t I, std::size_t N>
+const Bxdf* MakeComposite(BxdfAllocator& allocator,
+                          std::array<const Bxdf*, N>& storage,
+                          const Bxdf* bxdf) {
+  if (bxdf) {
+    storage[I] = bxdf;
+    return MakeComposite<I + 1, N>(allocator, storage);
+  } else {
+    return MakeComposite<I, N>(allocator, storage);
+  }
+}
+
+template <std::size_t I, std::size_t N>
+const Bxdf* MakeComposite(BxdfAllocator& allocator,
+                          std::array<const Bxdf*, N>& storage, const Bxdf* bxdf,
+                          std::convertible_to<const Bxdf*> auto... args) {
+  if (bxdf) {
+    storage[I] = bxdf;
+    return MakeComposite<I + 1, N>(allocator, storage, args...);
+  } else {
+    return MakeComposite<I, N>(allocator, storage, args...);
+  }
+}
 
 }  // namespace internal
 
-template <typename... Bxdfs>
-const Bxdf& MakeComposite(BxdfAllocator& allocator, Bxdfs&&... bxdfs) {
-  return allocator.Allocate<internal::CompositeBxdf<sizeof...(Bxdfs)>>(
-      bxdfs...);
+const Bxdf* MakeComposite(BxdfAllocator& allocator,
+                          std::convertible_to<const Bxdf*> auto... args) {
+  std::array<const Bxdf*, sizeof...(args)> storage;
+  return internal::MakeComposite<0, sizeof...(args)>(allocator, storage,
+                                                     args...);
 }
 
 }  // namespace bxdfs
