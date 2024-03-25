@@ -268,24 +268,24 @@ TEST(MatrixManager, TransformNotInvertible) {
 }
 
 TEST(MatrixManager, Transform) {
-  std::stringstream input("Transform 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1");
+  std::stringstream input("Transform 1 0 0 0 0 1 0 0 0 0 1 0 2 3 4 1");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::MatrixManager matrix_manager;
   EXPECT_TRUE(matrix_manager.TryParse(tokenizer));
 
-  EXPECT_EQ(iris::Matrix::Scalar(2.0, 2.0, 2.0).value(),
+  EXPECT_EQ(iris::Matrix::Translation(2.0, 3.0, 4.0).value(),
             matrix_manager.Get().start);
 }
 
 TEST(MatrixManager, TransformWithBrackets) {
-  std::stringstream input("Transform [ 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1 ]");
+  std::stringstream input("Transform [ 1 0 0 0 0 1 0 0 0 0 1 0 2 3 4 1 ]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::MatrixManager matrix_manager;
   EXPECT_TRUE(matrix_manager.TryParse(tokenizer));
 
-  EXPECT_EQ(iris::Matrix::Scalar(2.0, 2.0, 2.0).value(),
+  EXPECT_EQ(iris::Matrix::Translation(2.0, 3.0, 4.0).value(),
             matrix_manager.Get().start);
 }
 
@@ -312,25 +312,25 @@ TEST(MatrixManager, ConcatTransformNotInvertible) {
 }
 
 TEST(MatrixManager, ConcatTransform) {
-  std::stringstream input("ConcatTransform 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1");
+  std::stringstream input("ConcatTransform 1 0 0 0 0 1 0 0 0 0 1 0 2 3 4 1");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::MatrixManager matrix_manager;
   EXPECT_TRUE(matrix_manager.TryParse(tokenizer));
 
-  EXPECT_EQ(iris::Matrix::Scalar(2.0, 2.0, 2.0).value(),
+  EXPECT_EQ(iris::Matrix::Translation(2.0, 3.0, 4.0).value(),
             matrix_manager.Get().start);
 }
 
 TEST(MatrixManager, ConcatTransformWithBrackets) {
   std::stringstream input(
-      "ConcatTransform [ 2 0 0 0 0 2 0 0 0 0 2 0 0 0 0 1 ]");
+      "ConcatTransform [ 1 0 0 0 0 1 0 0 0 0 1 0 2 3 4 1 ]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::MatrixManager matrix_manager;
   EXPECT_TRUE(matrix_manager.TryParse(tokenizer));
 
-  EXPECT_EQ(iris::Matrix::Scalar(2.0, 2.0, 2.0).value(),
+  EXPECT_EQ(iris::Matrix::Translation(2.0, 3.0, 4.0).value(),
             matrix_manager.Get().start);
 }
 

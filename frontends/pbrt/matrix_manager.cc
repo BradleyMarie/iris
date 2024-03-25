@@ -203,10 +203,10 @@ void MatrixManager::CoordSysTransform(Tokenizer& tokenizer) {
 void MatrixManager::Transform(Tokenizer& tokenizer) {
   auto values = ParseFloats<16>(tokenizer, "Transform");
   std::array<std::array<geometric, 4>, 4> values2d = {
-      std::array<geometric, 4>{values[0], values[1], values[2], values[3]},
-      std::array<geometric, 4>{values[4], values[5], values[6], values[7]},
-      std::array<geometric, 4>{values[8], values[9], values[10], values[11]},
-      std::array<geometric, 4>{values[12], values[13], values[14], values[15]}};
+      std::array<geometric, 4>{values[0], values[4], values[8], values[12]},
+      std::array<geometric, 4>{values[1], values[5], values[9], values[13]},
+      std::array<geometric, 4>{values[2], values[6], values[10], values[14]},
+      std::array<geometric, 4>{values[3], values[7], values[11], values[15]}};
 
   auto matrix = Matrix::Create(values2d);
   if (!matrix.has_value()) {
@@ -221,10 +221,10 @@ void MatrixManager::Transform(Tokenizer& tokenizer) {
 void MatrixManager::ConcatTransform(Tokenizer& tokenizer) {
   auto values = ParseFloats<16>(tokenizer, "ConcatTransform");
   std::array<std::array<geometric, 4>, 4> values2d = {
-      std::array<geometric, 4>{values[0], values[1], values[2], values[3]},
-      std::array<geometric, 4>{values[4], values[5], values[6], values[7]},
-      std::array<geometric, 4>{values[8], values[9], values[10], values[11]},
-      std::array<geometric, 4>{values[12], values[13], values[14], values[15]}};
+      std::array<geometric, 4>{values[0], values[4], values[8], values[12]},
+      std::array<geometric, 4>{values[1], values[5], values[9], values[13]},
+      std::array<geometric, 4>{values[2], values[6], values[10], values[14]},
+      std::array<geometric, 4>{values[3], values[7], values[11], values[15]}};
 
   auto matrix = Matrix::Create(values2d);
   if (!matrix.has_value()) {

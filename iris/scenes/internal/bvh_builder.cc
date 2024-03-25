@@ -32,12 +32,14 @@ BoundingBox ComputeBounds(
 
 BoundingBox ComputeBounds(
     const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
+        get_geometry,
     std::span<const size_t> indices) {
   BoundingBox::Builder builder;
   for (const auto& index : indices) {
-    BoundingBox bounds = geometry(index).first.ComputeBounds(
-        geometry(index).second ? *geometry(index).second : Matrix::Identity());
+    auto geometry_pair = get_geometry(index);
+    const Matrix& model_to_world =
+        geometry_pair.second ? *geometry_pair.second : Matrix::Identity();
+    BoundingBox bounds = geometry_pair.first.ComputeBounds(model_to_world);
     builder.Add(bounds);
   }
   return builder.Build();
