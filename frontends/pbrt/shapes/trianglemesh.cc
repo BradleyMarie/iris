@@ -113,13 +113,14 @@ TriangleMeshBuilder::Build(
         alpha->second.GetFloatTextures().front());
   }
 
-  std::vector<Vector> normals;
+  std::vector<std::tuple<geometric, geometric, geometric>> normals;
   auto n = parameters.find("N");
   if (n != parameters.end() && !n->second.GetVector3Values(0u, 0u).empty()) {
     auto normals_array = n->second.GetVector3Values(0u, target_size);
 
     for (const auto& normal : normals_array) {
-      normals.push_back(model_to_world.InverseTransposeMultiply(normal));
+      Vector transformed = model_to_world.InverseTransposeMultiply(normal);
+      normals.emplace_back(transformed.x, transformed.y, transformed.z);
     }
   }
 

@@ -22,7 +22,7 @@ namespace geometry {
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
-    std::span<const Vector> normals,
+    std::span<const std::tuple<geometric, geometric, geometric>> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask,
     ReferenceCounted<Material> front_material,

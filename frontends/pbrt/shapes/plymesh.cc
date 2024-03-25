@@ -31,15 +31,22 @@ class TriangleMeshReader final
     positions.emplace_back(
         model_to_world_.Multiply(Point(position[0], position[1], position[2])));
 
-    if (parse_normals && maybe_normal) {
-      if ((*maybe_normal)[0] == 0.0 && (*maybe_normal)[1] == 0.0 &&
-          (*maybe_normal)[2] == 0.0) {
-        parse_normals = false;
-        normals.clear();
-      } else {
-        normals.emplace_back(model_to_world_.InverseTransposeMultiply(Vector(
-            (*maybe_normal)[0], (*maybe_normal)[1], (*maybe_normal)[2])));
+    if (maybe_normal) {
+      geometric x = (*maybe_normal)[0];
+      geometric y = (*maybe_normal)[1];
+      geometric z = (*maybe_normal)[2];
+
+      if (x != static_cast<geometric>(0.0) ||
+          y != static_cast<geometric>(0.0) ||
+          z != static_cast<geometric>(0.0)) {
+        Vector normal(x, y, z);
+        Vector transformed = model_to_world_.InverseTransposeMultiply(normal);
+        x = transformed.x;
+        y = transformed.y;
+        z = transformed.z;
       }
+
+      normals.emplace_back(x, y, z);
     }
 
     if (maybe_uv) {
@@ -52,10 +59,9 @@ class TriangleMeshReader final
   }
 
   std::vector<Point> positions;
-  std::vector<Vector> normals;
+  std::vector<std::tuple<geometric, geometric, geometric>> normals;
   std::vector<std::pair<geometric, geometric>> uvs;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> faces;
-  bool parse_normals = true;
 
  private:
   const Matrix& model_to_world_;

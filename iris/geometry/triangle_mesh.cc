@@ -23,7 +23,7 @@ class Triangle final : public Geometry {
  public:
   struct SharedData {
     std::vector<Point> points;
-    std::vector<Vector> normals;
+    std::vector<std::tuple<geometric, geometric, geometric>> normals;
     std::vector<std::pair<geometric, geometric>> uv;
     ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask;
     ReferenceCounted<Material> materials[2];
@@ -192,16 +192,23 @@ std::optional<Vector> Triangle::MaybeComputeShadingNormal(
   auto b1 = additional->barycentric_coordinates[1];
   auto b2 = additional->barycentric_coordinates[2];
 
-  Vector shading_normal = shared_->normals[std::get<0>(vertices_)] * b0 +
-                          shared_->normals[std::get<1>(vertices_)] * b1 +
-                          shared_->normals[std::get<2>(vertices_)] * b2;
+  geometric_t x = std::get<0>(shared_->normals[std::get<0>(vertices_)]) * b0 +
+                  std::get<0>(shared_->normals[std::get<1>(vertices_)]) * b1 +
+                  std::get<0>(shared_->normals[std::get<2>(vertices_)]) * b2;
+  geometric_t y = std::get<1>(shared_->normals[std::get<0>(vertices_)]) * b0 +
+                  std::get<1>(shared_->normals[std::get<1>(vertices_)]) * b1 +
+                  std::get<1>(shared_->normals[std::get<2>(vertices_)]) * b2;
+  geometric_t z = std::get<2>(shared_->normals[std::get<0>(vertices_)]) * b0 +
+                  std::get<2>(shared_->normals[std::get<1>(vertices_)]) * b1 +
+                  std::get<2>(shared_->normals[std::get<2>(vertices_)]) * b2;
 
-  if (DotProduct(additional->surface_normal, shading_normal) >
-      static_cast<geometric_t>(0.0)) {
-    return shading_normal;
+  if (x == static_cast<geometric_t>(0.0) &&
+      y == static_cast<geometric_t>(0.0) &&
+      z == static_cast<geometric_t>(0.0)) {
+    return std::nullopt;
   }
 
-  return -shading_normal;
+  return Vector(x, y, z).AlignWith(additional->surface_normal);
 }
 
 std::optional<std::pair<Vector, Vector>> Triangle::MaybeComputeNormalTangents()
@@ -403,7 +410,7 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
-    std::span<const Vector> normals,
+    std::span<const std::tuple<geometric, geometric, geometric>> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask,
     ReferenceCounted<Material> front_material,
@@ -415,7 +422,8 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
   auto shared_data =
       std::make_shared<Triangle::SharedData>(Triangle::SharedData{
           std::vector<Point>(points.begin(), points.end()),
-          std::vector<Vector>(normals.begin(), normals.end()),
+          std::vector<std::tuple<geometric, geometric, geometric>>(
+              normals.begin(), normals.end()),
           std::vector<std::pair<geometric, geometric>>(uv.begin(), uv.end()),
           std::move(alpha_mask),
           {std::move(front_material), std::move(back_material)},

@@ -534,6 +534,47 @@ TEST_F(Triangle, ComputeShadingNormalNone) {
   EXPECT_EQ(nullptr, back_normal.normal_map);
 }
 
+TEST_F(Triangle, ComputeShadingNormalZeroLength) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
+        iris::Point(0.0, 1.0, 0.0)}},
+      {{{0, 1, 2}}}, {{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}},
+      {{{static_cast<iris::geometric>(0.0), static_cast<iris::geometric>(0.0)},
+        {static_cast<iris::geometric>(1.0), static_cast<iris::geometric>(0.0)},
+        {static_cast<iris::geometric>(0.0),
+         static_cast<iris::geometric>(1.0)}}},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, iris::ReferenceCounted<iris::NormalMap>(),
+      iris::ReferenceCounted<iris::NormalMap>());
+
+  AdditionalData additional_data{{1.0, 1.0, 1.0}, iris::Vector(1.0, 0.0, 0.0)};
+
+  auto front_normal =
+      triangles.front()->ComputeShadingNormal(FRONT_FACE, &additional_data);
+  EXPECT_FALSE(front_normal.surface_normal);
+  ASSERT_TRUE(front_normal.dp_duv);
+  EXPECT_EQ(1.0, front_normal.dp_duv->first.x);
+  EXPECT_EQ(0.0, front_normal.dp_duv->first.y);
+  EXPECT_EQ(0.0, front_normal.dp_duv->first.z);
+  EXPECT_EQ(0.0, front_normal.dp_duv->second.x);
+  EXPECT_EQ(1.0, front_normal.dp_duv->second.y);
+  EXPECT_EQ(0.0, front_normal.dp_duv->second.z);
+  EXPECT_EQ(nullptr, front_normal.normal_map);
+
+  auto back_normal =
+      triangles.front()->ComputeShadingNormal(BACK_FACE, &additional_data);
+  EXPECT_FALSE(back_normal.surface_normal);
+  ASSERT_TRUE(back_normal.dp_duv);
+  EXPECT_EQ(1.0, back_normal.dp_duv->first.x);
+  EXPECT_EQ(0.0, back_normal.dp_duv->first.y);
+  EXPECT_EQ(0.0, back_normal.dp_duv->first.z);
+  EXPECT_EQ(0.0, back_normal.dp_duv->second.x);
+  EXPECT_EQ(1.0, back_normal.dp_duv->second.y);
+  EXPECT_EQ(0.0, back_normal.dp_duv->second.z);
+  EXPECT_EQ(nullptr, back_normal.normal_map);
+}
+
 TEST_F(Triangle, ComputeShadingNormalFromMap) {
   auto triangle = SimpleTriangle();
 
@@ -564,9 +605,7 @@ TEST_F(Triangle, ComputeShadingNormalFromNormals) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
         iris::Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}},
-      {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
-        iris::Vector(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}},
       {{{static_cast<iris::geometric>(0.0), static_cast<iris::geometric>(0.0)},
         {static_cast<iris::geometric>(1.0), static_cast<iris::geometric>(0.0)},
         {static_cast<iris::geometric>(0.0),
@@ -675,9 +714,7 @@ TEST_F(Triangle, IsEmissive) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
         iris::Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}},
-      {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0),
-        iris::Vector(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}},
       {{{static_cast<iris::geometric>(0.0), static_cast<iris::geometric>(0.0)},
         {static_cast<iris::geometric>(1.0), static_cast<iris::geometric>(0.0)},
         {static_cast<iris::geometric>(0.0),
