@@ -132,8 +132,6 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
   auto world_shading_normals = TransformNormals(
       world_hit_point, world_surface_normal, hit.model_to_world,
       world_differentials, shading_normals);
-  assert(DotProduct(-world_surface_normal, world_shading_normals.first) <
-         0.001);
 
   // When the object is transformed, it is arguably more correct to apply the
   // normal map in model space instead of world space. This might be good to
@@ -144,12 +142,20 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
                 texture_coordinates, world_shading_normals.second,
                 world_shading_normals.first))
           : world_shading_normals.first;
-  assert(DotProduct(-world_surface_normal, world_shading_normal) < 0.001);
+
+  // Transformation may cause world shading normal to no longer be aligned with
+  // the true surface normal, so if it is not aligned simply reverse it and hope
+  // for the best visually on the assumption that this should be rare. This
+  // might be a good argument for evaluating BSDFs in model space. If this is
+  // done the asserts should be updated to check that the model surface and
+  // model shading normals are in the same hemisphere.
+  Vector aligned_world_shading_normal =
+      world_shading_normal.AlignWith(world_surface_normal);
 
   return RayTracer::SurfaceIntersection{
-      Bsdf(*bxdf, world_surface_normal, world_shading_normal), world_hit_point,
-      MakeDifferentials(world_differentials), world_surface_normal,
-      world_shading_normal};
+      Bsdf(*bxdf, world_surface_normal, aligned_world_shading_normal),
+      world_hit_point, MakeDifferentials(world_differentials),
+      world_surface_normal, aligned_world_shading_normal};
 }
 
 RayTracer::TraceResult HandleMiss(const Ray& ray,
@@ -227,7 +233,6 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
       ComputeGeometryDifferentials(ray, world_hit_point, world_surface_normal);
   auto model_differentials =
       MaybeTransformDifferentials(world_differentials, hit->model_to_world);
-  assert(DotProduct(ray.direction, world_surface_normal) < 0.001);
 
   TextureCoordinates texture_coordinates =
       hit->geometry
