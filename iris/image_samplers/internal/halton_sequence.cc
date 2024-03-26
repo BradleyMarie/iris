@@ -1,5 +1,8 @@
 #include "iris/image_samplers/internal/halton_sequence.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace iris {
 namespace image_samplers {
 namespace internal {
@@ -7,6 +10,8 @@ namespace {
 
 static const size_t kResolution = 128u;
 static const Halton_enum kHaltonEnumerator(kResolution, kResolution);
+static const geometric_t kMaxValue = std::nextafter(
+    static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
 
 }  // namespace
 
@@ -55,7 +60,7 @@ std::optional<geometric_t> HaltonSequence::Next() {
 
   dimension_ += 1;
 
-  return sample;
+  return std::min(kMaxValue, sample);
 }
 
 visual_t HaltonSequence::SampleWeight(uint32_t desired_num_samples) const {

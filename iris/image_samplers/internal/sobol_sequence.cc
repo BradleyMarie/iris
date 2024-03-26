@@ -1,7 +1,9 @@
 #include "iris/image_samplers/internal/sobol_sequence.h"
 
+#include <algorithm>
 #include <bit>
 #include <cassert>
+#include <cmath>
 #include <limits>
 
 #include "third_party/gruenschloss/double/sobol.h"
@@ -11,6 +13,12 @@
 namespace iris {
 namespace image_samplers {
 namespace internal {
+namespace {
+
+static const geometric_t kMaxValue = std::nextafter(
+    static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
+
+}  // namespace
 
 std::optional<uint64_t> BitMatrixVectorMultiply(
     const uint64_t bit_matrix[pbrt::SobolMatrixSize], uint64_t bit_vector) {
@@ -122,7 +130,7 @@ std::optional<geometric_t> SobolSequence::Next() {
 
   dimension_ += 1;
 
-  return sample;
+  return std::min(kMaxValue, sample);
 }
 
 visual_t SobolSequence::SampleWeight(uint32_t desired_num_samples) const {
