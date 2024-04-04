@@ -10,6 +10,8 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"focaldistance", Parameter::FLOAT},
         {"frameaspectratio", Parameter::FLOAT},
         {"lensradius", Parameter::FLOAT},
+        {"shutteropen", Parameter::FLOAT},
+        {"shutterclose", Parameter::FLOAT},
 };
 
 class OrthographicObjectBuilder

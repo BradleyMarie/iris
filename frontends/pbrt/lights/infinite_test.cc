@@ -81,8 +81,9 @@ TEST(Infinite, NoExtension) {
 }
 
 TEST(Infinite, AllSpecifiedEXR) {
-  std::stringstream input("\"spectrum L\" [1.0 1.0] \"string mapname\" " +
-                          RunfilePath("image.exr"));
+  std::stringstream input(
+      "\"spectrum L\" [1.0 1.0] \"integer samples\" 2 \"string mapname\" " +
+      RunfilePath("image.exr"));
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;

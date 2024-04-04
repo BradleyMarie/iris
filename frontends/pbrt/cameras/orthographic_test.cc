@@ -123,3 +123,29 @@ TEST(Orthographic, FromFrameY) {
   auto bottom_right = camera->Compute({1.0, 1.0}, {1.0, 1.0}, std::nullopt);
   EXPECT_EQ(iris::Point(1.0, -2.0, 0.0), bottom_right.origin);
 }
+
+TEST(Perspective, WithShutterOpen) {
+  std::stringstream input("\"float shutteropen\" 0.5");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  auto result = iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
+  ASSERT_TRUE(result);
+}
+
+TEST(Perspective, WithShutterClose) {
+  std::stringstream input("\"float shutterclose\" 2.0");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  auto result = iris::pbrt_frontend::BuildObject(
+      *iris::pbrt_frontend::cameras::g_orthographic_builder, tokenizer,
+      std::filesystem::current_path(), spectrum_manager, texture_manager,
+      g_transformation);
+  ASSERT_TRUE(result);
+}

@@ -10,9 +10,13 @@ namespace {
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
-        {"focaldistance", Parameter::FLOAT},    {"fov", Parameter::FLOAT},
-        {"frameaspectratio", Parameter::FLOAT}, {"halffov", Parameter::FLOAT},
+        {"focaldistance", Parameter::FLOAT},
+        {"fov", Parameter::FLOAT},
+        {"frameaspectratio", Parameter::FLOAT},
+        {"halffov", Parameter::FLOAT},
         {"lensradius", Parameter::FLOAT},
+        {"shutteropen", Parameter::FLOAT},
+        {"shutterclose", Parameter::FLOAT},
 };
 
 class PerspectiveObjectBuilder

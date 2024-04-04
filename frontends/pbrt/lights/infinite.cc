@@ -14,8 +14,9 @@ namespace {
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
-        {"L", Parameter::SPECTRUM},       {"mapname", Parameter::FILE_PATH},
-        {"nsamples", Parameter::INTEGER}, {"samples", Parameter::INTEGER},
+        {"L", Parameter::SPECTRUM},
+        {"mapname", Parameter::FILE_PATH},
+        {"samples", Parameter::INTEGER},
         {"scale", Parameter::SPECTRUM},
 };
 
