@@ -150,11 +150,11 @@ TEST(RendererTest, MultiThreaded) {
 
 TEST(RendererTest, Progress) {
   size_t next_value = 0;
-  auto progress_callback = [&](size_t current_chunk, size_t num_chunks) {
-    EXPECT_EQ(next_value++, current_chunk);
-    EXPECT_EQ(64u, num_chunks);
+  auto progress_callback = [&](size_t current_pixel, size_t num_pixels) {
+    EXPECT_EQ(next_value++, current_pixel);
+    EXPECT_EQ(1056u, num_pixels);
   };
 
   RunTestBody(1u, 1u, progress_callback);
-  EXPECT_EQ(65u, next_value);
+  EXPECT_EQ(1057u, next_value);
 }

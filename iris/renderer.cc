@@ -26,6 +26,7 @@ struct Chunk {
   std::unique_ptr<ImageSampler> image_sampler;
   std::unique_ptr<Random> rng;
   size_t chunk_start_x, chunk_end_x;
+  size_t pixel_start;
 };
 
 void RenderChunk(const Scene& scene,
@@ -50,20 +51,24 @@ void RenderChunk(const Scene& scene,
   RayTracer ray_tracer(scene, environmental_light, minimum_distance,
                        internal_tracer, arena);
 
+  auto [size_y, size_x] = framebuffer.Size();
+  auto num_pixels = size_x * size_y;
+
   if (progress_callback) {
-    progress_callback(0, num_chunks);
+    progress_callback(0, num_pixels);
   }
 
   for (auto chunk_index = chunk_counter.fetch_add(1); chunk_index < num_chunks;
        chunk_index = chunk_counter.fetch_add(1)) {
-    if (progress_callback && chunk_index != 0) {
-      progress_callback(chunk_index, num_chunks);
-    }
-
     auto y = chunk_index % chunks.size();
     auto& chunk = chunks[y][chunk_index / chunks.size()];
 
     for (auto x = chunk.chunk_start_x; x < chunk.chunk_end_x; x++) {
+      if (progress_callback && (x != 0 || y != 0)) {
+        progress_callback(chunk.pixel_start + x - chunk.chunk_start_x,
+                          num_pixels);
+      }
+
       chunk.image_sampler->StartPixel(framebuffer.Size(), std::make_pair(y, x));
 
       std::array<visual_t, 3> pixel_components = {0.0, 0.0, 0.0};
@@ -104,7 +109,7 @@ void RenderChunk(const Scene& scene,
   }
 
   if (progress_callback) {
-    progress_callback(num_chunks, num_chunks);
+    progress_callback(num_pixels, num_pixels);
   }
 }
 
@@ -118,19 +123,28 @@ Framebuffer Renderer::Render(
     std::function<void(size_t, size_t)> progress_callback) const {
   Framebuffer result(image_dimensions);
 
-  size_t num_chunks = 0;
+  size_t num_x_chunks = image_dimensions.second / kChunkSize + 1u;
+  size_t num_chunks = image_dimensions.first * num_x_chunks;
+
   std::vector<std::vector<Chunk>> chunks;
   for (size_t y = 0; y < image_dimensions.first; y++) {
     chunks.emplace_back();
-    for (size_t x = 0; x < image_dimensions.second; x++) {
-      if (x % kChunkSize != 0) {
-        chunks.back().back().chunk_end_x += 1;
-        continue;
-      }
+    for (size_t x = 0; x < num_x_chunks; x++) {
+      auto& chunk = chunks.back().emplace_back();
+      chunk.image_sampler = image_sampler.Replicate();
+      chunk.rng = rng.Replicate();
+    }
+  }
 
-      chunks.back().emplace_back(
-          Chunk{image_sampler.Replicate(), rng.Replicate(), x, x + 1});
-      num_chunks += 1;
+  size_t pixel = 0;
+  for (size_t x = 0; x < image_dimensions.second; x += kChunkSize) {
+    for (size_t y = 0; y < image_dimensions.first; y++) {
+      auto& chunk = chunks.at(y).at(x / kChunkSize);
+      chunk.chunk_start_x = x;
+      chunk.chunk_end_x = std::min(x + kChunkSize, image_dimensions.second);
+      chunk.pixel_start = pixel;
+
+      pixel += chunk.chunk_end_x - chunk.chunk_start_x;
     }
   }
 

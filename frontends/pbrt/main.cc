@@ -171,7 +171,8 @@ int main(int argc, char** argv) {
 
     bool first = true;
     auto start_time = std::chrono::steady_clock::now();
-    auto progress_callback = [&](size_t current_chunk, size_t num_chunks) {
+    size_t pixels_rendered = 0;
+    auto progress_callback = [&](size_t current_pixel, size_t num_pixels) {
       auto current_time = std::chrono::steady_clock::now();
 
       std::string prefix;
@@ -181,15 +182,19 @@ int main(int argc, char** argv) {
         prefix = "Rendering [";
       }
 
+      if (current_pixel != 0) {
+        pixels_rendered += 1;
+      }
+
       std::chrono::duration<float> elapsed_time(current_time - start_time);
-      float chunks_per_second = static_cast<float>(current_chunk) /
+      float chunks_per_second = static_cast<float>(pixels_rendered) /
                                 static_cast<float>(elapsed_time.count());
       int elapsed_time_seconds = elapsed_time.count();
       int estimated_time_remaining_seconds =
-          static_cast<float>(num_chunks - current_chunk) / chunks_per_second;
+          static_cast<float>(num_pixels - current_pixel) / chunks_per_second;
 
       std::string suffix = "] (";
-      if (current_chunk == num_chunks) {
+      if (current_pixel == num_pixels) {
         suffix += std::to_string(elapsed_time_seconds) + "s)";
       } else if (first) {
         suffix += std::to_string(elapsed_time_seconds) + "s|?s)";
@@ -202,7 +207,7 @@ int main(int argc, char** argv) {
         suffix.push_back(' ');
       }
 
-      if (current_chunk == num_chunks) {
+      if (current_pixel == num_pixels) {
         suffix.push_back('\n');
       } else {
         suffix.push_back('\r');
@@ -220,7 +225,7 @@ int main(int argc, char** argv) {
 
       size_t bar_width = text_width - prefix.size() - suffix.size();
       float progress =
-          static_cast<float>(current_chunk) / static_cast<float>(num_chunks);
+          static_cast<float>(current_pixel) / static_cast<float>(num_pixels);
       size_t bar_length = bar_width * progress;
 
       std::string bar;
