@@ -171,7 +171,6 @@ int main(int argc, char** argv) {
 
     bool first = true;
     auto start_time = std::chrono::steady_clock::now();
-    size_t pixels_rendered = 0;
     auto progress_callback = [&](size_t current_pixel, size_t num_pixels) {
       auto current_time = std::chrono::steady_clock::now();
 
@@ -182,12 +181,8 @@ int main(int argc, char** argv) {
         prefix = "Rendering [";
       }
 
-      if (current_pixel != 0) {
-        pixels_rendered += 1;
-      }
-
       std::chrono::duration<float> elapsed_time(current_time - start_time);
-      float chunks_per_second = static_cast<float>(pixels_rendered) /
+      float chunks_per_second = static_cast<float>(current_pixel) /
                                 static_cast<float>(elapsed_time.count());
       int elapsed_time_seconds = elapsed_time.count();
       int estimated_time_remaining_seconds =
