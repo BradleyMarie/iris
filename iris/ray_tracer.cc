@@ -9,6 +9,22 @@
 namespace iris {
 namespace {
 
+bool HemisphereChanged(const Vector& model_surface_normal,
+                       const std::optional<Vector>& model_shading_normal,
+                       const Vector& world_surface_normal,
+                       const Vector& world_shading_normal) {
+  if (!model_shading_normal) {
+    return false;
+  }
+
+  bool model =
+      std::signbit(DotProduct(model_surface_normal, *model_shading_normal));
+  bool world =
+      std::signbit(DotProduct(world_surface_normal, world_shading_normal));
+
+  return model != world;
+}
+
 Vector MaybeTransformVector(const Matrix* model_to_world,
                             const Vector& surface_normal) {
   if (!model_to_world) {
@@ -113,8 +129,8 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
     const iris::internal::Hit& hit,
     const std::optional<Geometry::Differentials> world_differentials,
     const TextureCoordinates& texture_coordinates, const Point& world_hit_point,
-    const Vector& world_surface_normal, SpectralAllocator& spectral_allocator,
-    BxdfAllocator& bxdf_allocator) {
+    const Vector& world_surface_normal, const Vector& model_surface_normal,
+    SpectralAllocator& spectral_allocator, BxdfAllocator& bxdf_allocator) {
   auto* material = hit.geometry->GetMaterial(hit.front, hit.additional_data);
   if (!material) {
     return std::nullopt;
@@ -133,29 +149,28 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
       world_hit_point, world_surface_normal, hit.model_to_world,
       world_differentials, shading_normals);
 
-  // When the object is transformed, it is arguably more correct to apply the
-  // normal map in model space instead of world space. This might be good to
-  // change in the future.
+  // If transforming the model shading normal to world coordinates causes the
+  // normal to change the hemisphere in which it lies, simply ignore the hit
+  // and hope for the best visually on the assumption that this should be rare.
+  if (HemisphereChanged(model_surface_normal, shading_normals.surface_normal,
+                        world_surface_normal, world_shading_normals.first)) {
+    return std::nullopt;
+  }
+
   Vector world_shading_normal =
       shading_normals.normal_map
           ? Normalize(shading_normals.normal_map->Evaluate(
                 texture_coordinates, world_shading_normals.second,
                 world_shading_normals.first))
           : world_shading_normals.first;
-
-  // Transformation may cause world shading normal to no longer be aligned with
-  // the true surface normal, so if it is not aligned simply reverse it and hope
-  // for the best visually on the assumption that this should be rare. This
-  // might be a good argument for evaluating BSDFs in model space. If this is
-  // done the asserts should be updated to check that the model surface and
-  // model shading normals are in the same hemisphere.
-  Vector aligned_world_shading_normal =
-      world_shading_normal.AlignWith(world_surface_normal);
+  assert(!HemisphereChanged(model_surface_normal,
+                            shading_normals.surface_normal,
+                            world_surface_normal, world_shading_normal));
 
   return RayTracer::SurfaceIntersection{
-      Bsdf(*bxdf, world_surface_normal, aligned_world_shading_normal),
-      world_hit_point, MakeDifferentials(world_differentials),
-      world_surface_normal, aligned_world_shading_normal};
+      Bsdf(*bxdf, world_surface_normal, world_shading_normal), world_hit_point,
+      MakeDifferentials(world_differentials), world_surface_normal,
+      world_shading_normal};
 }
 
 RayTracer::TraceResult HandleMiss(const Ray& ray,
@@ -250,7 +265,8 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
   BxdfAllocator bxdf_allocator(arena_);
   auto surface_intersection = MakeSurfaceIntersection(
       *hit, world_differentials, texture_coordinates, world_hit_point,
-      world_surface_normal, spectral_allocator, bxdf_allocator);
+      world_surface_normal, model_surface_normal, spectral_allocator,
+      bxdf_allocator);
 
   return RayTracer::TraceResult{spectrum, surface_intersection};
 }

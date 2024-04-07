@@ -53,3 +53,7 @@ MODULE.bazel.lock
 
 # VS Code
 .vscode/
+
+# Render Outputs
+*.exr
+*.pfm
