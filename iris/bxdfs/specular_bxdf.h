@@ -26,10 +26,6 @@ class SpecularBrdf final : public Bxdf {
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
-    if (std::signbit(incoming.z)) {
-      return std::nullopt;
-    }
-
     Vector reflected(-incoming.x, -incoming.y, incoming.z);
     if (!differentials) {
       return Bxdf::SampleResult{reflected, std::nullopt, this};
@@ -76,23 +72,21 @@ class SpecularBtdf final : public Bxdf {
   SpecularBtdf(const Reflector& transmittance, const geometric_t eta_incident,
                const geometric_t eta_transmitted, const F& fresnel) noexcept
       : transmittance_(transmittance),
-        eta_incident_over_transmitted_(eta_incident / eta_transmitted),
+        relative_refractive_index_{eta_incident / eta_transmitted,
+                                   eta_transmitted / eta_incident},
         fresnel_(fresnel) {}
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
-    if (std::signbit(incoming.z)) {
-      return std::nullopt;
-    }
-
     Vector shading_normal(static_cast<geometric>(0.0),
                           static_cast<geometric>(0.0),
                           static_cast<geometric>(1.0));
+    geometric_t relative_refractive_index = RelativeRefractiveIndex(incoming);
 
     std::optional<Vector> outgoing =
         internal::Refract(incoming, shading_normal.AlignWith(incoming),
-                          eta_incident_over_transmitted_);
+                          relative_refractive_index);
     if (!outgoing) {
       return std::nullopt;
     }
@@ -103,14 +97,14 @@ class SpecularBtdf final : public Bxdf {
 
     std::optional<Vector> outgoing_dx = internal::Refract(
         differentials->dx, shading_normal.AlignWith(differentials->dx),
-        eta_incident_over_transmitted_);
+        relative_refractive_index);
     if (!outgoing_dx) {
       return Bxdf::SampleResult{*outgoing, std::nullopt, this};
     }
 
     std::optional<Vector> outgoing_dy = internal::Refract(
         differentials->dy, shading_normal.AlignWith(differentials->dy),
-        eta_incident_over_transmitted_);
+        relative_refractive_index);
     if (!outgoing_dy) {
       return Bxdf::SampleResult{*outgoing, std::nullopt, this};
     }
@@ -140,14 +134,20 @@ class SpecularBtdf final : public Bxdf {
     const Reflector* transmittance = fresnel_.AttenuateTransmittance(
         transmittance_, internal::CosTheta(outgoing), allocator);
 
+    geometric_t relative_refractive_index = RelativeRefractiveIndex(incoming);
     geometric_t attenuation =
-        eta_incident_over_transmitted_ * eta_incident_over_transmitted_;
+        relative_refractive_index * relative_refractive_index;
+
     return allocator.UnboundedScale(transmittance, attenuation);
   }
 
  private:
+  geometric_t RelativeRefractiveIndex(const Vector& incoming) const {
+    return relative_refractive_index_[std::signbit(incoming.z)];
+  }
+
   const Reflector& transmittance_;
-  const geometric_t eta_incident_over_transmitted_;
+  const geometric_t relative_refractive_index_[2];
   const F fresnel_;
 };
 
@@ -160,7 +160,8 @@ class SpecularBxdf final : public Bxdf {
         transmittance_(transmittance),
         eta_incident_(eta_incident),
         eta_transmitted_(eta_transmitted),
-        eta_incident_over_transmitted_(eta_incident / eta_transmitted) {}
+        relative_refractive_index_{eta_incident / eta_transmitted,
+                                   eta_transmitted / eta_incident} {}
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
@@ -176,11 +177,15 @@ class SpecularBxdf final : public Bxdf {
                                SpectralAllocator& allocator) const override;
 
  private:
+  geometric_t RelativeRefractiveIndex(const Vector& incoming) const {
+    return relative_refractive_index_[std::signbit(incoming.z)];
+  }
+
   const Reflector& reflectance_;
   const Reflector& transmittance_;
   const geometric_t eta_incident_;
   const geometric_t eta_transmitted_;
-  const geometric_t eta_incident_over_transmitted_;
+  const geometric_t relative_refractive_index_[2];
 };
 
 }  // namespace bxdfs

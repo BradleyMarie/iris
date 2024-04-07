@@ -24,10 +24,6 @@ Bxdf::Hemisphere SampledHemisphere(const Vector& incoming,
 std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  if (std::signbit(incoming.z)) {
-    return std::nullopt;
-  }
-
   visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
       internal::CosTheta(incoming), eta_incident_, eta_transmitted_);
 
@@ -49,10 +45,10 @@ std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
   Vector shading_normal(static_cast<geometric>(0.0),
                         static_cast<geometric>(0.0),
                         static_cast<geometric>(1.0));
+  geometric_t relative_refractive_index = RelativeRefractiveIndex(incoming);
 
-  std::optional<Vector> outgoing =
-      internal::Refract(incoming, shading_normal.AlignWith(incoming),
-                        eta_incident_over_transmitted_);
+  std::optional<Vector> outgoing = internal::Refract(
+      incoming, shading_normal.AlignWith(incoming), relative_refractive_index);
   if (!outgoing) {
     return std::nullopt;
   }
@@ -63,14 +59,14 @@ std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
 
   std::optional<Vector> outgoing_dx = internal::Refract(
       differentials->dx, shading_normal.AlignWith(differentials->dx),
-      eta_incident_over_transmitted_);
+      relative_refractive_index);
   if (!outgoing_dx) {
     return Bxdf::SampleResult{*outgoing, std::nullopt, this};
   }
 
   std::optional<Vector> outgoing_dy = internal::Refract(
       differentials->dy, shading_normal.AlignWith(differentials->dy),
-      eta_incident_over_transmitted_);
+      relative_refractive_index);
   if (!outgoing_dy) {
     return Bxdf::SampleResult{*outgoing, std::nullopt, this};
   }
@@ -89,7 +85,13 @@ std::optional<visual_t> SpecularBxdf::Pdf(const Vector& incoming,
     return static_cast<visual_t>(0.0);
   }
 
-  return std::nullopt;
+  visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
+      internal::CosTheta(incoming), eta_incident_, eta_transmitted_);
+  if (hemisphere == Hemisphere::BRDF) {
+    return fresnel_reflectance;
+  }
+
+  return static_cast<geometric_t>(1.0) - fresnel_reflectance;
 }
 
 const Reflector* SpecularBxdf::Reflectance(const Vector& incoming,
@@ -103,12 +105,16 @@ const Reflector* SpecularBxdf::Reflectance(const Vector& incoming,
   }
 
   if (hemisphere == Hemisphere::BRDF) {
-    return allocator.Scale(&reflectance_, internal::AbsCosTheta(incoming));
+    return allocator.Scale(&reflectance_, static_cast<geometric_t>(1.0) /
+                                              internal::AbsCosTheta(incoming));
   }
 
-  return allocator.Scale(&transmittance_, eta_incident_over_transmitted_ *
-                                              eta_incident_over_transmitted_ *
-                                              internal::AbsCosTheta(incoming));
+  geometric_t relative_refractive_index = RelativeRefractiveIndex(incoming);
+  geometric_t attenuation =
+      relative_refractive_index * relative_refractive_index;
+
+  return allocator.Scale(&transmittance_,
+                         attenuation / internal::AbsCosTheta(incoming));
 }
 
 }  // namespace bxdfs
