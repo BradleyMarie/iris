@@ -20,7 +20,7 @@ const Bxdf* GlassMaterial::Evaluate(
 
   // Consider clamping these values
   visual eta_incident = eta_incident_->Evaluate(texture_coordinates);
-  visual eta_transmitted = eta_incident_->Evaluate(texture_coordinates);
+  visual eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
 
   if (transmittance == nullptr) {
     return &bxdf_allocator
