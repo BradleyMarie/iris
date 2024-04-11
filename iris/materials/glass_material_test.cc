@@ -21,15 +21,15 @@ TEST(GlassMaterialTest, EvaluateEmpty) {
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(
           iris::ReferenceCounted<iris::Reflector>());
-  auto eta_incident = iris::MakeReferenceCounted<
+  auto eta_front = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
+  auto eta_back = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
   iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_incident),
-      std::move(eta_transmitted));
+      std::move(reflectance), std::move(transmittance), std::move(eta_front),
+      std::move(eta_back));
 
   ASSERT_FALSE(
       material.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -48,15 +48,15 @@ TEST(GlassMaterialTest, EvaluateBrdf) {
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(
           iris::ReferenceCounted<iris::Reflector>());
-  auto eta_incident = iris::MakeReferenceCounted<
+  auto eta_front = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
+  auto eta_back = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
   iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_incident),
-      std::move(eta_transmitted));
+      std::move(reflectance), std::move(transmittance), std::move(eta_front),
+      std::move(eta_back));
 
   auto* result = material.Evaluate(
       iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -78,15 +78,15 @@ TEST(GlassMaterialTest, EvaluateBtdf) {
   auto transmittance =
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(transmitter);
-  auto eta_incident = iris::MakeReferenceCounted<
+  auto eta_front = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
+  auto eta_back = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
   iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_incident),
-      std::move(eta_transmitted));
+      std::move(reflectance), std::move(transmittance), std::move(eta_front),
+      std::move(eta_back));
 
   auto* result = material.Evaluate(
       iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -109,15 +109,15 @@ TEST(GlassMaterialTest, Evaluate) {
   auto transmittance =
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(transmitter);
-  auto eta_incident = iris::MakeReferenceCounted<
+  auto eta_front = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
+  auto eta_back = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
   iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_incident),
-      std::move(eta_transmitted));
+      std::move(reflectance), std::move(transmittance), std::move(eta_front),
+      std::move(eta_back));
 
   auto* result = material.Evaluate(
       iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},

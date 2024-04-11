@@ -5,16 +5,10 @@
 
 #include "googletest/include/gtest/gtest.h"
 
-TEST(FesnelDielectricReflectance, Front) {
+TEST(FesnelDielectricReflectance, Refracted) {
   EXPECT_NEAR(0.04,
               iris::bxdfs::internal::FesnelDielectricReflectance(1.0, 1.0, 1.5),
               0.0001);
-}
-
-TEST(FesnelDielectricReflectance, Back) {
-  EXPECT_NEAR(
-      0.04, iris::bxdfs::internal::FesnelDielectricReflectance(-1.0, 1.0, 1.5),
-      0.0001);
 }
 
 TEST(FesnelDielectricReflectance, TotalInternalReflection) {

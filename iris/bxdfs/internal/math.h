@@ -19,10 +19,7 @@ static inline visual_t FesnelDielectricReflectance(visual_t cos_theta_incident,
   assert(eta_incident >= static_cast<visual_t>(1.0));
   assert(eta_transmission >= static_cast<visual_t>(1.0));
 
-  if (cos_theta_incident <= static_cast<visual_t>(0.0)) {
-    std::swap(eta_incident, eta_transmission);
-    cos_theta_incident = std::abs(cos_theta_incident);
-  }
+  cos_theta_incident = std::abs(cos_theta_incident);
 
   visual_t sin_theta_incident = std::sqrt(std::max(
       static_cast<visual_t>(0.0),

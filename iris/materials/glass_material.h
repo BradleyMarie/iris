@@ -25,16 +25,16 @@ class GlassMaterial final : public Material {
       iris::ReferenceCounted<
           textures::PointerTexture2D<Reflector, SpectralAllocator>>
           transmittance,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted)
+      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_front,
+      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_back)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
-        eta_incident_(std::move(eta_incident)),
-        eta_transmitted_(std::move(eta_transmitted)) {
+        eta_front_(std::move(eta_front)),
+        eta_back_(std::move(eta_back)) {
     assert(reflectance_);
     assert(transmittance_);
-    assert(eta_incident_);
-    assert(eta_transmitted_);
+    assert(eta_front_);
+    assert(eta_back_);
   }
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
@@ -48,8 +48,8 @@ class GlassMaterial final : public Material {
   iris::ReferenceCounted<
       textures::PointerTexture2D<Reflector, SpectralAllocator>>
       transmittance_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
+  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_front_;
+  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_back_;
 };
 
 }  // namespace materials

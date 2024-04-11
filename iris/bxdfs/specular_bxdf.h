@@ -69,11 +69,10 @@ template <typename F>
   requires std::derived_from<F, Fresnel>
 class SpecularBtdf final : public Bxdf {
  public:
-  SpecularBtdf(const Reflector& transmittance, const geometric_t eta_incident,
-               const geometric_t eta_transmitted, const F& fresnel) noexcept
+  SpecularBtdf(const Reflector& transmittance, const geometric_t eta_front,
+               const geometric_t eta_back, const F& fresnel) noexcept
       : transmittance_(transmittance),
-        relative_refractive_index_{eta_incident / eta_transmitted,
-                                   eta_transmitted / eta_incident},
+        relative_refractive_index_{eta_front / eta_back, eta_back / eta_front},
         fresnel_(fresnel) {}
 
   std::optional<SampleResult> Sample(
@@ -134,6 +133,7 @@ class SpecularBtdf final : public Bxdf {
     const Reflector* transmittance = fresnel_.AttenuateTransmittance(
         transmittance_, internal::CosTheta(outgoing), allocator);
 
+    // It may be better to do this in the integrator
     geometric_t relative_refractive_index = RelativeRefractiveIndex(incoming);
     geometric_t attenuation =
         relative_refractive_index * relative_refractive_index;
@@ -154,14 +154,12 @@ class SpecularBtdf final : public Bxdf {
 class SpecularBxdf final : public Bxdf {
  public:
   SpecularBxdf(const Reflector& reflectance, const Reflector& transmittance,
-               const geometric_t eta_incident,
-               const geometric_t eta_transmitted) noexcept
+               const geometric_t eta_front, const geometric_t eta_back) noexcept
       : reflectance_(reflectance),
         transmittance_(transmittance),
-        eta_incident_(eta_incident),
-        eta_transmitted_(eta_transmitted),
-        relative_refractive_index_{eta_incident / eta_transmitted,
-                                   eta_transmitted / eta_incident} {}
+        refractive_indices_{eta_front, eta_back},
+        relative_refractive_index_{eta_front / eta_back, eta_back / eta_front} {
+  }
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
@@ -177,14 +175,21 @@ class SpecularBxdf final : public Bxdf {
                                SpectralAllocator& allocator) const override;
 
  private:
+  geometric_t EtaIncident(const Vector& incoming) const {
+    return refractive_indices_[std::signbit(incoming.z)];
+  }
+
+  geometric_t EtaTransmitted(const Vector& incoming) const {
+    return refractive_indices_[!std::signbit(incoming.z)];
+  }
+
   geometric_t RelativeRefractiveIndex(const Vector& incoming) const {
     return relative_refractive_index_[std::signbit(incoming.z)];
   }
 
   const Reflector& reflectance_;
   const Reflector& transmittance_;
-  const geometric_t eta_incident_;
-  const geometric_t eta_transmitted_;
+  const geometric_t refractive_indices_[2];
   const geometric_t relative_refractive_index_[2];
 };
 

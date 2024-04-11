@@ -34,8 +34,8 @@ class FresnelNoOp final : public Fresnel {
 
 class FresnelDielectric final : public Fresnel {
  public:
-  FresnelDielectric(visual_t eta_incident, visual_t eta_transmitted)
-      : eta_incident_(eta_incident), eta_transmitted_(eta_transmitted) {}
+  FresnelDielectric(visual_t eta_front, visual_t eta_back)
+      : eta_front_(eta_front), eta_back_(eta_back) {}
 
   const Reflector* AttenuateReflectance(
       const Reflector& reflectance, visual_t cos_theta_incident,
@@ -45,7 +45,7 @@ class FresnelDielectric final : public Fresnel {
       SpectralAllocator& allocator) const override;
 
  private:
-  visual_t eta_incident_, eta_transmitted_;
+  visual_t eta_front_, eta_back_;
 };
 
 }  // namespace bxdfs

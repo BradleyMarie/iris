@@ -24,8 +24,10 @@ Bxdf::Hemisphere SampledHemisphere(const Vector& incoming,
 std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
+  geometric_t eta_incident = EtaIncident(incoming);
+  geometric_t eta_transmitted = EtaTransmitted(incoming);
   visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
-      internal::CosTheta(incoming), eta_incident_, eta_transmitted_);
+      internal::CosTheta(incoming), eta_incident, eta_transmitted);
 
   if (sampler.Next() < fresnel_reflectance) {
     Vector outgoing(-incoming.x, -incoming.y, incoming.z);
@@ -85,13 +87,7 @@ std::optional<visual_t> SpecularBxdf::Pdf(const Vector& incoming,
     return static_cast<visual_t>(0.0);
   }
 
-  visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
-      internal::CosTheta(incoming), eta_incident_, eta_transmitted_);
-  if (hemisphere == Hemisphere::BRDF) {
-    return fresnel_reflectance;
-  }
-
-  return static_cast<geometric_t>(1.0) - fresnel_reflectance;
+  return std::nullopt;
 }
 
 const Reflector* SpecularBxdf::Reflectance(const Vector& incoming,
@@ -105,16 +101,15 @@ const Reflector* SpecularBxdf::Reflectance(const Vector& incoming,
   }
 
   if (hemisphere == Hemisphere::BRDF) {
-    return allocator.Scale(&reflectance_, static_cast<geometric_t>(1.0) /
-                                              internal::AbsCosTheta(incoming));
+    return &reflectance_;
   }
 
+  // It may be better to do this in the integrator
   geometric_t relative_refractive_index = RelativeRefractiveIndex(incoming);
   geometric_t attenuation =
       relative_refractive_index * relative_refractive_index;
 
-  return allocator.Scale(&transmittance_,
-                         attenuation / internal::AbsCosTheta(incoming));
+  return allocator.UnboundedScale(&transmittance_, attenuation);
 }
 
 }  // namespace bxdfs

@@ -19,25 +19,24 @@ const Bxdf* GlassMaterial::Evaluate(
   }
 
   // Consider clamping these values
-  visual eta_incident = eta_incident_->Evaluate(texture_coordinates);
-  visual eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
+  visual eta_front = eta_front_->Evaluate(texture_coordinates);
+  visual eta_back = eta_back_->Evaluate(texture_coordinates);
 
   if (transmittance == nullptr) {
     return &bxdf_allocator
                 .Allocate<bxdfs::SpecularBrdf<bxdfs::FresnelDielectric>>(
-                    *reflector,
-                    bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
+                    *reflector, bxdfs::FresnelDielectric(eta_front, eta_back));
   }
 
   if (reflector == nullptr) {
     return &bxdf_allocator
                 .Allocate<bxdfs::SpecularBtdf<bxdfs::FresnelDielectric>>(
-                    *transmittance, eta_incident, eta_transmitted,
-                    bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
+                    *transmittance, eta_front, eta_back,
+                    bxdfs::FresnelDielectric(eta_front, eta_back));
   }
 
   return &bxdf_allocator.Allocate<bxdfs::SpecularBxdf>(
-      *reflector, *transmittance, eta_incident, eta_transmitted);
+      *reflector, *transmittance, eta_front, eta_back);
 }
 
 }  // namespace materials
