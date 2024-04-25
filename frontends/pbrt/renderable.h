@@ -24,10 +24,9 @@ class Renderable {
              std::unique_ptr<Integrator> integrator,
              std::pair<size_t, size_t> image_dimensions) noexcept;
 
-  Framebuffer Render(
-      const ColorMatcher& color_matcher, Random& rng,
-      geometric_t minimum_distance, unsigned num_threads = 0,
-      std::function<void(size_t, size_t)> progress_callback = nullptr) const;
+  Framebuffer Render(const ColorMatcher& color_matcher, Random& rng,
+                     const Renderer::AdditionalOptions& options =
+                         Renderer::AdditionalOptions()) const;
 
  private:
   Renderer renderer_;

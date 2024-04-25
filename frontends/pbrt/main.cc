@@ -243,10 +243,13 @@ int main(int argc, char** argv) {
                                                       std::ofstream::binary |
                                                       std::ofstream::trunc);
 
+    iris::Renderer::AdditionalOptions options;
+    options.minimum_distance = absl::GetFlag(FLAGS_epsilon);
+    options.num_threads = absl::GetFlag(FLAGS_num_threads);
+    options.progress_callback = std::move(progress_callback);
+
     iris::random::MersenneTwisterRandom rng;  // TODO: Support other RNG
-    auto framebuffer = result->renderable.Render(
-        *color_matcher, rng, absl::GetFlag(FLAGS_epsilon),
-        absl::GetFlag(FLAGS_num_threads), progress_callback);
+    auto framebuffer = result->renderable.Render(*color_matcher, rng, options);
 
     result->output_write_function(framebuffer, output);
   }

@@ -1,5 +1,6 @@
 #include "iris/renderer.h"
 
+#include <iostream>
 #include <thread>
 
 #include "googletest/include/gtest/gtest.h"
@@ -12,8 +13,11 @@
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
 
-void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
-                 std::function<void(size_t, size_t)> progress_callback) {
+void RunTestBody(
+    unsigned num_threads_requested, unsigned actual_num_threads,
+    std::function<void(size_t, size_t)> progress_callback,
+    std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
+        skip_pixel_callback) {
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
   auto light_scene_builder =
       iris::light_scenes::AllLightScene::Builder::Create();
@@ -24,9 +28,19 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
   iris::RayDifferential trace_ray(
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0)));
   std::pair<size_t, size_t> image_dimensions = std::make_pair(32, 33);
+
+  size_t num_pixels = 0;
+  for (size_t y = 0; y < image_dimensions.first; y++) {
+    for (size_t x = 0; x < image_dimensions.second; x++) {
+      if (!skip_pixel_callback ||
+          !skip_pixel_callback({y, x}, image_dimensions)) {
+        num_pixels += 1;
+      }
+    }
+  }
+
   uint32_t samples_per_pixel = 2;
-  size_t pixels = image_dimensions.first * image_dimensions.second;
-  size_t samples = pixels * samples_per_pixel;
+  size_t samples = num_pixels * samples_per_pixel;
   size_t chunks = 64;
 
   iris::random::MockRandom rng;
@@ -48,6 +62,12 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
             testing::InSequence s;
 
             for (size_t i = 0; i < 32; i++) {
+              if (skip_pixel_callback &&
+                  skip_pixel_callback({sampler_index / 2, i},
+                                      image_dimensions)) {
+                continue;
+              }
+
               EXPECT_CALL(*result,
                           StartPixel(std::make_pair(static_cast<size_t>(32),
                                                     static_cast<size_t>(33)),
@@ -68,25 +88,28 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
             }
           }
         } else {
-          EXPECT_CALL(
-              *result,
-              StartPixel(std::make_pair(static_cast<size_t>(32),
-                                        static_cast<size_t>(33)),
-                         std::make_pair(static_cast<size_t>(sampler_index / 2),
-                                        static_cast<size_t>(32))));
-          {
-            testing::InSequence s;
-            EXPECT_CALL(*result, NextSample(testing::_, testing::_))
-                .Times(samples_per_pixel)
-                .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
-                    {0.0, 0.0},
-                    {1.0, 1.0},
-                    std::nullopt,
-                    static_cast<iris::visual_t>(1.0) /
-                        static_cast<iris::visual_t>(samples_per_pixel),
-                    rng}));
-            EXPECT_CALL(*result, NextSample(testing::_, testing::_))
-                .WillOnce(testing::Return(std::nullopt));
+          if (!skip_pixel_callback ||
+              !skip_pixel_callback({sampler_index / 2, 32}, image_dimensions)) {
+            EXPECT_CALL(*result,
+                        StartPixel(std::make_pair(static_cast<size_t>(32),
+                                                  static_cast<size_t>(33)),
+                                   std::make_pair(
+                                       static_cast<size_t>(sampler_index / 2),
+                                       static_cast<size_t>(32))));
+            {
+              testing::InSequence s;
+              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+                  .Times(samples_per_pixel)
+                  .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
+                      {0.0, 0.0},
+                      {1.0, 1.0},
+                      std::nullopt,
+                      static_cast<iris::visual_t>(1.0) /
+                          static_cast<iris::visual_t>(samples_per_pixel),
+                      rng}));
+              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+                  .WillOnce(testing::Return(std::nullopt));
+            }
           }
         }
 
@@ -126,22 +149,33 @@ void RunTestBody(unsigned num_threads_requested, unsigned actual_num_threads,
       .Times(actual_num_threads)
       .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
 
-  auto framebuffer = renderer.Render(camera, image_sampler, integrator,
-                                     color_matcher, rng, image_dimensions, 0.0,
-                                     num_threads_requested, progress_callback);
+  iris::Renderer::AdditionalOptions options;
+  options.num_threads = num_threads_requested;
+  options.progress_callback = progress_callback;
+  options.skip_pixel_callback = skip_pixel_callback;
+
+  auto framebuffer =
+      renderer.Render(camera, image_sampler, integrator, color_matcher, rng,
+                      image_dimensions, options);
   EXPECT_EQ(image_dimensions, framebuffer.Size());
 
+  iris::Color black(0.0, 0.0, 0.0, iris::Color::LINEAR_SRGB);
   for (size_t y = 0; y < image_dimensions.first; y++) {
     for (size_t x = 0; x < image_dimensions.second; x++) {
-      EXPECT_EQ(color, framebuffer.Get(y, x));
+      if (!options.skip_pixel_callback ||
+          !options.skip_pixel_callback({y, x}, image_dimensions)) {
+        EXPECT_EQ(color, framebuffer.Get(y, x));
+      } else {
+        EXPECT_EQ(black, framebuffer.Get(y, x));
+      }
     }
   }
 }
 
-TEST(RendererTest, SingleThreaded) { RunTestBody(1u, 1u, nullptr); }
+TEST(RendererTest, SingleThreaded) { RunTestBody(1u, 1u, nullptr, nullptr); }
 
 TEST(RendererTest, MultiThreaded) {
-  RunTestBody(0u, std::thread::hardware_concurrency(), nullptr);
+  RunTestBody(0u, std::thread::hardware_concurrency(), nullptr, nullptr);
 }
 
 TEST(RendererTest, Progress) {
@@ -151,6 +185,24 @@ TEST(RendererTest, Progress) {
     EXPECT_EQ(1056u, num_pixels);
   };
 
-  RunTestBody(1u, 1u, progress_callback);
+  RunTestBody(1u, 1u, progress_callback, nullptr);
   EXPECT_EQ(1057u, next_value);
+}
+
+TEST(RendererTest, WithSkips) {
+  auto skip_pixel_callback = [&](std::pair<size_t, size_t> pixel,
+                                 std::pair<size_t, size_t> image_dimensions) {
+    EXPECT_EQ(32u, image_dimensions.first);
+    EXPECT_EQ(33u, image_dimensions.second);
+    return (pixel.first + pixel.second) % 2 != 0;
+  };
+
+  size_t next_value = 0;
+  auto progress_callback = [&](size_t current_pixel, size_t num_pixels) {
+    EXPECT_EQ(next_value++, current_pixel);
+    EXPECT_EQ(528u, num_pixels);
+  };
+
+  RunTestBody(1u, 1u, progress_callback, skip_pixel_callback);
+  EXPECT_EQ(529u, next_value);
 }

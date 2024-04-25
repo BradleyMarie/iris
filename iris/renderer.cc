@@ -4,6 +4,7 @@
 #include <array>
 #include <atomic>
 #include <cmath>
+#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -29,15 +30,16 @@ struct Chunk {
   size_t pixel_start;
 };
 
-void RenderChunk(const Scene& scene,
-                 const EnvironmentalLight* environmental_light,
-                 const LightScene& light_scene, const Camera& camera,
-                 std::unique_ptr<Integrator> integrator,
-                 const ColorMatcher& color_matcher,
-                 std::vector<std::vector<Chunk>>& chunks,
-                 std::atomic<size_t>& chunk_counter, size_t num_chunks,
-                 geometric_t minimum_distance, Framebuffer& framebuffer,
-                 std::function<void(size_t, size_t)> progress_callback) {
+void RenderChunk(
+    const Scene& scene, const EnvironmentalLight* environmental_light,
+    const LightScene& light_scene, const Camera& camera,
+    std::unique_ptr<Integrator> integrator, const ColorMatcher& color_matcher,
+    std::vector<std::vector<Chunk>>& chunks, std::atomic<size_t>& chunk_counter,
+    size_t num_chunks, size_t num_pixels, geometric_t minimum_distance,
+    Framebuffer& framebuffer,
+    const std::function<bool(std::pair<size_t, size_t>,
+                             std::pair<size_t, size_t>)>& skip_pixel_callback,
+    std::function<void(size_t, size_t)> progress_callback) {
   bool has_lens = camera.HasLens();
   auto color_space = color_matcher.ColorSpace();
 
@@ -51,8 +53,7 @@ void RenderChunk(const Scene& scene,
   RayTracer ray_tracer(scene, environmental_light, minimum_distance,
                        internal_tracer, arena);
 
-  auto [size_y, size_x] = framebuffer.Size();
-  auto num_pixels = size_x * size_y;
+  auto image_dimensions = framebuffer.Size();
 
   if (progress_callback) {
     progress_callback(0, num_pixels);
@@ -63,40 +64,46 @@ void RenderChunk(const Scene& scene,
     auto y = chunk_index % chunks.size();
     auto& chunk = chunks[y][chunk_index / chunks.size()];
 
+    size_t pixel_index = 0;
     for (auto x = chunk.chunk_start_x; x < chunk.chunk_end_x; x++) {
-      if (progress_callback && (x != 0 || y != 0)) {
-        progress_callback(chunk.pixel_start + x - chunk.chunk_start_x,
-                          num_pixels);
-      }
-
-      chunk.image_sampler->StartPixel(framebuffer.Size(), std::make_pair(y, x));
-
       std::array<visual_t, 3> pixel_components = {0.0, 0.0, 0.0};
-      for (;;) {
-        auto image_sample =
-            chunk.image_sampler->NextSample(has_lens, *chunk.rng);
-        if (!image_sample) {
-          break;
+      if (!skip_pixel_callback ||
+          !skip_pixel_callback({y, x}, image_dimensions)) {
+        if (progress_callback && (x != 0 || y != 0)) {
+          progress_callback(chunk.pixel_start + pixel_index, num_pixels);
         }
 
-        auto ray =
-            camera.Compute(image_sample->image_uv, image_sample->image_uv_dxdy,
-                           image_sample->lens_uv);
+        pixel_index += 1;
 
-        LightSampler light_sampler(light_scene, image_sample->rng,
-                                   light_sample_allocator);
-        auto* spectrum = integrator->Integrate(
-            ray, ray_tracer, light_sampler, visibility_tester,
-            spectral_allocator, image_sample->rng);
+        chunk.image_sampler->StartPixel(framebuffer.Size(),
+                                        std::make_pair(y, x));
 
-        if (spectrum) {
-          auto sample_components = color_matcher.Match(*spectrum);
-          pixel_components[0] += sample_components[0] * image_sample->weight;
-          pixel_components[1] += sample_components[1] * image_sample->weight;
-          pixel_components[2] += sample_components[2] * image_sample->weight;
+        for (;;) {
+          auto image_sample =
+              chunk.image_sampler->NextSample(has_lens, *chunk.rng);
+          if (!image_sample) {
+            break;
+          }
+
+          auto ray = camera.Compute(image_sample->image_uv,
+                                    image_sample->image_uv_dxdy,
+                                    image_sample->lens_uv);
+
+          LightSampler light_sampler(light_scene, image_sample->rng,
+                                     light_sample_allocator);
+          auto* spectrum = integrator->Integrate(
+              ray, ray_tracer, light_sampler, visibility_tester,
+              spectral_allocator, image_sample->rng);
+
+          if (spectrum) {
+            auto sample_components = color_matcher.Match(*spectrum);
+            pixel_components[0] += sample_components[0] * image_sample->weight;
+            pixel_components[1] += sample_components[1] * image_sample->weight;
+            pixel_components[2] += sample_components[2] * image_sample->weight;
+          }
+
+          arena.Clear();
         }
-
-        arena.Clear();
       }
 
       framebuffer.Set(
@@ -115,12 +122,12 @@ void RenderChunk(const Scene& scene,
 
 }  // namespace
 
-Framebuffer Renderer::Render(
-    const Camera& camera, const ImageSampler& image_sampler,
-    const Integrator& integrator, const ColorMatcher& color_matcher,
-    Random& rng, std::pair<size_t, size_t> image_dimensions,
-    geometric_t minimum_distance, unsigned num_threads,
-    std::function<void(size_t, size_t)> progress_callback) const {
+Framebuffer Renderer::Render(const Camera& camera,
+                             const ImageSampler& image_sampler,
+                             const Integrator& integrator,
+                             const ColorMatcher& color_matcher, Random& rng,
+                             const std::pair<size_t, size_t>& image_dimensions,
+                             const AdditionalOptions& options) const {
   Framebuffer result(image_dimensions);
 
   size_t num_x_chunks = image_dimensions.second / kChunkSize + 1u;
@@ -136,21 +143,35 @@ Framebuffer Renderer::Render(
     }
   }
 
-  size_t pixel = 0;
-  for (size_t x = 0; x < image_dimensions.second; x += kChunkSize) {
+  size_t num_pixels = 0;
+  for (size_t x_chunk = 0; x_chunk < num_x_chunks; x_chunk++) {
     for (size_t y = 0; y < image_dimensions.first; y++) {
-      auto& chunk = chunks.at(y).at(x / kChunkSize);
-      chunk.chunk_start_x = x;
-      chunk.chunk_end_x = std::min(x + kChunkSize, image_dimensions.second);
-      chunk.pixel_start = pixel;
+      auto& chunk = chunks.at(y).at(x_chunk);
 
-      pixel += chunk.chunk_end_x - chunk.chunk_start_x;
+      for (size_t x_offset = 0; x_offset < kChunkSize; x_offset++) {
+        size_t x = x_chunk * kChunkSize + x_offset;
+        if (x >= image_dimensions.second) {
+          break;
+        }
+
+        chunk.chunk_start_x = x - x % kChunkSize;
+        chunk.chunk_end_x = x + 1;
+
+        if (x % kChunkSize == 0) {
+          chunk.pixel_start = num_pixels;
+        }
+
+        if (!options.skip_pixel_callback ||
+            !options.skip_pixel_callback({y, x}, image_dimensions)) {
+          num_pixels += 1;
+        }
+      }
     }
   }
 
-  if (num_threads == 0) {
-    num_threads = std::thread::hardware_concurrency();
-  }
+  unsigned num_threads = (options.num_threads == 0)
+                             ? std::thread::hardware_concurrency()
+                             : options.num_threads;
 
   std::vector<std::thread> threads;
   std::atomic<size_t> chunk_counter = 0;
@@ -159,14 +180,15 @@ Framebuffer Renderer::Render(
         RenderChunk, std::cref(*scene_),
         scene_objects_->GetEnvironmentalLight(), std::cref(*light_scene_),
         std::cref(camera), integrator.Duplicate(), std::cref(color_matcher),
-        std::ref(chunks), std::ref(chunk_counter), num_chunks, minimum_distance,
-        std::ref(result), nullptr));
+        std::ref(chunks), std::ref(chunk_counter), num_chunks, num_pixels,
+        options.minimum_distance, std::ref(result), options.skip_pixel_callback,
+        nullptr));
   }
 
   RenderChunk(*scene_, scene_objects_->GetEnvironmentalLight(), *light_scene_,
               camera, integrator.Duplicate(), color_matcher, chunks,
-              chunk_counter, num_chunks, minimum_distance, result,
-              progress_callback);
+              chunk_counter, num_chunks, num_pixels, options.minimum_distance,
+              result, options.skip_pixel_callback, options.progress_callback);
 
   for (auto& thread : threads) {
     thread.join();

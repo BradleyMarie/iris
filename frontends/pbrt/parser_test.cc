@@ -724,7 +724,7 @@ TEST(Render, EmptyScene) {
 
   iris::random::MersenneTwisterRandom rng;
 
-  auto framebuffer = result->renderable.Render(color_matcher, rng, 0.0, 1u);
+  auto framebuffer = result->renderable.Render(color_matcher, rng);
   auto dimensions = framebuffer.Size();
   EXPECT_EQ(480u, dimensions.first);
   EXPECT_EQ(640u, dimensions.second);
