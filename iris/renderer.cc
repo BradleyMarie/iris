@@ -36,10 +36,8 @@ void RenderChunk(
     std::unique_ptr<Integrator> integrator, const ColorMatcher& color_matcher,
     std::vector<std::vector<Chunk>>& chunks, std::atomic<size_t>& chunk_counter,
     size_t num_chunks, size_t num_pixels, geometric_t minimum_distance,
-    Framebuffer& framebuffer,
-    const std::function<bool(std::pair<size_t, size_t>,
-                             std::pair<size_t, size_t>)>& skip_pixel_callback,
-    std::function<void(size_t, size_t)> progress_callback) {
+    Framebuffer& framebuffer, const Renderer::SkipPixelFn& skip_pixel_callback,
+    const Renderer::ProgressCallbackFn& progress_callback) {
   bool has_lens = camera.HasLens();
   auto color_space = color_matcher.ColorSpace();
 

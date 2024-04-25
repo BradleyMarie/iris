@@ -26,16 +26,17 @@ class Renderer {
         scene_(scene_builder.Build(*scene_objects_)),
         light_scene_(light_scene_builder.Build(*scene_objects_)) {}
 
+  typedef std::function<bool(std::pair<size_t, size_t>,
+                             std::pair<size_t, size_t>)>
+      SkipPixelFn;
+  typedef std::function<void(size_t, size_t)> ProgressCallbackFn;
+
   struct AdditionalOptions {
-    std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
-        skip_pixel_callback = nullptr;
-    std::function<void(size_t, size_t)> progress_callback = nullptr;
+    AdditionalOptions() {}  // Workaround compiler bug
+    SkipPixelFn skip_pixel_callback = nullptr;
+    ProgressCallbackFn progress_callback = nullptr;
     geometric_t minimum_distance = 0.0;
     unsigned num_threads = 0;
-
-    // This constructor is required in order to work around a bug in GCC and
-    // Clang
-    AdditionalOptions() {}
   };
 
   Framebuffer Render(
