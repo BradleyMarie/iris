@@ -14,8 +14,9 @@ namespace iris::pbrt_frontend::film {
 struct Result {
   std::filesystem::path filename;
   std::pair<size_t, size_t> resolution;
+  std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
+      skip_pixel_function;
   std::function<void(Framebuffer&, std::ofstream&)> write_function;
-  std::array<geometric_t, 4> crop_window;
   geometric_t diagonal;
   std::optional<visual_t> max_sample_luminance;
 };

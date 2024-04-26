@@ -33,6 +33,7 @@ class Parser {
 
   struct Result {
     Renderable renderable;
+    iris::Renderer::SkipPixelFn skip_pixel_callback;
     std::filesystem::path output_filename;
     std::function<void(Framebuffer&, std::ofstream&)> output_write_function;
   };
@@ -109,6 +110,7 @@ class Parser {
       camera_;
   SceneObjects::Builder scene_objects_builder_;
   std::pair<size_t, size_t> image_dimensions_;
+  iris::Renderer::SkipPixelFn skip_pixel_callback_;
   std::unique_ptr<iris::ImageSampler> image_sampler_;
   std::unique_ptr<iris::Integrator> integrator_;
   std::unique_ptr<iris::LightScene::Builder> light_scene_builder_;

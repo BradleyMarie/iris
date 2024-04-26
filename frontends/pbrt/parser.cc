@@ -108,6 +108,7 @@ bool Parser::Film() {
                   *spectrum_manager_, *texture_manager_);
 
   image_dimensions_ = result.resolution;
+  skip_pixel_callback_ = std::move(result.skip_pixel_function);
   output_filename_ = result.filename;
   write_function_ = result.write_function;
 
@@ -516,6 +517,7 @@ void Parser::InitializeDefault() {
       BuildObject(film::Default(), empty_tokenizer, *search_root_,
                   *spectrum_manager_, *texture_manager_);
   image_dimensions_ = default_film.resolution;
+  skip_pixel_callback_ = std::move(default_film.skip_pixel_function);
   output_filename_ = default_film.filename;
   write_function_ = std::move(default_film.write_function);
 
@@ -634,7 +636,8 @@ std::optional<Parser::Result> Parser::ParseFrom(
   matrix_manager_.reset();
   texture_manager_.reset();
 
-  return Parser::Result{std::move(renderable), std::move(output_filename_),
+  return Parser::Result{std::move(renderable), std::move(skip_pixel_callback_),
+                        std::move(output_filename_),
                         std::move(write_function_)};
 }
 

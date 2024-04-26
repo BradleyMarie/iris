@@ -16,10 +16,9 @@ TEST(Image, Empty) {
   EXPECT_EQ("pbrt.exr", result.filename);
   EXPECT_EQ(480u, result.resolution.first);
   EXPECT_EQ(640u, result.resolution.second);
-  EXPECT_EQ(0.0, result.crop_window[0]);
-  EXPECT_EQ(1.0, result.crop_window[1]);
-  EXPECT_EQ(0.0, result.crop_window[2]);
-  EXPECT_EQ(1.0, result.crop_window[3]);
+  EXPECT_FALSE(result.skip_pixel_function({0, 0}, {480, 640}));
+  EXPECT_FALSE(result.skip_pixel_function({479, 639}, {480, 640}));
+  EXPECT_TRUE(result.skip_pixel_function({480, 640}, {480, 640}));
   EXPECT_EQ(35.0, result.diagonal);
   EXPECT_FALSE(result.max_sample_luminance);
 }
@@ -301,8 +300,8 @@ TEST(Image, AllParameters) {
       "\"string filename\" \"iris.pfm\" "
       "\"float maxsampleluminance\" 1.0 "
       "\"float scale\" 2.0 "
-      "\"integer xresolution\" 500 "
-      "\"integer yresolution\" 250");
+      "\"integer xresolution\" 400 "
+      "\"integer yresolution\" 200");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
@@ -311,12 +310,14 @@ TEST(Image, AllParameters) {
       *iris::pbrt_frontend::film::g_image_builder, tokenizer,
       std::filesystem::current_path(), spectrum_manager, texture_manager);
   EXPECT_EQ("iris.pfm", result.filename);
-  EXPECT_EQ(250u, result.resolution.first);
-  EXPECT_EQ(500u, result.resolution.second);
-  EXPECT_EQ(0.25, result.crop_window[0]);
-  EXPECT_EQ(0.75, result.crop_window[1]);
-  EXPECT_EQ(0.25, result.crop_window[2]);
-  EXPECT_EQ(0.75, result.crop_window[3]);
+  EXPECT_EQ(200u, result.resolution.first);
+  EXPECT_EQ(400u, result.resolution.second);
+  EXPECT_TRUE(result.skip_pixel_function({0, 0}, {200, 400}));
+  EXPECT_TRUE(result.skip_pixel_function({49, 99}, {200, 400}));
+  EXPECT_FALSE(result.skip_pixel_function({50, 100}, {200, 400}));
+  EXPECT_FALSE(result.skip_pixel_function({149, 299}, {200, 400}));
+  EXPECT_TRUE(result.skip_pixel_function({150, 300}, {200, 400}));
+  EXPECT_TRUE(result.skip_pixel_function({199, 399}, {200, 400}));
   EXPECT_EQ(25.0, result.diagonal);
   EXPECT_EQ(1.0, result.max_sample_luminance.value());
 }

@@ -716,6 +716,9 @@ TEST(Render, EmptyScene) {
   auto result = parser.ParseFrom(tokenizer, std::filesystem::current_path());
   ASSERT_TRUE(result);
 
+  EXPECT_FALSE(result->skip_pixel_callback({0, 0}, {480, 640}));
+  EXPECT_FALSE(result->skip_pixel_callback({479, 639}, {480, 640}));
+  EXPECT_TRUE(result->skip_pixel_callback({480, 640}, {480, 640}));
   EXPECT_EQ("pbrt.exr", result->output_filename);
 
   iris::color_matchers::MockColorMatcher color_matcher;

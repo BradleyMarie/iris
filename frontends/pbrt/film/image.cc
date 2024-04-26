@@ -148,9 +148,15 @@ Result ImageObjectBuilder::Build(
     exit(EXIT_FAILURE);
   }
 
+  std::array<size_t, 4> crop_pixels;
+  crop_pixels[0] = crop_window[2] * y_resolution;
+  crop_pixels[1] = crop_window[3] * y_resolution;
+  crop_pixels[2] = crop_window[0] * x_resolution;
+  crop_pixels[3] = crop_window[1] * x_resolution;
+
   std::function<void(Framebuffer&, std::ofstream&)> write_function =
-      [scale, write_to_file_function](Framebuffer& framebuffer,
-                                      std::ofstream& output) {
+      [crop_pixels, scale, write_to_file_function](Framebuffer& framebuffer,
+                                                   std::ofstream& output) {
         auto size = framebuffer.Size();
 
         if (scale != 1.0) {
@@ -165,12 +171,32 @@ Result ImageObjectBuilder::Build(
           }
         }
 
-        write_to_file_function(framebuffer, output);
+        Framebuffer cropped(
+            {crop_pixels[1] - crop_pixels[0], crop_pixels[3] - crop_pixels[2]});
+        for (size_t y = crop_pixels[0]; y < crop_pixels[1]; y++) {
+          for (size_t x = crop_pixels[2]; x < crop_pixels[3]; x++) {
+            cropped.Set(y - crop_pixels[0], x - crop_pixels[2],
+                        framebuffer.Get(y, x));
+          }
+        }
+
+        write_to_file_function(cropped, output);
       };
 
-  return Result{filename,       std::make_pair(y_resolution, x_resolution),
-                write_function, crop_window,
-                diagonal,       max_sample_luminance};
+  std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
+      skip_pixel_function = [crop_pixels](
+                                std::pair<size_t, size_t> pixel,
+                                std::pair<size_t, size_t> image_dimensions) {
+        return pixel.first < crop_pixels[0] || pixel.first >= crop_pixels[1] ||
+               pixel.second < crop_pixels[2] || pixel.second >= crop_pixels[3];
+      };
+
+  return Result{filename,
+                std::make_pair(y_resolution, x_resolution),
+                skip_pixel_function,
+                write_function,
+                diagonal,
+                max_sample_luminance};
 }
 
 }  // namespace

@@ -171,73 +171,75 @@ int main(int argc, char** argv) {
 
     bool first = true;
     auto start_time = std::chrono::steady_clock::now();
-    auto progress_callback = [&](size_t current_pixel, size_t num_pixels) {
-      auto current_time = std::chrono::steady_clock::now();
+    iris::Renderer::ProgressCallbackFn progress_callback =
+        [&](size_t current_pixel, size_t num_pixels) {
+          auto current_time = std::chrono::steady_clock::now();
 
-      std::string prefix;
-      if (unparsed.size() == 1) {
-        prefix = "Rendering (" + std::to_string(render_index + 1) + ") [";
-      } else {
-        prefix = "Rendering [";
-      }
+          std::string prefix;
+          if (unparsed.size() == 1) {
+            prefix = "Rendering (" + std::to_string(render_index + 1) + ") [";
+          } else {
+            prefix = "Rendering [";
+          }
 
-      std::chrono::duration<float> elapsed_time(current_time - start_time);
-      float chunks_per_second = static_cast<float>(current_pixel) /
-                                static_cast<float>(elapsed_time.count());
-      int elapsed_time_seconds = elapsed_time.count();
-      int estimated_time_remaining_seconds =
-          static_cast<float>(num_pixels - current_pixel) / chunks_per_second;
+          std::chrono::duration<float> elapsed_time(current_time - start_time);
+          float chunks_per_second = static_cast<float>(current_pixel) /
+                                    static_cast<float>(elapsed_time.count());
+          int elapsed_time_seconds = elapsed_time.count();
+          int estimated_time_remaining_seconds =
+              static_cast<float>(num_pixels - current_pixel) /
+              chunks_per_second;
 
-      std::string suffix = "] (";
-      if (current_pixel == num_pixels) {
-        suffix += std::to_string(elapsed_time_seconds) + "s)";
-      } else if (first) {
-        suffix += std::to_string(elapsed_time_seconds) + "s|?s)";
-      } else {
-        suffix += std::to_string(elapsed_time_seconds) + "s|" +
-                  std::to_string(estimated_time_remaining_seconds) + "s)";
-      }
+          std::string suffix = "] (";
+          if (current_pixel == num_pixels) {
+            suffix += std::to_string(elapsed_time_seconds) + "s)";
+          } else if (first) {
+            suffix += std::to_string(elapsed_time_seconds) + "s|?s)";
+          } else {
+            suffix += std::to_string(elapsed_time_seconds) + "s|" +
+                      std::to_string(estimated_time_remaining_seconds) + "s)";
+          }
 
-      while (suffix.size() < kReservedSuffixSpace) {
-        suffix.push_back(' ');
-      }
+          while (suffix.size() < kReservedSuffixSpace) {
+            suffix.push_back(' ');
+          }
 
-      if (current_pixel == num_pixels) {
-        suffix.push_back('\n');
-      } else {
-        suffix.push_back('\r');
-      }
+          if (current_pixel == num_pixels) {
+            suffix.push_back('\n');
+          } else {
+            suffix.push_back('\r');
+          }
 
-      size_t text_width = kDefaultProgressWidth;
+          size_t text_width = kDefaultProgressWidth;
 
 #ifdef __linux__
-      struct winsize window;
-      int result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
-      if (result >= 0) {
-        text_width = window.ws_col;
-      }
+          struct winsize window;
+          int result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
+          if (result >= 0) {
+            text_width = window.ws_col;
+          }
 #endif
 
-      size_t bar_width = text_width - prefix.size() - suffix.size();
-      float progress =
-          static_cast<float>(current_pixel) / static_cast<float>(num_pixels);
-      size_t bar_length = bar_width * progress;
+          size_t bar_width = text_width - prefix.size() - suffix.size();
+          float progress = static_cast<float>(current_pixel) /
+                           static_cast<float>(num_pixels);
+          size_t bar_length = bar_width * progress;
 
-      std::string bar;
-      for (size_t i = 0; i < bar_width; i++) {
-        if (i < bar_length) {
-          bar += "=";
-        } else if (i == bar_length) {
-          bar += ">";
-        } else {
-          bar += " ";
-        }
-      }
+          std::string bar;
+          for (size_t i = 0; i < bar_width; i++) {
+            if (i < bar_length) {
+              bar += "=";
+            } else if (i == bar_length) {
+              bar += ">";
+            } else {
+              bar += " ";
+            }
+          }
 
-      std::cout << prefix << bar << suffix << std::flush;
+          std::cout << prefix << bar << suffix << std::flush;
 
-      first = false;
-    };
+          first = false;
+        };
 
     std::ofstream output(result->output_filename, std::ofstream::out |
                                                       std::ofstream::binary |
@@ -247,6 +249,7 @@ int main(int argc, char** argv) {
     options.minimum_distance = absl::GetFlag(FLAGS_epsilon);
     options.num_threads = absl::GetFlag(FLAGS_num_threads);
     options.progress_callback = std::move(progress_callback);
+    options.skip_pixel_callback = std::move(result->skip_pixel_callback);
 
     iris::random::MersenneTwisterRandom rng;  // TODO: Support other RNG
     auto framebuffer = result->renderable.Render(*color_matcher, rng, options);
