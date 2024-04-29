@@ -257,6 +257,28 @@ cc_test(
 )
 
 cc_library(
+    name = "hit_point",
+    srcs = ["hit_point.cc"],
+    hdrs = ["hit_point.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":float",
+        ":ray",
+        ":vector",
+    ],
+)
+
+cc_test(
+    name = "hit_point_test",
+    srcs = ["hit_point_test.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":hit_point",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "integer",
     hdrs = ["integer.h"],
     visibility = ["//visibility:public"],
