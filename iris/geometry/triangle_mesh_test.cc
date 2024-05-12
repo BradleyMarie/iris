@@ -2,6 +2,7 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
+#include "iris/geometry/internal/math.h"
 #include "iris/materials/mock_material.h"
 #include "iris/normal_maps/mock_normal_map.h"
 #include "iris/random/mock_random.h"
@@ -698,6 +699,23 @@ TEST_F(Triangle, ComputeShadingNormalFromNormals) {
   EXPECT_EQ(1.0, back_normal2.dp_duv->second.y);
   EXPECT_EQ(0.0, back_normal2.dp_duv->second.z);
   EXPECT_EQ(nullptr, back_normal2.normal_map);
+}
+
+TEST_F(Triangle, ComputeHitPoint) {
+  auto triangle = SimpleTriangle();
+
+  iris::Point origin(1.0, 0.25, 0.25);
+  iris::Vector direction(-1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  AdditionalData additional_data0{{0.0, 0.0, 1.0},
+                                  iris::Vector(0.0, 0.0, -1.0)};
+  auto hit_point0 = triangle->ComputeHitPoint(ray, 1.0, &additional_data0);
+  EXPECT_EQ(hit_point0.point, iris::Point(0.0, 1.0, 0.0));
+  EXPECT_EQ(hit_point0.error[0], 0.0);
+  EXPECT_LE(std::abs(hit_point0.error[1]),
+            1.0 * iris::geometry::internal::Gamma(7));
+  EXPECT_EQ(hit_point0.error[2], 0.0);
 }
 
 TEST_F(Triangle, GetMaterial) {

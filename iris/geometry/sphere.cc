@@ -5,6 +5,8 @@
 #include <cassert>
 #include <cmath>
 
+#include "iris/geometry/internal/math.h"
+
 namespace iris {
 namespace geometry {
 namespace {
@@ -31,40 +33,41 @@ class Sphere final : public Geometry {
     assert(std::isfinite(radius) && radius > 0.0);
   }
 
-  virtual Vector ComputeSurfaceNormal(
-      const Point& hit_point, face_t face,
-      const void* additional_data) const override;
+  Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
+                              const void* additional_data) const override;
 
-  virtual std::optional<TextureCoordinates> ComputeTextureCoordinates(
+  std::optional<TextureCoordinates> ComputeTextureCoordinates(
       const Point& hit_point, const std::optional<Differentials>& differentials,
       face_t face, const void* additional_data) const override;
 
-  virtual Geometry::ComputeShadingNormalResult ComputeShadingNormal(
+  Geometry::ComputeShadingNormalResult ComputeShadingNormal(
       face_t face, const void* additional_data) const override;
 
-  virtual const Material* GetMaterial(
+  ComputeHitPointResult ComputeHitPoint(
+      const Ray& ray, geometric_t distance,
+      const void* additional_data) const override;
+
+  const Material* GetMaterial(face_t face,
+                              const void* additional_data) const override;
+
+  bool IsEmissive(face_t face) const override;
+
+  const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const override;
 
-  virtual bool IsEmissive(face_t face) const override;
-
-  virtual const EmissiveMaterial* GetEmissiveMaterial(
-      face_t face, const void* additional_data) const override;
-
-  virtual std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
+  std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
       const Point& origin, face_t face, Sampler& sampler) const override;
 
-  virtual std::optional<visual_t> ComputePdfBySolidAngle(
+  std::optional<visual_t> ComputePdfBySolidAngle(
       const Point& origin, face_t face, const void* additional_data,
       const Point& on_face) const override;
 
-  virtual BoundingBox ComputeBounds(
-      const Matrix& model_to_world) const override;
+  BoundingBox ComputeBounds(const Matrix& model_to_world) const override;
 
-  virtual std::span<const face_t> GetFaces() const override;
+  std::span<const face_t> GetFaces() const override;
 
  private:
-  virtual Hit* Trace(const Ray& ray,
-                     HitAllocator& hit_allocator) const override;
+  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override;
 
   const Point center_;
   const geometric radius_;
@@ -90,6 +93,44 @@ std::optional<TextureCoordinates> Sphere::ComputeTextureCoordinates(
 Geometry::ComputeShadingNormalResult Sphere::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
   return {std::nullopt, std::nullopt, normal_maps_[face].Get()};
+}
+
+Geometry::ComputeHitPointResult Sphere::ComputeHitPoint(
+    const Ray& ray, geometric_t distance, const void* additional_data) const {
+  Point on_ray = ray.Endpoint(distance);
+  Vector to_center = on_ray - center_;
+
+  geometric phi = std::acos(to_center.z / to_center.Length());
+
+  geometric to_surface_x, to_surface_y, to_surface_z;
+  geometric error_x, error_y, error_z;
+  if (to_center.x != static_cast<geometric>(0.0) ||
+      to_center.y != static_cast<geometric>(0.0)) {
+    geometric theta = std::atan2(to_center.y, to_center.x);
+    geometric sin_theta = std::sin(theta);
+    geometric cos_theta = std::cos(theta);
+
+    to_surface_x = radius_ * (sin_theta * std::cos(phi));
+    to_surface_y = radius_ * (sin_theta * std::sin(phi));
+    to_surface_z = radius_ * cos_theta;
+
+    error_x = to_surface_x * internal::Gamma(5);
+    error_y = to_surface_y * internal::Gamma(5);
+    error_z = to_surface_z * internal::Gamma(3);
+  } else {
+    to_surface_x = 0.0;
+    to_surface_y = 0.0;
+    to_surface_z = std::copysign(radius_, to_center.z);
+
+    error_x = 0.0;
+    error_y = 0.0;
+    error_z = radius_ * internal::Gamma(1);
+  }
+
+  Vector to_surface(to_surface_x, to_surface_y, to_surface_z);
+
+  return ComputeHitPointResult{center_ + to_surface,
+                               {error_x, error_y, error_z}};
 }
 
 const Material* Sphere::GetMaterial(face_t face,

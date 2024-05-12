@@ -21,6 +21,10 @@ class BVHAggregate final : public Geometry {
       const Point& hit_point, face_t face,
       const void* additional_data) const override;
 
+  virtual ComputeHitPointResult ComputeHitPoint(
+      const Ray& ray, geometric_t distance,
+      const void* additional_data) const override;
+
   virtual BoundingBox ComputeBounds(
       const Matrix& model_to_world) const override;
 
@@ -37,7 +41,13 @@ class BVHAggregate final : public Geometry {
 Vector BVHAggregate::ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                           const void* additional_data) const {
   assert(false);
-  return iris::Vector(0.0, 0.0, 1.0);
+  return Vector(0.0, 0.0, 1.0);
+}
+
+Geometry::ComputeHitPointResult BVHAggregate::ComputeHitPoint(
+    const Ray& ray, geometric_t distance, const void* additional_data) const {
+  assert(false);
+  return ComputeHitPointResult{Point(0.0, 0.0, 0.0), {0.0, 0.0, 0.0}};
 }
 
 BoundingBox BVHAggregate::ComputeBounds(const Matrix& model_to_world) const {

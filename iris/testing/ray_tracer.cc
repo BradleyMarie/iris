@@ -56,6 +56,12 @@ class AlwaysHitsGeometry : public Geometry {
     return &hit_allocator.Allocate(nullptr, distance_, 1, 1);
   }
 
+  ComputeHitPointResult ComputeHitPoint(
+      const Ray& ray, geometric_t distance,
+      const void* additional_data) const override {
+    return {ray.Endpoint(distance), {0.0, 0.0, 0.0}};
+  }
+
   Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                               const void* additional_data) const override {
     return world_surface_normal_;

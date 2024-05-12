@@ -24,6 +24,8 @@ static inline bool operator==(
 class MockBasicGeometry : public Geometry {
  public:
   MOCK_METHOD(Hit*, Trace, (const Ray&, HitAllocator&), (const override));
+  MOCK_METHOD(ComputeHitPointResult, ComputeHitPoint,
+              (const Ray&, geometric_t, const void*), (const override));
   MOCK_METHOD(Vector, ComputeSurfaceNormal, (const Point&, face_t, const void*),
               (const override));
   MOCK_METHOD(BoundingBox, ComputeBounds, (const Matrix&), (const override));

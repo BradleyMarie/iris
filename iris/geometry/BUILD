@@ -44,6 +44,7 @@ cc_library(
     deps = [
         "//iris:geometry",
         "//iris:reference_counted",
+        "//iris/geometry/internal:math",
     ],
 )
 
@@ -53,6 +54,7 @@ cc_test(
     deps = [
         ":sphere",
         "//iris/emissive_materials:mock_emissive_material",
+        "//iris/geometry/internal:math",
         "//iris/materials:mock_material",
         "//iris/normal_maps:mock_normal_map",
         "//iris/random:mock_random",
@@ -68,6 +70,7 @@ cc_library(
     deps = [
         "//iris:geometry",
         "//iris:reference_counted",
+        "//iris/geometry/internal:math",
         "//iris/textures:texture2d",
     ],
 )
@@ -78,6 +81,7 @@ cc_test(
     deps = [
         ":triangle_mesh",
         "//iris/emissive_materials:mock_emissive_material",
+        "//iris/geometry/internal:math",
         "//iris/materials:mock_material",
         "//iris/normal_maps:mock_normal_map",
         "//iris/random:mock_random",

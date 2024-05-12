@@ -1,5 +1,7 @@
 #include "iris/geometry/triangle_mesh.h"
 
+#include "iris/geometry/internal/math.h"
+
 namespace iris {
 namespace geometry {
 namespace {
@@ -43,40 +45,41 @@ class Triangle final : public Geometry {
            std::shared_ptr<const SharedData> shared) noexcept
       : vertices_(vertices), shared_(std::move(shared)) {}
 
-  virtual Vector ComputeSurfaceNormal(
-      const Point& hit_point, face_t face,
-      const void* additional_data) const override;
+  Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
+                              const void* additional_data) const override;
 
-  virtual std::optional<TextureCoordinates> ComputeTextureCoordinates(
+  std::optional<TextureCoordinates> ComputeTextureCoordinates(
       const Point& hit_point, const std::optional<Differentials>& differentials,
       face_t face, const void* additional_data) const override;
 
-  virtual Geometry::ComputeShadingNormalResult ComputeShadingNormal(
+  Geometry::ComputeShadingNormalResult ComputeShadingNormal(
       face_t face, const void* additional_data) const override;
 
-  virtual const Material* GetMaterial(
+  ComputeHitPointResult ComputeHitPoint(
+      const Ray& ray, geometric_t distance,
+      const void* additional_data) const override;
+
+  const Material* GetMaterial(face_t face,
+                              const void* additional_data) const override;
+
+  bool IsEmissive(face_t face) const override;
+
+  const EmissiveMaterial* GetEmissiveMaterial(
       face_t face, const void* additional_data) const override;
 
-  virtual bool IsEmissive(face_t face) const override;
-
-  virtual const EmissiveMaterial* GetEmissiveMaterial(
-      face_t face, const void* additional_data) const override;
-
-  virtual std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
+  std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
       const Point& origin, face_t face, Sampler& sampler) const override;
 
-  virtual std::optional<visual_t> ComputePdfBySolidAngle(
+  std::optional<visual_t> ComputePdfBySolidAngle(
       const Point& origin, face_t face, const void* additional_data,
       const Point& on_face) const override;
 
-  virtual BoundingBox ComputeBounds(
-      const Matrix& model_to_world) const override;
+  BoundingBox ComputeBounds(const Matrix& model_to_world) const override;
 
-  virtual std::span<const face_t> GetFaces() const override;
+  std::span<const face_t> GetFaces() const override;
 
  private:
-  virtual Hit* Trace(const Ray& ray,
-                     HitAllocator& hit_allocator) const override;
+  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override;
 
   std::tuple<Vector, face_t, face_t> ComputeSurfaceNormalAndFaces(
       const Ray& ray) const;
@@ -246,6 +249,56 @@ Geometry::ComputeShadingNormalResult Triangle::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
   return {MaybeComputeShadingNormal(face, additional_data),
           MaybeComputeNormalTangents(), shared_->normal_maps[face].Get()};
+}
+
+Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
+    const Ray& ray, geometric_t distance, const void* additional_data) const {
+  const auto* additional = static_cast<const AdditionalData*>(additional_data);
+
+  geometric x = additional->barycentric_coordinates[0] *
+                    shared_->points[std::get<0>(vertices_)].x +
+                additional->barycentric_coordinates[1] *
+                    shared_->points[std::get<1>(vertices_)].x +
+                additional->barycentric_coordinates[2] *
+                    shared_->points[std::get<2>(vertices_)].x;
+  geometric y = additional->barycentric_coordinates[0] *
+                    shared_->points[std::get<0>(vertices_)].y +
+                additional->barycentric_coordinates[1] *
+                    shared_->points[std::get<1>(vertices_)].y +
+                additional->barycentric_coordinates[2] *
+                    shared_->points[std::get<2>(vertices_)].y;
+  geometric z = additional->barycentric_coordinates[0] *
+                    shared_->points[std::get<0>(vertices_)].z +
+                additional->barycentric_coordinates[1] *
+                    shared_->points[std::get<1>(vertices_)].z +
+                additional->barycentric_coordinates[2] *
+                    shared_->points[std::get<2>(vertices_)].z;
+
+  geometric x_error = std::abs(additional->barycentric_coordinates[0] *
+                               shared_->points[std::get<0>(vertices_)].x) +
+                      std::abs(additional->barycentric_coordinates[1] *
+                               shared_->points[std::get<1>(vertices_)].x) +
+                      std::abs(additional->barycentric_coordinates[2] *
+                               shared_->points[std::get<2>(vertices_)].x);
+  x_error *= internal::Gamma(7);
+
+  geometric y_error = std::abs(additional->barycentric_coordinates[0] *
+                               shared_->points[std::get<0>(vertices_)].y) +
+                      std::abs(additional->barycentric_coordinates[1] *
+                               shared_->points[std::get<1>(vertices_)].y) +
+                      std::abs(additional->barycentric_coordinates[2] *
+                               shared_->points[std::get<2>(vertices_)].y);
+  y_error *= internal::Gamma(7);
+
+  geometric z_error = std::abs(additional->barycentric_coordinates[0] *
+                               shared_->points[std::get<0>(vertices_)].z) +
+                      std::abs(additional->barycentric_coordinates[1] *
+                               shared_->points[std::get<1>(vertices_)].z) +
+                      std::abs(additional->barycentric_coordinates[2] *
+                               shared_->points[std::get<2>(vertices_)].z);
+  z_error *= internal::Gamma(7);
+
+  return ComputeHitPointResult{Point(x, y, z), {x_error, y_error, z_error}};
 }
 
 const Material* Triangle::GetMaterial(face_t face,

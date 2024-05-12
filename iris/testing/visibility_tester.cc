@@ -22,6 +22,12 @@ class NeverVisibleScene final : public Scene {
                                      1, 2);
     }
 
+    ComputeHitPointResult ComputeHitPoint(
+        const Ray& ray, geometric_t distance,
+        const void* additional_data) const override {
+      return {ray.Endpoint(distance), {0.0, 0.0, 0.0}};
+    }
+
     Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                 const void* additional_data) const override {
       return Vector(1.0, 0.0, 0.0);

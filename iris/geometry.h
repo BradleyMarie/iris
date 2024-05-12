@@ -1,6 +1,7 @@
 #ifndef _IRIS_GEOMETRY_
 #define _IRIS_GEOMETRY_
 
+#include <array>
 #include <optional>
 #include <span>
 #include <variant>
@@ -45,6 +46,15 @@ class Geometry : public ReferenceCountable {
 
   virtual ComputeShadingNormalResult ComputeShadingNormal(
       face_t face, const void* additional_data) const;
+
+  struct ComputeHitPointResult {
+    const Point point;
+    const geometric error[3];
+  };
+
+  virtual ComputeHitPointResult ComputeHitPoint(
+      const Ray& ray, geometric_t distance,
+      const void* additional_data) const = 0;
 
   virtual const Material* GetMaterial(face_t face,
                                       const void* additional_data) const;
