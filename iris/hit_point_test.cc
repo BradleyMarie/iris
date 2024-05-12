@@ -1,12 +1,13 @@
 #include "iris/hit_point.h"
 
+#include <array>
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"
 
 TEST(HitPoint, CreateRay) {
   iris::Point point(0.0, 0.0, 0.0);
-  iris::Vector error(1.0, 1.0, 1.0);
+  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
   iris::Vector surface_normal_x(1.0, 0.0, 0.0);
   iris::Vector surface_normal_y(0.0, 1.0, 0.0);
   iris::Vector surface_normal_z(0.0, 0.0, 1.0);
@@ -81,7 +82,7 @@ TEST(HitPoint, CreateRay) {
 
 TEST(HitPoint, CreateRayTo) {
   iris::Point point(0.0, 0.0, 0.0);
-  iris::Vector error(1.0, 1.0, 1.0);
+  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
   iris::Vector surface_normal(1.0, 0.0, 0.0);
   iris::HitPoint hit_point(point, error, surface_normal);
 
