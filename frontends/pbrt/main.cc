@@ -39,9 +39,11 @@ ABSL_FLAG(
     "If true, reproduce a bug in PBRT where the reflective CIE color matching "
     "function is always used to convert sampled spectra to XYZ colors.");
 
-ABSL_FLAG(iris::geometric_t, epsilon, 0.02,
-          "The amount of error tolerated in distance calculations. Must be "
-          "finite and greater than or equal to zero.");
+ABSL_FLAG(iris::geometric_t, epsilon, 0.0,
+          "The amount of error tolerated in distance calculations. This "
+          "capability should no longer be required since iris internally "
+          "compensates for precision errors caused by floating point rounding. "
+          "Must be finite and greater than or equal to zero. ");
 
 #ifdef _XOPEN_SOURCE
 ABSL_FLAG(unsigned short, nice_increment, 19,
