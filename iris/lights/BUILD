@@ -7,8 +7,8 @@ cc_library(
     hdrs = ["mock_light.h"],
     deps = [
         "//iris:float",
+        "//iris:hit_point",
         "//iris:light",
-        "//iris:point",
         "//iris:ray",
         "//iris:sampler",
         "//iris:spectral_allocator",
@@ -24,6 +24,7 @@ cc_library(
     hdrs = ["point_light.h"],
     deps = [
         "//iris:float",
+        "//iris:hit_point",
         "//iris:light",
         "//iris:point",
         "//iris:ray",

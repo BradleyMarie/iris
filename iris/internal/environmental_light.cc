@@ -3,14 +3,14 @@
 namespace iris::internal {
 
 std::optional<Light::SampleResult> EnvironmentalLight::Sample(
-    const Point& hit_point, Sampler sampler, iris::VisibilityTester& tester,
+    const HitPoint& hit_point, Sampler sampler, iris::VisibilityTester& tester,
     SpectralAllocator& allocator) const {
   auto sample = light_.Sample(sampler, allocator);
   if (!sample) {
     return std::nullopt;
   }
 
-  if (!tester.Visible(Ray(hit_point, sample->to_light))) {
+  if (!tester.Visible(hit_point.CreateRay(sample->to_light))) {
     return std::nullopt;
   }
 

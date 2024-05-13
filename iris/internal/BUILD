@@ -13,6 +13,7 @@ cc_library(
         ":visibility_tester",
         "//iris:float",
         "//iris:geometry",
+        "//iris:hit_point",
         "//iris:integer",
         "//iris:light",
         "//iris:matrix",
@@ -60,6 +61,7 @@ cc_library(
         "//iris:environmental_light",
         "//iris:float",
         "//iris:geometry",
+        "//iris:hit_point",
         "//iris:integer",
         "//iris:light",
         "//iris:matrix",
@@ -109,6 +111,7 @@ cc_library(
     deps = [
         "//iris:hit",
         "//iris:integer",
+        "//iris:ray",
     ],
 )
 

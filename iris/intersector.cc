@@ -16,6 +16,8 @@ void Intersector::Intersect(const Geometry& geometry) {
 
     if (hit_list->distance > minimum_distance_ &&
         hit_list->distance < maximum_distance_) {
+      auto* full_hit = static_cast<internal::Hit*>(hit_list);
+      full_hit->model_ray.emplace(ray_);
       closest_hit_ = hit_list;
       maximum_distance_ = hit_list->distance;
     }
@@ -34,6 +36,7 @@ void Intersector::Intersect(const Geometry& geometry,
     if (hit_list->distance > minimum_distance_ &&
         hit_list->distance < maximum_distance_) {
       auto* full_hit = static_cast<internal::Hit*>(hit_list);
+      full_hit->model_ray.emplace(trace_ray);
       full_hit->model_to_world = model_to_world;
       closest_hit_ = hit_list;
       maximum_distance_ = hit_list->distance;
@@ -53,6 +56,7 @@ void Intersector::Intersect(const Geometry& geometry,
     if (hit_list->distance > minimum_distance_ &&
         hit_list->distance < maximum_distance_) {
       auto* full_hit = static_cast<internal::Hit*>(hit_list);
+      full_hit->model_ray.emplace(trace_ray);
       full_hit->model_to_world = &model_to_world;
       closest_hit_ = hit_list;
       maximum_distance_ = hit_list->distance;

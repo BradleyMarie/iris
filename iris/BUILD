@@ -329,7 +329,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
-        ":point",
+        ":hit_point",
         ":random",
         ":ray",
         ":reference_countable",
@@ -547,6 +547,7 @@ cc_library(
         ":bxdf_allocator",
         ":environmental_light",
         ":float",
+        ":hit_point",
         ":ray_differential",
         ":scene",
         ":spectral_allocator",

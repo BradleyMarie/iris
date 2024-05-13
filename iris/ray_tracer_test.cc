@@ -24,6 +24,13 @@ void MakeBasicGeometryImpl(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 2u, 3u, g_data);
           }));
+  EXPECT_CALL(*geometry, ComputeHitPoint(expected_ray, 1.0, testing::_))
+      .WillOnce(testing::Invoke([](const iris::Ray& ray,
+                                   const iris::geometric_t distance,
+                                   const void* additional_data) {
+        return iris::Geometry::ComputeHitPointResult{ray.Endpoint(1.0),
+                                                     {0.0, 0.0, 0.0}};
+      }));
   EXPECT_CALL(*geometry,
               ComputeSurfaceNormal(expected_hit_point, 2u, testing::_))
       .WillRepeatedly(
@@ -230,7 +237,8 @@ TEST(RayTracerTest, Minimal) {
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   EXPECT_FALSE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
@@ -279,7 +287,8 @@ TEST(RayTracerTest, WithTextureCoordinates) {
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   EXPECT_FALSE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
@@ -328,7 +337,8 @@ TEST(RayTracerTest, WithMaterial) {
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   EXPECT_FALSE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
@@ -377,7 +387,8 @@ TEST(RayTracerTest, WithNormal) {
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   EXPECT_FALSE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
@@ -440,7 +451,8 @@ TEST(RayTracerTest, WithNormalMap) {
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(1.0, 1.0, 1.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   EXPECT_FALSE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
@@ -508,7 +520,8 @@ TEST(RayTracerTest, WithXYDifferentials) {
       iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
@@ -582,7 +595,8 @@ TEST(RayTracerTest, WithUVDifferentials) {
       iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
@@ -658,7 +672,8 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
       iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
@@ -735,7 +750,8 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
       iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
@@ -810,7 +826,8 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
       iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);
@@ -869,7 +886,8 @@ TEST(RayTracerTest, WithTransform) {
       iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), result.surface_intersection->hit_point);
+  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+            result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
   EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
             result.surface_intersection->differentials->dx);

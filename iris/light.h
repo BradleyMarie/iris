@@ -4,7 +4,7 @@
 #include <optional>
 
 #include "iris/float.h"
-#include "iris/point.h"
+#include "iris/hit_point.h"
 #include "iris/ray.h"
 #include "iris/reference_countable.h"
 #include "iris/sampler.h"
@@ -24,7 +24,7 @@ class Light : public ReferenceCountable {
   };
 
   virtual std::optional<SampleResult> Sample(
-      const Point& hit_point, Sampler sampler, VisibilityTester& tester,
+      const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
       SpectralAllocator& allocator) const = 0;
 
   virtual const Spectrum* Emission(const Ray& to_light,

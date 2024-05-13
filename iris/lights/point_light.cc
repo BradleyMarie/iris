@@ -6,14 +6,15 @@ namespace iris {
 namespace lights {
 
 std::optional<Light::SampleResult> PointLight::Sample(
-    const Point& hit_point, Sampler sampler, VisibilityTester& tester,
+    const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
     SpectralAllocator& allocator) const {
-  auto to_light = location_ - hit_point;
-  if (!tester.Visible(Ray(hit_point, to_light), 1.0)) {
+  geometric_t distance;
+  Ray trace_ray = hit_point.CreateRayTo(location_, &distance);
+  if (!tester.Visible(trace_ray, distance)) {
     return std::nullopt;
   }
 
-  return Light::SampleResult{*spectrum_, Normalize(to_light), std::nullopt};
+  return Light::SampleResult{*spectrum_, trace_ray.direction, std::nullopt};
 }
 
 const Spectrum* PointLight::Emission(const Ray& to_light,

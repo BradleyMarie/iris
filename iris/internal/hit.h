@@ -1,8 +1,11 @@
 #ifndef _IRIS_INTERNAL_HIT_
 #define _IRIS_INTERNAL_HIT_
 
+#include <optional>
+
 #include "iris/hit.h"
 #include "iris/integer.h"
+#include "iris/ray.h"
 
 namespace iris {
 class Geometry;
@@ -24,6 +27,7 @@ struct Hit final : public iris::Hit {
   face_t front;
   face_t back;
   const void* additional_data;
+  std::optional<Ray> model_ray;
 };
 
 }  // namespace internal

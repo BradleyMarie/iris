@@ -23,8 +23,10 @@ TEST(SampleIndirectLighting, NoSample) {
                   iris::Vector(0.0, 1.0, 0.0));
 
   iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::Point(1.0, 0.0, 0.0), std::nullopt,
-      iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
+      bsdf,
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+                     iris::Vector(0.0, 1.0, 0.0)),
+      std::nullopt, iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
 
   iris::RayDifferential initial_ray(
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0)));
@@ -59,8 +61,10 @@ TEST(SampleIndirectLighting, Sample) {
                   iris::Vector(0.0, 1.0, 0.0));
 
   iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::Point(1.0, 0.0, 0.0), std::nullopt,
-      iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
+      bsdf,
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+                     iris::Vector(0.0, 1.0, 0.0)),
+      std::nullopt, iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
 
   iris::RayDifferential actual_ray(
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0)));
@@ -71,7 +75,13 @@ TEST(SampleIndirectLighting, Sample) {
   EXPECT_EQ(&reflector, &indirect->reflector);
 
   iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)));
+      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(1.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0))),
+                iris::Vector(0.0, 1.0, 0.0)));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
@@ -98,8 +108,10 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
                   iris::Vector(0.0, 1.0, 0.0));
 
   iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::Point(1.0, 0.0, 0.0), std::nullopt,
-      iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
+      bsdf,
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+                     iris::Vector(0.0, 1.0, 0.0)),
+      std::nullopt, iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
 
   iris::RayDifferential actual_ray(
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
@@ -113,7 +125,13 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
   EXPECT_TRUE(indirect->differentials);
 
   iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)));
+      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(1.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0))),
+                iris::Vector(0.0, 1.0, 0.0)));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
@@ -139,7 +157,9 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
                   iris::Vector(0.0, 1.0, 0.0));
 
   iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::Point(1.0, 0.0, 0.0),
+      bsdf,
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+                     iris::Vector(0.0, 1.0, 0.0)),
       iris::RayTracer::Differentials{iris::Point(1.0, 1.0, 0.0),
                                      iris::Point(1.0, 0.0, 1.0)},
       iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
@@ -154,7 +174,13 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
   EXPECT_FALSE(indirect->differentials);
 
   iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)));
+      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(1.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0))),
+                iris::Vector(0.0, 1.0, 0.0)));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
@@ -180,7 +206,9 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
                   iris::Vector(0.0, 1.0, 0.0));
 
   iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::Point(1.0, 0.0, 0.0),
+      bsdf,
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+                     iris::Vector(0.0, 1.0, 0.0)),
       iris::RayTracer::Differentials{iris::Point(1.0, 1.0, 0.0),
                                      iris::Point(1.0, 0.0, 1.0)},
       iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
@@ -197,7 +225,13 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
   EXPECT_FALSE(indirect->differentials);
 
   iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)));
+      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(1.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0))),
+                iris::Vector(0.0, 1.0, 0.0)));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
@@ -224,7 +258,9 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
                   iris::Vector(0.0, 1.0, 0.0));
 
   iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::Point(1.0, 0.0, 0.0),
+      bsdf,
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+                     iris::Vector(0.0, 1.0, 0.0)),
       iris::RayTracer::Differentials{iris::Point(1.0, 1.0, 0.0),
                                      iris::Point(1.0, 0.0, 1.0)},
       iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
@@ -241,7 +277,13 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
   EXPECT_TRUE(indirect->differentials);
 
   iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)),
+      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(1.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0)),
+                            std::nextafter(static_cast<iris::geometric>(0.0),
+                                           static_cast<iris::geometric>(2.0))),
+                iris::Vector(0.0, 1.0, 0.0)),
       iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)),
       iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(0.0, 1.0, 0.0)));
   EXPECT_EQ(expected_ray, actual_ray);

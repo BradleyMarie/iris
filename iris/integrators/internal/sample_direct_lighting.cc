@@ -59,8 +59,9 @@ const Spectrum* FromBsdfSample(
   assert(sample.pdf);  // Perfectly specular BSDFs should not use this path
 
   visual_t light_pdf;
-  auto emissions = light.Emission(Ray(intersection.hit_point, sample.direction),
-                                  visibility_tester, allocator, &light_pdf);
+  auto emissions =
+      light.Emission(intersection.hit_point.CreateRay(sample.direction),
+                     visibility_tester, allocator, &light_pdf);
   if (!emissions || light_pdf <= 0.0) {
     return nullptr;
   }
@@ -117,7 +118,8 @@ const Spectrum* SampleDirectLighting(
     const RayTracer::SurfaceIntersection intersection, Random& rng,
     VisibilityTester& visibility_tester, SpectralAllocator& allocator) {
   const Spectrum* result = nullptr;
-  for (auto* light_samples = light_sampler.Sample(intersection.hit_point);
+  for (auto* light_samples =
+           light_sampler.Sample(intersection.hit_point.ApproximateLocation());
        light_samples; light_samples = light_samples->next) {
     Sampler bsdf_sampler(rng);
     Sampler light_sampler(rng);

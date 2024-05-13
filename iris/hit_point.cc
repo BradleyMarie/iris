@@ -32,8 +32,8 @@ Ray HitPoint::CreateRay(const Vector& direction) const {
   return Ray(origin, direction);
 }
 
-Ray HitPoint::CreateRayTo(const Point& point) const {
-  return CreateRay(Normalize(point - hit_point_));
+Ray HitPoint::CreateRayTo(const Point& point, geometric_t* distance) const {
+  return CreateRay(Normalize(point - hit_point_, nullptr, distance));
 }
 
 }  // namespace iris

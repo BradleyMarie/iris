@@ -49,7 +49,7 @@ class Geometry : public ReferenceCountable {
 
   struct ComputeHitPointResult {
     const Point point;
-    const geometric error[3];
+    const std::array<geometric, 3> error;
   };
 
   virtual ComputeHitPointResult ComputeHitPoint(

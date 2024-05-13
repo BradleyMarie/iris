@@ -5,6 +5,14 @@
 
 #include "googletest/include/gtest/gtest.h"
 
+TEST(HitPoint, ApproximateLocation) {
+  iris::Point point(0.0, 0.0, 0.0);
+  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
+  iris::Vector surface_normal(1.0, 0.0, 0.0);
+  iris::HitPoint hit_point(point, error, surface_normal);
+  EXPECT_EQ(point, hit_point.ApproximateLocation());
+}
+
 TEST(HitPoint, CreateRay) {
   iris::Point point(0.0, 0.0, 0.0);
   std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
@@ -95,4 +103,24 @@ TEST(HitPoint, CreateRayTo) {
   EXPECT_EQ(rx.origin.z, std::nextafter(static_cast<iris::geometric>(0.0),
                                         static_cast<iris::geometric>(1.0)));
   EXPECT_EQ(rx.direction, iris::Vector(1.0, 0.0, 0.0));
+}
+
+TEST(HitPoint, CreateRayToWithDistance) {
+  iris::Point point(0.0, 0.0, 0.0);
+  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
+  iris::Vector surface_normal(1.0, 0.0, 0.0);
+  iris::HitPoint hit_point(point, error, surface_normal);
+
+  iris::Point to_point(2.0, 0.0, 0.0);
+
+  iris::geometric_t distance;
+  iris::Ray rx = hit_point.CreateRayTo(to_point, &distance);
+  EXPECT_EQ(rx.origin.x, std::nextafter(static_cast<iris::geometric>(1.0),
+                                        static_cast<iris::geometric>(2.0)));
+  EXPECT_EQ(rx.origin.y, std::nextafter(static_cast<iris::geometric>(0.0),
+                                        static_cast<iris::geometric>(1.0)));
+  EXPECT_EQ(rx.origin.z, std::nextafter(static_cast<iris::geometric>(0.0),
+                                        static_cast<iris::geometric>(1.0)));
+  EXPECT_EQ(rx.direction, iris::Vector(1.0, 0.0, 0.0));
+  EXPECT_EQ(distance, 2.0);
 }

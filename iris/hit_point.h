@@ -18,8 +18,10 @@ class HitPoint {
         hit_point_error_(hit_point_error),
         surface_normal_(surface_normal) {}
 
+  const Point& ApproximateLocation() const { return hit_point_; }
+
   Ray CreateRay(const Vector& direction) const;
-  Ray CreateRayTo(const Point& point) const;
+  Ray CreateRayTo(const Point& point, geometric_t* distance = nullptr) const;
 
  private:
   Point hit_point_;

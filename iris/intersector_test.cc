@@ -45,7 +45,7 @@ TEST(IntersectorTest, TooClose) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, TooFar) {
   auto arena = iris::internal::HitArena();
@@ -59,7 +59,7 @@ TEST(IntersectorTest, TooFar) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, Hits) {
   auto arena = iris::internal::HitArena();
@@ -79,7 +79,8 @@ TEST(IntersectorTest, Hits) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
   EXPECT_EQ(nullptr, full_hit->model_to_world);
-};
+  EXPECT_EQ(ray, full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, HitsIgnoreFarther) {
   auto arena = iris::internal::HitArena();
@@ -102,7 +103,8 @@ TEST(IntersectorTest, HitsIgnoreFarther) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
   EXPECT_EQ(nullptr, full_hit->model_to_world);
-};
+  EXPECT_EQ(ray, full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, KeepsCloser) {
   auto arena = iris::internal::HitArena();
@@ -128,7 +130,8 @@ TEST(IntersectorTest, KeepsCloser) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
   EXPECT_EQ(nullptr, full_hit->model_to_world);
-};
+  EXPECT_EQ(ray, full_hit->model_ray.value());
+}
 
 static const iris::Matrix model_to_world =
     iris::Matrix::Translation(1.0, 1.0, 1.0).value();
@@ -147,7 +150,7 @@ TEST(IntersectorTest, TransformedTooClose) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, TransformedTooFar) {
   auto arena = iris::internal::HitArena();
@@ -161,7 +164,7 @@ TEST(IntersectorTest, TransformedTooFar) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, TransformedHits) {
   auto arena = iris::internal::HitArena();
@@ -181,7 +184,9 @@ TEST(IntersectorTest, TransformedHits) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
-};
+  EXPECT_EQ(model_to_world.InverseMultiply(transformed_ray),
+            full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, TransformedHitsIgnoreFarther) {
   auto arena = iris::internal::HitArena();
@@ -204,7 +209,9 @@ TEST(IntersectorTest, TransformedHitsIgnoreFarther) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
-};
+  EXPECT_EQ(model_to_world.InverseMultiply(transformed_ray),
+            full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, TransformedKeepsCloser) {
   auto arena = iris::internal::HitArena();
@@ -230,7 +237,9 @@ TEST(IntersectorTest, TransformedKeepsCloser) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
-};
+  EXPECT_EQ(model_to_world.InverseMultiply(transformed_ray),
+            full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, MatrixPointerTooClose) {
   auto arena = iris::internal::HitArena();
@@ -244,7 +253,7 @@ TEST(IntersectorTest, MatrixPointerTooClose) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, MatrixPointerTooFar) {
   auto arena = iris::internal::HitArena();
@@ -258,7 +267,7 @@ TEST(IntersectorTest, MatrixPointerTooFar) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, MatrixPointerHits) {
   auto arena = iris::internal::HitArena();
@@ -278,7 +287,8 @@ TEST(IntersectorTest, MatrixPointerHits) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
   EXPECT_EQ(nullptr, full_hit->model_to_world);
-};
+  EXPECT_EQ(ray, full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, MatrixPointerHitsIgnoreFarther) {
   auto arena = iris::internal::HitArena();
@@ -301,7 +311,8 @@ TEST(IntersectorTest, MatrixPointerHitsIgnoreFarther) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
   EXPECT_EQ(nullptr, full_hit->model_to_world);
-};
+  EXPECT_EQ(ray, full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, MatrixPointerKeepsCloser) {
   auto arena = iris::internal::HitArena();
@@ -327,7 +338,8 @@ TEST(IntersectorTest, MatrixPointerKeepsCloser) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
   EXPECT_EQ(nullptr, full_hit->model_to_world);
-};
+  EXPECT_EQ(ray, full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, MatrixPointerTransformedTooClose) {
   auto arena = iris::internal::HitArena();
@@ -341,7 +353,7 @@ TEST(IntersectorTest, MatrixPointerTransformedTooClose) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, MatrixPointerTransformedTooFar) {
   auto arena = iris::internal::HitArena();
@@ -355,7 +367,7 @@ TEST(IntersectorTest, MatrixPointerTransformedTooFar) {
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
-};
+}
 
 TEST(IntersectorTest, MatrixPointerTransformedHits) {
   auto arena = iris::internal::HitArena();
@@ -375,7 +387,9 @@ TEST(IntersectorTest, MatrixPointerTransformedHits) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
-};
+  EXPECT_EQ(model_to_world.InverseMultiply(transformed_ray),
+            full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, MatrixPointerTransformedHitsIgnoreFarther) {
   auto arena = iris::internal::HitArena();
@@ -398,7 +412,9 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsIgnoreFarther) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
-};
+  EXPECT_EQ(model_to_world.InverseMultiply(transformed_ray),
+            full_hit->model_ray.value());
+}
 
 TEST(IntersectorTest, MatrixPointerTransformedKeepsCloser) {
   auto arena = iris::internal::HitArena();
@@ -424,4 +440,6 @@ TEST(IntersectorTest, MatrixPointerTransformedKeepsCloser) {
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
-};
+  EXPECT_EQ(model_to_world.InverseMultiply(transformed_ray),
+            full_hit->model_ray.value());
+}

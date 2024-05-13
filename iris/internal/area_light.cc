@@ -26,10 +26,12 @@ AreaLight::AreaLight(const Geometry& geometry, const Matrix* model_to_world,
     : geometry_(geometry), model_to_world_(model_to_world), face_(face) {}
 
 std::optional<Light::SampleResult> AreaLight::Sample(
-    const Point& hit_point, Sampler sampler, iris::VisibilityTester& tester,
+    const HitPoint& hit_point, Sampler sampler, iris::VisibilityTester& tester,
     SpectralAllocator& allocator) const {
   Point model_origin =
-      model_to_world_ ? model_to_world_->InverseMultiply(hit_point) : hit_point;
+      model_to_world_
+          ? model_to_world_->InverseMultiply(hit_point.ApproximateLocation())
+          : hit_point.ApproximateLocation();
 
   auto model_to_light = ToLight(
       model_origin, geometry_.SampleBySolidAngle(model_origin, face_, sampler));
@@ -42,7 +44,8 @@ std::optional<Light::SampleResult> AreaLight::Sample(
                                 : *model_to_light);
 
   visual_t pdf;
-  auto* emission = Emission(Ray(hit_point, to_light), tester, allocator, &pdf);
+  auto* emission =
+      Emission(hit_point.CreateRay(to_light), tester, allocator, &pdf);
   if (!emission) {
     return std::nullopt;
   }

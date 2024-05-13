@@ -6,6 +6,7 @@
 #include "iris/environmental_light.h"
 #include "iris/float.h"
 #include "iris/geometry.h"
+#include "iris/hit_point.h"
 #include "iris/integer.h"
 #include "iris/light.h"
 #include "iris/matrix.h"
@@ -22,7 +23,8 @@ class EnvironmentalLight final : public Light {
       : light_(light) {}
 
   std::optional<SampleResult> Sample(
-      const Point& hit_point, Sampler sampler, iris::VisibilityTester& tester,
+      const HitPoint& hit_point, Sampler sampler,
+      iris::VisibilityTester& tester,
       SpectralAllocator& allocator) const override;
 
   const Spectrum* Emission(const Ray& to_light, iris::VisibilityTester& tester,

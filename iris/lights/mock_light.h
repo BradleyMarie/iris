@@ -5,8 +5,8 @@
 
 #include "googlemock/include/gmock/gmock.h"
 #include "iris/float.h"
+#include "iris/hit_point.h"
 #include "iris/light.h"
-#include "iris/point.h"
 #include "iris/ray.h"
 #include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
@@ -19,7 +19,7 @@ namespace lights {
 class MockLight final : public Light {
  public:
   MOCK_METHOD((std::optional<SampleResult>), Sample,
-              (const Point&, Sampler, VisibilityTester&, SpectralAllocator&),
+              (const HitPoint&, Sampler, VisibilityTester&, SpectralAllocator&),
               (const override));
 
   MOCK_METHOD(const Spectrum*, Emission,

@@ -1,5 +1,6 @@
 #include "iris/ray_tracer.h"
 
+#include <cmath>
 #include <limits>
 
 #include "iris/bxdf_allocator.h"
@@ -8,6 +9,18 @@
 
 namespace iris {
 namespace {
+
+Geometry::ComputeHitPointResult MaybeTransformHitPoint(
+    const Geometry::ComputeHitPointResult& model_hit_point,
+    const Matrix* model_to_world) {
+  if (!model_to_world) {
+    return model_hit_point;
+  }
+
+  return {
+      model_to_world->Multiply(model_hit_point.point),
+      model_to_world->Multiply(model_hit_point.point, model_hit_point.error)};
+}
 
 bool HemisphereChanged(const Vector& model_surface_normal,
                        const std::optional<Vector>& model_shading_normal,
@@ -128,7 +141,8 @@ std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
 std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
     const iris::internal::Hit& hit,
     const std::optional<Geometry::Differentials> world_differentials,
-    const TextureCoordinates& texture_coordinates, const Point& world_hit_point,
+    const TextureCoordinates& texture_coordinates,
+    const Geometry::ComputeHitPointResult& world_hit_point,
     const Vector& world_surface_normal, const Vector& model_surface_normal,
     SpectralAllocator& spectral_allocator, BxdfAllocator& bxdf_allocator) {
   auto* material = hit.geometry->GetMaterial(hit.front, hit.additional_data);
@@ -146,7 +160,7 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
       hit.geometry->ComputeShadingNormal(hit.front, hit.additional_data);
 
   auto world_shading_normals = TransformNormals(
-      world_hit_point, world_surface_normal, hit.model_to_world,
+      world_hit_point.point, world_surface_normal, hit.model_to_world,
       world_differentials, shading_normals);
 
   // If transforming the model shading normal to world coordinates causes the
@@ -168,7 +182,9 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
                             world_surface_normal, world_shading_normal));
 
   return RayTracer::SurfaceIntersection{
-      Bsdf(*bxdf, world_surface_normal, world_shading_normal), world_hit_point,
+      Bsdf(*bxdf, world_surface_normal, world_shading_normal),
+      HitPoint(world_hit_point.point, world_hit_point.error,
+               world_surface_normal),
       MakeDifferentials(world_differentials), world_surface_normal,
       world_shading_normal};
 }
@@ -232,27 +248,27 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
     return HandleMiss(ray, environmental_light_, spectral_allocator);
   }
 
-  Point world_hit_point = ray.Endpoint(hit->distance);
-  Point model_hit_point =
-      hit->model_to_world
-          ? hit->model_to_world->InverseMultiply(world_hit_point)
-          : world_hit_point;
+  auto model_hit_point = hit->geometry->ComputeHitPoint(
+      *hit->model_ray, hit->distance, hit->additional_data);
+  auto world_hit_point =
+      MaybeTransformHitPoint(model_hit_point, hit->model_to_world);
 
   Vector model_surface_normal = hit->geometry->ComputeSurfaceNormal(
-      model_hit_point, hit->front, hit->additional_data);
+      model_hit_point.point, hit->front, hit->additional_data);
   Vector world_surface_normal =
       MaybeTransformNormal(hit->model_to_world, model_surface_normal);
   assert(DotProduct(world_surface_normal, ray.direction) < 0.001);
 
-  auto world_differentials =
-      ComputeGeometryDifferentials(ray, world_hit_point, world_surface_normal);
+  auto world_differentials = ComputeGeometryDifferentials(
+      ray, world_hit_point.point, world_surface_normal);
   auto model_differentials =
       MaybeTransformDifferentials(world_differentials, hit->model_to_world);
 
   TextureCoordinates texture_coordinates =
       hit->geometry
-          ->ComputeTextureCoordinates(model_hit_point, model_differentials,
-                                      hit->front, hit->additional_data)
+          ->ComputeTextureCoordinates(model_hit_point.point,
+                                      model_differentials, hit->front,
+                                      hit->additional_data)
           .value_or(TextureCoordinates{0.0, 0.0});
 
   const Spectrum* spectrum = nullptr;

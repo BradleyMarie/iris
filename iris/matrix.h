@@ -49,6 +49,9 @@ struct Matrix final {
   Vector InverseTransposeMultiply(const Vector& vector) const;
   Vector TransposeMultiply(const Vector& vector) const;
 
+  std::array<geometric, 3> Multiply(
+      const Point& point, const std::array<geometric, 3>& error) const;
+
   static Matrix Multiply(const Matrix& left, const Matrix& right);
   Matrix Multiply(const Matrix& matrix) const;
 

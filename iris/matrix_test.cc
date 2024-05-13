@@ -641,3 +641,16 @@ TEST(MatrixTest, MultiplyBoundingBox) {
   EXPECT_EQ(iris::Point(1.0, 2.0, 3.0), transformed.lower);
   EXPECT_EQ(iris::Point(2.0, 3.0, 4.0), transformed.upper);
 }
+
+TEST(MatrixTest, MultiplyPointError) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
+  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
+  std::array<iris::geometric, 3> transformed_error =
+      matrix.Multiply(iris::Point(1.0, 1.0, 1.0), error);
+  EXPECT_GT(transformed_error[0], 1.0);
+  EXPECT_GT(transformed_error[1], 1.0);
+  EXPECT_GT(transformed_error[2], 1.0);
+  EXPECT_LE(transformed_error[0], 1.0000007);
+  EXPECT_LE(transformed_error[1], 1.0000009);
+  EXPECT_LE(transformed_error[2], 1.0000010);
+}

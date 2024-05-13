@@ -5,6 +5,7 @@
 
 #include "iris/bsdf.h"
 #include "iris/environmental_light.h"
+#include "iris/hit_point.h"
 #include "iris/float.h"
 #include "iris/ray_differential.h"
 #include "iris/scene.h"
@@ -34,7 +35,7 @@ class RayTracer final {
 
   struct SurfaceIntersection {
     const Bsdf bsdf;
-    const Point hit_point;
+    const HitPoint hit_point;
     const std::optional<Differentials> differentials;
     const Vector surface_normal;
     const Vector shading_normal;
