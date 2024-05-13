@@ -100,7 +100,9 @@ Geometry::ComputeHitPointResult Sphere::ComputeHitPoint(
   Point on_ray = ray.Endpoint(distance);
   Vector to_center = on_ray - center_;
 
-  geometric phi = std::acos(to_center.z / to_center.Length());
+  geometric phi =
+      std::acos(std::clamp(to_center.z / radius_, static_cast<geometric>(-1.0),
+                           static_cast<geometric>(1.0)));
 
   geometric to_surface_x, to_surface_y, to_surface_z;
   geometric error_x, error_y, error_z;
@@ -109,10 +111,12 @@ Geometry::ComputeHitPointResult Sphere::ComputeHitPoint(
     geometric theta = std::atan2(to_center.y, to_center.x);
     geometric sin_theta = std::sin(theta);
     geometric cos_theta = std::cos(theta);
+    geometric sin_phi = std::sin(phi);
+    geometric cos_phi = std::cos(phi);
 
-    to_surface_x = radius_ * (sin_theta * std::cos(phi));
-    to_surface_y = radius_ * (sin_theta * std::sin(phi));
-    to_surface_z = radius_ * cos_theta;
+    to_surface_x = radius_ * (cos_theta * sin_phi);
+    to_surface_y = radius_ * (sin_theta * sin_phi);
+    to_surface_z = radius_ * cos_phi;
 
     error_x = to_surface_x * internal::Gamma(5);
     error_y = to_surface_y * internal::Gamma(5);
