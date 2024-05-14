@@ -21,6 +21,11 @@ std::array<geometric_t, 3> PermuteYDominant(
   return std::array<geometric_t, 3>{point[2], point[0], point[1]};
 }
 
+Vector DoComputeSurfaceNormal(const Point& p0, const Point& p1,
+                              const Point& p2) {
+  return CrossProduct(p1 - p0, p2 - p0);
+}
+
 class Triangle final : public Geometry {
  public:
   struct SharedData {
@@ -85,7 +90,7 @@ class Triangle final : public Geometry {
       const Ray& ray) const;
 
   std::optional<Vector> MaybeComputeShadingNormal(
-      face_t face, const void* additional_data) const;
+      const void* additional_data) const;
 
   std::optional<std::pair<Vector, Vector>> MaybeComputeNormalTangents() const;
 
@@ -100,11 +105,10 @@ class Triangle final : public Geometry {
 
 std::tuple<Vector, face_t, face_t> Triangle::ComputeSurfaceNormalAndFaces(
     const Ray& ray) const {
-  Vector v0_to_v1 = shared_->points[std::get<1>(vertices_)] -
-                    shared_->points[std::get<0>(vertices_)];
-  Vector v0_to_v2 = shared_->points[std::get<2>(vertices_)] -
-                    shared_->points[std::get<0>(vertices_)];
-  Vector surface_normal = CrossProduct(v0_to_v1, v0_to_v2);
+  Vector surface_normal =
+      DoComputeSurfaceNormal(shared_->points[std::get<0>(vertices_)],
+                             shared_->points[std::get<1>(vertices_)],
+                             shared_->points[std::get<2>(vertices_)]);
 
   if (DotProduct(surface_normal, ray.direction) < 0.0) {
     return {surface_normal, kFrontFace, kBackFace};
@@ -185,7 +189,7 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
 }
 
 std::optional<Vector> Triangle::MaybeComputeShadingNormal(
-    face_t face, const void* additional_data) const {
+    const void* additional_data) const {
   if (shared_->normals.empty()) {
     return std::nullopt;
   }
@@ -247,7 +251,7 @@ std::optional<std::pair<Vector, Vector>> Triangle::MaybeComputeNormalTangents()
 
 Geometry::ComputeShadingNormalResult Triangle::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
-  return {MaybeComputeShadingNormal(face, additional_data),
+  return {MaybeComputeShadingNormal(additional_data),
           MaybeComputeNormalTangents(), shared_->normal_maps[face].Get()};
 }
 
@@ -458,6 +462,39 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
       AdditionalData{barycentric_coordinates, std::get<0>(normal_and_faces)});
 }
 
+std::tuple<uint32_t, uint32_t, uint32_t> ComputeIndices(
+    std::span<const Point> points,
+    const std::tuple<uint32_t, uint32_t, uint32_t>& indices,
+    std::span<const std::tuple<geometric, geometric, geometric>> normals) {
+  if (normals.empty()) {
+    return indices;
+  }
+
+  Vector surface_normal = DoComputeSurfaceNormal(
+      points.at(std::get<0>(indices)), points.at(std::get<1>(indices)),
+      points.at(std::get<2>(indices)));
+
+  geometric_t cumulative_dp = (std::get<0>(normals.at(std::get<0>(indices))) +
+                               std::get<0>(normals.at(std::get<1>(indices))) +
+                               std::get<0>(normals.at(std::get<2>(indices)))) *
+                                  surface_normal.x +
+                              (std::get<1>(normals.at(std::get<0>(indices))) +
+                               std::get<1>(normals.at(std::get<1>(indices))) +
+                               std::get<1>(normals.at(std::get<2>(indices)))) *
+                                  surface_normal.y +
+                              (std::get<2>(normals.at(std::get<0>(indices))) +
+                               std::get<2>(normals.at(std::get<1>(indices))) +
+                               std::get<2>(normals.at(std::get<2>(indices)))) *
+                                  surface_normal.z;
+
+  if (cumulative_dp < static_cast<geometric_t>(0.0)) {
+    return std::make_tuple(std::get<0>(indices), std::get<2>(indices),
+                           std::get<1>(indices));
+  }
+
+  return indices;
+}
+
 }  // namespace
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
@@ -508,7 +545,8 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
       continue;
     }
 
-    result.push_back(MakeReferenceCounted<Triangle>(entry, shared_data));
+    result.push_back(MakeReferenceCounted<Triangle>(
+        ComputeIndices(points, entry, normals), shared_data));
   }
 
   return result;

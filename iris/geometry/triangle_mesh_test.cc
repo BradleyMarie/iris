@@ -318,6 +318,46 @@ TEST_F(Triangle, HitsZDominantBack) {
   EXPECT_NEAR(-1.0, additional_data->surface_normal.z, 0.001);
 }
 
+TEST_F(Triangle, VertexNormalsLeaves) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
+        iris::Point(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {{{1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}}}, {},
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
+
+  iris::Point origin(-1.0, 0.25, 0.25);
+  iris::Vector direction(1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangles.front()->Trace(hit_allocator);
+  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit));
+}
+
+TEST_F(Triangle, VertexNormalsReverses) {
+  auto triangles = iris::geometry::AllocateTriangleMesh(
+      {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
+        iris::Point(0.0, 0.0, 1.0)}},
+      {{{0, 1, 2}}}, {{{-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}}},
+      {}, iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
+
+  iris::Point origin(-1.0, 0.25, 0.25);
+  iris::Vector direction(1.0, 0.0, 0.0);
+  iris::Ray ray(origin, direction);
+
+  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+
+  auto* hit = triangles.front()->Trace(hit_allocator);
+  EXPECT_EQ(FRONT_FACE, iris::testing::FrontFace(*hit));
+  EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit));
+}
+
 TEST_F(Triangle, AlphaHits) {
   auto triangles = iris::geometry::AllocateTriangleMesh(
       {{iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 0.0),
