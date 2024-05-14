@@ -117,7 +117,7 @@ GlassObjectBuilder::Build(
 
   auto kt = parameters.find("Kt");
   if (kt != parameters.end()) {
-    transmittance_texture = kr->second.GetReflectorTextures(1).front();
+    transmittance_texture = kt->second.GetReflectorTextures(1).front();
   }
 
   auto eta = parameters.find("eta");
@@ -161,7 +161,7 @@ NestedGlassObjectBuilder::Build(
 
   auto kt = parameters.find("Kt");
   if (kt != parameters.end()) {
-    transmittance_texture = kr->second.GetReflectorTextures(1).front();
+    transmittance_texture = kt->second.GetReflectorTextures(1).front();
   }
 
   auto eta = parameters.find("eta");
