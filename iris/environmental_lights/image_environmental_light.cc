@@ -18,20 +18,18 @@ static const geometric_t kLimit = std::nextafter(static_cast<geometric_t>(1.0),
                                                  static_cast<geometric_t>(0.0));
 
 std::pair<geometric_t, geometric_t> DirectionToUV(const Vector& direction) {
-  geometric_t cos_theta =
-      std::clamp(direction.z, static_cast<geometric_t>(-1.0),
-                 static_cast<geometric_t>(1.0));
-  geometric_t theta = std::acos(cos_theta);
+  geometric_t cos_phi = std::clamp(direction.z, static_cast<geometric_t>(-1.0),
+                                   static_cast<geometric_t>(1.0));
+  geometric_t phi = std::acos(cos_phi);
 
-  geometric_t phi = std::atan2(direction.y, direction.x);
-  if (phi < static_cast<geometric_t>(0.0)) {
-    phi += kTwoPi;
+  geometric_t theta = std::atan2(direction.y, direction.x);
+  if (theta < static_cast<geometric_t>(0.0)) {
+    theta += kTwoPi;
   }
 
-  return std::make_pair(std::clamp(phi / static_cast<geometric_t>(2.0 * M_PI),
-                                   static_cast<geometric_t>(0.0), kLimit),
-                        std::clamp(theta / static_cast<geometric_t>(M_PI),
-                                   static_cast<geometric_t>(0.0), kLimit));
+  return std::make_pair(
+      std::clamp(theta / kTwoPi, static_cast<geometric_t>(0.0), kLimit),
+      std::clamp(phi / kPi, static_cast<geometric_t>(0.0), kLimit));
 }
 
 std::vector<visual> ScaleLuma(std::span<const visual> luma,
@@ -81,24 +79,25 @@ std::optional<EnvironmentalLight::SampleResult> ImageEnvironmentalLight::Sample(
   size_t offset;
   auto [u, v] = distribution_.Sample(sampler, &pdf, &offset);
 
-  const Spectrum* spectrum = spectra_[offset].Get();
+  const Spectrum* spectrum =
+      allocator.Scale(spectra_[offset].Get(), scalar_.Get());
   if (!spectrum) {
     return std::nullopt;
   }
 
-  geometric_t phi = u * kTwoPi;
-  geometric_t cos_phi = std::cos(phi);
-  geometric_t sin_phi = std::sin(phi);
-
-  geometric_t theta = v * kPi;
-  geometric_t cos_theta = std::cos(theta);
+  geometric_t theta = u * kTwoPi;
   geometric_t sin_theta = std::sin(theta);
+  geometric_t cos_theta = std::cos(theta);
 
-  Vector model_to_light(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
+  geometric_t phi = v * kPi;
+  geometric_t sin_phi = std::sin(phi);
+  geometric_t cos_phi = std::cos(phi);
+
+  Vector model_to_light(cos_theta * sin_phi, sin_theta * sin_phi, cos_phi);
 
   return EnvironmentalLight::SampleResult{
       *spectrum, model_to_world_.Multiply(model_to_light),
-      SafeDivide(pdf, kTwoPiSquared * sin_theta)};
+      SafeDivide(pdf, kTwoPiSquared * sin_phi)};
 }
 
 const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
@@ -108,10 +107,9 @@ const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
   auto [u, v] = DirectionToUV(model_to_light);
 
   if (pdf) {
-    geometric_t cos_theta = model_to_light.z;
-    geometric_t sin_theta =
-        std::sqrt(kOne - std::min(kOne, cos_theta * cos_theta));
-    *pdf = SafeDivide(distribution_.Pdf(u, v), kTwoPiSquared * sin_theta);
+    geometric_t cos_phi = model_to_light.z;
+    geometric_t sin_phi = std::sqrt(kOne - std::min(kOne, cos_phi * cos_phi));
+    *pdf = SafeDivide(distribution_.Pdf(u, v), kTwoPiSquared * sin_phi);
   }
 
   size_t x = u * static_cast<geometric_t>(size_.second);

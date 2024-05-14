@@ -31,7 +31,7 @@ TEST(ImageEnvironmentalLight, SampleTwo) {
 
   auto result = light.Sample(sampler, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_EQ(1.0, result->emission.Intensity(1.0));
+  EXPECT_EQ(2.0, result->emission.Intensity(1.0));
   EXPECT_NEAR(0.07311284, result->pdf, 0.001);
   EXPECT_NEAR(-0.6532813, result->to_light.x, 0.001);
   EXPECT_NEAR(+0.6532815, result->to_light.y, 0.001);
@@ -52,7 +52,7 @@ TEST(ImageEnvironmentalLight, SampleFour) {
 
   auto result = light.Sample(sampler, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_EQ(2.0, result->emission.Intensity(1.0));
+  EXPECT_EQ(4.0, result->emission.Intensity(1.0));
   EXPECT_NEAR(0.35302019, result->pdf, 0.001);
   EXPECT_NEAR(+0.1464466, result->to_light.x, 0.001);
   EXPECT_NEAR(-0.3535532, result->to_light.y, 0.001);
