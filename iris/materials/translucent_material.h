@@ -31,17 +31,23 @@ class TranslucentMaterial final : public Material {
       iris::ReferenceCounted<
           textures::PointerTexture2D<Reflector, SpectralAllocator>>
           specular,
+      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
       iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
       bool remap_roughness)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
         diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
+        eta_incident_(std::move(eta_incident)),
+        eta_transmitted_(std::move(eta_transmitted)),
         roughness_(std::move(roughness)),
         remap_roughness_(remap_roughness) {
     assert(reflectance_);
     assert(transmittance_);
     assert(diffuse_);
+    assert(eta_incident_);
+    assert(eta_transmitted_);
     assert(specular_);
     assert(roughness_);
   }
@@ -63,6 +69,8 @@ class TranslucentMaterial final : public Material {
   iris::ReferenceCounted<
       textures::PointerTexture2D<Reflector, SpectralAllocator>>
       specular_;
+  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
+  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
   iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
   bool remap_roughness_;
 };

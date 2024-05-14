@@ -181,8 +181,8 @@ NestedGlassObjectBuilder::Build(
           reflectance_texture, transmittance_texture, eta_incident_texture,
           eta_transmitted_texture),
       iris::MakeReferenceCounted<iris::materials::GlassMaterial>(
-          reflectance_texture, transmittance_texture, eta_incident_texture,
-          eta_transmitted_texture),
+          reflectance_texture, transmittance_texture, eta_transmitted_texture,
+          eta_incident_texture),
       std::move(front_normal_map), std::move(back_normal_map));
 }
 

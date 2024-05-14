@@ -142,7 +142,7 @@ TriangleMeshBuilder::Build(
 
   auto triangles = iris::geometry::AllocateTriangleMesh(
       points, indices, normals, uvs, std::move(alpha_mask), front_material,
-      front_material, front_emissive_material, back_emissive_material,
+      back_material, front_emissive_material, back_emissive_material,
       front_normal_map, back_normal_map);
 
   return std::make_pair(std::move(triangles), Matrix::Identity());

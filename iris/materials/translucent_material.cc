@@ -38,6 +38,10 @@ const Bxdf* TranslucentMaterial::Evaluate(
 
   auto* specular = specular_->Evaluate(texture_coordinates, spectral_allocator);
 
+  // Consider clamping these values
+  visual eta_incident = eta_incident_->Evaluate(texture_coordinates);
+  visual eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
+
   const Bxdf* microfacet_brdf = nullptr;
   const Bxdf* microfacet_btdf = nullptr;
   if (specular != nullptr) {
@@ -52,18 +56,16 @@ const Bxdf* TranslucentMaterial::Evaluate(
           bxdfs::TrowbridgeReitzDistribution, bxdfs::FresnelDielectric>>(
           *spectral_allocator.Scale(reflectance, specular),
           bxdfs::TrowbridgeReitzDistribution(roughness, roughness),
-          bxdfs::FresnelDielectric(static_cast<visual_t>(1.0),
-                                   static_cast<visual_t>(1.5)));
+          bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
     }
 
     if (transmittance) {
       microfacet_btdf = &bxdf_allocator.Allocate<bxdfs::MicrofacetBtdf<
           bxdfs::TrowbridgeReitzDistribution, bxdfs::FresnelDielectric>>(
-          *spectral_allocator.Scale(transmittance, specular),
-          static_cast<visual_t>(1.0), static_cast<visual_t>(1.5),
+          *spectral_allocator.Scale(transmittance, specular), eta_incident,
+          eta_transmitted,
           bxdfs::TrowbridgeReitzDistribution(roughness, roughness),
-          bxdfs::FresnelDielectric(static_cast<visual_t>(1.0),
-                                   static_cast<visual_t>(1.5)));
+          bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
     }
   }
 

@@ -133,7 +133,7 @@ PlyMeshBuilder::Build(
 
   auto triangles = iris::geometry::AllocateTriangleMesh(
       reader.positions, reader.faces, reader.normals, reader.uvs,
-      std::move(alpha_mask), front_material, front_material,
+      std::move(alpha_mask), front_material, back_material,
       front_emissive_material, back_emissive_material, front_normal_map,
       back_normal_map);
 

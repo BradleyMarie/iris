@@ -7,6 +7,8 @@ namespace iris::pbrt_frontend::materials {
 namespace {
 
 static const iris::visual kDefaultDiffuse = 0.25;
+static const iris::visual kDefaultEtaIncident = 1.0;
+static const iris::visual kDefaultEtaTransmitted = 1.5;
 static const iris::visual kDefaultSpecular = 0.25;
 static const iris::visual kDefaultReflectance = 0.5;
 static const iris::visual kDefaultRoughness = 0.1;
@@ -59,6 +61,10 @@ class NestedTranslucentObjectBuilder
       iris::ReferenceCounted<iris::textures::PointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>
           diffuse,
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+          eta_incident,
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+          eta_transmitted,
       iris::ReferenceCounted<iris::textures::PointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>
           specular,
@@ -75,8 +81,11 @@ class NestedTranslucentObjectBuilder
         remap_roughness_(remap_roughness),
         default_(std::make_tuple(
             iris::MakeReferenceCounted<iris::materials::TranslucentMaterial>(
-                reflectance_, transmittance_, diffuse_, specular_, roughness_,
-                remap_roughness_),
+                reflectance_, transmittance_, diffuse_, specular_, eta_incident,
+                eta_transmitted, roughness_, remap_roughness_),
+            iris::MakeReferenceCounted<iris::materials::TranslucentMaterial>(
+                reflectance_, transmittance_, diffuse_, specular_,
+                eta_transmitted, eta_incident, roughness_, remap_roughness_),
             front_bump, back_bump)) {}
 
   std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
@@ -100,8 +109,8 @@ class NestedTranslucentObjectBuilder
   iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       roughness_;
   bool remap_roughness_;
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-             ReferenceCounted<NormalMap>>
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+             ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
       default_;
 };
 
@@ -163,9 +172,15 @@ TranslucentObjectBuilder::Build(
     back_normal_map = normal_maps.second;
   }
 
+  auto eta_incident_texture =
+      texture_manager.AllocateUniformFloatTexture(kDefaultEtaIncident);
+  auto eta_transmitted_texture =
+      texture_manager.AllocateUniformFloatTexture(kDefaultEtaTransmitted);
+
   return std::make_unique<NestedTranslucentObjectBuilder>(
       std::move(reflectance_texture), std::move(transmittance_texture),
-      std::move(diffuse_texture), std::move(specular_texture),
+      std::move(diffuse_texture), std::move(eta_incident_texture),
+      std::move(eta_transmitted_texture), std::move(specular_texture),
       std::move(roughness_texture), remap_roughness,
       std::move(front_normal_map), std::move(back_normal_map));
 }
@@ -176,8 +191,7 @@ NestedTranslucentObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
   if (parameters.empty()) {
-    return std::make_tuple(std::get<0>(default_), std::get<0>(default_),
-                           std::get<1>(default_), std::get<2>(default_));
+    return default_;
   }
 
   auto diffuse_texture = diffuse_;
@@ -186,8 +200,8 @@ NestedTranslucentObjectBuilder::Build(
   auto transmittance_texture = transmittance_;
   auto roughness_texture = roughness_;
   bool remap_roughness = remap_roughness_;
-  auto front_normal_map = std::get<1>(default_);
-  auto back_normal_map = std::get<2>(default_);
+  auto front_normal_map = std::get<2>(default_);
+  auto back_normal_map = std::get<3>(default_);
 
   auto kd = parameters.find("Kd");
   if (kd != parameters.end()) {
@@ -226,13 +240,25 @@ NestedTranslucentObjectBuilder::Build(
     back_normal_map = normal_maps.second;
   }
 
-  auto material =
+  auto eta_incident_texture =
+      texture_manager.AllocateUniformFloatTexture(kDefaultEtaIncident);
+  auto eta_transmitted_texture =
+      texture_manager.AllocateUniformFloatTexture(kDefaultEtaTransmitted);
+
+  auto front_material =
+      iris::MakeReferenceCounted<iris::materials::TranslucentMaterial>(
+          reflectance_texture, transmittance_texture, diffuse_texture,
+          specular_texture, eta_incident_texture, eta_transmitted_texture,
+          roughness_texture, remap_roughness);
+  auto back_material =
       iris::MakeReferenceCounted<iris::materials::TranslucentMaterial>(
           std::move(reflectance_texture), std::move(transmittance_texture),
           std::move(diffuse_texture), std::move(specular_texture),
+          std::move(eta_transmitted_texture), std::move(eta_incident_texture),
           std::move(roughness_texture), remap_roughness);
 
-  return std::make_tuple(material, material, std::move(front_normal_map),
+  return std::make_tuple(front_material, back_material,
+                         std::move(front_normal_map),
                          std::move(back_normal_map));
 }
 

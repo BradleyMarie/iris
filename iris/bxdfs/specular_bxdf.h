@@ -69,10 +69,11 @@ template <typename F>
   requires std::derived_from<F, Fresnel>
 class SpecularBtdf final : public Bxdf {
  public:
-  SpecularBtdf(const Reflector& transmittance, const geometric_t eta_front,
-               const geometric_t eta_back, const F& fresnel) noexcept
+  SpecularBtdf(const Reflector& transmittance, const geometric_t eta_incident,
+               const geometric_t eta_transmitted, const F& fresnel) noexcept
       : transmittance_(transmittance),
-        relative_refractive_index_{eta_front / eta_back, eta_back / eta_front},
+        relative_refractive_index_{eta_incident / eta_transmitted,
+                                   eta_transmitted / eta_incident},
         fresnel_(fresnel) {}
 
   std::optional<SampleResult> Sample(
@@ -154,12 +155,13 @@ class SpecularBtdf final : public Bxdf {
 class SpecularBxdf final : public Bxdf {
  public:
   SpecularBxdf(const Reflector& reflectance, const Reflector& transmittance,
-               const geometric_t eta_front, const geometric_t eta_back) noexcept
+               const geometric_t eta_incident,
+               const geometric_t eta_transmitted) noexcept
       : reflectance_(reflectance),
         transmittance_(transmittance),
-        refractive_indices_{eta_front, eta_back},
-        relative_refractive_index_{eta_front / eta_back, eta_back / eta_front} {
-  }
+        refractive_indices_{eta_incident, eta_transmitted},
+        relative_refractive_index_{eta_incident / eta_transmitted,
+                                   eta_transmitted / eta_incident} {}
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
