@@ -82,7 +82,7 @@ TextureMapping ParseTextureMapping(const std::string& value) {
 
 struct Parameters {
   std::filesystem::path filename;
-  float gamma = 2.2;
+  bool inverse_gamma = true;
   TextureMapping mapping = TextureMapping::UV;
   visual_t maxanisotropy = 8.0;
   visual_t scale = 1.0;
@@ -184,7 +184,7 @@ Parameters ParseParameters(
     auto gamma_iter = parameters.find("gamma");
     if (gamma_iter != parameters.end()) {
       if (!gamma_iter->second.GetBoolValues().front()) {
-        result.gamma = 1.0;
+        result.inverse_gamma = false;
       }
     }
   } else {
@@ -250,7 +250,10 @@ class ImageFloatTextureBuilder final
 
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
-        visual_t value = InverseGamma(values[(ny - y - 1) * nx + x]);
+        visual_t value = values[(ny - y - 1) * nx + x];
+        if (parsed_params.inverse_gamma) {
+          value = InverseGamma(value);
+        }
         scaled_values.push_back(value * parsed_params.scale);
       }
     }
@@ -339,12 +342,16 @@ class ImageSpectrumTextureBuilder final
 
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
-        visual_t r = InverseGamma(values[3 * ((ny - y - 1) * nx + x) + 0]) *
-                     parsed_params.scale;
-        visual_t g = InverseGamma(values[3 * ((ny - y - 1) * nx + x) + 1]) *
-                     parsed_params.scale;
-        visual_t b = InverseGamma(values[3 * ((ny - y - 1) * nx + x) + 2]) *
-                     parsed_params.scale;
+        visual_t r = values[3 * ((ny - y - 1) * nx + x) + 0];
+        visual_t g = values[3 * ((ny - y - 1) * nx + x) + 1];
+        visual_t b = values[3 * ((ny - y - 1) * nx + x) + 2];
+
+        if (parsed_params.inverse_gamma) {
+          r = InverseGamma(r);
+          g = InverseGamma(g);
+          b = InverseGamma(b);
+        }
+
         if (r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0) {
           std::cerr << "ERROR: Image file contained an out of range value"
                     << stbi_failure_reason() << std::endl;
