@@ -104,11 +104,10 @@ InfiniteBuilder::Build(
             exit(EXIT_FAILURE);
           }
 
-          spectra.push_back(
-              spectrum_manager.AllocateSpectrum(Color{{r, g, b}, Color::RGB}));
-
-          // TODO: Compute a better value for luma
-          luma.push_back((r + g + b) / static_cast<visual>(3.0));
+          visual_t luma_value;
+          spectra.push_back(spectrum_manager.AllocateSpectrum(
+              Color{{r, g, b}, Color::RGB}, &luma_value));
+          luma.push_back(luma_value);
         }
       }
 

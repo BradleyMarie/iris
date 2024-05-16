@@ -6,12 +6,12 @@
 namespace iris::pbrt_frontend::spectrum_managers {
 
 ReferenceCounted<Spectrum> TestSpectrumManager::AllocateSpectrum(
-    const Color& color) {
+    const Color& color, visual_t* luma) {
   return iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
 }
 
 ReferenceCounted<Spectrum> TestSpectrumManager::AllocateSpectrum(
-    const std::map<visual, visual>& wavelengths) {
+    const std::map<visual, visual>& wavelengths, visual_t* luma) {
   return iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
 }
 

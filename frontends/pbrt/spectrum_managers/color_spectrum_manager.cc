@@ -34,6 +34,16 @@ Color ToRGB(const Color& color) {
   return Color({rgb_color.r, rgb_color.g, rgb_color.b}, Color::RGB);
 }
 
+visual_t ToLuma(const Color& color) {
+  if (color.space == Color::XYZ) {
+    return color.values[1];
+  }
+
+  iris::Color rgb_color(color.values[0], color.values[1], color.values[2],
+                        iris::Color::LINEAR_SRGB);
+  return rgb_color.ConvertTo(iris::Color::CIE_XYZ).y;
+}
+
 };  // namespace
 
 std::array<visual_t, 3> ColorColorMatcher::Match(
@@ -50,7 +60,11 @@ ColorSpectrumManager::ColorSpectrumManager(bool all_spectra_are_reflective)
     : spectral_scalar_(ComputeSpectralScalar(all_spectra_are_reflective)) {}
 
 ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
-    const Color& color) {
+    const Color& color, visual_t* luma) {
+  if (luma) {
+    *luma = ToLuma(color);
+  }
+
   Color rgb_color = ToRGB(color);
   if (rgb_color.values[0] <= 0.0 && rgb_color.values[1] <= 0.0 &&
       rgb_color.values[2] <= 0.0) {
@@ -63,13 +77,17 @@ ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
 }
 
 ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
-    const std::map<visual, visual>& wavelengths) {
+    const std::map<visual, visual>& wavelengths, visual_t* luma) {
   iris::spectra::SampledSpectrum sampled_spectrum(wavelengths);
 
   auto values = g_color_matcher.Match(sampled_spectrum);
   iris::Color xyz_color(
       values[0] * spectral_scalar_, values[1] * spectral_scalar_,
       values[2] * spectral_scalar_, g_color_matcher.ColorSpace());
+
+  if (luma) {
+    *luma = xyz_color.y;
+  }
 
   auto rgb_color = xyz_color.ConvertTo(iris::Color::LINEAR_SRGB);
   if (rgb_color.r <= 0.0 && rgb_color.g <= 0.0 && rgb_color.b <= 0.0) {

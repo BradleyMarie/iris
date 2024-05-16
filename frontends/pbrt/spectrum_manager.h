@@ -12,10 +12,12 @@ namespace iris::pbrt_frontend {
 
 class SpectrumManager {
  public:
-  virtual ReferenceCounted<Spectrum> AllocateSpectrum(const Color& color) = 0;
+  virtual ReferenceCounted<Spectrum> AllocateSpectrum(
+      const Color& color, visual_t* luma = nullptr) = 0;
 
   virtual ReferenceCounted<Spectrum> AllocateSpectrum(
-      const std::map<visual, visual>& wavelengths) = 0;
+      const std::map<visual, visual>& wavelengths,
+      visual_t* luma = nullptr) = 0;
 
   virtual ReferenceCounted<Reflector> AllocateReflector(const Color& color) = 0;
 

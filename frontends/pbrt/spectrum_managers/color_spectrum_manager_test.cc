@@ -35,10 +35,12 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromColor) {
 TEST(ColorSpectrumManager, AllocateSpectrumFromColorXYZ) {
   iris::pbrt_frontend::Color color({0.25, 0.5, 0.75},
                                    iris::pbrt_frontend::Color::XYZ);
-  auto spectrum = g_spectrum_manager.AllocateSpectrum(color);
+  iris::visual_t luma;
+  auto spectrum = g_spectrum_manager.AllocateSpectrum(color, &luma);
   EXPECT_NEAR(0.0, spectrum->Intensity(0.5), 0.001);
   EXPECT_NEAR(0.726856, spectrum->Intensity(1.5), 0.001);
   EXPECT_NEAR(0.704817, spectrum->Intensity(2.5), 0.001);
+  EXPECT_EQ(0.5, luma);
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromColorZero) {

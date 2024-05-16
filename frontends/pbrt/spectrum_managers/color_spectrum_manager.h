@@ -16,10 +16,12 @@ class ColorSpectrumManager final : public SpectrumManager {
  public:
   ColorSpectrumManager(bool all_spectra_are_reflective);
 
-  ReferenceCounted<Spectrum> AllocateSpectrum(const Color& color) override;
+  ReferenceCounted<Spectrum> AllocateSpectrum(
+      const Color& color, visual_t* luma = nullptr) override;
 
   ReferenceCounted<Spectrum> AllocateSpectrum(
-      const std::map<visual, visual>& wavelengths) override;
+      const std::map<visual, visual>& wavelengths,
+      visual_t* luma = nullptr) override;
 
   ReferenceCounted<Reflector> AllocateReflector(const Color& color) override;
 
