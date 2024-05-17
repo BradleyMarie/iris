@@ -31,8 +31,8 @@ const Bxdf* PlasticMaterial::Evaluate(
     microfacet_brdf = &bxdf_allocator.Allocate<bxdfs::MicrofacetBrdf<
         bxdfs::TrowbridgeReitzDistribution, bxdfs::FresnelDielectric>>(
         *specular, bxdfs::TrowbridgeReitzDistribution(roughness, roughness),
-        bxdfs::FresnelDielectric(static_cast<visual_t>(1.0),
-                                 static_cast<visual_t>(1.5)));
+        bxdfs::FresnelDielectric(static_cast<visual_t>(1.5),
+                                 static_cast<visual_t>(1.0)));
   }
 
   return bxdfs::MakeComposite(bxdf_allocator, lambertian_brdf, microfacet_brdf);
