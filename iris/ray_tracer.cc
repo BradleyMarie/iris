@@ -22,22 +22,6 @@ Geometry::ComputeHitPointResult MaybeTransformHitPoint(
       model_to_world->Multiply(model_hit_point.point, model_hit_point.error)};
 }
 
-bool HemisphereChanged(const Vector& model_surface_normal,
-                       const std::optional<Vector>& model_shading_normal,
-                       const Vector& world_surface_normal,
-                       const Vector& world_shading_normal) {
-  if (!model_shading_normal) {
-    return false;
-  }
-
-  bool model =
-      std::signbit(DotProduct(model_surface_normal, *model_shading_normal));
-  bool world =
-      std::signbit(DotProduct(world_surface_normal, world_shading_normal));
-
-  return model != world;
-}
-
 Vector MaybeTransformVector(const Matrix* model_to_world,
                             const Vector& surface_normal) {
   if (!model_to_world) {
@@ -163,30 +147,26 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
       world_hit_point.point, world_surface_normal, hit.model_to_world,
       world_differentials, shading_normals);
 
-  // If transforming the model shading normal to world coordinates causes the
-  // normal to change the hemisphere in which it lies, simply ignore the hit
-  // and hope for the best visually on the assumption that this should be rare.
-  if (HemisphereChanged(model_surface_normal, shading_normals.surface_normal,
-                        world_surface_normal, world_shading_normals.first)) {
-    return std::nullopt;
-  }
-
   Vector world_shading_normal =
       shading_normals.normal_map
           ? Normalize(shading_normals.normal_map->Evaluate(
                 texture_coordinates, world_shading_normals.second,
                 world_shading_normals.first))
           : world_shading_normals.first;
-  assert(!HemisphereChanged(model_surface_normal,
-                            shading_normals.surface_normal,
-                            world_surface_normal, world_shading_normal));
+
+  // This ideally wouldn't be required, but it is possible that the shading
+  // normal we compute ends up out of alignment with the surface normal. Since
+  // the visual errors this can cause can be obvious, we instead force the
+  // shading normal back into alignment with the surface normal.
+  Vector aligned_world_shading_normal =
+      world_shading_normal.AlignWith(world_surface_normal);
 
   return RayTracer::SurfaceIntersection{
-      Bsdf(*bxdf, world_surface_normal, world_shading_normal),
+      Bsdf(*bxdf, world_surface_normal, aligned_world_shading_normal),
       HitPoint(world_hit_point.point, world_hit_point.error,
                world_surface_normal),
       MakeDifferentials(world_differentials), world_surface_normal,
-      world_shading_normal};
+      aligned_world_shading_normal};
 }
 
 RayTracer::TraceResult HandleMiss(const Ray& ray,
