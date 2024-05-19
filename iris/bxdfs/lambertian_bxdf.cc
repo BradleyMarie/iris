@@ -6,11 +6,9 @@
 
 namespace iris {
 namespace bxdfs {
+namespace {
 
-std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
-    const Vector& incoming,
-    const std::optional<Bxdf::Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler) const {
+Vector SampleHemisphere(geometric incoming_z, Sampler& sampler) {
   geometric_t radius_squared = sampler.Next();
   geometric_t radius = std::sqrt(radius_squared);
 
@@ -21,8 +19,17 @@ std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
   geometric_t x = radius * cos_theta;
   geometric_t y = radius * sin_theta;
   geometric_t z = std::sqrt(static_cast<geometric_t>(1.0) - radius_squared);
-  Vector outgoing(x, y, std::copysign(z, incoming.z));
 
+  return Vector(x, y, std::copysign(z, incoming_z));
+}
+
+}  // namespace
+
+std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
+    const Vector& incoming,
+    const std::optional<Bxdf::Differentials>& differentials,
+    const Vector& surface_normal, Sampler& sampler) const {
+  Vector outgoing = SampleHemisphere(incoming.z, sampler);
   return SampleResult{outgoing.AlignWith(surface_normal), std::nullopt, this};
 }
 
@@ -52,18 +59,7 @@ std::optional<Bxdf::SampleResult> LambertianBtdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  geometric_t radius_squared = sampler.Next();
-  geometric_t radius = std::sqrt(radius_squared);
-
-  geometric_t theta = sampler.Next() * static_cast<geometric_t>(2.0 * M_PI);
-  geometric_t sin_theta = std::sin(theta);
-  geometric_t cos_theta = std::cos(theta);
-
-  geometric_t x = radius * cos_theta;
-  geometric_t y = radius * sin_theta;
-  geometric_t z = std::sqrt(static_cast<geometric_t>(1.0) - radius_squared);
-  Vector outgoing(x, y, std::copysign(z, incoming.z));
-
+  Vector outgoing = SampleHemisphere(-incoming.z, sampler);
   return SampleResult{outgoing.AlignAgainst(surface_normal), std::nullopt,
                       this};
 }
