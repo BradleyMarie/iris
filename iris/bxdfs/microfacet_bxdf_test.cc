@@ -421,7 +421,7 @@ TEST(MicrofacetBtdf, Pdf) {
   TestTransmissionFresnel fresnel;
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(1.0,
+  EXPECT_EQ(2.0,
             btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
                      iris::Vector(0.0, 0.0, -1.0), &btdf,
                      iris::Bxdf::Hemisphere::BTDF)
@@ -498,5 +498,5 @@ TEST(MicrofacetBtdf, Reflectance) {
       iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &btdf,
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
-  EXPECT_NEAR(0.6666666, reflectance->Reflectance(1.0), 0.001);
+  EXPECT_NEAR(0.1666666, reflectance->Reflectance(1.0), 0.001);
 }

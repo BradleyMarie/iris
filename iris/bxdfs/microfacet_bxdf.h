@@ -151,6 +151,9 @@ class MicrofacetBtdf final : public Bxdf {
 
     Vector half_angle =
         distribution_.Sample(incoming, sampler.Next(), sampler.Next());
+    if (DotProduct(incoming, half_angle) < static_cast<geometric_t>(0.0)) {
+      return std::nullopt;
+    }
 
     std::optional<Vector> outgoing = internal::Refract(
         incoming, half_angle, RelativeRefractiveRatio(incoming));
@@ -176,7 +179,7 @@ class MicrofacetBtdf final : public Bxdf {
       return static_cast<visual_t>(0.0);
     }
 
-    visual_t refractive_ratio = RelativeRefractiveRatio(incoming);
+    visual_t refractive_ratio = ReversedRelativeRefractiveRatio(incoming);
 
     auto half_angle = HalfAngle(incoming, outgoing, refractive_ratio);
     if (!half_angle) {
@@ -190,13 +193,13 @@ class MicrofacetBtdf final : public Bxdf {
       return static_cast<visual_t>(0.0);
     }
 
-    visual_t scaled_dp_outgoing = refractive_ratio * dp_outgoing;
-    visual_t sqrt_denorm = dp_incoming + scaled_dp_outgoing;
-    visual_t dhalf_angle_doutgoing =
-        std::abs((refractive_ratio * refractive_ratio * scaled_dp_outgoing) /
-                 (sqrt_denorm * sqrt_denorm));
+    visual_t numer = refractive_ratio * refractive_ratio * dp_outgoing;
+    visual_t sqrt_denom = dp_incoming + refractive_ratio * dp_outgoing;
+    visual_t denom = sqrt_denom * sqrt_denom;
 
-    return distribution_.Pdf(incoming, *half_angle) / dhalf_angle_doutgoing;
+    visual_t dhalf_angle_doutgoing = std::abs(numer / denom);
+
+    return distribution_.Pdf(incoming, *half_angle) * dhalf_angle_doutgoing;
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
@@ -209,15 +212,20 @@ class MicrofacetBtdf final : public Bxdf {
       return nullptr;
     }
 
-    visual_t refractive_ratio = RelativeRefractiveRatio(incoming);
+    visual_t refractive_ratio = ReversedRelativeRefractiveRatio(incoming);
 
-    auto half_angle = HalfAngle(incoming, outgoing, refractive_ratio);
-    if (!half_angle) {
+    auto maybe_half_angle = HalfAngle(incoming, outgoing, refractive_ratio);
+    if (!maybe_half_angle) {
       return nullptr;
     }
 
-    visual_t dp_incoming = DotProduct(incoming, *half_angle);
-    visual_t dp_outgoing = DotProduct(outgoing, *half_angle);
+    // Unclear why this is required
+    Vector half_angle = maybe_half_angle->z < static_cast<geometric>(0.0)
+                            ? -*maybe_half_angle
+                            : *maybe_half_angle;
+
+    visual_t dp_incoming = DotProduct(incoming, half_angle);
+    visual_t dp_outgoing = DotProduct(outgoing, half_angle);
 
     if (std::signbit(dp_incoming) == std::signbit(dp_outgoing)) {
       return nullptr;
@@ -229,21 +237,21 @@ class MicrofacetBtdf final : public Bxdf {
       return nullptr;
     }
 
-    visual_t scaled_dp_outgoing = refractive_ratio * dp_outgoing;
-    visual_t sqrt_denorm = dp_incoming + scaled_dp_outgoing;
-    visual_t scale =
-        static_cast<visual_t>(1.0) / (refractive_ratio * refractive_ratio);
-
     visual_t cos_theta_incident = internal::CosTheta(incoming);
     visual_t cos_theta_outgoing = internal::CosTheta(outgoing);
-    visual_t d = distribution_.D(*half_angle);
+    visual_t d = distribution_.D(half_angle);
     visual_t g = distribution_.G(incoming, outgoing);
+    visual_t sqrt_denom = dp_incoming + refractive_ratio * dp_outgoing;
 
-    visual_t numer = d * g * scale * dp_incoming * dp_outgoing *
-                     refractive_ratio * refractive_ratio;
+    visual_t numer =
+        d * g * refractive_ratio * refractive_ratio * dp_incoming * dp_outgoing;
     visual_t denom =
-        cos_theta_incident * cos_theta_outgoing * sqrt_denorm * sqrt_denorm;
+        cos_theta_incident * cos_theta_outgoing * sqrt_denom * sqrt_denom;
     visual_t attenuation = std::abs(numer / denom);
+
+    // It may be better to do this in the integrator
+    attenuation *=
+        static_cast<visual_t>(1.0) / (refractive_ratio * refractive_ratio);
 
     return allocator.UnboundedScale(transmittance, attenuation);
   }
@@ -253,6 +261,12 @@ class MicrofacetBtdf final : public Bxdf {
     return incident.z > static_cast<geometric_t>(0.0)
                ? eta_incident_over_transmitted_
                : eta_transmitted_over_incident_;
+  }
+
+  geometric_t ReversedRelativeRefractiveRatio(const Vector& incident) const {
+    return incident.z > static_cast<geometric_t>(0.0)
+               ? eta_transmitted_over_incident_
+               : eta_incident_over_transmitted_;
   }
 
   static std::optional<Vector> HalfAngle(const Vector& incoming,
