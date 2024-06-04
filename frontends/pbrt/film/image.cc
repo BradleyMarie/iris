@@ -19,7 +19,7 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"yresolution", Parameter::INTEGER},
 };
 
-const int64_t kMaxImageDimensionSize = 8192u;
+const int64_t kMaxImageDimensionSize = 16384u;
 
 class ImageObjectBuilder : public ObjectBuilder<Result> {
  public:
