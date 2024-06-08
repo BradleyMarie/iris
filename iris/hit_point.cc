@@ -6,10 +6,11 @@
 namespace iris {
 namespace {
 
-geometric_t ComponentAbsDotProduct(const std::array<geometric, 3>& v0,
-                                   const Vector& v1) {
-  return std::abs(v0[0] * v1.x) + std::abs(v0[1] * v1.y) +
-         std::abs(v0[2] * v1.z);
+geometric_t ComponentAbsDotProduct(const PositionError& error,
+                                   const Vector& surface_normal) {
+  return std::abs(error.x * surface_normal.x) +
+         std::abs(error.y * surface_normal.y) +
+         std::abs(error.z * surface_normal.z);
 }
 
 geometric ComputeComponent(geometric value, geometric_t offset) {

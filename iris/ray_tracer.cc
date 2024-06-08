@@ -17,9 +17,9 @@ Geometry::ComputeHitPointResult MaybeTransformHitPoint(
     return model_hit_point;
   }
 
-  return {
-      model_to_world->Multiply(model_hit_point.point),
-      model_to_world->Multiply(model_hit_point.point, model_hit_point.error)};
+  auto [world_point, world_error] = model_to_world->MultiplyWithError(
+      model_hit_point.point, &model_hit_point.error);
+  return {world_point, world_error};
 }
 
 Vector MaybeTransformVector(const Matrix* model_to_world,
@@ -190,30 +190,36 @@ geometric_t PlaneIntersection(const Ray& ray, const Point& point,
 }
 
 std::optional<Geometry::Differentials> ComputeGeometryDifferentials(
-    const RayDifferential& world_ray, const Point& world_hit_point,
-    const Vector& world_surface_normal) {
+    const RayDifferential& world_ray, const Matrix* model_to_world,
+    const Point& model_hit_point, const Vector& model_surface_normal) {
   if (!world_ray.differentials) {
     return std::nullopt;
   }
 
-  geometric_t distance_dx = PlaneIntersection(
-      world_ray.differentials->dx, world_hit_point, world_surface_normal);
-  geometric_t distance_dy = PlaneIntersection(
-      world_ray.differentials->dy, world_hit_point, world_surface_normal);
+  Ray model_dx = model_to_world ? model_to_world->InverseMultiplyWithError(
+                                      world_ray.differentials->dx)
+                                : world_ray.differentials->dx;
+  Ray model_dy = model_to_world ? model_to_world->InverseMultiplyWithError(
+                                      world_ray.differentials->dy)
+                                : world_ray.differentials->dy;
 
-  return {{world_ray.differentials->dx.Endpoint(distance_dx),
-           world_ray.differentials->dy.Endpoint(distance_dy)}};
+  geometric_t distance_dx =
+      PlaneIntersection(model_dx, model_hit_point, model_surface_normal);
+  geometric_t distance_dy =
+      PlaneIntersection(model_dy, model_hit_point, model_surface_normal);
+
+  return {{model_dx.Endpoint(distance_dx), model_dy.Endpoint(distance_dy)}};
 }
 
 std::optional<Geometry::Differentials> MaybeTransformDifferentials(
-    const std::optional<Geometry::Differentials>& world_differentials,
+    const std::optional<Geometry::Differentials>& model_differentials,
     const Matrix* model_to_world) {
-  if (!world_differentials || !model_to_world) {
-    return world_differentials;
+  if (!model_differentials || !model_to_world) {
+    return model_differentials;
   }
 
-  return {{model_to_world->InverseMultiply(world_differentials->dx),
-           model_to_world->InverseMultiply(world_differentials->dy)}};
+  return {{model_to_world->Multiply(model_differentials->dx),
+           model_to_world->Multiply(model_differentials->dy)}};
 }
 
 }  // namespace
@@ -239,10 +245,10 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
       MaybeTransformNormal(hit->model_to_world, model_surface_normal);
   assert(DotProduct(world_surface_normal, ray.direction) < 0.001);
 
-  auto world_differentials = ComputeGeometryDifferentials(
-      ray, world_hit_point.point, world_surface_normal);
-  auto model_differentials =
-      MaybeTransformDifferentials(world_differentials, hit->model_to_world);
+  auto model_differentials = ComputeGeometryDifferentials(
+      ray, hit->model_to_world, model_hit_point.point, model_surface_normal);
+  auto world_differentials =
+      MaybeTransformDifferentials(model_differentials, hit->model_to_world);
 
   TextureCoordinates texture_coordinates =
       hit->geometry

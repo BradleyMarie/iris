@@ -7,7 +7,7 @@
 
 TEST(HitPoint, ApproximateLocation) {
   iris::Point point(0.0, 0.0, 0.0);
-  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
+  iris::PositionError error(1.0, 1.0, 1.0);
   iris::Vector surface_normal(1.0, 0.0, 0.0);
   iris::HitPoint hit_point(point, error, surface_normal);
   EXPECT_EQ(point, hit_point.ApproximateLocation());
@@ -15,7 +15,7 @@ TEST(HitPoint, ApproximateLocation) {
 
 TEST(HitPoint, CreateRay) {
   iris::Point point(0.0, 0.0, 0.0);
-  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
+  iris::PositionError error(1.0, 1.0, 1.0);
   iris::Vector surface_normal_x(1.0, 0.0, 0.0);
   iris::Vector surface_normal_y(0.0, 1.0, 0.0);
   iris::Vector surface_normal_z(0.0, 0.0, 1.0);
@@ -90,7 +90,7 @@ TEST(HitPoint, CreateRay) {
 
 TEST(HitPoint, CreateRayTo) {
   iris::Point point(0.0, 0.0, 0.0);
-  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
+  iris::PositionError error(1.0, 1.0, 1.0);
   iris::Vector surface_normal(1.0, 0.0, 0.0);
   iris::HitPoint hit_point(point, error, surface_normal);
 
@@ -107,7 +107,7 @@ TEST(HitPoint, CreateRayTo) {
 
 TEST(HitPoint, CreateRayToWithDistance) {
   iris::Point point(0.0, 0.0, 0.0);
-  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
+  iris::PositionError error(1.0, 1.0, 1.0);
   iris::Vector surface_normal(1.0, 0.0, 0.0);
   iris::HitPoint hit_point(point, error, surface_normal);
 

@@ -1,7 +1,6 @@
 #ifndef _IRIS_GEOMETRY_
 #define _IRIS_GEOMETRY_
 
-#include <array>
 #include <optional>
 #include <span>
 #include <variant>
@@ -14,6 +13,7 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/point.h"
+#include "iris/position_error.h"
 #include "iris/ray.h"
 #include "iris/reference_countable.h"
 #include "iris/sampler.h"
@@ -49,7 +49,7 @@ class Geometry : public ReferenceCountable {
 
   struct ComputeHitPointResult {
     const Point point;
-    const std::array<geometric, 3> error;
+    const PositionError error;
   };
 
   virtual ComputeHitPointResult ComputeHitPoint(

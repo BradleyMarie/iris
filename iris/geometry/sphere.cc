@@ -5,8 +5,6 @@
 #include <cassert>
 #include <cmath>
 
-#include "iris/geometry/internal/math.h"
-
 namespace iris {
 namespace geometry {
 namespace {
@@ -105,7 +103,7 @@ Geometry::ComputeHitPointResult Sphere::ComputeHitPoint(
                            static_cast<geometric>(1.0)));
 
   geometric to_surface_x, to_surface_y, to_surface_z;
-  geometric error_x, error_y, error_z;
+  geometric_t error_x, error_y, error_z;
   if (to_center.x != static_cast<geometric>(0.0) ||
       to_center.y != static_cast<geometric>(0.0)) {
     geometric theta = std::atan2(to_center.y, to_center.x);
@@ -118,9 +116,9 @@ Geometry::ComputeHitPointResult Sphere::ComputeHitPoint(
     to_surface_y = radius_ * (sin_theta * sin_phi);
     to_surface_z = radius_ * cos_phi;
 
-    error_x = to_surface_x * internal::Gamma(5);
-    error_y = to_surface_y * internal::Gamma(5);
-    error_z = to_surface_z * internal::Gamma(3);
+    error_x = to_surface_x * RoundingError(5);
+    error_y = to_surface_y * RoundingError(5);
+    error_z = to_surface_z * RoundingError(3);
   } else {
     to_surface_x = 0.0;
     to_surface_y = 0.0;
@@ -128,13 +126,13 @@ Geometry::ComputeHitPointResult Sphere::ComputeHitPoint(
 
     error_x = 0.0;
     error_y = 0.0;
-    error_z = radius_ * internal::Gamma(1);
+    error_z = radius_ * RoundingError(1);
   }
 
   Vector to_surface(to_surface_x, to_surface_y, to_surface_z);
 
   return ComputeHitPointResult{center_ + to_surface,
-                               {error_x, error_y, error_z}};
+                               PositionError(error_x, error_y, error_z)};
 }
 
 const Material* Sphere::GetMaterial(face_t face,

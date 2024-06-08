@@ -516,6 +516,15 @@ TEST(MatrixTest, Subscript) {
   EXPECT_EQ(matrix.m[3][3], matrix[3][3]);
 }
 
+TEST(MatrixTest, MultiplyBoundingBox) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
+  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
+                           iris::Point(1.0, 1.0, 1.0));
+  auto transformed = matrix.Multiply(bounds);
+  EXPECT_EQ(iris::Point(1.0, 2.0, 3.0), transformed.lower);
+  EXPECT_EQ(iris::Point(2.0, 3.0, 4.0), transformed.upper);
+}
+
 TEST(MatrixTest, MultiplyPoint) {
   auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
   EXPECT_EQ(iris::Point(1.0, 2.0, 3.0),
@@ -526,6 +535,150 @@ TEST(MatrixTest, InverseMultiplyPoint) {
   auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
   EXPECT_EQ(iris::Point(-1.0, -2.0, -3.0),
             matrix.InverseMultiply(iris::Point(0.0, 0.0, 0.0)));
+}
+
+TEST(MatrixTest, MultiplyPointWithError) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
+  iris::Point as_point = matrix.Multiply(iris::Point(1.0, 2.0, 3.0));
+  auto [point, error] = matrix.MultiplyWithError(iris::Point(1.0, 2.0, 3.0));
+  EXPECT_EQ(as_point.x, point.x);
+  EXPECT_EQ(as_point.x * iris::RoundingError(3), error.x);
+  EXPECT_EQ(as_point.y, point.y);
+  EXPECT_EQ(as_point.y * iris::RoundingError(3), error.y);
+  EXPECT_EQ(as_point.z, point.z);
+  EXPECT_EQ(as_point.z * iris::RoundingError(3), error.z);
+}
+
+TEST(MatrixTest, InverseMultiplyPointWithError) {
+  auto matrix = iris::Matrix::Translation(-1.0, -2.0, -3.0).value();
+  iris::Point as_point = matrix.InverseMultiply(iris::Point(1.0, 2.0, 3.0));
+  auto [point, error] =
+      matrix.InverseMultiplyWithError(iris::Point(1.0, 2.0, 3.0));
+  EXPECT_EQ(as_point.x, point.x);
+  EXPECT_EQ(as_point.x * iris::RoundingError(3), error.x);
+  EXPECT_EQ(as_point.y, point.y);
+  EXPECT_EQ(as_point.y * iris::RoundingError(3), error.y);
+  EXPECT_EQ(as_point.z, point.z);
+  EXPECT_EQ(as_point.z * iris::RoundingError(3), error.z);
+}
+
+TEST(MatrixTest, MultiplyPointWithExistingError) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
+  iris::Point as_point = matrix.Multiply(iris::Point(1.0, 2.0, 3.0));
+  iris::PositionError existing_error(1.0, 2.0, 3.0);
+  iris::PositionError transformed_error = matrix.Multiply(existing_error);
+  auto [point, error] =
+      matrix.MultiplyWithError(iris::Point(1.0, 2.0, 3.0), &existing_error);
+  EXPECT_EQ(as_point.x, point.x);
+  EXPECT_EQ(as_point.x * iris::RoundingError(3) + transformed_error.x, error.x);
+  EXPECT_EQ(as_point.y, point.y);
+  EXPECT_EQ(as_point.y * iris::RoundingError(3) + transformed_error.y, error.y);
+  EXPECT_EQ(as_point.z, point.z);
+  EXPECT_EQ(as_point.z * iris::RoundingError(3) + transformed_error.z, error.z);
+}
+
+TEST(MatrixTest, InverseMultiplyPointWithExistingError) {
+  auto matrix = iris::Matrix::Translation(-1.0, -2.0, -3.0).value();
+  iris::Point as_point = matrix.InverseMultiply(iris::Point(1.0, 2.0, 3.0));
+  iris::PositionError existing_error(1.0, 2.0, 3.0);
+  iris::PositionError transformed_error =
+      matrix.InverseMultiply(existing_error);
+  auto [point, error] = matrix.InverseMultiplyWithError(
+      iris::Point(1.0, 2.0, 3.0), &existing_error);
+  EXPECT_EQ(as_point.x, point.x);
+  EXPECT_EQ(as_point.x * iris::RoundingError(3) + transformed_error.x, error.x);
+  EXPECT_EQ(as_point.y, point.y);
+  EXPECT_EQ(as_point.y * iris::RoundingError(3) + transformed_error.y, error.y);
+  EXPECT_EQ(as_point.z, point.z);
+  EXPECT_EQ(as_point.z * iris::RoundingError(3) + transformed_error.z, error.z);
+}
+
+TEST(MatrixTest, MultiplyPositionErrorError) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
+  iris::Vector as_vector = matrix.Multiply(iris::Vector(1.0, 2.0, 3.0));
+  iris::PositionError as_error =
+      matrix.Multiply(iris::PositionError(-1.0, -2.0, -3.0));
+  EXPECT_EQ(as_vector.x *
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            as_error.x);
+  EXPECT_EQ(as_vector.y *
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            as_error.y);
+  EXPECT_EQ(as_vector.z *
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            as_error.z);
+}
+
+TEST(MatrixTest, InverseMultiplyPositionErrorError) {
+  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
+  iris::Vector as_vector = matrix.InverseMultiply(iris::Vector(1.0, 2.0, 3.0));
+  iris::PositionError as_error =
+      matrix.InverseMultiply(iris::PositionError(-1.0, -2.0, -3.0));
+  EXPECT_EQ(as_vector.x *
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            as_error.x);
+  EXPECT_EQ(as_vector.y *
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            as_error.y);
+  EXPECT_EQ(as_vector.z *
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            as_error.z);
+}
+
+TEST(MatrixTest, MultiplyRay) {
+  auto matrix = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
+  iris::Ray transformed = matrix.Multiply(
+      iris::Ray(iris::Point(1.0, 1.0, 1.0), iris::Vector(1.0, 1.0, 1.0)));
+  EXPECT_EQ(iris::Point(2.0, 2.0, 2.0), transformed.origin);
+  EXPECT_EQ(iris::Vector(2.0, 2.0, 2.0), transformed.direction);
+}
+
+TEST(MatrixTest, InverseMultiplyRay) {
+  auto matrix = iris::Matrix::Scalar(0.5, 0.5, 0.5).value();
+  iris::Ray transformed = matrix.InverseMultiply(
+      iris::Ray(iris::Point(1.0, 1.0, 1.0), iris::Vector(1.0, 1.0, 1.0)));
+  EXPECT_EQ(iris::Point(2.0, 2.0, 2.0), transformed.origin);
+  EXPECT_EQ(iris::Vector(2.0, 2.0, 2.0), transformed.direction);
+}
+
+TEST(MatrixTest, MultiplyRayWithError) {
+  auto matrix = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
+  iris::Ray transformed = matrix.MultiplyWithError(
+      iris::Ray(iris::Point(1.0, 1.0, 1.0), iris::Vector(1.0, 1.0, 1.0)));
+  EXPECT_EQ(
+      iris::Point(2.0, 2.0, 2.0) +
+          transformed.direction * ((static_cast<iris::geometric_t>(2.0) *
+                                        (static_cast<iris::geometric_t>(2.0) *
+                                         iris::RoundingError(3)) +
+                                    static_cast<iris::geometric_t>(2.0) *
+                                        (static_cast<iris::geometric_t>(2.0) *
+                                         iris::RoundingError(3)) +
+                                    static_cast<iris::geometric_t>(2.0) *
+                                        (static_cast<iris::geometric_t>(2.0) *
+                                         iris::RoundingError(3))) /
+                                   static_cast<iris::geometric_t>(12.0)),
+      transformed.origin);
+  EXPECT_EQ(iris::Vector(2.0, 2.0, 2.0), transformed.direction);
+}
+
+TEST(MatrixTest, InverseMultiplyRayWithError) {
+  auto matrix = iris::Matrix::Scalar(0.5, 0.5, 0.5).value();
+  iris::Ray transformed = matrix.InverseMultiplyWithError(
+      iris::Ray(iris::Point(1.0, 1.0, 1.0), iris::Vector(1.0, 1.0, 1.0)));
+  EXPECT_EQ(
+      iris::Point(2.0, 2.0, 2.0) +
+          transformed.direction * ((static_cast<iris::geometric_t>(2.0) *
+                                        (static_cast<iris::geometric_t>(2.0) *
+                                         iris::RoundingError(3)) +
+                                    static_cast<iris::geometric_t>(2.0) *
+                                        (static_cast<iris::geometric_t>(2.0) *
+                                         iris::RoundingError(3)) +
+                                    static_cast<iris::geometric_t>(2.0) *
+                                        (static_cast<iris::geometric_t>(2.0) *
+                                         iris::RoundingError(3))) /
+                                   static_cast<iris::geometric_t>(12.0)),
+      transformed.origin);
+  EXPECT_EQ(iris::Vector(2.0, 2.0, 2.0), transformed.direction);
 }
 
 TEST(MatrixTest, MultiplyVector) {
@@ -631,26 +784,4 @@ TEST(MatrixTest, LessThan) {
   auto right = iris::Matrix::Scalar(2.0, 1.0, 1.0).value();
   EXPECT_FALSE(right < left);
   EXPECT_TRUE(left < right);
-}
-
-TEST(MatrixTest, MultiplyBoundingBox) {
-  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
-  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
-                           iris::Point(1.0, 1.0, 1.0));
-  auto transformed = matrix.Multiply(bounds);
-  EXPECT_EQ(iris::Point(1.0, 2.0, 3.0), transformed.lower);
-  EXPECT_EQ(iris::Point(2.0, 3.0, 4.0), transformed.upper);
-}
-
-TEST(MatrixTest, MultiplyPointError) {
-  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
-  std::array<iris::geometric, 3> error = {1.0, 1.0, 1.0};
-  std::array<iris::geometric, 3> transformed_error =
-      matrix.Multiply(iris::Point(1.0, 1.0, 1.0), error);
-  EXPECT_GT(transformed_error[0], 1.0);
-  EXPECT_GT(transformed_error[1], 1.0);
-  EXPECT_GT(transformed_error[2], 1.0);
-  EXPECT_LE(transformed_error[0], 1.0000007);
-  EXPECT_LE(transformed_error[1], 1.0000009);
-  EXPECT_LE(transformed_error[2], 1.0000010);
 }

@@ -28,8 +28,8 @@ void MakeBasicGeometryImpl(
       .WillOnce(testing::Invoke([](const iris::Ray& ray,
                                    const iris::geometric_t distance,
                                    const void* additional_data) {
-        return iris::Geometry::ComputeHitPointResult{ray.Endpoint(1.0),
-                                                     {0.0, 0.0, 0.0}};
+        return iris::Geometry::ComputeHitPointResult{
+            ray.Endpoint(1.0), iris::PositionError(0.0, 0.0, 0.0)};
       }));
   EXPECT_CALL(*geometry,
               ComputeSurfaceNormal(expected_hit_point, 2u, testing::_))
@@ -764,7 +764,22 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
 }
 
 TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
-  iris::Ray ray(iris::Point(0.5, 0.0, 0.0), iris::Vector(0.5, 0.0, 0.0));
+  iris::Matrix model_to_world = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
+  iris::RayDifferential trace_ray(
+      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0)));
+  iris::Ray model_ray = model_to_world.InverseMultiplyWithError(trace_ray);
+  iris::Ray model_dx_ray =
+      model_to_world.InverseMultiplyWithError(trace_ray.differentials->dx);
+  iris::Ray model_dy_ray =
+      model_to_world.InverseMultiplyWithError(trace_ray.differentials->dy);
+  iris::Point expected_model_hit_point = model_ray.Endpoint(1.0);
+  iris::Point expected_world_dx_hit_point =
+      model_to_world.Multiply(model_dx_ray.Endpoint(1.0));
+  iris::Point expected_world_dy_hit_point =
+      model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
+
   auto material = MakeMaterial({1.0, 1.0}, true);
 
   iris::normal_maps::MockNormalMap normal_map;
@@ -784,19 +799,18 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
             return iris::Vector(-1.0, 0.0, 0.0);
           }));
 
-  auto geometry =
-      MakeGeometry(ray, iris::Point(1.0, 0.0, 0.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry,
-              ComputeBounds(iris::Matrix::Scalar(2.0, 2.0, 2.0).value()))
+  auto geometry = MakeGeometry(model_ray, expected_model_hit_point,
+                               material.get(), nullptr);
+  EXPECT_CALL(*geometry, ComputeBounds(model_to_world))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
-              ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
+              ComputeTextureCoordinates(expected_model_hit_point,
                                         testing::IsTrue(), 2u, testing::_))
       .WillOnce(testing::Invoke(
-          [](const iris::Point& hit_point,
-             const std::optional<iris::Geometry::Differentials>& differentials,
-             iris::face_t face, const void* additional_data) {
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return iris::TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
@@ -811,7 +825,7 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
           }));
 
   auto builder = iris::SceneObjects::Builder();
-  builder.Add(std::move(geometry), iris::Matrix::Scalar(2.0, 2.0, 2.0).value());
+  builder.Add(std::move(geometry), model_to_world);
 
   auto objects = builder.Build();
   auto scene = iris::scenes::ListScene::Builder::Create()->Build(objects);
@@ -820,18 +834,15 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
   iris::internal::Arena arena;
   iris::RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(iris::RayDifferential(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
+  auto result = ray_tracer.Trace(trace_ray);
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+  EXPECT_EQ(model_to_world.MultiplyWithError(expected_model_hit_point).first,
             result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
+  EXPECT_EQ(expected_world_dx_hit_point,
             result.surface_intersection->differentials->dx);
-  EXPECT_EQ(iris::Point(2.0, 1.0, 0.0),
+  EXPECT_EQ(expected_world_dy_hit_point,
             result.surface_intersection->differentials->dy);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);
@@ -840,25 +851,42 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
 }
 
 TEST(RayTracerTest, WithTransform) {
-  iris::Ray ray(iris::Point(1.0, 0.0, -1.0), iris::Vector(1.0, 0.0, 0.0));
+  iris::Matrix model_to_world =
+      iris::Matrix::Translation(0.0, 0.0, 1.0).value();
+  iris::RayDifferential trace_ray(
+      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(1.0, 0.0, 0.0)),
+      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0)));
+  iris::Ray model_ray = model_to_world.InverseMultiplyWithError(trace_ray);
+  iris::Ray model_dx_ray =
+      model_to_world.InverseMultiplyWithError(trace_ray.differentials->dx);
+  iris::Ray model_dy_ray =
+      model_to_world.InverseMultiplyWithError(trace_ray.differentials->dy);
+  iris::Point expected_model_hit_point = model_ray.Endpoint(1.0);
+  iris::Point expected_model_dx_hit_point = model_dx_ray.Endpoint(1.0);
+  iris::Point expected_model_dy_hit_point = model_dy_ray.Endpoint(1.0);
+  iris::Point expected_world_dx_hit_point =
+      model_to_world.Multiply(model_dx_ray.Endpoint(1.0));
+  iris::Point expected_world_dy_hit_point =
+      model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
+
   auto material = MakeMaterial({1.0, 1.0}, true);
 
-  auto geometry =
-      MakeGeometry(ray, iris::Point(2.0, 0.0, -1.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry,
-              ComputeBounds(iris::Matrix::Translation(0.0, 0.0, 1.0).value()))
+  auto geometry = MakeGeometry(model_ray, expected_model_hit_point,
+                               material.get(), nullptr);
+  EXPECT_CALL(*geometry, ComputeBounds(model_to_world))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
-              ComputeTextureCoordinates(iris::Point(2.0, 0.0, -1.0),
+              ComputeTextureCoordinates(expected_model_hit_point,
                                         testing::IsTrue(), 2u, testing::_))
       .WillOnce(testing::Invoke(
-          [](const iris::Point& hit_point,
-             const std::optional<iris::Geometry::Differentials>& differentials,
-             iris::face_t face, const void* additional_data) {
+          [&](const iris::Point& hit_point,
+              const std::optional<iris::Geometry::Differentials>& differentials,
+              iris::face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            EXPECT_EQ(iris::Point(2.0, 0.0, 0.0), differentials->dx);
-            EXPECT_EQ(iris::Point(2.0, 1.0, -1.0), differentials->dy);
+            EXPECT_EQ(expected_model_dx_hit_point, differentials->dx);
+            EXPECT_EQ(expected_model_dy_hit_point, differentials->dy);
             return iris::TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, testing::_))
@@ -870,8 +898,7 @@ TEST(RayTracerTest, WithTransform) {
           }));
 
   auto builder = iris::SceneObjects::Builder();
-  builder.Add(std::move(geometry),
-              iris::Matrix::Translation(0.0, 0.0, 1.0).value());
+  builder.Add(std::move(geometry), model_to_world);
 
   auto objects = builder.Build();
   auto scene = iris::scenes::ListScene::Builder::Create()->Build(objects);
@@ -880,18 +907,15 @@ TEST(RayTracerTest, WithTransform) {
   iris::internal::Arena arena;
   iris::RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(iris::RayDifferential(
-      iris::Ray(iris::Point(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 0.0, 1.0), iris::Vector(1.0, 0.0, 0.0)),
-      iris::Ray(iris::Point(1.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0))));
+  auto result = ray_tracer.Trace(trace_ray);
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 0.0),
+  EXPECT_EQ(model_to_world.MultiplyWithError(expected_model_hit_point).first,
             result.surface_intersection->hit_point.ApproximateLocation());
   ASSERT_TRUE(result.surface_intersection->differentials);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 1.0),
+  EXPECT_EQ(expected_world_dx_hit_point,
             result.surface_intersection->differentials->dx);
-  EXPECT_EQ(iris::Point(2.0, 1.0, 0.0),
+  EXPECT_EQ(expected_world_dy_hit_point,
             result.surface_intersection->differentials->dy);
   EXPECT_EQ(iris::Vector(-1.0, 0.0, 0.0),
             result.surface_intersection->surface_normal);

@@ -35,7 +35,8 @@ TEST(DeltaLight, NoReflectance) {
 
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, to_light, to_light),
-      iris::HitPoint(iris::Point(0.0, 0.0, 0.0), {0.0, 0.0, 0.0}, to_light),
+      iris::HitPoint(iris::Point(0.0, 0.0, 0.0),
+                     iris::PositionError(0.0, 0.0, 0.0), to_light),
       std::nullopt, to_light, to_light};
 
   EXPECT_EQ(
@@ -70,7 +71,8 @@ TEST(DeltaLight, WithReflectance) {
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0}, surface_normal),
+      iris::HitPoint(trace_ray.Endpoint(1.0),
+                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
   auto* result = DeltaLight(light_sample, trace_ray, intersection,
@@ -99,7 +101,8 @@ TEST(FromLightSample, NoReflectance) {
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0}, surface_normal),
+      iris::HitPoint(trace_ray.Endpoint(1.0),
+                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
   auto* result =
@@ -136,7 +139,8 @@ TEST(FromLightSample, WithReflectance) {
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0}, surface_normal),
+      iris::HitPoint(trace_ray.Endpoint(1.0),
+                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
   auto* result =
@@ -162,7 +166,8 @@ TEST(FromBsdfSample, NoEmission) {
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0}, surface_normal),
+      iris::HitPoint(trace_ray.Endpoint(1.0),
+                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
   iris::lights::MockLight light;
@@ -191,7 +196,8 @@ TEST(FromBsdfSample, ZeroPdf) {
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0}, surface_normal),
+      iris::HitPoint(trace_ray.Endpoint(1.0),
+                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
   iris::lights::MockLight light;
@@ -221,7 +227,8 @@ TEST(FromBsdfSample, NegativePdf) {
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0}, surface_normal),
+      iris::HitPoint(trace_ray.Endpoint(1.0),
+                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
   iris::lights::MockLight light;
@@ -253,7 +260,8 @@ TEST(FromBsdfSample, WithEmission) {
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
       iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0}, surface_normal),
+      iris::HitPoint(trace_ray.Endpoint(1.0),
+                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
   iris::spectra::MockSpectrum spectrum;
@@ -275,7 +283,8 @@ TEST(FromBsdfSample, WithEmission) {
 
 TEST(EstimateDirectLighting, NoSamples) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -308,7 +317,8 @@ TEST(EstimateDirectLighting, NoSamples) {
 
 TEST(EstimateDirectLighting, DeltaBsdf) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -343,7 +353,8 @@ TEST(EstimateDirectLighting, DeltaBsdf) {
 
 TEST(EstimateDirectLighting, DeltaLight) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -390,7 +401,8 @@ TEST(EstimateDirectLighting, DeltaLight) {
 
 TEST(EstimateDirectLighting, FullTest) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -442,7 +454,8 @@ TEST(EstimateDirectLighting, FullTest) {
 TEST(SampleDirectLighting, NoSamples) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
 
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -461,7 +474,8 @@ TEST(SampleDirectLighting, NoSamples) {
 
 TEST(SampleDirectLighting, OneZeroPdfSample) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -489,7 +503,8 @@ TEST(SampleDirectLighting, OneZeroPdfSample) {
 
 TEST(SampleDirectLighting, OneDeltaLight) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -542,7 +557,8 @@ TEST(SampleDirectLighting, OneDeltaLight) {
 
 TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;
@@ -595,7 +611,8 @@ TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
 
 TEST(SampleDirectLighting, TwoDeltaLights) {
   iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0), {0.0, 0.0, 0.0},
+  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
+                           iris::PositionError(0.0, 0.0, 0.0),
                            iris::Vector(0.0, 0.0, 1.0));
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::bxdfs::MockBxdf bxdf;

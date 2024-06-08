@@ -3,10 +3,12 @@
 
 #include <array>
 #include <expected>
+#include <utility>
 
 #include "iris/bounding_box.h"
 #include "iris/float.h"
 #include "iris/point.h"
+#include "iris/position_error.h"
 #include "iris/ray.h"
 #include "iris/vector.h"
 
@@ -41,16 +43,23 @@ struct Matrix final {
   Point Multiply(const Point& point) const;
   Point InverseMultiply(const Point& point) const;
 
+  std::pair<Point, PositionError> MultiplyWithError(
+      const Point& point, const PositionError* existing_error = nullptr) const;
+  std::pair<Point, PositionError> InverseMultiplyWithError(
+      const Point& point, const PositionError* existing_error = nullptr) const;
+
+  PositionError Multiply(const PositionError& existing_error) const;
+  PositionError InverseMultiply(const PositionError& existing_error) const;
+
   Ray Multiply(const Ray& ray) const;
   Ray InverseMultiply(const Ray& ray) const;
+  Ray MultiplyWithError(const Ray& ray) const;
+  Ray InverseMultiplyWithError(const Ray& ray) const;
 
   Vector Multiply(const Vector& vector) const;
   Vector InverseMultiply(const Vector& vector) const;
   Vector InverseTransposeMultiply(const Vector& vector) const;
   Vector TransposeMultiply(const Vector& vector) const;
-
-  std::array<geometric, 3> Multiply(
-      const Point& point, const std::array<geometric, 3>& error) const;
 
   static Matrix Multiply(const Matrix& left, const Matrix& right);
   Matrix Multiply(const Matrix& matrix) const;
@@ -88,12 +97,102 @@ inline Point Matrix::InverseMultiply(const Point& point) const {
       i[2][0] * point.x + i[2][1] * point.y + i[2][2] * point.z + i[2][3]);
 }
 
+inline std::pair<Point, PositionError> Matrix::MultiplyWithError(
+    const Point& point, const PositionError* existing_error) const {
+  Point transformed = Multiply(point);
+
+  geometric_t x = (std::abs(m[0][0] * point.x) + std::abs(m[0][1] * point.y) +
+                   std::abs(m[0][2] * point.z) + std::abs(m[0][3]));
+  geometric_t y = (std::abs(m[1][0] * point.x) + std::abs(m[1][1] * point.y) +
+                   std::abs(m[1][2] * point.z) + std::abs(m[1][3]));
+  geometric_t z = (std::abs(m[2][0] * point.x) + std::abs(m[2][1] * point.y) +
+                   std::abs(m[2][2] * point.z) + std::abs(m[2][3]));
+  PositionError transform_error = PositionError(x, y, z) * RoundingError(3);
+
+  if (existing_error == nullptr) {
+    return {transformed, transform_error};
+  }
+
+  return {transformed, transform_error + Multiply(*existing_error)};
+}
+
+inline std::pair<Point, PositionError> Matrix::InverseMultiplyWithError(
+    const Point& point, const PositionError* existing_error) const {
+  Point transformed = InverseMultiply(point);
+
+  geometric_t x = (std::abs(i[0][0] * point.x) + std::abs(i[0][1] * point.y) +
+                   std::abs(i[0][2] * point.z) + std::abs(i[0][3]));
+  geometric_t y = (std::abs(i[1][0] * point.x) + std::abs(i[1][1] * point.y) +
+                   std::abs(i[1][2] * point.z) + std::abs(i[1][3]));
+  geometric_t z = (std::abs(i[2][0] * point.x) + std::abs(i[2][1] * point.y) +
+                   std::abs(i[2][2] * point.z) + std::abs(i[2][3]));
+  PositionError transform_error = PositionError(x, y, z) * RoundingError(3);
+
+  if (existing_error == nullptr) {
+    return {transformed, transform_error};
+  }
+
+  return {transformed, transform_error + InverseMultiply(*existing_error)};
+}
+
+inline PositionError Matrix::Multiply(
+    const PositionError& existing_error) const {
+  geometric_t x = (std::abs(m[0][0] * existing_error.x) +
+                   std::abs(m[0][1] * existing_error.y) +
+                   std::abs(m[0][2] * existing_error.z));
+  geometric_t y = (std::abs(m[1][0] * existing_error.x) +
+                   std::abs(m[1][1] * existing_error.y) +
+                   std::abs(m[1][2] * existing_error.z));
+  geometric_t z = (std::abs(m[2][0] * existing_error.x) +
+                   std::abs(m[2][1] * existing_error.y) +
+                   std::abs(m[2][2] * existing_error.z));
+  geometric_t relative_error = static_cast<geometric_t>(1.0) + RoundingError(3);
+  return PositionError(x, y, z) * relative_error;
+}
+
+inline PositionError Matrix::InverseMultiply(
+    const PositionError& existing_error) const {
+  geometric_t x = (std::abs(i[0][0] * existing_error.x) +
+                   std::abs(i[0][1] * existing_error.y) +
+                   std::abs(i[0][2] * existing_error.z));
+  geometric_t y = (std::abs(i[1][0] * existing_error.x) +
+                   std::abs(i[1][1] * existing_error.y) +
+                   std::abs(i[1][2] * existing_error.z));
+  geometric_t z = (std::abs(i[2][0] * existing_error.x) +
+                   std::abs(i[2][1] * existing_error.y) +
+                   std::abs(i[2][2] * existing_error.z));
+  geometric_t relative_error = static_cast<geometric_t>(1.0) + RoundingError(3);
+  return PositionError(x, y, z) * relative_error;
+}
+
 inline Ray Matrix::Multiply(const Ray& ray) const {
   return Ray(Multiply(ray.origin), Multiply(ray.direction));
 }
 
 inline Ray Matrix::InverseMultiply(const Ray& ray) const {
   return Ray(InverseMultiply(ray.origin), InverseMultiply(ray.direction));
+}
+
+inline Ray Matrix::MultiplyWithError(const Ray& ray) const {
+  auto [origin, error] = MultiplyWithError(ray.origin);
+  Vector direction = Multiply(ray.direction);
+  geometric_t absolute_error_squared = std::abs(direction.x * error.x) +
+                                       std::abs(direction.y * error.y) +
+                                       std::abs(direction.z * error.z);
+  geometric_t length_squared = DotProduct(direction, direction);
+  geometric_t relative_error = absolute_error_squared / length_squared;
+  return Ray(origin + direction * relative_error, direction);
+}
+
+inline Ray Matrix::InverseMultiplyWithError(const Ray& ray) const {
+  auto [origin, error] = InverseMultiplyWithError(ray.origin);
+  Vector direction = InverseMultiply(ray.direction);
+  geometric_t absolute_error_squared = std::abs(direction.x * error.x) +
+                                       std::abs(direction.y * error.y) +
+                                       std::abs(direction.z * error.z);
+  geometric_t length_squared = DotProduct(direction, direction);
+  geometric_t relative_error = absolute_error_squared / length_squared;
+  return Ray(origin + direction * relative_error, direction);
 }
 
 inline Vector Matrix::Multiply(const Vector& vector) const {

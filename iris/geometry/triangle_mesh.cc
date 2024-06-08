@@ -1,7 +1,5 @@
 #include "iris/geometry/triangle_mesh.h"
 
-#include "iris/geometry/internal/math.h"
-
 namespace iris {
 namespace geometry {
 namespace {
@@ -278,31 +276,27 @@ Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
                 additional->barycentric_coordinates[2] *
                     shared_->points[std::get<2>(vertices_)].z;
 
-  geometric x_error = std::abs(additional->barycentric_coordinates[0] *
-                               shared_->points[std::get<0>(vertices_)].x) +
-                      std::abs(additional->barycentric_coordinates[1] *
-                               shared_->points[std::get<1>(vertices_)].x) +
-                      std::abs(additional->barycentric_coordinates[2] *
-                               shared_->points[std::get<2>(vertices_)].x);
-  x_error *= internal::Gamma(7);
+  geometric_t x_error = std::abs(additional->barycentric_coordinates[0] *
+                                 shared_->points[std::get<0>(vertices_)].x) +
+                        std::abs(additional->barycentric_coordinates[1] *
+                                 shared_->points[std::get<1>(vertices_)].x) +
+                        std::abs(additional->barycentric_coordinates[2] *
+                                 shared_->points[std::get<2>(vertices_)].x);
+  geometric_t y_error = std::abs(additional->barycentric_coordinates[0] *
+                                 shared_->points[std::get<0>(vertices_)].y) +
+                        std::abs(additional->barycentric_coordinates[1] *
+                                 shared_->points[std::get<1>(vertices_)].y) +
+                        std::abs(additional->barycentric_coordinates[2] *
+                                 shared_->points[std::get<2>(vertices_)].y);
+  geometric_t z_error = std::abs(additional->barycentric_coordinates[0] *
+                                 shared_->points[std::get<0>(vertices_)].z) +
+                        std::abs(additional->barycentric_coordinates[1] *
+                                 shared_->points[std::get<1>(vertices_)].z) +
+                        std::abs(additional->barycentric_coordinates[2] *
+                                 shared_->points[std::get<2>(vertices_)].z);
 
-  geometric y_error = std::abs(additional->barycentric_coordinates[0] *
-                               shared_->points[std::get<0>(vertices_)].y) +
-                      std::abs(additional->barycentric_coordinates[1] *
-                               shared_->points[std::get<1>(vertices_)].y) +
-                      std::abs(additional->barycentric_coordinates[2] *
-                               shared_->points[std::get<2>(vertices_)].y);
-  y_error *= internal::Gamma(7);
-
-  geometric z_error = std::abs(additional->barycentric_coordinates[0] *
-                               shared_->points[std::get<0>(vertices_)].z) +
-                      std::abs(additional->barycentric_coordinates[1] *
-                               shared_->points[std::get<1>(vertices_)].z) +
-                      std::abs(additional->barycentric_coordinates[2] *
-                               shared_->points[std::get<2>(vertices_)].z);
-  z_error *= internal::Gamma(7);
-
-  return ComputeHitPointResult{Point(x, y, z), {x_error, y_error, z_error}};
+  return {Point(x, y, z),
+          PositionError(x_error, y_error, z_error) * RoundingError(7)};
 }
 
 const Material* Triangle::GetMaterial(face_t face,

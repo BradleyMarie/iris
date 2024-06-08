@@ -2,7 +2,6 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
-#include "iris/geometry/internal/math.h"
 #include "iris/materials/mock_material.h"
 #include "iris/normal_maps/mock_normal_map.h"
 #include "iris/random/mock_random.h"
@@ -752,10 +751,9 @@ TEST_F(Triangle, ComputeHitPoint) {
                                   iris::Vector(0.0, 0.0, -1.0)};
   auto hit_point0 = triangle->ComputeHitPoint(ray, 1.0, &additional_data0);
   EXPECT_EQ(hit_point0.point, iris::Point(0.0, 1.0, 0.0));
-  EXPECT_EQ(hit_point0.error[0], 0.0);
-  EXPECT_LE(std::abs(hit_point0.error[1]),
-            1.0 * iris::geometry::internal::Gamma(7));
-  EXPECT_EQ(hit_point0.error[2], 0.0);
+  EXPECT_EQ(hit_point0.error.x, 0.0);
+  EXPECT_LE(std::abs(hit_point0.error.y), 1.0 * iris::RoundingError(7));
+  EXPECT_EQ(hit_point0.error.z, 0.0);
 }
 
 TEST_F(Triangle, GetMaterial) {

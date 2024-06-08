@@ -263,6 +263,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
+        ":position_error",
         ":ray",
         ":vector",
     ],
@@ -434,6 +435,7 @@ cc_library(
         ":bounding_box",
         ":float",
         ":point",
+        ":position_error",
         ":ray",
         ":vector",
     ],
@@ -475,6 +477,24 @@ cc_test(
     srcs = ["point_test.cc"],
     deps = [
         ":point",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "position_error",
+    hdrs = ["position_error.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":float",
+    ],
+)
+
+cc_test(
+    name = "position_error_test",
+    srcs = ["position_error_test.cc"],
+    deps = [
+        ":position_error",
         "@com_google_googletest//:gtest_main",
     ],
 )

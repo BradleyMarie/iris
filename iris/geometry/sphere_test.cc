@@ -2,7 +2,6 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
-#include "iris/geometry/internal/math.h"
 #include "iris/materials/mock_material.h"
 #include "iris/normal_maps/mock_normal_map.h"
 #include "iris/random/mock_random.h"
@@ -175,12 +174,9 @@ TEST_F(Sphere, ComputeHitPoint) {
   EXPECT_NEAR(hit_point0.point.x, expected_hit_point0.x, 0.00001);
   EXPECT_NEAR(hit_point0.point.y, expected_hit_point0.y, 0.00001);
   EXPECT_NEAR(hit_point0.point.z, expected_hit_point0.z, 0.00001);
-  EXPECT_LE(std::abs(hit_point0.error[0]),
-            8.8e-08 * iris::geometry::internal::Gamma(5));
-  EXPECT_LE(std::abs(hit_point0.error[1]),
-            2.0 * iris::geometry::internal::Gamma(5));
-  EXPECT_LE(std::abs(hit_point0.error[2]),
-            8.8e-08 * iris::geometry::internal::Gamma(3));
+  EXPECT_LE(std::abs(hit_point0.error.x), 8.8e-08 * iris::RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.y), 2.0 * iris::RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.z), 8.8e-08 * iris::RoundingError(3));
 
   iris::Vector direction1(0.0, -1.0, 0.0);
   iris::Ray ray1(origin, direction1);
@@ -190,12 +186,9 @@ TEST_F(Sphere, ComputeHitPoint) {
   EXPECT_NEAR(hit_point1.point.x, expected_hit_point1.x, 0.00001);
   EXPECT_NEAR(hit_point1.point.y, expected_hit_point1.y, 0.00001);
   EXPECT_NEAR(hit_point1.point.z, expected_hit_point1.z, 0.00001);
-  EXPECT_LE(std::abs(hit_point0.error[0]),
-            8.8e-08 * iris::geometry::internal::Gamma(5));
-  EXPECT_LE(std::abs(hit_point0.error[1]),
-            2.0 * iris::geometry::internal::Gamma(5));
-  EXPECT_LE(std::abs(hit_point0.error[2]),
-            8.8e-08 * iris::geometry::internal::Gamma(3));
+  EXPECT_LE(std::abs(hit_point0.error.x), 8.8e-08 * iris::RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.y), 2.0 * iris::RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.z), 8.8e-08 * iris::RoundingError(3));
 }
 
 TEST_F(Sphere, ComputeHitPointOnXYOrigin) {
@@ -207,18 +200,18 @@ TEST_F(Sphere, ComputeHitPointOnXYOrigin) {
 
   auto hit_point0 = sphere->ComputeHitPoint(ray0, 3.0, nullptr);
   EXPECT_EQ(ray0.Endpoint(3.0), hit_point0.point);
-  EXPECT_EQ(hit_point0.error[0], 0.0);
-  EXPECT_EQ(hit_point0.error[1], 0.0);
-  EXPECT_EQ(hit_point0.error[2], 2.0 * iris::geometry::internal::Gamma(1));
+  EXPECT_EQ(hit_point0.error.x, 0.0);
+  EXPECT_EQ(hit_point0.error.y, 0.0);
+  EXPECT_EQ(hit_point0.error.z, 2.0 * iris::RoundingError(1));
 
   iris::Vector direction1(0.0, 0.0, -1.0);
   iris::Ray ray1(origin, direction1);
 
   auto hit_point1 = sphere->ComputeHitPoint(ray1, 1.0, nullptr);
   EXPECT_EQ(ray1.Endpoint(1.0), hit_point1.point);
-  EXPECT_EQ(hit_point1.error[0], 0.0);
-  EXPECT_EQ(hit_point1.error[1], 0.0);
-  EXPECT_EQ(hit_point1.error[2], 2.0 * iris::geometry::internal::Gamma(1));
+  EXPECT_EQ(hit_point1.error.x, 0.0);
+  EXPECT_EQ(hit_point1.error.y, 0.0);
+  EXPECT_EQ(hit_point1.error.z, 2.0 * iris::RoundingError(1));
 }
 
 TEST_F(Sphere, GetMaterial) {

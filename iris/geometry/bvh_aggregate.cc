@@ -47,7 +47,8 @@ Vector BVHAggregate::ComputeSurfaceNormal(const Point& hit_point, face_t face,
 Geometry::ComputeHitPointResult BVHAggregate::ComputeHitPoint(
     const Ray& ray, geometric_t distance, const void* additional_data) const {
   assert(false);
-  return ComputeHitPointResult{Point(0.0, 0.0, 0.0), {0.0, 0.0, 0.0}};
+  return ComputeHitPointResult{Point(0.0, 0.0, 0.0),
+                               PositionError(0.0, 0.0, 0.0)};
 }
 
 BoundingBox BVHAggregate::ComputeBounds(const Matrix& model_to_world) const {

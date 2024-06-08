@@ -24,7 +24,8 @@ TEST(SampleIndirectLighting, NoSample) {
 
   iris::RayTracer::SurfaceIntersection intersection{
       bsdf,
-      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0),
+                     iris::PositionError(0.0, 0.0, 0.0),
                      iris::Vector(0.0, 1.0, 0.0)),
       std::nullopt, iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
 
@@ -62,7 +63,8 @@ TEST(SampleIndirectLighting, Sample) {
 
   iris::RayTracer::SurfaceIntersection intersection{
       bsdf,
-      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0),
+                     iris::PositionError(0.0, 0.0, 0.0),
                      iris::Vector(0.0, 1.0, 0.0)),
       std::nullopt, iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
 
@@ -109,7 +111,8 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
 
   iris::RayTracer::SurfaceIntersection intersection{
       bsdf,
-      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0),
+                     iris::PositionError(0.0, 0.0, 0.0),
                      iris::Vector(0.0, 1.0, 0.0)),
       std::nullopt, iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 1.0, 0.0)};
 
@@ -158,7 +161,8 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
 
   iris::RayTracer::SurfaceIntersection intersection{
       bsdf,
-      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0),
+                     iris::PositionError(0.0, 0.0, 0.0),
                      iris::Vector(0.0, 1.0, 0.0)),
       iris::RayTracer::Differentials{iris::Point(1.0, 1.0, 0.0),
                                      iris::Point(1.0, 0.0, 1.0)},
@@ -207,7 +211,8 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
 
   iris::RayTracer::SurfaceIntersection intersection{
       bsdf,
-      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0),
+                     iris::PositionError(0.0, 0.0, 0.0),
                      iris::Vector(0.0, 1.0, 0.0)),
       iris::RayTracer::Differentials{iris::Point(1.0, 1.0, 0.0),
                                      iris::Point(1.0, 0.0, 1.0)},
@@ -259,7 +264,8 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
 
   iris::RayTracer::SurfaceIntersection intersection{
       bsdf,
-      iris::HitPoint(iris::Point(1.0, 0.0, 0.0), {0.0, 0.0, 0.0},
+      iris::HitPoint(iris::Point(1.0, 0.0, 0.0),
+                     iris::PositionError(0.0, 0.0, 0.0),
                      iris::Vector(0.0, 1.0, 0.0)),
       iris::RayTracer::Differentials{iris::Point(1.0, 1.0, 0.0),
                                      iris::Point(1.0, 0.0, 1.0)},

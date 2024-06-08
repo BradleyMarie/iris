@@ -595,32 +595,4 @@ BoundingBox Matrix::Multiply(const BoundingBox& bounding_box) const {
                      Multiply(upper2), Multiply(upper3));
 }
 
-std::array<geometric, 3> Matrix::Multiply(
-    const Point& point, const std::array<geometric, 3>& error) const {
-  static constexpr geometric machine_epsilon =
-      std::numeric_limits<geometric>::epsilon() * static_cast<geometric>(0.5);
-  static constexpr geometric rounding_error =
-      static_cast<geometric>(3) * machine_epsilon;
-  static constexpr geometric gamma =
-      rounding_error / (static_cast<geometric>(1.0) - rounding_error);
-
-  std::array<geometric, 3> result = {
-      (gamma + static_cast<geometric>(1.0)) *
-              (std::abs(m[0][0] * error[0]) + std::abs(m[0][1] * error[1]) +
-               std::abs(m[0][2] * error[2])) +
-          gamma * (std::abs(m[0][0] * point.x) + std::abs(m[0][1] * point.y) +
-                   std::abs(m[0][2] * point.z) + std::abs(m[0][3])),
-      (gamma + static_cast<geometric>(1.0)) *
-              (std::abs(m[1][0] * error[0]) + std::abs(m[1][1] * error[1]) +
-               std::abs(m[1][2] * error[2])) +
-          gamma * (std::abs(m[1][0] * point.x) + std::abs(m[1][1] * point.y) +
-                   std::abs(m[1][2] * point.z) + std::abs(m[1][3])),
-      (gamma + static_cast<geometric>(1.0)) *
-              (std::abs(m[2][0] * error[0]) + std::abs(m[2][1] * error[1]) +
-               std::abs(m[2][2] * error[2])) +
-          gamma * (std::abs(m[2][0] * point.x) + std::abs(m[2][1] * point.y) +
-                   std::abs(m[2][2] * point.z) + std::abs(m[2][3]))};
-  return result;
-}
-
 }  // namespace iris

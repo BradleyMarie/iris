@@ -66,11 +66,12 @@ TEST(EnvironmentalLightTest, SampleFails) {
   iris::random::MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
 
-  EXPECT_FALSE(light.Sample(
-      iris::HitPoint(iris::Point(0.0, 0.0, 0.0), {0.0, 0.0, 0.0},
-                     iris::Vector(1.0, 0.0, 0.0)),
-      iris::Sampler(random), iris::testing::GetNeverVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator()));
+  EXPECT_FALSE(light.Sample(iris::HitPoint(iris::Point(0.0, 0.0, 0.0),
+                                           iris::PositionError(0.0, 0.0, 0.0),
+                                           iris::Vector(1.0, 0.0, 0.0)),
+                            iris::Sampler(random),
+                            iris::testing::GetNeverVisibleVisibilityTester(),
+                            iris::testing::GetSpectralAllocator()));
 }
 
 TEST(EnvironmentalLightTest, SampleNotVisible) {
@@ -86,11 +87,12 @@ TEST(EnvironmentalLightTest, SampleNotVisible) {
   iris::random::MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
 
-  EXPECT_FALSE(light.Sample(
-      iris::HitPoint(iris::Point(0.0, 0.0, 0.0), {0.0, 0.0, 0.0},
-                     iris::Vector(1.0, 0.0, 0.0)),
-      iris::Sampler(random), iris::testing::GetNeverVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator()));
+  EXPECT_FALSE(light.Sample(iris::HitPoint(iris::Point(0.0, 0.0, 0.0),
+                                           iris::PositionError(0.0, 0.0, 0.0),
+                                           iris::Vector(1.0, 0.0, 0.0)),
+                            iris::Sampler(random),
+                            iris::testing::GetNeverVisibleVisibilityTester(),
+                            iris::testing::GetSpectralAllocator()));
 }
 
 TEST(EnvironmentalLightTest, SampleSucceeds) {
@@ -106,11 +108,12 @@ TEST(EnvironmentalLightTest, SampleSucceeds) {
   iris::random::MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
 
-  auto result = light.Sample(
-      iris::HitPoint(iris::Point(0.0, 0.0, 0.0), {0.0, 0.0, 0.0},
-                     iris::Vector(1.0, 0.0, 0.0)),
-      iris::Sampler(random), iris::testing::GetAlwaysVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator());
+  auto result = light.Sample(iris::HitPoint(iris::Point(0.0, 0.0, 0.0),
+                                            iris::PositionError(0.0, 0.0, 0.0),
+                                            iris::Vector(1.0, 0.0, 0.0)),
+                             iris::Sampler(random),
+                             iris::testing::GetAlwaysVisibleVisibilityTester(),
+                             iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(&spectrum, &result->emission);
   EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), result->to_light);

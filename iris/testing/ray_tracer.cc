@@ -59,7 +59,7 @@ class AlwaysHitsGeometry : public Geometry {
   ComputeHitPointResult ComputeHitPoint(
       const Ray& ray, geometric_t distance,
       const void* additional_data) const override {
-    return {ray.Endpoint(distance), {0.0, 0.0, 0.0}};
+    return {ray.Endpoint(distance), PositionError(0.0, 0.0, 0.0)};
   }
 
   Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
