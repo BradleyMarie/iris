@@ -53,7 +53,8 @@ class AlwaysHitsGeometry : public Geometry {
   }
 
   Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
-    return &hit_allocator.Allocate(nullptr, distance_, 1, 1);
+    return &hit_allocator.Allocate(nullptr, distance_,
+                                   static_cast<geometric_t>(0.0), 1, 1);
   }
 
   ComputeHitPointResult ComputeHitPoint(

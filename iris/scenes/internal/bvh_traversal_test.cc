@@ -344,7 +344,7 @@ TEST(NestedIntersect, FirstNegative) {
   iris::Ray ray(iris::Point(0.25, 0.25, 5.5), iris::Vector(0.0, 0.0, -1.0));
   auto hit_allocator = iris::testing::MakeHitAllocator(ray);
 
-  auto& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0u, 0u);
+  auto& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u);
 
   EXPECT_CALL(*mock_geometry0, Trace(testing::_, testing::_))
       .Times(1)
@@ -391,7 +391,7 @@ TEST(NestedIntersect, FirstPositive) {
   iris::Ray ray(iris::Point(0.25, 0.25, 5.5), iris::Vector(0.0, 0.0, -1.0));
   auto hit_allocator = iris::testing::MakeHitAllocator(ray);
 
-  auto& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0u, 0u);
+  auto& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
 
   EXPECT_CALL(*mock_geometry0, Trace(testing::_, testing::_))
       .Times(1)
@@ -438,7 +438,7 @@ TEST(NestedIntersect, SecondNegative) {
   iris::Ray ray(iris::Point(2.25, 2.25, 5.5), iris::Vector(0.0, 0.0, -1.0));
   auto hit_allocator = iris::testing::MakeHitAllocator(ray);
 
-  auto& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0u, 0u);
+  auto& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u);
 
   EXPECT_CALL(*mock_geometry1, Trace(testing::_, testing::_)).Times(0);
   EXPECT_CALL(*mock_geometry1, Trace(testing::_, testing::_))
@@ -485,7 +485,7 @@ TEST(NestedIntersect, SecondPositive) {
   iris::Ray ray(iris::Point(2.25, 2.25, -5.5), iris::Vector(0.0, 0.0, 1.0));
   auto hit_allocator = iris::testing::MakeHitAllocator(ray);
 
-  auto& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0u, 0u);
+  auto& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
 
   EXPECT_CALL(*mock_geometry1, Trace(testing::_, testing::_)).Times(0);
   EXPECT_CALL(*mock_geometry1, Trace(testing::_, testing::_))
@@ -532,8 +532,8 @@ TEST(NestedIntersect, Overlapped) {
   iris::Ray ray(iris::Point(2.25, 2.25, -5.5), iris::Vector(0.0, 0.0, 1.0));
   auto hit_allocator = iris::testing::MakeHitAllocator(ray);
 
-  auto& first_hit = hit_allocator.Allocate(nullptr, 2.0, 0u, 0u);
-  auto& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0u, 0u);
+  auto& first_hit = hit_allocator.Allocate(nullptr, 2.0, 0.0, 0u, 0u);
+  auto& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
 
   EXPECT_CALL(*mock_geometry0, Trace(testing::_, testing::_))
       .Times(1)

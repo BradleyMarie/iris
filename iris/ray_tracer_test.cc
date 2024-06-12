@@ -22,7 +22,7 @@ void MakeBasicGeometryImpl(
   EXPECT_CALL(*geometry, Trace(expected_ray, testing::_))
       .WillOnce(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 2u, 3u, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2u, 3u, g_data);
           }));
   EXPECT_CALL(*geometry, ComputeHitPoint(expected_ray, 1.0, testing::_))
       .WillOnce(testing::Invoke([](const iris::Ray& ray,

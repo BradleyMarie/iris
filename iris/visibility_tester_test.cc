@@ -28,7 +28,8 @@ TEST(VisibilityTesterTest, WithGeometry) {
   EXPECT_CALL(*geometry, Trace(ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [&](const iris::Ray& trace_ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 2, 3);
+            return &hit_allocator.Allocate(
+                nullptr, 1.0, static_cast<iris::geometric_t>(0.0), 2, 3);
           }));
 
   auto builder = iris::SceneObjects::Builder();

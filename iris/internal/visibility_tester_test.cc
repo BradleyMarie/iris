@@ -220,12 +220,12 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
     EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
         .WillOnce(testing::Invoke(
             [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-              return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+              return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
             }));
     EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
         .WillOnce(testing::Invoke(
             [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-              return &hit_allocator.Allocate(nullptr, 1.0, 3, 4, g_data);
+              return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 3, 4, g_data);
             }));
   }
   auto geometry_ptr = geometry.Get();
@@ -260,7 +260,7 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(
@@ -311,7 +311,7 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(
@@ -363,7 +363,7 @@ TEST(VisibilityTesterTest, NoPdf) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(
@@ -419,7 +419,7 @@ TEST(VisibilityTesterTest, NegativePdf) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(
@@ -475,7 +475,7 @@ TEST(VisibilityTesterTest, Succeeds) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(
@@ -534,7 +534,7 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(
@@ -595,7 +595,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(
@@ -656,7 +656,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
       .WillOnce(

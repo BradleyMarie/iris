@@ -18,7 +18,8 @@ std::unique_ptr<iris::geometry::MockGeometry> MakeGeometry(
   EXPECT_CALL(*geometry, Trace(testing::_, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 1u, 2u);
+            return &hit_allocator.Allocate(
+                nullptr, 1.0, static_cast<iris::geometric_t>(0.0), 1u, 2u);
           }));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(testing::_, testing::_,
                                                    testing::_, testing::_))

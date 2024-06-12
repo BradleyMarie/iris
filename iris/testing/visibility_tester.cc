@@ -19,7 +19,7 @@ class NeverVisibleScene final : public Scene {
       return &hit_allocator.Allocate(nullptr,
                                      std::nextafter(static_cast<visual_t>(0.0),
                                                     static_cast<visual_t>(1.0)),
-                                     1, 2);
+                                     static_cast<geometric_t>(0.0), 1, 2);
     }
 
     ComputeHitPointResult ComputeHitPoint(

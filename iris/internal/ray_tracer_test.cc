@@ -24,7 +24,8 @@ TEST(RayTracerTest, WithGeometry) {
   EXPECT_CALL(*geometry, Trace(ray, testing::_))
       .WillOnce(testing::Invoke(
           [&](const iris::Ray& trace_ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 2, 3);
+            return &hit_allocator.Allocate(
+                nullptr, 1.0, static_cast<iris::geometric_t>(0.0), 2, 3);
           }));
 
   auto* geometry_ptr = geometry.Get();
@@ -38,6 +39,7 @@ TEST(RayTracerTest, WithGeometry) {
   auto* hit = ray_tracer.Trace(ray, 0.0, 2.0, *scene);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
+  EXPECT_EQ(0.0, hit->distance_error);
   EXPECT_EQ(nullptr, hit->next);
   EXPECT_EQ(2u, hit->front);
   EXPECT_EQ(3u, hit->back);

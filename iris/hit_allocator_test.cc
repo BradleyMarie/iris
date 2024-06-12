@@ -11,11 +11,12 @@ TEST(HitAllocator, Allocate) {
   auto arena = iris::internal::HitArena();
   iris::HitAllocator allocator(ray, arena);
 
-  auto& hit0 = allocator.Allocate(nullptr, 2.0, 1, 2);
+  auto& hit0 = allocator.Allocate(nullptr, 2.0, 3.0, 1, 2);
   EXPECT_EQ(nullptr, hit0.next);
   EXPECT_EQ(2.0, hit0.distance);
 
   auto& full_hit0 = static_cast<iris::internal::Hit&>(hit0);
+  EXPECT_EQ(3.0, full_hit0.distance_error);
   EXPECT_EQ(nullptr, full_hit0.geometry);
   EXPECT_EQ(nullptr, full_hit0.model_to_world);
   EXPECT_EQ(1u, full_hit0.front);
@@ -23,11 +24,12 @@ TEST(HitAllocator, Allocate) {
   EXPECT_EQ(nullptr, full_hit0.additional_data);
 
   std::array<double, 3> array = {1.0, 2.0, 3.0};
-  auto& hit1 = allocator.Allocate(&hit0, 1.0, 3, 4, array);
+  auto& hit1 = allocator.Allocate(&hit0, 1.0, -5.0, 3, 4, array);
   EXPECT_EQ(&hit0, hit1.next);
   EXPECT_EQ(1.0, hit1.distance);
 
   auto& full_hit1 = static_cast<iris::internal::Hit&>(hit1);
+  EXPECT_EQ(5.0, full_hit1.distance_error);
   EXPECT_EQ(nullptr, full_hit1.geometry);
   EXPECT_EQ(nullptr, full_hit1.model_to_world);
   EXPECT_EQ(3u, full_hit1.front);

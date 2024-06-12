@@ -15,7 +15,8 @@ TEST(GeometryTest, Trace) {
       .WillOnce(testing::Invoke(
           [&](const iris::Ray& trace_ray, iris::HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
-            return &hit_allocator.Allocate(nullptr, 2.0, 3, 4);
+            return &hit_allocator.Allocate(
+                nullptr, 2.0, static_cast<iris::geometric_t>(0.0), 3, 4);
           }));
 
   iris::geometry::MockBasicGeometry geom;
@@ -25,7 +26,8 @@ TEST(GeometryTest, Trace) {
             EXPECT_EQ(ray, trace_ray);
             const iris::Geometry* base_geom = &nested_geom;
             auto* nested_hit = base_geom->Trace(hit_allocator);
-            return &hit_allocator.Allocate(nested_hit, 1.0, 2, 3);
+            return &hit_allocator.Allocate(
+                nested_hit, 1.0, static_cast<iris::geometric_t>(0.0), 2, 3);
           }));
 
   iris::Geometry* base_geom = &geom;

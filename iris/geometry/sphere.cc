@@ -264,11 +264,13 @@ Hit* Sphere::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
     geometric_t forwards_distance =
         distance_to_chord_midpoint + half_chord_length;
     Hit* forwards_hit = &hit_allocator.Allocate(nullptr, forwards_distance,
+                                                static_cast<geometric_t>(0.0),
                                                 kBackFace, kFrontFace);
 
     geometric_t backwards_distance =
         distance_to_chord_midpoint - half_chord_length;
-    return &hit_allocator.Allocate(forwards_hit, backwards_distance, kBackFace,
+    return &hit_allocator.Allocate(forwards_hit, backwards_distance,
+                                   static_cast<geometric_t>(0.0), kBackFace,
                                    kFrontFace);
   }
 
@@ -289,10 +291,12 @@ Hit* Sphere::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
 
   geometric_t farther_distance = distance_to_chord_midpoint + half_chord_length;
   Hit* farther_hit = &hit_allocator.Allocate(nullptr, farther_distance,
+                                             static_cast<geometric_t>(0.0),
                                              second_face, first_face);
 
   geometric_t closer_distance = distance_to_chord_midpoint - half_chord_length;
-  return &hit_allocator.Allocate(farther_hit, closer_distance, first_face,
+  return &hit_allocator.Allocate(farther_hit, closer_distance,
+                                 static_cast<geometric_t>(0.0), first_face,
                                  second_face);
 }
 

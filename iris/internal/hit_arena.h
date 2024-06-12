@@ -13,8 +13,9 @@ class HitArena final {
  public:
   HitArena() = default;
 
-  Hit& Allocate(iris::Hit* next, geometric distance, face_t front, face_t back,
-                const void* additional_data, size_t additional_data_size);
+  Hit& Allocate(iris::Hit* next, geometric distance, geometric_t distance_error,
+                face_t front, face_t back, const void* additional_data,
+                size_t additional_data_size);
   void Clear();
 
  private:

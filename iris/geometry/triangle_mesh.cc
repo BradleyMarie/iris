@@ -451,8 +451,8 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
   auto normal_and_faces = ComputeSurfaceNormalAndFaces(ray);
 
   return &hit_allocator.Allocate(
-      nullptr, distance, std::get<1>(normal_and_faces),
-      std::get<2>(normal_and_faces),
+      nullptr, distance, static_cast<geometric_t>(0.0),
+      std::get<1>(normal_and_faces), std::get<2>(normal_and_faces),
       AdditionalData{barycentric_coordinates, std::get<0>(normal_and_faces)});
 }
 
