@@ -24,6 +24,10 @@ Vector DoComputeSurfaceNormal(const Point& p0, const Point& p1,
   return CrossProduct(p1 - p0, p2 - p0);
 }
 
+geometric_t AbsMax(geometric_t a, geometric_t b, geometric_t c) {
+  return std::max(std::max(std::abs(a), std::abs(b)), std::abs(c));
+}
+
 class Triangle final : public Geometry {
  public:
   struct SharedData {
@@ -93,8 +97,8 @@ class Triangle final : public Geometry {
   std::optional<std::pair<Vector, Vector>> MaybeComputeNormalTangents() const;
 
   std::optional<TextureCoordinates> ComputeTextureCoordinates(
-      const std::optional<Differentials>& differentials,
-      const std::array<geometric_t, 3>& barycentric_coordinates) const;
+      const std::optional<Differentials>& differentials, geometric_t b0,
+      geometric_t b1, geometric_t b2) const;
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
   const std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
@@ -151,20 +155,18 @@ std::array<geometric_t, 2> Triangle::UVCoordinates(const Point& point) const {
 }
 
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
-    const std::optional<Differentials>& differentials,
-    const std::array<geometric_t, 3>& barycentric_coordinates) const {
+    const std::optional<Differentials>& differentials, geometric_t b0,
+    geometric_t b1, geometric_t b2) const {
   if (shared_->uv.empty()) {
     return std::nullopt;
   }
 
-  geometric_t u =
-      shared_->uv[std::get<0>(vertices_)].first * barycentric_coordinates[0] +
-      shared_->uv[std::get<1>(vertices_)].first * barycentric_coordinates[1] +
-      shared_->uv[std::get<2>(vertices_)].first * barycentric_coordinates[2];
-  geometric_t v =
-      shared_->uv[std::get<0>(vertices_)].second * barycentric_coordinates[0] +
-      shared_->uv[std::get<1>(vertices_)].second * barycentric_coordinates[1] +
-      shared_->uv[std::get<2>(vertices_)].second * barycentric_coordinates[2];
+  geometric_t u = shared_->uv[std::get<0>(vertices_)].first * b0 +
+                  shared_->uv[std::get<1>(vertices_)].first * b1 +
+                  shared_->uv[std::get<2>(vertices_)].first * b2;
+  geometric_t v = shared_->uv[std::get<0>(vertices_)].second * b0 +
+                  shared_->uv[std::get<1>(vertices_)].second * b1 +
+                  shared_->uv[std::get<2>(vertices_)].second * b2;
 
   if (!differentials) {
     return TextureCoordinates{{u, v}};
@@ -183,7 +185,9 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
   const AdditionalData* additional =
       static_cast<const AdditionalData*>(additional_data);
   return ComputeTextureCoordinates(differentials,
-                                   additional->barycentric_coordinates);
+                                   additional->barycentric_coordinates[0],
+                                   additional->barycentric_coordinates[1],
+                                   additional->barycentric_coordinates[2]);
 }
 
 std::optional<Vector> Triangle::MaybeComputeShadingNormal(
@@ -400,60 +404,90 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
   v2[0] += shear_x * v2[2];
   v2[1] += shear_y * v2[2];
 
-  geometric_t b0 = v1[0] * v2[1] - v1[1] * v2[0];
-  geometric_t b1 = v2[0] * v0[1] - v2[1] * v0[0];
-  geometric_t b2 = v0[0] * v1[1] - v0[1] * v1[0];
+  geometric_t e0 = v1[0] * v2[1] - v1[1] * v2[0];
+  geometric_t e1 = v2[0] * v0[1] - v2[1] * v0[0];
+  geometric_t e2 = v0[0] * v1[1] - v0[1] * v1[0];
 
   if constexpr (std::is_same<geometric_t, float>::value) {
-    if (b0 == 0.0 || b1 == 0.0 || b2 == 0.0) {
-      b0 = ((double)v1[0] * (double)v2[1] - (double)v1[1] * (double)v2[0]);
-      b1 = ((double)v2[0] * (double)v0[1] - (double)v2[1] * (double)v0[0]);
-      b2 = ((double)v0[0] * (double)v1[1] - (double)v0[1] * (double)v1[0]);
+    if (e0 == 0.0 || e1 == 0.0 || e2 == 0.0) {
+      e0 = ((double)v1[0] * (double)v2[1] - (double)v1[1] * (double)v2[0]);
+      e1 = ((double)v2[0] * (double)v0[1] - (double)v2[1] * (double)v0[0]);
+      e2 = ((double)v0[0] * (double)v1[1] - (double)v0[1] * (double)v1[0]);
     }
   }
 
   if constexpr (std::is_same<geometric_t, double>::value) {
-    if (b0 == 0.0 || b1 == 0.0 || b2 == 0.0) {
-      b0 = ((long double)v1[0] * (long double)v2[1] -
+    if (e0 == 0.0 || e1 == 0.0 || e2 == 0.0) {
+      e0 = ((long double)v1[0] * (long double)v2[1] -
             (long double)v1[1] * (long double)v2[0]);
-      b1 = ((long double)v2[0] * (long double)v0[1] -
+      e1 = ((long double)v2[0] * (long double)v0[1] -
             (long double)v2[1] * (long double)v0[0]);
-      b2 = ((long double)v0[0] * (long double)v1[1] -
+      e2 = ((long double)v0[0] * (long double)v1[1] -
             (long double)v0[1] * (long double)v1[0]);
     }
   }
 
-  if ((b0 < 0.0 || b1 < 0.0 || b2 < 0.0) &&
-      (b0 > 0.0 || b1 > 0.0 || b2 > 0.0)) {
+  if ((e0 < 0.0 || e1 < 0.0 || e2 < 0.0) &&
+      (e0 > 0.0 || e1 > 0.0 || e2 > 0.0)) {
     return nullptr;
   }
 
-  geometric_t determinant = b0 + b1 + b2;
+  geometric_t determinant = e0 + e1 + e2;
   if (determinant == 0.0) {
     return nullptr;
   }
 
-  std::array<geometric_t, 3> barycentric_coordinates = {
-      b0 / determinant, b1 / determinant, b2 / determinant};
+  geometric_t b0 = e0 / determinant;
+  geometric_t b1 = e1 / determinant;
+  geometric_t b2 = e2 / determinant;
+
+  geometric_t barycentric0 = std::min(static_cast<geometric_t>(1.0), b0);
+  geometric_t amount_remaining = static_cast<geometric_t>(1.0) - barycentric0;
+  geometric_t barycentric1 = std::min(amount_remaining, b1);
+  amount_remaining -= barycentric1;
+  geometric_t barycentric2 =
+      std::max(static_cast<geometric_t>(0.0), amount_remaining);
 
   if (shared_->alpha_mask) {
-    auto texture_coordinates =
-        ComputeTextureCoordinates(std::nullopt, barycentric_coordinates);
+    auto texture_coordinates = ComputeTextureCoordinates(
+        std::nullopt, barycentric0, barycentric1, barycentric2);
     if (texture_coordinates &&
         !shared_->alpha_mask->Evaluate(*texture_coordinates)) {
       return nullptr;
     }
   }
 
-  geometric_t distance = barycentric_coordinates[0] * (v0[2] / direction_z) +
-                         barycentric_coordinates[1] * (v1[2] / direction_z) +
-                         barycentric_coordinates[2] * (v2[2] / direction_z);
-  auto normal_and_faces = ComputeSurfaceNormalAndFaces(ray);
+  v0[2] /= direction_z;
+  v1[2] /= direction_z;
+  v2[2] /= direction_z;
+
+  geometric_t distance = b0 * v0[2] + b1 * v1[2] + b2 * v2[2];
+
+  geometric_t max_x = AbsMax(v0[0], v1[0], v2[0]);
+  geometric_t max_y = AbsMax(v0[1], v1[1], v2[1]);
+  geometric_t max_z = AbsMax(v0[2], v1[2], v2[2]);
+  geometric_t max_e = AbsMax(e0, e1, e2);
+
+  geometric_t delta_x = RoundingError(5) * (max_x + max_z);
+  geometric_t delta_y = RoundingError(5) * (max_y + max_z);
+  geometric_t delta_z = RoundingError(3) * max_z;
+
+  geometric_t delta_e =
+      static_cast<geometric_t>(2.0) *
+      (RoundingError(2) * max_x * max_y + delta_y * max_x + delta_x * max_y);
+
+  geometric_t delta_error =
+      static_cast<geometric_t>(3.0) *
+      (RoundingError(3) * max_e * max_z + delta_e * max_z + delta_z * max_e) /
+      std::abs(determinant);
+
+  auto [surface_normal, front_face, back_face] =
+      ComputeSurfaceNormalAndFaces(ray);
 
   return &hit_allocator.Allocate(
-      nullptr, distance, static_cast<geometric_t>(0.0),
-      std::get<1>(normal_and_faces), std::get<2>(normal_and_faces),
-      AdditionalData{barycentric_coordinates, std::get<0>(normal_and_faces)});
+      nullptr, distance, delta_error, front_face, back_face,
+      AdditionalData{{barycentric0, barycentric1, barycentric2},
+                     surface_normal});
 }
 
 std::tuple<uint32_t, uint32_t, uint32_t> ComputeIndices(

@@ -442,8 +442,9 @@ TEST_F(Triangle, ComputeTextureCoordinatesNone) {
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
+  AdditionalData additional_data{{1.0, 0.0, 0.0}, iris::Vector(0.0, 0.0, 1.0)};
   auto texture_coordinates = triangles.front()->ComputeTextureCoordinates(
-      iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, nullptr);
+      iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, &additional_data);
   EXPECT_FALSE(texture_coordinates);
 }
 
