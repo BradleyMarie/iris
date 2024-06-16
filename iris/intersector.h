@@ -17,6 +17,7 @@ class Intersector final {
               Hit*& closest_hit) noexcept
       : ray_(ray),
         minimum_distance_(minimum_distance),
+        closest_hit_distance_(maximum_distance),
         maximum_distance_(maximum_distance),
         hit_arena_(hit_arena),
         closest_hit_(closest_hit) {
@@ -28,7 +29,7 @@ class Intersector final {
   void Intersect(const Geometry& geometry, const Matrix& model_to_world);
 
   geometric_t MinimumDistance() const { return minimum_distance_; }
-  geometric_t MaximumDistance() const { return maximum_distance_; }
+  geometric_t MaximumDistance() const { return closest_hit_distance_; }
 
  private:
   Intersector(const Intersector&) = delete;
@@ -36,6 +37,7 @@ class Intersector final {
 
   const Ray& ray_;
   geometric_t minimum_distance_;
+  geometric_t closest_hit_distance_;
   geometric_t maximum_distance_;
   internal::HitArena& hit_arena_;
   Hit*& closest_hit_;

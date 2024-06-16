@@ -16,10 +16,11 @@ void Intersector::Intersect(const Geometry& geometry) {
 
     auto* full_hit = static_cast<internal::Hit*>(hit_list);
     if (full_hit->distance - full_hit->distance_error > minimum_distance_ &&
+        full_hit->distance < closest_hit_distance_ &&
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
       full_hit->model_ray.emplace(ray_);
       closest_hit_ = hit_list;
-      maximum_distance_ = hit_list->distance;
+      closest_hit_distance_ = hit_list->distance;
     }
   }
 }
@@ -36,11 +37,12 @@ void Intersector::Intersect(const Geometry& geometry,
 
     auto* full_hit = static_cast<internal::Hit*>(hit_list);
     if (full_hit->distance - full_hit->distance_error > minimum_distance_ &&
+        full_hit->distance < closest_hit_distance_ &&
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
       full_hit->model_ray.emplace(trace_ray);
       full_hit->model_to_world = model_to_world;
       closest_hit_ = hit_list;
-      maximum_distance_ = hit_list->distance;
+      closest_hit_distance_ = hit_list->distance;
     }
   }
 }
@@ -56,11 +58,12 @@ void Intersector::Intersect(const Geometry& geometry,
 
     auto* full_hit = static_cast<internal::Hit*>(hit_list);
     if (full_hit->distance - full_hit->distance_error > minimum_distance_ &&
+        full_hit->distance < closest_hit_distance_ &&
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
       full_hit->model_ray.emplace(trace_ray);
       full_hit->model_to_world = &model_to_world;
       closest_hit_ = hit_list;
-      maximum_distance_ = hit_list->distance;
+      closest_hit_distance_ = hit_list->distance;
     }
   }
 }
