@@ -141,6 +141,33 @@ cc_library(
 )
 
 cc_library(
+    name = "oren_nayar_bxdf",
+    srcs = ["oren_nayar_bxdf.cc"],
+    hdrs = ["oren_nayar_bxdf.h"],
+    deps = [
+        ":math",
+        "//iris:bxdf",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+    ],
+)
+
+cc_test(
+    name = "oren_nayar_bxdf_test",
+    srcs = ["oren_nayar_bxdf_test.cc"],
+    deps = [
+        ":oren_nayar_bxdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:spectral_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "specular_bxdf",
     srcs = ["specular_bxdf.cc"],
     hdrs = ["specular_bxdf.h"],

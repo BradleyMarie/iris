@@ -47,6 +47,7 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:lambertian_bxdf",
+        "//iris/bxdfs:oren_nayar_bxdf",
         "//iris/textures:texture2d",
     ],
 )
@@ -56,6 +57,8 @@ cc_test(
     srcs = ["matte_material_test.cc"],
     deps = [
         ":matte_material",
+        "//iris/bxdfs:lambertian_bxdf",
+        "//iris/bxdfs:oren_nayar_bxdf",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
