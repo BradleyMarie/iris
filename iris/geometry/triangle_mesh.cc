@@ -498,21 +498,21 @@ std::tuple<uint32_t, uint32_t, uint32_t> ComputeIndices(
     return indices;
   }
 
-  Vector surface_normal = DoComputeSurfaceNormal(
-      points.at(std::get<0>(indices)), points.at(std::get<1>(indices)),
-      points.at(std::get<2>(indices)));
+  Vector surface_normal = DoComputeSurfaceNormal(points[std::get<0>(indices)],
+                                                 points[std::get<1>(indices)],
+                                                 points[std::get<2>(indices)]);
 
-  geometric_t cumulative_dp = (std::get<0>(normals.at(std::get<0>(indices))) +
-                               std::get<0>(normals.at(std::get<1>(indices))) +
-                               std::get<0>(normals.at(std::get<2>(indices)))) *
+  geometric_t cumulative_dp = (std::get<0>(normals[std::get<0>(indices)]) +
+                               std::get<0>(normals[std::get<1>(indices)]) +
+                               std::get<0>(normals[std::get<2>(indices)])) *
                                   surface_normal.x +
-                              (std::get<1>(normals.at(std::get<0>(indices))) +
-                               std::get<1>(normals.at(std::get<1>(indices))) +
-                               std::get<1>(normals.at(std::get<2>(indices)))) *
+                              (std::get<1>(normals[std::get<0>(indices)]) +
+                               std::get<1>(normals[std::get<1>(indices)]) +
+                               std::get<1>(normals[std::get<2>(indices)])) *
                                   surface_normal.y +
-                              (std::get<2>(normals.at(std::get<0>(indices))) +
-                               std::get<2>(normals.at(std::get<1>(indices))) +
-                               std::get<2>(normals.at(std::get<2>(indices)))) *
+                              (std::get<2>(normals[std::get<0>(indices)]) +
+                               std::get<2>(normals[std::get<1>(indices)]) +
+                               std::get<2>(normals[std::get<2>(indices)])) *
                                   surface_normal.z;
 
   if (cumulative_dp < static_cast<geometric_t>(0.0)) {
