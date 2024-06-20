@@ -79,8 +79,7 @@ class MicrofacetBrdf final : public Bxdf {
                               const Vector& surface_normal,
                               const Bxdf* sample_source,
                               Hemisphere hemisphere) const override {
-    if (hemisphere != Hemisphere::BRDF ||
-        incoming.z == static_cast<geometric_t>(0.0) ||
+    if (incoming.z == static_cast<geometric_t>(0.0) ||
         outgoing.z == static_cast<geometric_t>(0.0) ||
         std::signbit(incoming.z) != std::signbit(outgoing.z)) {
       return static_cast<visual_t>(0.0);
@@ -172,8 +171,7 @@ class MicrofacetBtdf final : public Bxdf {
                               const Vector& surface_normal,
                               const Bxdf* sample_source,
                               Hemisphere hemisphere) const override {
-    if (hemisphere != Hemisphere::BTDF ||
-        incoming.z == static_cast<geometric_t>(0.0) ||
+    if (incoming.z == static_cast<geometric_t>(0.0) ||
         outgoing.z == static_cast<geometric_t>(0.0) ||
         std::signbit(incoming.z) == std::signbit(outgoing.z)) {
       return static_cast<visual_t>(0.0);
