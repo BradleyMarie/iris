@@ -11,32 +11,34 @@ const Bxdf* TranslucentMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  auto* reflectance =
+  const Reflector* reflectance =
       reflectance_->Evaluate(texture_coordinates, spectral_allocator);
-  auto* transmittance =
+  const Reflector* transmittance =
       transmittance_->Evaluate(texture_coordinates, spectral_allocator);
 
   if (reflectance == nullptr && transmittance == nullptr) {
     return nullptr;
   }
 
-  auto* diffuse = diffuse_->Evaluate(texture_coordinates, spectral_allocator);
+  const Reflector* diffuse =
+      diffuse_->Evaluate(texture_coordinates, spectral_allocator);
 
   const Bxdf* lambertian_brdf = nullptr;
   const Bxdf* lambertian_btdf = nullptr;
   if (diffuse != nullptr) {
-    if (reflectance) {
+    if (reflectance != nullptr) {
       lambertian_brdf = &bxdf_allocator.Allocate<bxdfs::LambertianBrdf>(
           *spectral_allocator.Scale(reflectance, diffuse));
     }
 
-    if (transmittance) {
+    if (transmittance != nullptr) {
       lambertian_btdf = &bxdf_allocator.Allocate<bxdfs::LambertianBtdf>(
           *spectral_allocator.Scale(transmittance, diffuse));
     }
   }
 
-  auto* specular = specular_->Evaluate(texture_coordinates, spectral_allocator);
+  const Reflector* specular =
+      specular_->Evaluate(texture_coordinates, spectral_allocator);
 
   // Consider clamping these values
   visual eta_incident = eta_incident_->Evaluate(texture_coordinates);
@@ -51,7 +53,7 @@ const Bxdf* TranslucentMaterial::Evaluate(
           bxdfs::TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
     }
 
-    if (reflectance) {
+    if (reflectance != nullptr) {
       microfacet_brdf = &bxdf_allocator.Allocate<bxdfs::MicrofacetBrdf<
           bxdfs::TrowbridgeReitzDistribution, bxdfs::FresnelDielectric>>(
           *spectral_allocator.Scale(reflectance, specular),
@@ -59,7 +61,7 @@ const Bxdf* TranslucentMaterial::Evaluate(
           bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
     }
 
-    if (transmittance) {
+    if (transmittance != nullptr) {
       microfacet_btdf = &bxdf_allocator.Allocate<bxdfs::MicrofacetBtdf<
           bxdfs::TrowbridgeReitzDistribution, bxdfs::FresnelDielectric>>(
           *spectral_allocator.Scale(transmittance, specular), eta_incident,
