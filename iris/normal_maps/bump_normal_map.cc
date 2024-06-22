@@ -10,51 +10,67 @@ std::pair<geometric_t, geometric_t> ComputeNormal(
     const NormalMap::Differentials& differentials) {
   visual_t displacement = bumps->Evaluate(texture_coordinates);
 
+  geometric_t displacement0 = 0.0;
+  geometric_t displacement1 = 0.0;
   if (differentials.type == NormalMap::Differentials::DU_DV) {
     geometric_t du = static_cast<geometric_t>(0.5) *
                      (std::abs(texture_coordinates.differentials->du_dx) +
                       std::abs(texture_coordinates.differentials->du_dy));
+
+    if (du != static_cast<geometric_t>(0.0)) {
+      TextureCoordinates texture_coordinates_du{
+          {texture_coordinates.uv[0] + du, texture_coordinates.uv[1]},
+          texture_coordinates.differentials};
+      displacement0 =
+          (bumps->Evaluate(texture_coordinates_du) - displacement) / du;
+    }
+
     geometric_t dv = static_cast<geometric_t>(0.5) *
                      (std::abs(texture_coordinates.differentials->dv_dx) +
                       std::abs(texture_coordinates.differentials->dv_dy));
 
-    TextureCoordinates texture_coordinates_du{
-        {texture_coordinates.uv[0] + du, texture_coordinates.uv[1]},
-        texture_coordinates.differentials};
-    visual_t displacement_u = bumps->Evaluate(texture_coordinates_du);
+    if (du != static_cast<geometric_t>(0.0)) {
+      TextureCoordinates texture_coordinates_dv{
+          {texture_coordinates.uv[0], texture_coordinates.uv[1] + dv},
+          texture_coordinates.differentials};
+      displacement1 =
+          (bumps->Evaluate(texture_coordinates_dv) - displacement) / dv;
+    }
+  } else {
+    geometric_t duv_dx =
+        std::sqrt(texture_coordinates.differentials->du_dx *
+                      texture_coordinates.differentials->du_dx +
+                  texture_coordinates.differentials->dv_dx *
+                      texture_coordinates.differentials->dv_dx);
 
-    TextureCoordinates texture_coordinates_dv{
-        {texture_coordinates.uv[0], texture_coordinates.uv[1] + dv},
-        texture_coordinates.differentials};
-    visual_t displacement_v = bumps->Evaluate(texture_coordinates_dv);
+    if (duv_dx != static_cast<geometric_t>(0.0)) {
+      TextureCoordinates texture_coordinates_dx{
+          {texture_coordinates.uv[0] + texture_coordinates.differentials->du_dx,
+           texture_coordinates.uv[1] +
+               texture_coordinates.differentials->dv_dx},
+          texture_coordinates.differentials};
+      displacement0 =
+          (bumps->Evaluate(texture_coordinates_dx) - displacement) / duv_dx;
+    }
 
-    return {(displacement_u - displacement) / du,
-            (displacement_v - displacement) / dv};
+    geometric_t duv_dy =
+        std::sqrt(texture_coordinates.differentials->du_dy *
+                      texture_coordinates.differentials->du_dy +
+                  texture_coordinates.differentials->dv_dy *
+                      texture_coordinates.differentials->dv_dy);
+
+    if (duv_dy != static_cast<geometric_t>(0.0)) {
+      TextureCoordinates texture_coordinates_dy{
+          {texture_coordinates.uv[0] + texture_coordinates.differentials->du_dy,
+           texture_coordinates.uv[1] +
+               texture_coordinates.differentials->dv_dy},
+          texture_coordinates.differentials};
+      displacement1 =
+          (bumps->Evaluate(texture_coordinates_dy) - displacement) / duv_dy;
+    }
   }
 
-  TextureCoordinates texture_coordinates_dx{
-      {texture_coordinates.uv[0] + texture_coordinates.differentials->du_dx,
-       texture_coordinates.uv[1] + texture_coordinates.differentials->dv_dx},
-      texture_coordinates.differentials};
-  visual_t displacement_x = bumps->Evaluate(texture_coordinates_dx);
-
-  TextureCoordinates texture_coordinates_dy{
-      {texture_coordinates.uv[0] + texture_coordinates.differentials->du_dy,
-       texture_coordinates.uv[1] + texture_coordinates.differentials->dv_dy},
-      texture_coordinates.differentials};
-  visual_t displacement_y = bumps->Evaluate(texture_coordinates_dy);
-
-  geometric_t duv_dx = std::sqrt(texture_coordinates.differentials->du_dx *
-                                     texture_coordinates.differentials->du_dx +
-                                 texture_coordinates.differentials->dv_dx *
-                                     texture_coordinates.differentials->dv_dx);
-  geometric_t duv_dy = std::sqrt(texture_coordinates.differentials->du_dy *
-                                     texture_coordinates.differentials->du_dy +
-                                 texture_coordinates.differentials->dv_dy *
-                                     texture_coordinates.differentials->dv_dy);
-
-  return {(displacement_x - displacement) / duv_dx,
-          (displacement_y - displacement) / duv_dy};
+  return {displacement0, displacement1};
 }
 
 }  // namespace

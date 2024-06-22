@@ -43,6 +43,20 @@ TEST(BumpNormalMap, EvaluateNoTextureCoordinateDifferentials) {
   EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
 }
 
+TEST(BumpNormalMap, EvaluateNoDUVTextureCoordinateDifferentials) {
+  auto bump = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
+  iris::normals::BumpNormalMap normal_map(std::move(bump));
+
+  auto result = normal_map.Evaluate(
+      iris::TextureCoordinates{{0.0, 0.0}, {{0.0, 0.0, 0.0, 0.0}}},
+      {{iris::NormalMap::Differentials::DX_DY,
+        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
+      iris::Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+}
+
 TEST(BumpNormalMap, EvaluateConstantValueXY) {
   auto bump = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
@@ -93,6 +107,34 @@ TEST(BumpNormalMap, EvaluateXY) {
   EXPECT_NEAR(-1.0, result.x, 0.001);
   EXPECT_NEAR(-1.0, result.y, 0.001);
   EXPECT_NEAR(+1.0, result.z, 0.001);
+}
+
+TEST(BumpNormalMap, EvaluateNoDUTextureCoordinateDifferentials) {
+  auto bump = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
+  iris::normals::BumpNormalMap normal_map(std::move(bump));
+
+  auto result = normal_map.Evaluate(
+      iris::TextureCoordinates{{0.0, 0.0}, {{0.0, 1.0, 0.0, 1.0}}},
+      {{iris::NormalMap::Differentials::DU_DV,
+        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
+      iris::Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+}
+
+TEST(BumpNormalMap, EvaluateNoDVTextureCoordinateDifferentials) {
+  auto bump = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(0.0));
+  iris::normals::BumpNormalMap normal_map(std::move(bump));
+
+  auto result = normal_map.Evaluate(
+      iris::TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 1.0, 0.0}}},
+      {{iris::NormalMap::Differentials::DU_DV,
+        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
+      iris::Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateUV) {
