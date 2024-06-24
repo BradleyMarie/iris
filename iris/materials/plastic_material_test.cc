@@ -16,10 +16,17 @@ TEST(PlasticMaterialTest, NoBxdfs) {
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(
           iris::ReferenceCounted<iris::Reflector>());
+  auto eta_incident = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.5));
+  auto eta_transmitted = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.0));
   auto sigma = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
   iris::materials::PlasticMaterial material(reflectance, reflectance,
+                                            eta_incident, eta_transmitted,
                                             std::move(sigma), false);
 
   auto* result = material.Evaluate(
@@ -42,11 +49,18 @@ TEST(PlasticMaterialTest, LambertianOnly) {
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(
           iris::ReferenceCounted<iris::Reflector>());
+  auto eta_incident = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.5));
+  auto eta_transmitted = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.0));
   auto sigma = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  iris::materials::PlasticMaterial material(reflectance, specular,
-                                            std::move(sigma), false);
+  iris::materials::PlasticMaterial material(reflectance, specular, eta_incident,
+                                            eta_transmitted, std::move(sigma),
+                                            false);
 
   auto* result = material.Evaluate(
       iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -74,11 +88,18 @@ TEST(PlasticMaterialTest, SpecularOnly) {
   auto specular =
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(reflector);
+  auto eta_incident = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.5));
+  auto eta_transmitted = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.0));
   auto sigma = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  iris::materials::PlasticMaterial material(reflectance, specular,
-                                            std::move(sigma), false);
+  iris::materials::PlasticMaterial material(reflectance, specular, eta_incident,
+                                            eta_transmitted, std::move(sigma),
+                                            false);
 
   auto* result = material.Evaluate(
       iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -106,11 +127,18 @@ TEST(PlasticMaterialTest, Remap) {
   auto specular =
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(reflector);
+  auto eta_incident = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.5));
+  auto eta_transmitted = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.0));
   auto sigma = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  iris::materials::PlasticMaterial material(reflectance, specular,
-                                            std::move(sigma), true);
+  iris::materials::PlasticMaterial material(reflectance, specular, eta_incident,
+                                            eta_transmitted, std::move(sigma),
+                                            true);
 
   auto* result = material.Evaluate(
       iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -137,11 +165,18 @@ TEST(PlasticMaterialTest, Both) {
   auto specular =
       iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
           iris::Reflector, iris::SpectralAllocator>>(reflector);
+  auto eta_incident = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.5));
+  auto eta_transmitted = iris::MakeReferenceCounted<
+      iris::textures::ConstantValueTexture2D<iris::visual>>(
+      static_cast<iris::visual>(1.0));
   auto sigma = iris::MakeReferenceCounted<
       iris::textures::ConstantValueTexture2D<iris::visual>>(
       static_cast<iris::visual>(1.0));
-  iris::materials::PlasticMaterial material(reflectance, specular,
-                                            std::move(sigma), false);
+  iris::materials::PlasticMaterial material(reflectance, specular, eta_incident,
+                                            eta_transmitted, std::move(sigma),
+                                            false);
 
   auto* result = material.Evaluate(
       iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},

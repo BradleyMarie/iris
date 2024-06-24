@@ -62,12 +62,15 @@ TEST(Math, SinCosSquaredPhi) {
 }
 
 TEST(Math, Reflect) {
+  EXPECT_FALSE(iris::bxdfs::internal::Reflect(iris::Vector(0.0, 0.0, 1.0),
+                                              iris::Vector(0.0, 0.0, -1.0)));
   auto vector = iris::Normalize(iris::Vector(-1.0, -1.0, 1.0));
   auto reflected =
       iris::bxdfs::internal::Reflect(vector, iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(-vector.x, reflected.x);
-  EXPECT_EQ(-vector.y, reflected.y);
-  EXPECT_EQ(vector.z, reflected.z);
+  ASSERT_TRUE(reflected);
+  EXPECT_EQ(-vector.x, reflected->x);
+  EXPECT_EQ(-vector.y, reflected->y);
+  EXPECT_EQ(vector.z, reflected->z);
 }
 
 TEST(Math, Refract) {
@@ -82,4 +85,13 @@ TEST(Math, Refract) {
   auto reflected =
       iris::bxdfs::internal::Refract(vector, iris::Vector(0.0, 0.0, 1.0), 10.0);
   EXPECT_FALSE(reflected);
+}
+
+TEST(Math, HalfAngle) {
+  EXPECT_FALSE(iris::bxdfs::internal::HalfAngle(
+      iris::Vector(1.0, 1.0, 1.0), iris::Vector(-1.0, -1.0, -1.0)));
+  auto half_angle = iris::bxdfs::internal::HalfAngle(
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 1.0, 0.0));
+  ASSERT_TRUE(half_angle);
+  EXPECT_EQ(*half_angle, iris::Normalize(iris::Vector(0.0, 1.0, 1.0)));
 }

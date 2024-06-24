@@ -7,6 +7,8 @@ namespace iris::pbrt_frontend::materials {
 namespace {
 
 static const iris::visual kDefaultDiffuse = 0.25;
+static const iris::visual kDefaultEtaFront = 1.5;
+static const iris::visual kDefaultEtaBack = 1.0;
 static const iris::visual kDefaultSpecular = 0.25;
 static const iris::visual kDefaultRoughness = 0.1;
 static const bool kDefaultRemapRoughness = true;
@@ -53,17 +55,27 @@ class NestedPlasticObjectBuilder
           iris::Reflector, iris::SpectralAllocator>>
           specular,
       iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+          eta_front,
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+          eta_back,
+      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
           roughness,
       bool remap_roughness, iris::ReferenceCounted<iris::NormalMap> front_bump,
       iris::ReferenceCounted<iris::NormalMap> back_bump)
       : ObjectBuilder(g_parameters),
         diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
+        eta_front_(std::move(eta_front)),
+        eta_back_(std::move(eta_back)),
         roughness_(std::move(roughness)),
         remap_roughness_(remap_roughness),
         default_(std::make_tuple(
             iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
-                diffuse_, specular_, roughness_, remap_roughness_),
+                diffuse_, specular_, eta_front_, eta_back_, roughness_,
+                remap_roughness_),
+            iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
+                diffuse_, specular_, eta_back_, eta_front_, roughness_,
+                remap_roughness_),
             front_bump, back_bump)) {}
 
   std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
@@ -79,10 +91,14 @@ class NestedPlasticObjectBuilder
       iris::Reflector, iris::SpectralAllocator>>
       specular_;
   iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+      eta_front_;
+  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+      eta_back_;
+  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       roughness_;
   bool remap_roughness_;
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-             ReferenceCounted<NormalMap>>
+  std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+             ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
       default_;
 };
 
@@ -132,6 +148,8 @@ PlasticObjectBuilder::Build(
 
   return std::make_unique<NestedPlasticObjectBuilder>(
       std::move(diffuse_texture), std::move(specular_texture),
+      texture_manager.AllocateUniformFloatTexture(kDefaultEtaFront),
+      texture_manager.AllocateUniformFloatTexture(kDefaultEtaBack),
       std::move(roughness_texture), remap_roughness,
       std::move(front_normal_map), std::move(back_normal_map));
 }
@@ -142,16 +160,16 @@ NestedPlasticObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     TextureManager& texture_manager) const {
   if (parameters.empty()) {
-    return std::make_tuple(std::get<0>(default_), std::get<0>(default_),
-                           std::get<1>(default_), std::get<2>(default_));
+    return std::make_tuple(std::get<0>(default_), std::get<1>(default_),
+                           std::get<2>(default_), std::get<3>(default_));
   }
 
   auto diffuse_texture = diffuse_;
   auto specular_texture = specular_;
   auto roughness_texture = roughness_;
   bool remap_roughness = remap_roughness_;
-  auto front_normal_map = std::get<1>(default_);
-  auto back_normal_map = std::get<2>(default_);
+  auto front_normal_map = std::get<2>(default_);
+  auto back_normal_map = std::get<3>(default_);
 
   auto kd = parameters.find("Kd");
   if (kd != parameters.end()) {
@@ -180,11 +198,18 @@ NestedPlasticObjectBuilder::Build(
     back_normal_map = normal_maps.second;
   }
 
-  auto material = iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
-      std::move(diffuse_texture), std::move(specular_texture),
-      std::move(roughness_texture), remap_roughness);
+  auto front_material =
+      iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
+          diffuse_texture, specular_texture, eta_front_, eta_back_,
+          roughness_texture, remap_roughness);
+  auto back_material =
+      iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
+          std::move(diffuse_texture), std::move(specular_texture),
+          std::move(eta_back_), std::move(eta_front_),
+          std::move(roughness_texture), remap_roughness);
 
-  return std::make_tuple(material, material, std::move(front_normal_map),
+  return std::make_tuple(std::move(front_material), std::move(back_material),
+                         std::move(front_normal_map),
                          std::move(back_normal_map));
 }
 

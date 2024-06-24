@@ -70,7 +70,27 @@ static inline std::pair<geometric_t, geometric_t> SinCosSquaredPhi(
   return result;
 }
 
-static inline Vector Reflect(const Vector& vector, const Vector& normal) {
+static inline std::optional<Vector> HalfAngle(const Vector& v0,
+                                              const Vector& v1) {
+  geometric_t half_angle_x = v0.x + v1.x;
+  geometric_t half_angle_y = v0.y + v1.y;
+  geometric_t half_angle_z = v0.z + v1.z;
+
+  if (half_angle_x == static_cast<geometric>(0.0) &&
+      half_angle_y == static_cast<geometric>(0.0) &&
+      half_angle_z == static_cast<geometric>(0.0)) {
+    return std::nullopt;
+  }
+
+  return Normalize(Vector(half_angle_x, half_angle_y, half_angle_z));
+}
+
+static inline std::optional<Vector> Reflect(const Vector& vector,
+                                            const Vector& normal) {
+  if (DotProduct(vector, normal) < static_cast<geometric_t>(0.0)) {
+    return std::nullopt;
+  }
+
   return static_cast<geometric_t>(2.0) * DotProduct(vector, normal) * normal -
          vector;
 }

@@ -28,11 +28,13 @@ const Bxdf* PlasticMaterial::Evaluate(
           bxdfs::TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
     }
 
+    visual_t eta_incident = eta_incident_->Evaluate(texture_coordinates);
+    visual_t eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
+
     microfacet_brdf = &bxdf_allocator.Allocate<bxdfs::MicrofacetBrdf<
         bxdfs::TrowbridgeReitzDistribution, bxdfs::FresnelDielectric>>(
         *specular, bxdfs::TrowbridgeReitzDistribution(roughness, roughness),
-        bxdfs::FresnelDielectric(static_cast<visual_t>(1.5),
-                                 static_cast<visual_t>(1.0)));
+        bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
   }
 
   return bxdfs::MakeComposite(bxdf_allocator, lambertian_brdf, microfacet_brdf);

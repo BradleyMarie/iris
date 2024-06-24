@@ -25,14 +25,20 @@ class PlasticMaterial final : public Material {
       iris::ReferenceCounted<
           textures::PointerTexture2D<Reflector, SpectralAllocator>>
           specular,
+      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
       iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
       bool remap_roughness)
       : diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
+        eta_incident_(std::move(eta_incident)),
+        eta_transmitted_(std::move(eta_transmitted)),
         roughness_(std::move(roughness)),
         remap_roughness_(remap_roughness) {
     assert(diffuse_);
     assert(specular_);
+    assert(eta_incident_);
+    assert(eta_transmitted_);
     assert(roughness_);
   }
 
@@ -47,6 +53,8 @@ class PlasticMaterial final : public Material {
   iris::ReferenceCounted<
       textures::PointerTexture2D<Reflector, SpectralAllocator>>
       specular_;
+  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
+  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
   iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
   bool remap_roughness_;
 };

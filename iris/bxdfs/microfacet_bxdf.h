@@ -67,12 +67,12 @@ class MicrofacetBrdf final : public Bxdf {
     Vector half_angle =
         distribution_.Sample(incoming, sampler.Next(), sampler.Next());
 
-    Vector outgoing = internal::Reflect(incoming, half_angle);
-    if (std::signbit(incoming.z) != std::signbit(outgoing.z)) {
+    auto outgoing = internal::Reflect(incoming, half_angle);
+    if (!outgoing || std::signbit(incoming.z) != std::signbit(outgoing->z)) {
       return std::nullopt;
     }
 
-    return SampleResult{outgoing, std::nullopt, this};
+    return SampleResult{*outgoing, std::nullopt, this};
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
@@ -85,10 +85,13 @@ class MicrofacetBrdf final : public Bxdf {
       return static_cast<visual_t>(0.0);
     }
 
-    Vector half_angle = Normalize(outgoing + incoming);
-    visual_t dot_product = DotProduct(incoming, half_angle);
+    auto half_angle = internal::HalfAngle(incoming, outgoing);
+    if (!half_angle) {
+      return static_cast<visual_t>(0.0);
+    }
 
-    return distribution_.Pdf(incoming, half_angle) /
+    visual_t dot_product = DotProduct(incoming, *half_angle);
+    return distribution_.Pdf(incoming, *half_angle) /
            (static_cast<visual_t>(4.0) * dot_product);
   }
 
@@ -102,17 +105,21 @@ class MicrofacetBrdf final : public Bxdf {
       return nullptr;
     }
 
-    Vector half_angle = Normalize(outgoing + incoming);
-    visual_t dp = ClampedDotProduct(incoming, half_angle);
-    const Reflector* reflectance =
-        fresnel_.AttenuateReflectance(reflectance_, dp, allocator);
+    auto half_angle = internal::HalfAngle(incoming, outgoing);
+    if (!half_angle) {
+      return nullptr;
+    }
+
+    visual_t dp = ClampedDotProduct(incoming, *half_angle);
+    const Reflector* reflectance = fresnel_.AttenuateReflectance(
+        reflectance_, std::copysign(dp, incoming.z), allocator);
     if (!reflectance) {
       return nullptr;
     }
 
     visual_t cos_theta_incident = internal::AbsCosTheta(incoming);
     visual_t cos_theta_outgoing = internal::AbsCosTheta(outgoing);
-    visual_t d = distribution_.D(half_angle);
+    visual_t d = distribution_.D(*half_angle);
     visual_t g = distribution_.G(incoming, outgoing);
     visual_t attenuation =
         d * g /
