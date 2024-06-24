@@ -1,5 +1,6 @@
 #include "iris/integrators/internal/russian_roulette.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
@@ -8,8 +9,8 @@ namespace integrators {
 namespace internal {
 
 RussianRoulette::RussianRoulette(
-    visual maximum_continue_probability,
-    visual always_continue_path_throughput) noexcept
+    visual_t maximum_continue_probability,
+    visual_t always_continue_path_throughput) noexcept
     : maximum_continue_probability_(maximum_continue_probability),
       always_continue_path_throughput_(always_continue_path_throughput) {
   assert(0.0 <= maximum_continue_probability &&
@@ -24,19 +25,14 @@ std::optional<visual_t> RussianRoulette::Evaluate(
     return static_cast<visual_t>(1.0);
   }
 
-  visual continue_probability =
-      std::max(static_cast<visual>(0.0),
-               std::min(path_throughput, static_cast<visual>(1.0)));
-
-  visual_t termination_cutoff =
-      std::min(maximum_continue_probability_, continue_probability);
-
-  auto roulette_sample = rng.NextVisual();
-  if (termination_cutoff < roulette_sample) {
+  visual_t continue_probability =
+      std::clamp(path_throughput, static_cast<visual_t>(0.0),
+                 maximum_continue_probability_);
+  if (continue_probability < rng.NextVisual()) {
     return std::nullopt;
   }
 
-  return termination_cutoff;
+  return continue_probability;
 }
 
 }  // namespace internal
