@@ -4,9 +4,12 @@ package(default_visibility = ["//iris/bxdfs:__subpackages__"])
 
 cc_library(
     name = "math",
+    srcs = ["math.cc"],
     hdrs = ["math.h"],
     deps = [
         "//iris:float",
+        "//iris:sampler",
+        "//iris:vector",
     ],
 )
 
@@ -15,6 +18,7 @@ cc_test(
     srcs = ["math_test.cc"],
     deps = [
         ":math",
+        "//iris/random:mock_random",
         "@com_google_googletest//:gtest_main",
     ],
 )

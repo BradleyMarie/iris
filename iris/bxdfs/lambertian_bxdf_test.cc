@@ -19,7 +19,10 @@ TEST(LambertianBrdfTest, SampleAligned) {
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
                             iris::Vector(0.0, 0.0, 1.0), sampler);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result->direction);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.z, 0.0003452669, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 
@@ -34,7 +37,10 @@ TEST(LambertianBrdfTest, SampleUnaligned) {
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
                             iris::Vector(0.0, 0.0, -1.0), sampler);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->direction);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->direction.x, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.y, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.z, -0.000345266, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 
@@ -106,7 +112,10 @@ TEST(LambertianBtdfTest, SampleAligned) {
   iris::bxdfs::LambertianBtdf bxdf(reflector);
   auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
                             iris::Vector(0.0, 0.0, 1.0), sampler);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->direction);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.z, -0.000345266, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 
@@ -121,7 +130,10 @@ TEST(LambertianBtdfTest, SampleUnaligned) {
   iris::bxdfs::LambertianBtdf bxdf(reflector);
   auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
                             iris::Vector(0.0, 0.0, 1.0), sampler);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->direction);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.z, -0.000345266, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 

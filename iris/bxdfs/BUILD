@@ -64,6 +64,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
+        "//iris/bxdfs/internal:math",
     ],
 )
 
@@ -152,6 +153,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
+        "//iris/bxdfs/internal:math",
     ],
 )
 

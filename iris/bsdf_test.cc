@@ -6,23 +6,73 @@
 #include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 
+static const iris::Vector kTrueIncoming =
+    iris::Normalize(iris::Vector(0.0, -1.0, -1.0));
+static const iris::Vector kTrueBrdfOutgoing =
+    iris::Normalize(iris::Vector(0.0, -1.0, 1.0));
+static const iris::Vector kTrueBtdfOutgoing =
+    iris::Normalize(iris::Vector(0.0, -1.0, -1.0));
+
+static const iris::Vector kSurfaceNormal =
+    iris::Normalize(iris::Vector(0.0, 0.0, 1.0));
+
+static const iris::Vector kIncoming =
+    iris::Normalize(iris::Vector(1.0, 0.0, 1.0));
+static const iris::Vector kBrdfOutgoing =
+    iris::Normalize(iris::Vector(-1.0, 0.0, 1.0));
+static const iris::Vector kBtdfOutgoing =
+    iris::Normalize(iris::Vector(-1.0, 0.0, -1.0));
+
+static const iris::Vector kInvalid(1.0, 0.0, 0.0);
+
+TEST(BsdfTest, SampleIncomingZeroDP) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::bxdfs::MockBxdf bxdf;
+
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  auto result =
+      bsdf.Sample(kInvalid, std::nullopt, iris::Sampler(rng), allocator);
+  EXPECT_FALSE(result);
+}
+
 TEST(BsdfTest, SampleFails) {
   iris::internal::Arena arena;
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Sample(iris::Vector(0.0, 1.0, 0.0), testing::Eq(std::nullopt),
-                     iris::Vector(0.0, 0.0, 1.0), testing::_))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
       .WillOnce(testing::Return(std::nullopt));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0));
-  auto result = bsdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
+  EXPECT_FALSE(result);
+}
+
+TEST(BsdfTest, SampleOutgoingZeroDP) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kInvalid}));
+
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_FALSE(result);
 }
 
@@ -31,24 +81,19 @@ TEST(BsdfTest, SampleZeroPdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Sample(iris::Vector(0.0, 1.0, 0.0), testing::Eq(std::nullopt),
-                     iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBtdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0));
-  auto result = bsdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_FALSE(result);
 }
 
@@ -57,24 +102,19 @@ TEST(BsdfTest, SampleNegativePdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Sample(iris::Vector(0.0, 1.0, 0.0), testing::Eq(std::nullopt),
-                     iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBtdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(-1.0)));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0));
-  auto result = bsdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_FALSE(result);
 }
 
@@ -83,28 +123,22 @@ TEST(BsdfTest, SampleNoReflector) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Sample(iris::Vector(0.0, 1.0, 0.0), testing::Eq(std::nullopt),
-                     iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBtdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(1.0, 0.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(nullptr));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0));
-  auto result = bsdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_FALSE(result);
 }
 
@@ -114,31 +148,25 @@ TEST(BsdfTest, SampleBtdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Sample(iris::Vector(0.0, 1.0, 0.0), testing::Eq(std::nullopt),
-                     iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBtdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(1.0, 0.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), result->direction);
+  EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(0.5, result->pdf.value());
 }
@@ -149,31 +177,25 @@ TEST(BsdfTest, SampleBrdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Sample(iris::Vector(0.0, 0.0, -1.0), testing::Eq(std::nullopt),
-                     iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(0.0, 0.0, -1.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, -1.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBrdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBrdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 0.0, -1.0),
-                                iris::Vector(0.0, 0.0, -1.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBrdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BRDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->direction);
+  EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(0.5, result->pdf.value());
 }
@@ -184,31 +206,25 @@ TEST(BsdfTest, SampleNoPdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf,
-              Sample(iris::Vector(0.0, 1.0, 0.0), testing::Eq(std::nullopt),
-                     iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Eq(std::nullopt), kSurfaceNormal,
+                           testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBtdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(1.0, 0.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), result->direction);
+  EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_FALSE(result->pdf);
 }
@@ -219,33 +235,25 @@ TEST(BsdfTest, SampleWithInputDerivatives) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(iris::Vector(0.0, 1.0, 0.0),
-                           testing::Not(testing::Eq(std::nullopt)),
-                           iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Not(testing::Eq(std::nullopt)),
+                           kSurfaceNormal, testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBtdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(1.0, 0.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result =
-      bsdf.Sample(iris::Vector(1.0, 0.0, 0.0),
-                  {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)}},
-                  iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}},
+                            iris::Sampler(rng), allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), result->direction);
+  EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_FALSE(result->pdf);
 }
@@ -256,38 +264,52 @@ TEST(BsdfTest, SampleWithOutputDerivatives) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(iris::Vector(0.0, 1.0, 0.0),
-                           testing::Not(testing::Eq(std::nullopt)),
-                           iris::Vector(0.0, 0.0, 1.0), testing::_))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::Not(testing::Eq(std::nullopt)),
+                           kSurfaceNormal, testing::_))
       .WillOnce(testing::Return(iris::Bxdf::SampleResult{
-          iris::Vector(1.0, 0.0, 0.0),
-          {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)}}}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+          kBtdfOutgoing, {{kBtdfOutgoing, kBtdfOutgoing}}}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(1.0, 0.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result =
-      bsdf.Sample(iris::Vector(1.0, 0.0, 0.0),
-                  {{iris::Vector(1.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0)}},
-                  iris::Sampler(rng), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}},
+                            iris::Sampler(rng), allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), result->direction);
+  EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   ASSERT_TRUE(result->differentials);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), result->differentials->dx);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), result->differentials->dy);
+  EXPECT_EQ(kTrueBtdfOutgoing, result->differentials->dx);
+  EXPECT_EQ(kTrueBtdfOutgoing, result->differentials->dy);
   EXPECT_FALSE(result->pdf);
+}
+
+TEST(BsdfTest, ReflectanceIncomingZeroDp) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::bxdfs::MockBxdf bxdf;
+
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kInvalid, kTrueBtdfOutgoing, allocator);
+  EXPECT_FALSE(result);
+}
+
+TEST(BsdfTest, ReflectanceOutgoingZeroDp) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::bxdfs::MockBxdf bxdf;
+
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kInvalid, allocator);
+  EXPECT_FALSE(result);
 }
 
 TEST(BsdfTest, ReflectanceZeroPdf) {
@@ -295,16 +317,12 @@ TEST(BsdfTest, ReflectanceZeroPdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, -1.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Reflectance(iris::Vector(1.0, 0.0, 0.0),
-                                 iris::Vector(1.0, 0.0, 0.0), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kTrueBtdfOutgoing, allocator);
   EXPECT_FALSE(result);
 }
 
@@ -313,16 +331,12 @@ TEST(BsdfTest, ReflectanceNegativePdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, -1.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(-1.0)));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Reflectance(iris::Vector(1.0, 0.0, 0.0),
-                                 iris::Vector(1.0, 0.0, 0.0), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kTrueBtdfOutgoing, allocator);
   EXPECT_FALSE(result);
 }
 
@@ -331,16 +345,12 @@ TEST(BsdfTest, ReflectanceNoPdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, -1.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(std::nullopt));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Reflectance(iris::Vector(1.0, 0.0, 0.0),
-                                 iris::Vector(1.0, 0.0, 0.0), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kTrueBtdfOutgoing, allocator);
   EXPECT_FALSE(result);
 }
 
@@ -349,20 +359,15 @@ TEST(BsdfTest, ReflectanceNoReflector) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, -1.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual>(0.5)));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(0.0, -1.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(nullptr));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Reflectance(iris::Vector(1.0, 0.0, 0.0),
-                                 iris::Vector(1.0, 0.0, 0.0), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kTrueBtdfOutgoing, allocator);
   EXPECT_FALSE(result);
 }
 
@@ -372,20 +377,15 @@ TEST(BsdfTest, ReflectanceBtdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, -1.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(0.0, -1.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Reflectance(iris::Vector(1.0, 0.0, 0.0),
-                                 iris::Vector(1.0, 0.0, 0.0), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kTrueBtdfOutgoing, allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(0.5, result->pdf);
@@ -397,20 +397,15 @@ TEST(BsdfTest, ReflectanceBrdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, -1.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBrdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 0.0, -1.0),
-                                iris::Vector(0.0, 0.0, -1.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBrdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BRDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
-  iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 1.0),
-                  iris::Vector(0.0, 0.0, 1.0), true);
-  auto result = bsdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                 iris::Vector(0.0, 0.0, -1.0), allocator);
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kTrueBrdfOutgoing, allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(0.5, result->pdf);
@@ -422,17 +417,12 @@ TEST(BsdfTest, Normalize) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(iris::Vector(0.0, 1.0, 0.0), testing::_,
-                           iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
-  EXPECT_CALL(
-      bxdf,
-      Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(1.0, 0.0, 0.0),
-          iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BTDF))
+  EXPECT_CALL(bxdf, Sample(kIncoming, testing::_, kSurfaceNormal, testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{kBtdfOutgoing}));
+  EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal, nullptr,
+                        iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
-  EXPECT_CALL(bxdf, Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                iris::Vector(1.0, 0.0, 0.0), nullptr,
+  EXPECT_CALL(bxdf, Reflectance(kIncoming, kBtdfOutgoing, nullptr,
                                 iris::Bxdf::Hemisphere::BTDF, testing::_))
       .WillOnce(testing::Return(&reflector));
 
@@ -441,10 +431,10 @@ TEST(BsdfTest, Normalize) {
 
   iris::Bsdf bsdf(bxdf, iris::Vector(0.0, 0.0, 2.0),
                   iris::Vector(0.0, 0.0, 2.0), true);
-  auto result = bsdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                            iris::Sampler(rng), allocator);
+  auto result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, iris::Sampler(rng), allocator);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
-  EXPECT_EQ(iris::Vector(0.0, 1.0, 0.0), result->direction);
+  EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_EQ(0.5, result->pdf.value());
 }

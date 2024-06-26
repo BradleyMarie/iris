@@ -19,7 +19,10 @@ TEST(OrenNayarBrdfTest, SampleAligned) {
   iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
   auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
                             iris::Vector(0.0, 0.0, 1.0), sampler);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result->direction);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.z, 0.0003452669, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 
@@ -34,7 +37,10 @@ TEST(OrenNayarBrdfTest, SampleUnaligned) {
   iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
   auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
                             iris::Vector(0.0, 0.0, -1.0), sampler);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->direction);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->direction.x, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.y, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->direction.z, -0.0003452669, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 

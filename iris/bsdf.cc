@@ -70,6 +70,11 @@ Vector Bsdf::ToWorld(const Vector& vector) const {
 std::optional<Bsdf::SampleResult> Bsdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     Sampler sampler, SpectralAllocator& allocator) const {
+  geometric_t dp_incoming = DotProduct(incoming, surface_normal_);
+  if (dp_incoming == static_cast<geometric_t>(0.0)) {
+    return std::nullopt;
+  }
+
   auto local_incoming = ToLocal(-incoming);
   auto local_incoming_differentials = ToLocal(differentials);
 
@@ -81,9 +86,15 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
   }
 
   auto world_outgoing = ToWorld(sample_result->direction);
-  bool transmitted = (DotProduct(incoming, surface_normal_) > 0) ==
-                     (DotProduct(world_outgoing, surface_normal_) > 0);
-  auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
+
+  geometric_t dp_outgoing = DotProduct(world_outgoing, surface_normal_);
+  if (dp_outgoing == static_cast<geometric_t>(0.0)) {
+    return std::nullopt;
+  }
+
+  auto type = (std::signbit(dp_incoming) == std::signbit(dp_outgoing))
+                  ? Bxdf::Hemisphere::BTDF
+                  : Bxdf::Hemisphere::BRDF;
 
   auto pdf =
       bxdf_.Pdf(local_incoming, sample_result->direction, local_surface_normal_,
@@ -107,9 +118,19 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
     const Vector& incoming, const Vector& outgoing,
     SpectralAllocator& allocator) const {
-  bool transmitted = (DotProduct(incoming, surface_normal_) > 0) ==
-                     (DotProduct(outgoing, surface_normal_) > 0);
-  auto type = transmitted ? Bxdf::Hemisphere::BTDF : Bxdf::Hemisphere::BRDF;
+  geometric_t dp_incoming = DotProduct(incoming, surface_normal_);
+  if (dp_incoming == static_cast<geometric_t>(0.0)) {
+    return std::nullopt;
+  }
+
+  geometric_t dp_outgoing = DotProduct(outgoing, surface_normal_);
+  if (dp_outgoing == static_cast<geometric_t>(0.0)) {
+    return std::nullopt;
+  }
+
+  auto type = (std::signbit(dp_incoming) == std::signbit(dp_outgoing))
+                  ? Bxdf::Hemisphere::BTDF
+                  : Bxdf::Hemisphere::BRDF;
 
   auto local_incoming = ToLocal(-incoming);
   auto local_outgoing = ToLocal(outgoing);
