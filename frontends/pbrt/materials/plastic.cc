@@ -84,21 +84,21 @@ class NestedPlasticObjectBuilder
         TextureManager& texture_manager) const override;
 
  private:
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
+  const iris::ReferenceCounted<iris::textures::PointerTexture2D<
       iris::Reflector, iris::SpectralAllocator>>
       diffuse_;
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
+  const iris::ReferenceCounted<iris::textures::PointerTexture2D<
       iris::Reflector, iris::SpectralAllocator>>
       specular_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+  const iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       eta_front_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+  const iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       eta_back_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+  const iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       roughness_;
   bool remap_roughness_;
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-             ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
+  const std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
       default_;
 };
 
@@ -204,9 +204,8 @@ NestedPlasticObjectBuilder::Build(
           roughness_texture, remap_roughness);
   auto back_material =
       iris::MakeReferenceCounted<iris::materials::PlasticMaterial>(
-          std::move(diffuse_texture), std::move(specular_texture),
-          std::move(eta_back_), std::move(eta_front_),
-          std::move(roughness_texture), remap_roughness);
+          std::move(diffuse_texture), std::move(specular_texture), eta_back_,
+          eta_front_, std::move(roughness_texture), remap_roughness);
 
   return std::make_tuple(std::move(front_material), std::move(back_material),
                          std::move(front_normal_map),

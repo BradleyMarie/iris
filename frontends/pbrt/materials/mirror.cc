@@ -60,11 +60,11 @@ class NestedMirrorObjectBuilder
         TextureManager& texture_manager) const override;
 
  private:
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
+  const iris::ReferenceCounted<iris::textures::PointerTexture2D<
       iris::Reflector, iris::SpectralAllocator>>
       reflectance_;
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-             ReferenceCounted<NormalMap>>
+  const std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                   ReferenceCounted<NormalMap>>
       default_;
 };
 

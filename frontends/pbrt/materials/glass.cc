@@ -77,18 +77,18 @@ class NestedGlassObjectBuilder
         TextureManager& texture_manager) const override;
 
  private:
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
+  const iris::ReferenceCounted<iris::textures::PointerTexture2D<
       iris::Reflector, iris::SpectralAllocator>>
       reflectance_;
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
+  const iris::ReferenceCounted<iris::textures::PointerTexture2D<
       iris::Reflector, iris::SpectralAllocator>>
       transmittance_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+  const iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       eta_incident_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+  const iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       eta_transmitted_;
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-             ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
+  const std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
+                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
       default_;
 };
 

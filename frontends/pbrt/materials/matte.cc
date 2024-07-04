@@ -65,12 +65,13 @@ class NestedMatteObjectBuilder
         TextureManager& texture_manager) const override;
 
  private:
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
+  const iris::ReferenceCounted<iris::textures::PointerTexture2D<
       iris::Reflector, iris::SpectralAllocator>>
       diffuse_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>> sigma_;
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
-             ReferenceCounted<NormalMap>>
+  const iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
+      sigma_;
+  const std::tuple<ReferenceCounted<Material>, ReferenceCounted<NormalMap>,
+                   ReferenceCounted<NormalMap>>
       default_;
 };
 
