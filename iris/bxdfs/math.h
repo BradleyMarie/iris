@@ -51,13 +51,11 @@ static inline std::pair<geometric_t, geometric_t> SinCosPhi(
   }
 
   geometric_t sin_phi =
-      std::max(static_cast<geometric_t>(-1.0),
-               std::min(static_cast<geometric_t>(vector.y) / sin_theta,
-                        static_cast<geometric_t>(1.0)));
+      std::clamp(static_cast<geometric_t>(vector.y) / sin_theta,
+                 static_cast<geometric_t>(-1.0), static_cast<geometric_t>(1.0));
   geometric_t cos_phi =
-      std::max(static_cast<geometric_t>(-1.0),
-               std::min(static_cast<geometric_t>(vector.x) / sin_theta,
-                        static_cast<geometric_t>(1.0)));
+      std::clamp(static_cast<geometric_t>(vector.x) / sin_theta,
+                 static_cast<geometric_t>(-1.0), static_cast<geometric_t>(1.0));
 
   return std::make_pair(sin_phi, cos_phi);
 }

@@ -68,7 +68,8 @@ class MicrofacetBrdf final : public Bxdf {
         distribution_.Sample(incoming, sampler.Next(), sampler.Next());
 
     auto outgoing = internal::Reflect(incoming, half_angle);
-    if (!outgoing || std::signbit(incoming.z) != std::signbit(outgoing->z)) {
+    if (!outgoing || outgoing->z == static_cast<geometric>(0.0) ||
+        std::signbit(incoming.z) != std::signbit(outgoing->z)) {
       return std::nullopt;
     }
 
@@ -79,8 +80,8 @@ class MicrofacetBrdf final : public Bxdf {
                               const Vector& surface_normal,
                               const Bxdf* sample_source,
                               Hemisphere hemisphere) const override {
-    if (incoming.z == static_cast<geometric_t>(0.0) ||
-        outgoing.z == static_cast<geometric_t>(0.0) ||
+    if (incoming.z == static_cast<geometric>(0.0) ||
+        outgoing.z == static_cast<geometric>(0.0) ||
         std::signbit(incoming.z) != std::signbit(outgoing.z)) {
       return static_cast<visual_t>(0.0);
     }
@@ -99,8 +100,8 @@ class MicrofacetBrdf final : public Bxdf {
                                const Bxdf* sample_source, Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
     if (hemisphere != Hemisphere::BRDF ||
-        (incoming.z == static_cast<geometric_t>(0.0)) ||
-        (outgoing.z == static_cast<geometric_t>(0.0)) ||
+        incoming.z == static_cast<geometric>(0.0) ||
+        outgoing.z == static_cast<geometric>(0.0) ||
         std::signbit(incoming.z) != std::signbit(outgoing.z)) {
       return nullptr;
     }
@@ -151,7 +152,7 @@ class MicrofacetBtdf final : public Bxdf {
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
-    if (incoming.z == static_cast<geometric_t>(0.0)) {
+    if (incoming.z == static_cast<geometric>(0.0)) {
       return std::nullopt;
     }
 
@@ -178,8 +179,8 @@ class MicrofacetBtdf final : public Bxdf {
                               const Vector& surface_normal,
                               const Bxdf* sample_source,
                               Hemisphere hemisphere) const override {
-    if (incoming.z == static_cast<geometric_t>(0.0) ||
-        outgoing.z == static_cast<geometric_t>(0.0) ||
+    if (incoming.z == static_cast<geometric>(0.0) ||
+        outgoing.z == static_cast<geometric>(0.0) ||
         std::signbit(incoming.z) == std::signbit(outgoing.z)) {
       return static_cast<visual_t>(0.0);
     }
@@ -211,8 +212,8 @@ class MicrofacetBtdf final : public Bxdf {
                                const Bxdf* sample_source, Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
     if (hemisphere != Hemisphere::BTDF ||
-        (incoming.z == static_cast<geometric_t>(0.0)) ||
-        (outgoing.z == static_cast<geometric_t>(0.0)) ||
+        (incoming.z == static_cast<geometric>(0.0)) ||
+        (outgoing.z == static_cast<geometric>(0.0)) ||
         std::signbit(incoming.z) == std::signbit(outgoing.z)) {
       return nullptr;
     }
@@ -263,13 +264,13 @@ class MicrofacetBtdf final : public Bxdf {
 
  private:
   geometric_t RelativeRefractiveRatio(const Vector& incident) const {
-    return incident.z > static_cast<geometric_t>(0.0)
+    return incident.z > static_cast<geometric>(0.0)
                ? eta_incident_over_transmitted_
                : eta_transmitted_over_incident_;
   }
 
   geometric_t ReversedRelativeRefractiveRatio(const Vector& incident) const {
-    return incident.z > static_cast<geometric_t>(0.0)
+    return incident.z > static_cast<geometric>(0.0)
                ? eta_transmitted_over_incident_
                : eta_incident_over_transmitted_;
   }

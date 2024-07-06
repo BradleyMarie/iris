@@ -128,8 +128,8 @@ visual_t TrowbridgeReitzDistribution::Lambda(const Vector& vector) const {
 
 Vector TrowbridgeReitzDistribution::Sample(const Vector& incoming,
                                            geometric_t u, geometric_t v) const {
-  Vector stretched_incoming =
-      Vector(alpha_x_ * incoming.x, alpha_y_ * incoming.y, incoming.z);
+  Vector stretched_incoming = Vector(
+      alpha_x_ * incoming.x, alpha_y_ * incoming.y, std::abs(incoming.z));
   Vector normalized_stretched_incoming = Normalize(stretched_incoming);
 
   auto [slope_x, slope_y] =
@@ -143,7 +143,9 @@ Vector TrowbridgeReitzDistribution::Sample(const Vector& incoming,
   slope_x *= alpha_x_;
   slope_y *= alpha_y_;
 
-  return Normalize(Vector(-slope_x, -slope_y, 1.0));
+  return Normalize(
+      Vector(-slope_x, -slope_y,
+             std::copysign(static_cast<geometric>(1.0), incoming.z)));
 }
 
 visual_t TrowbridgeReitzDistribution::RoughnessToAlpha(visual_t roughness) {

@@ -124,6 +124,12 @@ TEST(TrowbridgeReitzDistribution, Sample) {
   EXPECT_NEAR(0.10792, sample2.x, 0.001);
   EXPECT_NEAR(0.86342, sample2.y, 0.001);
   EXPECT_NEAR(0.49279, sample2.z, 0.001);
+
+  auto sample3 = distribution.Sample(
+      iris::Normalize(iris::Vector(1.0, 2.0, -3.0)), 0.5, 0.5);
+  EXPECT_NEAR(0.10792, sample3.x, 0.001);
+  EXPECT_NEAR(0.86342, sample3.y, 0.001);
+  EXPECT_NEAR(-0.4927, sample3.z, 0.001);
 }
 
 TEST(MicrofacetBrdf, SampleZero) {
