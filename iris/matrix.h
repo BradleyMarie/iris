@@ -66,6 +66,8 @@ struct Matrix final {
 
   Matrix Inverse() const;
 
+  bool SwapsHandedness() const;
+
   const std::array<geometric, 4>& operator[](size_t index) const {
     return m[index];
   }

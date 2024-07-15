@@ -545,6 +545,13 @@ Matrix Matrix::Multiply(const Matrix& matrix) const {
 
 Matrix Matrix::Inverse() const { return Matrix(i, m); }
 
+bool Matrix::SwapsHandedness() const {
+  geometric_t determinant = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+                            m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+                            m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+  return determinant < static_cast<geometric_t>(0.0);
+}
+
 bool operator<(const Matrix& left, const Matrix& right) {
   for (size_t i = 0; i < 4; i++) {
     for (size_t j = 0; j < 4; j++) {

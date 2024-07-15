@@ -131,11 +131,20 @@ PlyMeshBuilder::Build(
         alpha->second.GetFloatTextures().front());
   }
 
-  auto triangles = iris::geometry::AllocateTriangleMesh(
-      reader.positions, reader.faces, reader.normals, reader.uvs,
-      std::move(alpha_mask), front_material, back_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+  std::vector<iris::ReferenceCounted<iris::Geometry>> triangles;
+  if (model_to_world.SwapsHandedness()) {
+    triangles = iris::geometry::AllocateTriangleMesh(
+        reader.positions, reader.faces, reader.normals, reader.uvs,
+        std::move(alpha_mask), back_material, front_material,
+        back_emissive_material, front_emissive_material, back_normal_map,
+        front_normal_map);
+  } else {
+    triangles = iris::geometry::AllocateTriangleMesh(
+        reader.positions, reader.faces, reader.normals, reader.uvs,
+        std::move(alpha_mask), front_material, back_material,
+        front_emissive_material, back_emissive_material, front_normal_map,
+        back_normal_map);
+  }
 
   return std::make_pair(std::move(triangles), Matrix::Identity());
 }

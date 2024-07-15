@@ -20,7 +20,9 @@ class PbrtFrontBumpMap final : public NormalMap {
     Vector dp_dy = CrossProduct(differentials->dp.first, surface_normal);
     Vector dp_dx = CrossProduct(dp_dy, surface_normal);
 
-    return Differentials{differentials->type, {dp_dx, dp_dy}};
+    return Differentials{differentials->type,
+                         {dp_dx.AlignWith(differentials->dp.first),
+                          dp_dy.AlignWith(differentials->dp.second)}};
   }
 
  public:

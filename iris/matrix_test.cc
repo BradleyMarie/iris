@@ -490,6 +490,17 @@ TEST(MatrixTest, Inverse) {
   EXPECT_EQ(1.0, matrix.i[3][3]);
 }
 
+TEST(MatrixTest, SwapsHandedness) {
+  EXPECT_FALSE(iris::Matrix::Scalar(1.0, 1.0, 1.0)->SwapsHandedness());
+  EXPECT_TRUE(iris::Matrix::Scalar(1.0, 1.0, -1.0)->SwapsHandedness());
+  EXPECT_TRUE(iris::Matrix::Scalar(1.0, -1.0, 1.0)->SwapsHandedness());
+  EXPECT_FALSE(iris::Matrix::Scalar(1.0, -1.0, -1.0)->SwapsHandedness());
+  EXPECT_TRUE(iris::Matrix::Scalar(-1.0, 1.0, 1.0)->SwapsHandedness());
+  EXPECT_FALSE(iris::Matrix::Scalar(-1.0, 1.0, -1.0)->SwapsHandedness());
+  EXPECT_FALSE(iris::Matrix::Scalar(-1.0, -1.0, 1.0)->SwapsHandedness());
+  EXPECT_TRUE(iris::Matrix::Scalar(-1.0, -1.0, -1.0)->SwapsHandedness());
+}
+
 TEST(MatrixTest, Subscript) {
   std::array<std::array<iris::geometric, 4>, 4> ortho = {
       {{2.0, 0.0, 0.0, -3.0},
