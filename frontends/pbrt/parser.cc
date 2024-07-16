@@ -444,10 +444,11 @@ bool Parser::Shape() {
 
   if (current_object_name_) {
     current_object_geometry_.insert(current_object_geometry_.end(),
-                                    shapes.begin(), shapes.end());
+                                    std::make_move_iterator(shapes.begin()),
+                                    std::make_move_iterator(shapes.end()));
   } else {
-    for (const auto& geometry : shapes) {
-      scene_objects_builder_.Add(geometry, transform);
+    for (auto& geometry : shapes) {
+      scene_objects_builder_.Add(std::move(geometry), transform);
     }
   }
 

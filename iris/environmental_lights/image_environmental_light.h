@@ -2,6 +2,7 @@
 #define _IRIS_ENVIRONMENTAL_LIGHTS_IMAGE_ENVIRONMENTAL_LIGHT_
 
 #include <span>
+#include <vector>
 
 #include "iris/environmental_light.h"
 #include "iris/environmental_lights/internal/distribution_2d.h"
@@ -18,7 +19,7 @@ namespace environmental_lights {
 
 class ImageEnvironmentalLight final : public EnvironmentalLight {
  public:
-  ImageEnvironmentalLight(std::span<const ReferenceCounted<Spectrum>> spectra,
+  ImageEnvironmentalLight(std::vector<ReferenceCounted<Spectrum>> spectra,
                           std::span<const visual> luma,
                           std::pair<size_t, size_t> size,
                           ReferenceCounted<Spectrum> scalar,

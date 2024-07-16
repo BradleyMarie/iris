@@ -134,7 +134,7 @@ InfiniteBuilder::Build(
   }
 
   return MakeReferenceCounted<environmental_lights::ImageEnvironmentalLight>(
-      spectra, luma, size, scalar, model_to_world);
+      std::move(spectra), luma, size, scalar, model_to_world);
 }
 
 };  // namespace

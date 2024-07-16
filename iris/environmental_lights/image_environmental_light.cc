@@ -59,10 +59,10 @@ visual_t SafeDivide(visual_t numerator, visual_t denominator) {
 }  // namespace
 
 ImageEnvironmentalLight::ImageEnvironmentalLight(
-    std::span<const ReferenceCounted<Spectrum>> spectra,
+    std::vector<ReferenceCounted<Spectrum>> spectra,
     std::span<const visual> luma, std::pair<size_t, size_t> size,
     ReferenceCounted<Spectrum> scalar, const Matrix& model_to_world)
-    : spectra_(spectra.begin(), spectra.end()),
+    : spectra_(std::move(spectra)),
       distribution_(ScaleLuma(luma, size), size),
       size_(size),
       scalar_(std::move(scalar)),
