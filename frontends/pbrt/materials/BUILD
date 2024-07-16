@@ -145,6 +145,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:plastic_material",
+        "@com_google_absl//absl/flags:flag",
     ],
 )
 

@@ -1,14 +1,22 @@
 #include "frontends/pbrt/materials/plastic.h"
 
+#include <algorithm>
+#include <utility>
+
+#include "absl/flags/flag.h"
 #include "frontends/pbrt/materials/bumpmap.h"
 #include "iris/materials/plastic_material.h"
+
+ABSL_FLAG(bool, reverse_plastic_eta, true,
+          "If true, the eta of the faces of a plastic material are reversed. "
+          "This replicates a bug that exists in pbrt-v3.");
 
 namespace iris::pbrt_frontend::materials {
 namespace {
 
 static const iris::visual kDefaultDiffuse = 0.25;
-static const iris::visual kDefaultEtaFront = 1.5;
-static const iris::visual kDefaultEtaBack = 1.0;
+static const iris::visual kDefaultEtaFront = 1.0;
+static const iris::visual kDefaultEtaBack = 1.5;
 static const iris::visual kDefaultSpecular = 0.25;
 static const iris::visual kDefaultRoughness = 0.1;
 static const bool kDefaultRemapRoughness = true;
@@ -146,12 +154,17 @@ PlasticObjectBuilder::Build(
     back_normal_map = normal_maps.second;
   }
 
+  auto eta_front =
+      texture_manager.AllocateUniformFloatTexture(kDefaultEtaFront);
+  auto eta_back = texture_manager.AllocateUniformFloatTexture(kDefaultEtaBack);
+  if (absl::GetFlag(FLAGS_reverse_plastic_eta)) {
+    std::swap(eta_front, eta_back);
+  }
+
   return std::make_unique<NestedPlasticObjectBuilder>(
       std::move(diffuse_texture), std::move(specular_texture),
-      texture_manager.AllocateUniformFloatTexture(kDefaultEtaFront),
-      texture_manager.AllocateUniformFloatTexture(kDefaultEtaBack),
-      std::move(roughness_texture), remap_roughness,
-      std::move(front_normal_map), std::move(back_normal_map));
+      std::move(eta_front), std::move(eta_back), std::move(roughness_texture),
+      remap_roughness, std::move(front_normal_map), std::move(back_normal_map));
 }
 
 std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
