@@ -24,10 +24,7 @@ void ComputeCosts(InputIterator begin, InputIterator end,
 
 BoundingBox ComputeBounds(
     const std::pair<const Geometry&, const Matrix*>& geometry) {
-  if (geometry.second) {
-    return geometry.first.ComputeBounds(*geometry.second);
-  }
-  return geometry.first.ComputeBounds(Matrix::Identity());
+  return geometry.first.ComputeBounds(geometry.second);
 }
 
 BoundingBox ComputeBounds(
@@ -37,9 +34,8 @@ BoundingBox ComputeBounds(
   BoundingBox::Builder builder;
   for (const auto& index : indices) {
     auto geometry_pair = get_geometry(index);
-    const Matrix& model_to_world =
-        geometry_pair.second ? *geometry_pair.second : Matrix::Identity();
-    BoundingBox bounds = geometry_pair.first.ComputeBounds(model_to_world);
+    BoundingBox bounds =
+        geometry_pair.first.ComputeBounds(geometry_pair.second);
     builder.Add(bounds);
   }
   return builder.Build();

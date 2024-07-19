@@ -21,7 +21,7 @@ TEST(SceneIntersect, FirstNegative) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry0, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
@@ -32,7 +32,7 @@ TEST(SceneIntersect, FirstNegative) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry1, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   iris::SceneObjects::Builder scene_objects_builder;
@@ -71,7 +71,7 @@ TEST(SceneIntersect, FirstPositive) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry0, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
@@ -82,7 +82,7 @@ TEST(SceneIntersect, FirstPositive) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry1, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   iris::SceneObjects::Builder scene_objects_builder;
@@ -121,7 +121,7 @@ TEST(SceneIntersect, SecondNegative) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry0, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
@@ -132,7 +132,7 @@ TEST(SceneIntersect, SecondNegative) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry1, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   iris::SceneObjects::Builder scene_objects_builder;
@@ -171,7 +171,7 @@ TEST(SceneIntersect, SecondPositive) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry0, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
@@ -182,7 +182,7 @@ TEST(SceneIntersect, SecondPositive) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry1, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   iris::SceneObjects::Builder scene_objects_builder;
@@ -221,7 +221,7 @@ TEST(SceneIntersect, Overlapped) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry0, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
@@ -232,7 +232,7 @@ TEST(SceneIntersect, Overlapped) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry1, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   iris::SceneObjects::Builder scene_objects_builder;
@@ -269,14 +269,14 @@ TEST(NestedIntersect, NoHit) {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
                             iris::Point(0.5, 0.5, 1.0));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 3.0),
                             iris::Point(2.5, 2.5, 4.0));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   std::vector<iris::ReferenceCounted<iris::Geometry>> geometry;
@@ -314,14 +314,14 @@ TEST(NestedIntersect, FirstNegative) {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
                             iris::Point(0.5, 0.5, 1.0));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 3.0),
                             iris::Point(2.5, 2.5, 4.0));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   std::vector<iris::ReferenceCounted<iris::Geometry>> geometry;
@@ -361,14 +361,14 @@ TEST(NestedIntersect, FirstPositive) {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
                             iris::Point(0.5, 0.5, 1.0));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 3.0),
                             iris::Point(2.5, 2.5, 4.0));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   std::vector<iris::ReferenceCounted<iris::Geometry>> geometry;
@@ -408,14 +408,14 @@ TEST(NestedIntersect, SecondNegative) {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
                             iris::Point(0.5, 0.5, 1.0));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 3.0),
                             iris::Point(2.5, 2.5, 4.0));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   std::vector<iris::ReferenceCounted<iris::Geometry>> geometry;
@@ -455,14 +455,14 @@ TEST(NestedIntersect, SecondPositive) {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
                             iris::Point(0.5, 0.5, 1.0));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 3.0),
                             iris::Point(2.5, 2.5, 4.0));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   std::vector<iris::ReferenceCounted<iris::Geometry>> geometry;
@@ -502,14 +502,14 @@ TEST(NestedIntersect, Overlapped) {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds0(iris::Point(2.0, 2.0, 3.0),
                             iris::Point(2.5, 2.5, 4.0));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 3.0),
                             iris::Point(2.5, 2.5, 4.0));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   std::vector<iris::ReferenceCounted<iris::Geometry>> geometry;

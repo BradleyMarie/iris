@@ -305,10 +305,17 @@ TEST_F(Sphere, ComputePdfBySolidAngle) {
   EXPECT_NEAR(0.6250, *pdf1, 0.01);
 }
 
+TEST_F(Sphere, GetBounds) {
+  auto sphere = SimpleSphere();
+  auto bounds = sphere->ComputeBounds(nullptr);
+  EXPECT_EQ(iris::Point(-2.0, -2.0, 1.0), bounds.lower);
+  EXPECT_EQ(iris::Point(2.0, 2.0, 5.0), bounds.upper);
+}
+
 TEST_F(Sphere, GetBoundsWithTransform) {
   auto sphere = SimpleSphere();
   auto transform = iris::Matrix::Scalar(2.0, 2.0, 1.0).value();
-  auto bounds = sphere->ComputeBounds(transform);
+  auto bounds = sphere->ComputeBounds(&transform);
   EXPECT_EQ(iris::Point(-4.0, -4.0, 1.0), bounds.lower);
   EXPECT_EQ(iris::Point(4.0, 4.0, 5.0), bounds.upper);
 }

@@ -60,7 +60,7 @@ class Sphere final : public Geometry {
       const Point& origin, face_t face, const void* additional_data,
       const Point& on_face) const override;
 
-  BoundingBox ComputeBounds(const Matrix& model_to_world) const override;
+  BoundingBox ComputeBounds(const Matrix* model_to_world) const override;
 
   std::span<const face_t> GetFaces() const override;
 
@@ -220,20 +220,29 @@ std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
                                (cos_theta * 4.0 * M_PI * radius_squared_));
 }
 
-BoundingBox Sphere::ComputeBounds(const Matrix& model_to_world) const {
+BoundingBox Sphere::ComputeBounds(const Matrix* model_to_world) const {
   Vector x_offset(radius_, 0.0, 0.0);
   Vector y_offset(0.0, radius_, 0.0);
   Vector z_offset(0.0, 0.0, radius_);
 
-  return BoundingBox(
-      model_to_world.Multiply(center_ + x_offset + y_offset + z_offset),
-      model_to_world.Multiply(center_ + x_offset + y_offset - z_offset),
-      model_to_world.Multiply(center_ + x_offset - y_offset + z_offset),
-      model_to_world.Multiply(center_ + x_offset - y_offset - z_offset),
-      model_to_world.Multiply(center_ - x_offset + y_offset + z_offset),
-      model_to_world.Multiply(center_ - x_offset + y_offset - z_offset),
-      model_to_world.Multiply(center_ - x_offset - y_offset + z_offset),
-      model_to_world.Multiply(center_ - x_offset - y_offset - z_offset));
+  Point p0 = center_ + x_offset + y_offset + z_offset;
+  Point p1 = center_ + x_offset + y_offset - z_offset;
+  Point p2 = center_ + x_offset - y_offset + z_offset;
+  Point p3 = center_ + x_offset - y_offset - z_offset;
+  Point p4 = center_ - x_offset + y_offset + z_offset;
+  Point p5 = center_ - x_offset + y_offset - z_offset;
+  Point p6 = center_ - x_offset - y_offset + z_offset;
+  Point p7 = center_ - x_offset - y_offset - z_offset;
+
+  if (model_to_world == nullptr) {
+    return BoundingBox(p0, p1, p2, p3, p4, p5, p6, p7);
+  }
+
+  return BoundingBox(model_to_world->Multiply(p0), model_to_world->Multiply(p1),
+                     model_to_world->Multiply(p2), model_to_world->Multiply(p3),
+                     model_to_world->Multiply(p4), model_to_world->Multiply(p5),
+                     model_to_world->Multiply(p6),
+                     model_to_world->Multiply(p7));
 }
 
 std::span<const face_t> Sphere::GetFaces() const {

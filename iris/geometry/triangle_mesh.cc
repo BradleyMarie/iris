@@ -81,7 +81,7 @@ class Triangle final : public Geometry {
       const Point& origin, face_t face, const void* additional_data,
       const Point& on_face) const override;
 
-  BoundingBox ComputeBounds(const Matrix& model_to_world) const override;
+  BoundingBox ComputeBounds(const Matrix* model_to_world) const override;
 
   std::span<const face_t> GetFaces() const override;
 
@@ -351,11 +351,17 @@ std::optional<visual_t> Triangle::ComputePdfBySolidAngle(
   return distance_to_sample_squared / (cos_theta * surface_area);
 }
 
-BoundingBox Triangle::ComputeBounds(const Matrix& model_to_world) const {
+BoundingBox Triangle::ComputeBounds(const Matrix* model_to_world) const {
+  if (model_to_world == nullptr) {
+    return BoundingBox(shared_->points[std::get<0>(vertices_)],
+                       shared_->points[std::get<1>(vertices_)],
+                       shared_->points[std::get<2>(vertices_)]);
+  }
+
   return BoundingBox(
-      model_to_world.Multiply(shared_->points[std::get<0>(vertices_)]),
-      model_to_world.Multiply(shared_->points[std::get<1>(vertices_)]),
-      model_to_world.Multiply(shared_->points[std::get<2>(vertices_)]));
+      model_to_world->Multiply(shared_->points[std::get<0>(vertices_)]),
+      model_to_world->Multiply(shared_->points[std::get<1>(vertices_)]),
+      model_to_world->Multiply(shared_->points[std::get<2>(vertices_)]));
 }
 
 std::span<const face_t> Triangle::GetFaces() const {

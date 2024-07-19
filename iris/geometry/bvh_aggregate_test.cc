@@ -40,17 +40,17 @@ TEST(BVHAggregate, ComputeBounds) {
   auto aggregate = iris::geometry::AllocateBVHAggregate(spheres);
 
   iris::BoundingBox::Builder bounds_builder;
-  bounds_builder.Add(spheres[0]->ComputeBounds(iris::Matrix::Identity()));
-  bounds_builder.Add(spheres[1]->ComputeBounds(iris::Matrix::Identity()));
+  bounds_builder.Add(spheres[0]->ComputeBounds(nullptr));
+  bounds_builder.Add(spheres[1]->ComputeBounds(nullptr));
   auto bounds = bounds_builder.Build();
 
-  auto computed_bounds = aggregate->ComputeBounds(iris::Matrix::Identity());
+  auto computed_bounds = aggregate->ComputeBounds(nullptr);
   EXPECT_EQ(bounds.lower, computed_bounds.lower);
   EXPECT_EQ(bounds.upper, computed_bounds.upper);
 
   auto rotation = iris::Matrix::Rotation(0.5, 0.5, 0.5, 0.5).value();
   auto expected_rotated_bounds = rotation.Multiply(bounds);
-  auto actual_rotated_bounds = aggregate->ComputeBounds(rotation);
+  auto actual_rotated_bounds = aggregate->ComputeBounds(&rotation);
   EXPECT_EQ(expected_rotated_bounds.lower, actual_rotated_bounds.lower);
   EXPECT_EQ(expected_rotated_bounds.upper, actual_rotated_bounds.upper);
 }

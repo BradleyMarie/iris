@@ -26,7 +26,7 @@ class BVHAggregate final : public Geometry {
       const void* additional_data) const override;
 
   virtual BoundingBox ComputeBounds(
-      const Matrix& model_to_world) const override;
+      const Matrix* model_to_world) const override;
 
   virtual std::span<const face_t> GetFaces() const override;
 
@@ -51,8 +51,12 @@ Geometry::ComputeHitPointResult BVHAggregate::ComputeHitPoint(
                                PositionError(0.0, 0.0, 0.0)};
 }
 
-BoundingBox BVHAggregate::ComputeBounds(const Matrix& model_to_world) const {
-  return model_to_world.Multiply(bvh_.front().Bounds());
+BoundingBox BVHAggregate::ComputeBounds(const Matrix* model_to_world) const {
+  if (model_to_world == nullptr) {
+    return bvh_.front().Bounds();
+  }
+
+  return model_to_world->Multiply(bvh_.front().Bounds());
 }
 
 std::span<const face_t> BVHAggregate::GetFaces() const { return {}; }

@@ -129,7 +129,7 @@ TEST(RayTracerTest, NoBsdf) {
   iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0));
 
   auto geometry = MakeBasicGeometry(ray, iris::Point(1.0, 1.0, 1.0));
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
 
@@ -166,7 +166,7 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
 
   auto geometry = MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), nullptr,
                                &emissive_material);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -202,7 +202,7 @@ TEST(RayTracerTest, Minimal) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -252,7 +252,7 @@ TEST(RayTracerTest, WithTextureCoordinates) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -302,7 +302,7 @@ TEST(RayTracerTest, WithMaterial) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -352,7 +352,7 @@ TEST(RayTracerTest, WithNormal) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -416,7 +416,7 @@ TEST(RayTracerTest, WithNormalMap) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(1.0, 1.0, 1.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -483,7 +483,7 @@ TEST(RayTracerTest, WithXYDifferentials) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(2.0, 0.0, 0.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -556,7 +556,7 @@ TEST(RayTracerTest, WithUVDifferentials) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(2.0, 0.0, 0.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -635,7 +635,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(2.0, 0.0, 0.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -713,7 +713,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
 
   auto geometry =
       MakeGeometry(ray, iris::Point(2.0, 0.0, 0.0), material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -801,7 +801,7 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
 
   auto geometry = MakeGeometry(model_ray, expected_model_hit_point,
                                material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(model_to_world))
+  EXPECT_CALL(*geometry, ComputeBounds(&model_to_world))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
@@ -874,7 +874,7 @@ TEST(RayTracerTest, WithTransform) {
 
   auto geometry = MakeGeometry(model_ray, expected_model_hit_point,
                                material.get(), nullptr);
-  EXPECT_CALL(*geometry, ComputeBounds(model_to_world))
+  EXPECT_CALL(*geometry, ComputeBounds(&model_to_world))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,

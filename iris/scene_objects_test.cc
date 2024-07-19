@@ -7,7 +7,7 @@
 
 iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
   auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*result, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*result, ComputeBounds(nullptr))
       .WillRepeatedly(
           testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0))));
   return result;

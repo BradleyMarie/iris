@@ -32,7 +32,7 @@ TEST(ListScene, TestsAll) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry0, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
   auto mock_geometry1 =
@@ -43,7 +43,7 @@ TEST(ListScene, TestsAll) {
       .WillRepeatedly(testing::Return(std::span{kFaces}));
   EXPECT_CALL(*mock_geometry1, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*mock_geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 
   iris::SceneObjects::Builder scene_objects_builder;

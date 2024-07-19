@@ -33,7 +33,7 @@ class NeverVisibleScene final : public Scene {
       return Vector(1.0, 0.0, 0.0);
     }
 
-    BoundingBox ComputeBounds(const Matrix& model_to_world) const override {
+    BoundingBox ComputeBounds(const Matrix* model_to_world) const override {
       return BoundingBox(Point(0.0, 0.0, 0.0));
     }
 

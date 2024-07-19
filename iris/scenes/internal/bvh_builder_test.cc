@@ -19,7 +19,7 @@ TEST(ComputeBounds, NoMatrix) {
   iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
                            iris::Point(1.0, 1.0, 1.0));
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(bounds));
   auto actual_bounds =
       iris::scenes::internal::internal::ComputeBounds({*geometry, nullptr});
@@ -32,7 +32,7 @@ TEST(ComputeBounds, WithMatrix) {
                            iris::Point(1.0, 1.0, 1.0));
   auto transformation = iris::Matrix::Translation(2.0, 2.0, 2.0).value();
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, ComputeBounds(transformation))
+  EXPECT_CALL(*geometry, ComputeBounds(&transformation))
       .WillOnce(testing::Return(bounds));
   auto actual_bounds = iris::scenes::internal::internal::ComputeBounds(
       {*geometry, &transformation});
@@ -48,11 +48,11 @@ TEST(ComputeBounds, Many) {
   auto geometry0 = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   auto geometry1 = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   auto geometry2 = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry0, ComputeBounds(nullptr))
       .WillOnce(testing::Return(bounds0));
-  EXPECT_CALL(*geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry1, ComputeBounds(nullptr))
       .WillOnce(testing::Return(bounds1));
-  EXPECT_CALL(*geometry2, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  EXPECT_CALL(*geometry2, ComputeBounds(nullptr)).Times(0);
   auto actual_bounds = iris::scenes::internal::internal::ComputeBounds(
       WrapGeometry(
           {{{geometry0, nullptr}, {geometry1, nullptr}, {geometry2, nullptr}}}),
@@ -72,7 +72,7 @@ TEST(ComputeCentroid, FromGeometry) {
   iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
                            iris::Point(1.0, 1.0, 1.0));
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(bounds));
   auto centroid = iris::scenes::internal::internal::ComputeCentroid(
       std::pair<const iris::Geometry&, const iris::Matrix*>(*geometry,
@@ -88,11 +88,11 @@ TEST(ComputeCentroidBounds, Compute) {
   auto geometry0 = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   auto geometry1 = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   auto geometry2 = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry0, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry0, ComputeBounds(nullptr))
       .WillOnce(testing::Return(bounds0));
-  EXPECT_CALL(*geometry1, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry1, ComputeBounds(nullptr))
       .WillOnce(testing::Return(bounds1));
-  EXPECT_CALL(*geometry2, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  EXPECT_CALL(*geometry2, ComputeBounds(nullptr)).Times(0);
   auto actual_bounds = iris::scenes::internal::internal::ComputeCentroidBounds(
       WrapGeometry(
           {{{geometry0, nullptr}, {geometry1, nullptr}, {geometry2, nullptr}}}),
@@ -112,7 +112,7 @@ TEST(ComputeSplits, Compute) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, i, 0.0),
                               iris::Point(1.0, i + 1, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -120,7 +120,7 @@ TEST(ComputeSplits, Compute) {
 
   auto mock_geometry =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr)).Times(0);
   geometry.emplace_back(mock_geometry, nullptr);
 
   auto splits = iris::scenes::internal::internal::ComputeSplits(
@@ -197,7 +197,7 @@ TEST(FindBestSplitOnAxis, Compute) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, i, 0.0),
                               iris::Point(1.0, i + 1, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -205,7 +205,7 @@ TEST(FindBestSplitOnAxis, Compute) {
 
   auto mock_geometry =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr)).Times(0);
   geometry.emplace_back(mock_geometry, nullptr);
 
   auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
@@ -230,7 +230,7 @@ TEST(FindBestSplitOnAxis, TooMuchOverlap) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, 0.0 + 0.01 * i, 0.0),
                               iris::Point(1.0, 1.0 + 0.01 * i, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -238,7 +238,7 @@ TEST(FindBestSplitOnAxis, TooMuchOverlap) {
 
   auto mock_geometry =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr)).Times(0);
   geometry.emplace_back(mock_geometry, nullptr);
 
   auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
@@ -266,7 +266,7 @@ TEST(FindBestSplitOnAxis, LotsOfOverlappedGeometry) {
     iris::BoundingBox bounds0(
         iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
         iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -274,7 +274,7 @@ TEST(FindBestSplitOnAxis, LotsOfOverlappedGeometry) {
 
   auto mock_geometry =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr)).Times(0);
   geometry.emplace_back(mock_geometry, nullptr);
 
   auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
@@ -303,7 +303,7 @@ TEST(FindBestSplitOnAxis, AllOverlappedGeometry) {
     iris::BoundingBox bounds0(
         iris::Point(0.0, -0.5 + bound_offset * i + 0.5 * bound_offset, 0.0),
         iris::Point(1.0, 99.5 + bound_offset * i + 0.5 * bound_offset, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -311,7 +311,7 @@ TEST(FindBestSplitOnAxis, AllOverlappedGeometry) {
 
   auto mock_geometry =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity())).Times(0);
+  EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr)).Times(0);
   geometry.emplace_back(mock_geometry, nullptr);
 
   auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
@@ -340,7 +340,7 @@ TEST(Partition, LotsOfOverlappedGeometry) {
     iris::BoundingBox bounds0(
         iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
         iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -407,7 +407,7 @@ TEST(BuildBVH, OneGeometry) {
     iris::BoundingBox bounds0(
         iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
         iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -442,7 +442,7 @@ TEST(BuildBVH, DepthLimit) {
     iris::BoundingBox bounds0(
         iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
         iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -474,7 +474,7 @@ TEST(BuildBVH, TooMuchOverlap) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, 0.0 + 0.01 * i, 0.0),
                               iris::Point(1.0, 1.0 + 0.01 * i, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -506,7 +506,7 @@ TEST(BuildBVH, EmptyCentroidBounds) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
                               iris::Point(1.0, 1.0, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -537,7 +537,7 @@ TEST(BuildBVH, TwoGeometry) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, i * 2, 0.0),
                               iris::Point(1.0, i * 2 + 1, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -577,7 +577,7 @@ TEST(BuildBVH, TwoGeometryReversed) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, (2 - i) * 2, 0.0),
                               iris::Point(1.0, (2 - i) * 2 + 1, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -622,7 +622,7 @@ TEST(BuildBVH, HitsDepthLimit) {
     iris::BoundingBox bounds0(
         iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
         iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
@@ -677,7 +677,7 @@ TEST(BuildBVH, FullTwoGeometry) {
         iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
     iris::BoundingBox bounds0(iris::Point(0.0, (2 - i) * 2, 0.0),
                               iris::Point(1.0, (2 - i) * 2 + 1, 1.0));
-    EXPECT_CALL(*mock_geometry, ComputeBounds(iris::Matrix::Identity()))
+    EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);

@@ -71,7 +71,7 @@ class Geometry : public ReferenceCountable {
       const Point& origin, face_t face, const void* additional_data,
       const Point& on_face) const;
 
-  virtual BoundingBox ComputeBounds(const Matrix& model_to_world) const = 0;
+  virtual BoundingBox ComputeBounds(const Matrix* model_to_world) const = 0;
 
   virtual std::span<const face_t> GetFaces() const = 0;
 

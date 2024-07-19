@@ -875,10 +875,17 @@ TEST_F(Triangle, ComputePdfBySolidAngle) {
   EXPECT_NEAR(2.3864853, pdf2.value(), 0.001);
 }
 
+TEST_F(Triangle, GetBounds) {
+  auto triangle = SimpleTriangle();
+  auto bounds = triangle->ComputeBounds(nullptr);
+  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), bounds.lower);
+  EXPECT_EQ(iris::Point(1.0, 1.0, 0.0), bounds.upper);
+}
+
 TEST_F(Triangle, GetBoundsWithTransform) {
   auto triangle = SimpleTriangle();
   auto transform = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
-  auto bounds = triangle->ComputeBounds(transform);
+  auto bounds = triangle->ComputeBounds(&transform);
   EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), bounds.lower);
   EXPECT_EQ(iris::Point(2.0, 2.0, 0.0), bounds.upper);
 }

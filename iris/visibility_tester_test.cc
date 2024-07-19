@@ -22,7 +22,7 @@ TEST(VisibilityTesterTest, WithGeometry) {
   iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0));
   auto geometry =
       iris::MakeReferenceCounted<iris::geometry::MockBasicGeometry>();
-  EXPECT_CALL(*geometry, ComputeBounds(iris::Matrix::Identity()))
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, Trace(ray, testing::_))

@@ -1,4 +1,3 @@
-#undef NDEBUG  // Enable assertions at runtime
 #include "iris/scene_objects.h"
 
 #include <limits>
@@ -29,24 +28,31 @@ void ReorderImpl(std::vector<T>& values,
   }
 }
 
+const Matrix* ToNullableMatrix(const Matrix& matrix) {
+  return (&matrix == &Matrix::Identity()) ? nullptr : &matrix;
+}
+
 }  // namespace
 
 void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
                                 const Matrix& matrix) {
-  if (!geometry || geometry->ComputeBounds(matrix).Empty()) {
+  const Matrix* model_to_world = ToNullableMatrix(matrix);
+  if (!geometry || geometry->ComputeBounds(model_to_world).Empty()) {
     return;
   }
 
-  auto matrix_insertion_result = matrix_to_transform_index_.insert(
-      {matrix, matrix_to_transform_index_.size()});
-  if (matrix_insertion_result.second) {
-    matrices_.push_back(matrix);
-  }
+  uintptr_t matrix_index = 0;
+  if (model_to_world != nullptr) {
+    auto [iterator, added] = matrix_to_transform_index_.insert(
+        {matrix, matrix_to_transform_index_.size()});
+    if (added) {
+      matrices_.push_back(matrix);
+    }
 
-  assert(matrix_insertion_result.first->second <=
-        std::numeric_limits<uintptr_t>::max());
-  uintptr_t matrix_index =
-      static_cast<uintptr_t>(matrix_insertion_result.first->second);
+    matrix_index = static_cast<uintptr_t>(iterator->second);
+    static_assert(std::numeric_limits<size_t>::max() <=
+                  std::numeric_limits<uintptr_t>::max());
+  }
 
   auto geometry_insertion_result =
       geometry_filter_.emplace(geometry.Get(), matrix_index);
