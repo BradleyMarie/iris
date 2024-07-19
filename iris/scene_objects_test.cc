@@ -26,13 +26,28 @@ iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
 }
 
 TEST(SceneObjects, Build) {
-  auto geom0 = MakeGeometry(false);
-  auto geom1 = MakeGeometry(false);
-  auto geom2 = MakeGeometry(false);
-  auto geom3 = MakeGeometry(true);
-  auto geom4 = MakeZeroBoundsGeometry();
-  auto light0 = iris::MakeReferenceCounted<iris::lights::MockLight>();
-  auto light1 = iris::MakeReferenceCounted<iris::lights::MockLight>();
+  std::set<iris::ReferenceCounted<iris::Geometry>> geometry;
+  geometry.insert(MakeGeometry(false));
+  geometry.insert(MakeGeometry(false));
+  geometry.insert(MakeGeometry(false));
+  geometry.insert(MakeGeometry(true));
+  geometry.insert(MakeZeroBoundsGeometry());
+
+  auto geometry_iter = geometry.begin();
+  iris::ReferenceCounted<iris::Geometry> geom0 = *geometry_iter++;
+  iris::ReferenceCounted<iris::Geometry> geom1 = *geometry_iter++;
+  iris::ReferenceCounted<iris::Geometry> geom2 = *geometry_iter++;
+  iris::ReferenceCounted<iris::Geometry> geom3 = *geometry_iter++;
+  iris::ReferenceCounted<iris::Geometry> geom4 = *geometry_iter++;
+
+  std::set<iris::ReferenceCounted<iris::Light>> lights;
+  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
+  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
+
+  auto light_iter = lights.begin();
+  iris::ReferenceCounted<iris::Light> light0 = *light_iter++;
+  iris::ReferenceCounted<iris::Light> light1 = *light_iter++;
+
   auto environmental_light = iris::MakeReferenceCounted<
       iris::environmental_lights::MockEnvironmentalLight>();
   auto matrix0 = iris::Matrix::Identity();
@@ -81,12 +96,25 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(environmental_light.Get(), scene_objects.GetEnvironmentalLight());
 
   // Reuse builder
-  geom0 = MakeGeometry(false);
-  geom1 = MakeGeometry(false);
-  geom2 = MakeGeometry(false);
-  geom3 = MakeGeometry(true);
-  light0 = iris::MakeReferenceCounted<iris::lights::MockLight>();
-  light1 = iris::MakeReferenceCounted<iris::lights::MockLight>();
+  geometry.clear();
+  geometry.insert(MakeGeometry(false));
+  geometry.insert(MakeGeometry(false));
+  geometry.insert(MakeGeometry(false));
+  geometry.insert(MakeGeometry(true));
+
+  geometry_iter = geometry.begin();
+  geom0 = *geometry_iter++;
+  geom1 = *geometry_iter++;
+  geom2 = *geometry_iter++;
+  geom3 = *geometry_iter++;
+
+  lights.clear();
+  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
+  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
+
+  light_iter = lights.begin();
+  light0 = *light_iter++;
+  light1 = *light_iter++;
 
   builder.Add(light0);
   builder.Add(light0);

@@ -76,7 +76,7 @@ class SceneObjects {
 
   std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
   std::vector<ReferenceCounted<Light>> lights_;
-  std::set<Matrix> matrices_;
+  std::vector<Matrix> matrices_;
   ReferenceCounted<EnvironmentalLight> environmental_light_;
 };
 

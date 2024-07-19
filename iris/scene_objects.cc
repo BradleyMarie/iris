@@ -1,6 +1,7 @@
 #include "iris/scene_objects.h"
 
 #include <map>
+#include <unordered_map>
 
 #include "iris/internal/area_light.h"
 #include "iris/internal/environmental_light.h"
@@ -75,9 +76,22 @@ SceneObjects::SceneObjects(Builder&& builder)
                 std::move_iterator(builder.geometry_.end())),
       lights_(std::move_iterator(builder.lights_.begin()),
               std::move_iterator(builder.lights_.end())),
-      matrices_(std::move(builder.matrices_)),
       environmental_light_(std::move(builder.environmental_light_)) {
+  std::unordered_map<const Matrix*, const Matrix*> moved_matrices;
+  moved_matrices.reserve(builder.matrices_.size());
+
+  matrices_.reserve(builder.matrices_.size());  // Required for correctness
   for (auto& entry : geometry_) {
+    if (entry.second != nullptr) {
+      const Matrix*& new_matrix = moved_matrices[entry.second];
+      if (new_matrix == nullptr) {
+        matrices_.push_back(*entry.second);
+        new_matrix = &matrices_.back();
+      }
+
+      entry.second = new_matrix;
+    }
+
     for (face_t face : entry.first->GetFaces()) {
       if (!entry.first->IsEmissive(face)) {
         continue;
