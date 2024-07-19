@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #include <optional>
 
 namespace iris {
@@ -552,32 +553,12 @@ bool Matrix::SwapsHandedness() const {
   return determinant < static_cast<geometric_t>(0.0);
 }
 
+bool operator==(const Matrix& left, const Matrix& right) {
+  return std::memcmp(&left.m, &right.m, sizeof(left.m)) == 0;
+}
+
 bool operator<(const Matrix& left, const Matrix& right) {
-  for (size_t i = 0; i < 4; i++) {
-    for (size_t j = 0; j < 4; j++) {
-      if (left.m[i][j] > right.m[i][j]) {
-        return false;
-      }
-
-      if (left.m[i][j] < right.m[i][j]) {
-        return true;
-      }
-    }
-  }
-
-  for (size_t i = 0; i < 4; i++) {
-    for (size_t j = 0; j < 4; j++) {
-      if (left.i[i][j] > right.i[i][j]) {
-        return false;
-      }
-
-      if (left.i[i][j] < right.i[i][j]) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return std::memcmp(&left.m, &right.m, sizeof(left.m)) < 0;
 }
 
 BoundingBox Matrix::Multiply(const BoundingBox& bounding_box) const {

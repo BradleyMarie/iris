@@ -173,10 +173,9 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  auto transform = iris::Matrix::Translation(1.0, 0.0, 0.0).value();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*geometry, ComputeBounds(testing::_))
+  EXPECT_CALL(*geometry, ComputeBounds(testing::NotNull()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
@@ -584,10 +583,9 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  auto transform = iris::Matrix::Scalar(2.0, 1.0, 1.0).value();
   EXPECT_CALL(*geometry, IsEmissive(testing::_))
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(*geometry, ComputeBounds(testing::_))
+  EXPECT_CALL(*geometry, ComputeBounds(testing::NotNull()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())

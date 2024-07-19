@@ -3,6 +3,7 @@
 
 #include <array>
 #include <expected>
+#include <string_view>
 #include <utility>
 
 #include "iris/bounding_box.h"
@@ -72,8 +73,6 @@ struct Matrix final {
     return m[index];
   }
 
-  bool operator==(const Matrix& matrix) const = default;
-
  private:
   Matrix(const std::array<std::array<geometric, 4>, 4>& m,
          const std::array<std::array<geometric, 4>, 4>& i);
@@ -83,6 +82,7 @@ struct Matrix final {
   const std::array<std::array<geometric, 4>, 4> i;
 };
 
+bool operator==(const Matrix& left, const Matrix& right);
 bool operator<(const Matrix& left, const Matrix& right);
 
 inline Point Matrix::Multiply(const Point& point) const {

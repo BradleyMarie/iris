@@ -1,8 +1,6 @@
 #include "iris/scene_objects.h"
 
-#include <limits>
 #include <map>
-#include <set>
 
 #include "iris/internal/area_light.h"
 #include "iris/internal/environmental_light.h"
@@ -29,7 +27,7 @@ void ReorderImpl(std::vector<T>& values,
 }
 
 const Matrix* ToNullableMatrix(const Matrix& matrix) {
-  return (&matrix == &Matrix::Identity()) ? nullptr : &matrix;
+  return (matrix == Matrix::Identity()) ? nullptr : &matrix;
 }
 
 }  // namespace
@@ -41,27 +39,11 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
     return;
   }
 
-  uintptr_t matrix_index = 0;
   if (model_to_world != nullptr) {
-    auto [iterator, added] = matrix_to_transform_index_.insert(
-        {matrix, matrix_to_transform_index_.size()});
-    if (added) {
-      matrices_.push_back(matrix);
-    }
-
-    matrix_index = static_cast<uintptr_t>(iterator->second);
-    static_assert(std::numeric_limits<size_t>::max() <=
-                  std::numeric_limits<uintptr_t>::max());
+    model_to_world = &*matrices_.insert(matrix).first;
   }
 
-  auto geometry_insertion_result =
-      geometry_filter_.emplace(geometry.Get(), matrix_index);
-  if (!geometry_insertion_result.second) {
-    return;
-  }
-
-  geometry_.push_back(
-      std::make_pair(geometry, reinterpret_cast<const Matrix*>(matrix_index)));
+  geometry_.emplace(std::move(geometry), model_to_world);
 }
 
 void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
@@ -69,12 +51,7 @@ void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
     return;
   }
 
-  auto insertion_result = light_filter_.emplace(light.Get());
-  if (!insertion_result.second) {
-    return;
-  }
-
-  lights_.push_back(std::move(light));
+  lights_.insert(std::move(light));
 }
 
 void SceneObjects::Builder::Set(
@@ -85,33 +62,22 @@ void SceneObjects::Builder::Set(
 SceneObjects SceneObjects::Builder::Build() {
   SceneObjects result(std::move(*this));
 
-  matrix_to_transform_index_.clear();
-  matrices_.clear();
-  geometry_filter_.clear();
-  light_filter_.clear();
   geometry_.clear();
   lights_.clear();
+  matrices_.clear();
   environmental_light_.Reset();
-
-  matrix_to_transform_index_.insert({Matrix::Identity(), 0});
-  matrices_.push_back(Matrix::Identity());
 
   return result;
 }
 
 SceneObjects::SceneObjects(Builder&& builder)
-    : geometry_(std::move(builder.geometry_)),
-      lights_(std::move(builder.lights_)),
-      environmental_light_(std::move(builder.environmental_light_)),
-      matrices_(std::move(builder.matrices_)) {
-  matrices_.shrink_to_fit();
-  geometry_.shrink_to_fit();
-
+    : geometry_(std::move_iterator(builder.geometry_.begin()),
+                std::move_iterator(builder.geometry_.end())),
+      lights_(std::move_iterator(builder.lights_.begin()),
+              std::move_iterator(builder.lights_.end())),
+      matrices_(std::move(builder.matrices_)),
+      environmental_light_(std::move(builder.environmental_light_)) {
   for (auto& entry : geometry_) {
-    if (entry.second) {
-      entry.second = &matrices_.at(reinterpret_cast<uintptr_t>(entry.second));
-    }
-
     for (face_t face : entry.first->GetFaces()) {
       if (!entry.first->IsEmissive(face)) {
         continue;
@@ -126,8 +92,6 @@ SceneObjects::SceneObjects(Builder&& builder)
     lights_.push_back(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
         std::cref(*environmental_light_)));
   }
-
-  lights_.shrink_to_fit();
 }
 
 void SceneObjects::Reorder(

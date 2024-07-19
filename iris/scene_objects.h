@@ -2,7 +2,6 @@
 #define _IRIS_SCENE_OBJECTS_
 
 #include <cassert>
-#include <map>
 #include <memory>
 #include <set>
 #include <span>
@@ -41,13 +40,9 @@ class SceneObjects {
     SceneObjects Build();
 
    private:
-    std::map<Matrix, size_t> matrix_to_transform_index_ = {
-        {Matrix::Identity(), 0}};
-    std::vector<Matrix> matrices_ = {Matrix::Identity()};
-    std::set<std::pair<const Geometry*, size_t>> geometry_filter_;
-    std::set<const Light*> light_filter_;
-    std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
-    std::vector<ReferenceCounted<Light>> lights_;
+    std::set<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
+    std::set<ReferenceCounted<Light>> lights_;
+    std::set<Matrix> matrices_;
     ReferenceCounted<EnvironmentalLight> environmental_light_;
 
     friend class SceneObjects;
@@ -81,8 +76,8 @@ class SceneObjects {
 
   std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
   std::vector<ReferenceCounted<Light>> lights_;
+  std::set<Matrix> matrices_;
   ReferenceCounted<EnvironmentalLight> environmental_light_;
-  std::vector<Matrix> matrices_;
 };
 
 }  // namespace iris
