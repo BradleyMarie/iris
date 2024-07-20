@@ -15,15 +15,16 @@ void ReorderImpl(std::vector<T>& values,
   std::multimap<size_t, T> sorted_values;
   for (size_t i = 0; i < values.size(); i++) {
     if (i < new_positions.size()) {
-      sorted_values.insert({new_positions[i], values[i]});
+      sorted_values.emplace(new_positions[i], std::move(values[i]));
     } else {
-      sorted_values.insert({std::numeric_limits<size_t>::max(), values[i]});
+      sorted_values.emplace(std::numeric_limits<size_t>::max(),
+                            std::move(values[i]));
     }
   }
 
-  values.clear();
-  for (const auto& [key, value] : sorted_values) {
-    values.push_back(value);
+  size_t i = 0;
+  for (auto& [key, value] : sorted_values) {
+    values[i++] = std::move(value);
   }
 }
 
