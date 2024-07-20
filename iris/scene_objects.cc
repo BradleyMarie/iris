@@ -45,7 +45,7 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
     model_to_world = &*matrices_.insert(matrix).first;
   }
 
-  geometry_.emplace(std::move(geometry), model_to_world);
+  geometry_.emplace(std::move(geometry), std::move(model_to_world));
 }
 
 void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
