@@ -7,9 +7,9 @@ cc_library(
     srcs = ["constant.cc"],
     hdrs = ["constant.h"],
     deps = [
+        "//frontends/pbrt:image_manager",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
-        "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt:texture_manager",
     ],
 )
@@ -30,11 +30,12 @@ cc_library(
     srcs = ["imagemap.cc"],
     hdrs = ["imagemap.h"],
     deps = [
+        "//frontends/pbrt:image_manager",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
-        "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt:texture_manager",
         "//iris/textures:image_texture",
+        "//iris/textures:scaled_texture",
         "//third_party/stb:stb_image",
     ],
 )
@@ -65,9 +66,9 @@ cc_library(
         ":constant",
         ":imagemap",
         ":scale",
+        "//frontends/pbrt:image_manager",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
-        "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt:texture_manager",
     ],
 )
@@ -89,9 +90,9 @@ cc_library(
     srcs = ["scale.cc"],
     hdrs = ["scale.h"],
     deps = [
+        "//frontends/pbrt:image_manager",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
-        "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt:texture_manager",
         "//iris/textures:scaled_texture",
     ],

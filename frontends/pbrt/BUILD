@@ -32,6 +32,20 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "image_manager",
+    srcs = ["image_manager.cc"],
+    hdrs = ["image_manager.h"],
+    deps = [
+        ":spectrum_manager",
+        ":texture_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris/textures:image_texture",
+        "//third_party/stb:stb_image",
+    ],
+)
+
 cc_binary(
     name = "iris",
     srcs = ["main.cc"],
@@ -169,6 +183,7 @@ cc_library(
     hdrs = ["parser.h"],
     deps = [
         ":build_objects",
+        ":image_manager",
         ":matrix_manager",
         ":quoted_string",
         ":renderable",

@@ -16,13 +16,13 @@ static const std::unordered_map<std::string_view, Parameter::Type>
                              {"tex2", Parameter::REFLECTOR_TEXTURE}};
 
 class ScaleFloatTextureBuilder final
-    : public ObjectBuilder<void, TextureManager&, SpectrumManager&,
+    : public ObjectBuilder<void, ImageManager&, TextureManager&,
                            const std::string&> {
  public:
   ScaleFloatTextureBuilder() : ObjectBuilder(g_float_parameters) {}
 
   void Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-             TextureManager& texture_manager, SpectrumManager& spectrum_manager,
+             ImageManager& image_manager, TextureManager& texture_manager,
              const std::string& name) const override {
     auto tex1 = texture_manager.AllocateUniformFloatTexture(1.0);
     auto tex2 = texture_manager.AllocateUniformFloatTexture(1.0);
@@ -46,13 +46,13 @@ class ScaleFloatTextureBuilder final
 };
 
 class ScaleSpectrumTextureBuilder final
-    : public ObjectBuilder<void, TextureManager&, SpectrumManager&,
+    : public ObjectBuilder<void, ImageManager&, TextureManager&,
                            const std::string&> {
  public:
   ScaleSpectrumTextureBuilder() : ObjectBuilder(g_spectrum_parameters) {}
 
   void Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-             TextureManager& texture_manager, SpectrumManager& spectrum_manager,
+             ImageManager& image_manager, TextureManager& texture_manager,
              const std::string& name) const override {
     auto tex1 = texture_manager.AllocateUniformReflectorTexture(1.0);
     auto tex2 = texture_manager.AllocateUniformReflectorTexture(1.0);
@@ -77,11 +77,11 @@ class ScaleSpectrumTextureBuilder final
 
 }  // namespace
 
-const std::unique_ptr<const ObjectBuilder<void, TextureManager&,
-                                          SpectrumManager&, const std::string&>>
+const std::unique_ptr<const ObjectBuilder<void, ImageManager&, TextureManager&,
+                                          const std::string&>>
     g_float_scale_builder = std::make_unique<ScaleFloatTextureBuilder>();
-const std::unique_ptr<const ObjectBuilder<void, TextureManager&,
-                                          SpectrumManager&, const std::string&>>
+const std::unique_ptr<const ObjectBuilder<void, ImageManager&, TextureManager&,
+                                          const std::string&>>
     g_spectrum_scale_builder = std::make_unique<ScaleSpectrumTextureBuilder>();
 
 }  // namespace iris::pbrt_frontend::textures

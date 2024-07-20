@@ -12,12 +12,12 @@ TEST(Constant, Empty) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
+                                                  spectrum_manager);
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_constant_builder, tokenizer,
       std::filesystem::current_path(), spectrum_manager, texture_manager,
-      texture_manager,
-      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
-      kName);
+      image_manager, texture_manager, kName);
 }
 
 TEST(Constant, WithValue) {
@@ -26,10 +26,10 @@ TEST(Constant, WithValue) {
 
   iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
   iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
+                                                  spectrum_manager);
   iris::pbrt_frontend::BuildObject(
       *iris::pbrt_frontend::textures::g_float_constant_builder, tokenizer,
       std::filesystem::current_path(), spectrum_manager, texture_manager,
-      texture_manager,
-      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager),
-      kName);
+      image_manager, texture_manager, kName);
 }

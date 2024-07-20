@@ -13,7 +13,7 @@ namespace {
 static const std::unordered_map<
     std::string_view,
     const std::unique_ptr<const ObjectBuilder<
-        void, TextureManager&, SpectrumManager&, const std::string&>>&>
+        void, ImageManager&, TextureManager&, const std::string&>>&>
     g_float_textures = {{"constant", g_float_constant_builder},
                         {"imagemap", g_float_imagemap_builder},
                         {"scale", g_float_scale_builder}};
@@ -21,15 +21,14 @@ static const std::unordered_map<
 static const std::unordered_map<
     std::string_view,
     const std::unique_ptr<const ObjectBuilder<
-        void, TextureManager&, SpectrumManager&, const std::string&>>&>
+        void, ImageManager&, TextureManager&, const std::string&>>&>
     g_spectral_textures = {{"constant", g_spectrum_constant_builder},
                            {"imagemap", g_spectrum_imagemap_builder},
                            {"scale", g_spectrum_scale_builder}};
 
 }  // namespace
 
-const ObjectBuilder<void, TextureManager&, SpectrumManager&,
-                    const std::string&>&
+const ObjectBuilder<void, ImageManager&, TextureManager&, const std::string&>&
 Parse(Tokenizer& tokenizer, std::string& name) {
   auto name_token = tokenizer.Next();
   if (!name_token) {
@@ -81,8 +80,8 @@ Parse(Tokenizer& tokenizer, std::string& name) {
     exit(EXIT_FAILURE);
   }
 
-  const ObjectBuilder<void, TextureManager&, SpectrumManager&,
-                      const std::string&>* result;
+  const ObjectBuilder<void, ImageManager&, TextureManager&, const std::string&>*
+      result;
   if (float_texture) {
     auto iter = g_float_textures.find(*unquoted_type);
     if (iter == g_float_textures.end()) {

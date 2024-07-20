@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "frontends/pbrt/image_manager.h"
 #include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/matrix_manager.h"
 #include "frontends/pbrt/renderable.h"
@@ -105,6 +106,7 @@ class Parser {
   std::unique_ptr<MaterialManager> material_manager_;
   std::unique_ptr<MatrixManager> matrix_manager_;
   std::unique_ptr<TextureManager> texture_manager_;
+  std::unique_ptr<ImageManager> image_manager_;
 
   std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
       camera_;

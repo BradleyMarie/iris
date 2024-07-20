@@ -466,8 +466,8 @@ bool Parser::Texture() {
   const auto& builder =
       textures::Parse(*tokenizers_.back().tokenizer, texture_name_);
   BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-              *spectrum_manager_, *texture_manager_, *texture_manager_,
-              *spectrum_manager_,
+              *spectrum_manager_, *texture_manager_, *image_manager_,
+              *texture_manager_,
               static_cast<const std::string&>(texture_name_));
 
   return true;
@@ -552,6 +552,8 @@ std::optional<Parser::Result> Parser::ParseFrom(
   material_manager_ = std::make_unique<MaterialManager>();
   matrix_manager_ = std::make_unique<MatrixManager>();
   texture_manager_ = std::make_unique<TextureManager>();
+  image_manager_ =
+      std::make_unique<ImageManager>(*texture_manager_, *spectrum_manager_);
 
   camera_encountered_ = false;
   film_encountered_ = false;
@@ -636,6 +638,7 @@ std::optional<Parser::Result> Parser::ParseFrom(
   material_manager_.reset();
   matrix_manager_.reset();
   texture_manager_.reset();
+  image_manager_.reset();
 
   return Parser::Result{std::move(renderable), std::move(skip_pixel_callback_),
                         std::move(output_filename_),
