@@ -28,8 +28,6 @@ BoundingBox ComputeBounds(
         geometry,
     std::span<const size_t> indices);
 
-Point ComputeCentroid(const BoundingBox& bounds);
-
 Point ComputeCentroid(
     const std::pair<const Geometry&, const Matrix*>& geometry);
 

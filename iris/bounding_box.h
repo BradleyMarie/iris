@@ -43,6 +43,13 @@ struct BoundingBox final {
            2;
   }
 
+  Point Center() const {
+    geometric x = static_cast<visual_t>(0.5) * (upper.x + lower.x);
+    geometric y = static_cast<visual_t>(0.5) * (upper.y + lower.y);
+    geometric z = static_cast<visual_t>(0.5) * (upper.z + lower.z);
+    return Point(x, y, z);
+  }
+
   geometric_t SurfaceArea() const {
     Vector diagonal = upper - lower;
     geometric_t area0 = diagonal.x * diagonal.z;

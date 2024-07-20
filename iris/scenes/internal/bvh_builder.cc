@@ -41,13 +41,9 @@ BoundingBox ComputeBounds(
   return builder.Build();
 }
 
-Point ComputeCentroid(const BoundingBox& bounds) {
-  return bounds.lower + 0.5 * (bounds.upper - bounds.lower);
-}
-
 Point ComputeCentroid(
     const std::pair<const Geometry&, const Matrix*>& geometry) {
-  return ComputeCentroid(ComputeBounds(geometry));
+  return ComputeBounds(geometry).Center();
 }
 
 BoundingBox ComputeCentroidBounds(
@@ -77,7 +73,8 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
   std::array<BVHSplit, kNumSplitsToEvaluate> result;
   for (size_t index : indices) {
     auto bounds = ComputeBounds(geometry(index));
-    geometric value = ComputeCentroid(bounds)[split_axis];
+    Point centroid = bounds.Center();
+    geometric value = centroid[split_axis];
     geometric_t offset = value - min;
     geometric_t scaled_offset = offset / range;
 

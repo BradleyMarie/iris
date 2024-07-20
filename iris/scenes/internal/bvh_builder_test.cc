@@ -61,13 +61,6 @@ TEST(ComputeBounds, Many) {
   EXPECT_EQ(bounds1.upper, actual_bounds.upper);
 }
 
-TEST(ComputeCentroid, FromBounds) {
-  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
-                           iris::Point(1.0, 1.0, 1.0));
-  auto centroid = iris::scenes::internal::internal::ComputeCentroid(bounds);
-  EXPECT_EQ(iris::Point(0.5, 0.5, 0.5), centroid);
-}
-
 TEST(ComputeCentroid, FromGeometry) {
   iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
                            iris::Point(1.0, 1.0, 1.0));

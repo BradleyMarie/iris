@@ -127,6 +127,13 @@ TEST(BoundingBoxTest, Empty) {
           .Empty());
 }
 
+TEST(BoundingBoxTest, Center) {
+  iris::Point point0(0.0, 1.0, 2.0);
+  iris::Point point1(2.0, 3.0, 4.0);
+  iris::BoundingBox bounding_box(point0, point1);
+  EXPECT_EQ(iris::Point(1.0, 2.0, 3.0), bounding_box.Center());
+}
+
 TEST(BoundingBoxTest, SurfaceArea) {
   iris::Point point0(0.0, 1.0, 2.0);
   iris::Point point1(3.0, 4.0, 5.0);
