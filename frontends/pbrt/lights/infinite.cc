@@ -91,6 +91,8 @@ InfiniteBuilder::Build(
         exit(EXIT_FAILURE);
       }
 
+      spectra.reserve(height * width);
+      luma.reserve(height * width);
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
           visual r = static_cast<visual>(values[4 * (y * width + x) + 0]);
@@ -134,7 +136,7 @@ InfiniteBuilder::Build(
   }
 
   return MakeReferenceCounted<environmental_lights::ImageEnvironmentalLight>(
-      std::move(spectra), luma, size, scalar, model_to_world);
+      std::move(spectra), luma, size, std::move(scalar), model_to_world);
 }
 
 };  // namespace

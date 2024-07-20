@@ -67,8 +67,8 @@ ImageEnvironmentalLight::ImageEnvironmentalLight(
       size_(size),
       scalar_(std::move(scalar)),
       model_to_world_(model_to_world) {
-  assert(!spectra.empty());
-  assert(spectra.size() == size.first * size.second);
+  assert(!spectra_.empty());
+  assert(spectra_.size() == size.first * size.second);
   assert(!luma.empty());
   assert(luma.size() == size.first * size.second);
 }
