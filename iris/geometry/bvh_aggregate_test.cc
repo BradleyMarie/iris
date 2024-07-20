@@ -28,15 +28,15 @@ TEST(BVHAggregate, NoShapes) {
 }
 
 TEST(BVHAggregate, OneShape) {
-  iris::ReferenceCounted<iris::Geometry> shapes[1] = {
+  std::vector<iris::ReferenceCounted<iris::Geometry>> shapes = {
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>()};
   EXPECT_EQ(shapes[0].Get(),
             iris::geometry::AllocateBVHAggregate(shapes).Get());
 }
 
 TEST(BVHAggregate, ComputeBounds) {
-  iris::ReferenceCounted<iris::Geometry> spheres[2] = {MakeSphere(-0.5),
-                                                       MakeSphere(0.5)};
+  std::vector<iris::ReferenceCounted<iris::Geometry>> spheres = {
+      MakeSphere(-0.5), MakeSphere(0.5)};
   auto aggregate = iris::geometry::AllocateBVHAggregate(spheres);
 
   iris::BoundingBox::Builder bounds_builder;
@@ -56,8 +56,8 @@ TEST(BVHAggregate, ComputeBounds) {
 }
 
 TEST(BVHAggregate, FirstSphere) {
-  iris::ReferenceCounted<iris::Geometry> spheres[2] = {MakeSphere(-0.5),
-                                                       MakeSphere(0.5)};
+  std::vector<iris::ReferenceCounted<iris::Geometry>> spheres = {
+      MakeSphere(-0.5), MakeSphere(0.5)};
   auto aggregate = iris::geometry::AllocateBVHAggregate(spheres);
 
   iris::Point origin(-2.0, 0.0, 0.0);
@@ -70,8 +70,8 @@ TEST(BVHAggregate, FirstSphere) {
 }
 
 TEST(BVHAggregate, SecondSphere) {
-  iris::ReferenceCounted<iris::Geometry> spheres[2] = {MakeSphere(-0.5),
-                                                       MakeSphere(0.5)};
+  std::vector<iris::ReferenceCounted<iris::Geometry>> spheres = {
+      MakeSphere(-0.5), MakeSphere(0.5)};
   auto aggregate = iris::geometry::AllocateBVHAggregate(spheres);
 
   iris::Point origin(2.0, 0.0, 0.0);

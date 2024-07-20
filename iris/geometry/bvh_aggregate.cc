@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <vector>
 
 #include "iris/scenes/internal/bvh_builder.h"
 #include "iris/scenes/internal/bvh_traversal.h"
@@ -69,7 +68,7 @@ Hit* BVHAggregate::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
 }  // namespace
 
 ReferenceCounted<Geometry> AllocateBVHAggregate(
-    std::span<ReferenceCounted<Geometry>> geometry) {
+    std::vector<ReferenceCounted<Geometry>> geometry) {
   if (geometry.empty()) {
     return ReferenceCounted<Geometry>();
   }
@@ -89,10 +88,11 @@ ReferenceCounted<Geometry> AllocateBVHAggregate(
       geometry.size());
 
   for (size_t index = 0; index < result.geometry_sort_order.size(); index++) {
-    sorted_geometry[result.geometry_sort_order[index]] = geometry[index];
     assert(std::ranges::all_of(geometry[index]->GetFaces(), [&](face_t face) {
       return !geometry[index]->IsEmissive(face);
     }));
+  
+    sorted_geometry[result.geometry_sort_order[index]] = std::move(geometry[index]);
   }
 
   return MakeReferenceCounted<BVHAggregate>(std::move(result.bvh),
