@@ -10,11 +10,11 @@ namespace iris {
 namespace {
 
 template <typename T>
-std::vector<T> MoveToVector(std::set<T> set) {
+std::vector<T> MoveToVector(std::set<T> values) {
   std::vector<T> result;
-  result.reserve(set.size());
-  for (auto& entry : set) {
-    result.push_back(std::move(entry));
+  result.reserve(values.size());
+  while (!values.empty()) {
+    result.push_back(std::move(values.extract(values.begin()).value()));
   }
   return result;
 }
@@ -70,24 +70,26 @@ void SceneObjects::Builder::Set(
 }
 
 SceneObjects SceneObjects::Builder::Build() {
-  SceneObjects result(std::move(*this));
-
+  SceneObjects result(std::move(geometry_), std::move(lights_),
+                      std::move(matrices_), std::move(environmental_light_));
   geometry_.clear();
   lights_.clear();
   matrices_.clear();
   environmental_light_.Reset();
-
   return result;
 }
 
-SceneObjects::SceneObjects(Builder&& builder)
-    : geometry_(MoveToVector(std::move(builder.geometry_))),
-      lights_(MoveToVector(std::move(builder.lights_))),
-      environmental_light_(std::move(builder.environmental_light_)) {
+SceneObjects::SceneObjects(
+    std::set<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry,
+    std::set<ReferenceCounted<Light>> lights, std::set<Matrix> matrices,
+    ReferenceCounted<EnvironmentalLight> environmental_light)
+    : geometry_(MoveToVector(std::move(geometry))),
+      lights_(MoveToVector(std::move(lights))),
+      environmental_light_(std::move(environmental_light)) {
   std::unordered_map<const Matrix*, const Matrix*> moved_matrices;
-  moved_matrices.reserve(builder.matrices_.size());
+  moved_matrices.reserve(matrices.size());
 
-  matrices_.reserve(builder.matrices_.size());  // Required for correctness
+  matrices_.reserve(matrices.size());  // Required for correctness
   for (auto& entry : geometry_) {
     if (entry.second != nullptr) {
       const Matrix*& new_matrix = moved_matrices[entry.second];

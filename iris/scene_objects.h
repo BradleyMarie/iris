@@ -72,7 +72,10 @@ class SceneObjects {
                std::span<const size_t> new_light_positions = {}) noexcept;
 
  private:
-  SceneObjects(Builder&& builder);
+  SceneObjects(
+      std::set<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry,
+      std::set<ReferenceCounted<Light>> lights, std::set<Matrix> matrices,
+      ReferenceCounted<EnvironmentalLight> environmental_light);
 
   std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
   std::vector<ReferenceCounted<Light>> lights_;
