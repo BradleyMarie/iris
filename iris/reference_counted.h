@@ -86,8 +86,8 @@ class ReferenceCounted final {
 };
 
 template <typename T, typename... Args>
-ReferenceCounted<T> MakeReferenceCounted(Args... args) {
-  return ReferenceCounted<T>(std::make_unique<T>(args...));
+ReferenceCounted<T> MakeReferenceCounted(Args&&... args) {
+  return ReferenceCounted<T>(std::make_unique<T>(std::forward<Args>(args)...));
 }
 
 }  // namespace iris
