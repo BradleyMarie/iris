@@ -14,12 +14,10 @@ void ReorderImpl(std::vector<T>& values,
                  std::span<const size_t> new_positions) {
   std::multimap<size_t, T> sorted_values;
   for (size_t i = 0; i < values.size(); i++) {
-    if (i < new_positions.size()) {
-      sorted_values.emplace(new_positions[i], std::move(values[i]));
-    } else {
-      sorted_values.emplace(std::numeric_limits<size_t>::max(),
-                            std::move(values[i]));
-    }
+    size_t new_position = (i < new_positions.size())
+                              ? new_positions[i]
+                              : std::numeric_limits<size_t>::max();
+    sorted_values.emplace(new_position, std::move(values[i]));
   }
 
   size_t i = 0;
