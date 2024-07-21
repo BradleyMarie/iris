@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 #include "iris/scenes/internal/bvh_builder.h"
 #include "iris/scenes/internal/bvh_traversal.h"
@@ -74,7 +75,7 @@ ReferenceCounted<Geometry> AllocateBVHAggregate(
   }
 
   if (geometry.size() == 1) {
-    return geometry.front();
+    return std::move(geometry[0]);
   }
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
@@ -91,8 +92,9 @@ ReferenceCounted<Geometry> AllocateBVHAggregate(
     assert(std::ranges::all_of(geometry[index]->GetFaces(), [&](face_t face) {
       return !geometry[index]->IsEmissive(face);
     }));
-  
-    sorted_geometry[result.geometry_sort_order[index]] = std::move(geometry[index]);
+
+    sorted_geometry[result.geometry_sort_order[index]] =
+        std::move(geometry[index]);
   }
 
   return MakeReferenceCounted<BVHAggregate>(std::move(result.bvh),
