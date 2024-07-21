@@ -10,6 +10,16 @@ namespace iris {
 namespace {
 
 template <typename T>
+std::vector<T> MoveToVector(std::set<T> set) {
+  std::vector<T> result;
+  result.reserve(set.size());
+  for (auto& entry : set) {
+    result.push_back(std::move(entry));
+  }
+  return result;
+}
+
+template <typename T>
 void ReorderImpl(std::vector<T>& values,
                  std::span<const size_t> new_positions) {
   std::multimap<size_t, T> sorted_values;
@@ -71,10 +81,8 @@ SceneObjects SceneObjects::Builder::Build() {
 }
 
 SceneObjects::SceneObjects(Builder&& builder)
-    : geometry_(std::move_iterator(builder.geometry_.begin()),
-                std::move_iterator(builder.geometry_.end())),
-      lights_(std::move_iterator(builder.lights_.begin()),
-              std::move_iterator(builder.lights_.end())),
+    : geometry_(MoveToVector(std::move(builder.geometry_))),
+      lights_(MoveToVector(std::move(builder.lights_))),
       environmental_light_(std::move(builder.environmental_light_)) {
   std::unordered_map<const Matrix*, const Matrix*> moved_matrices;
   moved_matrices.reserve(builder.matrices_.size());
