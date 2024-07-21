@@ -20,20 +20,11 @@ constexpr size_t kNumShapesPerNode = 4;
 constexpr size_t kNumSplitsToEvaluate = 12;
 constexpr size_t kMaxBvhDepth = 32;
 
-BoundingBox ComputeBounds(
-    const std::pair<const Geometry&, const Matrix*>& geometry);
-
-BoundingBox ComputeBounds(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
-    std::span<const size_t> indices);
-
-Point ComputeCentroid(
-    const std::pair<const Geometry&, const Matrix*>& geometry);
+BoundingBox ComputeBounds(const std::vector<BoundingBox>& geometry_bounds,
+                          std::span<const size_t> indices);
 
 BoundingBox ComputeCentroidBounds(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
+    const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices);
 
 struct BVHSplit {
@@ -42,8 +33,7 @@ struct BVHSplit {
 };
 
 std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
+    const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices, const BoundingBox& centroid_bounds,
     Vector::Axis split_axis);
 
@@ -54,8 +44,7 @@ std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
     const std::array<BVHSplit, kNumSplitsToEvaluate>& splits);
 
 std::optional<geometric_t> FindBestSplitOnAxis(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
+    const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices, const BoundingBox& node_bounds,
     const BoundingBox& centroid_bounds, Vector::Axis split_axis);
 
@@ -64,10 +53,9 @@ struct PartitionResult {
   std::span<size_t> below;
 };
 
-PartitionResult Partition(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
-    Vector::Axis split_axis, geometric_t split, std::span<size_t> indices);
+PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
+                          Vector::Axis split_axis, geometric_t split,
+                          std::span<size_t> indices);
 
 size_t AddLeafNode(std::span<const size_t> indices,
                    const BoundingBox& node_bounds, std::vector<BVHNode>& bvh,
@@ -77,8 +65,7 @@ size_t AddLeafNode(std::span<const size_t> indices,
 size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
                        std::vector<BVHNode>& bvh);
 
-size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
-                    size_t index)>& geometry,
+size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
                 size_t depth_remaining, std::span<size_t> indices,
                 std::vector<BVHNode>& bvh, size_t& geometry_offset,
                 std::span<size_t> geometry_sort_order);

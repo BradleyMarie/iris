@@ -22,45 +22,27 @@ void ComputeCosts(InputIterator begin, InputIterator end,
 
 }  // namespace
 
-BoundingBox ComputeBounds(
-    const std::pair<const Geometry&, const Matrix*>& geometry) {
-  return geometry.first.ComputeBounds(geometry.second);
-}
-
-BoundingBox ComputeBounds(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        get_geometry,
-    std::span<const size_t> indices) {
+BoundingBox ComputeBounds(const std::vector<BoundingBox>& geometry_bounds,
+                          std::span<const size_t> indices) {
   BoundingBox::Builder builder;
   for (const auto& index : indices) {
-    auto geometry_pair = get_geometry(index);
-    BoundingBox bounds =
-        geometry_pair.first.ComputeBounds(geometry_pair.second);
-    builder.Add(bounds);
+    builder.Add(geometry_bounds.at(index));
   }
   return builder.Build();
 }
 
-Point ComputeCentroid(
-    const std::pair<const Geometry&, const Matrix*>& geometry) {
-  return ComputeBounds(geometry).Center();
-}
-
 BoundingBox ComputeCentroidBounds(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
+    const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices) {
   BoundingBox::Builder builder;
   for (const auto& index : indices) {
-    Point centroid = ComputeCentroid(geometry(index));
-    builder.Add(centroid);
+    builder.Add(geometry_bounds.at(index).Center());
   }
   return builder.Build();
 }
 
 std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
+    const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices, const BoundingBox& centroid_bounds,
     Vector::Axis split_axis) {
   assert(centroid_bounds.lower[split_axis] !=
@@ -72,9 +54,7 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
 
   std::array<BVHSplit, kNumSplitsToEvaluate> result;
   for (size_t index : indices) {
-    auto bounds = ComputeBounds(geometry(index));
-    Point centroid = bounds.Center();
-    geometric value = centroid[split_axis];
+    geometric value = geometry_bounds.at(index).Center()[split_axis];
     geometric_t offset = value - min;
     geometric_t scaled_offset = offset / range;
 
@@ -84,7 +64,7 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
       split_index = kNumSplitsToEvaluate - 1;
     }
 
-    result.at(split_index).bounds.Add(bounds);
+    result.at(split_index).bounds.Add(geometry_bounds.at(index));
     result.at(split_index).num_shapes += 1;
   }
 
@@ -106,14 +86,14 @@ std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
 }
 
 std::optional<geometric_t> FindBestSplitOnAxis(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
+    const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices, const BoundingBox& node_bounds,
     const BoundingBox& centroid_bounds, Vector::Axis split_axis) {
   assert(centroid_bounds.lower[split_axis] !=
          centroid_bounds.upper[split_axis]);
 
-  auto splits = ComputeSplits(geometry, indices, centroid_bounds, split_axis);
+  auto splits =
+      ComputeSplits(geometry_bounds, indices, centroid_bounds, split_axis);
   auto below_costs = ComputeBelowCosts(splits);
   auto above_costs = ComputeAboveCosts(splits);
   geometric_t node_surface_area = node_bounds.SurfaceArea();
@@ -157,16 +137,13 @@ std::optional<geometric_t> FindBestSplitOnAxis(
                        static_cast<geometric_t>(kNumSplitsToEvaluate));
 }
 
-PartitionResult Partition(
-    const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
-        geometry,
-    Vector::Axis split_axis, geometric_t split, std::span<size_t> indices) {
+PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
+                          Vector::Axis split_axis, geometric_t split,
+                          std::span<size_t> indices) {
   size_t insert_index = 0;
 
   for (size_t i = 0; i < indices.size(); i++) {
-    auto centroid = ComputeCentroid(geometry(indices[i]));
-    auto value = centroid[split_axis];
-    if (value < split) {
+    if (geometry_bounds.at(indices[i]).Center()[split_axis] < split) {
       std::swap(indices[i], indices[insert_index++]);
     }
   }
@@ -193,20 +170,19 @@ size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
   return bvh.size() - 1;
 }
 
-size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
-                    size_t index)>& geometry,
+size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
                 size_t depth_remaining, std::span<size_t> indices,
                 std::vector<BVHNode>& bvh, size_t& geometry_offset,
                 std::span<size_t> geometry_sort_order) {
   assert(!indices.empty());
 
-  auto node_bounds = ComputeBounds(geometry, indices);
+  auto node_bounds = ComputeBounds(geometry_bounds, indices);
   if (indices.size() == 1 || depth_remaining == 0) {
     return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
                        geometry_sort_order);
   }
 
-  auto centroid_bounds = ComputeCentroidBounds(geometry, indices);
+  auto centroid_bounds = ComputeCentroidBounds(geometry_bounds, indices);
   auto centroid_bounds_diagonal = centroid_bounds.upper - centroid_bounds.lower;
   auto split_axis = centroid_bounds_diagonal.DominantAxis();
 
@@ -217,8 +193,8 @@ size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
 
   std::span<size_t> above_indices, below_indices;
   if (indices.size() == 2) {
-    geometric_t shape0 = ComputeCentroid(geometry(indices[0]))[split_axis];
-    geometric_t shape1 = ComputeCentroid(geometry(indices[1]))[split_axis];
+    geometric_t shape0 = geometry_bounds.at(indices[0]).Center()[split_axis];
+    geometric_t shape1 = geometry_bounds.at(indices[1]).Center()[split_axis];
 
     if (shape0 < shape1) {
       below_indices = indices.subspan(0, 1);
@@ -228,14 +204,14 @@ size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
       above_indices = indices.subspan(0, 1);
     }
   } else {
-    auto split = FindBestSplitOnAxis(geometry, indices, node_bounds,
+    auto split = FindBestSplitOnAxis(geometry_bounds, indices, node_bounds,
                                      centroid_bounds, split_axis);
     if (!split.has_value()) {
       return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
                          geometry_sort_order);
     }
 
-    auto result = Partition(geometry, split_axis, *split, indices);
+    auto result = Partition(geometry_bounds, split_axis, *split, indices);
     if (result.above.empty() || result.below.empty()) {
       // It's unclear how to write a unit test to exercise this branch; however,
       // since FindBestSplitOnAxis has been observed returning splits that do
@@ -249,10 +225,11 @@ size_t BuildBVH(const std::function<std::pair<const Geometry&, const Matrix*>(
   }
 
   size_t result = AddInteriorNode(node_bounds, split_axis, bvh);
-  BuildBVH(geometry, depth_remaining - 1, below_indices, bvh, geometry_offset,
-           geometry_sort_order);
-  size_t right_child = BuildBVH(geometry, depth_remaining - 1, above_indices,
-                                bvh, geometry_offset, geometry_sort_order);
+  BuildBVH(geometry_bounds, depth_remaining - 1, below_indices, bvh,
+           geometry_offset, geometry_sort_order);
+  size_t right_child =
+      BuildBVH(geometry_bounds, depth_remaining - 1, above_indices, bvh,
+               geometry_offset, geometry_sort_order);
   bvh.at(result).SetRightChildOffset(right_child - result);
 
   return result;
@@ -264,18 +241,22 @@ BuildBVHResult BuildBVH(
     const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     size_t num_geometry) {
+  std::vector<BoundingBox> geometry_bounds;
+  geometry_bounds.reserve(num_geometry);
   std::vector<size_t> geometry_order;
-  std::vector<size_t> geometry_sort_order;
+  geometry_order.reserve(num_geometry);
+  std::vector<size_t> geometry_sort_order(num_geometry, num_geometry);
   for (size_t i = 0; i < num_geometry; i++) {
+    auto [geometry_ref, model_to_world] = geometry(i);
+    geometry_bounds.push_back(geometry_ref.ComputeBounds(model_to_world));
     geometry_order.push_back(i);
-    geometry_sort_order.push_back(num_geometry);
   }
 
   std::vector<BVHNode> bvh;
   if (num_geometry != 0) {
     size_t geometry_offset = 0;
-    internal::BuildBVH(geometry, internal::kMaxBvhDepth, geometry_order, bvh,
-                       geometry_offset, geometry_sort_order);
+    internal::BuildBVH(geometry_bounds, internal::kMaxBvhDepth, geometry_order,
+                       bvh, geometry_offset, geometry_sort_order);
     bvh.shrink_to_fit();
   }
 
