@@ -308,9 +308,8 @@ bool Parser::ObjectEnd() {
     exit(EXIT_FAILURE);
   }
 
-  objects_[*current_object_name_] =
+  objects_[std::move(*current_object_name_)] =
       geometry::AllocateBVHAggregate(std::move(current_object_geometry_));
-
   current_object_name_.reset();
   current_object_geometry_.clear();
 
