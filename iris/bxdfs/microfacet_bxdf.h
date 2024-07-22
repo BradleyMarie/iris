@@ -29,16 +29,16 @@ class MicrofacetDistribution {
                         geometric_t v) const = 0;
 };
 
-class TrowbridgeReitzDistribution : public MicrofacetDistribution {
+class TrowbridgeReitzDistribution final : public MicrofacetDistribution {
  public:
   TrowbridgeReitzDistribution(visual_t alpha_x, visual_t alpha_y)
       : alpha_x_(std::max(static_cast<visual>(0.001), alpha_x)),
         alpha_y_(std::max(static_cast<visual>(0.001), alpha_y)) {}
 
-  virtual visual_t D(const Vector& vector) const override;
-  virtual visual_t Lambda(const Vector& vector) const override;
-  virtual Vector Sample(const Vector& incoming, geometric_t u,
-                        geometric_t v) const override;
+  visual_t D(const Vector& vector) const override;
+  visual_t Lambda(const Vector& vector) const override;
+  Vector Sample(const Vector& incoming, geometric_t u,
+                geometric_t v) const override;
 
   static visual_t RoughnessToAlpha(visual_t roughness);
 

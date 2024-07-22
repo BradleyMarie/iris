@@ -11,7 +11,7 @@ namespace iris {
 namespace scenes {
 namespace internal {
 
-class BVHNode {
+class BVHNode final {
  public:
   BVHNode(const BVHNode& node) = default;
 

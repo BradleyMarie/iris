@@ -27,7 +27,7 @@ BoundingBox ComputeCentroidBounds(
     const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices);
 
-struct BVHSplit {
+struct BVHSplit final {
   BoundingBox::Builder bounds;
   size_t num_shapes = 0;
 };
@@ -48,7 +48,7 @@ std::optional<geometric_t> FindBestSplitOnAxis(
     std::span<const size_t> indices, const BoundingBox& node_bounds,
     const BoundingBox& centroid_bounds, Vector::Axis split_axis);
 
-struct PartitionResult {
+struct PartitionResult final {
   std::span<size_t> above;
   std::span<size_t> below;
 };
@@ -72,7 +72,7 @@ size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
 
 };  // namespace internal
 
-struct BuildBVHResult {
+struct BuildBVHResult final {
   std::vector<BVHNode> bvh;
   std::vector<size_t> geometry_sort_order;
 };

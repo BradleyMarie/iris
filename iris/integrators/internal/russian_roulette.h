@@ -10,7 +10,7 @@ namespace iris {
 namespace integrators {
 namespace internal {
 
-class RussianRoulette {
+class RussianRoulette final {
  public:
   RussianRoulette(visual_t maximum_continue_probability,
                   visual_t always_continue_path_throughput) noexcept;

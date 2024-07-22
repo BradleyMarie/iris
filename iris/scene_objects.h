@@ -15,7 +15,7 @@
 
 namespace iris {
 
-class SceneObjects {
+class SceneObjects final {
  public:
   SceneObjects() = delete;
   SceneObjects(const SceneObjects&) = delete;
@@ -23,7 +23,7 @@ class SceneObjects {
   SceneObjects& operator=(const SceneObjects&) = delete;
   SceneObjects& operator=(SceneObjects&&) = default;
 
-  class Builder {
+  class Builder final {
    public:
     Builder() = default;
     Builder(const Builder&) = delete;

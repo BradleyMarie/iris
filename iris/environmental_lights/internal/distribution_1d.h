@@ -11,7 +11,7 @@ namespace iris {
 namespace environmental_lights {
 namespace internal {
 
-class Distribution1D {
+class Distribution1D final {
  public:
   Distribution1D(std::span<const visual> values);
   Distribution1D(std::vector<visual> values);

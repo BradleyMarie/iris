@@ -10,7 +10,7 @@ namespace iris {
 namespace environmental_lights {
 namespace internal {
 
-class Distribution2D {
+class Distribution2D final {
  public:
   Distribution2D(std::span<const visual> values,
                  std::pair<size_t, size_t> size);

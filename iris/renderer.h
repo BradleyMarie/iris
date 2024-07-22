@@ -16,7 +16,7 @@
 
 namespace iris {
 
-class Renderer {
+class Renderer final {
  public:
   Renderer(const Scene::Builder& scene_builder,
            const LightScene::Builder& light_scene_builder,

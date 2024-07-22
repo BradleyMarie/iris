@@ -8,7 +8,7 @@
 
 namespace iris {
 
-class HitPoint {
+class HitPoint final {
  public:
   explicit HitPoint(const Point& hit_point,
                     const PositionError& hit_point_error,

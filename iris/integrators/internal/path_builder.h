@@ -11,7 +11,7 @@ namespace iris {
 namespace integrators {
 namespace internal {
 
-class PathBuilder {
+class PathBuilder final {
  public:
   PathBuilder(std::vector<const Reflector*>& reflectors,
               std::vector<const Spectrum*>& spectra,
