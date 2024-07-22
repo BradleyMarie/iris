@@ -516,7 +516,7 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
 
         ReferenceCounted<Reflector>& reflector = reflector_map[key];
         if (!reflector) {
-          Color color({float_lut[r], float_lut[g], float_lut[g]}, Color::RGB);
+          Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
           reflector = spectrum_manager_.AllocateReflector(color);
         }
 
