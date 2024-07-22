@@ -72,13 +72,18 @@ class SceneObjects final {
 
  private:
   SceneObjects(
-      std::set<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry,
-      std::set<ReferenceCounted<Light>> lights, std::set<Matrix> matrices,
-      ReferenceCounted<EnvironmentalLight> environmental_light);
+      std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>
+          geometry,
+      std::vector<ReferenceCounted<Light>> lights, std::set<Matrix> matrices,
+      ReferenceCounted<EnvironmentalLight> environmental_light) noexcept
+      : geometry_(std::move(geometry)),
+        lights_(std::move(lights)),
+        matrices_(std::move(matrices)),
+        environmental_light_(std::move(environmental_light)) {}
 
   std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
   std::vector<ReferenceCounted<Light>> lights_;
-  std::vector<Matrix> matrices_;
+  std::set<Matrix> matrices_;
   ReferenceCounted<EnvironmentalLight> environmental_light_;
 };
 

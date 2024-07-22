@@ -1,7 +1,6 @@
 #include "iris/scene_objects.h"
 
 #include <ranges>
-#include <unordered_map>
 
 #include "iris/internal/area_light.h"
 #include "iris/internal/environmental_light.h"
@@ -75,51 +74,30 @@ void SceneObjects::Builder::Set(
 }
 
 SceneObjects SceneObjects::Builder::Build() {
-  SceneObjects result(std::move(geometry_), std::move(lights_),
+  auto lights = MoveToVector(std::move(lights_));
+  for (auto& entry : geometry_) {
+    for (face_t face : entry.first->GetFaces()) {
+      if (!entry.first->IsEmissive(face)) {
+        continue;
+      }
+
+      lights.push_back(iris::MakeReferenceCounted<internal::AreaLight>(
+          std::cref(*entry.first), entry.second, face));
+    }
+  }
+
+  if (environmental_light_) {
+    lights.push_back(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
+        std::cref(*environmental_light_)));
+  }
+
+  SceneObjects result(MoveToVector(std::move(geometry_)), lights,
                       std::move(matrices_), std::move(environmental_light_));
   geometry_.clear();
   lights_.clear();
   matrices_.clear();
   environmental_light_.Reset();
   return result;
-}
-
-SceneObjects::SceneObjects(
-    std::set<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry,
-    std::set<ReferenceCounted<Light>> lights, std::set<Matrix> matrices,
-    ReferenceCounted<EnvironmentalLight> environmental_light)
-    : geometry_(MoveToVector(std::move(geometry))),
-      lights_(MoveToVector(std::move(lights))),
-      environmental_light_(std::move(environmental_light)) {
-  std::unordered_map<const Matrix*, const Matrix*> moved_matrices;
-  moved_matrices.reserve(matrices.size());
-
-  matrices_.reserve(matrices.size());  // Required for correctness
-  for (auto& entry : geometry_) {
-    if (entry.second != nullptr) {
-      const Matrix*& new_matrix = moved_matrices[entry.second];
-      if (new_matrix == nullptr) {
-        matrices_.push_back(*entry.second);
-        new_matrix = &matrices_.back();
-      }
-
-      entry.second = new_matrix;
-    }
-
-    for (face_t face : entry.first->GetFaces()) {
-      if (!entry.first->IsEmissive(face)) {
-        continue;
-      }
-
-      lights_.push_back(iris::MakeReferenceCounted<internal::AreaLight>(
-          std::cref(*entry.first), entry.second, face));
-    }
-  }
-
-  if (environmental_light_) {
-    lights_.push_back(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
-        std::cref(*environmental_light_)));
-  }
 }
 
 void SceneObjects::Reorder(std::vector<size_t> new_geometry_positions,
