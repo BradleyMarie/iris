@@ -14,13 +14,13 @@ std::vector<Distribution1D> ComputeRows(std::span<const visual> values,
   assert(size.first * size.second == values.size());
 
   std::vector<Distribution1D> rows;
+  rows.reserve(size.first);
+
   for (size_t y = 0; y < size.first; y += 1) {
     auto start = values.begin() + size.second * y;
     auto end = start + size.second;
     rows.emplace_back(std::span<const visual>(start, end));
   }
-
-  rows.shrink_to_fit();
 
   return rows;
 }

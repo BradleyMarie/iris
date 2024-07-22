@@ -257,7 +257,6 @@ BuildBVHResult BuildBVH(
     size_t geometry_offset = 0;
     internal::BuildBVH(geometry_bounds, internal::kMaxBvhDepth, geometry_order,
                        bvh, geometry_offset, geometry_sort_order);
-    bvh.shrink_to_fit();
   }
 
   return {std::move(bvh), std::move(geometry_sort_order)};
