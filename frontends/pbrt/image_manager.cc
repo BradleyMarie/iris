@@ -19,6 +19,7 @@ visual GammaCorrect(visual_t value) {
       (value + static_cast<visual_t>(0.055)) / static_cast<visual_t>(1.055),
       static_cast<visual_t>(2.4));
 }
+
 const std::array<visual, 256>& FloatLUT(bool gamma_correct) {
   static const std::array<visual, 256> gamma_correct_lut = {
       GammaCorrect(static_cast<visual>(0.0 / 255.0)),
@@ -418,26 +419,6 @@ uint32_t ToKey(stbi_uc r, stbi_uc g, stbi_uc b) {
   return r32 | (g32 << 8u) | (b32 << 16u);
 }
 
-stbi_uc* ReadFileWithStbi(const std::filesystem::path& filename, int* nx,
-                          int* ny, int* num_channels) {
-  if (stbi_is_16_bit(filename.native().c_str())) {
-    std::cerr << "ERROR: Image loading of 16-bit images is not supported: "
-              << filename.native() << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  stbi_uc* values = stbi_load(filename.native().c_str(), nx, ny, num_channels,
-                              /*desired_channels=*/0);
-
-  if (!values) {
-    std::cerr << "ERROR: Image loading failed with error: "
-              << stbi_failure_reason() << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return values;
-}
-
 }  // namespace
 
 std::shared_ptr<iris::textures::Image2D<visual>>
@@ -450,36 +431,92 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
     return result;
   }
 
-  int nx, ny, num_channels;
-  stbi_uc* values =
-      ReadFileWithStbi(filename.native().c_str(), &nx, &ny, &num_channels);
-
-  const std::array<visual, 256>& float_lut = FloatLUT(gamma_correct);
-
+  int nx, ny;
   std::vector<visual> float_values;
-  float_values.reserve(nx * ny);
+  if (stbi_is_16_bit(filename.native().c_str())) {
+    int num_channels;
+    stbi_us* values =
+        stbi_load_16(filename.native().c_str(), &nx, &ny, &num_channels,
+                     /*desired_channels=*/0);
+    if (!values) {
+      std::cerr << "ERROR: Image loading failed with error: "
+                << stbi_failure_reason() << std::endl;
+      exit(EXIT_FAILURE);
+    }
 
-  if (num_channels == 1 || num_channels == 2) {
-    for (int y = 0; y < ny; y++) {
-      for (int x = 0; x < nx; x++) {
-        float_values.push_back(float_lut[values[(ny - y - 1) * nx + x]]);
+    float_values.reserve(nx * ny);
+
+    if (num_channels == 1 || num_channels == 2) {
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          visual_t grey = static_cast<visual_t>(values[(ny - y - 1) * nx + x]) /
+                          static_cast<visual_t>(65535.0);
+          if (gamma_correct) {
+            grey = GammaCorrect(grey);
+          }
+
+          float_values.push_back(grey);
+        }
+      }
+    } else {
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          visual_t r =
+              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 0]) /
+              static_cast<visual_t>(65535.0);
+          visual_t g =
+              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 1]) /
+              static_cast<visual_t>(65535.0);
+          visual_t b =
+              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 2]) /
+              static_cast<visual_t>(65535.0);
+          if (gamma_correct) {
+            r = GammaCorrect(r);
+            g = GammaCorrect(g);
+            b = GammaCorrect(b);
+          }
+
+          Color color({r, g, b}, Color::RGB);
+          float_values.push_back(spectrum_manager_.ComputeLuma(color));
+        }
       }
     }
+
+    stbi_image_free(values);
   } else {
-    std::unordered_map<uint32_t, ReferenceCounted<Reflector>>& reflector_map =
-        gamma_correct ? gamma_corrected_reflectors_ : reflectors_;
-    for (int y = 0; y < ny; y++) {
-      for (int x = 0; x < nx; x++) {
-        stbi_uc r = values[3 * ((ny - y - 1) * nx + x) + 0];
-        stbi_uc g = values[3 * ((ny - y - 1) * nx + x) + 1];
-        stbi_uc b = values[3 * ((ny - y - 1) * nx + x) + 2];
-        Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
-        float_values.push_back(spectrum_manager_.ComputeLuma(color));
+    int num_channels;
+    stbi_uc* values =
+        stbi_load(filename.native().c_str(), &nx, &ny, &num_channels,
+                  /*desired_channels=*/0);
+    if (!values) {
+      std::cerr << "ERROR: Image loading failed with error: "
+                << stbi_failure_reason() << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    const std::array<visual, 256>& float_lut = FloatLUT(gamma_correct);
+    float_values.reserve(nx * ny);
+
+    if (num_channels == 1 || num_channels == 2) {
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          float_values.push_back(float_lut[values[(ny - y - 1) * nx + x]]);
+        }
+      }
+    } else {
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          stbi_uc r = values[3 * ((ny - y - 1) * nx + x) + 0];
+          stbi_uc g = values[3 * ((ny - y - 1) * nx + x) + 1];
+          stbi_uc b = values[3 * ((ny - y - 1) * nx + x) + 2];
+          Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
+          float_values.push_back(spectrum_manager_.ComputeLuma(color));
+        }
       }
     }
-  }
 
-  stbi_image_free(values);
+    stbi_image_free(values);
+  }
 
   result = std::make_shared<iris::textures::Image2D<visual>>(
       std::move(float_values),
@@ -498,44 +535,104 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
     return result;
   }
 
-  int nx, ny, num_channels;
-  stbi_uc* values =
-      ReadFileWithStbi(filename.native().c_str(), &nx, &ny, &num_channels);
-
-  const std::array<visual, 256>& float_lut = FloatLUT(gamma_correct);
-
+  int nx, ny;
   std::vector<ReferenceCounted<Reflector>> reflector_values;
-  reflector_values.reserve(nx * ny);
-
-  if (num_channels == 1 || num_channels == 2) {
-    for (int y = 0; y < ny; y++) {
-      for (int x = 0; x < nx; x++) {
-        reflector_values.push_back(texture_manager_.AllocateUniformReflector(
-            float_lut[values[num_channels * ((ny - y - 1) * nx + x)]]));
-      }
+  if (stbi_is_16_bit(filename.native().c_str())) {
+    int num_channels;
+    stbi_us* values =
+        stbi_load_16(filename.native().c_str(), &nx, &ny, &num_channels,
+                     /*desired_channels=*/0);
+    if (!values) {
+      std::cerr << "ERROR: Image loading failed with error: "
+                << stbi_failure_reason() << std::endl;
+      exit(EXIT_FAILURE);
     }
-  } else {
-    std::unordered_map<uint32_t, ReferenceCounted<Reflector>>& reflector_map =
-        gamma_correct ? gamma_corrected_reflectors_ : reflectors_;
-    for (int y = 0; y < ny; y++) {
-      for (int x = 0; x < nx; x++) {
-        stbi_uc r = values[num_channels * ((ny - y - 1) * nx + x) + 0];
-        stbi_uc g = values[num_channels * ((ny - y - 1) * nx + x) + 1];
-        stbi_uc b = values[num_channels * ((ny - y - 1) * nx + x) + 2];
-        uint32_t key = ToKey(r, g, b);
 
-        ReferenceCounted<Reflector>& reflector = reflector_map[key];
-        if (!reflector) {
-          Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
-          reflector = spectrum_manager_.AllocateReflector(color);
+    reflector_values.reserve(nx * ny);
+
+    if (num_channels == 1 || num_channels == 2) {
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          visual_t grey = static_cast<visual_t>(values[(ny - y - 1) * nx + x]) /
+                          static_cast<visual_t>(65535.0);
+          if (gamma_correct) {
+            grey = GammaCorrect(grey);
+          }
+
+          reflector_values.push_back(
+              texture_manager_.AllocateUniformReflector(grey));
         }
+      }
+    } else {
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          visual_t r =
+              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 0]) /
+              static_cast<visual_t>(65535.0);
+          visual_t g =
+              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 1]) /
+              static_cast<visual_t>(65535.0);
+          visual_t b =
+              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 2]) /
+              static_cast<visual_t>(65535.0);
+          if (gamma_correct) {
+            r = GammaCorrect(r);
+            g = GammaCorrect(g);
+            b = GammaCorrect(b);
+          }
 
-        reflector_values.push_back(reflector);
+          Color color({r, g, b}, Color::RGB);
+          reflector_values.push_back(
+              spectrum_manager_.AllocateReflector(color));
+        }
       }
     }
-  }
 
-  stbi_image_free(values);
+    stbi_image_free(values);
+  } else {
+    int num_channels;
+    stbi_uc* values =
+        stbi_load(filename.native().c_str(), &nx, &ny, &num_channels,
+                  /*desired_channels=*/0);
+    if (!values) {
+      std::cerr << "ERROR: Image loading failed with error: "
+                << stbi_failure_reason() << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    const std::array<visual, 256>& float_lut = FloatLUT(gamma_correct);
+    reflector_values.reserve(nx * ny);
+
+    if (num_channels == 1 || num_channels == 2) {
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          reflector_values.push_back(texture_manager_.AllocateUniformReflector(
+              float_lut[values[num_channels * ((ny - y - 1) * nx + x)]]));
+        }
+      }
+    } else {
+      std::unordered_map<uint32_t, ReferenceCounted<Reflector>>& reflector_map =
+          gamma_correct ? gamma_corrected_reflectors_ : reflectors_;
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          stbi_uc r = values[num_channels * ((ny - y - 1) * nx + x) + 0];
+          stbi_uc g = values[num_channels * ((ny - y - 1) * nx + x) + 1];
+          stbi_uc b = values[num_channels * ((ny - y - 1) * nx + x) + 2];
+          uint32_t key = ToKey(r, g, b);
+
+          ReferenceCounted<Reflector>& reflector = reflector_map[key];
+          if (!reflector) {
+            Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
+            reflector = spectrum_manager_.AllocateReflector(color);
+          }
+
+          reflector_values.push_back(reflector);
+        }
+      }
+    }
+
+    stbi_image_free(values);
+  }
 
   result =
       std::make_shared<iris::textures::Image2D<ReferenceCounted<Reflector>>>(
