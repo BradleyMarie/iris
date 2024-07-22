@@ -12,7 +12,7 @@
 namespace iris {
 
 template <typename T>
-requires std::derived_from<T, ReferenceCountable>
+  requires std::derived_from<T, ReferenceCountable>
 class ReferenceCounted final {
  public:
   ReferenceCounted(std::unique_ptr<T> value) noexcept : ptr_(value.release()) {}
@@ -28,13 +28,17 @@ class ReferenceCounted final {
   }
 
   template <class U>
-  requires std::derived_from<U, T> ReferenceCounted(
-      const ReferenceCounted<U>& value)
-  noexcept : ptr_(value.ptr_) { MaybeIncrement(); }
+    requires std::derived_from<U, T>
+  ReferenceCounted(const ReferenceCounted<U>& value) noexcept
+      : ptr_(value.ptr_) {
+    MaybeIncrement();
+  }
 
   template <class U>
-  requires std::derived_from<U, T> ReferenceCounted(ReferenceCounted<U>&& value)
-  noexcept : ptr_(value.ptr_) { value.ptr_ = nullptr; }
+    requires std::derived_from<U, T>
+  ReferenceCounted(ReferenceCounted<U>&& value) noexcept : ptr_(value.ptr_) {
+    value.ptr_ = nullptr;
+  }
 
   ReferenceCounted& operator=(const ReferenceCounted& value) noexcept {
     MaybeDecrement();
@@ -81,13 +85,18 @@ class ReferenceCounted final {
   T* ptr_;
 
   template <class U>
-  requires std::derived_from<U, ReferenceCountable>
+    requires std::derived_from<U, ReferenceCountable>
   friend class ReferenceCounted;
 };
 
 template <typename T, typename... Args>
 ReferenceCounted<T> MakeReferenceCounted(Args&&... args) {
   return ReferenceCounted<T>(std::make_unique<T>(std::forward<Args>(args)...));
+}
+
+template <typename T>
+void swap(ReferenceCounted<T>& lhs, ReferenceCounted<T>& rhs) noexcept {
+  lhs.Swap(rhs);
 }
 
 }  // namespace iris

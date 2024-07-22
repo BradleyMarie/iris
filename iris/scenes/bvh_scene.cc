@@ -18,7 +18,7 @@ std::unique_ptr<Scene> BVHScene::Builder::Build(
   };
 
   auto result = internal::BuildBVH(get_geometry, scene_objects.NumGeometry());
-  scene_objects.Reorder(result.geometry_sort_order);
+  scene_objects.Reorder(std::move(result.geometry_sort_order));
 
   return std::make_unique<BVHScene>(scene_objects, std::move(result.bvh));
 }

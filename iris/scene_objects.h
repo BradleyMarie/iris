@@ -4,7 +4,6 @@
 #include <cassert>
 #include <memory>
 #include <set>
-#include <span>
 #include <utility>
 #include <vector>
 
@@ -68,8 +67,8 @@ class SceneObjects {
     return environmental_light_.Get();
   }
 
-  void Reorder(std::span<const size_t> new_geometry_positions = {},
-               std::span<const size_t> new_light_positions = {}) noexcept;
+  void Reorder(std::vector<size_t> new_geometry_positions = {},
+               std::vector<size_t> new_light_positions = {}) noexcept;
 
  private:
   SceneObjects(

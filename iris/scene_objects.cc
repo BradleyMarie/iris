@@ -1,6 +1,6 @@
 #include "iris/scene_objects.h"
 
-#include <map>
+#include <ranges>
 #include <unordered_map>
 
 #include "iris/internal/area_light.h"
@@ -20,19 +20,24 @@ std::vector<T> MoveToVector(std::set<T> values) {
 }
 
 template <typename T>
-void ReorderImpl(std::vector<T>& values,
-                 std::span<const size_t> new_positions) {
-  std::multimap<size_t, T> sorted_values;
-  for (size_t i = 0; i < values.size(); i++) {
-    size_t new_position = (i < new_positions.size())
-                              ? new_positions[i]
-                              : std::numeric_limits<size_t>::max();
-    sorted_values.emplace(new_position, std::move(values[i]));
+void ReorderImpl(std::vector<T>& values, std::vector<size_t>& new_positions) {
+  std::vector<size_t> to_new_position;
+  for (size_t i = 0; i < new_positions.size(); i++) {
+    to_new_position.emplace_back(i);
   }
 
-  size_t i = 0;
-  for (auto& [key, value] : sorted_values) {
-    values[i++] = std::move(value);
+  std::ranges::sort(std::views::zip(new_positions, to_new_position),
+                    [](auto&& left, auto&& right) {
+                      return std::get<0>(left) < std::get<0>(right);
+                    });
+
+  std::vector<T> moved_values;
+  for (size_t i = 0; i < new_positions.size(); i++) {
+    moved_values.push_back(std::move(values[i]));
+  }
+
+  for (size_t i = 0; i < new_positions.size(); i++) {
+    values[i] = std::move(moved_values[to_new_position[i]]);
   }
 }
 
@@ -117,9 +122,8 @@ SceneObjects::SceneObjects(
   }
 }
 
-void SceneObjects::Reorder(
-    std::span<const size_t> new_geometry_positions,
-    std::span<const size_t> new_light_positions) noexcept {
+void SceneObjects::Reorder(std::vector<size_t> new_geometry_positions,
+                           std::vector<size_t> new_light_positions) noexcept {
   ReorderImpl(geometry_, new_geometry_positions);
   ReorderImpl(lights_, new_light_positions);
 }
