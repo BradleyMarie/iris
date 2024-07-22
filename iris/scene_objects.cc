@@ -74,25 +74,25 @@ void SceneObjects::Builder::Set(
 }
 
 SceneObjects SceneObjects::Builder::Build() {
-  auto lights = MoveToVector(std::move(lights_));
   for (auto& entry : geometry_) {
     for (face_t face : entry.first->GetFaces()) {
       if (!entry.first->IsEmissive(face)) {
         continue;
       }
 
-      lights.push_back(iris::MakeReferenceCounted<internal::AreaLight>(
+      lights_.insert(iris::MakeReferenceCounted<internal::AreaLight>(
           std::cref(*entry.first), entry.second, face));
     }
   }
 
   if (environmental_light_) {
-    lights.push_back(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
+    lights_.insert(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
         std::cref(*environmental_light_)));
   }
 
-  SceneObjects result(MoveToVector(std::move(geometry_)), lights,
-                      std::move(matrices_), std::move(environmental_light_));
+  SceneObjects result(MoveToVector(std::move(geometry_)),
+                      MoveToVector(std::move(lights_)), std::move(matrices_),
+                      std::move(environmental_light_));
   geometry_.clear();
   lights_.clear();
   matrices_.clear();

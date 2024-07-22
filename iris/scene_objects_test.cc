@@ -25,6 +25,14 @@ iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
   return result;
 }
 
+std::set<const iris::Light*> GetLights(const iris::SceneObjects& objects) {
+  std::set<const iris::Light*> result;
+  for (size_t i = 0; i < objects.NumLights(); i++) {
+    result.emplace(&objects.GetLight(i));
+  }
+  return result;
+}
+
 TEST(SceneObjects, Build) {
   std::set<iris::ReferenceCounted<iris::Geometry>> geometry;
   geometry.insert(MakeGeometry(false));
@@ -90,9 +98,11 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(nullptr, scene_objects.GetGeometry(3).second);
   EXPECT_EQ(*scene_objects.GetGeometry(1).second,
             *scene_objects.GetGeometry(2).second);
-  ASSERT_EQ(4u, scene_objects.NumLights());
-  EXPECT_EQ(light0.Get(), &scene_objects.GetLight(0));
-  EXPECT_EQ(light1.Get(), &scene_objects.GetLight(1));
+  auto built_lights = GetLights(scene_objects);
+  ASSERT_EQ(4u, built_lights.size());
+  built_lights.erase(light0.Get());
+  built_lights.erase(light1.Get());
+  ASSERT_EQ(2u, built_lights.size());
   EXPECT_EQ(environmental_light.Get(), scene_objects.GetEnvironmentalLight());
 
   // Reuse builder
@@ -144,9 +154,11 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(nullptr, scene_objects.GetGeometry(3).second);
   EXPECT_EQ(*scene_objects.GetGeometry(1).second,
             *scene_objects.GetGeometry(2).second);
-  ASSERT_EQ(3u, scene_objects.NumLights());
-  EXPECT_EQ(light0.Get(), &scene_objects.GetLight(0));
-  EXPECT_EQ(light1.Get(), &scene_objects.GetLight(1));
+  built_lights = GetLights(scene_objects);
+  ASSERT_EQ(3u, built_lights.size());
+  built_lights.erase(light0.Get());
+  built_lights.erase(light1.Get());
+  ASSERT_EQ(1u, built_lights.size());
   EXPECT_EQ(nullptr, scene_objects.GetEnvironmentalLight());
 
   // Reorder
