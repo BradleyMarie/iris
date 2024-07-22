@@ -23,6 +23,12 @@ TEST(ColorColorMatcher, ColorSpace) {
   EXPECT_EQ(iris::Color::LINEAR_SRGB, g_color_matcher.ColorSpace());
 }
 
+TEST(ColorSpectrumManager, ComputeLuma) {
+  iris::pbrt_frontend::Color color({0.25, 0.5, 0.75},
+                                   iris::pbrt_frontend::Color::XYZ);
+  EXPECT_EQ(0.5, g_spectrum_manager.ComputeLuma(color));
+}
+
 TEST(ColorSpectrumManager, AllocateSpectrumFromColor) {
   iris::pbrt_frontend::Color color({0.25, 0.5, 0.75},
                                    iris::pbrt_frontend::Color::RGB);

@@ -59,6 +59,10 @@ iris::Color::Space ColorColorMatcher::ColorSpace() const {
 ColorSpectrumManager::ColorSpectrumManager(bool all_spectra_are_reflective)
     : spectral_scalar_(ComputeSpectralScalar(all_spectra_are_reflective)) {}
 
+visual_t ColorSpectrumManager::ComputeLuma(const Color& color) {
+  return ToLuma(color);
+}
+
 ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
     const Color& color, visual_t* luma) {
   if (luma) {

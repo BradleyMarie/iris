@@ -7,6 +7,8 @@ namespace iris::pbrt_frontend::spectrum_managers {
 
 class TestSpectrumManager final : public SpectrumManager {
  public:
+  visual_t ComputeLuma(const Color& color) override;
+
   ReferenceCounted<Spectrum> AllocateSpectrum(
       const Color& color, visual_t* luma = nullptr) override;
 

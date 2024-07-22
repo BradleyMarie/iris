@@ -5,6 +5,10 @@
 
 namespace iris::pbrt_frontend::spectrum_managers {
 
+visual_t TestSpectrumManager::ComputeLuma(const Color& color) {
+  return static_cast<visual_t>(1.0);
+}
+
 ReferenceCounted<Spectrum> TestSpectrumManager::AllocateSpectrum(
     const Color& color, visual_t* luma) {
   return iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();

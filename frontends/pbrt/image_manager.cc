@@ -1,7 +1,6 @@
 #include "frontends/pbrt/image_manager.h"
 
 #include <cerrno>
-#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -420,23 +419,21 @@ uint32_t ToKey(stbi_uc r, stbi_uc g, stbi_uc b) {
 }
 
 stbi_uc* ReadFileWithStbi(const std::filesystem::path& filename, int* nx,
-                          int* ny, int* num_channels, int desired_channels) {
-  FILE* file = std::fopen(filename.native().c_str(), "r");
-  if (!file) {
-    std::cerr << "ERROR: Image loading failed with error: "
-              << std::strerror(errno) << std::endl;
+                          int* ny, int* num_channels) {
+  if (stbi_is_16_bit(filename.native().c_str())) {
+    std::cerr << "ERROR: Image loading of 16-bit images is not supported: "
+              << filename.native() << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  stbi_uc* values =
-      stbi_load_from_file(file, nx, ny, num_channels, desired_channels);
+  stbi_uc* values = stbi_load(filename.native().c_str(), nx, ny, num_channels,
+                              /*desired_channels=*/0);
+
   if (!values) {
     std::cerr << "ERROR: Image loading failed with error: "
               << stbi_failure_reason() << std::endl;
     exit(EXIT_FAILURE);
   }
-
-  std::fclose(file);
 
   return values;
 }
@@ -453,18 +450,32 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
     return result;
   }
 
-  int nx, ny;
+  int nx, ny, num_channels;
   stbi_uc* values =
-      ReadFileWithStbi(filename.native().c_str(), &nx, &ny, nullptr,
-                       /*desired_channels=*/1);
+      ReadFileWithStbi(filename.native().c_str(), &nx, &ny, &num_channels);
 
   const std::array<visual, 256>& float_lut = FloatLUT(gamma_correct);
 
   std::vector<visual> float_values;
   float_values.reserve(nx * ny);
-  for (int y = 0; y < ny; y++) {
-    for (int x = 0; x < nx; x++) {
-      float_values.push_back(float_lut[values[(ny - y - 1) * nx + x]]);
+
+  if (num_channels == 1 || num_channels == 2) {
+    for (int y = 0; y < ny; y++) {
+      for (int x = 0; x < nx; x++) {
+        float_values.push_back(float_lut[values[(ny - y - 1) * nx + x]]);
+      }
+    }
+  } else {
+    std::unordered_map<uint32_t, ReferenceCounted<Reflector>>& reflector_map =
+        gamma_correct ? gamma_corrected_reflectors_ : reflectors_;
+    for (int y = 0; y < ny; y++) {
+      for (int x = 0; x < nx; x++) {
+        stbi_uc r = values[3 * ((ny - y - 1) * nx + x) + 0];
+        stbi_uc g = values[3 * ((ny - y - 1) * nx + x) + 1];
+        stbi_uc b = values[3 * ((ny - y - 1) * nx + x) + 2];
+        Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
+        float_values.push_back(spectrum_manager_.ComputeLuma(color));
+      }
     }
   }
 
@@ -489,19 +500,18 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
 
   int nx, ny, num_channels;
   stbi_uc* values =
-      ReadFileWithStbi(filename.native().c_str(), &nx, &ny, &num_channels,
-                       /*desired_channels=*/3);
+      ReadFileWithStbi(filename.native().c_str(), &nx, &ny, &num_channels);
 
   const std::array<visual, 256>& float_lut = FloatLUT(gamma_correct);
 
   std::vector<ReferenceCounted<Reflector>> reflector_values;
   reflector_values.reserve(nx * ny);
 
-  if (num_channels == 1) {
+  if (num_channels == 1 || num_channels == 2) {
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
         reflector_values.push_back(texture_manager_.AllocateUniformReflector(
-            float_lut[values[(ny - y - 1) * nx + x]]));
+            float_lut[values[num_channels * ((ny - y - 1) * nx + x)]]));
       }
     }
   } else {
@@ -509,9 +519,9 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
         gamma_correct ? gamma_corrected_reflectors_ : reflectors_;
     for (int y = 0; y < ny; y++) {
       for (int x = 0; x < nx; x++) {
-        stbi_uc r = values[3 * ((ny - y - 1) * nx + x) + 0];
-        stbi_uc g = values[3 * ((ny - y - 1) * nx + x) + 1];
-        stbi_uc b = values[3 * ((ny - y - 1) * nx + x) + 2];
+        stbi_uc r = values[num_channels * ((ny - y - 1) * nx + x) + 0];
+        stbi_uc g = values[num_channels * ((ny - y - 1) * nx + x) + 1];
+        stbi_uc b = values[num_channels * ((ny - y - 1) * nx + x) + 2];
         uint32_t key = ToKey(r, g, b);
 
         ReferenceCounted<Reflector>& reflector = reflector_map[key];

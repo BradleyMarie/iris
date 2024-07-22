@@ -12,6 +12,8 @@ namespace iris::pbrt_frontend {
 
 class SpectrumManager {
  public:
+  virtual visual_t ComputeLuma(const Color& color) = 0;
+
   virtual ReferenceCounted<Spectrum> AllocateSpectrum(
       const Color& color, visual_t* luma = nullptr) = 0;
 

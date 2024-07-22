@@ -16,6 +16,8 @@ class ColorSpectrumManager final : public SpectrumManager {
  public:
   ColorSpectrumManager(bool all_spectra_are_reflective);
 
+  visual_t ComputeLuma(const Color& color) override;
+
   ReferenceCounted<Spectrum> AllocateSpectrum(
       const Color& color, visual_t* luma = nullptr) override;
 
