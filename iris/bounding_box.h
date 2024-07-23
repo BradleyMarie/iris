@@ -100,6 +100,8 @@ struct BoundingBox final {
         max};
   }
 
+  bool operator==(const BoundingBox&) const = default;
+
   const Point lower;
   const Point upper;
 

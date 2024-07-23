@@ -5,6 +5,9 @@
 #include "iris/geometry/mock_geometry.h"
 #include "iris/lights/mock_light.h"
 
+const static iris::BoundingBox kBounds(iris::Point(0.0, 0.0, 0.0),
+                                       iris::Point(0.0, 1.0, 2.0));
+
 iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
   auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   EXPECT_CALL(*result, ComputeBounds(nullptr))
@@ -20,8 +23,7 @@ iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
       .WillRepeatedly(testing::Return(emissive));
   EXPECT_CALL(*result, GetFaces()).WillRepeatedly(testing::Return(faces));
   EXPECT_CALL(*result, ComputeBounds(testing::_))
-      .WillRepeatedly(testing::Return(iris::BoundingBox(
-          iris::Point(0.0, 0.0, 0.0), iris::Point(0.0, 1.0, 2.0))));
+      .WillRepeatedly(testing::Return(kBounds));
   return result;
 }
 
@@ -104,8 +106,13 @@ TEST(SceneObjects, Build) {
   built_lights.erase(light1.Get());
   ASSERT_EQ(2u, built_lights.size());
   EXPECT_EQ(environmental_light.Get(), scene_objects.GetEnvironmentalLight());
+  EXPECT_EQ(kBounds, scene_objects.GetBounds());
 
-  // Reuse builder
+  // Reuse builder for empty scene
+  scene_objects = builder.Build();
+  EXPECT_TRUE(scene_objects.GetBounds().Empty());
+
+  // Reuse builder for populated scene
   geometry.clear();
   geometry.insert(MakeGeometry(false));
   geometry.insert(MakeGeometry(false));
@@ -160,6 +167,10 @@ TEST(SceneObjects, Build) {
   built_lights.erase(light1.Get());
   ASSERT_EQ(1u, built_lights.size());
   EXPECT_EQ(nullptr, scene_objects.GetEnvironmentalLight());
+  EXPECT_EQ(kBounds, scene_objects.GetBounds());
+
+  const iris::Light& light0_old = scene_objects.GetLight(0);
+  const iris::Light& light1_old = scene_objects.GetLight(1);
 
   // Reorder
   scene_objects.Reorder({{4, 3, 2, 1}}, {{1, 0}});
@@ -171,6 +182,6 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(matrix2, *scene_objects.GetGeometry(1).second);
   EXPECT_EQ(geom3.Get(), &scene_objects.GetGeometry(0).first);
   EXPECT_EQ(nullptr, scene_objects.GetGeometry(0).second);
-  EXPECT_EQ(light0.Get(), &scene_objects.GetLight(1));
-  EXPECT_EQ(light1.Get(), &scene_objects.GetLight(0));
+  EXPECT_EQ(&light0_old, &scene_objects.GetLight(1));
+  EXPECT_EQ(&light1_old, &scene_objects.GetLight(0));
 }

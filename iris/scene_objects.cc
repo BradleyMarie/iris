@@ -49,9 +49,16 @@ const Matrix* ToNullableMatrix(const Matrix& matrix) {
 void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
                                 const Matrix& matrix) {
   const Matrix* model_to_world = ToNullableMatrix(matrix);
-  if (!geometry || geometry->ComputeBounds(model_to_world).Empty()) {
+  if (!geometry) {
     return;
   }
+
+  BoundingBox bounds = geometry->ComputeBounds(model_to_world);
+  if (bounds.Empty()) {
+    return;
+  }
+
+  bounds_builder_.Add(bounds);
 
   if (model_to_world != nullptr) {
     model_to_world = &*matrices_.insert(matrix).first;
@@ -92,11 +99,12 @@ SceneObjects SceneObjects::Builder::Build() {
 
   SceneObjects result(MoveToVector(std::move(geometry_)),
                       MoveToVector(std::move(lights_)), std::move(matrices_),
-                      std::move(environmental_light_));
+                      std::move(environmental_light_), bounds_builder_);
   geometry_.clear();
   lights_.clear();
   matrices_.clear();
   environmental_light_.Reset();
+  bounds_builder_.Reset();
   return result;
 }
 
