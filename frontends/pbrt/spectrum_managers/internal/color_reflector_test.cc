@@ -18,3 +18,12 @@ TEST(ColorReflector, Albedo) {
       color);
   EXPECT_NEAR(0.464875579, reflector.Albedo(), 0.001);
 }
+
+TEST(ColorReflector, AlbedoWhite) {
+  iris::pbrt_frontend::Color color({1.0, 1.0, 1.0},
+                                   iris::pbrt_frontend::Color::RGB);
+  iris::pbrt_frontend::spectrum_managers::internal::ColorReflector reflector(
+      color);
+  EXPECT_LE(1.0, reflector.Albedo());
+  EXPECT_NEAR(1.0, reflector.Albedo(), 0.001);
+}

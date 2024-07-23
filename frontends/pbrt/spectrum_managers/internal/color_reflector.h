@@ -1,6 +1,8 @@
 #ifndef _FRONTENDS_PBRT_SPECTRUM_MANAGERS_INTERNAL_COLOR_REFLECTOR_
 #define _FRONTENDS_PBRT_SPECTRUM_MANAGERS_INTERNAL_COLOR_REFLECTOR_
 
+#include <algorithm>
+
 #include "frontends/pbrt/color.h"
 #include "iris/color.h"
 #include "iris/float.h"
@@ -31,7 +33,8 @@ class ColorReflector final : public Reflector {
   visual_t Albedo() const override {
     iris::Color color(values_[0], values_[1], values_[2],
                       iris::Color::LINEAR_SRGB);
-    return color.ConvertTo(iris::Color::CIE_XYZ).y;
+    return std::min(static_cast<visual_t>(1.0),
+                    color.ConvertTo(iris::Color::CIE_XYZ).y);
   }
 
  private:

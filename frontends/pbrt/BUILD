@@ -46,6 +46,27 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "image_manager_test",
+    srcs = ["image_manager_test.cc"],
+    data = [
+        "test_data/g16.png",
+        "test_data/g8.png",
+        "test_data/ga16.png",
+        "test_data/ga8.png",
+        "test_data/rgb16.png",
+        "test_data/rgb8.png",
+        "test_data/rgba16.png",
+        "test_data/rgba8.png",
+    ],
+    deps = [
+        ":image_manager",
+        "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
 cc_binary(
     name = "iris",
     srcs = ["main.cc"],

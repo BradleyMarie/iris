@@ -1,5 +1,6 @@
 #include "frontends/pbrt/image_manager.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 #include <fstream>
@@ -15,9 +16,10 @@ visual GammaCorrect(visual_t value) {
     return value / static_cast<visual_t>(12.92);
   }
 
-  return std::pow(
-      (value + static_cast<visual_t>(0.055)) / static_cast<visual_t>(1.055),
-      static_cast<visual_t>(2.4));
+  return std::pow(std::min(static_cast<visual_t>(1.0),
+                           (value + static_cast<visual_t>(0.055)) /
+                               static_cast<visual_t>(1.055)),
+                  static_cast<visual_t>(2.4));
 }
 
 const std::array<visual, 256>& FloatLUT(bool gamma_correct) {
@@ -439,8 +441,8 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
         stbi_load_16(filename.native().c_str(), &nx, &ny, &num_channels,
                      /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Image loading failed with error: "
-                << stbi_failure_reason() << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename.native()
+                << std::endl;
       exit(EXIT_FAILURE);
     }
 
@@ -449,7 +451,8 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
     if (num_channels == 1 || num_channels == 2) {
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
-          visual_t grey = static_cast<visual_t>(values[(ny - y - 1) * nx + x]) /
+          visual_t grey = static_cast<visual_t>(
+                              values[num_channels * (ny - y - 1) * nx + x]) /
                           static_cast<visual_t>(65535.0);
           if (gamma_correct) {
             grey = GammaCorrect(grey);
@@ -461,15 +464,15 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
     } else {
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
-          visual_t r =
-              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 0]) /
-              static_cast<visual_t>(65535.0);
-          visual_t g =
-              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 1]) /
-              static_cast<visual_t>(65535.0);
-          visual_t b =
-              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 2]) /
-              static_cast<visual_t>(65535.0);
+          visual_t r = static_cast<visual_t>(
+                           values[num_channels * ((ny - y - 1) * nx + x) + 0]) /
+                       static_cast<visual_t>(65535.0);
+          visual_t g = static_cast<visual_t>(
+                           values[num_channels * ((ny - y - 1) * nx + x) + 1]) /
+                       static_cast<visual_t>(65535.0);
+          visual_t b = static_cast<visual_t>(
+                           values[num_channels * ((ny - y - 1) * nx + x) + 2]) /
+                       static_cast<visual_t>(65535.0);
           if (gamma_correct) {
             r = GammaCorrect(r);
             g = GammaCorrect(g);
@@ -477,7 +480,8 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
           }
 
           Color color({r, g, b}, Color::RGB);
-          float_values.push_back(spectrum_manager_.ComputeLuma(color));
+          float_values.push_back(std::min(
+              static_cast<visual>(1.0), spectrum_manager_.ComputeLuma(color)));
         }
       }
     }
@@ -489,8 +493,8 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
         stbi_load(filename.native().c_str(), &nx, &ny, &num_channels,
                   /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Image loading failed with error: "
-                << stbi_failure_reason() << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename.native()
+                << std::endl;
       exit(EXIT_FAILURE);
     }
 
@@ -500,17 +504,19 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
     if (num_channels == 1 || num_channels == 2) {
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
-          float_values.push_back(float_lut[values[(ny - y - 1) * nx + x]]);
+          float_values.push_back(
+              float_lut[values[num_channels * (ny - y - 1) * nx + x]]);
         }
       }
     } else {
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
-          stbi_uc r = values[3 * ((ny - y - 1) * nx + x) + 0];
-          stbi_uc g = values[3 * ((ny - y - 1) * nx + x) + 1];
-          stbi_uc b = values[3 * ((ny - y - 1) * nx + x) + 2];
+          stbi_uc r = values[num_channels * ((ny - y - 1) * nx + x) + 0];
+          stbi_uc g = values[num_channels * ((ny - y - 1) * nx + x) + 1];
+          stbi_uc b = values[num_channels * ((ny - y - 1) * nx + x) + 2];
           Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
-          float_values.push_back(spectrum_manager_.ComputeLuma(color));
+          float_values.push_back(std::min(
+              static_cast<visual>(1.0), spectrum_manager_.ComputeLuma(color)));
         }
       }
     }
@@ -543,8 +549,8 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
         stbi_load_16(filename.native().c_str(), &nx, &ny, &num_channels,
                      /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Image loading failed with error: "
-                << stbi_failure_reason() << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename.native()
+                << std::endl;
       exit(EXIT_FAILURE);
     }
 
@@ -553,7 +559,8 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
     if (num_channels == 1 || num_channels == 2) {
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
-          visual_t grey = static_cast<visual_t>(values[(ny - y - 1) * nx + x]) /
+          visual_t grey = static_cast<visual_t>(
+                              values[num_channels * (ny - y - 1) * nx + x]) /
                           static_cast<visual_t>(65535.0);
           if (gamma_correct) {
             grey = GammaCorrect(grey);
@@ -566,15 +573,15 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
     } else {
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
-          visual_t r =
-              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 0]) /
-              static_cast<visual_t>(65535.0);
-          visual_t g =
-              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 1]) /
-              static_cast<visual_t>(65535.0);
-          visual_t b =
-              static_cast<visual_t>(values[3 * ((ny - y - 1) * nx + x) + 2]) /
-              static_cast<visual_t>(65535.0);
+          visual_t r = static_cast<visual_t>(
+                           values[num_channels * ((ny - y - 1) * nx + x) + 0]) /
+                       static_cast<visual_t>(65535.0);
+          visual_t g = static_cast<visual_t>(
+                           values[num_channels * ((ny - y - 1) * nx + x) + 1]) /
+                       static_cast<visual_t>(65535.0);
+          visual_t b = static_cast<visual_t>(
+                           values[num_channels * ((ny - y - 1) * nx + x) + 2]) /
+                       static_cast<visual_t>(65535.0);
           if (gamma_correct) {
             r = GammaCorrect(r);
             g = GammaCorrect(g);
@@ -595,8 +602,8 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
         stbi_load(filename.native().c_str(), &nx, &ny, &num_channels,
                   /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Image loading failed with error: "
-                << stbi_failure_reason() << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename.native()
+                << std::endl;
       exit(EXIT_FAILURE);
     }
 
