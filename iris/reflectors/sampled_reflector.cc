@@ -40,9 +40,8 @@ SampledReflector::SampledReflector(const std::map<visual, visual>& samples) {
   visual_t lowest_wavelength = wavelengths_.at(0);
   visual_t hightest_wavelength = wavelengths_.back();
 
-  albedo_ = std::max(static_cast<visual_t>(0.0),
-                     std::min(sum / (hightest_wavelength - lowest_wavelength),
-                              static_cast<visual_t>(1.0)));
+  albedo_ = std::clamp(sum / (hightest_wavelength - lowest_wavelength),
+                       static_cast<visual_t>(0.0), static_cast<visual_t>(1.0));
 }
 
 visual_t SampledReflector::Reflectance(visual_t wavelength) const {
@@ -66,13 +65,11 @@ visual_t SampledReflector::Reflectance(visual_t wavelength) const {
 
   visual_t delta = wavelengths_[next_index] - wavelengths_[index];
   visual_t interpolation = (wavelength - wavelengths_[index]) / delta;
-
   visual_t result =
-      intensitites_[index] +
-      interpolation * (intensitites_[next_index] - intensitites_[index]);
+      std::lerp(intensitites_[index], intensitites_[next_index], interpolation);
 
-  return std::max(static_cast<visual_t>(0.0),
-                  std::min(result, static_cast<visual_t>(1.0)));
+  return std::clamp(result, static_cast<visual_t>(0.0),
+                    static_cast<visual_t>(1.0));
 }
 
 visual_t SampledReflector::Albedo() const { return albedo_; }

@@ -41,10 +41,8 @@ visual_t SampledSpectrum::Intensity(visual_t wavelength) const {
 
   visual_t delta = wavelengths_[next_index] - wavelengths_[index];
   visual_t interpolation = (wavelength - wavelengths_[index]) / delta;
-
   visual_t result =
-      intensitites_[index] +
-      interpolation * (intensitites_[next_index] - intensitites_[index]);
+      std::lerp(intensitites_[index], intensitites_[next_index], interpolation);
 
   return std::max(static_cast<visual_t>(0.0), result);
 }
