@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "iris/environmental_lights/image_environmental_light.h"
-#include "iris/spectra/uniform_spectrum.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 
@@ -20,8 +19,7 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"scale", Parameter::SPECTRUM},
 };
 
-static const ReferenceCounted<Spectrum> kWhiteSpectrum =
-    MakeReferenceCounted<spectra::UniformSpectrum>(static_cast<visual>(1.0));
+static const Color kDefaultColor = Color({1.0, 1.0, 1.0}, Color::Space::RGB);
 
 class InfiniteBuilder
     : public ObjectBuilder<std::variant<ReferenceCounted<Light>,
@@ -40,10 +38,14 @@ std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
 InfiniteBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
     SpectrumManager& spectrum_manager, const Matrix& model_to_world) const {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kWhiteSpectrum};
-  std::vector<visual> luma = {1.0};
+  visual_t default_luma;
+  std::vector<ReferenceCounted<Spectrum>> spectra = {
+      spectrum_manager.AllocateSpectrum(kDefaultColor, &default_luma)};
+  std::vector<visual> luma = {default_luma};
   std::pair<size_t, size_t> size(1, 1);
-  ReferenceCounted<Spectrum> scalar = kWhiteSpectrum;
+
+  // The interface for scaling the image should be cleaned up
+  ReferenceCounted<Spectrum> scalar = spectra.front();
 
   auto l_iter = parameters.find("L");
   auto scale_iter = parameters.find("scale");

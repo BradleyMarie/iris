@@ -2,19 +2,24 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random/mock_random.h"
-#include "iris/spectra/uniform_spectrum.h"
+#include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/spectral_allocator.h"
+
+iris::ReferenceCounted<iris::Spectrum> MakeUniformSpectrum(
+    iris::visual_t value) {
+  auto result = iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
+  EXPECT_CALL(*result, Intensity(testing::_))
+      .WillRepeatedly(testing::Return(value));
+  return result;
+}
 
 static const iris::ReferenceCounted<iris::Spectrum> kSpectrum0;
 static const iris::ReferenceCounted<iris::Spectrum> kSpectrum1 =
-    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(
-        static_cast<iris::visual>(1.0));
+    MakeUniformSpectrum(1.0);
 static const iris::ReferenceCounted<iris::Spectrum> kSpectrum2 =
-    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(
-        static_cast<iris::visual>(2.0));
+    MakeUniformSpectrum(2.0);
 static const iris::ReferenceCounted<iris::Spectrum> kScalar =
-    iris::MakeReferenceCounted<iris::spectra::UniformSpectrum>(
-        static_cast<iris::visual>(2.0));
+    MakeUniformSpectrum(2.0);
 
 TEST(ImageEnvironmentalLight, SampleTwo) {
   std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {

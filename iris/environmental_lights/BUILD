@@ -25,7 +25,7 @@ cc_test(
     deps = [
         ":image_environmental_light",
         "//iris/random:mock_random",
-        "//iris/spectra:uniform_spectrum",
+        "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "@com_google_googletest//:gtest_main",
     ],

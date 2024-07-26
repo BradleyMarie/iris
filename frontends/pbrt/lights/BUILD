@@ -14,7 +14,6 @@ cc_library(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/environmental_lights:image_environmental_light",
-        "//iris/spectra:uniform_spectrum",
         "//third_party/stb:stb_image",
         "//third_party/tinyexr",
     ],
