@@ -110,9 +110,11 @@ int main(int argc, char** argv) {
 
   std::unique_ptr<iris::pbrt_frontend::SpectrumManager> spectral_manager;
   std::unique_ptr<iris::ColorMatcher> color_matcher;
+  std::unique_ptr<iris::PowerMatcher> power_matcher;
   if (absl::GetFlag(FLAGS_spectral)) {
     spectral_manager = nullptr;
     color_matcher = std::make_unique<iris::color_matchers::CieColorMatcher>();
+    power_matcher = nullptr;
 
     std::cerr << "ERROR: Spectral rendering is not yet implemented"
               << std::endl;
@@ -123,6 +125,8 @@ int main(int argc, char** argv) {
         absl::GetFlag(FLAGS_all_spectra_are_reflective));
     color_matcher = std::make_unique<
         iris::pbrt_frontend::spectrum_managers::ColorColorMatcher>();
+    power_matcher = std::make_unique<
+        iris::pbrt_frontend::spectrum_managers::ColorPowerMatcher>();
   }
 
 #ifdef _XOPEN_SOURCE
@@ -159,7 +163,8 @@ int main(int argc, char** argv) {
     search_root = file_path.parent_path();
   }
 
-  iris::pbrt_frontend::Parser parser(std::move(spectral_manager));
+  iris::pbrt_frontend::Parser parser(std::move(spectral_manager),
+                                     std::move(power_matcher));
   for (size_t render_index = 0;; render_index += 1) {
     auto result = parser.ParseFrom(*tokenizer, search_root);
     if (!result) {

@@ -5,6 +5,8 @@
 
 static iris::pbrt_frontend::spectrum_managers::ColorColorMatcher
     g_color_matcher;
+static iris::pbrt_frontend::spectrum_managers::ColorPowerMatcher
+    g_power_matcher;
 static iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager
     g_spectrum_manager(false);
 
@@ -21,6 +23,13 @@ TEST(ColorColorMatcher, Match) {
 
 TEST(ColorColorMatcher, ColorSpace) {
   EXPECT_EQ(iris::Color::LINEAR_SRGB, g_color_matcher.ColorSpace());
+}
+
+TEST(ColorPowerMatcher, Match) {
+  iris::pbrt_frontend::Color color({0.75, 0.5, 0.25},
+                                   iris::pbrt_frontend::Color::XYZ);
+  auto spectrum = g_spectrum_manager.AllocateSpectrum(color);
+  EXPECT_NEAR(0.5, g_power_matcher.Match(*spectrum), 0.001);
 }
 
 TEST(ColorSpectrumManager, ComputeLuma) {

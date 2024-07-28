@@ -8,7 +8,8 @@ std::unique_ptr<LightScene::Builder> OneLightScene::Builder::Create() {
 }
 
 std::unique_ptr<LightScene> OneLightScene::Builder::Build(
-    const SceneObjects& scene_objects) const {
+    const SceneObjects& scene_objects,
+    const PowerMatcher& power_matcher) const {
   return std::make_unique<OneLightScene>(scene_objects);
 }
 

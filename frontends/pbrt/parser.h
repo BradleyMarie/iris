@@ -22,13 +22,16 @@
 #include "iris/image_sampler.h"
 #include "iris/integrator.h"
 #include "iris/light_scene.h"
+#include "iris/power_matcher.h"
 
 namespace iris::pbrt_frontend {
 
 class Parser {
  public:
-  Parser(std::unique_ptr<SpectrumManager> spectrum_manager)
-      : spectrum_manager_(std::move(spectrum_manager)) {
+  Parser(std::unique_ptr<SpectrumManager> spectrum_manager,
+         std::unique_ptr<PowerMatcher> power_matcher)
+      : spectrum_manager_(std::move(spectrum_manager)),
+        power_matcher_(std::move(power_matcher)) {
     spectrum_manager_->Clear();
   }
 
@@ -103,6 +106,7 @@ class Parser {
   std::vector<iris::ReferenceCounted<Geometry>> current_object_geometry_;
 
   std::unique_ptr<SpectrumManager> spectrum_manager_;
+  std::unique_ptr<PowerMatcher> power_matcher_;
   std::unique_ptr<MaterialManager> material_manager_;
   std::unique_ptr<MatrixManager> matrix_manager_;
   std::unique_ptr<TextureManager> texture_manager_;

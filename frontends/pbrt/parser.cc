@@ -623,7 +623,7 @@ std::optional<Parser::Result> Parser::ParseFrom(
   }
 
   Renderer renderer(scenes::BVHScene::Builder(), *light_scene_builder_,
-                    scene_objects_builder_.Build());
+                    scene_objects_builder_.Build(), *power_matcher_);
   Renderable renderable(std::move(renderer), camera_(image_dimensions_),
                         std::move(image_sampler_), std::move(integrator_),
                         image_dimensions_);

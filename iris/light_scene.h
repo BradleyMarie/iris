@@ -4,6 +4,7 @@
 #include "iris/light_sample.h"
 #include "iris/light_sample_allocator.h"
 #include "iris/point.h"
+#include "iris/power_matcher.h"
 #include "iris/random.h"
 
 namespace iris {
@@ -15,7 +16,8 @@ class LightScene {
   class Builder {
    public:
     virtual std::unique_ptr<LightScene> Build(
-        const SceneObjects& scene_objects) const = 0;
+        const SceneObjects& scene_objects,
+        const PowerMatcher& power_matcher) const = 0;
     virtual ~Builder() = default;
   };
 

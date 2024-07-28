@@ -4,16 +4,19 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/lights/mock_light.h"
+#include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mock_random.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/testing/light_sample_allocator.h"
+
+const static iris::power_matchers::MockPowerMatcher kPowerMatcher;
 
 TEST(AllLightSceneTest, NoLights) {
   iris::random::MockRandom rng;
   auto scene_objects = iris::SceneObjects::Builder().Build();
   auto light_scene =
       iris::light_scenes::AllLightScene::Builder::Create()->Build(
-          scene_objects);
+          scene_objects, kPowerMatcher);
   EXPECT_EQ(nullptr,
             light_scene->Sample(iris::Point(0.0, 0.0, 0.0), rng,
                                 iris::testing::GetLightSampleAllocator()));
@@ -32,7 +35,8 @@ TEST(AllLightSceneTest, TwoLights) {
   light_scene_builder.Add(std::move(light1));
   auto objects = light_scene_builder.Build();
   auto light_scene =
-      iris::light_scenes::AllLightScene::Builder::Create()->Build(objects);
+      iris::light_scenes::AllLightScene::Builder::Create()->Build(
+          objects, kPowerMatcher);
 
   auto light_samples =
       light_scene->Sample(iris::Point(0.0, 0.0, 0.0), rng,

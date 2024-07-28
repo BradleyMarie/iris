@@ -3,6 +3,7 @@
 
 #include "frontends/pbrt/spectrum_manager.h"
 #include "iris/color_matcher.h"
+#include "iris/power_matcher.h"
 
 namespace iris::pbrt_frontend::spectrum_managers {
 
@@ -10,6 +11,11 @@ class ColorColorMatcher final : public ColorMatcher {
  public:
   std::array<visual_t, 3> Match(const Spectrum& spectrum) const override;
   iris::Color::Space ColorSpace() const override;
+};
+
+class ColorPowerMatcher : public PowerMatcher {
+ public:
+  visual_t Match(const Spectrum& spectrum) const override;
 };
 
 class ColorSpectrumManager final : public SpectrumManager {

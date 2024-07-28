@@ -7,6 +7,7 @@
 #include "iris/light_sample_allocator.h"
 #include "iris/light_scene.h"
 #include "iris/point.h"
+#include "iris/power_matcher.h"
 #include "iris/random.h"
 #include "iris/scene_objects.h"
 
@@ -19,7 +20,8 @@ class AllLightScene final : public LightScene {
    public:
     static std::unique_ptr<LightScene::Builder> Create();
     std::unique_ptr<LightScene> Build(
-        const SceneObjects& scene_objects) const override;
+        const SceneObjects& scene_objects,
+        const PowerMatcher& power_matcher) const override;
   };
 
   AllLightScene(const SceneObjects& scene_objects) noexcept

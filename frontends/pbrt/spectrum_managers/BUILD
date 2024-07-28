@@ -12,6 +12,7 @@ cc_library(
         "//frontends/pbrt/spectrum_managers/internal:color_spectrum",
         "//iris:color",
         "//iris:color_matcher",
+        "//iris:power_matcher",
         "//iris/color_matchers:cie_color_matcher",
         "//iris/reflectors:sampled_reflector",
         "//iris/spectra:sampled_spectrum",

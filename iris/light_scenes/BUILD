@@ -11,6 +11,7 @@ cc_library(
         "//iris:light_sample_allocator",
         "//iris:light_scene",
         "//iris:point",
+        "//iris:power_matcher",
         "//iris:random",
         "//iris:scene_objects",
     ],
@@ -22,6 +23,7 @@ cc_test(
     deps = [
         ":all_light_scene",
         "//iris/lights:mock_light",
+        "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",
@@ -48,6 +50,7 @@ cc_library(
         "//iris:light_sample_allocator",
         "//iris:light_scene",
         "//iris:point",
+        "//iris:power_matcher",
         "//iris:random",
         "//iris:scene_objects",
     ],
@@ -59,6 +62,7 @@ cc_test(
     deps = [
         ":one_light_scene",
         "//iris/lights:mock_light",
+        "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",

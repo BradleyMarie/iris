@@ -56,6 +56,14 @@ iris::Color::Space ColorColorMatcher::ColorSpace() const {
   return iris::Color::LINEAR_SRGB;
 }
 
+visual_t ColorPowerMatcher::Match(const Spectrum& spectrum) const {
+  static const ColorColorMatcher color_matcher;
+  std::array<visual_t, 3> values = color_matcher.Match(spectrum);
+  iris::Color color(values[0], values[1], values[2],
+                    color_matcher.ColorSpace());
+  return color.ConvertTo(iris::Color::CIE_XYZ).y;
+}
+
 ColorSpectrumManager::ColorSpectrumManager(bool all_spectra_are_reflective)
     : spectral_scalar_(ComputeSpectralScalar(all_spectra_are_reflective)) {}
 

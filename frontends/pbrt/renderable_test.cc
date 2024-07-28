@@ -9,6 +9,7 @@
 #include "iris/image_samplers/mock_image_sampler.h"
 #include "iris/integrators/mock_integrator.h"
 #include "iris/light_scenes/all_light_scene.h"
+#include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mock_random.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
@@ -18,12 +19,13 @@ void RunTestBody(
     std::function<void(size_t, size_t)> progress_callback,
     std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
         skip_pixel_callback) {
+  iris::power_matchers::MockPowerMatcher power_matcher;
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
   auto light_scene_builder =
       iris::light_scenes::AllLightScene::Builder::Create();
   auto scene_objects = iris::SceneObjects::Builder().Build();
   iris::Renderer renderer(*scene_builder, *light_scene_builder,
-                          std::move(scene_objects));
+                          std::move(scene_objects), power_matcher);
 
   iris::RayDifferential trace_ray(
       iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0)));
