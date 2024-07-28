@@ -130,6 +130,7 @@ cc_library(
     hdrs = ["emissive_material.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":power_matcher",
         ":reference_countable",
         ":spectral_allocator",
         ":spectrum",
@@ -143,6 +144,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
+        ":power_matcher",
         ":reference_countable",
         ":sampler",
         ":spectral_allocator",
@@ -331,6 +333,7 @@ cc_library(
     deps = [
         ":float",
         ":hit_point",
+        ":power_matcher",
         ":random",
         ":ray",
         ":reference_countable",
@@ -496,6 +499,16 @@ cc_test(
     deps = [
         ":position_error",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "power_matcher",
+    hdrs = ["power_matcher.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":float",
+        ":spectrum",
     ],
 )
 
@@ -714,6 +727,7 @@ cc_test(
     srcs = ["scene_objects_test.cc"],
     deps = [
         ":scene_objects",
+        "//iris/emissive_materials:mock_emissive_material",
         "//iris/environmental_lights:mock_environmental_light",
         "//iris/geometry:mock_geometry",
         "//iris/lights:mock_light",

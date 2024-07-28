@@ -760,39 +760,34 @@ TEST_F(Triangle, ComputeHitPoint) {
 TEST_F(Triangle, GetMaterial) {
   auto triangle = SimpleTriangle();
 
-  auto front = triangle->GetMaterial(FRONT_FACE, nullptr);
+  auto front = triangle->GetMaterial(FRONT_FACE);
   EXPECT_EQ(front_material.Get(), front);
 
-  auto back = triangle->GetMaterial(BACK_FACE, nullptr);
+  auto back = triangle->GetMaterial(BACK_FACE);
   EXPECT_EQ(back_material.Get(), back);
-}
-
-TEST_F(Triangle, IsEmissive) {
-  auto triangles = iris::geometry::AllocateTriangleMesh(
-      {{iris::Point(0.0, 0.0, 0.0), iris::Point(1.0, 0.0, 0.0),
-        iris::Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}},
-      {{{static_cast<iris::geometric>(0.0), static_cast<iris::geometric>(0.0)},
-        {static_cast<iris::geometric>(1.0), static_cast<iris::geometric>(0.0)},
-        {static_cast<iris::geometric>(0.0),
-         static_cast<iris::geometric>(1.0)}}},
-      iris::ReferenceCounted<iris::textures::ValueTexture2D<bool>>(),
-      back_material, front_material, front_emissive_material,
-      iris::ReferenceCounted<iris::EmissiveMaterial>(),
-      iris::ReferenceCounted<iris::NormalMap>(),
-      iris::ReferenceCounted<iris::NormalMap>());
-  EXPECT_TRUE(triangles.front()->IsEmissive(FRONT_FACE));
-  EXPECT_FALSE(triangles.front()->IsEmissive(BACK_FACE));
 }
 
 TEST_F(Triangle, GetEmissiveMaterial) {
   auto triangle = SimpleTriangle();
 
-  auto front = triangle->GetEmissiveMaterial(FRONT_FACE, nullptr);
+  auto front = triangle->GetEmissiveMaterial(FRONT_FACE);
   EXPECT_EQ(front_emissive_material.Get(), front);
 
-  auto back = triangle->GetEmissiveMaterial(BACK_FACE, nullptr);
+  auto back = triangle->GetEmissiveMaterial(BACK_FACE);
   EXPECT_EQ(back_emissive_material.Get(), back);
+}
+
+TEST_F(Triangle, ComputeSurfaceArea) {
+  auto triangle = SimpleTriangle();
+
+  iris::visual_t surface_area0 =
+      triangle->ComputeSurfaceArea(FRONT_FACE, nullptr);
+  EXPECT_EQ(0.5, surface_area0);
+
+  iris::Matrix model_to_world = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
+  iris::visual_t surface_area1 =
+      triangle->ComputeSurfaceArea(FRONT_FACE, &model_to_world);
+  EXPECT_EQ(2.0, surface_area1);
 }
 
 TEST_F(Triangle, SampleBySolidAngle) {

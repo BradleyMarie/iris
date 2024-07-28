@@ -35,6 +35,10 @@ class SpectrumMaterial : public EmissiveMaterial {
     return spectrum_;
   }
 
+  visual_t UnitPower(const PowerMatcher& power_matcher) const override {
+    return 0.0;
+  }
+
  private:
   const Spectrum* spectrum_;
 };
@@ -73,14 +77,15 @@ class AlwaysHitsGeometry : public Geometry {
     return {world_shading_normal_, std::nullopt, nullptr};
   }
 
-  const Material* GetMaterial(face_t face,
-                              const void* additional_data) const override {
-    return &material_;
+  const Material* GetMaterial(face_t face) const override { return &material_; }
+
+  const EmissiveMaterial* GetEmissiveMaterial(face_t face) const override {
+    return &emissive_material_;
   }
 
-  const EmissiveMaterial* GetEmissiveMaterial(
-      face_t face, const void* additional_data) const override {
-    return &emissive_material_;
+  visual_t ComputeSurfaceArea(face_t face,
+                              const Matrix* model_to_world) const override {
+    return 0.0;
   }
 
   BoundingBox ComputeBounds(const Matrix* model_to_world) const override {

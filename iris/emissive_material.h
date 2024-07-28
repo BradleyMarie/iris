@@ -1,6 +1,7 @@
 #ifndef _IRIS_EMISSIVE_MATERIAL_
 #define _IRIS_EMISSIVE_MATERIAL_
 
+#include "iris/power_matcher.h"
 #include "iris/reference_countable.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
@@ -13,6 +14,9 @@ class EmissiveMaterial : public ReferenceCountable {
   virtual const Spectrum* Evaluate(
       const TextureCoordinates& texture_coordinates,
       SpectralAllocator& spectral_allocator) const = 0;
+
+  virtual visual_t UnitPower(const PowerMatcher& power_matcher) const = 0;
+
   virtual ~EmissiveMaterial() {}
 };
 

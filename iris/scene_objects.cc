@@ -83,7 +83,7 @@ void SceneObjects::Builder::Set(
 SceneObjects SceneObjects::Builder::Build() {
   for (auto& entry : geometry_) {
     for (face_t face : entry.first->GetFaces()) {
-      if (!entry.first->IsEmissive(face)) {
+      if (!entry.first->GetEmissiveMaterial(face)) {
         continue;
       }
 
@@ -94,7 +94,7 @@ SceneObjects SceneObjects::Builder::Build() {
 
   if (environmental_light_) {
     lights_.insert(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
-        std::cref(*environmental_light_)));
+        std::cref(*environmental_light_), bounds_builder_.Build()));
   }
 
   SceneObjects result(MoveToVector(std::move(geometry_)),

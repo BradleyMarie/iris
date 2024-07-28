@@ -45,13 +45,12 @@ class Sphere final : public Geometry {
       const Ray& ray, geometric_t distance,
       const void* additional_data) const override;
 
-  const Material* GetMaterial(face_t face,
-                              const void* additional_data) const override;
+  const Material* GetMaterial(face_t face) const override;
 
-  bool IsEmissive(face_t face) const override;
+  const EmissiveMaterial* GetEmissiveMaterial(face_t face) const override;
 
-  const EmissiveMaterial* GetEmissiveMaterial(
-      face_t face, const void* additional_data) const override;
+  visual_t ComputeSurfaceArea(face_t face,
+                              const Matrix* model_to_world) const override;
 
   std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
       const Point& origin, face_t face, Sampler& sampler) const override;
@@ -135,18 +134,26 @@ Geometry::ComputeHitPointResult Sphere::ComputeHitPoint(
                                PositionError(error_x, error_y, error_z)};
 }
 
-const Material* Sphere::GetMaterial(face_t face,
-                                    const void* additional_data) const {
+const Material* Sphere::GetMaterial(face_t face) const {
   return materials_[face].Get();
 }
 
-bool Sphere::IsEmissive(face_t face) const {
+const EmissiveMaterial* Sphere::GetEmissiveMaterial(face_t face) const {
   return emissive_materials_[face].Get();
 }
 
-const EmissiveMaterial* Sphere::GetEmissiveMaterial(
-    face_t face, const void* additional_data) const {
-  return emissive_materials_[face].Get();
+visual_t Sphere::ComputeSurfaceArea(face_t face,
+                                    const Matrix* model_to_world) const {
+  visual_t radius_squared = radius_squared_;
+  if (model_to_world) {
+    // TODO: Compute approximation for non-uniform transformations
+    assert(model_to_world->m[0][0] == model_to_world->m[1][1]);
+    assert(model_to_world->m[0][0] == model_to_world->m[2][2]);
+    assert(model_to_world->m[3][3] == static_cast<geometric>(1.0));
+    radius_squared *= model_to_world->m[0][0] * model_to_world->m[0][0];
+  }
+
+  return static_cast<visual_t>(4.0 * M_PI) * radius_squared;
 }
 
 std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(

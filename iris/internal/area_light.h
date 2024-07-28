@@ -9,6 +9,7 @@
 #include "iris/integer.h"
 #include "iris/light.h"
 #include "iris/matrix.h"
+#include "iris/power_matcher.h"
 #include "iris/ray.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
@@ -28,6 +29,8 @@ class AreaLight final : public Light {
   const Spectrum* Emission(const Ray& to_light, iris::VisibilityTester& tester,
                            SpectralAllocator& allocator,
                            visual_t* pdf = nullptr) const override;
+
+  visual_t Power(const PowerMatcher& power_matcher) const override;
 
  private:
   const Geometry& geometry_;

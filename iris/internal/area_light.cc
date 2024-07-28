@@ -73,4 +73,10 @@ const Spectrum* AreaLight::Emission(const Ray& to_light,
   return &result->emission;
 }
 
+visual_t AreaLight::Power(const PowerMatcher& power_matcher) const {
+  visual_t unit_power =
+      geometry_.GetEmissiveMaterial(face_)->UnitPower(power_matcher);
+  return unit_power * geometry_.ComputeSurfaceArea(face_, model_to_world_);
+}
+
 }  // namespace iris::internal

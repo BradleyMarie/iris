@@ -4,6 +4,7 @@
 #include "googlemock/include/gmock/gmock.h"
 #include "iris/environmental_light.h"
 #include "iris/float.h"
+#include "iris/power_matcher.h"
 #include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
@@ -18,6 +19,7 @@ class MockEnvironmentalLight final : public EnvironmentalLight {
               (Sampler&, SpectralAllocator&), (const override));
   MOCK_METHOD(const Spectrum*, Emission,
               (const Vector&, SpectralAllocator&, visual_t*), (const override));
+  MOCK_METHOD(visual_t, UnitPower, (const PowerMatcher&), (const override));
 };
 
 }  // namespace environmental_lights

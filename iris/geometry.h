@@ -56,13 +56,12 @@ class Geometry : public ReferenceCountable {
       const Ray& ray, geometric_t distance,
       const void* additional_data) const = 0;
 
-  virtual const Material* GetMaterial(face_t face,
-                                      const void* additional_data) const;
+  virtual const Material* GetMaterial(face_t face) const;
 
-  virtual bool IsEmissive(face_t face) const;
+  virtual const EmissiveMaterial* GetEmissiveMaterial(face_t face) const;
 
-  virtual const EmissiveMaterial* GetEmissiveMaterial(
-      face_t face, const void* additional_data) const;
+  virtual visual_t ComputeSurfaceArea(face_t face,
+                                      const Matrix* model_to_world) const = 0;
 
   virtual std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
       const Point& origin, face_t face, Sampler& sampler) const;

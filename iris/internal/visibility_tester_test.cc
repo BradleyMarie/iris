@@ -142,13 +142,13 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
 
   auto scene_geometry =
       iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*scene_geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*scene_geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*scene_geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
+  EXPECT_CALL(*scene_geometry, GetEmissiveMaterial(testing::_))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*scene_geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
@@ -173,13 +173,13 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   iris::Ray world_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(testing::NotNull()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(testing::_))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry, Trace(testing::_, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
@@ -207,13 +207,13 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(testing::_))
+      .WillRepeatedly(testing::Return(nullptr));
   {
     testing::InSequence sequence;
     EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
@@ -249,23 +249,17 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
   iris::Ray model_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 0.0, 0.0));
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(testing::Return(std::vector<iris::face_t>({1, 2})));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(testing::_))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry, Trace(model_ray, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
-          }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return nullptr;
           }));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
@@ -300,8 +294,6 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   auto emissive_material = MakeEmissiveMaterial({0.0, 0.0});
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
@@ -312,12 +304,10 @@ TEST(VisibilityTesterTest, NoSpectrum) {
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material.get();
-          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(testing::Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
                                         testing::IsFalse(), 1u, testing::_))
@@ -352,8 +342,6 @@ TEST(VisibilityTesterTest, NoPdf) {
   auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
@@ -364,12 +352,10 @@ TEST(VisibilityTesterTest, NoPdf) {
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material.get();
-          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(testing::Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
                                         testing::IsFalse(), 1u, testing::_))
@@ -408,8 +394,6 @@ TEST(VisibilityTesterTest, NegativePdf) {
   auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
@@ -420,12 +404,10 @@ TEST(VisibilityTesterTest, NegativePdf) {
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material.get();
-          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(testing::Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
                                         testing::IsFalse(), 1u, testing::_))
@@ -464,8 +446,6 @@ TEST(VisibilityTesterTest, Succeeds) {
   auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
@@ -476,12 +456,10 @@ TEST(VisibilityTesterTest, Succeeds) {
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material.get();
-          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(testing::Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
                                         testing::IsFalse(), 1u, testing::_))
@@ -523,8 +501,6 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
@@ -535,12 +511,10 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material.get();
-          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(testing::Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
                                         testing::IsFalse(), 1u, testing::_))
@@ -583,8 +557,6 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   auto emissive_material = MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(testing::NotNull()))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
@@ -595,12 +567,10 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material.get();
-          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(testing::Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(0.5, 0.0, 0.0),
                                         testing::IsFalse(), 1u, testing::_))
@@ -644,8 +614,6 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   auto emissive_material = MakeEmissiveMaterial({0.5, 0.5}, spectrum.get());
 
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
                                                   iris::Point(0.0, 1.0, 2.0))));
@@ -656,12 +624,10 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
           }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, testing::_))
-      .WillOnce(
-          testing::Invoke([&](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material.get();
-          }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(testing::Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(iris::Point(1.0, 0.0, 0.0),
                                         testing::IsFalse(), 1u, testing::_))

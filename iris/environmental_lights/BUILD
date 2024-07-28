@@ -10,6 +10,7 @@ cc_library(
         "//iris:environmental_light",
         "//iris:float",
         "//iris:matrix",
+        "//iris:power_matcher",
         "//iris:reference_counted",
         "//iris:sampler",
         "//iris:spectral_allocator",
@@ -24,6 +25,7 @@ cc_test(
     srcs = ["image_environmental_light_test.cc"],
     deps = [
         ":image_environmental_light",
+        "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mock_random",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
@@ -38,6 +40,7 @@ cc_library(
     deps = [
         "//iris:environmental_light",
         "//iris:float",
+        "//iris:power_matcher",
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:spectrum",

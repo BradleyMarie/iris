@@ -24,5 +24,9 @@ const Spectrum* PointLight::Emission(const Ray& to_light,
   return nullptr;
 }
 
+visual_t PointLight::Power(const PowerMatcher& power_matcher) const {
+  return power_matcher.Match(*spectrum_);
+}
+
 }  // namespace lights
 }  // namespace iris

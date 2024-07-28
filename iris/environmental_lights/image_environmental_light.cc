@@ -33,17 +33,25 @@ std::pair<geometric_t, geometric_t> DirectionToUV(const Vector& direction) {
 }
 
 std::vector<visual> ScaleLuma(std::span<const visual> luma,
-                              std::pair<size_t, size_t> size) {
+                              std::pair<size_t, size_t> size, visual_t& power) {
   assert(size.first * size.second == luma.size());
 
   std::vector<visual> scaled_values;
   scaled_values.reserve(luma.size());
+
+  visual_t total_weight = 0.0;
+  power = static_cast<visual_t>(0.0);
   for (size_t index = 0; index < luma.size(); index += 1) {
     size_t y = index / size.second;
     visual_t v = (static_cast<visual_t>(y) + static_cast<visual_t>(0.5)) /
                  static_cast<visual_t>(size.first);
-    scaled_values.push_back(luma[index] * std::sin(kPi * v));
+    visual_t weight = std::sin(kPi * v);
+    scaled_values.push_back(luma[index] * weight);
+    power += scaled_values.back();
+    total_weight += weight;
   }
+
+  power *= static_cast<visual_t>(4.0 * M_PI) / total_weight;
 
   return scaled_values;
 }
@@ -63,7 +71,7 @@ ImageEnvironmentalLight::ImageEnvironmentalLight(
     std::span<const visual> luma, std::pair<size_t, size_t> size,
     ReferenceCounted<Spectrum> scalar, const Matrix& model_to_world)
     : spectra_(std::move(spectra)),
-      distribution_(ScaleLuma(luma, size), size),
+      distribution_(ScaleLuma(luma, size, power_), size),
       size_(size),
       scalar_(std::move(scalar)),
       model_to_world_(model_to_world) {
@@ -117,6 +125,11 @@ const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
   size_t index = y * size_.second + x;
 
   return allocator.Scale(spectra_[index].Get(), scalar_.Get());
+}
+
+visual_t ImageEnvironmentalLight::UnitPower(
+    const PowerMatcher& power_matcher) const {
+  return power_;
 }
 
 }  // namespace environmental_lights

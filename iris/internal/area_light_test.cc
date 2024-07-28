@@ -3,6 +3,7 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mock_random.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/spectral_allocator.h"
@@ -13,8 +14,6 @@ std::unique_ptr<iris::geometry::MockGeometry> MakeGeometry(
   auto geometry = std::make_unique<iris::geometry::MockGeometry>();
   EXPECT_CALL(*geometry, GetFaces())
       .WillRepeatedly(testing::Return(std::vector<iris::face_t>({1u, 2u})));
-  EXPECT_CALL(*geometry, IsEmissive(1u)).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(*geometry, IsEmissive(2u)).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*geometry, Trace(testing::_, testing::_))
       .WillRepeatedly(testing::Invoke(
           [](const iris::Ray& ray, iris::HitAllocator& hit_allocator) {
@@ -24,8 +23,12 @@ std::unique_ptr<iris::geometry::MockGeometry> MakeGeometry(
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(testing::_, testing::_,
                                                    testing::_, testing::_))
       .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u, nullptr))
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(testing::Return(emissive_material));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(testing::Return(nullptr));
+  EXPECT_CALL(*geometry, ComputeSurfaceArea(1u, testing::_))
+      .WillRepeatedly(testing::Return(2.0));
   return geometry;
 }
 
@@ -211,4 +214,17 @@ TEST(AreaLightTest, AreaLightSampleVector) {
         EXPECT_EQ(1.0, result->pdf);
         EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), result->to_light);
       });
+}
+
+TEST(AreaLightTest, Power) {
+  iris::power_matchers::MockPowerMatcher power_matcher;
+
+  iris::emissive_materials::MockEmissiveMaterial emissive_material;
+  EXPECT_CALL(emissive_material, UnitPower(testing::Ref(power_matcher)))
+      .WillOnce(testing::Return(3.0));
+
+  auto geometry = MakeGeometry(&emissive_material);
+  iris::internal::AreaLight light(*geometry, nullptr, 1);
+
+  EXPECT_EQ(6.0, light.Power(power_matcher));
 }

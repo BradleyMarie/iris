@@ -1,6 +1,7 @@
 #include "iris/scene_objects.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/emissive_materials/mock_emissive_material.h"
 #include "iris/environmental_lights/mock_environmental_light.h"
 #include "iris/geometry/mock_geometry.h"
 #include "iris/lights/mock_light.h"
@@ -18,9 +19,15 @@ iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
 
 iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
   static const std::vector<iris::face_t> faces = {1};
+  static const iris::emissive_materials::MockEmissiveMaterial emissive_material;
   auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-  EXPECT_CALL(*result, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(emissive));
+  if (emissive) {
+    EXPECT_CALL(*result, GetEmissiveMaterial(testing::_))
+        .WillRepeatedly(testing::Return(&emissive_material));
+  } else {
+    EXPECT_CALL(*result, GetEmissiveMaterial(testing::_))
+        .WillRepeatedly(testing::Return(nullptr));
+  }
   EXPECT_CALL(*result, GetFaces()).WillRepeatedly(testing::Return(faces));
   EXPECT_CALL(*result, ComputeBounds(testing::_))
       .WillRepeatedly(testing::Return(kBounds));

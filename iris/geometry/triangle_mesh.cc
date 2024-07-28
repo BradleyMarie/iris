@@ -28,6 +28,14 @@ geometric_t AbsMax(geometric_t a, geometric_t b, geometric_t c) {
   return std::max(std::max(std::abs(a), std::abs(b)), std::abs(c));
 }
 
+Point MaybeMultiply(const Matrix* model_to_world, const Point& point) {
+  if (!model_to_world) {
+    return point;
+  }
+
+  return model_to_world->Multiply(point);
+}
+
 class Triangle final : public Geometry {
  public:
   struct SharedData {
@@ -66,13 +74,12 @@ class Triangle final : public Geometry {
       const Ray& ray, geometric_t distance,
       const void* additional_data) const override;
 
-  const Material* GetMaterial(face_t face,
-                              const void* additional_data) const override;
+  const Material* GetMaterial(face_t face) const override;
 
-  bool IsEmissive(face_t face) const override;
+  const EmissiveMaterial* GetEmissiveMaterial(face_t face) const override;
 
-  const EmissiveMaterial* GetEmissiveMaterial(
-      face_t face, const void* additional_data) const override;
+  visual_t ComputeSurfaceArea(face_t face,
+                              const Matrix* model_to_world) const override;
 
   std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
       const Point& origin, face_t face, Sampler& sampler) const override;
@@ -303,18 +310,23 @@ Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
           PositionError(x_error, y_error, z_error) * RoundingError(7)};
 }
 
-const Material* Triangle::GetMaterial(face_t face,
-                                      const void* additional_data) const {
+const Material* Triangle::GetMaterial(face_t face) const {
   return shared_->materials[face].Get();
 }
 
-bool Triangle::IsEmissive(face_t face) const {
+const EmissiveMaterial* Triangle::GetEmissiveMaterial(face_t face) const {
   return shared_->emissive_materials[face].Get();
 }
 
-const EmissiveMaterial* Triangle::GetEmissiveMaterial(
-    face_t face, const void* additional_data) const {
-  return shared_->emissive_materials[face].Get();
+visual_t Triangle::ComputeSurfaceArea(face_t face,
+                                      const Matrix* model_to_world) const {
+  Point p0 =
+      MaybeMultiply(model_to_world, shared_->points[std::get<0>(vertices_)]);
+  Point p1 =
+      MaybeMultiply(model_to_world, shared_->points[std::get<1>(vertices_)]);
+  Point p2 =
+      MaybeMultiply(model_to_world, shared_->points[std::get<2>(vertices_)]);
+  return static_cast<visual_t>(0.5) * CrossProduct(p1 - p0, p2 - p0).Length();
 }
 
 std::variant<std::monostate, Point, Vector> Triangle::SampleBySolidAngle(

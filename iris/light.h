@@ -5,6 +5,7 @@
 
 #include "iris/float.h"
 #include "iris/hit_point.h"
+#include "iris/power_matcher.h"
 #include "iris/ray.h"
 #include "iris/reference_countable.h"
 #include "iris/sampler.h"
@@ -31,6 +32,8 @@ class Light : public ReferenceCountable {
                                    VisibilityTester& tester,
                                    SpectralAllocator& allocator,
                                    visual_t* pdf = nullptr) const = 0;
+
+  virtual visual_t Power(const PowerMatcher& power_matcher) const = 0;
 
   virtual ~Light() {}
 };

@@ -8,6 +8,7 @@
 #include "iris/environmental_lights/internal/distribution_2d.h"
 #include "iris/float.h"
 #include "iris/matrix.h"
+#include "iris/power_matcher.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
@@ -31,12 +32,15 @@ class ImageEnvironmentalLight final : public EnvironmentalLight {
   const Spectrum* Emission(const Vector& to_light, SpectralAllocator& allocator,
                            visual_t* pdf) const override;
 
+  visual_t UnitPower(const PowerMatcher& power_matcher) const override;
+
  private:
   std::vector<ReferenceCounted<Spectrum>> spectra_;
   internal::Distribution2D distribution_;
   std::pair<size_t, size_t> size_;
   ReferenceCounted<Spectrum> scalar_;
   Matrix model_to_world_;
+  visual_t power_;
 };
 
 }  // namespace environmental_lights

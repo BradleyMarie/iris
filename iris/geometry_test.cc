@@ -65,17 +65,12 @@ TEST(GeometryTest, ComputeShadingNormal) {
 
 TEST(GeometryTest, GetMaterial) {
   iris::geometry::MockBasicGeometry geom;
-  EXPECT_EQ(nullptr, geom.GetMaterial(0, nullptr));
-}
-
-TEST(GeometryTest, IsEmissive) {
-  iris::geometry::MockBasicGeometry geom;
-  EXPECT_FALSE(geom.IsEmissive(0));
+  EXPECT_EQ(nullptr, geom.GetMaterial(0));
 }
 
 TEST(GeometryTest, GetEmissiveMaterial) {
   iris::geometry::MockBasicGeometry geom;
-  EXPECT_EQ(nullptr, geom.GetEmissiveMaterial(0, nullptr));
+  EXPECT_EQ(nullptr, geom.GetEmissiveMaterial(0));
 }
 
 TEST(GeometryTest, SampleBySolidAngle) {

@@ -7,6 +7,7 @@
 #include "iris/float.h"
 #include "iris/hit_point.h"
 #include "iris/light.h"
+#include "iris/power_matcher.h"
 #include "iris/ray.h"
 #include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
@@ -21,10 +22,10 @@ class MockLight final : public Light {
   MOCK_METHOD((std::optional<SampleResult>), Sample,
               (const HitPoint&, Sampler, VisibilityTester&, SpectralAllocator&),
               (const override));
-
   MOCK_METHOD(const Spectrum*, Emission,
               (const Ray&, VisibilityTester&, SpectralAllocator&, visual_t*),
               (const override));
+  MOCK_METHOD(visual_t, Power, (const PowerMatcher&), (const override));
 };
 
 }  // namespace lights

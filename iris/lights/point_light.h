@@ -8,6 +8,7 @@
 #include "iris/hit_point.h"
 #include "iris/light.h"
 #include "iris/point.h"
+#include "iris/power_matcher.h"
 #include "iris/ray.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
@@ -32,6 +33,8 @@ class PointLight final : public Light {
   const Spectrum* Emission(const Ray& to_light, VisibilityTester& tester,
                            SpectralAllocator& allocator,
                            visual_t* pdf) const override;
+
+  visual_t Power(const PowerMatcher& power_matcher) const override;
 
  private:
   const iris::ReferenceCounted<Spectrum> spectrum_;

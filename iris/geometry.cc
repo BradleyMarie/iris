@@ -28,17 +28,11 @@ Geometry::ComputeShadingNormalResult Geometry::ComputeShadingNormal(
   return {std::nullopt, std::nullopt, nullptr};
 }
 
-const Material* Geometry::GetMaterial(face_t face,
-                                      const void* additional_data) const {
+const Material* Geometry::GetMaterial(face_t face) const { return nullptr; }
+
+const EmissiveMaterial* Geometry::GetEmissiveMaterial(face_t face) const {
   return nullptr;
 }
-
-const EmissiveMaterial* Geometry::GetEmissiveMaterial(
-    face_t face, const void* additional_data) const {
-  return nullptr;
-}
-
-bool Geometry::IsEmissive(face_t face) const { return false; }
 
 std::variant<std::monostate, Point, Vector> Geometry::SampleBySolidAngle(
     const Point& origin, face_t face, Sampler& sampler) const {

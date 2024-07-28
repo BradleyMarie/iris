@@ -1,6 +1,8 @@
+#define _USE_MATH_DEFINES
 #include "iris/environmental_lights/image_environmental_light.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mock_random.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/spectral_allocator.h"
@@ -107,4 +109,51 @@ TEST(ImageEnvironmentalLight, EmissionFour) {
   ASSERT_TRUE(result);
   EXPECT_EQ(4.0, result->Intensity(1.0));
   EXPECT_NEAR(0.16545681, pdf, 0.001);
+}
+
+TEST(ImageEnvironmentalLight, UnitPower1x1) {
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {kSpectrum0};
+  std::vector<iris::visual> luma = {1.0};
+  std::pair<size_t, size_t> size(1, 1);
+  iris::environmental_lights::ImageEnvironmentalLight light(
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
+
+  iris::power_matchers::MockPowerMatcher power_matcher;
+  EXPECT_NEAR(4.0 * M_PI, light.UnitPower(power_matcher), 0.001);
+}
+
+TEST(ImageEnvironmentalLight, UnitPower2x2) {
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {1.0, 1.0, 1.0, 1.0};
+  std::pair<size_t, size_t> size(2, 2);
+  iris::environmental_lights::ImageEnvironmentalLight light(
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
+
+  iris::power_matchers::MockPowerMatcher power_matcher;
+  EXPECT_NEAR(4.0 * M_PI, light.UnitPower(power_matcher), 0.001);
+}
+
+TEST(ImageEnvironmentalLight, UnitPower2x2Quarter) {
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {0.0, 0.0, 0.0, 1.0};
+  std::pair<size_t, size_t> size(2, 2);
+  iris::environmental_lights::ImageEnvironmentalLight light(
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
+
+  iris::power_matchers::MockPowerMatcher power_matcher;
+  EXPECT_NEAR(M_PI, light.UnitPower(power_matcher), 0.001);
+}
+
+TEST(ImageEnvironmentalLight, UnitPower2x2Half) {
+  std::vector<iris::ReferenceCounted<iris::Spectrum>> spectra = {
+      kSpectrum0, kSpectrum0, kSpectrum1, kSpectrum2};
+  std::vector<iris::visual> luma = {0.0, 0.0, 1.0, 2.0};
+  std::pair<size_t, size_t> size(2, 2);
+  iris::environmental_lights::ImageEnvironmentalLight light(
+      spectra, luma, size, kScalar, iris::Matrix::Identity());
+
+  iris::power_matchers::MockPowerMatcher power_matcher;
+  EXPECT_NEAR(3.0 * M_PI, light.UnitPower(power_matcher), 0.001);
 }

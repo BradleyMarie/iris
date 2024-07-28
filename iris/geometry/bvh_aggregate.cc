@@ -17,22 +17,22 @@ class BVHAggregate final : public Geometry {
                std::vector<ReferenceCounted<Geometry>> geometry)
       : bvh_(std::move(bvh)), geometry_(std::move(geometry)) {}
 
-  virtual Vector ComputeSurfaceNormal(
-      const Point& hit_point, face_t face,
-      const void* additional_data) const override;
+  Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
+                              const void* additional_data) const override;
 
-  virtual ComputeHitPointResult ComputeHitPoint(
+  ComputeHitPointResult ComputeHitPoint(
       const Ray& ray, geometric_t distance,
       const void* additional_data) const override;
 
-  virtual BoundingBox ComputeBounds(
-      const Matrix* model_to_world) const override;
+  visual_t ComputeSurfaceArea(face_t face,
+                              const Matrix* model_to_world) const override;
 
-  virtual std::span<const face_t> GetFaces() const override;
+  BoundingBox ComputeBounds(const Matrix* model_to_world) const override;
+
+  std::span<const face_t> GetFaces() const override;
 
  private:
-  virtual Hit* Trace(const Ray& ray,
-                     HitAllocator& hit_allocator) const override;
+  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override;
 
   std::vector<scenes::internal::BVHNode> bvh_;
   std::vector<ReferenceCounted<Geometry>> geometry_;
@@ -49,6 +49,12 @@ Geometry::ComputeHitPointResult BVHAggregate::ComputeHitPoint(
   assert(false);
   return ComputeHitPointResult{Point(0.0, 0.0, 0.0),
                                PositionError(0.0, 0.0, 0.0)};
+}
+
+visual_t BVHAggregate::ComputeSurfaceArea(face_t face,
+                                          const Matrix* model_to_world) const {
+  assert(false);
+  return static_cast<visual_t>(0.0);
 }
 
 BoundingBox BVHAggregate::ComputeBounds(const Matrix* model_to_world) const {
@@ -90,7 +96,7 @@ ReferenceCounted<Geometry> AllocateBVHAggregate(
 
   for (size_t index = 0; index < result.geometry_sort_order.size(); index++) {
     assert(std::ranges::all_of(geometry[index]->GetFaces(), [&](face_t face) {
-      return !geometry[index]->IsEmissive(face);
+      return !geometry[index]->GetEmissiveMaterial(face);
     }));
 
     sorted_geometry[result.geometry_sort_order[index]] =

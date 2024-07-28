@@ -30,8 +30,6 @@ TEST(BVHScene, TestsAll) {
                             iris::Point(0.5, 0.5, 1.0));
   EXPECT_CALL(*mock_geometry0, GetFaces())
       .WillRepeatedly(testing::Return(std::span{kFaces}));
-  EXPECT_CALL(*mock_geometry0, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*mock_geometry0, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds0));
 
@@ -41,8 +39,6 @@ TEST(BVHScene, TestsAll) {
                             iris::Point(2.5, 2.5, 4.0));
   EXPECT_CALL(*mock_geometry1, GetFaces())
       .WillRepeatedly(testing::Return(std::span{kFaces}));
-  EXPECT_CALL(*mock_geometry1, IsEmissive(testing::_))
-      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(*mock_geometry1, ComputeBounds(nullptr))
       .WillRepeatedly(testing::Return(bounds1));
 

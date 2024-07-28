@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "iris/float.h"
+#include "iris/power_matcher.h"
 #include "iris/reference_countable.h"
 #include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
@@ -26,6 +27,8 @@ class EnvironmentalLight : public ReferenceCountable {
   virtual const Spectrum* Emission(const Vector& to_light,
                                    SpectralAllocator& allocator,
                                    visual_t* pdf = nullptr) const = 0;
+
+  virtual visual_t UnitPower(const PowerMatcher& power_matcher) const = 0;
 
   virtual ~EnvironmentalLight() {}
 };

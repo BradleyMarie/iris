@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "iris/geometry/sphere.h"
 
 #include "googletest/include/gtest/gtest.h"
@@ -217,31 +218,34 @@ TEST_F(Sphere, ComputeHitPointOnXYOrigin) {
 TEST_F(Sphere, GetMaterial) {
   auto sphere = SimpleSphere();
 
-  auto front = sphere->GetMaterial(FRONT_FACE, nullptr);
+  auto front = sphere->GetMaterial(FRONT_FACE);
   EXPECT_EQ(front_material.Get(), front);
 
-  auto back = sphere->GetMaterial(BACK_FACE, nullptr);
+  auto back = sphere->GetMaterial(BACK_FACE);
   EXPECT_EQ(back_material.Get(), back);
-}
-
-TEST_F(Sphere, IsEmissive) {
-  auto sphere = iris::geometry::AllocateSphere(
-      iris::Point(0.0, 0.0, 0.0), 1.0, back_material, front_material,
-      front_emissive_material, iris::ReferenceCounted<iris::EmissiveMaterial>(),
-      iris::ReferenceCounted<iris::NormalMap>(),
-      iris::ReferenceCounted<iris::NormalMap>());
-  EXPECT_TRUE(sphere->IsEmissive(FRONT_FACE));
-  EXPECT_FALSE(sphere->IsEmissive(BACK_FACE));
 }
 
 TEST_F(Sphere, GetEmissiveMaterial) {
   auto sphere = SimpleSphere();
 
-  auto front = sphere->GetEmissiveMaterial(FRONT_FACE, nullptr);
+  auto front = sphere->GetEmissiveMaterial(FRONT_FACE);
   EXPECT_EQ(front_emissive_material.Get(), front);
 
-  auto back = sphere->GetEmissiveMaterial(BACK_FACE, nullptr);
+  auto back = sphere->GetEmissiveMaterial(BACK_FACE);
   EXPECT_EQ(back_emissive_material.Get(), back);
+}
+
+TEST_F(Sphere, ComputeSurfaceArea) {
+  auto sphere = SimpleSphere();
+
+  iris::visual_t surface_area0 =
+      sphere->ComputeSurfaceArea(FRONT_FACE, nullptr);
+  EXPECT_NEAR(16.0 * M_PI, surface_area0, 0.001);
+
+  iris::Matrix model_to_world = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
+  iris::visual_t surface_area1 =
+      sphere->ComputeSurfaceArea(FRONT_FACE, &model_to_world);
+  EXPECT_NEAR(64.0 * M_PI, surface_area1, 0.001);
 }
 
 TEST_F(Sphere, SampleBySolidAngle) {

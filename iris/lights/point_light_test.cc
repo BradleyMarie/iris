@@ -6,6 +6,7 @@
 #include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/float.h"
+#include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mock_random.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/spectral_allocator.h"
@@ -56,4 +57,15 @@ TEST(PointLightTest, Emission) {
                                      iris::Vector(0.0, 0.0, 1.0)),
                            iris::testing::GetAlwaysVisibleVisibilityTester(),
                            iris::testing::GetSpectralAllocator(), &pdf));
+}
+
+TEST(PointLightTest, Power) {
+  auto spectrum = iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
+
+  iris::lights::PointLight light(iris::Point(0.0, 0.0, 0.0), spectrum);
+
+  iris::power_matchers::MockPowerMatcher power_matcher;
+  EXPECT_CALL(power_matcher, Match(testing::Ref(*spectrum)))
+      .WillOnce(testing::Return(1.0));
+  EXPECT_EQ(1.0, light.Power(power_matcher));
 }

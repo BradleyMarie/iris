@@ -80,7 +80,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
           .value_or(TextureCoordinates{0.0, 0.0});
 
   const EmissiveMaterial* emissive_material =
-      geometry.GetEmissiveMaterial(face, scene_hit->additional_data);
+      geometry.GetEmissiveMaterial(face);
   if (!emissive_material) {
     return std::nullopt;
   }

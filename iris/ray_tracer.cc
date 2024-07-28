@@ -129,7 +129,7 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
     const Geometry::ComputeHitPointResult& world_hit_point,
     const Vector& world_surface_normal, const Vector& model_surface_normal,
     SpectralAllocator& spectral_allocator, BxdfAllocator& bxdf_allocator) {
-  auto* material = hit.geometry->GetMaterial(hit.front, hit.additional_data);
+  auto* material = hit.geometry->GetMaterial(hit.front);
   if (!material) {
     return std::nullopt;
   }
@@ -258,8 +258,8 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
           .value_or(TextureCoordinates{0.0, 0.0});
 
   const Spectrum* spectrum = nullptr;
-  if (auto* emissive_material = hit->geometry->GetEmissiveMaterial(
-          hit->front, hit->additional_data)) {
+  if (auto* emissive_material =
+          hit->geometry->GetEmissiveMaterial(hit->front)) {
     spectrum =
         emissive_material->Evaluate(texture_coordinates, spectral_allocator);
   }

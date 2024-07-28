@@ -26,6 +26,8 @@ class MockBasicGeometry : public Geometry {
   MOCK_METHOD(Hit*, Trace, (const Ray&, HitAllocator&), (const override));
   MOCK_METHOD(ComputeHitPointResult, ComputeHitPoint,
               (const Ray&, geometric_t, const void*), (const override));
+  MOCK_METHOD(visual_t, ComputeSurfaceArea, (face_t, const Matrix*),
+              (const override));
   MOCK_METHOD(Vector, ComputeSurfaceNormal, (const Point&, face_t, const void*),
               (const override));
   MOCK_METHOD(BoundingBox, ComputeBounds, (const Matrix*), (const override));
@@ -40,11 +42,9 @@ class MockGeometry : public MockBasicGeometry {
               (const override));
   MOCK_METHOD((Geometry::ComputeShadingNormalResult), ComputeShadingNormal,
               (face_t, const void*), (const override));
-  MOCK_METHOD(const Material*, GetMaterial, (face_t, const void*),
+  MOCK_METHOD(const Material*, GetMaterial, (face_t), (const override));
+  MOCK_METHOD(const EmissiveMaterial*, GetEmissiveMaterial, (face_t),
               (const override));
-  MOCK_METHOD(bool, IsEmissive, (face_t), (const override));
-  MOCK_METHOD(const EmissiveMaterial*, GetEmissiveMaterial,
-              (face_t, const void*), (const override));
   MOCK_METHOD((std::variant<std::monostate, Point, Vector>), SampleBySolidAngle,
               (const Point&, face_t, Sampler&), (const override));
   MOCK_METHOD(std::optional<visual_t>, ComputePdfBySolidAngle,

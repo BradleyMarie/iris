@@ -9,6 +9,7 @@ cc_library(
         "//iris:float",
         "//iris:hit_point",
         "//iris:light",
+        "//iris:power_matcher",
         "//iris:ray",
         "//iris:sampler",
         "//iris:spectral_allocator",
@@ -27,6 +28,7 @@ cc_library(
         "//iris:hit_point",
         "//iris:light",
         "//iris:point",
+        "//iris:power_matcher",
         "//iris:ray",
         "//iris:reference_counted",
         "//iris:sampler",
@@ -41,6 +43,7 @@ cc_test(
     srcs = ["point_light_test.cc"],
     deps = [
         ":point_light",
+        "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mock_random",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",

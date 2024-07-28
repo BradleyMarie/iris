@@ -55,20 +55,11 @@ iris::ReferenceCounted<iris::geometry::MockGeometry> MakeGeometry(
     const iris::EmissiveMaterial* emissive_material) {
   auto geometry = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
   MakeBasicGeometryImpl(geometry, expected_ray, expected_hit_point);
-  EXPECT_CALL(*geometry, IsEmissive(testing::_))
-      .WillOnce(testing::Return(false));
-  EXPECT_CALL(*geometry, GetMaterial(2u, testing::_))
-      .WillOnce(testing::Invoke(
-          [material](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return material;
-          }));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u, testing::_))
-      .WillOnce(testing::Invoke(
-          [emissive_material](iris::face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return emissive_material;
-          }));
+  EXPECT_CALL(*geometry, GetMaterial(2u)).WillOnce(testing::Return(material));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillOnce(testing::Return(nullptr));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillOnce(testing::Return(emissive_material));
   return geometry;
 }
 

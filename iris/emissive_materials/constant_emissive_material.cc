@@ -9,5 +9,10 @@ const Spectrum* ConstantEmissiveMaterial::Evaluate(
   return spectrum_.Get();
 }
 
+visual_t ConstantEmissiveMaterial::UnitPower(
+    const PowerMatcher& power_matcher) const {
+  return power_matcher.Match(*spectrum_);
+}
+
 }  // namespace emissive_materials
 }  // namespace iris
