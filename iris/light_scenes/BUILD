@@ -69,3 +69,32 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "power_light_scene",
+    srcs = ["power_light_scene.cc"],
+    hdrs = ["power_light_scene.h"],
+    deps = [
+        "//iris:light_sample",
+        "//iris:light_sample_allocator",
+        "//iris:light_scene",
+        "//iris:point",
+        "//iris:power_matcher",
+        "//iris:random",
+        "//iris:scene_objects",
+    ],
+)
+
+cc_test(
+    name = "power_light_scene_test",
+    srcs = ["power_light_scene_test.cc"],
+    deps = [
+        ":power_light_scene",
+        "//iris/lights:mock_light",
+        "//iris/power_matchers:mock_power_matcher",
+        "//iris/random:mock_random",
+        "//iris/scenes:list_scene",
+        "//iris/testing:light_sample_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

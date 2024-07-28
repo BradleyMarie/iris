@@ -10,6 +10,7 @@ cc_library(
         "//iris:light_scene",
         "//iris/light_scenes:all_light_scene",
         "//iris/light_scenes:one_light_scene",
+        "//iris/light_scenes:power_light_scene",
     ],
 )
 

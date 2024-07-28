@@ -14,6 +14,11 @@ TEST(ParseLightScene, All) {
   EXPECT_NE(nullptr, light_scene.get());
 }
 
+TEST(ParseLightScene, Power) {
+  auto light_scene = iris::pbrt_frontend::integrators::ParseLightScene("power");
+  EXPECT_NE(nullptr, light_scene.get());
+}
+
 TEST(ParseLightScene, Uniform) {
   auto light_scene =
       iris::pbrt_frontend::integrators::ParseLightScene("uniform");

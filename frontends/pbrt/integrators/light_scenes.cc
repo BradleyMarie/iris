@@ -5,12 +5,17 @@
 
 #include "iris/light_scenes/all_light_scene.h"
 #include "iris/light_scenes/one_light_scene.h"
+#include "iris/light_scenes/power_light_scene.h"
 
 namespace iris::pbrt_frontend::integrators {
 namespace {
 
 std::unique_ptr<LightScene::Builder> MakeAllLightSampler() {
   return std::make_unique<iris::light_scenes::AllLightScene::Builder>();
+}
+
+std::unique_ptr<LightScene::Builder> MakePowerLightSampler() {
+  return std::make_unique<iris::light_scenes::PowerLightScene::Builder>();
 }
 
 std::unique_ptr<LightScene::Builder> MakeUniformLightSampler() {
@@ -24,6 +29,7 @@ std::unique_ptr<LightScene::Builder> ParseLightScene(std::string_view type) {
                                   std::unique_ptr<LightScene::Builder> (*)()>
       g_light_scenes = {
           {"all", MakeAllLightSampler},
+          {"power", MakePowerLightSampler},
           {"uniform", MakeUniformLightSampler},
       };
 

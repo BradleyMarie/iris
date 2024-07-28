@@ -27,7 +27,7 @@ class PathObjectBuilder : public ObjectBuilder<Result> {
 
 Result PathObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters) const {
-  std::string_view sample_strategy = "uniform";  // TODO: This should be spatial
+  std::string_view sample_strategy = "power";  // TODO: This should be spatial
   std::optional<std::array<size_t, 4>> pixel_bounds;
   visual maximum_path_continue_probability = 0.95;
   visual always_continue_path_throughput = 1.0;
