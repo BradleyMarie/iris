@@ -86,85 +86,249 @@ bool operator==(const Matrix& left, const Matrix& right);
 bool operator<(const Matrix& left, const Matrix& right);
 
 inline Point Matrix::Multiply(const Point& point) const {
-  return Point(
-      m[0][0] * point.x + m[0][1] * point.y + m[0][2] * point.z + m[0][3],
-      m[1][0] * point.x + m[1][1] * point.y + m[1][2] * point.z + m[1][3],
-      m[2][0] * point.x + m[2][1] * point.y + m[2][2] * point.z + m[2][3]);
+  geometric_t x =
+      m[0][0] * point.x + m[0][1] * point.y + m[0][2] * point.z + m[0][3];
+  geometric_t y =
+      m[1][0] * point.x + m[1][1] * point.y + m[1][2] * point.z + m[1][3];
+  geometric_t z =
+      m[2][0] * point.x + m[2][1] * point.y + m[2][2] * point.z + m[2][3];
+
+  if (geometric_t w =
+          m[3][0] * point.x + m[3][1] * point.y + m[3][2] * point.z + m[3][3];
+      w != static_cast<geometric_t>(1.0)) {
+    x /= w;
+    y /= w;
+    z /= w;
+  }
+
+  return Point(x, y, z);
 }
 
 inline Point Matrix::InverseMultiply(const Point& point) const {
-  return Point(
-      i[0][0] * point.x + i[0][1] * point.y + i[0][2] * point.z + i[0][3],
-      i[1][0] * point.x + i[1][1] * point.y + i[1][2] * point.z + i[1][3],
-      i[2][0] * point.x + i[2][1] * point.y + i[2][2] * point.z + i[2][3]);
+  geometric_t x =
+      i[0][0] * point.x + i[0][1] * point.y + i[0][2] * point.z + i[0][3];
+  geometric_t y =
+      i[1][0] * point.x + i[1][1] * point.y + i[1][2] * point.z + i[1][3];
+  geometric_t z =
+      i[2][0] * point.x + i[2][1] * point.y + i[2][2] * point.z + i[2][3];
+
+  if (geometric_t w =
+          i[3][0] * point.x + i[3][1] * point.y + i[3][2] * point.z + i[3][3];
+      w != static_cast<geometric_t>(1.0)) {
+    x /= w;
+    y /= w;
+    z /= w;
+  }
+
+  return Point(x, y, z);
 }
 
 inline std::pair<Point, PositionError> Matrix::MultiplyWithError(
     const Point& point, const PositionError* existing_error) const {
-  Point transformed = Multiply(point);
+  geometric_t x =
+      (m[0][0] * point.x + m[0][1] * point.y) + (m[0][2] * point.z + m[0][3]);
+  geometric_t y =
+      (m[1][0] * point.x + m[1][1] * point.y) + (m[1][2] * point.z + m[1][3]);
+  geometric_t z =
+      (m[2][0] * point.x + m[2][1] * point.y) + (m[2][2] * point.z + m[2][3]);
+  geometric_t w =
+      (m[3][0] * point.x + m[3][1] * point.y) + (m[3][2] * point.z + m[3][3]);
 
-  geometric_t x = (std::abs(m[0][0] * point.x) + std::abs(m[0][1] * point.y) +
-                   std::abs(m[0][2] * point.z) + std::abs(m[0][3]));
-  geometric_t y = (std::abs(m[1][0] * point.x) + std::abs(m[1][1] * point.y) +
-                   std::abs(m[1][2] * point.z) + std::abs(m[1][3]));
-  geometric_t z = (std::abs(m[2][0] * point.x) + std::abs(m[2][1] * point.y) +
-                   std::abs(m[2][2] * point.z) + std::abs(m[2][3]));
-  PositionError transform_error = PositionError(x, y, z) * RoundingError(3);
+  geometric_t err_x = std::abs(m[0][0] * point.x) +
+                      std::abs(m[0][1] * point.y) +
+                      std::abs(m[0][2] * point.z) + std::abs(m[0][3]);
+  err_x *= RoundingError(3);
 
-  if (existing_error == nullptr) {
-    return {transformed, transform_error};
+  geometric_t err_y = std::abs(m[1][0] * point.x) +
+                      std::abs(m[1][1] * point.y) +
+                      std::abs(m[1][2] * point.z) + std::abs(m[1][3]);
+  err_y *= RoundingError(3);
+
+  geometric_t err_z = std::abs(m[2][0] * point.x) +
+                      std::abs(m[2][1] * point.y) +
+                      std::abs(m[2][2] * point.z) + std::abs(m[2][3]);
+  err_z *= RoundingError(3);
+
+  geometric_t err_w = 0.0;
+  if (w != static_cast<geometric_t>(1.0)) {
+    geometric_t new_x = x / w;
+    geometric_t new_y = y / w;
+    geometric_t new_z = z / w;
+
+    err_w = std::abs(m[3][0] * point.x) + std::abs(m[3][1] * point.y) +
+            std::abs(m[3][2] * point.z) + std::abs(m[3][3]);
+    err_w *= RoundingError(3);
+
+    geometric_t safe_err_x = static_cast<iris::geometric>(0.0);
+    if (x != static_cast<iris::geometric>(0.0)) {
+      safe_err_x = std::abs(err_x / x);
+    }
+
+    geometric_t safe_err_y = static_cast<iris::geometric>(0.0);
+    if (y != static_cast<iris::geometric>(0.0)) {
+      safe_err_y = std::abs(err_y / y);
+    }
+
+    geometric_t safe_err_z = static_cast<iris::geometric>(0.0);
+    if (z != static_cast<iris::geometric>(0.0)) {
+      safe_err_z = std::abs(err_z / z);
+    }
+
+    err_x = std::abs(new_x) * (safe_err_x + std::abs(err_w / w)) +
+            std::abs(new_x) * RoundingError(1);
+    err_y = std::abs(new_y) * (safe_err_y + std::abs(err_w / w)) +
+            std::abs(new_y) * RoundingError(1);
+    err_z = std::abs(new_z) * (safe_err_z + std::abs(err_w / w)) +
+            std::abs(new_z) * RoundingError(1);
+
+    x = new_x;
+    y = new_y;
+    z = new_z;
   }
 
-  return {transformed, transform_error + Multiply(*existing_error)};
+  if (existing_error) {
+    geometric_t relative_error =
+        static_cast<geometric_t>(1.0) + RoundingError(3);
+
+    geometric_t existing_err_x = std::abs(m[0][0] * existing_error->x) +
+                                 std::abs(m[0][1] * existing_error->y) +
+                                 std::abs(m[0][2] * existing_error->z);
+    existing_err_x *= relative_error;
+
+    geometric_t existing_err_y = std::abs(m[1][0] * existing_error->x) +
+                                 std::abs(m[1][1] * existing_error->y) +
+                                 std::abs(m[1][2] * existing_error->z);
+    existing_err_y *= relative_error;
+
+    geometric_t existing_err_z = std::abs(m[2][0] * existing_error->x) +
+                                 std::abs(m[2][1] * existing_error->y) +
+                                 std::abs(m[2][2] * existing_error->z);
+    existing_err_z *= relative_error;
+
+    if (w != static_cast<geometric_t>(1.0)) {
+      relative_error = (static_cast<geometric_t>(1.0) + err_w / w) *
+                       (static_cast<geometric_t>(1.0) + RoundingError(1));
+
+      existing_err_x = std::abs(existing_err_x / w);
+      existing_err_x *= relative_error;
+
+      existing_err_y = std::abs(existing_err_y / w);
+      existing_err_y *= relative_error;
+
+      existing_err_z = std::abs(existing_err_z / w);
+      existing_err_z *= relative_error;
+    }
+
+    err_x += existing_err_x;
+    err_y += existing_err_y;
+    err_z += existing_err_z;
+  }
+
+  return std::make_pair(Point(x, y, z), PositionError(err_x, err_y, err_z));
 }
 
 inline std::pair<Point, PositionError> Matrix::InverseMultiplyWithError(
     const Point& point, const PositionError* existing_error) const {
-  Point transformed = InverseMultiply(point);
+  geometric_t x =
+      (i[0][0] * point.x + i[0][1] * point.y) + (i[0][2] * point.z + i[0][3]);
+  geometric_t y =
+      (i[1][0] * point.x + i[1][1] * point.y) + (i[1][2] * point.z + i[1][3]);
+  geometric_t z =
+      (i[2][0] * point.x + i[2][1] * point.y) + (i[2][2] * point.z + i[2][3]);
+  geometric_t w =
+      (i[3][0] * point.x + i[3][1] * point.y) + (i[3][2] * point.z + i[3][3]);
 
-  geometric_t x = (std::abs(i[0][0] * point.x) + std::abs(i[0][1] * point.y) +
-                   std::abs(i[0][2] * point.z) + std::abs(i[0][3]));
-  geometric_t y = (std::abs(i[1][0] * point.x) + std::abs(i[1][1] * point.y) +
-                   std::abs(i[1][2] * point.z) + std::abs(i[1][3]));
-  geometric_t z = (std::abs(i[2][0] * point.x) + std::abs(i[2][1] * point.y) +
-                   std::abs(i[2][2] * point.z) + std::abs(i[2][3]));
-  PositionError transform_error = PositionError(x, y, z) * RoundingError(3);
+  geometric_t err_x = std::abs(i[0][0] * point.x) +
+                      std::abs(i[0][1] * point.y) +
+                      std::abs(i[0][2] * point.z) + std::abs(i[0][3]);
+  err_x *= RoundingError(3);
 
-  if (existing_error == nullptr) {
-    return {transformed, transform_error};
+  geometric_t err_y = std::abs(i[1][0] * point.x) +
+                      std::abs(i[1][1] * point.y) +
+                      std::abs(i[1][2] * point.z) + std::abs(i[1][3]);
+  err_y *= RoundingError(3);
+
+  geometric_t err_z = std::abs(i[2][0] * point.x) +
+                      std::abs(i[2][1] * point.y) +
+                      std::abs(i[2][2] * point.z) + std::abs(i[2][3]);
+  err_z *= RoundingError(3);
+
+  geometric_t err_w = 0.0;
+  if (w != static_cast<geometric_t>(1.0)) {
+    geometric_t new_x = x / w;
+    geometric_t new_y = y / w;
+    geometric_t new_z = z / w;
+
+    err_w = std::abs(i[3][0] * point.x) + std::abs(i[3][1] * point.y) +
+            std::abs(i[3][2] * point.z) + std::abs(i[3][3]);
+    err_w *= RoundingError(3);
+
+    geometric_t safe_err_x = static_cast<iris::geometric>(0.0);
+    if (x != static_cast<iris::geometric>(0.0)) {
+      safe_err_x = std::abs(err_x / x);
+    }
+
+    geometric_t safe_err_y = static_cast<iris::geometric>(0.0);
+    if (y != static_cast<iris::geometric>(0.0)) {
+      safe_err_y = std::abs(err_y / y);
+    }
+
+    geometric_t safe_err_z = static_cast<iris::geometric>(0.0);
+    if (z != static_cast<iris::geometric>(0.0)) {
+      safe_err_z = std::abs(err_z / z);
+    }
+
+    err_x = std::abs(new_x) * (safe_err_x + std::abs(err_w / w)) +
+            std::abs(new_x) * RoundingError(1);
+    err_y = std::abs(new_y) * (safe_err_y + std::abs(err_w / w)) +
+            std::abs(new_y) * RoundingError(1);
+    err_z = std::abs(new_z) * (safe_err_z + std::abs(err_w / w)) +
+            std::abs(new_z) * RoundingError(1);
+
+    x = new_x;
+    y = new_y;
+    z = new_z;
   }
 
-  return {transformed, transform_error + InverseMultiply(*existing_error)};
-}
+  if (existing_error) {
+    geometric_t relative_error =
+        static_cast<geometric_t>(1.0) + RoundingError(3);
 
-inline PositionError Matrix::Multiply(
-    const PositionError& existing_error) const {
-  geometric_t x = (std::abs(m[0][0] * existing_error.x) +
-                   std::abs(m[0][1] * existing_error.y) +
-                   std::abs(m[0][2] * existing_error.z));
-  geometric_t y = (std::abs(m[1][0] * existing_error.x) +
-                   std::abs(m[1][1] * existing_error.y) +
-                   std::abs(m[1][2] * existing_error.z));
-  geometric_t z = (std::abs(m[2][0] * existing_error.x) +
-                   std::abs(m[2][1] * existing_error.y) +
-                   std::abs(m[2][2] * existing_error.z));
-  geometric_t relative_error = static_cast<geometric_t>(1.0) + RoundingError(3);
-  return PositionError(x, y, z) * relative_error;
-}
+    geometric_t existing_err_x = std::abs(i[0][0] * existing_error->x) +
+                                 std::abs(i[0][1] * existing_error->y) +
+                                 std::abs(i[0][2] * existing_error->z);
+    existing_err_x *= relative_error;
 
-inline PositionError Matrix::InverseMultiply(
-    const PositionError& existing_error) const {
-  geometric_t x = (std::abs(i[0][0] * existing_error.x) +
-                   std::abs(i[0][1] * existing_error.y) +
-                   std::abs(i[0][2] * existing_error.z));
-  geometric_t y = (std::abs(i[1][0] * existing_error.x) +
-                   std::abs(i[1][1] * existing_error.y) +
-                   std::abs(i[1][2] * existing_error.z));
-  geometric_t z = (std::abs(i[2][0] * existing_error.x) +
-                   std::abs(i[2][1] * existing_error.y) +
-                   std::abs(i[2][2] * existing_error.z));
-  geometric_t relative_error = static_cast<geometric_t>(1.0) + RoundingError(3);
-  return PositionError(x, y, z) * relative_error;
+    geometric_t existing_err_y = std::abs(i[1][0] * existing_error->x) +
+                                 std::abs(i[1][1] * existing_error->y) +
+                                 std::abs(i[1][2] * existing_error->z);
+    existing_err_y *= relative_error;
+
+    geometric_t existing_err_z = std::abs(i[2][0] * existing_error->x) +
+                                 std::abs(i[2][1] * existing_error->y) +
+                                 std::abs(i[2][2] * existing_error->z);
+    existing_err_z *= relative_error;
+
+    if (w != static_cast<geometric_t>(1.0)) {
+      relative_error = (static_cast<geometric_t>(1.0) + err_w / w) *
+                       (static_cast<geometric_t>(1.0) + RoundingError(1));
+
+      existing_err_x = std::abs(existing_err_x / w);
+      existing_err_x *= relative_error;
+
+      existing_err_y = std::abs(existing_err_y / w);
+      existing_err_y *= relative_error;
+
+      existing_err_z = std::abs(existing_err_z / w);
+      existing_err_z *= relative_error;
+    }
+
+    err_x += existing_err_x;
+    err_y += existing_err_y;
+    err_z += existing_err_z;
+  }
+
+  return std::make_pair(Point(x, y, z), PositionError(err_x, err_y, err_z));
 }
 
 inline Ray Matrix::Multiply(const Ray& ray) const {

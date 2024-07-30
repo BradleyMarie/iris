@@ -542,10 +542,32 @@ TEST(MatrixTest, MultiplyPoint) {
             matrix.Multiply(iris::Point(0.0, 0.0, 0.0)));
 }
 
+TEST(MatrixTest, MultiplyPointWithW) {
+  std::array<std::array<iris::geometric, 4>, 4> elements = {
+      {{1.0, 0.0, 0.0, 0.0},
+       {0.0, 1.0, 0.0, 0.0},
+       {0.0, 0.0, 1.0, 0.0},
+       {0.0, 0.0, 0.0, 0.5}}};
+  auto matrix = iris::Matrix::Create(elements).value();
+  EXPECT_EQ(iris::Point(2.0, 2.0, 2.0),
+            matrix.Multiply(iris::Point(1.0, 1.0, 1.0)));
+}
+
 TEST(MatrixTest, InverseMultiplyPoint) {
   auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
   EXPECT_EQ(iris::Point(-1.0, -2.0, -3.0),
             matrix.InverseMultiply(iris::Point(0.0, 0.0, 0.0)));
+}
+
+TEST(MatrixTest, InverseMultiplyPointWithW) {
+  std::array<std::array<iris::geometric, 4>, 4> elements = {
+      {{1.0, 0.0, 0.0, 0.0},
+       {0.0, 1.0, 0.0, 0.0},
+       {0.0, 0.0, 1.0, 0.0},
+       {0.0, 0.0, 0.0, 2.0}}};
+  auto matrix = iris::Matrix::Create(elements).value();
+  EXPECT_EQ(iris::Point(2.0, 2.0, 2.0),
+            matrix.InverseMultiply(iris::Point(1.0, 1.0, 1.0)));
 }
 
 TEST(MatrixTest, MultiplyPointWithError) {
@@ -558,6 +580,57 @@ TEST(MatrixTest, MultiplyPointWithError) {
   EXPECT_EQ(as_point.y * iris::RoundingError(3), error.y);
   EXPECT_EQ(as_point.z, point.z);
   EXPECT_EQ(as_point.z * iris::RoundingError(3), error.z);
+}
+
+TEST(MatrixTest, MultiplyPointWithErrorWithW) {
+  std::array<std::array<iris::geometric, 4>, 4> elements = {
+      {{1.0, 0.0, 0.0, 0.0},
+       {0.0, 1.0, 0.0, 0.0},
+       {0.0, 0.0, 1.0, 0.0},
+       {0.0, 0.0, 0.0, 0.5}}};
+  auto matrix = iris::Matrix::Create(elements).value();
+
+  auto [point0, error0] = matrix.MultiplyWithError(iris::Point(1.0, 0.0, 0.0));
+  EXPECT_EQ(2.0, point0.x);
+  EXPECT_EQ(
+      point0.x * (static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(1.0) +
+                  static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(0.5)) +
+          (point0.x * iris::RoundingError(1)),
+      error0.x);
+  EXPECT_EQ(0.0, point0.y);
+  EXPECT_EQ(0.0, error0.z);
+  EXPECT_EQ(0.0, point0.z);
+  EXPECT_EQ(0.0, error0.z);
+
+  auto [point1, error1] = matrix.MultiplyWithError(iris::Point(0.0, 1.0, 0.0));
+  EXPECT_EQ(0.0, point1.x);
+  EXPECT_EQ(0.0, error1.x);
+  EXPECT_EQ(2.0, point1.y);
+  EXPECT_EQ(
+      point1.y * (static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(1.0) +
+                  static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(0.5)) +
+          (point1.y * iris::RoundingError(1)),
+      error1.y);
+  EXPECT_EQ(0.0, point1.z);
+  EXPECT_EQ(0.0, error1.z);
+
+  auto [point2, error2] = matrix.MultiplyWithError(iris::Point(0.0, 0.0, 1.0));
+  EXPECT_EQ(0.0, point2.x);
+  EXPECT_EQ(0.0, error2.x);
+  EXPECT_EQ(0.0, point2.y);
+  EXPECT_EQ(0.0, error2.y);
+  EXPECT_EQ(2.0, point2.z);
+  EXPECT_EQ(
+      point2.z * (static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(1.0) +
+                  static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(0.5)) +
+          (point2.z * iris::RoundingError(1)),
+      error2.z);
 }
 
 TEST(MatrixTest, InverseMultiplyPointWithError) {
@@ -573,67 +646,246 @@ TEST(MatrixTest, InverseMultiplyPointWithError) {
   EXPECT_EQ(as_point.z * iris::RoundingError(3), error.z);
 }
 
+TEST(MatrixTest, InverseMultiplyPointWithErrorWithW) {
+  std::array<std::array<iris::geometric, 4>, 4> elements = {
+      {{1.0, 0.0, 0.0, 0.0},
+       {0.0, 1.0, 0.0, 0.0},
+       {0.0, 0.0, 1.0, 0.0},
+       {0.0, 0.0, 0.0, 2.0}}};
+  auto matrix = iris::Matrix::Create(elements).value();
+
+  auto [point0, error0] =
+      matrix.InverseMultiplyWithError(iris::Point(1.0, 0.0, 0.0));
+  EXPECT_EQ(2.0, point0.x);
+  EXPECT_EQ(
+      point0.x * (static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(1.0) +
+                  static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(0.5)) +
+          (point0.x * iris::RoundingError(1)),
+      error0.x);
+  EXPECT_EQ(0.0, point0.y);
+  EXPECT_EQ(0.0, error0.z);
+  EXPECT_EQ(0.0, point0.z);
+  EXPECT_EQ(0.0, error0.z);
+
+  auto [point1, error1] =
+      matrix.InverseMultiplyWithError(iris::Point(0.0, 1.0, 0.0));
+  EXPECT_EQ(0.0, point1.x);
+  EXPECT_EQ(0.0, error1.x);
+  EXPECT_EQ(2.0, point1.y);
+  EXPECT_EQ(
+      point1.y * (static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(1.0) +
+                  static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(0.5)) +
+          (point1.y * iris::RoundingError(1)),
+      error1.y);
+  EXPECT_EQ(0.0, point1.z);
+  EXPECT_EQ(0.0, error1.z);
+
+  auto [point2, error2] =
+      matrix.InverseMultiplyWithError(iris::Point(0.0, 0.0, 1.0));
+  EXPECT_EQ(0.0, point2.x);
+  EXPECT_EQ(0.0, error2.x);
+  EXPECT_EQ(0.0, point2.y);
+  EXPECT_EQ(0.0, error2.y);
+  EXPECT_EQ(2.0, point2.z);
+  EXPECT_EQ(
+      point2.z * (static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(1.0) +
+                  static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3) /
+                      static_cast<iris::geometric_t>(0.5)) +
+          (point2.z * iris::RoundingError(1)),
+      error2.z);
+}
+
 TEST(MatrixTest, MultiplyPointWithExistingError) {
-  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
-  iris::Point as_point = matrix.Multiply(iris::Point(1.0, 2.0, 3.0));
-  iris::PositionError existing_error(1.0, 2.0, 3.0);
-  iris::PositionError transformed_error = matrix.Multiply(existing_error);
-  auto [point, error] =
-      matrix.MultiplyWithError(iris::Point(1.0, 2.0, 3.0), &existing_error);
-  EXPECT_EQ(as_point.x, point.x);
-  EXPECT_EQ(as_point.x * iris::RoundingError(3) + transformed_error.x, error.x);
-  EXPECT_EQ(as_point.y, point.y);
-  EXPECT_EQ(as_point.y * iris::RoundingError(3) + transformed_error.y, error.y);
-  EXPECT_EQ(as_point.z, point.z);
-  EXPECT_EQ(as_point.z * iris::RoundingError(3) + transformed_error.z, error.z);
+  iris::Point point(0.0, 0.0, 0.0);
+
+  iris::PositionError existing_error0(-1.0, 0.0, 0.0);
+  auto [point0, error0] = iris::Matrix::Translation(1.0, 0.0, 0.0)
+                              .value()
+                              .MultiplyWithError(point, &existing_error0);
+  EXPECT_EQ(1.0, point0.x);
+  EXPECT_EQ((static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3)) +
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            error0.x);
+  EXPECT_EQ(0.0, point0.y);
+  EXPECT_EQ(0.0, error0.y);
+  EXPECT_EQ(0.0, point0.z);
+  EXPECT_EQ(0.0, error0.z);
+
+  iris::PositionError existing_error1(0.0, -1.0, 0.0);
+  auto [point1, error1] = iris::Matrix::Translation(0.0, 1.0, 0.0)
+                              .value()
+                              .MultiplyWithError(point, &existing_error1);
+  EXPECT_EQ(0.0, point1.x);
+  EXPECT_EQ(0.0, error1.x);
+  EXPECT_EQ(1.0, point1.y);
+  EXPECT_EQ((static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3)) +
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            error1.y);
+  EXPECT_EQ(0.0, point1.z);
+  EXPECT_EQ(0.0, error1.z);
+
+  iris::PositionError existing_error2(0.0, 0.0, -1.0);
+  auto [point2, error2] = iris::Matrix::Translation(0.0, 0.0, 1.0)
+                              .value()
+                              .MultiplyWithError(point, &existing_error2);
+  EXPECT_EQ(0.0, point2.x);
+  EXPECT_EQ(0.0, error2.x);
+  EXPECT_EQ(0.0, point2.y);
+  EXPECT_EQ(0.0, error2.y);
+  EXPECT_EQ(1.0, point2.z);
+  EXPECT_EQ((static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3)) +
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            error2.z);
+}
+
+TEST(MatrixTest, MultiplyPointWithExistingErrorWithW) {
+  iris::Point point(0.0, 0.0, 0.0);
+
+  std::array<std::array<iris::geometric, 4>, 4> elements = {
+      {{1.0, 0.0, 0.0, 0.0},
+       {0.0, 1.0, 0.0, 0.0},
+       {0.0, 0.0, 1.0, 0.0},
+       {0.0, 0.0, 0.0, 0.5}}};
+  auto matrix = iris::Matrix::Create(elements).value();
+
+  iris::geometric_t existing_error =
+      (static_cast<iris::geometric_t>(1.0) *
+       (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3))) /
+      static_cast<iris::geometric_t>(0.5);
+  iris::geometric_t relative_error =
+      ((static_cast<iris::geometric_t>(1.0) +
+        ((static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3)) /
+         static_cast<iris::geometric_t>(0.5))) *
+       (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(1)));
+
+  iris::PositionError existing_error0(-1.0, 0.0, 0.0);
+  auto [point0, error0] = matrix.MultiplyWithError(point, &existing_error0);
+  EXPECT_EQ(0.0, point0.x);
+  EXPECT_EQ(existing_error * relative_error, error0.x);
+  EXPECT_EQ(0.0, point0.y);
+  EXPECT_EQ(0.0, error0.y);
+  EXPECT_EQ(0.0, point0.z);
+  EXPECT_EQ(0.0, error0.z);
+
+  iris::PositionError existing_error1(0.0, -1.0, 0.0);
+  auto [point1, error1] = matrix.MultiplyWithError(point, &existing_error1);
+  EXPECT_EQ(0.0, point1.x);
+  EXPECT_EQ(0.0, error1.x);
+  EXPECT_EQ(0.0, point1.y);
+  EXPECT_EQ(existing_error * relative_error, error1.y);
+  EXPECT_EQ(0.0, point1.z);
+  EXPECT_EQ(0.0, error1.z);
+
+  iris::PositionError existing_error2(0.0, 0.0, -1.0);
+  auto [point2, error2] = matrix.MultiplyWithError(point, &existing_error2);
+  EXPECT_EQ(0.0, point2.x);
+  EXPECT_EQ(0.0, error2.x);
+  EXPECT_EQ(0.0, point2.y);
+  EXPECT_EQ(0.0, error2.y);
+  EXPECT_EQ(0.0, point2.z);
+  EXPECT_EQ(existing_error * relative_error, error2.z);
 }
 
 TEST(MatrixTest, InverseMultiplyPointWithExistingError) {
-  auto matrix = iris::Matrix::Translation(-1.0, -2.0, -3.0).value();
-  iris::Point as_point = matrix.InverseMultiply(iris::Point(1.0, 2.0, 3.0));
-  iris::PositionError existing_error(1.0, 2.0, 3.0);
-  iris::PositionError transformed_error =
-      matrix.InverseMultiply(existing_error);
-  auto [point, error] = matrix.InverseMultiplyWithError(
-      iris::Point(1.0, 2.0, 3.0), &existing_error);
-  EXPECT_EQ(as_point.x, point.x);
-  EXPECT_EQ(as_point.x * iris::RoundingError(3) + transformed_error.x, error.x);
-  EXPECT_EQ(as_point.y, point.y);
-  EXPECT_EQ(as_point.y * iris::RoundingError(3) + transformed_error.y, error.y);
-  EXPECT_EQ(as_point.z, point.z);
-  EXPECT_EQ(as_point.z * iris::RoundingError(3) + transformed_error.z, error.z);
+  iris::Point point(0.0, 0.0, 0.0);
+
+  iris::PositionError existing_error0(1.0, 0.0, 0.0);
+  auto [point0, error0] =
+      iris::Matrix::Translation(1.0, 0.0, 0.0)
+          .value()
+          .InverseMultiplyWithError(point, &existing_error0);
+  EXPECT_EQ(-1.0, point0.x);
+  EXPECT_EQ((static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3)) +
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            error0.x);
+  EXPECT_EQ(0.0, point0.y);
+  EXPECT_EQ(0.0, error0.y);
+  EXPECT_EQ(0.0, point0.z);
+  EXPECT_EQ(0.0, error0.z);
+
+  iris::PositionError existing_error1(0.0, 1.0, 0.0);
+  auto [point1, error1] =
+      iris::Matrix::Translation(0.0, 1.0, 0.0)
+          .value()
+          .InverseMultiplyWithError(point, &existing_error1);
+  EXPECT_EQ(0.0, point1.x);
+  EXPECT_EQ(0.0, error1.x);
+  EXPECT_EQ(-1.0, point1.y);
+  EXPECT_EQ((static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3)) +
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            error1.y);
+  EXPECT_EQ(0.0, point1.z);
+  EXPECT_EQ(0.0, error1.z);
+
+  iris::PositionError existing_error2(0.0, 0.0, 1.0);
+  auto [point2, error2] =
+      iris::Matrix::Translation(0.0, 0.0, 1.0)
+          .value()
+          .InverseMultiplyWithError(point, &existing_error2);
+  EXPECT_EQ(0.0, point2.x);
+  EXPECT_EQ(0.0, error2.x);
+  EXPECT_EQ(0.0, point2.y);
+  EXPECT_EQ(0.0, error2.y);
+  EXPECT_EQ(-1.0, point2.z);
+  EXPECT_EQ((static_cast<iris::geometric_t>(1.0) * iris::RoundingError(3)) +
+                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
+            error2.z);
 }
 
-TEST(MatrixTest, MultiplyPositionErrorError) {
-  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
-  iris::Vector as_vector = matrix.Multiply(iris::Vector(1.0, 2.0, 3.0));
-  iris::PositionError as_error =
-      matrix.Multiply(iris::PositionError(-1.0, -2.0, -3.0));
-  EXPECT_EQ(as_vector.x *
-                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
-            as_error.x);
-  EXPECT_EQ(as_vector.y *
-                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
-            as_error.y);
-  EXPECT_EQ(as_vector.z *
-                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
-            as_error.z);
-}
+TEST(MatrixTest, InverseMultiplyPointWithExistingErrorWithW) {
+  iris::Point point(0.0, 0.0, 0.0);
 
-TEST(MatrixTest, InverseMultiplyPositionErrorError) {
-  auto matrix = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
-  iris::Vector as_vector = matrix.InverseMultiply(iris::Vector(1.0, 2.0, 3.0));
-  iris::PositionError as_error =
-      matrix.InverseMultiply(iris::PositionError(-1.0, -2.0, -3.0));
-  EXPECT_EQ(as_vector.x *
-                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
-            as_error.x);
-  EXPECT_EQ(as_vector.y *
-                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
-            as_error.y);
-  EXPECT_EQ(as_vector.z *
-                (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3)),
-            as_error.z);
+  std::array<std::array<iris::geometric, 4>, 4> elements = {
+      {{1.0, 0.0, 0.0, 0.0},
+       {0.0, 1.0, 0.0, 0.0},
+       {0.0, 0.0, 1.0, 0.0},
+       {0.0, 0.0, 0.0, 2.0}}};
+  auto matrix = iris::Matrix::Create(elements).value();
+
+  iris::geometric_t existing_error =
+      (static_cast<iris::geometric_t>(1.0) *
+       (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(3))) /
+      static_cast<iris::geometric_t>(0.5);
+  iris::geometric_t relative_error =
+      ((static_cast<iris::geometric_t>(1.0) +
+        ((static_cast<iris::geometric_t>(0.5) * iris::RoundingError(3)) /
+         static_cast<iris::geometric_t>(0.5))) *
+       (static_cast<iris::geometric_t>(1.0) + iris::RoundingError(1)));
+
+  iris::PositionError existing_error0(-1.0, 0.0, 0.0);
+  auto [point0, error0] =
+      matrix.InverseMultiplyWithError(point, &existing_error0);
+  EXPECT_EQ(0.0, point0.x);
+  EXPECT_EQ(existing_error * relative_error, error0.x);
+  EXPECT_EQ(0.0, point0.y);
+  EXPECT_EQ(0.0, error0.y);
+  EXPECT_EQ(0.0, point0.z);
+  EXPECT_EQ(0.0, error0.z);
+
+  iris::PositionError existing_error1(0.0, -1.0, 0.0);
+  auto [point1, error1] =
+      matrix.InverseMultiplyWithError(point, &existing_error1);
+  EXPECT_EQ(0.0, point1.x);
+  EXPECT_EQ(0.0, error1.x);
+  EXPECT_EQ(0.0, point1.y);
+  EXPECT_EQ(existing_error * relative_error, error1.y);
+  EXPECT_EQ(0.0, point1.z);
+  EXPECT_EQ(0.0, error1.z);
+
+  iris::PositionError existing_error2(0.0, 0.0, -1.0);
+  auto [point2, error2] =
+      matrix.InverseMultiplyWithError(point, &existing_error2);
+  EXPECT_EQ(0.0, point2.x);
+  EXPECT_EQ(0.0, error2.x);
+  EXPECT_EQ(0.0, point2.y);
+  EXPECT_EQ(0.0, error2.y);
+  EXPECT_EQ(0.0, point2.z);
+  EXPECT_EQ(existing_error * relative_error, error2.z);
 }
 
 TEST(MatrixTest, MultiplyRay) {
