@@ -87,14 +87,14 @@ bool operator<(const Matrix& left, const Matrix& right);
 
 inline Point Matrix::Multiply(const Point& point) const {
   geometric_t x =
-      m[0][0] * point.x + m[0][1] * point.y + m[0][2] * point.z + m[0][3];
+      (m[0][0] * point.x + m[0][1] * point.y) + (m[0][2] * point.z + m[0][3]);
   geometric_t y =
-      m[1][0] * point.x + m[1][1] * point.y + m[1][2] * point.z + m[1][3];
+      (m[1][0] * point.x + m[1][1] * point.y) + (m[1][2] * point.z + m[1][3]);
   geometric_t z =
-      m[2][0] * point.x + m[2][1] * point.y + m[2][2] * point.z + m[2][3];
+      (m[2][0] * point.x + m[2][1] * point.y) + (m[2][2] * point.z + m[2][3]);
 
-  if (geometric_t w =
-          m[3][0] * point.x + m[3][1] * point.y + m[3][2] * point.z + m[3][3];
+  if (geometric_t w = (m[3][0] * point.x + m[3][1] * point.y) +
+                      (m[3][2] * point.z + m[3][3]);
       w != static_cast<geometric_t>(1.0)) {
     x /= w;
     y /= w;
@@ -106,14 +106,14 @@ inline Point Matrix::Multiply(const Point& point) const {
 
 inline Point Matrix::InverseMultiply(const Point& point) const {
   geometric_t x =
-      i[0][0] * point.x + i[0][1] * point.y + i[0][2] * point.z + i[0][3];
+      (i[0][0] * point.x + i[0][1] * point.y) + (i[0][2] * point.z + i[0][3]);
   geometric_t y =
-      i[1][0] * point.x + i[1][1] * point.y + i[1][2] * point.z + i[1][3];
+      (i[1][0] * point.x + i[1][1] * point.y) + (i[1][2] * point.z + i[1][3]);
   geometric_t z =
-      i[2][0] * point.x + i[2][1] * point.y + i[2][2] * point.z + i[2][3];
+      (i[2][0] * point.x + i[2][1] * point.y) + (i[2][2] * point.z + i[2][3]);
 
-  if (geometric_t w =
-          i[3][0] * point.x + i[3][1] * point.y + i[3][2] * point.z + i[3][3];
+  if (geometric_t w = (i[3][0] * point.x + i[3][1] * point.y) +
+                      (i[3][2] * point.z + i[3][3]);
       w != static_cast<geometric_t>(1.0)) {
     x /= w;
     y /= w;
