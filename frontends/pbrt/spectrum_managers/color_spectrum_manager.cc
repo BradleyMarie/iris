@@ -41,7 +41,7 @@ visual_t ToLuma(const Color& color) {
 
   iris::Color rgb_color(color.values[0], color.values[1], color.values[2],
                         iris::Color::LINEAR_SRGB);
-  return rgb_color.ConvertTo(iris::Color::CIE_XYZ).y;
+  return rgb_color.Luma();
 }
 
 };  // namespace
@@ -61,11 +61,9 @@ visual_t ColorAlbedoMatcher::Match(const Reflector& reflector) const {
 }
 
 visual_t ColorPowerMatcher::Match(const Spectrum& spectrum) const {
-  static const ColorColorMatcher color_matcher;
-  std::array<visual_t, 3> values = color_matcher.Match(spectrum);
-  iris::Color color(values[0], values[1], values[2],
-                    color_matcher.ColorSpace());
-  return color.ConvertTo(iris::Color::CIE_XYZ).y;
+  iris::Color color(spectrum.Intensity(0.5), spectrum.Intensity(1.5),
+                    spectrum.Intensity(2.5), iris::Color::LINEAR_SRGB);
+  return color.Luma();
 }
 
 ColorSpectrumManager::ColorSpectrumManager(bool all_spectra_are_reflective)
