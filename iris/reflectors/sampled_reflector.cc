@@ -19,29 +19,6 @@ SampledReflector::SampledReflector(const std::map<visual, visual>& samples) {
     wavelengths_.push_back(entry.first);
     intensitites_.push_back(std::max(static_cast<visual>(0.0), entry.second));
   }
-
-  if (wavelengths_.size() == 1) {
-    albedo_ = intensitites_[0];
-    return;
-  }
-
-  visual_t left_sum = 0.0;
-  for (size_t i = 1; i < wavelengths_.size(); i++) {
-    left_sum += intensitites_[i] * (wavelengths_[i] - wavelengths_[i - 1]);
-  }
-
-  visual_t right_sum = 0.0;
-  for (size_t i = 1; i < wavelengths_.size(); i++) {
-    right_sum += intensitites_[i - 1] * (wavelengths_[i] - wavelengths_[i - 1]);
-  }
-
-  visual_t sum = (left_sum + right_sum) * static_cast<visual_t>(0.5);
-
-  visual_t lowest_wavelength = wavelengths_.at(0);
-  visual_t hightest_wavelength = wavelengths_.back();
-
-  albedo_ = std::clamp(sum / (hightest_wavelength - lowest_wavelength),
-                       static_cast<visual_t>(0.0), static_cast<visual_t>(1.0));
 }
 
 visual_t SampledReflector::Reflectance(visual_t wavelength) const {
@@ -71,7 +48,5 @@ visual_t SampledReflector::Reflectance(visual_t wavelength) const {
   return std::clamp(result, static_cast<visual_t>(0.0),
                     static_cast<visual_t>(1.0));
 }
-
-visual_t SampledReflector::Albedo() const { return albedo_; }
 
 }  // namespace iris::reflectors

@@ -13,7 +13,7 @@ class SumSpectrum final : public Spectrum {
   SumSpectrum(const Spectrum& addend0, const Spectrum& addend1)
       : addend0_(addend0), addend1_(addend1) {}
 
-  visual_t Intensity(visual_t wavelength) const {
+  visual_t Intensity(visual_t wavelength) const override {
     return addend0_.Intensity(wavelength) + addend1_.Intensity(wavelength);
   }
 
@@ -29,7 +29,7 @@ class ScaledSpectrum final : public Spectrum {
     assert(scalar > 0.0);
   }
 
-  visual_t Intensity(visual_t wavelength) const {
+  visual_t Intensity(visual_t wavelength) const override {
     return spectrum_.Intensity(wavelength) * scalar_;
   }
 
@@ -43,7 +43,7 @@ class ScaledSpectra final : public Spectrum {
   ScaledSpectra(const Spectrum& spectrum0, const Spectrum& spectrum1)
       : spectrum0_(spectrum0), spectrum1_(spectrum1) {}
 
-  visual_t Intensity(visual_t wavelength) const {
+  visual_t Intensity(visual_t wavelength) const override {
     return spectrum0_.Intensity(wavelength) * spectrum1_.Intensity(wavelength);
   }
 
@@ -57,7 +57,7 @@ class ReflectedSpectrum final : public Spectrum {
   ReflectedSpectrum(const Spectrum& spectrum, const Reflector& reflector)
       : spectrum_(spectrum), reflector_(reflector) {}
 
-  visual_t Intensity(visual_t wavelength) const {
+  visual_t Intensity(visual_t wavelength) const override {
     return spectrum_.Intensity(wavelength) * reflector_.Reflectance(wavelength);
   }
 
@@ -71,14 +71,9 @@ class SumReflector final : public Reflector {
   SumReflector(const Reflector& addend0, const Reflector& addend1)
       : addend0_(addend0), addend1_(addend1) {}
 
-  visual_t Reflectance(visual_t wavelength) const {
+  visual_t Reflectance(visual_t wavelength) const override {
     visual_t sum =
         addend0_.Reflectance(wavelength) + addend1_.Reflectance(wavelength);
-    return std::min(static_cast<visual_t>(1.0), sum);
-  }
-
-  visual_t Albedo() const {
-    visual_t sum = addend0_.Albedo() + addend1_.Albedo();
     return std::min(static_cast<visual_t>(1.0), sum);
   }
 
@@ -94,11 +89,9 @@ class ScaledReflector final : public Reflector {
     assert(scalar > 0.0 && scalar < 1.0);
   }
 
-  visual_t Reflectance(visual_t wavelength) const {
+  visual_t Reflectance(visual_t wavelength) const override {
     return reflector_.Reflectance(wavelength) * scalar_;
   }
-
-  visual_t Albedo() const { return reflector_.Albedo() * scalar_; }
 
  private:
   const Reflector& reflector_;
@@ -110,13 +103,9 @@ class ScaledReflectors final : public Reflector {
   ScaledReflectors(const Reflector& reflector, const Reflector& attenuation)
       : reflector_(reflector), attenuation_(attenuation) {}
 
-  visual_t Reflectance(visual_t wavelength) const {
+  visual_t Reflectance(visual_t wavelength) const override {
     return reflector_.Reflectance(wavelength) *
            attenuation_.Reflectance(wavelength);
-  }
-
-  visual_t Albedo() const {
-    return reflector_.Albedo() * attenuation_.Albedo();
   }
 
  private:
@@ -131,11 +120,9 @@ class UnboundedScaledReflector final : public Reflector {
     assert(scalar > 0.0);
   }
 
-  visual_t Reflectance(visual_t wavelength) const {
+  visual_t Reflectance(visual_t wavelength) const override {
     return reflector_.Reflectance(wavelength) * scalar_;
   }
-
-  visual_t Albedo() const { return reflector_.Albedo() * scalar_; }
 
  private:
   const Reflector& reflector_;
@@ -147,14 +134,9 @@ class UnboundedSumReflector final : public Reflector {
   UnboundedSumReflector(const Reflector& addend0, const Reflector& addend1)
       : addend0_(addend0), addend1_(addend1) {}
 
-  visual_t Reflectance(visual_t wavelength) const {
+  visual_t Reflectance(visual_t wavelength) const override {
     visual_t sum =
         addend0_.Reflectance(wavelength) + addend1_.Reflectance(wavelength);
-    return sum;
-  }
-
-  visual_t Albedo() const {
-    visual_t sum = addend0_.Albedo() + addend1_.Albedo();
     return sum;
   }
 

@@ -11,7 +11,6 @@ namespace reflectors {
 class MockReflector final : public Reflector {
  public:
   MOCK_METHOD(visual_t, Reflectance, (visual_t), (const override));
-  MOCK_METHOD(visual_t, Albedo, (), (const override));
 };
 
 }  // namespace reflectors

@@ -30,13 +30,6 @@ class ColorReflector final : public Reflector {
 
   visual_t Reflectance(visual_t wavelength) const override;
 
-  visual_t Albedo() const override {
-    iris::Color color(values_[0], values_[1], values_[2],
-                      iris::Color::LINEAR_SRGB);
-    return std::min(static_cast<visual_t>(1.0),
-                    color.ConvertTo(iris::Color::CIE_XYZ).y);
-  }
-
  private:
   const std::array<visual_t, 3> values_;
 };

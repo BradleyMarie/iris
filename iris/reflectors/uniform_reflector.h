@@ -12,7 +12,6 @@ class UniformReflector final : public Reflector {
   UniformReflector(visual reflectance);
 
   visual_t Reflectance(visual_t wavelength) const override;
-  visual_t Albedo() const override;
 
  private:
   visual_t reflectance_;

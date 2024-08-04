@@ -17,6 +17,4 @@ visual_t UniformReflector::Reflectance(visual_t wavelength) const {
   return reflectance_;
 }
 
-visual_t UniformReflector::Albedo() const { return reflectance_; }
-
 }  // namespace iris::reflectors

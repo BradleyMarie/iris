@@ -15,12 +15,10 @@ class SampledReflector final : public Reflector {
   SampledReflector(const std::map<visual, visual>& samples);
 
   visual_t Reflectance(visual_t wavelength) const override;
-  visual_t Albedo() const override;
 
  private:
   std::vector<visual> wavelengths_;
   std::vector<visual> intensitites_;
-  visual_t albedo_;
 };
 
 }  // namespace reflectors

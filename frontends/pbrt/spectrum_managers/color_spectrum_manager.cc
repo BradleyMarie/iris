@@ -57,7 +57,9 @@ iris::Color::Space ColorColorMatcher::ColorSpace() const {
 }
 
 visual_t ColorAlbedoMatcher::Match(const Reflector& reflector) const {
-  return reflector.Albedo();
+  iris::Color color(reflector.Reflectance(0.5), reflector.Reflectance(1.5),
+                    reflector.Reflectance(2.5), iris::Color::LINEAR_SRGB);
+  return color.Luma();
 }
 
 visual_t ColorPowerMatcher::Match(const Spectrum& spectrum) const {
