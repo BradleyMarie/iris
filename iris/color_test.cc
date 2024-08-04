@@ -53,3 +53,13 @@ TEST(ColorTest, ConvertToXyzFromLinearRgb) {
   EXPECT_NEAR(0.50000006, actual.g, 0.001);
   EXPECT_NEAR(0.544414997, actual.b, 0.001);
 }
+
+TEST(ColorTest, LumaSame) {
+  auto color = iris::Color(1.0, 2.0, 3.0, iris::Color::CIE_XYZ);
+  EXPECT_EQ(color.y, color.Luma());
+}
+
+TEST(ColorTest, LumaFromLinearRgb) {
+  auto color = iris::Color(0.5, 0.5, 0.5, iris::Color::LINEAR_SRGB);
+  EXPECT_NEAR(0.50000006, color.Luma(), 0.001);
+}

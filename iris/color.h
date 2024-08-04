@@ -25,6 +25,8 @@ struct Color final {
 
   Color ConvertTo(Space target) const;
 
+  visual_t Luma() const;
+
   const visual_t& operator[](size_t index) const {
     assert(index < 3);
     const visual_t* as_array = &x;
