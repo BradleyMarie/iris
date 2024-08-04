@@ -2,6 +2,7 @@
 #define _FRONTENDS_PBRT_SPECTRUM_MANAGERS_COLOR_SPECTRUM_MANAGER_
 
 #include "frontends/pbrt/spectrum_manager.h"
+#include "iris/albedo_matcher.h"
 #include "iris/color_matcher.h"
 #include "iris/power_matcher.h"
 
@@ -11,6 +12,11 @@ class ColorColorMatcher final : public ColorMatcher {
  public:
   std::array<visual_t, 3> Match(const Spectrum& spectrum) const override;
   iris::Color::Space ColorSpace() const override;
+};
+
+class ColorAlbedoMatcher : public AlbedoMatcher {
+ public:
+  visual_t Match(const Reflector& reflector) const override;
 };
 
 class ColorPowerMatcher : public PowerMatcher {

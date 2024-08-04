@@ -4,6 +4,7 @@
 #include <thread>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/albedo_matchers/mock_albedo_matcher.h"
 #include "iris/cameras/mock_camera.h"
 #include "iris/color_matchers/mock_color_matcher.h"
 #include "iris/image_samplers/mock_image_sampler.h"
@@ -19,6 +20,7 @@ void RunTestBody(
     std::function<void(size_t, size_t)> progress_callback,
     std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
         skip_pixel_callback) {
+  iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
   iris::power_matchers::MockPowerMatcher power_matcher;
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
   auto light_scene_builder =
@@ -135,8 +137,9 @@ void RunTestBody(
       .Times(actual_num_threads)
       .WillRepeatedly(testing::Invoke([&]() {
         auto result = std::make_unique<iris::integrators::MockIntegrator>();
-        EXPECT_CALL(*result, Integrate(trace_ray, testing::_, testing::_,
-                                       testing::_, testing::_, testing::_))
+        EXPECT_CALL(*result,
+                    Integrate(trace_ray, testing::_, testing::_, testing::_,
+                              testing::_, testing::_, testing::_))
             .WillRepeatedly(testing::Return(&spectrum));
         return result;
       }));
@@ -160,7 +163,8 @@ void RunTestBody(
   options.progress_callback = progress_callback;
   options.skip_pixel_callback = skip_pixel_callback;
 
-  auto framebuffer = renderable.Render(color_matcher, *rng, options);
+  auto framebuffer =
+      renderable.Render(albedo_matcher, color_matcher, *rng, options);
   EXPECT_EQ(image_dimensions, framebuffer.Size());
 
   iris::Color black(0.0, 0.0, 0.0, iris::Color::LINEAR_SRGB);

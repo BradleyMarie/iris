@@ -33,10 +33,11 @@ struct Chunk {
 void RenderChunk(
     const Scene& scene, const EnvironmentalLight* environmental_light,
     const LightScene& light_scene, const Camera& camera,
-    std::unique_ptr<Integrator> integrator, const ColorMatcher& color_matcher,
-    std::vector<std::vector<Chunk>>& chunks, std::atomic<size_t>& chunk_counter,
-    size_t num_chunks, size_t num_pixels, geometric_t minimum_distance,
-    Framebuffer& framebuffer, const Renderer::SkipPixelFn& skip_pixel_callback,
+    std::unique_ptr<Integrator> integrator, const AlbedoMatcher& albedo_matcher,
+    const ColorMatcher& color_matcher, std::vector<std::vector<Chunk>>& chunks,
+    std::atomic<size_t>& chunk_counter, size_t num_chunks, size_t num_pixels,
+    geometric_t minimum_distance, Framebuffer& framebuffer,
+    const Renderer::SkipPixelFn& skip_pixel_callback,
     const Renderer::ProgressCallbackFn& progress_callback) {
   bool has_lens = camera.HasLens();
   auto color_space = color_matcher.ColorSpace();
@@ -90,7 +91,7 @@ void RenderChunk(
           LightSampler light_sampler(light_scene, image_sample->rng,
                                      light_sample_allocator);
           auto* spectrum = integrator->Integrate(
-              ray, ray_tracer, light_sampler, visibility_tester,
+              ray, ray_tracer, light_sampler, visibility_tester, albedo_matcher,
               spectral_allocator, image_sample->rng);
 
           if (spectrum) {
@@ -123,6 +124,7 @@ void RenderChunk(
 Framebuffer Renderer::Render(const Camera& camera,
                              const ImageSampler& image_sampler,
                              const Integrator& integrator,
+                             const AlbedoMatcher& albedo_matcher,
                              const ColorMatcher& color_matcher, Random& rng,
                              const std::pair<size_t, size_t>& image_dimensions,
                              const AdditionalOptions& options) const {
@@ -177,16 +179,17 @@ Framebuffer Renderer::Render(const Camera& camera,
     threads.push_back(std::thread(
         RenderChunk, std::cref(*scene_),
         scene_objects_->GetEnvironmentalLight(), std::cref(*light_scene_),
-        std::cref(camera), integrator.Duplicate(), std::cref(color_matcher),
-        std::ref(chunks), std::ref(chunk_counter), num_chunks, num_pixels,
-        options.minimum_distance, std::ref(result), options.skip_pixel_callback,
-        nullptr));
+        std::cref(camera), integrator.Duplicate(), std::cref(albedo_matcher),
+        std::cref(color_matcher), std::ref(chunks), std::ref(chunk_counter),
+        num_chunks, num_pixels, options.minimum_distance, std::ref(result),
+        options.skip_pixel_callback, nullptr));
   }
 
   RenderChunk(*scene_, scene_objects_->GetEnvironmentalLight(), *light_scene_,
-              camera, integrator.Duplicate(), color_matcher, chunks,
-              chunk_counter, num_chunks, num_pixels, options.minimum_distance,
-              result, options.skip_pixel_callback, options.progress_callback);
+              camera, integrator.Duplicate(), albedo_matcher, color_matcher,
+              chunks, chunk_counter, num_chunks, num_pixels,
+              options.minimum_distance, result, options.skip_pixel_callback,
+              options.progress_callback);
 
   for (auto& thread : threads) {
     thread.join();

@@ -56,6 +56,10 @@ iris::Color::Space ColorColorMatcher::ColorSpace() const {
   return iris::Color::LINEAR_SRGB;
 }
 
+visual_t ColorAlbedoMatcher::Match(const Reflector& reflector) const {
+  return reflector.Albedo();
+}
+
 visual_t ColorPowerMatcher::Match(const Spectrum& spectrum) const {
   static const ColorColorMatcher color_matcher;
   std::array<visual_t, 3> values = color_matcher.Match(spectrum);

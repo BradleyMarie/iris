@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "iris/albedo_matcher.h"
 #include "iris/light_sampler.h"
 #include "iris/random.h"
 #include "iris/ray_differential.h"
@@ -18,6 +19,7 @@ class Integrator {
   virtual const Spectrum* Integrate(RayDifferential ray, RayTracer& ray_tracer,
                                     LightSampler& light_sampler,
                                     VisibilityTester& visibility_tester,
+                                    const AlbedoMatcher& albedo_matcher,
                                     SpectralAllocator& spectral_allocator,
                                     Random& rng) = 0;
 

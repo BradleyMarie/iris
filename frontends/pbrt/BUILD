@@ -241,6 +241,7 @@ cc_test(
     deps = [
         ":parser",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris/albedo_matchers:mock_albedo_matcher",
         "//iris/color_matchers:mock_color_matcher",
         "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mersenne_twister_random",
@@ -272,6 +273,7 @@ cc_test(
     srcs = ["renderable_test.cc"],
     deps = [
         ":renderable",
+        "//iris/albedo_matchers:mock_albedo_matcher",
         "//iris/cameras:mock_camera",
         "//iris/color_matchers:mock_color_matcher",
         "//iris/image_samplers:mock_image_sampler",

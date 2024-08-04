@@ -5,6 +5,7 @@
 #include <memory>
 #include <utility>
 
+#include "iris/albedo_matcher.h"
 #include "iris/camera.h"
 #include "iris/color_matcher.h"
 #include "iris/framebuffer.h"
@@ -43,8 +44,9 @@ class Renderer final {
 
   Framebuffer Render(
       const Camera& camera, const ImageSampler& image_sampler,
-      const Integrator& integrator, const ColorMatcher& color_matcher,
-      Random& rng, const std::pair<size_t, size_t>& image_dimensions,
+      const Integrator& integrator, const AlbedoMatcher& albedo_matcher,
+      const ColorMatcher& color_matcher, Random& rng,
+      const std::pair<size_t, size_t>& image_dimensions,
       const AdditionalOptions& options = AdditionalOptions()) const;
 
  private:

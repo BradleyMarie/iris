@@ -20,7 +20,8 @@ class MockIntegrator final : public Integrator {
  public:
   MOCK_METHOD(const Spectrum*, Integrate,
               (RayDifferential, RayTracer&, LightSampler&, VisibilityTester&,
-               SpectralAllocator&, Random&),
+               const AlbedoMatcher& albedo_matcher, SpectralAllocator&,
+               Random&),
               (override));
   MOCK_METHOD(std::unique_ptr<Integrator>, Duplicate, (), (const override));
 };

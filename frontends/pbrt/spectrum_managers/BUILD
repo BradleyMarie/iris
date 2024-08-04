@@ -10,6 +10,7 @@ cc_library(
         "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt/spectrum_managers/internal:color_reflector",
         "//frontends/pbrt/spectrum_managers/internal:color_spectrum",
+        "//iris:albedo_matcher",
         "//iris:color",
         "//iris:color_matcher",
         "//iris:power_matcher",

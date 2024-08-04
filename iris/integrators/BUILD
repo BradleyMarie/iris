@@ -44,6 +44,7 @@ cc_test(
     srcs = ["path_integrator_test.cc"],
     deps = [
         ":path_integrator",
+        "//iris/albedo_matchers:mock_albedo_matcher",
         "//iris/bxdfs:mock_bxdf",
         "//iris/environmental_lights:mock_environmental_light",
         "//iris/lights:mock_light",

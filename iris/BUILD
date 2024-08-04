@@ -3,6 +3,16 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "albedo_matcher",
+    hdrs = ["albedo_matcher.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":float",
+        ":reflector",
+    ],
+)
+
+cc_library(
     name = "bounding_box",
     srcs = ["bounding_box.cc"],
     hdrs = ["bounding_box.h"],
@@ -292,6 +302,7 @@ cc_library(
     hdrs = ["integrator.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":albedo_matcher",
         ":light_sampler",
         ":random",
         ":ray_differential",
@@ -648,6 +659,7 @@ cc_library(
     hdrs = ["renderer.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":albedo_matcher",
         ":camera",
         ":color",
         ":color_matcher",
@@ -674,6 +686,7 @@ cc_test(
     srcs = ["renderer_test.cc"],
     deps = [
         ":renderer",
+        "//iris/albedo_matchers:mock_albedo_matcher",
         "//iris/cameras:mock_camera",
         "//iris/color_matchers:mock_color_matcher",
         "//iris/image_samplers:mock_image_sampler",

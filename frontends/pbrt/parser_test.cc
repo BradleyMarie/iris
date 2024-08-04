@@ -4,6 +4,7 @@
 
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/albedo_matchers/mock_albedo_matcher.h"
 #include "iris/color_matchers/mock_color_matcher.h"
 #include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mersenne_twister_random.h"
@@ -778,13 +779,16 @@ TEST(Render, EmptyScene) {
   EXPECT_TRUE(result->skip_pixel_callback({480, 640}, {480, 640}));
   EXPECT_EQ("pbrt.exr", result->output_filename);
 
+  iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
+
   iris::color_matchers::MockColorMatcher color_matcher;
   EXPECT_CALL(color_matcher, ColorSpace())
       .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
 
   iris::random::MersenneTwisterRandom rng;
 
-  auto framebuffer = result->renderable.Render(color_matcher, rng);
+  auto framebuffer =
+      result->renderable.Render(albedo_matcher, color_matcher, rng);
   auto dimensions = framebuffer.Size();
   EXPECT_EQ(480u, dimensions.first);
   EXPECT_EQ(640u, dimensions.second);

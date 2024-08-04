@@ -25,6 +25,7 @@ class PathIntegrator final : public Integrator {
   virtual const Spectrum* Integrate(RayDifferential ray, RayTracer& ray_tracer,
                                     LightSampler& light_sampler,
                                     VisibilityTester& visibility_tester,
+                                    const AlbedoMatcher& albedo_matcher,
                                     SpectralAllocator& spectral_allocator,
                                     Random& rng) override;
 

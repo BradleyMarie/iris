@@ -20,10 +20,11 @@ Renderable::Renderable(Renderer renderer, std::unique_ptr<Camera> camera,
 }
 
 Framebuffer Renderable::Render(
-    const ColorMatcher& color_matcher, Random& rng,
-    const Renderer::AdditionalOptions& options) const {
+    const AlbedoMatcher& albedo_matcher, const ColorMatcher& color_matcher,
+    Random& rng, const Renderer::AdditionalOptions& options) const {
   return renderer_.Render(*camera_, *image_sampler_, *integrator_,
-                          color_matcher, rng, image_dimensions_, options);
+                          albedo_matcher, color_matcher, rng, image_dimensions_,
+                          options);
 }
 
 }  // namespace iris::pbrt_frontend

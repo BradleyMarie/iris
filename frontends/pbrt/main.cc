@@ -109,6 +109,7 @@ int main(int argc, char** argv) {
   }
 
   std::unique_ptr<iris::pbrt_frontend::SpectrumManager> spectral_manager;
+  std::unique_ptr<iris::AlbedoMatcher> albedo_matcher;
   std::unique_ptr<iris::ColorMatcher> color_matcher;
   std::unique_ptr<iris::PowerMatcher> power_matcher;
   if (absl::GetFlag(FLAGS_spectral)) {
@@ -123,6 +124,8 @@ int main(int argc, char** argv) {
     spectral_manager = std::make_unique<
         iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager>(
         absl::GetFlag(FLAGS_all_spectra_are_reflective));
+    albedo_matcher = std::make_unique<
+        iris::pbrt_frontend::spectrum_managers::ColorAlbedoMatcher>();
     color_matcher = std::make_unique<
         iris::pbrt_frontend::spectrum_managers::ColorColorMatcher>();
     power_matcher = std::make_unique<
@@ -259,7 +262,8 @@ int main(int argc, char** argv) {
     options.skip_pixel_callback = std::move(result->skip_pixel_callback);
 
     iris::random::MersenneTwisterRandom rng;  // TODO: Support other RNG
-    auto framebuffer = result->renderable.Render(*color_matcher, rng, options);
+    auto framebuffer = result->renderable.Render(*albedo_matcher,
+                                                 *color_matcher, rng, options);
 
     result->output_write_function(framebuffer, output);
   }

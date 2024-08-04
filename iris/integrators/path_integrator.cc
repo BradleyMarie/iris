@@ -28,12 +28,10 @@ PathIntegrator::PathIntegrator(visual maximum_path_continue_probability,
   attenuations_.reserve(max_bounces);
 }
 
-const Spectrum* PathIntegrator::Integrate(RayDifferential ray,
-                                          RayTracer& ray_tracer,
-                                          LightSampler& light_sampler,
-                                          VisibilityTester& visibility_tester,
-                                          SpectralAllocator& spectral_allocator,
-                                          Random& rng) {
+const Spectrum* PathIntegrator::Integrate(
+    RayDifferential ray, RayTracer& ray_tracer, LightSampler& light_sampler,
+    VisibilityTester& visibility_tester, const AlbedoMatcher& albedo_matcher,
+    SpectralAllocator& spectral_allocator, Random& rng) {
   internal::RussianRoulette russian_roulette(maximum_path_continue_probability_,
                                              always_continue_path_throughput_);
   internal::PathBuilder path_builder(reflectors_, spectra_, attenuations_);
@@ -68,7 +66,7 @@ const Spectrum* PathIntegrator::Integrate(RayDifferential ray,
       break;
     }
 
-    path_throughput *= bsdf_sample->reflector.Albedo();
+    path_throughput *= albedo_matcher.Match(bsdf_sample->reflector);
 
     visual_t attenuation;
     if (bsdf_sample->pdf) {

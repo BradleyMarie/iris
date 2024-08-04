@@ -24,7 +24,8 @@ class Renderable {
              std::unique_ptr<Integrator> integrator,
              std::pair<size_t, size_t> image_dimensions) noexcept;
 
-  Framebuffer Render(const ColorMatcher& color_matcher, Random& rng,
+  Framebuffer Render(const AlbedoMatcher& albedo_matcher,
+                     const ColorMatcher& color_matcher, Random& rng,
                      const Renderer::AdditionalOptions& options =
                          Renderer::AdditionalOptions()) const;
 
