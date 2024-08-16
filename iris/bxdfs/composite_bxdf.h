@@ -28,6 +28,15 @@ class CompositeBxdf final : public Bxdf {
     }
   }
 
+  bool IsDiffuse() const override {
+    for (size_t i = 0; i < NumBxdfs; i++) {
+      if (bxdfs_[i]->IsDiffuse()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {

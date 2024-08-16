@@ -8,6 +8,12 @@
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 
+TEST(OrenNayarBrdfTest, IsDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
+  EXPECT_TRUE(bxdf.IsDiffuse());
+}
+
 TEST(OrenNayarBrdfTest, SampleAligned) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;

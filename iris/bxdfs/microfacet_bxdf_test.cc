@@ -132,6 +132,14 @@ TEST(TrowbridgeReitzDistribution, Sample) {
   EXPECT_NEAR(-0.4927, sample3.z, 0.001);
 }
 
+TEST(MicrofacetBrdf, IsDiffuse) {
+  iris::reflectors::UniformReflector reflector(0.5);
+  TestMicrofacetDistribution distribution;
+  TestReflectionFresnel fresnel;
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
+  EXPECT_TRUE(brdf.IsDiffuse());
+}
+
 TEST(MicrofacetBrdf, SampleZero) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -305,6 +313,14 @@ TEST(MicrofacetBrdf, Reflectance) {
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.0416667, reflectance->Reflectance(1.0), 0.001);
+}
+
+TEST(MicrofacetBtdf, IsDiffuse) {
+  iris::reflectors::UniformReflector reflector(0.5);
+  TestMicrofacetDistribution distribution;
+  TestTransmissionFresnel fresnel;
+  iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
+  EXPECT_TRUE(btdf.IsDiffuse());
 }
 
 TEST(MicrofacetBtdf, SampleZero) {

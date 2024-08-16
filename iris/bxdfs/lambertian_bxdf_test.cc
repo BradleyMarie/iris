@@ -8,6 +8,12 @@
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 
+TEST(LambertianBrdfTest, IsDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::bxdfs::LambertianBrdf bxdf(reflector);
+  EXPECT_TRUE(bxdf.IsDiffuse());
+}
+
 TEST(LambertianBrdfTest, SampleAligned) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
@@ -99,6 +105,12 @@ TEST(LambertianBrdfTest, Reflectance) {
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);
+}
+
+TEST(LambertianBtdfTest, IsDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::bxdfs::LambertianBtdf bxdf(reflector);
+  EXPECT_TRUE(bxdf.IsDiffuse());
 }
 
 TEST(LambertianBtdfTest, SampleAligned) {

@@ -57,6 +57,8 @@ class MicrofacetBrdf final : public Bxdf {
         distribution_(distribution),
         fresnel_(fresnel) {}
 
+  bool IsDiffuse() const override { return true; }
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
@@ -148,6 +150,8 @@ class MicrofacetBtdf final : public Bxdf {
         eta_transmitted_over_incident_(eta_transmitted / eta_incident),
         distribution_(distribution),
         fresnel_(fresnel) {}
+
+  bool IsDiffuse() const override { return true; }
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,

@@ -21,6 +21,8 @@ Bxdf::Hemisphere SampledHemisphere(const Vector& incoming,
 
 }  // namespace
 
+bool SpecularBxdf::IsDiffuse() const { return false; }
+
 std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {

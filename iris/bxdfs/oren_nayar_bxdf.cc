@@ -34,6 +34,8 @@ OrenNayarBrdf::OrenNayarBrdf(const Reflector& reflector, visual_t sigma)
   assert(sigma >= static_cast<visual_t>(0.0));
 }
 
+bool OrenNayarBrdf::IsDiffuse() const { return true; }
+
 std::optional<Bxdf::SampleResult> OrenNayarBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,

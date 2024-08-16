@@ -10,6 +10,30 @@
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 
+TEST(CompositeBxdfTest, IsNotDiffuse) {
+  iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(false));
+
+  iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
+
+  const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  EXPECT_FALSE(composite.IsDiffuse());
+}
+
+TEST(CompositeBxdfTest, IsDiffuse) {
+  iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(false));
+
+  iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(true));
+
+  const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  EXPECT_TRUE(composite.IsDiffuse());
+}
+
 TEST(CompositeBxdfTest, Sample) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.75));

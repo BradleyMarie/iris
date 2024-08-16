@@ -8,6 +8,8 @@
 namespace iris {
 namespace bxdfs {
 
+bool LambertianBrdf::IsDiffuse() const { return true; }
+
 std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
@@ -37,6 +39,8 @@ const Reflector* LambertianBrdf::Reflectance(
 
   return allocator.Scale(&reflector_, M_1_PI);
 }
+
+bool LambertianBtdf::IsDiffuse() const { return true; }
 
 std::optional<Bxdf::SampleResult> LambertianBtdf::Sample(
     const Vector& incoming,

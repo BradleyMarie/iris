@@ -13,6 +13,8 @@ namespace iris {
 
 class Bxdf {
  public:
+  virtual bool IsDiffuse() const = 0;
+
   struct Differentials {
     const Vector dx;
     const Vector dy;

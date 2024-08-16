@@ -8,6 +8,12 @@
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 
+TEST(SpecularBrdfTest, IsDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
+  EXPECT_FALSE(bxdf.IsDiffuse());
+}
+
 TEST(SpecularBrdfTest, Sample) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
@@ -90,6 +96,13 @@ TEST(SpecularBrdfTest, Reflectance) {
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->Reflectance(1.0));
+}
+
+TEST(SpecularBtdfTest, IsDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
+                                 iris::bxdfs::FresnelNoOp());
+  EXPECT_FALSE(bxdf.IsDiffuse());
 }
 
 TEST(SpecularBtdfTest, SampleFront) {

@@ -15,6 +15,8 @@ class OrenNayarBrdf final : public Bxdf {
  public:
   OrenNayarBrdf(const Reflector& reflector, visual_t sigma);
 
+  bool IsDiffuse() const override;
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override;

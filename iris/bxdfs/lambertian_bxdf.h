@@ -15,6 +15,8 @@ class LambertianBrdf final : public Bxdf {
  public:
   LambertianBrdf(const Reflector& reflector) noexcept : reflector_(reflector) {}
 
+  bool IsDiffuse() const override;
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override;
@@ -36,6 +38,8 @@ class LambertianBtdf final : public Bxdf {
  public:
   LambertianBtdf(const Reflector& transmittance) noexcept
       : transmittance_(transmittance) {}
+
+  bool IsDiffuse() const override;
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
