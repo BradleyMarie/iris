@@ -14,7 +14,41 @@ TEST(LambertianBrdfTest, IsDiffuse) {
   EXPECT_TRUE(bxdf.IsDiffuse());
 }
 
-TEST(LambertianBrdfTest, SampleAligned) {
+TEST(LambertianBrdfTest, SampleDiffuseAligned) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.0));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::LambertianBrdf bxdf(reflector);
+  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->z, 0.0003452669, 0.0001);
+}
+
+TEST(LambertianBrdfTest, SampleDiffuseUnaligned) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.0));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::LambertianBrdf bxdf(reflector);
+  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, -1.0), sampler);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->x, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->y, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->z, -0.000345266, 0.0001);
+}
+
+TEST(LambertianBrdfTest, Sample) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
@@ -29,24 +63,6 @@ TEST(LambertianBrdfTest, SampleAligned) {
   EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.z, 0.0003452669, 0.0001);
-  EXPECT_FALSE(result->differentials);
-}
-
-TEST(LambertianBrdfTest, SampleUnaligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
-
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
-                            iris::Vector(0.0, 0.0, -1.0), sampler);
-  ASSERT_TRUE(result);
-  EXPECT_NEAR(result->direction.x, 0.707106709, 0.0001);
-  EXPECT_NEAR(result->direction.y, 0.707106709, 0.0001);
-  EXPECT_NEAR(result->direction.z, -0.000345266, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 
@@ -113,7 +129,7 @@ TEST(LambertianBtdfTest, IsDiffuse) {
   EXPECT_TRUE(bxdf.IsDiffuse());
 }
 
-TEST(LambertianBtdfTest, SampleAligned) {
+TEST(LambertianBtdfTest, SampleDiffuseAligned) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
@@ -122,16 +138,32 @@ TEST(LambertianBtdfTest, SampleAligned) {
   iris::Sampler sampler(rng);
 
   iris::bxdfs::LambertianBtdf bxdf(reflector);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
-                            iris::Vector(0.0, 0.0, 1.0), sampler);
+  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
-  EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
-  EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
-  EXPECT_NEAR(result->direction.z, -0.000345266, 0.0001);
-  EXPECT_FALSE(result->differentials);
+  EXPECT_NEAR(result->x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->z, -0.000345266, 0.0001);
 }
 
-TEST(LambertianBtdfTest, SampleUnaligned) {
+TEST(LambertianBtdfTest, SampleDiffuseUnaligned) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.0));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::LambertianBtdf bxdf(reflector);
+  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->z, -0.000345266, 0.0001);
+}
+
+TEST(LambertianBtdfTest, Sample) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())

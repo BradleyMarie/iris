@@ -34,6 +34,47 @@ TEST(CompositeBxdfTest, IsDiffuse) {
   EXPECT_TRUE(composite.IsDiffuse());
 }
 
+TEST(CompositeBxdfTest, SampleDiffuseNone) {
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(false));
+  iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
+
+  const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  auto sample = composite.SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
+                                        iris::Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_FALSE(sample);
+}
+
+TEST(CompositeBxdfTest, SampleDiffuse) {
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.55));
+  EXPECT_CALL(rng, DiscardGeometric(1));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(true));
+  iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
+  iris::bxdfs::MockBxdf bxdf2;
+  EXPECT_CALL(bxdf2, IsDiffuse()).WillOnce(testing::Return(true));
+  EXPECT_CALL(bxdf2, SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
+                                   iris::Vector(0.0, 0.0, 1.0), testing::_))
+      .WillOnce(testing::Return(iris::Vector(1.0, 0.0, 0.0)));
+
+  const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1, &bxdf2};
+  iris::bxdfs::internal::CompositeBxdf<3> composite(bxdfs);
+  auto sample = composite.SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
+                                        iris::Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(sample);
+  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), *sample);
+}
+
 TEST(CompositeBxdfTest, Sample) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.75));

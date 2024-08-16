@@ -140,7 +140,7 @@ TEST(MicrofacetBrdf, IsDiffuse) {
   EXPECT_TRUE(brdf.IsDiffuse());
 }
 
-TEST(MicrofacetBrdf, SampleZero) {
+TEST(MicrofacetBrdf, SampleDiffuseZero) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   iris::Sampler sampler(rng);
@@ -150,11 +150,11 @@ TEST(MicrofacetBrdf, SampleZero) {
   TestReflectionFresnel fresnel;
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_FALSE(brdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                           iris::Vector(0.0, 0.0, 1.0), sampler));
+  EXPECT_FALSE(brdf.SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
+                                  iris::Vector(0.0, 0.0, 1.0), sampler));
 }
 
-TEST(MicrofacetBrdf, SampleOppositeHemispheres) {
+TEST(MicrofacetBrdf, SampleDiffuseOppositeHemispheres) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
       .Times(2)
@@ -166,8 +166,26 @@ TEST(MicrofacetBrdf, SampleOppositeHemispheres) {
   TestReflectionFresnel fresnel;
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_FALSE(brdf.Sample(iris::Vector(1.0, 0.0, 1.0), std::nullopt,
-                           iris::Vector(0.0, 0.0, 1.0), sampler));
+  EXPECT_FALSE(brdf.SampleDiffuse(iris::Vector(1.0, 0.0, 1.0),
+                                  iris::Vector(0.0, 0.0, 1.0), sampler));
+}
+
+TEST(MicrofacetBrdf, SampleDiffuse) {
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.75));
+  iris::Sampler sampler(rng);
+
+  iris::reflectors::UniformReflector reflector(0.5);
+  TestMicrofacetDistribution distribution;
+  TestReflectionFresnel fresnel;
+  iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
+
+  auto sample = brdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(sample);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), *sample);
 }
 
 TEST(MicrofacetBrdf, Sample) {
@@ -323,7 +341,7 @@ TEST(MicrofacetBtdf, IsDiffuse) {
   EXPECT_TRUE(btdf.IsDiffuse());
 }
 
-TEST(MicrofacetBtdf, SampleZero) {
+TEST(MicrofacetBtdf, SampleDiffuseZero) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   iris::Sampler sampler(rng);
@@ -333,11 +351,11 @@ TEST(MicrofacetBtdf, SampleZero) {
   TestTransmissionFresnel fresnel;
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_FALSE(btdf.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
-                           iris::Vector(0.0, 0.0, 1.0), sampler));
+  EXPECT_FALSE(btdf.SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
+                                  iris::Vector(0.0, 0.0, 1.0), sampler));
 }
 
-TEST(MicrofacetBtdf, SampleSameHemispheres) {
+TEST(MicrofacetBtdf, SampleDiffuseSameHemispheres) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
       .Times(2)
@@ -349,8 +367,26 @@ TEST(MicrofacetBtdf, SampleSameHemispheres) {
   TestTransmissionFresnel fresnel;
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_FALSE(btdf.Sample(iris::Vector(1.0, 0.0, 1.0), std::nullopt,
-                           iris::Vector(0.0, 0.0, 1.0), sampler));
+  EXPECT_FALSE(btdf.SampleDiffuse(iris::Vector(1.0, 0.0, 1.0),
+                                  iris::Vector(0.0, 0.0, 1.0), sampler));
+}
+
+TEST(MicrofacetBtdf, SampleDiffuse) {
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.75));
+  iris::Sampler sampler(rng);
+
+  iris::reflectors::UniformReflector reflector(0.5);
+  TestMicrofacetDistribution distribution;
+  TestTransmissionFresnel fresnel;
+  iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
+
+  auto sample = btdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(sample);
+  EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), *sample);
 }
 
 TEST(MicrofacetBtdf, Sample) {

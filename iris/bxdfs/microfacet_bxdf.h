@@ -59,6 +59,25 @@ class MicrofacetBrdf final : public Bxdf {
 
   bool IsDiffuse() const override { return true; }
 
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override {
+    if (incoming.z == static_cast<geometric_t>(0.0)) {
+      return std::nullopt;
+    }
+
+    Vector half_angle =
+        distribution_.Sample(incoming, sampler.Next(), sampler.Next());
+
+    auto outgoing = internal::Reflect(incoming, half_angle);
+    if (!outgoing || outgoing->z == static_cast<geometric>(0.0) ||
+        std::signbit(incoming.z) != std::signbit(outgoing->z)) {
+      return std::nullopt;
+    }
+
+    return *outgoing;
+  }
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
@@ -152,6 +171,32 @@ class MicrofacetBtdf final : public Bxdf {
         fresnel_(fresnel) {}
 
   bool IsDiffuse() const override { return true; }
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override {
+    if (incoming.z == static_cast<geometric>(0.0)) {
+      return std::nullopt;
+    }
+
+    Vector half_angle =
+        distribution_.Sample(incoming, sampler.Next(), sampler.Next());
+    if (DotProduct(incoming, half_angle) < static_cast<geometric_t>(0.0)) {
+      return std::nullopt;
+    }
+
+    std::optional<Vector> outgoing = internal::Refract(
+        incoming, half_angle, RelativeRefractiveRatio(incoming));
+    if (!outgoing) {
+      return std::nullopt;
+    }
+
+    if (std::signbit(incoming.z) == std::signbit(outgoing->z)) {
+      return std::nullopt;
+    }
+
+    return *outgoing;
+  }
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,

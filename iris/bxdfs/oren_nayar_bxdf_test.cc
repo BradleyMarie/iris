@@ -14,7 +14,41 @@ TEST(OrenNayarBrdfTest, IsDiffuse) {
   EXPECT_TRUE(bxdf.IsDiffuse());
 }
 
-TEST(OrenNayarBrdfTest, SampleAligned) {
+TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.0));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
+  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->x, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->y, -0.707106709, 0.0001);
+  EXPECT_NEAR(result->z, 0.0003452669, 0.0001);
+}
+
+TEST(OrenNayarBrdfTest, SampleDiffuseUnaligned) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric())
+      .Times(2)
+      .WillRepeatedly(testing::Return(0.0));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
+  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
+                                   iris::Vector(0.0, 0.0, -1.0), sampler);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->x, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->y, 0.707106709, 0.0001);
+  EXPECT_NEAR(result->z, -0.0003452669, 0.0001);
+}
+
+TEST(OrenNayarBrdfTest, Sample) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
@@ -29,24 +63,6 @@ TEST(OrenNayarBrdfTest, SampleAligned) {
   EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.z, 0.0003452669, 0.0001);
-  EXPECT_FALSE(result->differentials);
-}
-
-TEST(OrenNayarBrdfTest, SampleUnaligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
-
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
-                            iris::Vector(0.0, 0.0, -1.0), sampler);
-  ASSERT_TRUE(result);
-  EXPECT_NEAR(result->direction.x, 0.707106709, 0.0001);
-  EXPECT_NEAR(result->direction.y, 0.707106709, 0.0001);
-  EXPECT_NEAR(result->direction.z, -0.0003452669, 0.0001);
   EXPECT_FALSE(result->differentials);
 }
 

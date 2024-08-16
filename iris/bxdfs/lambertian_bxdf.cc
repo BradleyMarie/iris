@@ -10,12 +10,19 @@ namespace bxdfs {
 
 bool LambertianBrdf::IsDiffuse() const { return true; }
 
+std::optional<Vector> LambertianBrdf::SampleDiffuse(
+    const Vector& incoming, const Vector& surface_normal,
+    Sampler& sampler) const {
+  Vector outgoing = internal::CosineSampleHemisphere(incoming.z, sampler);
+  return outgoing.AlignWith(surface_normal);
+}
+
 std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  Vector outgoing = internal::CosineSampleHemisphere(incoming.z, sampler);
-  return SampleResult{outgoing.AlignWith(surface_normal), std::nullopt, this};
+  return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
+                      std::nullopt, this};
 }
 
 std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
@@ -42,13 +49,19 @@ const Reflector* LambertianBrdf::Reflectance(
 
 bool LambertianBtdf::IsDiffuse() const { return true; }
 
+std::optional<Vector> LambertianBtdf::SampleDiffuse(
+    const Vector& incoming, const Vector& surface_normal,
+    Sampler& sampler) const {
+  Vector outgoing = internal::CosineSampleHemisphere(-incoming.z, sampler);
+  return outgoing.AlignAgainst(surface_normal);
+}
+
 std::optional<Bxdf::SampleResult> LambertianBtdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  Vector outgoing = internal::CosineSampleHemisphere(-incoming.z, sampler);
-  return SampleResult{outgoing.AlignAgainst(surface_normal), std::nullopt,
-                      this};
+  return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
+                      std::nullopt, this};
 }
 
 std::optional<visual_t> LambertianBtdf::Pdf(const Vector& incoming,

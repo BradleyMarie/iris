@@ -14,6 +14,18 @@ TEST(SpecularBrdfTest, IsDiffuse) {
   EXPECT_FALSE(bxdf.IsDiffuse());
 }
 
+TEST(SpecularBrdfTest, SampleDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
+  auto result = bxdf.SampleDiffuse(iris::Vector(1.0, 1.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_FALSE(result);
+}
+
 TEST(SpecularBrdfTest, Sample) {
   iris::reflectors::MockReflector reflector;
   iris::random::MockRandom rng;
@@ -103,6 +115,19 @@ TEST(SpecularBtdfTest, IsDiffuse) {
   iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
                                  iris::bxdfs::FresnelNoOp());
   EXPECT_FALSE(bxdf.IsDiffuse());
+}
+
+TEST(SpecularBtdfTest, SampleDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
+                                 iris::bxdfs::FresnelNoOp());
+  auto result = bxdf.SampleDiffuse(iris::Vector(1.0, 1.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_FALSE(result);
 }
 
 TEST(SpecularBtdfTest, SampleFront) {
@@ -220,6 +245,19 @@ TEST(SpecularBtdfTest, ReflectanceBack) {
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->Reflectance(1.0));
+}
+
+TEST(SpecularBxdfTest, SampleDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::reflectors::MockReflector transmitter;
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
+  auto result = bxdf.SampleDiffuse(iris::Vector(1.0, 1.0, 1.0),
+                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_FALSE(result);
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceFront) {

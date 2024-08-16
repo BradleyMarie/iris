@@ -37,6 +37,27 @@ class CompositeBxdf final : public Bxdf {
     return false;
   }
 
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override {
+    std::array<const Bxdf*, NumBxdfs> diffuse_bxdfs;
+
+    size_t num_diffuse = 0;
+    for (size_t i = 0; i < NumBxdfs; i++) {
+      if (bxdfs_[i]->IsDiffuse()) {
+        diffuse_bxdfs[num_diffuse++] = bxdfs_[i];
+      }
+    }
+
+    if (num_diffuse == 0) {
+      return std::nullopt;
+    }
+
+    size_t index = sampler.NextIndex(num_diffuse);
+    return diffuse_bxdfs[index]->SampleDiffuse(incoming, surface_normal,
+                                               sampler);
+  }
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {

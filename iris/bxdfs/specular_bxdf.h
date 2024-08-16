@@ -25,6 +25,12 @@ class SpecularBrdf final : public Bxdf {
 
   bool IsDiffuse() const override { return false; }
 
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override {
+    return std::nullopt;
+  }
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
@@ -79,6 +85,12 @@ class SpecularBtdf final : public Bxdf {
         fresnel_(fresnel) {}
 
   bool IsDiffuse() const override { return false; }
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override {
+    return std::nullopt;
+  }
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
@@ -168,6 +180,10 @@ class SpecularBxdf final : public Bxdf {
                                    eta_transmitted / eta_incident} {}
 
   bool IsDiffuse() const override;
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override;
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,

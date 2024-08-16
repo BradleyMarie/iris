@@ -17,6 +17,10 @@ class OrenNayarBrdf final : public Bxdf {
 
   bool IsDiffuse() const override;
 
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override;
+
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override;

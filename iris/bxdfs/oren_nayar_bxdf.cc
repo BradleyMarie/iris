@@ -36,12 +36,19 @@ OrenNayarBrdf::OrenNayarBrdf(const Reflector& reflector, visual_t sigma)
 
 bool OrenNayarBrdf::IsDiffuse() const { return true; }
 
+std::optional<Vector> OrenNayarBrdf::SampleDiffuse(const Vector& incoming,
+                                                   const Vector& surface_normal,
+                                                   Sampler& sampler) const {
+  Vector outgoing = internal::CosineSampleHemisphere(incoming.z, sampler);
+  return outgoing.AlignWith(surface_normal);
+}
+
 std::optional<Bxdf::SampleResult> OrenNayarBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  Vector outgoing = internal::CosineSampleHemisphere(incoming.z, sampler);
-  return SampleResult{outgoing.AlignWith(surface_normal), std::nullopt, this};
+  return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
+                      std::nullopt, this};
 }
 
 std::optional<visual_t> OrenNayarBrdf::Pdf(const Vector& incoming,

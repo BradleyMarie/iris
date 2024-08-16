@@ -15,6 +15,10 @@ class Bxdf {
  public:
   virtual bool IsDiffuse() const = 0;
 
+  virtual std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                              const Vector& surface_normal,
+                                              Sampler& sampler) const = 0;
+
   struct Differentials {
     const Vector dx;
     const Vector dy;
