@@ -18,7 +18,7 @@ TEST(CompositeBxdfTest, IsNotDiffuse) {
   EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   EXPECT_FALSE(composite.IsDiffuse());
 }
 
@@ -30,7 +30,7 @@ TEST(CompositeBxdfTest, IsDiffuse) {
   EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(true));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   EXPECT_TRUE(composite.IsDiffuse());
 }
 
@@ -45,7 +45,7 @@ TEST(CompositeBxdfTest, SampleDiffuseNone) {
   EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   auto sample = composite.SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
                                         iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_FALSE(sample);
@@ -68,7 +68,7 @@ TEST(CompositeBxdfTest, SampleDiffuse) {
       .WillOnce(testing::Return(iris::Vector(1.0, 0.0, 0.0)));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1, &bxdf2};
-  iris::bxdfs::internal::CompositeBxdf<3> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<3> composite(bxdfs, 3u);
   auto sample = composite.SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
                                         iris::Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
@@ -89,7 +89,7 @@ TEST(CompositeBxdfTest, Sample) {
           iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   auto sample = composite.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
                                  iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample->direction);
@@ -106,7 +106,7 @@ TEST(CompositeBxdfTest, PdfOneBxdf) {
       .WillOnce(testing::Return(std::nullopt));
 
   const iris::Bxdf* bxdfs[] = {&bxdf};
-  iris::bxdfs::internal::CompositeBxdf<1> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<1> composite(bxdfs, 2u);
   EXPECT_EQ(std::nullopt, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
                                         iris::Vector(-1.0, 0.0, 0.0),
                                         iris::Vector(0.0, 0.0, 1.0), nullptr,
@@ -122,7 +122,7 @@ TEST(CompositeBxdfTest, PdfTwoBxdfsEmpty) {
       .WillRepeatedly(testing::Return(std::nullopt));
 
   const iris::Bxdf* bxdfs[] = {&bxdf, &bxdf};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   EXPECT_EQ(std::nullopt, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
                                         iris::Vector(-1.0, 0.0, 0.0),
                                         iris::Vector(0.0, 0.0, 1.0), nullptr,
@@ -144,7 +144,7 @@ TEST(CompositeBxdfTest, PdfTwoBxdfs) {
       .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   EXPECT_EQ(1.5, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
                                iris::Vector(-1.0, 0.0, 0.0),
                                iris::Vector(0.0, 0.0, 1.0), nullptr,
@@ -166,7 +166,7 @@ TEST(CompositeBxdfTest, LightPdfTwoBxdfs) {
       .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   EXPECT_EQ(1.0, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
                                iris::Vector(-1.0, 0.0, 0.0),
                                iris::Vector(0.0, 0.0, 1.0), nullptr,
@@ -188,7 +188,7 @@ TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingOne) {
       .WillOnce(testing::Return(std::nullopt));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   EXPECT_EQ(1.0, composite.Pdf(iris::Vector(1.0, 0.0, 0.0),
                                iris::Vector(-1.0, 0.0, 0.0),
                                iris::Vector(0.0, 0.0, 1.0), nullptr,
@@ -210,7 +210,7 @@ TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingBoth) {
       .WillOnce(testing::Return(std::nullopt));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   EXPECT_FALSE(composite.Pdf(
       iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
       iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF));
@@ -233,7 +233,7 @@ TEST(CompositeBxdfTest, Reflectance) {
       .WillOnce(testing::Return(&reflector1));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
-  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs);
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
   auto* result = composite.Reflectance(
       iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0), nullptr,
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
