@@ -294,10 +294,9 @@ TEST(EstimateDirectLighting, NoSamples) {
 
   iris::Vector to_light(0.0, 0.866025, 0.5);
 
-  EXPECT_CALL(bxdf,
-              Sample(-trace_ray.direction, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{to_light, std::nullopt, &bxdf, 1.0}));
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
+      .WillOnce(testing::Return(to_light));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
@@ -330,10 +329,9 @@ TEST(EstimateDirectLighting, DeltaBsdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::Vector to_light(0.0, 0.866025, 0.5);
-  EXPECT_CALL(bxdf,
-              Sample(-trace_ray.direction, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{to_light, std::nullopt, &bxdf, 1.0}));
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
+      .WillOnce(testing::Return(to_light));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillOnce(testing::Return(std::nullopt));
@@ -368,10 +366,9 @@ TEST(EstimateDirectLighting, DeltaLight) {
 
   iris::reflectors::MockReflector reflector;
 
-  EXPECT_CALL(bxdf,
-              Sample(-trace_ray.direction, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{to_light, std::nullopt, &bxdf, 1.0}));
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
+      .WillOnce(testing::Return(to_light));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
@@ -417,10 +414,9 @@ TEST(EstimateDirectLighting, FullTest) {
 
   iris::reflectors::MockReflector reflector;
 
-  EXPECT_CALL(bxdf,
-              Sample(-trace_ray.direction, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{to_light, std::nullopt, &bxdf, 1.0}));
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
+      .WillOnce(testing::Return(to_light));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
@@ -520,10 +516,9 @@ TEST(SampleDirectLighting, OneDeltaLight) {
 
   iris::reflectors::MockReflector reflector;
 
-  EXPECT_CALL(bxdf,
-              Sample(-trace_ray.direction, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{to_light, std::nullopt, &bxdf, 1.0}));
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
+      .WillOnce(testing::Return(to_light));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
@@ -575,10 +570,9 @@ TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
 
   iris::reflectors::MockReflector reflector;
 
-  EXPECT_CALL(bxdf,
-              Sample(-trace_ray.direction, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{to_light, std::nullopt, &bxdf, 1.0}));
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
+      .WillOnce(testing::Return(to_light));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
@@ -630,10 +624,9 @@ TEST(SampleDirectLighting, TwoDeltaLights) {
 
   iris::reflectors::MockReflector reflector;
 
-  EXPECT_CALL(bxdf,
-              Sample(-trace_ray.direction, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{to_light, std::nullopt, &bxdf, 1.0}));
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(to_light));
   EXPECT_CALL(bxdf,
               Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));

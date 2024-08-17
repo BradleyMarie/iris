@@ -29,6 +29,33 @@ std::array<Vector, 4> ComputeState(const Vector& surface_normal,
           vectors.first};
 }
 
+std::optional<Bxdf::SampleResult> SampleBxdf(
+    const Bxdf& bxdf, const Vector& incoming,
+    const std::optional<Bxdf::Differentials>& differentials,
+    const Vector& surface_normal, Sampler& sampler, bool diffuse_only) {
+  if (!diffuse_only) {
+    std::optional<Bxdf::SampleResult> sample =
+        bxdf.Sample(incoming, differentials, surface_normal, sampler);
+    if (!sample.has_value()) {
+      return std::nullopt;
+    }
+
+    return Bxdf::SampleResult{
+        sample->direction, sample->differentials,
+        sample->sample_source->IsDiffuse() ? &bxdf : sample->sample_source,
+        sample->pdf_weight};
+  }
+
+  std::optional<Vector> outgoing =
+      bxdf.SampleDiffuse(incoming, surface_normal, sampler);
+  if (!outgoing.has_value()) {
+    return std::nullopt;
+  }
+
+  return Bxdf::SampleResult{*outgoing, std::nullopt, &bxdf,
+                            static_cast<visual_t>(1.0)};
+}
+
 }  // namespace
 
 Bsdf::Bsdf(const Bxdf& bxdf, const Vector& surface_normal,
@@ -69,7 +96,7 @@ Vector Bsdf::ToWorld(const Vector& vector) const {
 
 std::optional<Bsdf::SampleResult> Bsdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
-    Sampler sampler, SpectralAllocator& allocator) const {
+    Sampler sampler, SpectralAllocator& allocator, bool diffuse_only) const {
   geometric_t dp_incoming = DotProduct(incoming, surface_normal_);
   if (dp_incoming == static_cast<geometric_t>(0.0)) {
     return std::nullopt;
@@ -78,9 +105,9 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
   auto local_incoming = ToLocal(-incoming);
   auto local_incoming_differentials = ToLocal(differentials);
 
-  auto sample_result =
-      bxdf_.Sample(local_incoming, local_incoming_differentials,
-                   local_surface_normal_, sampler);
+  std::optional<Bxdf::SampleResult> sample_result =
+      SampleBxdf(bxdf_, local_incoming, local_incoming_differentials,
+                 local_surface_normal_, sampler, diffuse_only);
   if (!sample_result) {
     return std::nullopt;
   }
@@ -96,16 +123,16 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
                   ? Bxdf::Hemisphere::BTDF
                   : Bxdf::Hemisphere::BRDF;
 
-  auto pdf =
-      bxdf_.Pdf(local_incoming, sample_result->direction, local_surface_normal_,
-                sample_result->sample_source, type);
+  auto pdf = sample_result->sample_source->Pdf(
+      local_incoming, sample_result->direction, local_surface_normal_,
+      sample_result->sample_source, type);
   if (pdf.has_value() && *pdf <= 0.0) {
     return std::nullopt;
   }
 
-  auto reflector =
-      bxdf_.Reflectance(local_incoming, sample_result->direction,
-                        sample_result->sample_source, type, allocator);
+  auto reflector = sample_result->sample_source->Reflectance(
+      local_incoming, sample_result->direction, sample_result->sample_source,
+      type, allocator);
   if (!reflector) {
     return std::nullopt;
   }
