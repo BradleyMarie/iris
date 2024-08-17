@@ -27,7 +27,8 @@ class Bsdf final {
     const Reflector& reflector;
     const Vector direction;
     const std::optional<Differentials> differentials;
-    const std::optional<visual_t> pdf;
+    const visual_t pdf;
+    const bool diffuse;
   };
 
   std::optional<SampleResult> Sample(

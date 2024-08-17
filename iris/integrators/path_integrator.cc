@@ -43,7 +43,6 @@ const Spectrum* PathIntegrator::Integrate(
 
     if (add_light_emissions) {
       path_builder.Add(trace_result.emission, spectral_allocator);
-      add_light_emissions = false;
     }
 
     if (!trace_result.surface_intersection) {
@@ -66,19 +65,16 @@ const Spectrum* PathIntegrator::Integrate(
       break;
     }
 
-    path_throughput *= albedo_matcher.Match(bsdf_sample->reflector);
-
-    visual_t attenuation;
-    if (bsdf_sample->pdf) {
+    visual_t attenuation = static_cast<visual_t>(1.0);
+    if (bsdf_sample->diffuse) {
       attenuation =
           AbsDotProduct(trace_result.surface_intersection->shading_normal,
-                        bsdf_sample->direction) /
-          *bsdf_sample->pdf;
-      path_throughput *= attenuation;
-    } else {
-      attenuation = 1.0;
-      add_light_emissions = true;
+                        bsdf_sample->direction);
     }
+
+    attenuation /= bsdf_sample->pdf;
+    path_throughput *=
+        albedo_matcher.Match(bsdf_sample->reflector) * attenuation;
 
     if (min_bounces_ <= bounces) {
       auto roulette_pdf = russian_roulette.Evaluate(rng, path_throughput);
@@ -91,6 +87,8 @@ const Spectrum* PathIntegrator::Integrate(
       attenuation *= inverse_roulette_pdf;
       path_throughput *= inverse_roulette_pdf;
     }
+
+    add_light_emissions = !bsdf_sample->diffuse;
 
     path_builder.Bounce(&bsdf_sample->reflector, attenuation);
   }

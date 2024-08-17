@@ -56,8 +56,6 @@ const Spectrum* FromBsdfSample(
     const Bsdf::SampleResult& sample, const Light& light, const Ray& traced_ray,
     const RayTracer::SurfaceIntersection intersection,
     VisibilityTester& visibility_tester, SpectralAllocator& allocator) {
-  assert(sample.pdf);  // Perfectly specular BSDFs should not use this path
-
   visual_t light_pdf;
   auto emissions =
       light.Emission(intersection.hit_point.CreateRay(sample.direction),
@@ -68,8 +66,8 @@ const Spectrum* FromBsdfSample(
 
   visual_t falloff =
       AbsDotProduct(intersection.shading_normal, sample.direction);
-  visual_t weight = PowerHeuristic(*sample.pdf, light_pdf);
-  visual_t attenuation = (falloff * weight) / *sample.pdf;
+  visual_t weight = PowerHeuristic(sample.pdf, light_pdf);
+  visual_t attenuation = (falloff * weight) / sample.pdf;
   auto* spectrum = allocator.Scale(emissions, attenuation);
   return allocator.Reflect(spectrum, &sample.reflector);
 }
@@ -84,7 +82,7 @@ const Spectrum* EstimateDirectLighting(
   auto bsdf_sample = intersection.bsdf.Sample(
       traced_ray.direction, std::nullopt, std::move(bsdf_sampler), allocator);
 
-  if (bsdf_sample && !bsdf_sample->pdf) {
+  if (bsdf_sample && !bsdf_sample->diffuse) {
     return nullptr;
   }
 

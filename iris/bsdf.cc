@@ -111,8 +111,10 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
   }
 
   auto world_outgoing_differentials = ToWorld(sample_result->differentials);
-  return Bsdf::SampleResult{*reflector, world_outgoing,
-                            world_outgoing_differentials, pdf};
+  return Bsdf::SampleResult{
+      *reflector, world_outgoing, world_outgoing_differentials,
+      pdf.value_or(static_cast<visual_t>(1.0)) * sample_result->pdf_weight,
+      pdf.has_value()};
 }
 
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
