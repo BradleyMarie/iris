@@ -55,7 +55,7 @@ TEST(SampleIndirectLighting, Sample) {
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
                            testing::_))
       .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf, 1.0}));
+          iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf}));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
@@ -95,8 +95,8 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
   EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
                            testing::_))
-      .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
-          kOutgoing, {{kOutgoing, kOutgoing}}, &bxdf, 1.0}));
+      .WillRepeatedly(testing::Return(
+          iris::Bxdf::SampleResult{kOutgoing, {{kOutgoing, kOutgoing}}}));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
@@ -139,8 +139,7 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
   EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
                            testing::_))
-      .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf, 1.0}));
+      .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{kOutgoing}));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
@@ -182,8 +181,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
   EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
                            testing::_, testing::_))
-      .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf, 1.0}));
+      .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{kOutgoing}));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
@@ -228,7 +226,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
-          kOutgoing, {{kOutgoing, kOutgoing}}, &bxdf, 1.0}));
+          kOutgoing, {{kOutgoing, kOutgoing}}, &bxdf}));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))

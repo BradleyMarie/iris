@@ -27,8 +27,8 @@ class Bxdf {
   struct SampleResult {
     const Vector direction;
     const std::optional<Differentials> differentials;
-    const Bxdf* bxdf_override;
-    const visual_t pdf_weight;
+    const Bxdf* bxdf_override = nullptr;
+    const visual_t pdf_weight = static_cast<visual_t>(1.0);
   };
 
   virtual std::optional<SampleResult> Sample(

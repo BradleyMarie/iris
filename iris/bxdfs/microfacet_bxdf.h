@@ -94,8 +94,7 @@ class MicrofacetBrdf final : public Bxdf {
       return std::nullopt;
     }
 
-    return SampleResult{*outgoing, std::nullopt, nullptr,
-                        static_cast<visual_t>(1.0)};
+    return SampleResult{*outgoing};
   }
 
   visual_t Pdf(const Vector& incoming, const Vector& outgoing,
@@ -221,8 +220,7 @@ class MicrofacetBtdf final : public Bxdf {
       return std::nullopt;
     }
 
-    return SampleResult{*outgoing, std::nullopt, nullptr,
-                        static_cast<visual_t>(1.0)};
+    return SampleResult{*outgoing};
   }
 
   visual_t Pdf(const Vector& incoming, const Vector& outgoing,

@@ -36,16 +36,14 @@ class SpecularBrdf final : public Bxdf {
       const Vector& surface_normal, Sampler& sampler) const override {
     Vector reflected(-incoming.x, -incoming.y, incoming.z);
     if (!differentials) {
-      return Bxdf::SampleResult{reflected, std::nullopt, this,
-                                static_cast<visual_t>(1.0)};
+      return Bxdf::SampleResult{reflected, std::nullopt, this};
     }
 
     Differentials outgoing_diffs = {
         Vector(-differentials->dx.x, -differentials->dx.y, differentials->dx.z),
         Vector(-differentials->dy.x, -differentials->dy.y,
                differentials->dy.z)};
-    return Bxdf::SampleResult{reflected, outgoing_diffs, this,
-                              static_cast<visual_t>(1.0)};
+    return Bxdf::SampleResult{reflected, outgoing_diffs, this};
   }
 
   visual_t Pdf(const Vector& incoming, const Vector& outgoing,
@@ -106,29 +104,25 @@ class SpecularBtdf final : public Bxdf {
     }
 
     if (!differentials) {
-      return Bxdf::SampleResult{*outgoing, std::nullopt, this,
-                                static_cast<visual_t>(1.0)};
+      return Bxdf::SampleResult{*outgoing, std::nullopt, this};
     }
 
     std::optional<Vector> outgoing_dx = internal::Refract(
         differentials->dx, shading_normal.AlignWith(differentials->dx),
         relative_refractive_index);
     if (!outgoing_dx) {
-      return Bxdf::SampleResult{*outgoing, std::nullopt, this,
-                                static_cast<visual_t>(1.0)};
+      return Bxdf::SampleResult{*outgoing, std::nullopt, this};
     }
 
     std::optional<Vector> outgoing_dy = internal::Refract(
         differentials->dy, shading_normal.AlignWith(differentials->dy),
         relative_refractive_index);
     if (!outgoing_dy) {
-      return Bxdf::SampleResult{*outgoing, std::nullopt, this,
-                                static_cast<visual_t>(1.0)};
+      return Bxdf::SampleResult{*outgoing, std::nullopt, this};
     }
 
     return Bxdf::SampleResult{*outgoing,
-                              Differentials{*outgoing_dx, *outgoing_dy}, this,
-                              static_cast<visual_t>(1.0)};
+                              Differentials{*outgoing_dx, *outgoing_dy}, this};
   }
 
   visual_t Pdf(const Vector& incoming, const Vector& outgoing,
