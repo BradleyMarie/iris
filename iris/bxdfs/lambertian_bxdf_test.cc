@@ -64,6 +64,7 @@ TEST(LambertianBrdfTest, Sample) {
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.z, 0.0003452669, 0.0001);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(LambertianBrdfTest, DiffusePdfTransmitted) {
@@ -179,6 +180,7 @@ TEST(LambertianBtdfTest, Sample) {
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.z, -0.000345266, 0.0001);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(LambertianBtdfTest, DiffusePdfReflected) {

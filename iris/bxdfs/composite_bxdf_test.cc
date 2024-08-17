@@ -12,10 +12,10 @@
 
 TEST(CompositeBxdfTest, IsNotDiffuse) {
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(false));
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
 
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(false));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
@@ -24,10 +24,10 @@ TEST(CompositeBxdfTest, IsNotDiffuse) {
 
 TEST(CompositeBxdfTest, IsDiffuse) {
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(false));
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
 
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(true));
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(true));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
@@ -40,9 +40,9 @@ TEST(CompositeBxdfTest, SampleDiffuseNone) {
   iris::Sampler sampler(rng);
 
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(false));
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(false));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
@@ -58,11 +58,11 @@ TEST(CompositeBxdfTest, SampleDiffuse) {
   iris::Sampler sampler(rng);
 
   iris::bxdfs::MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0, IsDiffuse()).WillOnce(testing::Return(true));
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(true));
   iris::bxdfs::MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1, IsDiffuse()).WillOnce(testing::Return(false));
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(false));
   iris::bxdfs::MockBxdf bxdf2;
-  EXPECT_CALL(bxdf2, IsDiffuse()).WillOnce(testing::Return(true));
+  EXPECT_CALL(bxdf2, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf2, SampleDiffuse(iris::Vector(1.0, 0.0, 0.0),
                                    iris::Vector(0.0, 0.0, 1.0), testing::_))
       .WillOnce(testing::Return(iris::Vector(1.0, 0.0, 0.0)));
@@ -75,18 +75,20 @@ TEST(CompositeBxdfTest, SampleDiffuse) {
   EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), *sample);
 }
 
-TEST(CompositeBxdfTest, Sample) {
+TEST(CompositeBxdfTest, SampleAllDifuse) {
   iris::random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.75));
   EXPECT_CALL(rng, DiscardGeometric(1));
   iris::Sampler sampler(rng);
 
   iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(true));
   iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf1, Sample(iris::Vector(1.0, 0.0, 0.0), testing::_,
                             iris::Vector(0.0, 0.0, 1.0), testing::_))
-      .WillOnce(testing::Return(
-          iris::Bxdf::SampleResult{iris::Vector(1.0, 0.0, 0.0)}));
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{
+          iris::Vector(1.0, 0.0, 0.0), std::nullopt, &bxdf1, 1.0}));
 
   const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
   iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
@@ -94,11 +96,67 @@ TEST(CompositeBxdfTest, Sample) {
                                  iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample->direction);
   EXPECT_FALSE(sample->differentials);
-  EXPECT_EQ(nullptr, sample->sample_source);
+  EXPECT_EQ(&bxdf1, sample->sample_source);
+  EXPECT_EQ(1.0, sample->pdf_weight);
+}
+
+TEST(CompositeBxdfTest, SampleOneDiffuse) {
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.2));
+  EXPECT_CALL(rng, DiscardGeometric(1));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  iris::bxdfs::MockBxdf bxdf2;
+  EXPECT_CALL(bxdf2, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  iris::bxdfs::MockBxdf bxdf3;
+  EXPECT_CALL(bxdf3, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf3, Sample(iris::Vector(1.0, 0.0, 0.0), testing::_,
+                            iris::Vector(0.0, 0.0, 1.0), testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{
+          iris::Vector(1.0, 0.0, 0.0), std::nullopt, &bxdf3, 1.0}));
+
+  const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1, &bxdf2, &bxdf3};
+  iris::bxdfs::internal::CompositeBxdf<4> composite(bxdfs, 4u);
+  auto sample = composite.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
+                                 iris::Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample->direction);
+  EXPECT_FALSE(sample->differentials);
+  EXPECT_EQ(&bxdf3, sample->sample_source);
+  EXPECT_EQ(0.25, sample->pdf_weight);
+}
+
+TEST(CompositeBxdfTest, SampleSpecular) {
+  iris::random::MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.75));
+  EXPECT_CALL(rng, DiscardGeometric(1));
+  iris::Sampler sampler(rng);
+
+  iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(bxdf1, Sample(iris::Vector(1.0, 0.0, 0.0), testing::_,
+                            iris::Vector(0.0, 0.0, 1.0), testing::_))
+      .WillOnce(testing::Return(iris::Bxdf::SampleResult{
+          iris::Vector(1.0, 0.0, 0.0), std::nullopt, &bxdf1, 1.0}));
+
+  const iris::Bxdf* bxdfs[] = {&bxdf0, &bxdf1};
+  iris::bxdfs::internal::CompositeBxdf<2> composite(bxdfs, 2u);
+  auto sample = composite.Sample(iris::Vector(1.0, 0.0, 0.0), std::nullopt,
+                                 iris::Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_EQ(iris::Vector(1.0, 0.0, 0.0), sample->direction);
+  EXPECT_FALSE(sample->differentials);
+  EXPECT_EQ(&bxdf1, sample->sample_source);
+  EXPECT_EQ(0.5, sample->pdf_weight);
 }
 
 TEST(CompositeBxdfTest, PdfOneBxdf) {
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(
       bxdf,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
@@ -115,6 +173,7 @@ TEST(CompositeBxdfTest, PdfOneBxdf) {
 
 TEST(CompositeBxdfTest, PdfTwoBxdfsEmpty) {
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(
       bxdf,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
@@ -131,12 +190,14 @@ TEST(CompositeBxdfTest, PdfTwoBxdfsEmpty) {
 
 TEST(CompositeBxdfTest, PdfTwoBxdfs) {
   iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(
       bxdf0,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
   iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
@@ -153,12 +214,14 @@ TEST(CompositeBxdfTest, PdfTwoBxdfs) {
 
 TEST(CompositeBxdfTest, LightPdfTwoBxdfs) {
   iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(
       bxdf0,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
   iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
@@ -175,12 +238,14 @@ TEST(CompositeBxdfTest, LightPdfTwoBxdfs) {
 
 TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingOne) {
   iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(
       bxdf0,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
   iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
@@ -197,12 +262,14 @@ TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingOne) {
 
 TEST(CompositeBxdfTest, LightPdfTwoBxdfsMissingBoth) {
   iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(
       bxdf0,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
   iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
@@ -220,6 +287,7 @@ TEST(CompositeBxdfTest, Reflectance) {
   iris::reflectors::MockReflector reflector0;
   EXPECT_CALL(reflector0, Reflectance(1.0)).WillOnce(testing::Return(0.25));
   iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf0, Reflectance(iris::Vector(1.0, 0.0, 0.0),
                                  iris::Vector(-1.0, 0.0, 0.0), nullptr,
                                  iris::Bxdf::Hemisphere::BRDF, testing::_))
@@ -227,6 +295,7 @@ TEST(CompositeBxdfTest, Reflectance) {
   iris::reflectors::MockReflector reflector1;
   EXPECT_CALL(reflector1, Reflectance(1.0)).WillOnce(testing::Return(0.5));
   iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf1, Reflectance(iris::Vector(1.0, 0.0, 0.0),
                                  iris::Vector(-1.0, 0.0, 0.0), nullptr,
                                  iris::Bxdf::Hemisphere::BRDF, testing::_))
@@ -242,12 +311,14 @@ TEST(CompositeBxdfTest, Reflectance) {
 
 TEST(CompositeBxdfTest, MakeComposite) {
   iris::bxdfs::MockBxdf bxdf0;
+  EXPECT_CALL(bxdf0, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(
       bxdf0,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),
           iris::Vector(0.0, 0.0, 1.0), nullptr, iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(std::nullopt));
   iris::bxdfs::MockBxdf bxdf1;
+  EXPECT_CALL(bxdf1, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(
       bxdf1,
       Pdf(iris::Vector(1.0, 0.0, 0.0), iris::Vector(-1.0, 0.0, 0.0),

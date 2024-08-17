@@ -37,6 +37,7 @@ TEST(SpecularBrdfTest, Sample) {
                             iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(-1.0, -1.0, 1.0), result->direction);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBrdfTest, SampleWithDerivatives) {
@@ -54,6 +55,7 @@ TEST(SpecularBrdfTest, SampleWithDerivatives) {
   ASSERT_TRUE(result->differentials);
   EXPECT_EQ(iris::Vector(-1.0, -0.5, 1.0), result->differentials->dx);
   EXPECT_EQ(iris::Vector(-0.5, -1.0, 1.0), result->differentials->dy);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBrdfTest, PdfBtdfSampled) {
@@ -142,6 +144,7 @@ TEST(SpecularBtdfTest, SampleFront) {
                             iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(-1.0, -1.0, -1.0), result->direction);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBtdfTest, SampleBack) {
@@ -156,6 +159,7 @@ TEST(SpecularBtdfTest, SampleBack) {
                             iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(-1.0, -1.0, 1.0), result->direction);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBtdfTest, SampleWithDerivatives) {
@@ -174,6 +178,7 @@ TEST(SpecularBtdfTest, SampleWithDerivatives) {
   ASSERT_TRUE(result->differentials);
   EXPECT_EQ(iris::Vector(-1.0, -0.5, -1.0), result->differentials->dx);
   EXPECT_EQ(iris::Vector(-0.5, -1.0, -1.0), result->differentials->dy);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBtdfTest, PdfBrdfSampled) {
@@ -273,6 +278,7 @@ TEST(SpecularBxdfTest, SampleTransmittanceFront) {
                             iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(-1.0, -1.0, -1.0), result->direction);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceBack) {
@@ -288,6 +294,7 @@ TEST(SpecularBxdfTest, SampleTransmittanceBack) {
                             iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(-1.0, -1.0, 1.0), result->direction);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
@@ -307,6 +314,7 @@ TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
   ASSERT_TRUE(result->differentials);
   EXPECT_EQ(iris::Vector(-1.0, -0.5, -1.0), result->differentials->dx);
   EXPECT_EQ(iris::Vector(-0.5, -1.0, -1.0), result->differentials->dy);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBxdfTest, SampleReflectance) {
@@ -322,6 +330,7 @@ TEST(SpecularBxdfTest, SampleReflectance) {
                             iris::Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(iris::Vector(-1.0, -1.0, 1.0), result->direction);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
@@ -341,6 +350,7 @@ TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
   ASSERT_TRUE(result->differentials);
   EXPECT_EQ(iris::Vector(-1.0, -0.5, 1.0), result->differentials->dx);
   EXPECT_EQ(iris::Vector(-0.5, -1.0, 1.0), result->differentials->dy);
+  EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(SpecularBxdfTest, PdfWrongHemisphere) {

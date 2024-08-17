@@ -48,7 +48,7 @@ std::optional<Bxdf::SampleResult> OrenNayarBrdf::Sample(
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
   return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
-                      std::nullopt, this};
+                      std::nullopt, this, static_cast<visual_t>(1.0)};
 }
 
 std::optional<visual_t> OrenNayarBrdf::Pdf(const Vector& incoming,

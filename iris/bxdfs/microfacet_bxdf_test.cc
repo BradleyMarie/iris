@@ -205,6 +205,7 @@ TEST(MicrofacetBrdf, Sample) {
   ASSERT_TRUE(sample);
   EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), sample->direction);
   EXPECT_FALSE(sample->differentials);
+  EXPECT_EQ(sample->pdf_weight, 1.0);
 }
 
 TEST(MicrofacetBrdf, PdfBTDF) {
@@ -406,6 +407,7 @@ TEST(MicrofacetBtdf, Sample) {
   ASSERT_TRUE(sample);
   EXPECT_EQ(iris::Vector(0.0, 0.0, -1.0), sample->direction);
   EXPECT_FALSE(sample->differentials);
+  EXPECT_EQ(sample->pdf_weight, 1.0);
 }
 
 TEST(MicrofacetBtdf, PdfBTDF) {

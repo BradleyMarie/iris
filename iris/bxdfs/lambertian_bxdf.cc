@@ -22,7 +22,7 @@ std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
   return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
-                      std::nullopt, this};
+                      std::nullopt, this, static_cast<visual_t>(1.0)};
 }
 
 std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
@@ -61,7 +61,7 @@ std::optional<Bxdf::SampleResult> LambertianBtdf::Sample(
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
   return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
-                      std::nullopt, this};
+                      std::nullopt, this, static_cast<visual_t>(1.0)};
 }
 
 std::optional<visual_t> LambertianBtdf::Pdf(const Vector& incoming,

@@ -40,7 +40,8 @@ std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
   if (sampler.Next() < fresnel_reflectance) {
     Vector outgoing(-incoming.x, -incoming.y, incoming.z);
     if (!differentials) {
-      return Bxdf::SampleResult{outgoing, std::nullopt, this};
+      return Bxdf::SampleResult{outgoing, std::nullopt, this,
+                                static_cast<visual_t>(1.0)};
     }
 
     Vector outgoing_dx(-differentials->dx.x, -differentials->dx.y,
@@ -49,7 +50,7 @@ std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
                        differentials->dy.z);
 
     return Bxdf::SampleResult{outgoing, Differentials{outgoing_dx, outgoing_dy},
-                              this};
+                              this, static_cast<visual_t>(1.0)};
   }
 
   Vector shading_normal(static_cast<geometric>(0.0),
@@ -64,25 +65,29 @@ std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
   }
 
   if (!differentials) {
-    return Bxdf::SampleResult{*outgoing, std::nullopt, this};
+    return Bxdf::SampleResult{*outgoing, std::nullopt, this,
+                              static_cast<visual_t>(1.0)};
   }
 
   std::optional<Vector> outgoing_dx = internal::Refract(
       differentials->dx, shading_normal.AlignWith(differentials->dx),
       relative_refractive_index);
   if (!outgoing_dx) {
-    return Bxdf::SampleResult{*outgoing, std::nullopt, this};
+    return Bxdf::SampleResult{*outgoing, std::nullopt, this,
+                              static_cast<visual_t>(1.0)};
   }
 
   std::optional<Vector> outgoing_dy = internal::Refract(
       differentials->dy, shading_normal.AlignWith(differentials->dy),
       relative_refractive_index);
   if (!outgoing_dy) {
-    return Bxdf::SampleResult{*outgoing, std::nullopt, this};
+    return Bxdf::SampleResult{*outgoing, std::nullopt, this,
+                              static_cast<visual_t>(1.0)};
   }
 
   return Bxdf::SampleResult{*outgoing,
-                            Differentials{*outgoing_dx, *outgoing_dy}, this};
+                            Differentials{*outgoing_dx, *outgoing_dy}, this,
+                            static_cast<visual_t>(1.0)};
 }
 
 std::optional<visual_t> SpecularBxdf::Pdf(const Vector& incoming,

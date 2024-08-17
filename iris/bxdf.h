@@ -28,6 +28,7 @@ class Bxdf {
     const Vector direction;
     const std::optional<Differentials> differentials;
     const Bxdf* sample_source;
+    const visual_t pdf_weight;
   };
 
   virtual std::optional<SampleResult> Sample(

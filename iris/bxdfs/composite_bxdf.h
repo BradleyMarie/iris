@@ -48,8 +48,23 @@ class CompositeBxdf final : public Bxdf {
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
     size_t index = sampler.NextIndex(num_bxdfs_);
-    return bxdfs_[index]->Sample(incoming, differentials, surface_normal,
-                                 sampler);
+
+    std::optional<SampleResult> sample =
+        bxdfs_[index]->Sample(incoming, differentials, surface_normal, sampler);
+    if (!sample.has_value()) {
+      return std::nullopt;
+    }
+
+    visual_t pdf_weight = sample->pdf_weight;
+    if (sample->sample_source->IsDiffuse()) {
+      pdf_weight *= static_cast<visual_t>(num_diffuse_bxdfs_) /
+                    static_cast<visual_t>(num_bxdfs_);
+    } else {
+      pdf_weight /= static_cast<visual_t>(num_bxdfs_);
+    }
+
+    return SampleResult{sample->direction, sample->differentials,
+                        sample->sample_source, pdf_weight};
   }
 
   std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
