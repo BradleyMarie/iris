@@ -25,36 +25,23 @@ class CompositeBxdf final : public Bxdf {
  public:
   CompositeBxdf(const Bxdf* bxdfs[], size_t num_bxdfs) : num_bxdfs_(num_bxdfs) {
     std::copy(bxdfs, bxdfs + num_bxdfs, bxdfs_.data());
+    auto partition_iter = std::stable_partition(
+        bxdfs_.begin(), bxdfs_.end(),
+        [](const Bxdf* bxdf) { return bxdf->IsDiffuse(); });
+    num_diffuse_bxdfs_ = std::distance(bxdfs_.begin(), partition_iter);
   }
 
-  bool IsDiffuse() const override {
-    for (size_t i = 0; i < num_bxdfs_; i++) {
-      if (bxdfs_[i]->IsDiffuse()) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool IsDiffuse() const override { return num_diffuse_bxdfs_ != 0; }
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
                                       Sampler& sampler) const override {
-    std::array<const Bxdf*, N> diffuse_bxdfs;
-
-    size_t num_diffuse = 0;
-    for (size_t i = 0; i < num_bxdfs_; i++) {
-      if (bxdfs_[i]->IsDiffuse()) {
-        diffuse_bxdfs[num_diffuse++] = bxdfs_[i];
-      }
-    }
-
-    if (num_diffuse == 0) {
+    if (num_diffuse_bxdfs_ == 0) {
       return std::nullopt;
     }
 
-    size_t index = sampler.NextIndex(num_diffuse);
-    return diffuse_bxdfs[index]->SampleDiffuse(incoming, surface_normal,
-                                               sampler);
+    size_t index = sampler.NextIndex(num_diffuse_bxdfs_);
+    return bxdfs_[index]->SampleDiffuse(incoming, surface_normal, sampler);
   }
 
   std::optional<SampleResult> Sample(
@@ -102,6 +89,7 @@ class CompositeBxdf final : public Bxdf {
  private:
   std::array<const Bxdf*, N> bxdfs_;
   size_t num_bxdfs_;
+  size_t num_diffuse_bxdfs_;
 };
 
 }  // namespace internal
