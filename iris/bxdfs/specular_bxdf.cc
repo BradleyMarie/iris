@@ -90,39 +90,52 @@ std::optional<Bxdf::SampleResult> SpecularBxdf::Sample(
                             static_cast<visual_t>(1.0)};
 }
 
-std::optional<visual_t> SpecularBxdf::Pdf(const Vector& incoming,
-                                          const Vector& outgoing,
-                                          const Vector& surface_normal,
-                                          const Bxdf* sample_source,
-                                          Hemisphere hemisphere) const {
-  if (sample_source != this ||
-      hemisphere != SampledHemisphere(incoming, outgoing)) {
+visual_t SpecularBxdf::Pdf(const Vector& incoming, const Vector& outgoing,
+                           const Vector& surface_normal,
+                           Hemisphere hemisphere) const {
+  if (hemisphere != SampledHemisphere(incoming, outgoing)) {
     return static_cast<visual_t>(0.0);
   }
 
-  return std::nullopt;
+  geometric_t eta_incident = EtaIncident(incoming);
+  geometric_t eta_transmitted = EtaTransmitted(incoming);
+  visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
+      internal::CosTheta(incoming), eta_incident, eta_transmitted);
+
+  if (hemisphere == Hemisphere::BRDF) {
+    return fresnel_reflectance;
+  }
+
+  return static_cast<visual_t>(1.0) - fresnel_reflectance;
 }
 
 const Reflector* SpecularBxdf::Reflectance(const Vector& incoming,
                                            const Vector& outgoing,
-                                           const Bxdf* sample_source,
                                            Hemisphere hemisphere,
                                            SpectralAllocator& allocator) const {
-  if (sample_source != this ||
-      hemisphere != SampledHemisphere(incoming, outgoing)) {
+  if (hemisphere != SampledHemisphere(incoming, outgoing)) {
     return nullptr;
   }
 
+  geometric_t eta_incident = EtaIncident(incoming);
+  geometric_t eta_transmitted = EtaTransmitted(incoming);
+  visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
+      internal::CosTheta(incoming), eta_incident, eta_transmitted);
+
   if (hemisphere == Hemisphere::BRDF) {
-    return &reflectance_;
+    return allocator.Scale(&reflectance_, fresnel_reflectance);
   }
+
+  visual_t fresnel_transmittance =
+      static_cast<visual_t>(1.0) - fresnel_reflectance;
 
   // It may be better to do this in the integrator
   geometric_t relative_refractive_index = RelativeRefractiveIndex(incoming);
   geometric_t attenuation =
       relative_refractive_index * relative_refractive_index;
 
-  return allocator.UnboundedScale(&transmittance_, attenuation);
+  return allocator.UnboundedScale(&transmittance_,
+                                  attenuation * fresnel_transmittance);
 }
 
 }  // namespace bxdfs

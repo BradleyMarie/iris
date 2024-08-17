@@ -56,46 +56,41 @@ class CompositeBxdf final : public Bxdf {
     }
 
     visual_t pdf_weight = sample->pdf_weight;
-    if (sample->sample_source->IsDiffuse()) {
+    if (sample->bxdf_override != nullptr) {
+      pdf_weight /= static_cast<visual_t>(num_bxdfs_);
+    } else {
       pdf_weight *= static_cast<visual_t>(num_diffuse_bxdfs_) /
                     static_cast<visual_t>(num_bxdfs_);
-    } else {
-      pdf_weight /= static_cast<visual_t>(num_bxdfs_);
     }
 
     return SampleResult{sample->direction, sample->differentials,
-                        sample->sample_source, pdf_weight};
+                        sample->bxdf_override, pdf_weight};
   }
 
-  std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              const Vector& surface_normal,
-                              const Bxdf* sample_source,
-                              Hemisphere hemisphere) const override {
-    visual_t diffuse_pdf = 0.0;
-    size_t num_diffuse = 0;
-    for (const auto* bxdf : bxdfs_) {
-      auto pdf = bxdf->Pdf(incoming, outgoing, surface_normal, sample_source,
-                           hemisphere);
-      diffuse_pdf += pdf.value_or(0.0);
-      num_diffuse += pdf.has_value();
+  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
+               const Vector& surface_normal,
+               Hemisphere hemisphere) const override {
+    visual_t total_pdf = static_cast<visual_t>(0.0);
+    if (num_diffuse_bxdfs_ == 0) {
+      return total_pdf;
     }
 
-    std::optional<visual_t> result;
-    if (num_diffuse != 0) {
-      visual_t specular_pdf = static_cast<visual_t>(num_bxdfs_ - num_diffuse);
-      result = (diffuse_pdf + specular_pdf) / static_cast<visual_t>(num_bxdfs_);
+    for (size_t i = 0; i < num_diffuse_bxdfs_; i++) {
+      visual_t pdf =
+          bxdfs_[i]->Pdf(incoming, outgoing, surface_normal, hemisphere);
+      total_pdf += std::max(static_cast<visual_t>(0.0), pdf);
     }
 
-    return result;
+    return total_pdf / static_cast<visual_t>(num_diffuse_bxdfs_);
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               const Bxdf* sample_source, Hemisphere hemisphere,
+                               Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
     const Reflector* result = nullptr;
-    for (const auto* bxdf : bxdfs_) {
-      auto reflectance = bxdf->Reflectance(incoming, outgoing, sample_source,
-                                           hemisphere, allocator);
+    for (size_t i = 0; i < num_diffuse_bxdfs_; i++) {
+      const Reflector* reflectance =
+          bxdfs_[i]->Reflectance(incoming, outgoing, hemisphere, allocator);
       result = allocator.UnboundedAdd(result, reflectance);
     }
     return result;

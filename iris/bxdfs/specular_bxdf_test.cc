@@ -61,44 +61,26 @@ TEST(SpecularBrdfTest, SampleWithDerivatives) {
 TEST(SpecularBrdfTest, PdfBtdfSampled) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
-  EXPECT_EQ(0.0,
-            (bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                      iris::Vector(0.0, 0.0, -1.0), &bxdf,
-                      iris::Bxdf::Hemisphere::BTDF)));
-}
-
-TEST(SpecularBrdfTest, PdfWrongSource) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
-  EXPECT_EQ(0.0,
-            (bxdf.Pdf(iris::Vector(0.0, 1.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                      iris::Vector(0.0, 0.0, 1.0), nullptr,
-                      iris::Bxdf::Hemisphere::BRDF)));
+  EXPECT_EQ(
+      0.0,
+      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(SpecularBrdfTest, PdfReflected) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
-  EXPECT_FALSE(bxdf.Pdf(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Vector(0.0, 0.0, 1.0), &bxdf, iris::Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(
+      1.0, bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(SpecularBrdfTest, ReflectanceBtdf) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
-  EXPECT_FALSE(result);
-}
-
-TEST(SpecularBrdfTest, ReflectanceWrongSourceSampled) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), nullptr,
-      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -106,7 +88,7 @@ TEST(SpecularBrdfTest, Reflectance) {
   iris::reflectors::UniformReflector reflector(1.0);
   iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->Reflectance(1.0));
@@ -185,29 +167,19 @@ TEST(SpecularBtdfTest, PdfBrdfSampled) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
                                  iris::bxdfs::FresnelNoOp());
-  EXPECT_EQ(0.0,
-            (bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                      iris::Vector(0.0, 0.0, 1.0), &bxdf,
-                      iris::Bxdf::Hemisphere::BRDF)));
-}
-
-TEST(SpecularBtdfTest, PdfWrongSource) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
-                                 iris::bxdfs::FresnelNoOp());
-  EXPECT_EQ(0.0,
-            (bxdf.Pdf(iris::Vector(0.0, 1.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                      iris::Vector(0.0, 0.0, -1.0), nullptr,
-                      iris::Bxdf::Hemisphere::BTDF)));
+  EXPECT_EQ(
+      0.0, bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(SpecularBtdfTest, PdfTransmitted) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
                                  iris::bxdfs::FresnelNoOp());
-  EXPECT_FALSE(bxdf.Pdf(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Vector(0.0, 0.0, -1.0), &bxdf, iris::Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(
+      1.0,
+      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(SpecularBtdfTest, ReflectanceBrdf) {
@@ -215,18 +187,8 @@ TEST(SpecularBtdfTest, ReflectanceBrdf) {
   iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
                                  iris::bxdfs::FresnelNoOp());
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
-  EXPECT_FALSE(result);
-}
-
-TEST(SpecularBtdfTest, ReflectanceWrongSourceSampled) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
-                                 iris::bxdfs::FresnelNoOp());
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), nullptr,
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -235,7 +197,7 @@ TEST(SpecularBtdfTest, ReflectanceFront) {
   iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
                                  iris::bxdfs::FresnelNoOp());
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->Reflectance(1.0));
@@ -246,7 +208,7 @@ TEST(SpecularBtdfTest, ReflectanceBack) {
   iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
                                  iris::bxdfs::FresnelNoOp());
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->Reflectance(1.0));
@@ -356,102 +318,95 @@ TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
 TEST(SpecularBxdfTest, PdfWrongHemisphere) {
   iris::reflectors::MockReflector reflector;
   iris::reflectors::MockReflector transmitter;
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  EXPECT_EQ(0.0,
-            bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Vector(0.0, 0.0, 1.0), &bxdf,
-                     iris::Bxdf::Hemisphere::BRDF));
-  EXPECT_EQ(0.0,
-            bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                     iris::Vector(0.0, 0.0, 1.0), &bxdf,
-                     iris::Bxdf::Hemisphere::BTDF));
-}
-
-TEST(SpecularBxdfTest, PdfWrongSource) {
-  iris::reflectors::MockReflector reflector;
-  iris::reflectors::MockReflector transmitter;
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  EXPECT_EQ(0.0,
-            (bxdf.Pdf(iris::Vector(0.0, 1.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                      iris::Vector(0.0, 0.0, -1.0), nullptr,
-                      iris::Bxdf::Hemisphere::BTDF)));
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.5);
+  EXPECT_EQ(
+      0.0, bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(
+      0.0, bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(SpecularBxdfTest, PdfFront) {
   iris::reflectors::MockReflector reflector;
   iris::reflectors::MockReflector transmitter;
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  EXPECT_FALSE(bxdf.Pdf(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Vector(0.0, 0.0, 1.0), &bxdf, iris::Bxdf::Hemisphere::BRDF));
-  EXPECT_FALSE(bxdf.Pdf(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-      iris::Vector(0.0, 0.0, 1.0), &bxdf, iris::Bxdf::Hemisphere::BTDF));
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.5);
+  EXPECT_NEAR(
+      0.0400016233,
+      bxdf.Pdf(iris::Normalize(iris::Vector(0.1, 0.0, 1.0)),
+               iris::Normalize(iris::Vector(-0.1, 0.0, 1.0)),
+               iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF),
+      0.001);
+  EXPECT_NEAR(
+      0.959998369,
+      bxdf.Pdf(iris::Normalize(iris::Vector(0.1, 0.0, 1.0)),
+               iris::Normalize(iris::Vector(0.1, 0.0, -1.0)),
+               iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BTDF),
+      0.001);
 }
 
 TEST(SpecularBxdfTest, PdfBack) {
   iris::reflectors::MockReflector reflector;
   iris::reflectors::MockReflector transmitter;
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  EXPECT_FALSE(bxdf.Pdf(
-      iris::Vector(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, -1.0),
-      iris::Vector(0.0, 0.0, 1.0), &bxdf, iris::Bxdf::Hemisphere::BRDF));
-  EXPECT_FALSE(bxdf.Pdf(
-      iris::Vector(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Vector(0.0, 0.0, 1.0), &bxdf, iris::Bxdf::Hemisphere::BTDF));
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.5);
+  EXPECT_NEAR(
+      0.0400016233,
+      bxdf.Pdf(iris::Normalize(iris::Vector(0.1, 0.0, -1.0)),
+               iris::Normalize(iris::Vector(-0.1, 0.0, -1.0)),
+               iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF),
+      0.001);
+  EXPECT_NEAR(
+      0.959998369,
+      bxdf.Pdf(iris::Normalize(iris::Vector(0.1, 0.0, -1.0)),
+               iris::Normalize(iris::Vector(0.1, 0.0, 1.0)),
+               iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BTDF),
+      0.001);
 }
 
 TEST(SpecularBxdfTest, ReflectanceWrongHemisphere) {
   iris::reflectors::MockReflector reflector;
   iris::reflectors::MockReflector transmitter;
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.5);
   EXPECT_FALSE(bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator()));
   EXPECT_FALSE(bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator()));
-}
-
-TEST(SpecularBxdfTest, ReflectanceWrongSourceSampled) {
-  iris::reflectors::MockReflector reflector;
-  iris::reflectors::MockReflector transmitter;
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), nullptr,
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
-  EXPECT_FALSE(result);
 }
 
 TEST(SpecularBxdfTest, TransmittanceFront) {
   iris::reflectors::MockReflector reflector;
   iris::reflectors::UniformReflector transmitter(1.0);
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &bxdf,
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.5);
+  auto* result = bxdf.Reflectance(iris::Normalize(iris::Vector(0.1, 0.0, 1.0)),
+                                  iris::Normalize(iris::Vector(0.1, 0.0, -1.0)),
+                                  iris::Bxdf::Hemisphere::BTDF,
+                                  iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_EQ(1.0, result->Reflectance(1.0));
+  EXPECT_NEAR(0.426665962, result->Reflectance(1.0), 0.0001);
 }
 
 TEST(SpecularBxdfTest, TransmittanceBack) {
   iris::reflectors::MockReflector reflector;
   iris::reflectors::UniformReflector transmitter(1.0);
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.5);
+  auto* result = bxdf.Reflectance(iris::Normalize(iris::Vector(0.1, 0.0, -1.0)),
+                                  iris::Normalize(iris::Vector(0.1, 0.0, 1.0)),
+                                  iris::Bxdf::Hemisphere::BTDF,
+                                  iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_EQ(1.0, result->Reflectance(1.0));
+  EXPECT_NEAR(2.15998125, result->Reflectance(1.0), 0.0001);
 }
 
 TEST(SpecularBxdfTest, Reflectance) {
   iris::reflectors::UniformReflector reflector(1.0);
   iris::reflectors::MockReflector transmitter;
-  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
-      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.5);
+  auto* result = bxdf.Reflectance(iris::Normalize(iris::Vector(0.1, 0.0, 1.0)),
+                                  iris::Normalize(iris::Vector(-0.1, 0.0, 1.0)),
+                                  iris::Bxdf::Hemisphere::BRDF,
+                                  iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_EQ(1.0, result->Reflectance(1.0));
+  EXPECT_NEAR(0.0400016233, result->Reflectance(1.0), 0.001);
 }

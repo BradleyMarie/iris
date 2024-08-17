@@ -94,14 +94,13 @@ class MicrofacetBrdf final : public Bxdf {
       return std::nullopt;
     }
 
-    return SampleResult{*outgoing, std::nullopt, this,
+    return SampleResult{*outgoing, std::nullopt, nullptr,
                         static_cast<visual_t>(1.0)};
   }
 
-  std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              const Vector& surface_normal,
-                              const Bxdf* sample_source,
-                              Hemisphere hemisphere) const override {
+  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
+               const Vector& surface_normal,
+               Hemisphere hemisphere) const override {
     if (incoming.z == static_cast<geometric>(0.0) ||
         outgoing.z == static_cast<geometric>(0.0) ||
         std::signbit(incoming.z) != std::signbit(outgoing.z)) {
@@ -119,7 +118,7 @@ class MicrofacetBrdf final : public Bxdf {
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               const Bxdf* sample_source, Hemisphere hemisphere,
+                               Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
     if (hemisphere != Hemisphere::BRDF ||
         incoming.z == static_cast<geometric>(0.0) ||
@@ -222,14 +221,13 @@ class MicrofacetBtdf final : public Bxdf {
       return std::nullopt;
     }
 
-    return SampleResult{*outgoing, std::nullopt, this,
+    return SampleResult{*outgoing, std::nullopt, nullptr,
                         static_cast<visual_t>(1.0)};
   }
 
-  std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              const Vector& surface_normal,
-                              const Bxdf* sample_source,
-                              Hemisphere hemisphere) const override {
+  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
+               const Vector& surface_normal,
+               Hemisphere hemisphere) const override {
     if (incoming.z == static_cast<geometric>(0.0) ||
         outgoing.z == static_cast<geometric>(0.0) ||
         std::signbit(incoming.z) == std::signbit(outgoing.z)) {
@@ -260,7 +258,7 @@ class MicrofacetBtdf final : public Bxdf {
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               const Bxdf* sample_source, Hemisphere hemisphere,
+                               Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
     if (hemisphere != Hemisphere::BTDF ||
         (incoming.z == static_cast<geometric>(0.0)) ||

@@ -68,7 +68,7 @@ TEST(PlasticMaterialTest, LambertianOnly) {
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), nullptr,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(M_1_PI, returned_reflector->Reflectance(1.0), 0.0001);
@@ -107,7 +107,7 @@ TEST(PlasticMaterialTest, SpecularOnly) {
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), nullptr,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(0.0031830, returned_reflector->Reflectance(1.0), 0.0001);
@@ -146,7 +146,7 @@ TEST(PlasticMaterialTest, Remap) {
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), nullptr,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(0.0012107628, returned_reflector->Reflectance(1.0), 0.0001);
@@ -184,7 +184,7 @@ TEST(PlasticMaterialTest, Both) {
   ASSERT_TRUE(result);
 
   auto* returned_reflector = result->Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), nullptr,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(0.321492, returned_reflector->Reflectance(1.0), 0.01);

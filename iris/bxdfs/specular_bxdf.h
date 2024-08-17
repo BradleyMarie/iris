@@ -48,21 +48,17 @@ class SpecularBrdf final : public Bxdf {
                               static_cast<visual_t>(1.0)};
   }
 
-  std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              const Vector& surface_normal,
-                              const Bxdf* sample_source,
-                              Hemisphere hemisphere) const override {
-    if (sample_source != this || hemisphere != Hemisphere::BRDF) {
-      return static_cast<visual_t>(0.0);
-    }
-
-    return std::nullopt;
+  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
+               const Vector& surface_normal,
+               Hemisphere hemisphere) const override {
+    return (hemisphere == Hemisphere::BRDF) ? static_cast<visual_t>(1.0)
+                                            : static_cast<visual_t>(0.0);
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               const Bxdf* sample_source, Hemisphere hemisphere,
+                               Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
-    if (sample_source != this || hemisphere != Hemisphere::BRDF) {
+    if (hemisphere != Hemisphere::BRDF) {
       return nullptr;
     }
 
@@ -135,21 +131,17 @@ class SpecularBtdf final : public Bxdf {
                               static_cast<visual_t>(1.0)};
   }
 
-  std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              const Vector& surface_normal,
-                              const Bxdf* sample_source,
-                              Hemisphere hemisphere) const override {
-    if (sample_source != this || hemisphere != Hemisphere::BTDF) {
-      return static_cast<visual_t>(0.0);
-    }
-
-    return std::nullopt;
+  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
+               const Vector& surface_normal,
+               Hemisphere hemisphere) const override {
+    return (hemisphere == Hemisphere::BTDF) ? static_cast<visual_t>(1.0)
+                                            : static_cast<visual_t>(0.0);
   }
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               const Bxdf* sample_source, Hemisphere hemisphere,
+                               Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override {
-    if (sample_source != this || hemisphere != Hemisphere::BTDF) {
+    if (hemisphere != Hemisphere::BTDF) {
       return nullptr;
     }
 
@@ -195,13 +187,12 @@ class SpecularBxdf final : public Bxdf {
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override;
 
-  std::optional<visual_t> Pdf(const Vector& incoming, const Vector& outgoing,
-                              const Vector& surface_normal,
-                              const Bxdf* sample_source,
-                              Hemisphere hemisphere) const override;
+  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
+               const Vector& surface_normal,
+               Hemisphere hemisphere) const override;
 
   const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               const Bxdf* sample_source, Hemisphere hemisphere,
+                               Hemisphere hemisphere,
                                SpectralAllocator& allocator) const override;
 
  private:

@@ -61,14 +61,14 @@ TEST(PathIntegratorTest, BounceLimit) {
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.5)));
 
   iris::bxdfs::MockBxdf specular0;
+  EXPECT_CALL(specular0, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(specular0, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular0, 1.0}));
+  EXPECT_CALL(specular0, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(specular0,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(specular0, Reflectance(testing::_, testing::_, testing::_,
-                                     testing::_, testing::_))
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::spectra::MockSpectrum spectrum;
@@ -142,8 +142,7 @@ TEST(PathIntegratorTest, BsdfSampleFails) {
   EXPECT_CALL(specular0, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular0, 1.0}));
-  EXPECT_CALL(specular0,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(specular0, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.0)));
 
   iris::spectra::MockSpectrum spectrum;
@@ -179,23 +178,23 @@ TEST(PathIntegratorTest, TwoSpecularBouncesHitsEmissive) {
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.5)));
 
   iris::bxdfs::MockBxdf specular0, specular1;
+  EXPECT_CALL(specular0, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(specular1, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(specular0, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular0, 1.0}));
   EXPECT_CALL(specular1, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular1, 1.0}));
+  EXPECT_CALL(specular0, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(specular1, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(specular0,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(specular1,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(specular0, Reflectance(testing::_, testing::_, testing::_,
-                                     testing::_, testing::_))
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
-  EXPECT_CALL(specular1, Reflectance(testing::_, testing::_, testing::_,
-                                     testing::_, testing::_))
+  EXPECT_CALL(specular1,
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::spectra::MockSpectrum spectrum;
@@ -234,6 +233,8 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.5)));
 
   iris::bxdfs::MockBxdf diffuse, specular;
+  EXPECT_CALL(diffuse, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(specular, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(diffuse, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Normalize(iris::Vector(1.0, 0.0, -1.0)), std::nullopt, &diffuse,
@@ -241,17 +242,15 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
   EXPECT_CALL(specular, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular, 1.0}));
-  EXPECT_CALL(diffuse,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(diffuse, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.5)));
-  EXPECT_CALL(specular,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(diffuse, Reflectance(testing::_, testing::_, testing::_,
-                                   testing::_, testing::_))
+  EXPECT_CALL(specular, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(diffuse,
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
-  EXPECT_CALL(specular, Reflectance(testing::_, testing::_, testing::_,
-                                    testing::_, testing::_))
+  EXPECT_CALL(specular,
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::spectra::MockSpectrum spectrum;
@@ -290,14 +289,14 @@ TEST(PathIntegratorTest, SpecularBounceRouletteFails) {
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.5)));
 
   iris::bxdfs::MockBxdf specular;
+  EXPECT_CALL(specular, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(specular, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular, 1.0}));
+  EXPECT_CALL(specular, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(specular,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(specular, Reflectance(testing::_, testing::_, testing::_,
-                                    testing::_, testing::_))
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::spectra::MockSpectrum spectrum;
@@ -334,14 +333,14 @@ TEST(PathIntegratorTest, OneSpecularBounceRoulettePasses) {
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.5)));
 
   iris::bxdfs::MockBxdf specular;
+  EXPECT_CALL(specular, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(specular, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular, 1.0}));
+  EXPECT_CALL(specular, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(specular,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(specular, Reflectance(testing::_, testing::_, testing::_,
-                                    testing::_, testing::_))
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::spectra::MockSpectrum spectrum;
@@ -386,23 +385,23 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
       .WillRepeatedly(testing::Return(0.01));
 
   iris::bxdfs::MockBxdf specular0, specular1;
+  EXPECT_CALL(specular0, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(specular1, IsDiffuse()).WillRepeatedly(testing::Return(false));
   EXPECT_CALL(specular0, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular0, 1.0}));
   EXPECT_CALL(specular1, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           iris::Vector(0.0, 0.0, -1.0), std::nullopt, &specular1, 1.0}));
+  EXPECT_CALL(specular0, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(specular1, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
   EXPECT_CALL(specular0,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(specular1,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(specular0, Reflectance(testing::_, testing::_, testing::_,
-                                     testing::_, testing::_))
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector0));
-  EXPECT_CALL(specular1, Reflectance(testing::_, testing::_, testing::_,
-                                     testing::_, testing::_))
+  EXPECT_CALL(specular1,
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector1));
 
   iris::spectra::MockSpectrum spectrum;
@@ -443,14 +442,14 @@ TEST(PathIntegratorTest, DirectLighting) {
   iris::Vector to_light(0.0, 0.0, -1.0);
 
   iris::bxdfs::MockBxdf diffuse;
+  EXPECT_CALL(diffuse, IsDiffuse()).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(diffuse, Sample(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(
           iris::Bxdf::SampleResult{to_light, std::nullopt, &diffuse, 1.0}));
-  EXPECT_CALL(diffuse,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
+  EXPECT_CALL(diffuse, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
-  EXPECT_CALL(diffuse, Reflectance(testing::_, testing::_, testing::_,
-                                   testing::_, testing::_))
+  EXPECT_CALL(diffuse,
+              Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::spectra::MockSpectrum spectrum;

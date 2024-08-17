@@ -12,7 +12,8 @@ std::pair<Vector, Vector> Normalize(const std::pair<Vector, Vector>& vectors) {
 std::pair<Vector, Vector> MaybeNormalize(const Vector& surface_normal,
                                          const Vector& shading_normal,
                                          bool normalize) {
-  auto vectors = std::make_pair(surface_normal, shading_normal);
+  std::pair<Vector, Vector> vectors =
+      std::make_pair(surface_normal, shading_normal);
   if (!normalize) {
     return vectors;
   }
@@ -23,8 +24,9 @@ std::pair<Vector, Vector> MaybeNormalize(const Vector& surface_normal,
 std::array<Vector, 4> ComputeState(const Vector& surface_normal,
                                    const Vector& shading_normal,
                                    bool normalize) {
-  auto vectors = MaybeNormalize(surface_normal, shading_normal, normalize);
-  auto coordinate_space = CoordinateSystem(vectors.second);
+  std::pair<Vector, Vector> vectors =
+      MaybeNormalize(surface_normal, shading_normal, normalize);
+  std::pair<Vector, Vector> coordinate_space = CoordinateSystem(vectors.second);
   return {coordinate_space.first, coordinate_space.second, vectors.second,
           vectors.first};
 }
@@ -42,7 +44,7 @@ std::optional<Bxdf::SampleResult> SampleBxdf(
 
     return Bxdf::SampleResult{
         sample->direction, sample->differentials,
-        sample->sample_source->IsDiffuse() ? &bxdf : sample->sample_source,
+        sample->bxdf_override ? sample->bxdf_override : &bxdf,
         sample->pdf_weight};
   }
 
@@ -102,8 +104,9 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
     return std::nullopt;
   }
 
-  auto local_incoming = ToLocal(-incoming);
-  auto local_incoming_differentials = ToLocal(differentials);
+  Vector local_incoming = ToLocal(-incoming);
+  std::optional<iris::Bxdf::Differentials> local_incoming_differentials =
+      ToLocal(differentials);
 
   std::optional<Bxdf::SampleResult> sample_result =
       SampleBxdf(bxdf_, local_incoming, local_incoming_differentials,
@@ -112,36 +115,36 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
     return std::nullopt;
   }
 
-  auto world_outgoing = ToWorld(sample_result->direction);
+  Vector world_outgoing = ToWorld(sample_result->direction);
 
   geometric_t dp_outgoing = DotProduct(world_outgoing, surface_normal_);
   if (dp_outgoing == static_cast<geometric_t>(0.0)) {
     return std::nullopt;
   }
 
-  auto type = (std::signbit(dp_incoming) == std::signbit(dp_outgoing))
-                  ? Bxdf::Hemisphere::BTDF
-                  : Bxdf::Hemisphere::BRDF;
+  Bxdf::Hemisphere type =
+      (std::signbit(dp_incoming) == std::signbit(dp_outgoing))
+          ? Bxdf::Hemisphere::BTDF
+          : Bxdf::Hemisphere::BRDF;
 
-  auto pdf = sample_result->sample_source->Pdf(
-      local_incoming, sample_result->direction, local_surface_normal_,
-      sample_result->sample_source, type);
-  if (pdf.has_value() && *pdf <= 0.0) {
+  visual_t pdf = sample_result->bxdf_override->Pdf(
+      local_incoming, sample_result->direction, local_surface_normal_, type);
+  if (pdf <= static_cast<visual_t>(0.0)) {
     return std::nullopt;
   }
 
-  auto reflector = sample_result->sample_source->Reflectance(
-      local_incoming, sample_result->direction, sample_result->sample_source,
-      type, allocator);
+  const Reflector* reflector = sample_result->bxdf_override->Reflectance(
+      local_incoming, sample_result->direction, type, allocator);
   if (!reflector) {
     return std::nullopt;
   }
 
-  auto world_outgoing_differentials = ToWorld(sample_result->differentials);
+  std::optional<iris::Bsdf::Differentials> world_outgoing_differentials =
+      ToWorld(sample_result->differentials);
   return Bsdf::SampleResult{
       *reflector, world_outgoing, world_outgoing_differentials,
-      pdf.value_or(static_cast<visual_t>(1.0)) * sample_result->pdf_weight,
-      pdf.has_value()};
+      pdf * sample_result->pdf_weight,
+      diffuse_only || sample_result->bxdf_override->IsDiffuse()};
 }
 
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
@@ -157,25 +160,26 @@ std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
     return std::nullopt;
   }
 
-  auto type = (std::signbit(dp_incoming) == std::signbit(dp_outgoing))
-                  ? Bxdf::Hemisphere::BTDF
-                  : Bxdf::Hemisphere::BRDF;
+  Bxdf::Hemisphere type =
+      (std::signbit(dp_incoming) == std::signbit(dp_outgoing))
+          ? Bxdf::Hemisphere::BTDF
+          : Bxdf::Hemisphere::BRDF;
 
-  auto local_incoming = ToLocal(-incoming);
-  auto local_outgoing = ToLocal(outgoing);
-  auto pdf = bxdf_.Pdf(local_incoming, local_outgoing, local_surface_normal_,
-                       nullptr, type);
-  if (pdf.value_or(0.0) <= 0.0) {
+  Vector local_incoming = ToLocal(-incoming);
+  Vector local_outgoing = ToLocal(outgoing);
+  visual_t pdf =
+      bxdf_.Pdf(local_incoming, local_outgoing, local_surface_normal_, type);
+  if (pdf <= static_cast<visual_t>(0.0)) {
     return std::nullopt;
   }
 
-  auto* reflector = bxdf_.Reflectance(local_incoming, local_outgoing, nullptr,
-                                      type, allocator);
+  const Reflector* reflector =
+      bxdf_.Reflectance(local_incoming, local_outgoing, type, allocator);
   if (!reflector) {
     return std::nullopt;
   }
 
-  return Bsdf::ReflectanceResult{*reflector, *pdf};
+  return Bsdf::ReflectanceResult{*reflector, pdf};
 }
 
 }  // namespace iris

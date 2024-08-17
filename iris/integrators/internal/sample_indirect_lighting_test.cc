@@ -56,11 +56,9 @@ TEST(SampleIndirectLighting, Sample) {
                            testing::_))
       .WillRepeatedly(testing::Return(
           iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf, 1.0}));
-  EXPECT_CALL(bxdf,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
-                                testing::_))
+  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
@@ -99,11 +97,9 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
                            testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           kOutgoing, {{kOutgoing, kOutgoing}}, &bxdf, 1.0}));
-  EXPECT_CALL(bxdf,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
-                                testing::_))
+  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
@@ -145,11 +141,9 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
                            testing::_))
       .WillRepeatedly(testing::Return(
           iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf, 1.0}));
-  EXPECT_CALL(bxdf,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
-                                testing::_))
+  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
@@ -190,11 +184,9 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(
           iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf, 1.0}));
-  EXPECT_CALL(bxdf,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
-                                testing::_))
+  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
@@ -237,11 +229,9 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
           kOutgoing, {{kOutgoing, kOutgoing}}, &bxdf, 1.0}));
-  EXPECT_CALL(bxdf,
-              Pdf(testing::_, testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(std::nullopt));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_,
-                                testing::_))
+  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
+      .WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
       .WillRepeatedly(testing::Return(&reflector));
 
   iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);

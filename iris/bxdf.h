@@ -27,7 +27,7 @@ class Bxdf {
   struct SampleResult {
     const Vector direction;
     const std::optional<Differentials> differentials;
-    const Bxdf* sample_source;
+    const Bxdf* bxdf_override;
     const visual_t pdf_weight;
   };
 
@@ -40,15 +40,12 @@ class Bxdf {
     BTDF,
   };
 
-  virtual std::optional<visual_t> Pdf(const Vector& incoming,
-                                      const Vector& outgoing,
-                                      const Vector& surface_normal,
-                                      const Bxdf* sample_source,
-                                      Hemisphere hemisphere) const = 0;
+  virtual visual_t Pdf(const Vector& incoming, const Vector& outgoing,
+                       const Vector& surface_normal,
+                       Hemisphere hemisphere) const = 0;
 
   virtual const Reflector* Reflectance(const Vector& incoming,
                                        const Vector& outgoing,
-                                       const Bxdf* sample_source,
                                        Hemisphere hemisphere,
                                        SpectralAllocator& allocator) const = 0;
 

@@ -22,14 +22,12 @@ std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
   return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
-                      std::nullopt, this, static_cast<visual_t>(1.0)};
+                      std::nullopt, nullptr, static_cast<visual_t>(1.0)};
 }
 
-std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
-                                            const Vector& outgoing,
-                                            const Vector& surface_normal,
-                                            const Bxdf* sample_source,
-                                            Hemisphere hemisphere) const {
+visual_t LambertianBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
+                             const Vector& surface_normal,
+                             Hemisphere hemisphere) const {
   if (hemisphere != Hemisphere::BRDF) {
     return static_cast<visual_t>(0.0);
   }
@@ -38,8 +36,8 @@ std::optional<visual_t> LambertianBrdf::Pdf(const Vector& incoming,
 }
 
 const Reflector* LambertianBrdf::Reflectance(
-    const Vector& incoming, const Vector& outgoing, const Bxdf* sample_source,
-    Hemisphere hemisphere, SpectralAllocator& allocator) const {
+    const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+    SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BRDF) {
     return nullptr;
   }
@@ -61,14 +59,12 @@ std::optional<Bxdf::SampleResult> LambertianBtdf::Sample(
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
   return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler),
-                      std::nullopt, this, static_cast<visual_t>(1.0)};
+                      std::nullopt, nullptr, static_cast<visual_t>(1.0)};
 }
 
-std::optional<visual_t> LambertianBtdf::Pdf(const Vector& incoming,
-                                            const Vector& outgoing,
-                                            const Vector& surface_normal,
-                                            const Bxdf* sample_source,
-                                            Hemisphere hemisphere) const {
+visual_t LambertianBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
+                             const Vector& surface_normal,
+                             Hemisphere hemisphere) const {
   if (hemisphere != Hemisphere::BTDF) {
     return static_cast<visual_t>(0.0);
   }
@@ -77,8 +73,8 @@ std::optional<visual_t> LambertianBtdf::Pdf(const Vector& incoming,
 }
 
 const Reflector* LambertianBtdf::Reflectance(
-    const Vector& incoming, const Vector& outgoing, const Bxdf* sample_source,
-    Hemisphere hemisphere, SpectralAllocator& allocator) const {
+    const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+    SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BTDF) {
     return nullptr;
   }

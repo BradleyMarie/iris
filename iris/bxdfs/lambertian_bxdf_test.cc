@@ -70,10 +70,10 @@ TEST(LambertianBrdfTest, Sample) {
 TEST(LambertianBrdfTest, DiffusePdfTransmitted) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::LambertianBrdf bxdf(reflector);
-  EXPECT_EQ(0.0,
-            bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Vector(0.0, 0.0, -1.0), &bxdf,
-                     iris::Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(
+      0.0,
+      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(LambertianBrdfTest, DiffusePdfReflected) {
@@ -81,9 +81,8 @@ TEST(LambertianBrdfTest, DiffusePdfReflected) {
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   EXPECT_NEAR(
       M_1_PI,
-      *bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                iris::Vector(0.0, 0.0, -1.0), &bxdf,
-                iris::Bxdf::Hemisphere::BRDF),
+      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BRDF),
       0.001);
 }
 
@@ -94,7 +93,7 @@ TEST(LambertianBrdfTest, ReflectanceBtdf) {
 
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
@@ -106,7 +105,7 @@ TEST(LambertianBrdfTest, ReflectanceTransmitted) {
 
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
@@ -118,7 +117,7 @@ TEST(LambertianBrdfTest, Reflectance) {
 
   iris::bxdfs::LambertianBrdf bxdf(reflector);
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);
@@ -180,16 +179,16 @@ TEST(LambertianBtdfTest, Sample) {
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.z, -0.000345266, 0.0001);
   EXPECT_FALSE(result->differentials);
+  EXPECT_EQ(result->bxdf_override, nullptr);
   EXPECT_EQ(result->pdf_weight, 1.0);
 }
 
 TEST(LambertianBtdfTest, DiffusePdfReflected) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::LambertianBtdf bxdf(reflector);
-  EXPECT_EQ(0.0,
-            bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Vector(0.0, 0.0, 1.0), &bxdf,
-                     iris::Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(
+      0.0, bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(LambertianBtdfTest, DiffusePdfTransmitted) {
@@ -197,9 +196,8 @@ TEST(LambertianBtdfTest, DiffusePdfTransmitted) {
   iris::bxdfs::LambertianBtdf bxdf(reflector);
   EXPECT_NEAR(
       M_1_PI,
-      *bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                iris::Vector(0.0, 0.0, -1.0), &bxdf,
-                iris::Bxdf::Hemisphere::BTDF),
+      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF),
       0.001);
 }
 
@@ -210,7 +208,7 @@ TEST(LambertianBtdfTest, ReflectanceBrdf) {
 
   iris::bxdfs::LambertianBtdf bxdf(reflector);
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
@@ -222,7 +220,7 @@ TEST(LambertianBtdfTest, ReflectanceReflected) {
 
   iris::bxdfs::LambertianBtdf bxdf(reflector);
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
@@ -234,7 +232,7 @@ TEST(LambertianBtdfTest, Reflectance) {
 
   iris::bxdfs::LambertianBtdf bxdf(reflector);
   auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &bxdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);

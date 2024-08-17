@@ -23,13 +23,11 @@ class MockBxdf final : public Bxdf {
               (const Vector&, const std::optional<Differentials>& differentials,
                const Vector&, Sampler&),
               (const override));
-  MOCK_METHOD(std::optional<visual_t>, Pdf,
-              (const Vector&, const Vector&, const Vector&, const Bxdf*,
-               Hemisphere),
+  MOCK_METHOD(visual_t, Pdf,
+              (const Vector&, const Vector&, const Vector&, Hemisphere),
               (const override));
   MOCK_METHOD(const Reflector*, Reflectance,
-              (const Vector&, const Vector&, const Bxdf*, Hemisphere,
-               SpectralAllocator&),
+              (const Vector&, const Vector&, Hemisphere, SpectralAllocator&),
               (const override));
 };
 

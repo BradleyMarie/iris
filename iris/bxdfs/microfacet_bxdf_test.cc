@@ -205,6 +205,7 @@ TEST(MicrofacetBrdf, Sample) {
   ASSERT_TRUE(sample);
   EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), sample->direction);
   EXPECT_FALSE(sample->differentials);
+  EXPECT_EQ(sample->bxdf_override, nullptr);
   EXPECT_EQ(sample->pdf_weight, 1.0);
 }
 
@@ -214,11 +215,10 @@ TEST(MicrofacetBrdf, PdfBTDF) {
   TestReflectionFresnel fresnel;
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.0,
-            brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Vector(0.0, 0.0, -1.0), &brdf,
-                     iris::Bxdf::Hemisphere::BTDF)
-                .value());
+  EXPECT_EQ(
+      0.0,
+      brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBrdf, PdfNoIncomingZ) {
@@ -227,11 +227,10 @@ TEST(MicrofacetBrdf, PdfNoIncomingZ) {
   TestReflectionFresnel fresnel;
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.0,
-            brdf.Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Vector(0.0, 0.0, -1.0), &brdf,
-                     iris::Bxdf::Hemisphere::BRDF)
-                .value());
+  EXPECT_EQ(
+      0.0,
+      brdf.Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 0.0, -1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBrdf, PdfNoOutgoingZ) {
@@ -240,11 +239,10 @@ TEST(MicrofacetBrdf, PdfNoOutgoingZ) {
   TestReflectionFresnel fresnel;
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.0,
-            brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 0.0),
-                     iris::Vector(0.0, 0.0, -1.0), &brdf,
-                     iris::Bxdf::Hemisphere::BRDF)
-                .value());
+  EXPECT_EQ(
+      0.0,
+      brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 0.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBrdf, PdfDifferentHemispheres) {
@@ -255,9 +253,8 @@ TEST(MicrofacetBrdf, PdfDifferentHemispheres) {
 
   EXPECT_EQ(0.0,
             brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Normalize(iris::Vector(0.0, 1.0, 0.0)), &brdf,
-                     iris::Bxdf::Hemisphere::BRDF)
-                .value());
+                     iris::Normalize(iris::Vector(0.0, 1.0, 0.0)),
+                     iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBrdf, Pdf) {
@@ -269,8 +266,7 @@ TEST(MicrofacetBrdf, Pdf) {
   EXPECT_EQ(
       0.125,
       brdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-               iris::Vector(0.0, 0.0, 1.0), &brdf, iris::Bxdf::Hemisphere::BRDF)
-          .value());
+               iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBrdf, ReflectanceWrongHemishphere) {
@@ -280,7 +276,7 @@ TEST(MicrofacetBrdf, ReflectanceWrongHemishphere) {
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(nullptr, brdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                      iris::Vector(0.0, 0.0, 1.0), &brdf,
+                                      iris::Vector(0.0, 0.0, 1.0),
                                       iris::Bxdf::Hemisphere::BTDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -292,7 +288,7 @@ TEST(MicrofacetBrdf, ReflectanceNoZIncoming) {
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(nullptr, brdf.Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                      iris::Vector(0.0, 0.0, -1.0), &brdf,
+                                      iris::Vector(0.0, 0.0, -1.0),
                                       iris::Bxdf::Hemisphere::BRDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -304,7 +300,7 @@ TEST(MicrofacetBrdf, ReflectanceNoZOutgoing) {
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(nullptr, brdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                      iris::Vector(0.0, 1.0, 0.0), &brdf,
+                                      iris::Vector(0.0, 1.0, 0.0),
                                       iris::Bxdf::Hemisphere::BRDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -316,7 +312,7 @@ TEST(MicrofacetBrdf, ReflectanceOppositeHemispheres) {
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   EXPECT_EQ(nullptr, brdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                      iris::Vector(0.0, 0.0, -1.0), &brdf,
+                                      iris::Vector(0.0, 0.0, -1.0),
                                       iris::Bxdf::Hemisphere::BRDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -328,7 +324,7 @@ TEST(MicrofacetBrdf, Reflectance) {
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
   const auto* reflectance = brdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0), &brdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
       iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.0416667, reflectance->Reflectance(1.0), 0.001);
@@ -417,10 +413,8 @@ TEST(MicrofacetBtdf, PdfBTDF) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   EXPECT_EQ(
-      0.0,
-      btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-               iris::Vector(0.0, 0.0, 1.0), &btdf, iris::Bxdf::Hemisphere::BRDF)
-          .value());
+      0.0, btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBtdf, PdfNoIncomingZ) {
@@ -430,10 +424,8 @@ TEST(MicrofacetBtdf, PdfNoIncomingZ) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   EXPECT_EQ(
-      0.0,
-      btdf.Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 0.0, 1.0),
-               iris::Vector(0.0, 0.0, 1.0), &btdf, iris::Bxdf::Hemisphere::BTDF)
-          .value());
+      0.0, btdf.Pdf(iris::Vector(0.0, 1.0, 0.0), iris::Vector(0.0, 0.0, 1.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, PdfNoOutgoingZ) {
@@ -443,10 +435,8 @@ TEST(MicrofacetBtdf, PdfNoOutgoingZ) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   EXPECT_EQ(
-      0.0,
-      btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 0.0),
-               iris::Vector(0.0, 0.0, 1.0), &btdf, iris::Bxdf::Hemisphere::BTDF)
-          .value());
+      0.0, btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 0.0),
+                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, PdfSameHemispheres) {
@@ -457,9 +447,8 @@ TEST(MicrofacetBtdf, PdfSameHemispheres) {
 
   EXPECT_EQ(0.0,
             btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-                     iris::Normalize(iris::Vector(0.0, 1.0, 0.0)), &btdf,
-                     iris::Bxdf::Hemisphere::BTDF)
-                .value());
+                     iris::Normalize(iris::Vector(0.0, 1.0, 0.0)),
+                     iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, PdfNoHalfAngle) {
@@ -468,11 +457,10 @@ TEST(MicrofacetBtdf, PdfNoHalfAngle) {
   TestTransmissionFresnel fresnel;
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 1.0, distribution, fresnel);
 
-  EXPECT_EQ(0.0,
-            btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Vector(0.0, 0.0, -1.0), &btdf,
-                     iris::Bxdf::Hemisphere::BTDF)
-                .value());
+  EXPECT_EQ(
+      0.0,
+      btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, Pdf) {
@@ -481,11 +469,10 @@ TEST(MicrofacetBtdf, Pdf) {
   TestTransmissionFresnel fresnel;
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(2.0,
-            btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                     iris::Vector(0.0, 0.0, -1.0), &btdf,
-                     iris::Bxdf::Hemisphere::BTDF)
-                .value());
+  EXPECT_EQ(
+      2.0,
+      btdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
+               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, ReflectanceWrongHemishphere) {
@@ -495,7 +482,7 @@ TEST(MicrofacetBtdf, ReflectanceWrongHemishphere) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   EXPECT_EQ(nullptr, btdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                      iris::Vector(0.0, 0.0, -1.0), &btdf,
+                                      iris::Vector(0.0, 0.0, -1.0),
                                       iris::Bxdf::Hemisphere::BRDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -507,7 +494,7 @@ TEST(MicrofacetBtdf, ReflectanceNoZIncoming) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   EXPECT_EQ(nullptr, btdf.Reflectance(iris::Vector(0.0, 1.0, 0.0),
-                                      iris::Vector(0.0, 0.0, 1.0), &btdf,
+                                      iris::Vector(0.0, 0.0, 1.0),
                                       iris::Bxdf::Hemisphere::BTDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -519,7 +506,7 @@ TEST(MicrofacetBtdf, ReflectanceNoZOutgoing) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   EXPECT_EQ(nullptr, btdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                      iris::Vector(0.0, 1.0, 0.0), &btdf,
+                                      iris::Vector(0.0, 1.0, 0.0),
                                       iris::Bxdf::Hemisphere::BTDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -531,7 +518,7 @@ TEST(MicrofacetBtdf, ReflectanceSameHemispheres) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   EXPECT_EQ(nullptr, btdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                      iris::Vector(0.0, 0.0, 1.0), &btdf,
+                                      iris::Vector(0.0, 0.0, 1.0),
                                       iris::Bxdf::Hemisphere::BTDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -543,7 +530,7 @@ TEST(MicrofacetBtdf, ReflectanceNoHalfAngle) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 1.0, distribution, fresnel);
 
   EXPECT_EQ(nullptr, btdf.Reflectance(iris::Vector(0.0, 0.0, 1.0),
-                                      iris::Vector(0.0, 0.0, -1.0), &btdf,
+                                      iris::Vector(0.0, 0.0, -1.0),
                                       iris::Bxdf::Hemisphere::BTDF,
                                       iris::testing::GetSpectralAllocator()));
 }
@@ -555,7 +542,7 @@ TEST(MicrofacetBtdf, Reflectance) {
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
   const auto* reflectance = btdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0), &btdf,
+      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.1666666, reflectance->Reflectance(1.0), 0.001);
