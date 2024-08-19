@@ -8,7 +8,13 @@
 namespace iris {
 namespace bxdfs {
 
-bool LambertianBrdf::IsDiffuse() const { return true; }
+bool LambertianBrdf::IsDiffuse(visual_t* diffuse_pdf) const {
+  if (diffuse_pdf != nullptr) {
+    *diffuse_pdf = static_cast<visual_t>(1.0);
+  }
+
+  return true;
+}
 
 std::optional<Vector> LambertianBrdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
@@ -44,7 +50,13 @@ const Reflector* LambertianBrdf::Reflectance(
   return allocator.Scale(&reflector_, M_1_PI);
 }
 
-bool LambertianBtdf::IsDiffuse() const { return true; }
+bool LambertianBtdf::IsDiffuse(visual_t* diffuse_pdf) const {
+  if (diffuse_pdf != nullptr) {
+    *diffuse_pdf = static_cast<visual_t>(1.0);
+  }
+
+  return true;
+}
 
 std::optional<Vector> LambertianBtdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,

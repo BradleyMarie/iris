@@ -11,7 +11,11 @@
 TEST(LambertianBrdfTest, IsDiffuse) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::LambertianBrdf bxdf(reflector);
-  EXPECT_TRUE(bxdf.IsDiffuse());
+  EXPECT_TRUE(bxdf.IsDiffuse(nullptr));
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_TRUE(bxdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(LambertianBrdfTest, SampleDiffuseAligned) {
@@ -126,7 +130,11 @@ TEST(LambertianBrdfTest, Reflectance) {
 TEST(LambertianBtdfTest, IsDiffuse) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::LambertianBtdf bxdf(reflector);
-  EXPECT_TRUE(bxdf.IsDiffuse());
+  EXPECT_TRUE(bxdf.IsDiffuse(nullptr));
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_TRUE(bxdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(LambertianBtdfTest, SampleDiffuseAligned) {

@@ -11,7 +11,11 @@
 TEST(OrenNayarBrdfTest, IsDiffuse) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  EXPECT_TRUE(bxdf.IsDiffuse());
+  EXPECT_TRUE(bxdf.IsDiffuse(nullptr));
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_TRUE(bxdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {

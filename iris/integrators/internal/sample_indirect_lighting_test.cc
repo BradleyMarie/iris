@@ -24,7 +24,8 @@ TEST(SampleIndirectLighting, NoSample) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
                            testing::_))
       .WillOnce(testing::Return(std::nullopt));
@@ -51,7 +52,8 @@ TEST(SampleIndirectLighting, Sample) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
                            testing::_))
       .WillRepeatedly(testing::Return(
@@ -92,7 +94,8 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
                            testing::_))
       .WillRepeatedly(testing::Return(
@@ -136,7 +139,8 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
                            testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{kOutgoing}));
@@ -178,7 +182,8 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{kOutgoing}));
@@ -222,7 +227,8 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
   iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse()).WillRepeatedly(testing::Return(false));
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
                            testing::_, testing::_))
       .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{

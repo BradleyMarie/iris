@@ -11,7 +11,11 @@
 TEST(SpecularBrdfTest, IsDiffuse) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::SpecularBrdf bxdf(reflector, iris::bxdfs::FresnelNoOp());
-  EXPECT_FALSE(bxdf.IsDiffuse());
+  EXPECT_FALSE(bxdf.IsDiffuse(nullptr));
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_FALSE(bxdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(0.0, diffuse_pdf);
 }
 
 TEST(SpecularBrdfTest, SampleDiffuse) {
@@ -98,7 +102,10 @@ TEST(SpecularBtdfTest, IsDiffuse) {
   iris::reflectors::MockReflector reflector;
   iris::bxdfs::SpecularBtdf bxdf(reflector, 1.0, 1.0,
                                  iris::bxdfs::FresnelNoOp());
-  EXPECT_FALSE(bxdf.IsDiffuse());
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_FALSE(bxdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(0.0, diffuse_pdf);
 }
 
 TEST(SpecularBtdfTest, SampleDiffuse) {
@@ -212,6 +219,18 @@ TEST(SpecularBtdfTest, ReflectanceBack) {
       iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->Reflectance(1.0));
+}
+
+TEST(SpecularBxdfTest, IsDiffuse) {
+  iris::reflectors::MockReflector reflector;
+  iris::reflectors::MockReflector transmitter;
+
+  iris::bxdfs::SpecularBxdf bxdf(reflector, transmitter, 1.0, 1.0);
+  EXPECT_FALSE(bxdf.IsDiffuse(nullptr));
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_FALSE(bxdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(0.0, diffuse_pdf);
 }
 
 TEST(SpecularBxdfTest, SampleDiffuse) {

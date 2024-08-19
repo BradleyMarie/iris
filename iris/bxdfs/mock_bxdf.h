@@ -16,7 +16,7 @@ namespace bxdfs {
 
 class MockBxdf final : public Bxdf {
  public:
-  MOCK_METHOD(bool, IsDiffuse, (), (const override));
+  MOCK_METHOD(bool, IsDiffuse, (visual_t*), (const override));
   MOCK_METHOD(std::optional<Vector>, SampleDiffuse,
               (const Vector&, const Vector&, Sampler&), (const override));
   MOCK_METHOD(std::optional<SampleResult>, Sample,

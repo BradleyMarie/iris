@@ -137,7 +137,11 @@ TEST(MicrofacetBrdf, IsDiffuse) {
   TestMicrofacetDistribution distribution;
   TestReflectionFresnel fresnel;
   iris::bxdfs::MicrofacetBrdf brdf(reflector, distribution, fresnel);
-  EXPECT_TRUE(brdf.IsDiffuse());
+  EXPECT_TRUE(brdf.IsDiffuse(nullptr));
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_TRUE(brdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(MicrofacetBrdf, SampleDiffuseZero) {
@@ -335,7 +339,11 @@ TEST(MicrofacetBtdf, IsDiffuse) {
   TestMicrofacetDistribution distribution;
   TestTransmissionFresnel fresnel;
   iris::bxdfs::MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
-  EXPECT_TRUE(btdf.IsDiffuse());
+  EXPECT_TRUE(btdf.IsDiffuse(nullptr));
+
+  iris::visual_t diffuse_pdf;
+  EXPECT_TRUE(btdf.IsDiffuse(&diffuse_pdf));
+  EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(MicrofacetBtdf, SampleDiffuseZero) {

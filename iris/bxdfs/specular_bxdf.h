@@ -23,7 +23,13 @@ class SpecularBrdf final : public Bxdf {
   SpecularBrdf(const Reflector& reflectance, const F& fresnel) noexcept
       : reflectance_(reflectance), fresnel_(fresnel) {}
 
-  bool IsDiffuse() const override { return false; }
+  bool IsDiffuse(visual_t* diffuse_pdf) const override {
+    if (diffuse_pdf != nullptr) {
+      *diffuse_pdf = static_cast<visual_t>(0.0);
+    }
+
+    return false;
+  }
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -80,7 +86,13 @@ class SpecularBtdf final : public Bxdf {
                                    eta_transmitted / eta_incident},
         fresnel_(fresnel) {}
 
-  bool IsDiffuse() const override { return false; }
+  bool IsDiffuse(visual_t* diffuse_pdf) const override {
+    if (diffuse_pdf != nullptr) {
+      *diffuse_pdf = static_cast<visual_t>(0.0);
+    }
+
+    return false;
+  }
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -171,7 +183,7 @@ class SpecularBxdf final : public Bxdf {
         relative_refractive_index_{eta_incident / eta_transmitted,
                                    eta_transmitted / eta_incident} {}
 
-  bool IsDiffuse() const override;
+  bool IsDiffuse(visual_t* diffuse_pdf) const override;
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,

@@ -21,7 +21,13 @@ Bxdf::Hemisphere SampledHemisphere(const Vector& incoming,
 
 }  // namespace
 
-bool SpecularBxdf::IsDiffuse() const { return false; }
+bool SpecularBxdf::IsDiffuse(visual_t* diffuse_pdf) const {
+  if (diffuse_pdf != nullptr) {
+    *diffuse_pdf = static_cast<visual_t>(0.0);
+  }
+
+  return false;
+}
 
 std::optional<Vector> SpecularBxdf::SampleDiffuse(const Vector& incoming,
                                                   const Vector& surface_normal,

@@ -57,7 +57,13 @@ class MicrofacetBrdf final : public Bxdf {
         distribution_(distribution),
         fresnel_(fresnel) {}
 
-  bool IsDiffuse() const override { return true; }
+  bool IsDiffuse(visual_t* diffuse_pdf) const override {
+    if (diffuse_pdf != nullptr) {
+      *diffuse_pdf = static_cast<visual_t>(1.0);
+    }
+
+    return true;
+  }
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -169,7 +175,13 @@ class MicrofacetBtdf final : public Bxdf {
         distribution_(distribution),
         fresnel_(fresnel) {}
 
-  bool IsDiffuse() const override { return true; }
+  bool IsDiffuse(visual_t* diffuse_pdf) const override {
+    if (diffuse_pdf != nullptr) {
+      *diffuse_pdf = static_cast<visual_t>(1.0);
+    }
+
+    return true;
+  }
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,

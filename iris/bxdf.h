@@ -13,7 +13,7 @@ namespace iris {
 
 class Bxdf {
  public:
-  virtual bool IsDiffuse() const = 0;
+  virtual bool IsDiffuse(visual_t* diffuse_pdf = nullptr) const = 0;
 
   virtual std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                               const Vector& surface_normal,

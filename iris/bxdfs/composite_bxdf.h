@@ -28,10 +28,29 @@ class CompositeBxdf final : public Bxdf {
     auto partition_iter = std::stable_partition(
         bxdfs_.begin(), bxdfs_.end(),
         [](const Bxdf* bxdf) { return bxdf->IsDiffuse(); });
+
     num_diffuse_bxdfs_ = std::distance(bxdfs_.begin(), partition_iter);
+
+    diffuse_pdf_ = static_cast<visual_t>(0.0);
+    for (size_t i = 0; i < num_diffuse_bxdfs_; i++) {
+      visual_t pdf;
+      bxdfs_[i]->IsDiffuse(&pdf);
+      diffuse_pdf_ += std::clamp(pdf, static_cast<visual_t>(0.0),
+                                 static_cast<visual_t>(1.0));
+    }
+
+    if (num_bxdfs_ != 0) {
+      diffuse_pdf_ /= static_cast<visual_t>(num_bxdfs_);
+    }
   }
 
-  bool IsDiffuse() const override { return num_diffuse_bxdfs_ != 0; }
+  bool IsDiffuse(visual_t* diffuse_pdf) const override {
+    if (diffuse_pdf != nullptr) {
+      *diffuse_pdf = diffuse_pdf_;
+    }
+
+    return num_diffuse_bxdfs_ != 0;
+  }
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -55,12 +74,11 @@ class CompositeBxdf final : public Bxdf {
       return std::nullopt;
     }
 
-    visual_t pdf_weight = sample->pdf_weight;
+    visual_t pdf_weight;
     if (sample->bxdf_override != nullptr) {
-      pdf_weight /= static_cast<visual_t>(num_bxdfs_);
+      pdf_weight = sample->pdf_weight / static_cast<visual_t>(num_bxdfs_);
     } else {
-      pdf_weight *= static_cast<visual_t>(num_diffuse_bxdfs_) /
-                    static_cast<visual_t>(num_bxdfs_);
+      pdf_weight = diffuse_pdf_;
     }
 
     return SampleResult{sample->direction, sample->differentials,
@@ -100,6 +118,7 @@ class CompositeBxdf final : public Bxdf {
   std::array<const Bxdf*, N> bxdfs_;
   size_t num_bxdfs_;
   size_t num_diffuse_bxdfs_;
+  visual_t diffuse_pdf_;
 };
 
 }  // namespace internal

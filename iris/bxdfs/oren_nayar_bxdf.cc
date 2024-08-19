@@ -34,7 +34,13 @@ OrenNayarBrdf::OrenNayarBrdf(const Reflector& reflector, visual_t sigma)
   assert(sigma >= static_cast<visual_t>(0.0));
 }
 
-bool OrenNayarBrdf::IsDiffuse() const { return true; }
+bool OrenNayarBrdf::IsDiffuse(visual_t* diffuse_pdf) const {
+  if (diffuse_pdf != nullptr) {
+    *diffuse_pdf = static_cast<visual_t>(1.0);
+  }
+
+  return true;
+}
 
 std::optional<Vector> OrenNayarBrdf::SampleDiffuse(const Vector& incoming,
                                                    const Vector& surface_normal,
