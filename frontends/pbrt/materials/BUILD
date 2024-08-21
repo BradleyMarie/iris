@@ -113,6 +113,7 @@ cc_library(
         ":mirror",
         ":plastic",
         ":translucent",
+        ":uber",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
@@ -180,6 +181,32 @@ cc_test(
     srcs = ["translucent_test.cc"],
     deps = [
         ":translucent",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "uber",
+    srcs = ["uber.cc"],
+    hdrs = ["uber.h"],
+    deps = [
+        ":bumpmap",
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:texture_manager",
+        "//iris:material",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris/materials:uber_material",
+    ],
+)
+
+cc_test(
+    name = "uber_test",
+    srcs = ["uber_test.cc"],
+    deps = [
+        ":uber",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
