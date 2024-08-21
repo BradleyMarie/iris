@@ -199,6 +199,7 @@ cc_library(
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/bxdfs:specular_bxdf",
+        "//iris/reflectors:uniform_reflector",
         "//iris/textures:texture2d",
     ],
 )

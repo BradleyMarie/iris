@@ -31,22 +31,22 @@ static const ReferenceCounted<textures::ConstantValueTexture2D<visual>>
 static const ReferenceCounted<textures::ConstantValueTexture2D<visual>>
     kRoughness = MakeReferenceCounted<textures::ConstantValueTexture2D<visual>>(
         static_cast<visual>(1.0));
-
-TEST(UberMaterialTest, NoOpacityOrTransparency) {
-  materials::UberMaterial material(kWhite, kWhite, kWhite, kWhite, kBlack,
-                                   kBlack, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
-
-  auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                   testing::GetSpectralAllocator(),
-                                   testing::GetBxdfAllocator());
-  EXPECT_FALSE(result);
-}
+static const ReferenceCounted<textures::ConstantValueTexture2D<visual>>
+    kTransparent =
+        MakeReferenceCounted<textures::ConstantValueTexture2D<visual>>(
+            static_cast<visual>(0.0));
+static const ReferenceCounted<textures::ConstantValueTexture2D<visual>>
+    kTranslucent =
+        MakeReferenceCounted<textures::ConstantValueTexture2D<visual>>(
+            static_cast<visual>(0.5));
+static const ReferenceCounted<textures::ConstantValueTexture2D<visual>>
+    kOpaque = MakeReferenceCounted<textures::ConstantValueTexture2D<visual>>(
+        static_cast<visual>(1.0));
 
 TEST(UberMaterialTest, TransparencyOnly) {
-  materials::UberMaterial material(kWhite, kWhite, kWhite, kWhite, kBlack,
-                                   kWhite, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kWhite, kWhite, kWhite, kWhite, kTransparent,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -56,9 +56,9 @@ TEST(UberMaterialTest, TransparencyOnly) {
 }
 
 TEST(UberMaterialTest, OpaqueOnlyAllTermsEmpty) {
-  materials::UberMaterial material(kBlack, kBlack, kBlack, kBlack, kWhite,
-                                   kBlack, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kBlack, kBlack, kBlack, kBlack, kOpaque,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -67,9 +67,9 @@ TEST(UberMaterialTest, OpaqueOnlyAllTermsEmpty) {
 }
 
 TEST(UberMaterialTest, LambertianOnly) {
-  materials::UberMaterial material(kBlack, kBlack, kWhite, kBlack, kWhite,
-                                   kBlack, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kBlack, kBlack, kWhite, kBlack, kOpaque,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -79,9 +79,9 @@ TEST(UberMaterialTest, LambertianOnly) {
 }
 
 TEST(UberMaterialTest, SpecularReflectionOnly) {
-  materials::UberMaterial material(kWhite, kBlack, kBlack, kBlack, kWhite,
-                                   kBlack, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kWhite, kBlack, kBlack, kBlack, kOpaque,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -91,9 +91,9 @@ TEST(UberMaterialTest, SpecularReflectionOnly) {
 }
 
 TEST(UberMaterialTest, SpecularTransmissionOnly) {
-  materials::UberMaterial material(kBlack, kWhite, kBlack, kBlack, kWhite,
-                                   kBlack, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kBlack, kWhite, kBlack, kBlack, kOpaque,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -103,9 +103,9 @@ TEST(UberMaterialTest, SpecularTransmissionOnly) {
 }
 
 TEST(UberMaterialTest, MicrofacetOnly) {
-  materials::UberMaterial material(kBlack, kBlack, kBlack, kWhite, kWhite,
-                                   kBlack, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kBlack, kBlack, kBlack, kWhite, kOpaque,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -115,9 +115,9 @@ TEST(UberMaterialTest, MicrofacetOnly) {
 }
 
 TEST(UberMaterialTest, DiffuseAndMicrofacetOnly) {
-  materials::UberMaterial material(kBlack, kBlack, kWhite, kWhite, kWhite,
-                                   kBlack, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kBlack, kBlack, kWhite, kWhite, kOpaque,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -127,9 +127,9 @@ TEST(UberMaterialTest, DiffuseAndMicrofacetOnly) {
 }
 
 TEST(UberMaterialTest, SpecularOnly) {
-  materials::UberMaterial material(kWhite, kWhite, kBlack, kBlack, kWhite,
-                                   kWhite, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, false);
+  materials::UberMaterial material(kWhite, kWhite, kBlack, kBlack, kTranslucent,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, false);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),
@@ -139,9 +139,9 @@ TEST(UberMaterialTest, SpecularOnly) {
 }
 
 TEST(UberMaterialTest, All) {
-  materials::UberMaterial material(kWhite, kWhite, kWhite, kWhite, kWhite,
-                                   kWhite, kEtaIncident, kEtaTransmitted,
-                                   kRoughness, kRoughness, true);
+  materials::UberMaterial material(kWhite, kWhite, kWhite, kWhite, kTranslucent,
+                                   kEtaIncident, kEtaTransmitted, kRoughness,
+                                   kRoughness, true);
 
   auto* result = material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                    testing::GetSpectralAllocator(),

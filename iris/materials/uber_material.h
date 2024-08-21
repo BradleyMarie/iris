@@ -31,12 +31,7 @@ class UberMaterial final : public Material {
       iris::ReferenceCounted<
           textures::PointerTexture2D<Reflector, SpectralAllocator>>
           specular,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          opacity,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          transparency,
+      iris::ReferenceCounted<textures::ValueTexture2D<visual>> opacity,
       iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
       iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
       iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
@@ -47,7 +42,6 @@ class UberMaterial final : public Material {
         diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
         opacity_(std::move(opacity)),
-        transparency_(std::move(transparency)),
         eta_incident_(std::move(eta_incident)),
         eta_transmitted_(std::move(eta_transmitted)),
         roughness_u_(std::move(roughness_u)),
@@ -57,7 +51,6 @@ class UberMaterial final : public Material {
     assert(transmittance_);
     assert(diffuse_);
     assert(specular_);
-    assert(transparency_);
     assert(opacity_);
     assert(eta_incident_);
     assert(eta_transmitted_);
@@ -82,12 +75,7 @@ class UberMaterial final : public Material {
   iris::ReferenceCounted<
       textures::PointerTexture2D<Reflector, SpectralAllocator>>
       specular_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      opacity_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      transparency_;
+  iris::ReferenceCounted<textures::ValueTexture2D<visual>> opacity_;
   iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
   iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
   iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u_;
