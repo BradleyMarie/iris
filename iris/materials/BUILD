@@ -181,3 +181,37 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "uber_material",
+    srcs = ["uber_material.cc"],
+    hdrs = ["uber_material.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:composite_bxdf",
+        "//iris/bxdfs:lambertian_bxdf",
+        "//iris/bxdfs:microfacet_bxdf",
+        "//iris/bxdfs:specular_bxdf",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "uber_material_test",
+    srcs = ["uber_material_test.cc"],
+    deps = [
+        ":uber_material",
+        "//iris/reflectors:uniform_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

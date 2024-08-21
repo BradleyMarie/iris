@@ -26,7 +26,7 @@ class CompositeBxdf final : public Bxdf {
   CompositeBxdf(const Bxdf* bxdfs[], size_t num_bxdfs) : num_bxdfs_(num_bxdfs) {
     std::copy(bxdfs, bxdfs + num_bxdfs, bxdfs_.data());
     auto partition_iter = std::stable_partition(
-        bxdfs_.begin(), bxdfs_.end(),
+        bxdfs_.data(), bxdfs_.data() + num_bxdfs_,
         [](const Bxdf* bxdf) { return bxdf->IsDiffuse(); });
 
     num_diffuse_bxdfs_ = std::distance(bxdfs_.begin(), partition_iter);

@@ -1,5 +1,5 @@
-#ifndef _IRIS_BXDFS_MICROFACET_BXDF_
-#define _IRIS_BXDFS_MICROFACET_BXDF_
+#ifndef _IRIS_BXDFS_SPECULAR_BXDF_
+#define _IRIS_BXDFS_SPECULAR_BXDF_
 
 #include <cmath>
 #include <concepts>

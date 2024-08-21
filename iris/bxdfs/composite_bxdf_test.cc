@@ -402,8 +402,9 @@ TEST(CompositeBxdfTest, MakeComposite) {
                   iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
 
-  const iris::Bxdf* composite = iris::bxdfs::MakeComposite(
-      iris::testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
+  const iris::Bxdf* composite =
+      iris::bxdfs::MakeComposite(iris::testing::GetBxdfAllocator(), &bxdf0,
+                                 &bxdf1, nullptr, nullptr, nullptr);
   ASSERT_TRUE(composite);
 
   EXPECT_EQ(1.5, composite->Pdf(iris::Vector(1.0, 0.0, 0.0),
