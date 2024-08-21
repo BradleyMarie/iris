@@ -8,27 +8,33 @@
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 
+namespace iris {
+namespace bxdfs {
+
+using ::iris::random::MockRandom;
+using ::iris::reflectors::MockReflector;
+using ::testing::_;
+using ::testing::Return;
+
 TEST(LambertianBrdfTest, IsDiffuse) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
+  MockReflector reflector;
+  LambertianBrdf bxdf(reflector);
   EXPECT_TRUE(bxdf.IsDiffuse(nullptr));
 
-  iris::visual_t diffuse_pdf;
+  visual_t diffuse_pdf;
   EXPECT_TRUE(bxdf.IsDiffuse(&diffuse_pdf));
   EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(LambertianBrdfTest, SampleDiffuseAligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
-                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  LambertianBrdf bxdf(reflector);
+  std::optional<Vector> result =
+      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -36,16 +42,14 @@ TEST(LambertianBrdfTest, SampleDiffuseAligned) {
 }
 
 TEST(LambertianBrdfTest, SampleDiffuseUnaligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
-                                   iris::Vector(0.0, 0.0, -1.0), sampler);
+  LambertianBrdf bxdf(reflector);
+  std::optional<Vector> result = bxdf.SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, 0.707106709, 0.0001);
   EXPECT_NEAR(result->y, 0.707106709, 0.0001);
@@ -53,16 +57,14 @@ TEST(LambertianBrdfTest, SampleDiffuseUnaligned) {
 }
 
 TEST(LambertianBrdfTest, Sample) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
-                            iris::Vector(0.0, 0.0, 1.0), sampler);
+  LambertianBrdf bxdf(reflector);
+  std::optional<Bxdf::SampleResult> result = bxdf.Sample(
+      Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
@@ -72,82 +74,74 @@ TEST(LambertianBrdfTest, Sample) {
 }
 
 TEST(LambertianBrdfTest, DiffusePdfTransmitted) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  EXPECT_EQ(
-      0.0,
-      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
+  MockReflector reflector;
+  LambertianBrdf bxdf(reflector);
+  EXPECT_EQ(0.0, bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(LambertianBrdfTest, DiffusePdfReflected) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  EXPECT_NEAR(
-      M_1_PI,
-      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BRDF),
-      0.001);
+  MockReflector reflector;
+  LambertianBrdf bxdf(reflector);
+  EXPECT_NEAR(M_1_PI,
+              bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF),
+              0.001);
 }
 
 TEST(LambertianBrdfTest, ReflectanceBtdf) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
+  LambertianBrdf bxdf(reflector);
+  const Reflector* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Bxdf::Hemisphere::BTDF, testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
 
 TEST(LambertianBrdfTest, ReflectanceTransmitted) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
+  LambertianBrdf bxdf(reflector);
+  const Reflector* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                       Bxdf::Hemisphere::BTDF, testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
 
 TEST(LambertianBrdfTest, Reflectance) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::LambertianBrdf bxdf(reflector);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
+  LambertianBrdf bxdf(reflector);
+  const Reflector* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);
 }
 
 TEST(LambertianBtdfTest, IsDiffuse) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
+  MockReflector reflector;
+  LambertianBtdf bxdf(reflector);
   EXPECT_TRUE(bxdf.IsDiffuse(nullptr));
 
-  iris::visual_t diffuse_pdf;
+  visual_t diffuse_pdf;
   EXPECT_TRUE(bxdf.IsDiffuse(&diffuse_pdf));
   EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(LambertianBtdfTest, SampleDiffuseAligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
-                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  LambertianBtdf bxdf(reflector);
+  std::optional<Vector> result =
+      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -155,16 +149,14 @@ TEST(LambertianBtdfTest, SampleDiffuseAligned) {
 }
 
 TEST(LambertianBtdfTest, SampleDiffuseUnaligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
-                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  LambertianBtdf bxdf(reflector);
+  std::optional<Vector> result =
+      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -172,16 +164,14 @@ TEST(LambertianBtdfTest, SampleDiffuseUnaligned) {
 }
 
 TEST(LambertianBtdfTest, Sample) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
-                            iris::Vector(0.0, 0.0, 1.0), sampler);
+  LambertianBtdf bxdf(reflector);
+  std::optional<Bxdf::SampleResult> result = bxdf.Sample(
+      Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
@@ -192,56 +182,54 @@ TEST(LambertianBtdfTest, Sample) {
 }
 
 TEST(LambertianBtdfTest, DiffusePdfReflected) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  EXPECT_EQ(
-      0.0, bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-                    iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF));
+  MockReflector reflector;
+  LambertianBtdf bxdf(reflector);
+  EXPECT_EQ(0.0, bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                          Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(LambertianBtdfTest, DiffusePdfTransmitted) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  EXPECT_NEAR(
-      M_1_PI,
-      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF),
-      0.001);
+  MockReflector reflector;
+  LambertianBtdf bxdf(reflector);
+  EXPECT_NEAR(M_1_PI,
+              bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF),
+              0.001);
 }
 
 TEST(LambertianBtdfTest, ReflectanceBrdf) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
+  LambertianBtdf bxdf(reflector);
+  const Reflector* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
 
 TEST(LambertianBtdfTest, ReflectanceReflected) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
+  LambertianBtdf bxdf(reflector);
+  const Reflector* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
 
 TEST(LambertianBtdfTest, Reflectance) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::LambertianBtdf bxdf(reflector);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
+  LambertianBtdf bxdf(reflector);
+  const Reflector* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                       Bxdf::Hemisphere::BTDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);
 }
+
+}  // namespace bxdfs
+}  // namespace iris

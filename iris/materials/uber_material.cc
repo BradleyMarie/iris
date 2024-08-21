@@ -80,8 +80,9 @@ const Bxdf* UberMaterial::Evaluate(
     }
   }
 
-  return bxdfs::MakeComposite(bxdf_allocator, transparent_btdf, lambertian_brdf,
-                              microfacet_brdf, specular_brdf, specular_btdf);
+  return bxdfs::MakeCompositeBxdf(bxdf_allocator, transparent_btdf,
+                                  lambertian_brdf, microfacet_brdf,
+                                  specular_brdf, specular_btdf);
 }
 
 }  // namespace materials

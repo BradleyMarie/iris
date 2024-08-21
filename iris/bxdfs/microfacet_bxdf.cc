@@ -89,13 +89,13 @@ visual_t MicrofacetDistribution::Pdf(const Vector& incoming,
 }
 
 visual_t TrowbridgeReitzDistribution::D(const Vector& vector) const {
-  auto tan_squared_theta = internal::TanSquaredTheta(vector);
+  geometric_t tan_squared_theta = internal::TanSquaredTheta(vector);
   if (std::isinf(tan_squared_theta)) {
     return 0.0;
   }
 
-  auto cos_squared_theta = internal::CosSquaredTheta(vector);
-  auto cos_4_theta = cos_squared_theta * cos_squared_theta;
+  geometric_t cos_squared_theta = internal::CosSquaredTheta(vector);
+  geometric_t cos_4_theta = cos_squared_theta * cos_squared_theta;
   if (cos_4_theta < static_cast<geometric_t>(1e-16)) {
     return 0.0;
   }
@@ -117,8 +117,8 @@ visual_t TrowbridgeReitzDistribution::Lambda(const Vector& vector) const {
   }
 
   auto [sin_squared_phi, cos_squared_phi] = internal::SinCosSquaredPhi(vector);
-  auto alpha_squared = cos_squared_phi * alpha_x_ * alpha_x_ +
-                       sin_squared_phi * alpha_y_ * alpha_y_;
+  geometric_t alpha_squared = cos_squared_phi * alpha_x_ * alpha_x_ +
+                              sin_squared_phi * alpha_y_ * alpha_y_;
 
   return (std::sqrt(static_cast<visual_t>(1.0) +
                     alpha_squared * tan_squared_theta) -
@@ -136,7 +136,7 @@ Vector TrowbridgeReitzDistribution::Sample(const Vector& incoming,
       TrowbridgeReitzSample11(normalized_stretched_incoming, u, v);
   auto [sin_phi, cos_phi] = internal::SinCosPhi(normalized_stretched_incoming);
 
-  auto tmp = cos_phi * slope_x - sin_phi * slope_y;
+  geometric_t tmp = cos_phi * slope_x - sin_phi * slope_y;
   slope_y = sin_phi * slope_x + cos_phi * slope_y;
   slope_x = tmp;
 

@@ -123,8 +123,8 @@ class CompositeBxdf final : public Bxdf {
 
 }  // namespace internal
 
-const Bxdf* MakeComposite(BxdfAllocator& allocator,
-                          std::convertible_to<const Bxdf*> auto... args) {
+const Bxdf* MakeCompositeBxdf(BxdfAllocator& allocator,
+                              std::convertible_to<const Bxdf*> auto... args) {
   auto storage = std::to_array<const Bxdf*>({args...});
 
   auto partition_iter =

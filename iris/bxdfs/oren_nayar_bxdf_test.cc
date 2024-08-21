@@ -8,27 +8,34 @@
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 
+namespace iris {
+namespace bxdfs {
+namespace {
+
+using ::iris::random::MockRandom;
+using ::iris::reflectors::MockReflector;
+using ::testing::_;
+using ::testing::Return;
+
 TEST(OrenNayarBrdfTest, IsDiffuse) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
+  MockReflector reflector;
+  OrenNayarBrdf bxdf(reflector, 0.1);
   EXPECT_TRUE(bxdf.IsDiffuse(nullptr));
 
-  iris::visual_t diffuse_pdf;
+  visual_t diffuse_pdf;
   EXPECT_TRUE(bxdf.IsDiffuse(&diffuse_pdf));
   EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
-                                   iris::Vector(0.0, 0.0, 1.0), sampler);
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  std::optional<Vector> result =
+      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -36,16 +43,14 @@ TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {
 }
 
 TEST(OrenNayarBrdfTest, SampleDiffuseUnaligned) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  auto result = bxdf.SampleDiffuse(iris::Vector(0.0, 0.0, 1.0),
-                                   iris::Vector(0.0, 0.0, -1.0), sampler);
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  std::optional<Vector> result = bxdf.SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, 0.707106709, 0.0001);
   EXPECT_NEAR(result->y, 0.707106709, 0.0001);
@@ -53,16 +58,14 @@ TEST(OrenNayarBrdfTest, SampleDiffuseUnaligned) {
 }
 
 TEST(OrenNayarBrdfTest, Sample) {
-  iris::reflectors::MockReflector reflector;
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.0));
-  iris::Sampler sampler(rng);
+  MockReflector reflector;
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  auto result = bxdf.Sample(iris::Vector(0.0, 0.0, 1.0), std::nullopt,
-                            iris::Vector(0.0, 0.0, 1.0), sampler);
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  std::optional<Bxdf::SampleResult> result = bxdf.Sample(
+      Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->direction.x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->direction.y, -0.707106709, 0.0001);
@@ -73,85 +76,79 @@ TEST(OrenNayarBrdfTest, Sample) {
 }
 
 TEST(OrenNayarBrdfTest, DiffusePdfTransmitted) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  EXPECT_EQ(
-      0.0,
-      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BTDF));
+  MockReflector reflector;
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  EXPECT_EQ(0.0, bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(OrenNayarBrdfTest, DiffusePdfReflected) {
-  iris::reflectors::MockReflector reflector;
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  EXPECT_NEAR(
-      M_1_PI,
-      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-               iris::Vector(0.0, 0.0, -1.0), iris::Bxdf::Hemisphere::BRDF),
-      0.001);
+  MockReflector reflector;
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  EXPECT_NEAR(M_1_PI,
+              bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF),
+              0.001);
 }
 
 TEST(OrenNayarBrdfTest, ReflectanceBtdf) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  auto* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Bxdf::Hemisphere::BTDF, testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
 
 TEST(OrenNayarBrdfTest, ReflectanceTransmitted) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, -1.0),
-      iris::Bxdf::Hemisphere::BTDF, iris::testing::GetSpectralAllocator());
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  auto* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                       Bxdf::Hemisphere::BTDF, testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
 }
 
 TEST(OrenNayarBrdfTest, ReflectanceVertical) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 0.1);
-  auto* result = bxdf.Reflectance(
-      iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-      iris::Bxdf::Hemisphere::BRDF, iris::testing::GetSpectralAllocator());
+  OrenNayarBrdf bxdf(reflector, 0.1);
+  auto* result =
+      bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);
 }
 
 TEST(OrenNayarBrdfTest, ReflectanceIncomingDominant) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 10.0);
-  auto* result = bxdf.Reflectance(iris::Normalize(iris::Vector(0.0, 1.0, 2.0)),
-                                  iris::Normalize(iris::Vector(0.0, 1.0, 1.0)),
-                                  iris::Bxdf::Hemisphere::BRDF,
-                                  iris::testing::GetSpectralAllocator());
+  OrenNayarBrdf bxdf(reflector, 10.0);
+  auto* result = bxdf.Reflectance(
+      Normalize(Vector(0.0, 1.0, 2.0)), Normalize(Vector(0.0, 1.0, 1.0)),
+      Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(0.31766638, result->Reflectance(1.0), 0.0001);
 }
 
 TEST(OrenNayarBrdfTest, ReflectanceOutgoingDominant) {
-  iris::reflectors::MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(testing::_))
-      .WillRepeatedly(testing::Return(1.0));
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  iris::bxdfs::OrenNayarBrdf bxdf(reflector, 10.0);
-  auto* result = bxdf.Reflectance(iris::Normalize(iris::Vector(0.0, 1.0, 1.0)),
-                                  iris::Normalize(iris::Vector(0.0, 1.0, 2.0)),
-                                  iris::Bxdf::Hemisphere::BRDF,
-                                  iris::testing::GetSpectralAllocator());
+  OrenNayarBrdf bxdf(reflector, 10.0);
+  auto* result = bxdf.Reflectance(
+      Normalize(Vector(0.0, 1.0, 1.0)), Normalize(Vector(0.0, 1.0, 2.0)),
+      Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(0.31766638, result->Reflectance(1.0), 0.0001);
 }
+
+}  // namespace
+}  // namespace bxdfs
+}  // namespace iris

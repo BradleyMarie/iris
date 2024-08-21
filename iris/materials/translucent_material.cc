@@ -71,8 +71,9 @@ const Bxdf* TranslucentMaterial::Evaluate(
     }
   }
 
-  return bxdfs::MakeComposite(bxdf_allocator, lambertian_brdf, lambertian_btdf,
-                              microfacet_brdf, microfacet_btdf);
+  return bxdfs::MakeCompositeBxdf(bxdf_allocator, lambertian_brdf,
+                                  lambertian_btdf, microfacet_brdf,
+                                  microfacet_btdf);
 }
 
 }  // namespace materials

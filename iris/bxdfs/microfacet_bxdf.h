@@ -75,7 +75,7 @@ class MicrofacetBrdf final : public Bxdf {
     Vector half_angle =
         distribution_.Sample(incoming, sampler.Next(), sampler.Next());
 
-    auto outgoing = internal::Reflect(incoming, half_angle);
+    std::optional<Vector> outgoing = internal::Reflect(incoming, half_angle);
     if (!outgoing || outgoing->z == static_cast<geometric>(0.0) ||
         std::signbit(incoming.z) != std::signbit(outgoing->z)) {
       return std::nullopt;
@@ -94,7 +94,7 @@ class MicrofacetBrdf final : public Bxdf {
     Vector half_angle =
         distribution_.Sample(incoming, sampler.Next(), sampler.Next());
 
-    auto outgoing = internal::Reflect(incoming, half_angle);
+    std::optional<Vector> outgoing = internal::Reflect(incoming, half_angle);
     if (!outgoing || outgoing->z == static_cast<geometric>(0.0) ||
         std::signbit(incoming.z) != std::signbit(outgoing->z)) {
       return std::nullopt;
@@ -112,7 +112,7 @@ class MicrofacetBrdf final : public Bxdf {
       return static_cast<visual_t>(0.0);
     }
 
-    auto half_angle = internal::HalfAngle(incoming, outgoing);
+    std::optional<Vector> half_angle = internal::HalfAngle(incoming, outgoing);
     if (!half_angle) {
       return static_cast<visual_t>(0.0);
     }
@@ -132,7 +132,7 @@ class MicrofacetBrdf final : public Bxdf {
       return nullptr;
     }
 
-    auto half_angle = internal::HalfAngle(incoming, outgoing);
+    std::optional<Vector> half_angle = internal::HalfAngle(incoming, outgoing);
     if (!half_angle) {
       return nullptr;
     }
@@ -246,7 +246,8 @@ class MicrofacetBtdf final : public Bxdf {
 
     visual_t refractive_ratio = ReversedRelativeRefractiveRatio(incoming);
 
-    auto half_angle = HalfAngle(incoming, outgoing, refractive_ratio);
+    std::optional<Vector> half_angle =
+        HalfAngle(incoming, outgoing, refractive_ratio);
     if (!half_angle) {
       return static_cast<visual_t>(0.0);
     }
@@ -279,7 +280,8 @@ class MicrofacetBtdf final : public Bxdf {
 
     visual_t refractive_ratio = ReversedRelativeRefractiveRatio(incoming);
 
-    auto maybe_half_angle = HalfAngle(incoming, outgoing, refractive_ratio);
+    std::optional<Vector> maybe_half_angle =
+        HalfAngle(incoming, outgoing, refractive_ratio);
     if (!maybe_half_angle) {
       return nullptr;
     }

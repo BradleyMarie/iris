@@ -37,7 +37,8 @@ const Bxdf* PlasticMaterial::Evaluate(
         bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
   }
 
-  return bxdfs::MakeComposite(bxdf_allocator, lambertian_brdf, microfacet_brdf);
+  return bxdfs::MakeCompositeBxdf(bxdf_allocator, lambertian_brdf,
+                                  microfacet_brdf);
 }
 
 }  // namespace materials
