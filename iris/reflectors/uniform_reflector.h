@@ -2,20 +2,13 @@
 #define _IRIS_SPECTRA_UNIFORM_SPECTRUM_
 
 #include "iris/float.h"
+#include "iris/reference_counted.h"
 #include "iris/reflector.h"
 
 namespace iris {
 namespace reflectors {
 
-class UniformReflector final : public Reflector {
- public:
-  UniformReflector(visual reflectance);
-
-  visual_t Reflectance(visual_t wavelength) const override;
-
- private:
-  visual_t reflectance_;
-};
+ReferenceCounted<Reflector> CreateUniformReflector(visual reflectance);
 
 }  // namespace reflectors
 }  // namespace iris

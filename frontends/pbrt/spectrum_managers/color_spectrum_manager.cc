@@ -130,9 +130,13 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
 
 ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
     const std::map<visual, visual>& wavelengths) {
-  iris::reflectors::SampledReflector sampled_reflector(wavelengths);
+  ReferenceCounted<Reflector> sampled_reflector =
+      reflectors::CreateSampledReflector(wavelengths);
+  if (!sampled_reflector) {
+    return ReferenceCounted<Reflector>();
+  }
 
-  auto values = g_color_matcher.Match(sampled_reflector);
+  auto values = g_color_matcher.Match(*sampled_reflector);
   iris::Color xyz_color(values[0], values[1], values[2],
                         g_color_matcher.ColorSpace());
   auto rgb_color = xyz_color.ConvertTo(iris::Color::LINEAR_SRGB);

@@ -19,7 +19,7 @@ static const ReferenceCounted<
     textures::ConstantPointerTexture2D<Reflector, SpectralAllocator>>
     kWhite = MakeReferenceCounted<
         textures::ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-        MakeReferenceCounted<reflectors::UniformReflector>(1.0));
+        reflectors::CreateUniformReflector(1.0));
 static const ReferenceCounted<textures::ConstantValueTexture2D<visual>>
     kEtaIncident =
         MakeReferenceCounted<textures::ConstantValueTexture2D<visual>>(

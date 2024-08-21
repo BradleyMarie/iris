@@ -3,22 +3,39 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <vector>
 
-namespace iris::reflectors {
+namespace iris {
+namespace reflectors {
+namespace {
 
-SampledReflector::SampledReflector(const std::map<visual, visual>& samples) {
-  assert(!samples.empty());
+class SampledReflector final : public Reflector {
+ public:
+  SampledReflector(std::vector<visual> wavelengths,
+                   std::vector<visual> intensitites);
 
-  for (const auto& entry : samples) {
-    assert(std::isfinite(entry.first));
-    assert(entry.first >= 0.0);
-    assert(std::isfinite(entry.second));
-    assert(entry.second >= 0.0);
-    assert(entry.second <= 1.0);
+  visual_t Reflectance(visual_t wavelength) const override;
 
-    wavelengths_.push_back(entry.first);
-    intensitites_.push_back(std::max(static_cast<visual>(0.0), entry.second));
-  }
+ private:
+  std::vector<visual> wavelengths_;
+  std::vector<visual> intensitites_;
+};
+
+SampledReflector::SampledReflector(std::vector<visual> wavelengths,
+                                   std::vector<visual> intensitites)
+    : wavelengths_(std::move(wavelengths)),
+      intensitites_(std::move(intensitites)) {
+  assert(!wavelengths_.empty());
+  assert(std::is_sorted(wavelengths_.begin(), wavelengths_.end()));
+  assert(std::none_of(wavelengths_.begin(), wavelengths_.end(),
+                      [](visual value) { return !std::isfinite(value); }));
+  assert(!intensitites_.empty());
+  assert(std::none_of(intensitites_.begin(), intensitites_.end(),
+                      [](visual value) {
+                        return value < static_cast<visual>(0.0) ||
+                               value > static_cast<visual>(1.0);
+                      }));
+  assert(intensitites_.size() == wavelengths_.size());
 }
 
 visual_t SampledReflector::Reflectance(visual_t wavelength) const {
@@ -49,4 +66,37 @@ visual_t SampledReflector::Reflectance(visual_t wavelength) const {
                     static_cast<visual_t>(1.0));
 }
 
-}  // namespace iris::reflectors
+}  // namespace
+
+ReferenceCounted<Reflector> CreateSampledReflector(
+    const std::map<visual, visual>& samples) {
+  if (samples.empty()) {
+    return ReferenceCounted<Reflector>();
+  }
+
+  std::vector<visual> wavelengths;
+  std::vector<visual> intensitites;
+  bool is_black = true;
+  for (const auto& [wavelength, intensity] : samples) {
+    if (!std::isfinite(wavelength)) {
+      continue;
+    }
+
+    wavelengths.push_back(wavelength);
+    intensitites.push_back(std::clamp(intensity, static_cast<visual>(0.0),
+                                      static_cast<visual>(1.0)));
+    if (intensitites.back() != static_cast<visual>(0.0)) {
+      is_black = false;
+    }
+  }
+
+  if (is_black) {
+    return ReferenceCounted<Reflector>();
+  }
+
+  return iris::MakeReferenceCounted<SampledReflector>(std::move(wavelengths),
+                                                      std::move(intensitites));
+}
+
+}  // namespace reflectors
+}  // namespace iris

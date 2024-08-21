@@ -33,9 +33,7 @@ ReferenceCounted<Reflector> TextureManager::AllocateUniformReflector(
     return iter->second;
   }
 
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::UniformReflector>(
-          reflectance);
+  auto reflector = iris::reflectors::CreateUniformReflector(reflectance);
   uniform_value_reflectors_[reflectance] = reflector;
 
   return reflector;

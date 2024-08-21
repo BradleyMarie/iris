@@ -19,6 +19,7 @@ cc_library(
     hdrs = ["sampled_reflector.h"],
     deps = [
         "//iris:float",
+        "//iris:reference_counted",
         "//iris:reflector",
     ],
 )
@@ -38,6 +39,7 @@ cc_library(
     hdrs = ["uniform_reflector.h"],
     deps = [
         "//iris:float",
+        "//iris:reference_counted",
         "//iris:reflector",
     ],
 )

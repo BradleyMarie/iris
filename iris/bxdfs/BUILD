@@ -38,7 +38,6 @@ cc_library(
         "//iris:float",
         "//iris:spectral_allocator",
         "//iris/bxdfs/internal:math",
-        "//iris/reflectors:uniform_reflector",
     ],
 )
 
@@ -121,7 +120,7 @@ cc_test(
     deps = [
         ":microfacet_bxdf",
         "//iris/random:mock_random",
-        "//iris/reflectors:uniform_reflector",
+        "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
         "@com_google_googletest//:gtest_main",
     ],
@@ -193,7 +192,6 @@ cc_test(
         ":specular_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
-        "//iris/reflectors:uniform_reflector",
         "//iris/testing:spectral_allocator",
         "@com_google_googletest//:gtest_main",
     ],
