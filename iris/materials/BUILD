@@ -100,6 +100,40 @@ cc_test(
 )
 
 cc_library(
+    name = "mix_material",
+    srcs = ["mix_material.cc"],
+    hdrs = ["mix_material.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:attenuated_bxdf",
+        "//iris/bxdfs:composite_bxdf",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "mix_material_test",
+    srcs = ["mix_material_test.cc"],
+    deps = [
+        ":mix_material",
+        ":mock_material",
+        "//iris/bxdfs:mock_bxdf",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "mock_material",
     testonly = True,
     hdrs = ["mock_material.h"],
