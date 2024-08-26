@@ -163,10 +163,11 @@ Result ImageObjectBuilder::Build(
           for (size_t y = 0; y < size.first; y++) {
             for (size_t x = 0; x < size.second; x++) {
               auto color =
-                  framebuffer.Get(y, x).ConvertTo(iris::Color::CIE_XYZ);
-              framebuffer.Set(y, x,
-                              iris::Color(color.x, color.y * scale, color.z,
-                                          iris::Color::CIE_XYZ));
+                  framebuffer.Get(y, x).ConvertTo(iris::Color::LINEAR_SRGB);
+              framebuffer.Set(
+                  y, x,
+                  iris::Color(color.r * scale, color.g * scale, color.b * scale,
+                              iris::Color::LINEAR_SRGB));
             }
           }
         }

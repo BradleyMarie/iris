@@ -1,9 +1,5 @@
 #include "frontends/pbrt/lights/infinite.h"
 
-#include <fstream>
-#include <sstream>
-#include <vector>
-
 #include "iris/environmental_lights/image_environmental_light.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
@@ -73,20 +69,13 @@ InfiniteBuilder::Build(
       std::cerr << "ERROR: Unimplemented image file type: .tga" << std::endl;
       exit(EXIT_FAILURE);
     } else if (extension == ".exr") {
-      std::ifstream stream(mapname_iter->second.GetFilePaths().front().native(),
-                           std::ios::in | std::ios::binary);
-
-      std::vector<unsigned char> contents;
-      char c;
-      while (stream.get(c)) {
-        contents.push_back(static_cast<unsigned char>(c));
-      }
-
       float* values;
       int width, height;
       const char* error_message;
-      int error = LoadEXRFromMemory(&values, &width, &height, contents.data(),
-                                    contents.size(), &error_message);
+      int error =
+          LoadEXR(&values, &width, &height,
+                  mapname_iter->second.GetFilePaths().front().native().c_str(),
+                  &error_message);
       if (error < 0) {
         std::cerr << "ERROR: Image loading failed with error: " << error_message
                   << std::endl;
