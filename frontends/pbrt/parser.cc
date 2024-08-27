@@ -642,8 +642,8 @@ std::optional<Parser::Result> Parser::ParseFrom(
   image_manager_.reset();
 
   return Parser::Result{std::move(renderable), std::move(skip_pixel_callback_),
-                        std::move(output_filename_),
-                        std::move(write_function_)};
+                        std::move(output_filename_), std::move(write_function_),
+                        maximum_sample_luminance_};
 }
 
 }  // namespace iris::pbrt_frontend

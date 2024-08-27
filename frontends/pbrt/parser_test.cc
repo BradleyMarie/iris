@@ -777,6 +777,7 @@ TEST(Render, EmptyScene) {
   EXPECT_FALSE(result->skip_pixel_callback({0, 0}, {480, 640}));
   EXPECT_FALSE(result->skip_pixel_callback({479, 639}, {480, 640}));
   EXPECT_TRUE(result->skip_pixel_callback({480, 640}, {480, 640}));
+  EXPECT_FALSE(result->maximum_sample_luminance.has_value());
   EXPECT_EQ("pbrt.exr", result->output_filename);
 
   iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
