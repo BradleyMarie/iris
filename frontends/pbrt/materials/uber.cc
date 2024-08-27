@@ -9,12 +9,14 @@
 namespace iris::pbrt_frontend::materials {
 namespace {
 
-static const iris::visual kDefaultDiffuse = 0.25;
-static const iris::visual kDefaultEtaFront = 1.0;
-static const iris::visual kDefaultEtaBack = 1.5;
-static const iris::visual kDefaultOpacity = 1.0;
-static const iris::visual kDefaultSpecular = 0.25;
-static const iris::visual kDefaultRoughness = 0.1;
+static const visual kDefaultDiffuse = 0.25;
+static const visual kDefaultEtaFront = 1.0;
+static const visual kDefaultEtaBack = 1.5;
+static const visual kDefaultOpacity = 1.0;
+static const visual kDefaultSpecular = 0.25;
+static const visual kDefaultRoughness = 0.1;
+static const visual kDefaultReflectance = 0.0;
+static const visual kDefaultTransmittance = 0.0;
 static const bool kDefaultRemapRoughness = true;
 
 static const std::unordered_map<std::string_view, Parameter::Type>
@@ -156,9 +158,9 @@ UberObjectBuilder::Build(
   iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
       vroughness_texture;
   auto reflectance_texture =
-      texture_manager.AllocateUniformReflectorTexture(kDefaultDiffuse);
+      texture_manager.AllocateUniformReflectorTexture(kDefaultReflectance);
   auto transmittance_texture =
-      texture_manager.AllocateUniformReflectorTexture(kDefaultDiffuse);
+      texture_manager.AllocateUniformReflectorTexture(kDefaultTransmittance);
   auto diffuse_texture =
       texture_manager.AllocateUniformReflectorTexture(kDefaultDiffuse);
   auto specular_texture =
