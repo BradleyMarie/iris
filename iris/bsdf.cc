@@ -150,6 +150,10 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
     const Vector& incoming, const Vector& outgoing,
     SpectralAllocator& allocator) const {
+  if (!bxdf_.IsDiffuse()) {
+    return std::nullopt;
+  }
+
   geometric_t dp_incoming = DotProduct(incoming, surface_normal_);
   if (dp_incoming == static_cast<geometric_t>(0.0)) {
     return std::nullopt;

@@ -418,11 +418,26 @@ TEST(BsdfTest, SampleWithOutputDerivatives) {
   EXPECT_FALSE(result->diffuse);
 }
 
+TEST(BsdfTest, ReflectanceNotDiffuse) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(false));
+
+  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  auto result = bsdf.Reflectance(kTrueIncoming, kTrueBtdfOutgoing, allocator);
+  EXPECT_FALSE(result);
+}
+
 TEST(BsdfTest, ReflectanceIncomingZeroDp) {
   iris::internal::Arena arena;
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
 
   iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
   auto result = bsdf.Reflectance(kInvalid, kTrueBtdfOutgoing, allocator);
@@ -434,6 +449,8 @@ TEST(BsdfTest, ReflectanceOutgoingZeroDp) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
 
   iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
   auto result = bsdf.Reflectance(kTrueIncoming, kInvalid, allocator);
@@ -445,6 +462,8 @@ TEST(BsdfTest, ReflectanceZeroPdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                         iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
@@ -459,6 +478,8 @@ TEST(BsdfTest, ReflectanceNegativePdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                         iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(-1.0)));
@@ -473,6 +494,8 @@ TEST(BsdfTest, ReflectanceNoPdf) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                         iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(0.0));
@@ -487,6 +510,8 @@ TEST(BsdfTest, ReflectanceNoReflector) {
   iris::SpectralAllocator allocator(arena);
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                         iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual>(0.5)));
@@ -505,6 +530,8 @@ TEST(BsdfTest, ReflectanceBtdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                         iris::Bxdf::Hemisphere::BTDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
@@ -525,6 +552,8 @@ TEST(BsdfTest, ReflectanceBrdf) {
   iris::reflectors::MockReflector reflector;
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(kIncoming, kBrdfOutgoing, kSurfaceNormal,
                         iris::Bxdf::Hemisphere::BRDF))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));

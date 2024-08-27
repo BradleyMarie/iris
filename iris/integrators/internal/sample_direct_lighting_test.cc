@@ -29,6 +29,8 @@ TEST(DeltaLight, NoReflectance) {
   iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillOnce(testing::Return(1.0));
 
@@ -60,6 +62,8 @@ TEST(DeltaLight, WithReflectance) {
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(100.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
@@ -88,6 +92,8 @@ TEST(FromLightSample, NoReflectance) {
   iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(100.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
@@ -124,6 +130,8 @@ TEST(FromLightSample, WithReflectance) {
       .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
   EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
       .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
   EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
@@ -155,6 +163,8 @@ TEST(FromBsdfSample, NoEmission) {
                                        static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
 
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
@@ -185,6 +195,8 @@ TEST(FromBsdfSample, ZeroPdf) {
                                        static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
 
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
@@ -216,6 +228,8 @@ TEST(FromBsdfSample, NegativePdf) {
                                        static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
 
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
@@ -249,6 +263,8 @@ TEST(FromBsdfSample, WithEmission) {
                                        static_cast<iris::visual_t>(1.0)};
 
   iris::bxdfs::MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
+      .WillRepeatedly(testing::Return(true));
 
   iris::Vector surface_normal(0.0, 0.0, 1.0);
   iris::RayTracer::RayTracer::SurfaceIntersection intersection{
