@@ -109,6 +109,7 @@ bool Parser::Film() {
 
   image_dimensions_ = result.resolution;
   skip_pixel_callback_ = std::move(result.skip_pixel_function);
+  maximum_sample_luminance_ = result.max_sample_luminance;
   output_filename_ = result.filename;
   write_function_ = result.write_function;
 
@@ -518,6 +519,7 @@ void Parser::InitializeDefault() {
                   *spectrum_manager_, *texture_manager_);
   image_dimensions_ = default_film.resolution;
   skip_pixel_callback_ = std::move(default_film.skip_pixel_function);
+  maximum_sample_luminance_ = std::nullopt;
   output_filename_ = default_film.filename;
   write_function_ = std::move(default_film.write_function);
 

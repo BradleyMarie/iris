@@ -36,11 +36,12 @@ void RenderChunk(
     std::unique_ptr<Integrator> integrator, const AlbedoMatcher& albedo_matcher,
     const ColorMatcher& color_matcher, std::vector<std::vector<Chunk>>& chunks,
     std::atomic<size_t>& chunk_counter, size_t num_chunks, size_t num_pixels,
+    std::optional<visual_t> maximum_sample_luminance,
     geometric_t minimum_distance, Framebuffer& framebuffer,
     const Renderer::SkipPixelFn& skip_pixel_callback,
     const Renderer::ProgressCallbackFn& progress_callback) {
   bool has_lens = camera.HasLens();
-  auto color_space = color_matcher.ColorSpace();
+  Color::Space color_space = color_matcher.ColorSpace();
 
   internal::Arena arena;
   LightSampleAllocator light_sample_allocator(arena);
@@ -52,19 +53,24 @@ void RenderChunk(
   RayTracer ray_tracer(scene, environmental_light, minimum_distance,
                        internal_tracer, arena);
 
-  auto image_dimensions = framebuffer.Size();
+  std::pair<size_t, size_t> image_dimensions = framebuffer.Size();
 
   if (progress_callback) {
     progress_callback(0, num_pixels);
   }
 
-  for (auto chunk_index = chunk_counter.fetch_add(1); chunk_index < num_chunks;
-       chunk_index = chunk_counter.fetch_add(1)) {
-    auto y = chunk_index % chunks.size();
-    auto& chunk = chunks[y][chunk_index / chunks.size()];
+  if (maximum_sample_luminance.has_value() &&
+      *maximum_sample_luminance <= static_cast<visual_t>(0.0)) {
+    *maximum_sample_luminance = static_cast<visual_t>(0.0);
+  }
+
+  for (size_t chunk_index = chunk_counter.fetch_add(1);
+       chunk_index < num_chunks; chunk_index = chunk_counter.fetch_add(1)) {
+    size_t y = chunk_index % chunks.size();
+    Chunk& chunk = chunks[y][chunk_index / chunks.size()];
 
     size_t pixel_index = 0;
-    for (auto x = chunk.chunk_start_x; x < chunk.chunk_end_x; x++) {
+    for (size_t x = chunk.chunk_start_x; x < chunk.chunk_end_x; x++) {
       std::array<visual_t, 3> pixel_components = {0.0, 0.0, 0.0};
       if (!skip_pixel_callback ||
           !skip_pixel_callback({y, x}, image_dimensions)) {
@@ -78,24 +84,47 @@ void RenderChunk(
                                         std::make_pair(y, x));
 
         for (;;) {
-          auto image_sample =
+          std::optional<ImageSampler::Sample> image_sample =
               chunk.image_sampler->NextSample(has_lens, *chunk.rng);
           if (!image_sample) {
             break;
           }
 
-          auto ray = camera.Compute(image_sample->image_uv,
-                                    image_sample->image_uv_dxdy,
-                                    image_sample->lens_uv);
+          RayDifferential ray = camera.Compute(image_sample->image_uv,
+                                               image_sample->image_uv_dxdy,
+                                               image_sample->lens_uv);
 
           LightSampler light_sampler(light_scene, image_sample->rng,
                                      light_sample_allocator);
-          auto* spectrum = integrator->Integrate(
+          const Spectrum* spectrum = integrator->Integrate(
               ray, ray_tracer, light_sampler, visibility_tester, albedo_matcher,
               spectral_allocator, image_sample->rng);
 
           if (spectrum) {
-            auto sample_components = color_matcher.Match(*spectrum);
+            std::array<visual_t, 3UL> sample_components =
+                color_matcher.Match(*spectrum);
+
+            sample_components[0] =
+                std::max(static_cast<visual_t>(0.0), sample_components[0]);
+            sample_components[1] =
+                std::max(static_cast<visual_t>(0.0), sample_components[1]);
+            sample_components[2] =
+                std::max(static_cast<visual_t>(0.0), sample_components[2]);
+
+            if (maximum_sample_luminance.has_value()) {
+              Color color(sample_components[0], sample_components[1],
+                          sample_components[2], color_space);
+
+              if (Color xyz = color.ConvertTo(Color::CIE_XYZ);
+                  xyz.y > static_cast<visual_t>(0.0) &&
+                  xyz.y > *maximum_sample_luminance) {
+                visual_t scale = *maximum_sample_luminance / xyz.y;
+                sample_components[0] *= scale;
+                sample_components[1] *= scale;
+                sample_components[2] *= scale;
+              }
+            }
+
             pixel_components[0] += sample_components[0] * image_sample->weight;
             pixel_components[1] += sample_components[1] * image_sample->weight;
             pixel_components[2] += sample_components[2] * image_sample->weight;
@@ -105,12 +134,9 @@ void RenderChunk(
         }
       }
 
-      framebuffer.Set(
-          y, x,
-          Color(std::max(static_cast<visual_t>(0.0), pixel_components[0]),
-                std::max(static_cast<visual_t>(0.0), pixel_components[1]),
-                std::max(static_cast<visual_t>(0.0), pixel_components[2]),
-                color_space));
+      framebuffer.Set(y, x,
+                      Color(pixel_components[0], pixel_components[1],
+                            pixel_components[2], color_space));
     }
   }
 
@@ -137,7 +163,7 @@ Framebuffer Renderer::Render(const Camera& camera,
   for (size_t y = 0; y < image_dimensions.first; y++) {
     chunks.emplace_back();
     for (size_t x = 0; x < num_x_chunks; x++) {
-      auto& chunk = chunks.back().emplace_back();
+      Chunk& chunk = chunks.back().emplace_back();
       chunk.image_sampler = image_sampler.Replicate();
       chunk.rng = rng.Replicate();
     }
@@ -146,7 +172,7 @@ Framebuffer Renderer::Render(const Camera& camera,
   size_t num_pixels = 0;
   for (size_t x_chunk = 0; x_chunk < num_x_chunks; x_chunk++) {
     for (size_t y = 0; y < image_dimensions.first; y++) {
-      auto& chunk = chunks.at(y).at(x_chunk);
+      Chunk& chunk = chunks.at(y).at(x_chunk);
 
       for (size_t x_offset = 0; x_offset < kChunkSize; x_offset++) {
         size_t x = x_chunk * kChunkSize + x_offset;
@@ -181,17 +207,18 @@ Framebuffer Renderer::Render(const Camera& camera,
         scene_objects_->GetEnvironmentalLight(), std::cref(*light_scene_),
         std::cref(camera), integrator.Duplicate(), std::cref(albedo_matcher),
         std::cref(color_matcher), std::ref(chunks), std::ref(chunk_counter),
-        num_chunks, num_pixels, options.minimum_distance, std::ref(result),
-        options.skip_pixel_callback, nullptr));
+        num_chunks, num_pixels, options.maximum_sample_luminance,
+        options.minimum_distance, std::ref(result), options.skip_pixel_callback,
+        nullptr));
   }
 
   RenderChunk(*scene_, scene_objects_->GetEnvironmentalLight(), *light_scene_,
               camera, integrator.Duplicate(), albedo_matcher, color_matcher,
               chunks, chunk_counter, num_chunks, num_pixels,
-              options.minimum_distance, result, options.skip_pixel_callback,
-              options.progress_callback);
+              options.maximum_sample_luminance, options.minimum_distance,
+              result, options.skip_pixel_callback, options.progress_callback);
 
-  for (auto& thread : threads) {
+  for (std::thread& thread : threads) {
     thread.join();
   }
 

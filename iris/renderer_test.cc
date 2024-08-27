@@ -19,7 +19,8 @@ void RunTestBody(
     unsigned num_threads_requested, unsigned actual_num_threads,
     std::function<void(size_t, size_t)> progress_callback,
     std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
-        skip_pixel_callback) {
+        skip_pixel_callback,
+    std::optional<iris::visual_t> max_sample_luminance) {
   iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
   iris::power_matchers::MockPowerMatcher power_matcher;
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
@@ -144,7 +145,7 @@ void RunTestBody(
         return result;
       }));
 
-  iris::Color color(1.0, 1.0, 1.0, iris::Color::LINEAR_SRGB);
+  iris::Color color(1.0, 1.0, 1.0, iris::Color::CIE_XYZ);
   iris::color_matchers::MockColorMatcher color_matcher;
   EXPECT_CALL(color_matcher, Match(testing::_))
       .Times(samples)
@@ -152,24 +153,34 @@ void RunTestBody(
           testing::Return(std::array<iris::visual_t, 3>({1.0, 1.0, 1.0})));
   EXPECT_CALL(color_matcher, ColorSpace())
       .Times(actual_num_threads)
-      .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
+      .WillRepeatedly(testing::Return(iris::Color::CIE_XYZ));
 
   iris::Renderer::AdditionalOptions options;
   options.num_threads = num_threads_requested;
   options.progress_callback = progress_callback;
   options.skip_pixel_callback = skip_pixel_callback;
+  options.maximum_sample_luminance = max_sample_luminance;
 
   auto framebuffer =
       renderer.Render(camera, image_sampler, integrator, albedo_matcher,
                       color_matcher, rng, image_dimensions, options);
   EXPECT_EQ(image_dimensions, framebuffer.Size());
 
-  iris::Color black(0.0, 0.0, 0.0, iris::Color::LINEAR_SRGB);
+  iris::Color black(0.0, 0.0, 0.0, iris::Color::CIE_XYZ);
   for (size_t y = 0; y < image_dimensions.first; y++) {
     for (size_t x = 0; x < image_dimensions.second; x++) {
       if (!options.skip_pixel_callback ||
           !options.skip_pixel_callback({y, x}, image_dimensions)) {
-        EXPECT_EQ(color, framebuffer.Get(y, x));
+        if (max_sample_luminance.has_value() &&
+            color.y > *max_sample_luminance) {
+          iris::visual_t scale = *max_sample_luminance / color.y;
+          EXPECT_NEAR(color.x * scale, framebuffer.Get(y, x).x, 0.001);
+          EXPECT_NEAR(color.y * scale, framebuffer.Get(y, x).y, 0.001);
+          EXPECT_NEAR(color.z * scale, framebuffer.Get(y, x).z, 0.001);
+          EXPECT_EQ(color.space, framebuffer.Get(y, x).space);
+        } else {
+          EXPECT_EQ(color, framebuffer.Get(y, x));
+        }
       } else {
         EXPECT_EQ(black, framebuffer.Get(y, x));
       }
@@ -177,10 +188,13 @@ void RunTestBody(
   }
 }
 
-TEST(RendererTest, SingleThreaded) { RunTestBody(1u, 1u, nullptr, nullptr); }
+TEST(RendererTest, SingleThreaded) {
+  RunTestBody(1u, 1u, nullptr, nullptr, std::nullopt);
+}
 
 TEST(RendererTest, MultiThreaded) {
-  RunTestBody(0u, std::thread::hardware_concurrency(), nullptr, nullptr);
+  RunTestBody(0u, std::thread::hardware_concurrency(), nullptr, nullptr,
+              std::nullopt);
 }
 
 TEST(RendererTest, Progress) {
@@ -191,7 +205,7 @@ TEST(RendererTest, Progress) {
         EXPECT_EQ(1056u, num_pixels);
       };
 
-  RunTestBody(1u, 1u, progress_callback, nullptr);
+  RunTestBody(1u, 1u, progress_callback, nullptr, std::nullopt);
   EXPECT_EQ(1057u, next_value);
 }
 
@@ -211,6 +225,8 @@ TEST(RendererTest, WithSkips) {
         EXPECT_EQ(528u, num_pixels);
       };
 
-  RunTestBody(1u, 1u, progress_callback, skip_pixel_callback);
+  RunTestBody(1u, 1u, progress_callback, skip_pixel_callback, std::nullopt);
   EXPECT_EQ(529u, next_value);
 }
+
+TEST(RendererTest, WithMaxLuma) { RunTestBody(1u, 1u, nullptr, nullptr, 0.5); }

@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "iris/albedo_matcher.h"
@@ -38,6 +39,7 @@ class Renderer final {
     AdditionalOptions() {}  // Workaround compiler bug
     SkipPixelFn skip_pixel_callback = nullptr;
     ProgressCallbackFn progress_callback = nullptr;
+    std::optional<visual_t> maximum_sample_luminance = std::nullopt;
     geometric_t minimum_distance = 0.0;
     unsigned num_threads = 0;
   };

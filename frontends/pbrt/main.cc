@@ -260,6 +260,7 @@ int main(int argc, char** argv) {
     options.num_threads = absl::GetFlag(FLAGS_num_threads);
     options.progress_callback = std::move(progress_callback);
     options.skip_pixel_callback = std::move(result->skip_pixel_callback);
+    options.maximum_sample_luminance = result->maximum_sample_luminance;
 
     iris::random::MersenneTwisterRandom rng;  // TODO: Support other RNG
     auto framebuffer = result->renderable.Render(*albedo_matcher,

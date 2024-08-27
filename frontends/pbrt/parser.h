@@ -40,6 +40,7 @@ class Parser {
     iris::Renderer::SkipPixelFn skip_pixel_callback;
     std::filesystem::path output_filename;
     std::function<void(Framebuffer&, std::ofstream&)> output_write_function;
+    std::optional<visual_t> maximum_sample_luminance;
   };
 
   std::optional<Result> ParseFrom(Tokenizer& tokenizer,
@@ -116,7 +117,8 @@ class Parser {
       camera_;
   SceneObjects::Builder scene_objects_builder_;
   std::pair<size_t, size_t> image_dimensions_;
-  iris::Renderer::SkipPixelFn skip_pixel_callback_;
+  Renderer::SkipPixelFn skip_pixel_callback_;
+  std::optional<visual_t> maximum_sample_luminance_;
   std::unique_ptr<iris::ImageSampler> image_sampler_;
   std::unique_ptr<iris::Integrator> integrator_;
   std::unique_ptr<iris::LightScene::Builder> light_scene_builder_;
