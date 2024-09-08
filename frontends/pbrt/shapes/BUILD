@@ -30,6 +30,7 @@ cc_library(
         ":plymesh",
         ":sphere",
         ":trianglemesh",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
         "//iris:geometry",

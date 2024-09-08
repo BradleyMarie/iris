@@ -1,88 +1,97 @@
 #include "frontends/pbrt/materials/uber.h"
 
+#include <memory>
+#include <sstream>
+
 #include "frontends/pbrt/build_objects.h"
+#include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
 
-static iris::pbrt_frontend::TextureManager g_texture_manager;
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
+namespace {
 
-TEST(Plastic, Empty) {
+using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
+
+static const MaterialManager g_material_manager;
+static TextureManager g_texture_manager;
+
+TEST(Uber, Empty) {
   std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto result0 = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::materials::g_uber_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      texture_manager);
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
+      *g_uber_builder, tokenizer, std::filesystem::current_path(),
+      spectrum_manager, texture_manager, g_material_manager, texture_manager);
   EXPECT_TRUE(result0);
 
-  auto result1 = iris::pbrt_frontend::BuildObject(
+  MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
   EXPECT_FALSE(std::get<3>(result1));
 
-  auto result2 = iris::pbrt_frontend::BuildObject(
+  MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager);
   EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
   EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
   EXPECT_FALSE(std::get<2>(result1));
   EXPECT_FALSE(std::get<3>(result1));
 }
 
-TEST(Plastic, WithDefaults) {
+TEST(Uber, WithDefaults) {
   std::stringstream input(
       "\"float Kr\" 1.0 \"float Kt\" 1.0 \"float Kd\" 1.0 \"float Ks\" 1.0 "
       "\"float roughness\" 0.5 \"float uroughness\" 0.5 \"float vroughness\" "
       "0.5 \"float eta\" 1.5 \"float opacity\" 1.0 \"bool remaproughness\" "
       "\"false\" \"float bumpmap\" 0.5");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto result0 = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::materials::g_uber_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      texture_manager);
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
+      *g_uber_builder, tokenizer, std::filesystem::current_path(),
+      spectrum_manager, texture_manager, g_material_manager, texture_manager);
   EXPECT_TRUE(result0);
 
-  auto result1 = iris::pbrt_frontend::BuildObject(
+  MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_TRUE(std::get<2>(result1));
   EXPECT_TRUE(std::get<3>(result1));
 
-  auto result2 = iris::pbrt_frontend::BuildObject(
+  MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager);
   EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
   EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result1));
   EXPECT_TRUE(std::get<3>(result1));
 }
 
-TEST(Plastic, OverridesDefaults) {
+TEST(Uber, OverridesDefaults) {
   std::stringstream input0("");
-  iris::pbrt_frontend::Tokenizer tokenizer0(input0);
+  Tokenizer tokenizer0(input0);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto result0 = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::materials::g_uber_builder, tokenizer0,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      texture_manager);
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
+      *g_uber_builder, tokenizer0, std::filesystem::current_path(),
+      spectrum_manager, texture_manager, g_material_manager, texture_manager);
   EXPECT_TRUE(result0);
 
-  auto result1 = iris::pbrt_frontend::BuildObject(
+  MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer0, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager);
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
@@ -93,13 +102,18 @@ TEST(Plastic, OverridesDefaults) {
       "\"float roughness\" 0.5 \"float uroughness\" 0.5 \"float vroughness\" "
       "0.5 \"float eta\" 1.5 \"float opacity\" 1.0 \"bool remaproughness\" "
       "\"false\" \"float bumpmap\" 0.5");
-  iris::pbrt_frontend::Tokenizer tokenizer1(input1);
+  Tokenizer tokenizer1(input1);
 
-  auto result2 = iris::pbrt_frontend::BuildObject(
+  MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer1, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager);
   EXPECT_NE(std::get<0>(result1), std::get<0>(result2));
   EXPECT_NE(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));
   EXPECT_TRUE(std::get<3>(result2));
 }
+
+}  // namespace
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris

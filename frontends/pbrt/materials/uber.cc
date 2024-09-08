@@ -6,18 +6,24 @@
 #include "frontends/pbrt/materials/bumpmap.h"
 #include "iris/materials/uber_material.h"
 
-namespace iris::pbrt_frontend::materials {
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
 namespace {
 
-static const visual kDefaultDiffuse = 0.25;
-static const visual kDefaultEtaFront = 1.0;
-static const visual kDefaultEtaBack = 1.5;
-static const visual kDefaultOpacity = 1.0;
-static const visual kDefaultSpecular = 0.25;
-static const visual kDefaultRoughness = 0.1;
-static const visual kDefaultReflectance = 0.0;
-static const visual kDefaultTransmittance = 0.0;
-static const bool kDefaultRemapRoughness = true;
+using ::iris::materials::UberMaterial;
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
+
+constexpr visual kDefaultDiffuse = 0.25;
+constexpr visual kDefaultEtaFront = 1.0;
+constexpr visual kDefaultEtaBack = 1.5;
+constexpr visual kDefaultOpacity = 1.0;
+constexpr visual kDefaultSpecular = 0.25;
+constexpr visual kDefaultRoughness = 0.1;
+constexpr visual kDefaultReflectance = 0.0;
+constexpr visual kDefaultTransmittance = 0.0;
+constexpr bool kDefaultRemapRoughness = true;
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
@@ -34,58 +40,33 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"remaproughness", Parameter::BOOL},
 };
 
-class UberObjectBuilder
-    : public ObjectBuilder<
-          std::shared_ptr<ObjectBuilder<
-              std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                         ReferenceCounted<NormalMap>,
-                         ReferenceCounted<NormalMap>>,
-              TextureManager&>>,
-          TextureManager&> {
+class UberObjectBuilder : public MaterialBuilder {
  public:
   UberObjectBuilder() noexcept : ObjectBuilder(g_parameters) {}
 
-  std::shared_ptr<ObjectBuilder<
-      std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                 ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-      TextureManager&>>
-  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-        TextureManager& texture_manager) const override;
+  std::shared_ptr<NestedMaterialBuilder> Build(
+      const std::unordered_map<std::string_view, Parameter>& parameters,
+      const MaterialManager& material_manager,
+      TextureManager& texture_manager) const override;
 };
 
-class NestedUberObjectBuilder
-    : public ObjectBuilder<
-          std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                     ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-          TextureManager&> {
+class NestedUberObjectBuilder : public NestedMaterialBuilder {
  public:
   NestedUberObjectBuilder(
-      iris::ReferenceCounted<iris::textures::PointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
           reflectance,
-      iris::ReferenceCounted<iris::textures::PointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
           transmittance,
-      iris::ReferenceCounted<iris::textures::PointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>
-          diffuse,
-      iris::ReferenceCounted<iris::textures::PointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>
-          specular,
-      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-          opacity,
-      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-          eta_front,
-      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-          eta_back,
-      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-          roughness,
-      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-          uroughness,
-      iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-          vroughness,
-      bool remap_roughness, iris::ReferenceCounted<iris::NormalMap> front_bump,
-      iris::ReferenceCounted<iris::NormalMap> back_bump)
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
+      ReferenceCounted<ValueTexture2D<visual>> opacity,
+      ReferenceCounted<ValueTexture2D<visual>> eta_front,
+      ReferenceCounted<ValueTexture2D<visual>> eta_back,
+      ReferenceCounted<ValueTexture2D<visual>> roughness,
+      ReferenceCounted<ValueTexture2D<visual>> uroughness,
+      ReferenceCounted<ValueTexture2D<visual>> vroughness, bool remap_roughness,
+      ReferenceCounted<NormalMap> front_bump,
+      ReferenceCounted<NormalMap> back_bump)
       : ObjectBuilder(g_parameters),
         reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
@@ -99,77 +80,62 @@ class NestedUberObjectBuilder
         vroughness_(std::move(vroughness)),
         remap_roughness_(remap_roughness),
         default_(std::make_tuple(
-            iris::MakeReferenceCounted<iris::materials::UberMaterial>(
+            MakeReferenceCounted<materials::UberMaterial>(
                 reflectance_, transmittance_, diffuse_, specular_, opacity_,
                 eta_front_, eta_back_, uroughness_ ? uroughness_ : roughness_,
                 vroughness_ ? vroughness_ : roughness_, remap_roughness_),
-            iris::MakeReferenceCounted<iris::materials::UberMaterial>(
+            MakeReferenceCounted<materials::UberMaterial>(
                 reflectance_, transmittance_, diffuse_, specular_, opacity_,
                 eta_back_, eta_front_, uroughness_ ? uroughness_ : roughness_,
                 vroughness_ ? vroughness_ : roughness_, remap_roughness_),
             front_bump, back_bump)) {}
 
-  std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-             ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
-  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-        TextureManager& texture_manager) const override;
+  MaterialBuilderResult Build(
+      const std::unordered_map<std::string_view, Parameter>& parameters,
+      const MaterialManager& material_manager,
+      TextureManager& texture_manager) const override;
 
  private:
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
-      iris::Reflector, iris::SpectralAllocator>>
-      reflectance_;
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
-      iris::Reflector, iris::SpectralAllocator>>
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
       transmittance_;
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
-      iris::Reflector, iris::SpectralAllocator>>
-      diffuse_;
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
-      iris::Reflector, iris::SpectralAllocator>>
-      specular_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>> opacity_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-      eta_front_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-      eta_back_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-      roughness_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-      uroughness_;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-      vroughness_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular_;
+  ReferenceCounted<ValueTexture2D<visual>> opacity_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_front_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_back_;
+  ReferenceCounted<ValueTexture2D<visual>> roughness_;
+  ReferenceCounted<ValueTexture2D<visual>> uroughness_;
+  ReferenceCounted<ValueTexture2D<visual>> vroughness_;
   bool remap_roughness_;
-  const std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
-      default_;
+  const MaterialBuilderResult default_;
 };
 
-std::shared_ptr<ObjectBuilder<
-    std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-               ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-    TextureManager&>>
-UberObjectBuilder::Build(
+std::shared_ptr<NestedMaterialBuilder> UberObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
+    const MaterialManager& material_manager,
     TextureManager& texture_manager) const {
   ReferenceCounted<NormalMap> front_normal_map;
   ReferenceCounted<NormalMap> back_normal_map;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-      uroughness_texture;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>>
-      vroughness_texture;
-  auto reflectance_texture =
-      texture_manager.AllocateUniformReflectorTexture(kDefaultReflectance);
-  auto transmittance_texture =
-      texture_manager.AllocateUniformReflectorTexture(kDefaultTransmittance);
-  auto diffuse_texture =
-      texture_manager.AllocateUniformReflectorTexture(kDefaultDiffuse);
-  auto specular_texture =
-      texture_manager.AllocateUniformReflectorTexture(kDefaultSpecular);
-  auto opacity_texture =
+  ReferenceCounted<ValueTexture2D<visual>> uroughness_texture;
+  ReferenceCounted<ValueTexture2D<visual>> vroughness_texture;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      reflectance_texture =
+          texture_manager.AllocateUniformReflectorTexture(kDefaultReflectance);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance_texture = texture_manager.AllocateUniformReflectorTexture(
+          kDefaultTransmittance);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      diffuse_texture =
+          texture_manager.AllocateUniformReflectorTexture(kDefaultDiffuse);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      specular_texture =
+          texture_manager.AllocateUniformReflectorTexture(kDefaultSpecular);
+  ReferenceCounted<ValueTexture2D<visual>> opacity_texture =
       texture_manager.AllocateUniformFloatTexture(kDefaultOpacity);
-  auto eta_back_texture =
+  ReferenceCounted<ValueTexture2D<visual>> eta_back_texture =
       texture_manager.AllocateUniformFloatTexture(kDefaultEtaBack);
-  auto roughness_texture =
+  ReferenceCounted<ValueTexture2D<visual>> roughness_texture =
       texture_manager.AllocateUniformFloatTexture(kDefaultRoughness);
   bool remap_roughness = kDefaultRemapRoughness;
 
@@ -225,12 +191,13 @@ UberObjectBuilder::Build(
 
   auto bump = parameters.find("bumpmap");
   if (bump != parameters.end()) {
-    auto normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
+    std::pair<ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
+        normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
     front_normal_map = normal_maps.first;
     back_normal_map = normal_maps.second;
   }
 
-  auto eta_front_texture =
+  ReferenceCounted<ValueTexture2D<visual>> eta_front_texture =
       texture_manager.AllocateUniformFloatTexture(kDefaultEtaFront);
 
   return std::make_unique<NestedUberObjectBuilder>(
@@ -242,28 +209,31 @@ UberObjectBuilder::Build(
       remap_roughness, std::move(front_normal_map), std::move(back_normal_map));
 }
 
-std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-           ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
-NestedUberObjectBuilder::Build(
+MaterialBuilderResult NestedUberObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
+    const MaterialManager& material_manager,
     TextureManager& texture_manager) const {
   if (parameters.empty()) {
     return std::make_tuple(std::get<0>(default_), std::get<1>(default_),
                            std::get<2>(default_), std::get<3>(default_));
   }
 
-  auto reflectance_texture = reflectance_;
-  auto transmittance_texture = transmittance_;
-  auto diffuse_texture = diffuse_;
-  auto specular_texture = specular_;
-  auto opacity_texture = opacity_;
-  auto eta_back_texture = eta_back_;
-  auto roughness_texture = roughness_;
-  auto uroughness_texture = uroughness_;
-  auto vroughness_texture = vroughness_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      reflectance_texture = reflectance_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance_texture = transmittance_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      diffuse_texture = diffuse_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      specular_texture = specular_;
+  ReferenceCounted<ValueTexture2D<visual>> opacity_texture = opacity_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_back_texture = eta_back_;
+  ReferenceCounted<ValueTexture2D<visual>> roughness_texture = roughness_;
+  ReferenceCounted<ValueTexture2D<visual>> uroughness_texture = uroughness_;
+  ReferenceCounted<ValueTexture2D<visual>> vroughness_texture = vroughness_;
   bool remap_roughness = remap_roughness_;
-  auto front_normal_map = std::get<2>(default_);
-  auto back_normal_map = std::get<3>(default_);
+  ReferenceCounted<NormalMap> front_normal_map = std::get<2>(default_);
+  ReferenceCounted<NormalMap> back_normal_map = std::get<3>(default_);
 
   auto kr = parameters.find("Kr");
   if (kr != parameters.end()) {
@@ -317,20 +287,21 @@ NestedUberObjectBuilder::Build(
 
   auto bump = parameters.find("bumpmap");
   if (bump != parameters.end()) {
-    auto normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
+    std::pair<ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
+        normal_maps = MakeBumpMap(bump->second.GetFloatTextures(1).front());
     front_normal_map = normal_maps.first;
     back_normal_map = normal_maps.second;
   }
 
-  auto front_material =
-      iris::MakeReferenceCounted<iris::materials::UberMaterial>(
+  ReferenceCounted<Material> front_material =
+      MakeReferenceCounted<materials::UberMaterial>(
           reflectance_texture, transmittance_texture, diffuse_texture,
           specular_texture, opacity_texture, eta_front_, eta_back_texture,
           uroughness_texture ? uroughness_texture : roughness_texture,
           vroughness_texture ? vroughness_texture : roughness_texture,
           remap_roughness);
-  auto back_material =
-      iris::MakeReferenceCounted<iris::materials::UberMaterial>(
+  ReferenceCounted<Material> back_material =
+      MakeReferenceCounted<materials::UberMaterial>(
           std::move(reflectance_texture), std::move(transmittance_texture),
           std::move(diffuse_texture), std::move(specular_texture),
           std::move(opacity_texture), std::move(eta_back_texture), eta_front_,
@@ -347,12 +318,9 @@ NestedUberObjectBuilder::Build(
 
 }  // namespace
 
-const std::unique_ptr<const ObjectBuilder<
-    std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>,
-    TextureManager&>>
-    g_uber_builder = std::make_unique<UberObjectBuilder>();
+const std::unique_ptr<const MaterialBuilder> g_uber_builder =
+    std::make_unique<UberObjectBuilder>();
 
-}  // namespace iris::pbrt_frontend::materials
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris

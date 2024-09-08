@@ -2,7 +2,12 @@
 
 #include "iris/normal_maps/bump_normal_map.h"
 
-namespace iris::pbrt_frontend::materials {
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
+
+using ::iris::normals::BumpNormalMap;
+using ::iris::textures::ValueTexture2D;
 
 class PbrtFrontBumpMap final : public NormalMap {
  public:
@@ -54,13 +59,16 @@ class PbrtBackBumpMap final : public NormalMap {
 };
 
 std::pair<ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>> MakeBumpMap(
-    const ReferenceCounted<textures::ValueTexture2D<visual>>& texture) {
-  auto bump_map = iris::MakeReferenceCounted<normals::BumpNormalMap>(texture);
-  auto front_bump_map =
-      iris::MakeReferenceCounted<PbrtFrontBumpMap>(std::move(bump_map));
-  auto back_bump_map =
-      iris::MakeReferenceCounted<PbrtBackBumpMap>(front_bump_map);
+    const ReferenceCounted<ValueTexture2D<visual>>& texture) {
+  ReferenceCounted<NormalMap> bump_map =
+      MakeReferenceCounted<BumpNormalMap>(texture);
+  ReferenceCounted<NormalMap> front_bump_map =
+      MakeReferenceCounted<PbrtFrontBumpMap>(std::move(bump_map));
+  ReferenceCounted<NormalMap> back_bump_map =
+      MakeReferenceCounted<PbrtBackBumpMap>(front_bump_map);
   return std::make_pair(std::move(front_bump_map), std::move(back_bump_map));
 }
 
-}  // namespace iris::pbrt_frontend::materials
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris

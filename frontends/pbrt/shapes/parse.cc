@@ -28,11 +28,12 @@ static const std::unordered_map<
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
     Tokenizer& tokenizer, const std::filesystem::path& search_root,
-    SpectrumManager& spectrum_manager, TextureManager& texture_manager,
+    const MaterialManager& material_manager, SpectrumManager& spectrum_manager,
+    TextureManager& texture_manager,
     const std::shared_ptr<ObjectBuilder<
         std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
                    ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>& material_builder,
+        const MaterialManager&, TextureManager&>>& material_builder,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
     const Matrix& model_to_world, bool reverse_orientation) {
@@ -80,7 +81,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
     shape_parameters[name] = std::move(shape_parameter);
   }
 
-  auto material = material_builder->Build(material_parameters, texture_manager);
+  auto material = material_builder->Build(material_parameters, material_manager,
+                                          texture_manager);
 
   if (reverse_orientation) {
     return iter->second->Build(shape_parameters, std::get<1>(material),

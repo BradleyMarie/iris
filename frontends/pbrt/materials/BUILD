@@ -30,11 +30,7 @@ cc_library(
     hdrs = ["glass.h"],
     deps = [
         ":bumpmap",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
+        ":material_builder",
         "//iris/materials:glass_material",
     ],
 )
@@ -45,8 +41,22 @@ cc_test(
     deps = [
         ":glass",
         "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "material_builder",
+    hdrs = ["material_builder.h"],
+    visibility = ["//frontends/pbrt:__subpackages__"],
+    deps = [
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:texture_manager",
+        "//iris:material",
+        "//iris:normal_map",
+        "//iris:reference_counted",
     ],
 )
 
@@ -56,11 +66,7 @@ cc_library(
     hdrs = ["matte.h"],
     deps = [
         ":bumpmap",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
+        ":material_builder",
         "//iris/materials:matte_material",
     ],
 )
@@ -71,7 +77,33 @@ cc_test(
     deps = [
         ":matte",
         "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "mix",
+    srcs = ["mix.cc"],
+    hdrs = ["mix.h"],
+    deps = [
+        ":bumpmap",
+        ":material_builder",
+        "//frontends/pbrt:material_manager",
+        "//iris/materials:mix_material",
+    ],
+)
+
+cc_test(
+    name = "mix_test",
+    srcs = ["mix_test.cc"],
+    deps = [
+        ":mix",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris/materials:mock_material",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -82,11 +114,7 @@ cc_library(
     hdrs = ["mirror.h"],
     deps = [
         ":bumpmap",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
+        ":material_builder",
         "//iris/materials:mirror_material",
     ],
 )
@@ -97,6 +125,7 @@ cc_test(
     deps = [
         ":mirror",
         "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
     ],
@@ -109,18 +138,15 @@ cc_library(
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":glass",
+        ":material_builder",
         ":matte",
         ":mirror",
+        ":mix",
         ":plastic",
         ":translucent",
         ":uber",
         "//frontends/pbrt:material_manager",
-        "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",
-        "//frontends/pbrt:texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
     ],
 )
 
@@ -129,6 +155,7 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
     ],
@@ -140,11 +167,7 @@ cc_library(
     hdrs = ["plastic.h"],
     deps = [
         ":bumpmap",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
+        ":material_builder",
         "//iris/materials:plastic_material",
         "@com_google_absl//absl/flags:flag",
     ],
@@ -156,6 +179,7 @@ cc_test(
     deps = [
         ":plastic",
         "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
     ],
@@ -167,11 +191,7 @@ cc_library(
     hdrs = ["translucent.h"],
     deps = [
         ":bumpmap",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
+        ":material_builder",
         "//iris/materials:translucent_material",
     ],
 )
@@ -182,6 +202,7 @@ cc_test(
     deps = [
         ":translucent",
         "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
     ],
@@ -193,11 +214,7 @@ cc_library(
     hdrs = ["uber.h"],
     deps = [
         ":bumpmap",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
+        ":material_builder",
         "//iris/materials:uber_material",
     ],
 )
@@ -206,8 +223,10 @@ cc_test(
     name = "uber_test",
     srcs = ["uber_test.cc"],
     deps = [
+        ":material_builder",
         ":uber",
         "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@com_google_googletest//:gtest_main",
     ],

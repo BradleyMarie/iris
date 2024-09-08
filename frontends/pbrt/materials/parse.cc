@@ -4,42 +4,32 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/glass.h"
 #include "frontends/pbrt/materials/matte.h"
 #include "frontends/pbrt/materials/mirror.h"
+#include "frontends/pbrt/materials/mix.h"
 #include "frontends/pbrt/materials/plastic.h"
 #include "frontends/pbrt/materials/translucent.h"
 #include "frontends/pbrt/materials/uber.h"
 #include "frontends/pbrt/quoted_string.h"
 
-namespace iris::pbrt_frontend::materials {
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
 namespace {
 
-static const std::unordered_map<
-    std::string_view,
-    const std::unique_ptr<const ObjectBuilder<
-        std::shared_ptr<ObjectBuilder<
-            std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                       ReferenceCounted<NormalMap>,
-                       ReferenceCounted<NormalMap>>,
-            TextureManager&>>,
-        TextureManager&>>&>
-    g_materials = {{"glass", g_glass_builder},
-                   {"matte", g_matte_builder},
-                   {"mirror", g_mirror_builder},
-                   {"plastic", g_plastic_builder},
-                   {"translucent", g_translucent_builder},
-                   {"uber", g_uber_builder}};
+static const std::unordered_map<std::string_view,
+                                const std::unique_ptr<const MaterialBuilder>&>
+    g_materials = {
+        {"glass", g_glass_builder},     {"matte", g_matte_builder},
+        {"mirror", g_mirror_builder},   {"mix", g_mix_builder},
+        {"plastic", g_plastic_builder}, {"translucent", g_translucent_builder},
+        {"uber", g_uber_builder}};
 
 }  // namespace
 
-const ObjectBuilder<
-    std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>,
-    TextureManager&>&
-Parse(Tokenizer& tokenizer) {
+const MaterialBuilder& Parse(Tokenizer& tokenizer) {
   auto type = tokenizer.Next();
   if (!type) {
     std::cerr << "ERROR: Too few parameters to directive: Material"
@@ -131,18 +121,14 @@ void ParseNamed(Tokenizer& tokenizer, const std::filesystem::path& search_root,
     parameters[parameter_name] = std::move(parameter);
   }
 
-  auto result = material_builder->second->Build(parameters, texture_manager);
+  std::shared_ptr<NestedMaterialBuilder> result =
+      material_builder->second->Build(parameters, material_manager,
+                                      texture_manager);
   material_manager.Put(name, result);
 }
 
-const ObjectBuilder<
-    std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>,
-    TextureManager&>&
-Default() {
-  return *g_matte_builder;
-}
+const MaterialBuilder& Default() { return *g_matte_builder; }
 
-}  // namespace iris::pbrt_frontend::materials
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris

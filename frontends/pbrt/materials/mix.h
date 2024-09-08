@@ -1,5 +1,5 @@
-#ifndef _FRONTENDS_PBRT_MATERIALS_GLASS_
-#define _FRONTENDS_PBRT_MATERIALS_GLASS_
+#ifndef _FRONTENDS_PBRT_MATERIALS_MIX_
+#define _FRONTENDS_PBRT_MATERIALS_MIX_
 
 #include <memory>
 
@@ -9,10 +9,10 @@ namespace iris {
 namespace pbrt_frontend {
 namespace materials {
 
-extern const std::unique_ptr<const MaterialBuilder> g_glass_builder;
+extern const std::unique_ptr<const MaterialBuilder> g_mix_builder;
 
 }  // namespace materials
 }  // namespace pbrt_frontend
 }  // namespace iris
 
-#endif  // _FRONTENDS_PBRT_MATERIALS_GLASS_
+#endif  // _FRONTENDS_PBRT_MATERIALS_MIX_

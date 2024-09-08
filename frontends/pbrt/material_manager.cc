@@ -3,13 +3,13 @@
 #include <cstdlib>
 #include <iostream>
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
 
-std::shared_ptr<ObjectBuilder<
-    std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-               ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-    TextureManager&>>
-MaterialManager::Get(std::string_view name) const {
+using iris::pbrt_frontend::materials::NestedMaterialBuilder;
+
+std::shared_ptr<NestedMaterialBuilder> MaterialManager::Get(
+    std::string_view name) const {
   temp_key_ = name;
 
   auto iter = materials_.find(temp_key_);
@@ -21,17 +21,13 @@ MaterialManager::Get(std::string_view name) const {
   return iter->second;
 }
 
-void MaterialManager::Put(
-    std::string_view name,
-    std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>
-        texture) {
+void MaterialManager::Put(std::string_view name,
+                          std::shared_ptr<NestedMaterialBuilder> texture) {
   temp_key_ = name;
   materials_[temp_key_] = texture;
 }
 
 void MaterialManager::Clear() { materials_.clear(); }
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris

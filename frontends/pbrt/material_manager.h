@@ -4,44 +4,29 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <tuple>
 #include <unordered_map>
 
-#include "frontends/pbrt/object_builder.h"
-#include "frontends/pbrt/texture_manager.h"
-#include "iris/material.h"
-#include "iris/normal_map.h"
-#include "iris/reference_counted.h"
+#include "frontends/pbrt/materials/material_builder.h"
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
 
 class MaterialManager {
  public:
-  std::shared_ptr<ObjectBuilder<
-      std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                 ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-      TextureManager&>>
-  Get(std::string_view name) const;
-  void Put(
-      std::string_view name,
-      std::shared_ptr<ObjectBuilder<
-          std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                     ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-          TextureManager&>>
-          texture);
+  std::shared_ptr<materials::NestedMaterialBuilder> Get(
+      std::string_view name) const;
+  void Put(std::string_view name,
+           std::shared_ptr<materials::NestedMaterialBuilder> texture);
   void Clear();
 
  private:
-  std::unordered_map<
-      std::string,
-      std::shared_ptr<ObjectBuilder<
-          std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                     ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-          TextureManager&>>>
+  std::unordered_map<std::string,
+                     std::shared_ptr<materials::NestedMaterialBuilder>>
       materials_;
   mutable std::string temp_key_;
 };
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_MATERIAL_MANAGER_

@@ -7,11 +7,15 @@
 #include "iris/reference_counted.h"
 #include "iris/textures/texture2d.h"
 
-namespace iris::pbrt_frontend::materials {
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
 
 std::pair<ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>> MakeBumpMap(
     const ReferenceCounted<textures::ValueTexture2D<visual>>& texture);
 
-}  // namespace iris::pbrt_frontend::materials
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_MATERIALS_MATTE_

@@ -10,7 +10,11 @@
 #include "iris/random/mersenne_twister_random.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
-using bazel::tools::cpp::runfiles::Runfiles;
+namespace iris {
+namespace pbrt_frontend {
+namespace {
+
+using ::bazel::tools::cpp::runfiles::Runfiles;
 
 std::string RawRunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
@@ -24,23 +28,19 @@ std::string RunfilePath(const std::string& path) {
 
 TEST(Parser, Empty) {
   std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_FALSE(parser.ParseFrom(tokenizer, std::filesystem::current_path()));
 }
 
 TEST(Parser, NoEnd) {
   std::stringstream input("WorldBegin");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
@@ -48,12 +48,10 @@ TEST(Parser, NoEnd) {
 
 TEST(Parser, InvalidDirective) {
   std::stringstream input("NotADirective");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid directive: NotADirective");
@@ -61,12 +59,10 @@ TEST(Parser, InvalidDirective) {
 
 TEST(AreaLightSource, BeforeWorldEnd) {
   std::stringstream input("AreaLightSource \"diffuse\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
@@ -75,12 +71,10 @@ TEST(AreaLightSource, BeforeWorldEnd) {
 
 TEST(AreaLightSource, TooFewArguments) {
   std::stringstream input("WorldBegin AreaLightSource");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: AreaLightSource");
@@ -88,12 +82,10 @@ TEST(AreaLightSource, TooFewArguments) {
 
 TEST(AttributeBegin, BeforeWorldBegin) {
   std::stringstream input("AttributeBegin");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -102,12 +94,10 @@ TEST(AttributeBegin, BeforeWorldBegin) {
 
 TEST(AttributeBegin, Mismatched) {
   std::stringstream input("WorldBegin AttributeBegin TransformEnd");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched AttributeBegin and AttributeEnd directives");
@@ -115,12 +105,10 @@ TEST(AttributeBegin, Mismatched) {
 
 TEST(AttributeEnd, BeforeWorldBegin) {
   std::stringstream input("AttributeEnd");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -129,12 +117,10 @@ TEST(AttributeEnd, BeforeWorldBegin) {
 
 TEST(AttributeEnd, Mismatched) {
   std::stringstream input("WorldBegin AttributeEnd");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing AttributeBegin directive");
@@ -142,12 +128,10 @@ TEST(AttributeEnd, Mismatched) {
 
 TEST(Camera, AfterWorldBegin) {
   std::stringstream input("WorldBegin Camera");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
@@ -156,12 +140,10 @@ TEST(Camera, AfterWorldBegin) {
 
 TEST(Camera, Duplicate) {
   std::stringstream input("Camera \"perspective\" Camera \"perspective\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Camera");
@@ -169,12 +151,10 @@ TEST(Camera, Duplicate) {
 
 TEST(Camera, TooFewArguments) {
   std::stringstream input("Camera");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Camera");
@@ -182,12 +162,10 @@ TEST(Camera, TooFewArguments) {
 
 TEST(Film, AfterWorldBegin) {
   std::stringstream input("WorldBegin Film");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
@@ -196,12 +174,10 @@ TEST(Film, AfterWorldBegin) {
 
 TEST(Film, Duplicate) {
   std::stringstream input("Film \"image\" Film \"image\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Film");
@@ -209,12 +185,10 @@ TEST(Film, Duplicate) {
 
 TEST(Film, TooFewArguments) {
   std::stringstream input("Film");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Film");
@@ -222,12 +196,10 @@ TEST(Film, TooFewArguments) {
 
 TEST(Include, MissingToken) {
   std::stringstream input("Include");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Include");
@@ -235,12 +207,10 @@ TEST(Include, MissingToken) {
 
 TEST(Include, NotQuoted) {
   std::stringstream input("Include 2.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to Include must be a string");
@@ -253,12 +223,10 @@ TEST(Include, Circular) {
       std::filesystem::weakly_canonical(file_path).parent_path();
 
   std::stringstream input("Include \"include_circular_first.pbrt\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, search_path),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -272,12 +240,10 @@ TEST(Include, CircularSelf) {
       std::filesystem::weakly_canonical(file_path).parent_path();
 
   std::stringstream input("Include \"include_circular_self.pbrt\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, search_path),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -286,12 +252,10 @@ TEST(Include, CircularSelf) {
 
 TEST(Include, Empty) {
   std::stringstream input("Include " + RunfilePath("include_empty.pbrt"));
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
@@ -299,12 +263,10 @@ TEST(Include, Empty) {
 
 TEST(Integrator, AfterWorldBegin) {
   std::stringstream input("WorldBegin Integrator");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
@@ -313,12 +275,10 @@ TEST(Integrator, AfterWorldBegin) {
 
 TEST(Integrator, Duplicate) {
   std::stringstream input("Integrator \"path\" Integrator \"path\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Integrator");
@@ -326,12 +286,10 @@ TEST(Integrator, Duplicate) {
 
 TEST(Integrator, TooFewArguments) {
   std::stringstream input("Integrator");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Integrator");
@@ -339,12 +297,10 @@ TEST(Integrator, TooFewArguments) {
 
 TEST(LightSource, BeforeWorldBegin) {
   std::stringstream input("LightSource");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -353,12 +309,10 @@ TEST(LightSource, BeforeWorldBegin) {
 
 TEST(MakeNamedMaterial, TooFewArguments) {
   std::stringstream input("MakeNamedMaterial");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: MakeNamedMaterial");
@@ -366,12 +320,10 @@ TEST(MakeNamedMaterial, TooFewArguments) {
 
 TEST(Material, BeforeWorldEnd) {
   std::stringstream input("Material \"matte\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -380,12 +332,10 @@ TEST(Material, BeforeWorldEnd) {
 
 TEST(Material, TooFewArguments) {
   std::stringstream input("WorldBegin Material");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Material");
@@ -393,12 +343,10 @@ TEST(Material, TooFewArguments) {
 
 TEST(NamedMaterial, BeforeWorldEnd) {
   std::stringstream input("NamedMaterial \"name\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -407,12 +355,10 @@ TEST(NamedMaterial, BeforeWorldEnd) {
 
 TEST(NamedMaterial, TooFewArguments) {
   std::stringstream input("WorldBegin NamedMaterial");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: NamedMaterial");
@@ -420,12 +366,10 @@ TEST(NamedMaterial, TooFewArguments) {
 
 TEST(NamedMaterial, NotAString) {
   std::stringstream input("WorldBegin NamedMaterial 1");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to NamedMaterial must be a string");
@@ -433,12 +377,10 @@ TEST(NamedMaterial, NotAString) {
 
 TEST(ObjectBegin, BeforeWorldBegin) {
   std::stringstream input("ObjectBegin");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -447,12 +389,10 @@ TEST(ObjectBegin, BeforeWorldBegin) {
 
 TEST(ObjectBegin, Mismatched) {
   std::stringstream input("WorldBegin ObjectBegin \"abc\" ObjectBegin \"abc\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
@@ -460,12 +400,10 @@ TEST(ObjectBegin, Mismatched) {
 
 TEST(ObjectBegin, TooFew) {
   std::stringstream input("WorldBegin ObjectBegin");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: ObjectBegin");
@@ -473,12 +411,10 @@ TEST(ObjectBegin, TooFew) {
 
 TEST(ObjectBegin, NotAString) {
   std::stringstream input("WorldBegin ObjectBegin 1");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to ObjectBegin must be a string");
@@ -486,12 +422,10 @@ TEST(ObjectBegin, NotAString) {
 
 TEST(ObjectEnd, BeforeWorldBegin) {
   std::stringstream input("ObjectEnd");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -500,12 +434,10 @@ TEST(ObjectEnd, BeforeWorldBegin) {
 
 TEST(ObjectEnd, Mismatched) {
   std::stringstream input("WorldBegin ObjectEnd");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
@@ -513,12 +445,10 @@ TEST(ObjectEnd, Mismatched) {
 
 TEST(ObjectInstance, BeforeWorldBegin) {
   std::stringstream input("ObjectInstance");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
@@ -527,12 +457,10 @@ TEST(ObjectInstance, BeforeWorldBegin) {
 
 TEST(ObjectInstance, InsideObject) {
   std::stringstream input("WorldBegin ObjectBegin \"abc\" ObjectInstance");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance cannot be specified between ObjectBegin "
@@ -541,12 +469,10 @@ TEST(ObjectInstance, InsideObject) {
 
 TEST(ObjectInstance, TooFew) {
   std::stringstream input("WorldBegin ObjectInstance");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: ObjectInstance");
@@ -554,12 +480,10 @@ TEST(ObjectInstance, TooFew) {
 
 TEST(ObjectInstance, NotAString) {
   std::stringstream input("WorldBegin ObjectInstance 1");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to ObjectInstance must be a string");
@@ -567,12 +491,10 @@ TEST(ObjectInstance, NotAString) {
 
 TEST(ObjectInstance, MissingObject) {
   std::stringstream input("WorldBegin ObjectInstance \"1\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance referred to an unknown object: 1");
@@ -580,12 +502,10 @@ TEST(ObjectInstance, MissingObject) {
 
 TEST(Matrix, Parses) {
   std::stringstream input("Identity");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
@@ -593,12 +513,10 @@ TEST(Matrix, Parses) {
 
 TEST(PixelFilter, AfterWorldBegin) {
   std::stringstream input("WorldBegin PixelFilter");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
@@ -607,12 +525,10 @@ TEST(PixelFilter, AfterWorldBegin) {
 
 TEST(PixelFilter, MissingToken) {
   std::stringstream input("PixelFilter");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: PixelFilter");
@@ -620,12 +536,10 @@ TEST(PixelFilter, MissingToken) {
 
 TEST(PixelFilter, NotQuoted) {
   std::stringstream input("PixelFilter 2.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Parameter to PixelFilter must be a string");
@@ -633,12 +547,10 @@ TEST(PixelFilter, NotQuoted) {
 
 TEST(PixelFilter, Duplicate) {
   std::stringstream input("PixelFilter \"box\" PixelFilter \"box\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: PixelFilter");
@@ -646,12 +558,10 @@ TEST(PixelFilter, Duplicate) {
 
 TEST(ReverseOrientation, Succeeds) {
   std::stringstream input("ReverseOrientation Shape");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: Shape");
@@ -659,12 +569,10 @@ TEST(ReverseOrientation, Succeeds) {
 
 TEST(Sampler, AfterWorldBegin) {
   std::stringstream input("WorldBegin Sampler");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
@@ -673,12 +581,10 @@ TEST(Sampler, AfterWorldBegin) {
 
 TEST(Sampler, Duplicate) {
   std::stringstream input("Sampler \"random\" Sampler \"random\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "Directive specified twice for a render: Sampler");
@@ -686,12 +592,10 @@ TEST(Sampler, Duplicate) {
 
 TEST(Sampler, TooFewArguments) {
   std::stringstream input("Sampler");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Sampler");
@@ -699,12 +603,10 @@ TEST(Sampler, TooFewArguments) {
 
 TEST(Shape, BeforeWorldBegin) {
   std::stringstream input("Shape");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: Shape");
@@ -712,12 +614,10 @@ TEST(Shape, BeforeWorldBegin) {
 
 TEST(Texture, BeforeWorldBegin) {
   std::stringstream input("Texture WorldBegin");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
       parser.ParseFrom(tokenizer, std::filesystem::current_path()),
       testing::ExitedWithCode(EXIT_FAILURE),
@@ -726,12 +626,10 @@ TEST(Texture, BeforeWorldBegin) {
 
 TEST(Texture, TooFewArguments) {
   std::stringstream input("WorldBegin Texture");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Too few parameters to directive: Texture");
@@ -739,12 +637,10 @@ TEST(Texture, TooFewArguments) {
 
 TEST(WorldBegin, Duplicate) {
   std::stringstream input("WorldBegin WorldBegin");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldBegin directive");
@@ -752,12 +648,10 @@ TEST(WorldBegin, Duplicate) {
 
 TEST(WorldEnd, NoWorldBegin) {
   std::stringstream input("WorldEnd");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldEnd directive");
@@ -765,12 +659,10 @@ TEST(WorldEnd, NoWorldBegin) {
 
 TEST(Render, EmptyScene) {
   std::stringstream input("WorldBegin WorldEnd");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::Parser parser(
-      std::make_unique<
-          iris::pbrt_frontend::spectrum_managers::TestSpectrumManager>(),
-      std::make_unique<iris::power_matchers::MockPowerMatcher>());
+  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
+                std::make_unique<power_matchers::MockPowerMatcher>());
   auto result = parser.ParseFrom(tokenizer, std::filesystem::current_path());
   ASSERT_TRUE(result);
 
@@ -780,23 +672,23 @@ TEST(Render, EmptyScene) {
   EXPECT_FALSE(result->maximum_sample_luminance.has_value());
   EXPECT_EQ("pbrt.exr", result->output_filename);
 
-  iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
+  albedo_matchers::MockAlbedoMatcher albedo_matcher;
 
-  iris::color_matchers::MockColorMatcher color_matcher;
+  color_matchers::MockColorMatcher color_matcher;
   EXPECT_CALL(color_matcher, ColorSpace())
       .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
 
-  iris::random::MersenneTwisterRandom rng;
+  random::MersenneTwisterRandom rng;
 
-  auto framebuffer =
+  Framebuffer framebuffer =
       result->renderable.Render(albedo_matcher, color_matcher, rng);
-  auto dimensions = framebuffer.Size();
+  std::pair<size_t, size_t> dimensions = framebuffer.Size();
   EXPECT_EQ(480u, dimensions.first);
   EXPECT_EQ(640u, dimensions.second);
 
   for (size_t y = 0; y < dimensions.first; y++) {
     for (size_t x = 0; x < dimensions.second; x++) {
-      auto color = framebuffer.Get(y, x);
+      iris::Color color = framebuffer.Get(y, x);
       EXPECT_EQ(0.0, color.r);
       EXPECT_EQ(0.0, color.g);
       EXPECT_EQ(0.0, color.b);
@@ -804,3 +696,7 @@ TEST(Render, EmptyScene) {
     }
   }
 }
+
+}  // namespace
+}  // namespace pbrt_frontend
+}  // namespace iris

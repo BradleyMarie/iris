@@ -13,6 +13,7 @@
 
 #include "frontends/pbrt/image_manager.h"
 #include "frontends/pbrt/material_manager.h"
+#include "frontends/pbrt/materials/material_builder.h"
 #include "frontends/pbrt/matrix_manager.h"
 #include "frontends/pbrt/renderable.h"
 #include "frontends/pbrt/spectrum_manager.h"
@@ -24,7 +25,8 @@
 #include "iris/light_scene.h"
 #include "iris/power_matcher.h"
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
 
 class Parser {
  public:
@@ -37,7 +39,7 @@ class Parser {
 
   struct Result {
     Renderable renderable;
-    iris::Renderer::SkipPixelFn skip_pixel_callback;
+    Renderer::SkipPixelFn skip_pixel_callback;
     std::filesystem::path output_filename;
     std::function<void(Framebuffer&, std::ofstream&)> output_write_function;
     std::optional<visual_t> maximum_sample_luminance;
@@ -86,25 +88,18 @@ class Parser {
   std::string texture_name_;
 
   struct AttributeEntry {
-    std::shared_ptr<
-        ObjectBuilder<std::tuple<iris::ReferenceCounted<iris::Material>,
-                                 iris::ReferenceCounted<iris::Material>,
-                                 iris::ReferenceCounted<iris::NormalMap>,
-                                 iris::ReferenceCounted<iris::NormalMap>>,
-                      TextureManager&>>
-        material;
-    std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,
-              iris::ReferenceCounted<iris::EmissiveMaterial>>
+    std::shared_ptr<materials::NestedMaterialBuilder> material;
+    std::pair<ReferenceCounted<EmissiveMaterial>,
+              ReferenceCounted<EmissiveMaterial>>
         emissive_material;
     bool reverse_orientation;
   };
 
   std::vector<AttributeEntry> attributes_;
 
-  std::unordered_map<std::string, iris::ReferenceCounted<iris::Geometry>>
-      objects_;
+  std::unordered_map<std::string, ReferenceCounted<Geometry>> objects_;
   std::optional<std::string> current_object_name_;
-  std::vector<iris::ReferenceCounted<Geometry>> current_object_geometry_;
+  std::vector<ReferenceCounted<Geometry>> current_object_geometry_;
 
   std::unique_ptr<SpectrumManager> spectrum_manager_;
   std::unique_ptr<PowerMatcher> power_matcher_;
@@ -119,9 +114,9 @@ class Parser {
   std::pair<size_t, size_t> image_dimensions_;
   Renderer::SkipPixelFn skip_pixel_callback_;
   std::optional<visual_t> maximum_sample_luminance_;
-  std::unique_ptr<iris::ImageSampler> image_sampler_;
+  std::unique_ptr<ImageSampler> image_sampler_;
   std::unique_ptr<iris::Integrator> integrator_;
-  std::unique_ptr<iris::LightScene::Builder> light_scene_builder_;
+  std::unique_ptr<LightScene::Builder> light_scene_builder_;
   std::filesystem::path output_filename_;
   std::function<void(Framebuffer&, std::ofstream&)> write_function_;
 
@@ -133,6 +128,7 @@ class Parser {
   bool world_begin_encountered_ = false;
 };
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_PARSER_

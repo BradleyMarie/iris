@@ -1,39 +1,23 @@
 #ifndef _FRONTENDS_PBRT_MATERIALS_PARSE_
 #define _FRONTENDS_PBRT_MATERIALS_PARSE_
 
-#include <memory>
-#include <tuple>
+#include "frontends/pbrt/materials/material_builder.h"
 
-#include "frontends/pbrt/material_manager.h"
-#include "frontends/pbrt/object_builder.h"
-#include "frontends/pbrt/texture_manager.h"
-#include "iris/material.h"
-#include "iris/normal_map.h"
-#include "iris/reference_counted.h"
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
 
-namespace iris::pbrt_frontend::materials {
-
-const ObjectBuilder<
-    std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>,
-    TextureManager&>&
-Parse(Tokenizer& tokenizer);
+const MaterialBuilder& Parse(Tokenizer& tokenizer);
 
 void ParseNamed(Tokenizer& tokenizer, const std::filesystem::path& search_root,
                 MaterialManager& material_manager,
                 SpectrumManager& spectrum_manager,
                 TextureManager& texture_manager);
 
-const ObjectBuilder<
-    std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>,
-    TextureManager&>&
-Default();
+const MaterialBuilder& Default();
 
-}  // namespace iris::pbrt_frontend::materials
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_MATERIALS_PARSE_

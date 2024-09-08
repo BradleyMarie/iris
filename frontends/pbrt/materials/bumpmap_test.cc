@@ -3,11 +3,24 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/textures/constant_texture.h"
 
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
+namespace {
+
+using ::iris::textures::ConstantValueTexture2D;
+
 TEST(BumpMap, Allocates) {
-  auto value_texture = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto bump_maps = iris::pbrt_frontend::materials::MakeBumpMap(value_texture);
+  ReferenceCounted<ConstantValueTexture2D<visual>> value_texture =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(1.0));
+  std::pair<ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>
+      bump_maps = MakeBumpMap(value_texture);
   EXPECT_TRUE(bump_maps.first);
   EXPECT_TRUE(bump_maps.second);
 }
+
+}  // namespace
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris

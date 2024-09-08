@@ -88,11 +88,7 @@ cc_library(
     srcs = ["material_manager.cc"],
     hdrs = ["material_manager.h"],
     deps = [
-        ":object_builder",
-        ":texture_manager",
-        "//iris:material",
-        "//iris:normal_map",
-        "//iris:reference_counted",
+        "//frontends/pbrt/materials:material_builder",
     ],
 )
 
@@ -216,6 +212,7 @@ cc_library(
         "//frontends/pbrt/film:parse",
         "//frontends/pbrt/integrators:parse",
         "//frontends/pbrt/lights:parse",
+        "//frontends/pbrt/materials:material_builder",
         "//frontends/pbrt/materials:parse",
         "//frontends/pbrt/samplers:parse",
         "//frontends/pbrt/shapes:parse",

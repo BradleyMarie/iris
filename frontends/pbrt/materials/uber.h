@@ -2,24 +2,17 @@
 #define _FRONTENDS_PBRT_MATERIALS_UBER_
 
 #include <memory>
-#include <tuple>
 
-#include "frontends/pbrt/object_builder.h"
-#include "frontends/pbrt/texture_manager.h"
-#include "iris/material.h"
-#include "iris/normal_map.h"
-#include "iris/reference_counted.h"
+#include "frontends/pbrt/materials/material_builder.h"
 
-namespace iris::pbrt_frontend::materials {
+namespace iris {
+namespace pbrt_frontend {
+namespace materials {
 
-extern const std::unique_ptr<const ObjectBuilder<
-    std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        TextureManager&>>,
-    TextureManager&>>
-    g_uber_builder;
+extern const std::unique_ptr<const MaterialBuilder> g_uber_builder;
 
-}  // namespace iris::pbrt_frontend::materials
+}  // namespace materials
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_MATERIALS_UBER_

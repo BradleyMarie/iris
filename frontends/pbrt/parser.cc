@@ -230,7 +230,9 @@ bool Parser::Material() {
   const auto& builder = materials::Parse(*tokenizers_.back().tokenizer);
   attributes_.back().material =
       BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_, *texture_manager_);
+                  *spectrum_manager_, *texture_manager_,
+                  static_cast<const MaterialManager&>(*material_manager_),
+                  *texture_manager_);
 
   return true;
 }
@@ -435,8 +437,8 @@ bool Parser::Shape() {
   }
 
   auto [shapes, transform] = shapes::Parse(
-      *tokenizers_.back().tokenizer, *search_root_, *spectrum_manager_,
-      *texture_manager_, attributes_.back().material,
+      *tokenizers_.back().tokenizer, *search_root_, *material_manager_,
+      *spectrum_manager_, *texture_manager_, attributes_.back().material,
       attributes_.back().emissive_material.first,
       attributes_.back().emissive_material.second,
       current_object_name_ ? Matrix::Identity() : matrix_manager_->Get().start,
@@ -540,7 +542,9 @@ void Parser::InitializeDefault() {
 
   auto default_material =
       BuildObject(materials::Default(), empty_tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_, *texture_manager_);
+                  *spectrum_manager_, *texture_manager_,
+                  static_cast<const MaterialManager&>(*material_manager_),
+                  *texture_manager_);
   attributes_.emplace_back(
       default_material,
       std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,
