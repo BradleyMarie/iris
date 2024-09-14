@@ -1,248 +1,234 @@
-#define _USE_MATH_DEFINES
 #include "iris/materials/translucent_material.h"
 
-#include <cmath>
-#include <memory>
-
-#include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/composite_bxdf.h"
 #include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
+#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
 
-TEST(TranslucentMaterialTest, NoBxdfs) {
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto diffuse =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto specular =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto eta_incident = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.5));
-  auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::TranslucentMaterial material(reflectance, transmittance,
-                                                diffuse, specular, eta_incident,
-                                                eta_transmitted, sigma, false);
+namespace iris {
+namespace materials {
+namespace {
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+using ::iris::bxdfs::FresnelDielectric;
+using ::iris::bxdfs::LambertianBrdf;
+using ::iris::bxdfs::LambertianBtdf;
+using ::iris::bxdfs::MicrofacetBrdf;
+using ::iris::bxdfs::MicrofacetBtdf;
+using ::iris::bxdfs::internal::CompositeBxdf;
+using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
+using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetBxdfAllocator;
+using ::iris::testing::GetSpectralAllocator;
+using ::iris::textures::ConstantPointerTexture2D;
+using ::iris::textures::ConstantValueTexture2D;
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
+using ::testing::_;
+using ::testing::Return;
+
+TEST(TranslucentMaterialTest, NoBxdfs) {
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
+  ReferenceCounted<ValueTexture2D<visual>> sigma =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  TranslucentMaterial material(reflectance, transmittance, diffuse, specular,
+                               eta_incident, eta_transmitted, sigma, false);
+
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_FALSE(result);
 }
 
 TEST(TranslucentMaterialTest, DiffuseReflection) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto diffuse =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto specular =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto eta_incident = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.5));
-  auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::TranslucentMaterial material(reflectance, transmittance,
-                                                diffuse, specular, eta_incident,
-                                                eta_transmitted, sigma, false);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
+  ReferenceCounted<ValueTexture2D<visual>> sigma =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  TranslucentMaterial material(reflectance, transmittance, diffuse, specular,
+                               eta_incident, eta_transmitted, sigma, false);
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const iris::bxdfs::LambertianBrdf*>(result));
+  EXPECT_TRUE(dynamic_cast<const LambertianBrdf*>(result));
 }
 
 TEST(TranslucentMaterialTest, DiffuseTransmission) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto diffuse =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto specular =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto eta_incident = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.5));
-  auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::TranslucentMaterial material(reflectance, transmittance,
-                                                diffuse, specular, eta_incident,
-                                                eta_transmitted, sigma, false);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
+  ReferenceCounted<ValueTexture2D<visual>> sigma =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  TranslucentMaterial material(reflectance, transmittance, diffuse, specular,
+                               eta_incident, eta_transmitted, sigma, false);
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const iris::bxdfs::LambertianBtdf*>(result));
+  EXPECT_TRUE(dynamic_cast<const LambertianBtdf*>(result));
 }
 
 TEST(TranslucentMaterialTest, SpecularReflection) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> reflector =
+      MakeReferenceCounted<reflectors::MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto diffuse =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto specular =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto eta_incident = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.5));
-  auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::TranslucentMaterial material(reflectance, transmittance,
-                                                diffuse, specular, eta_incident,
-                                                eta_transmitted, sigma, false);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
+  ReferenceCounted<ValueTexture2D<visual>> sigma =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  TranslucentMaterial material(reflectance, transmittance, diffuse, specular,
+                               eta_incident, eta_transmitted, sigma, false);
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-
-  auto* cast = dynamic_cast<const iris::bxdfs::MicrofacetBrdf<
-      iris::bxdfs::TrowbridgeReitzDistribution,
-      iris::bxdfs::FresnelDielectric>*>(result);
-  EXPECT_TRUE(cast);
+  EXPECT_TRUE((dynamic_cast<const MicrofacetBrdf<TrowbridgeReitzDistribution,
+                                                 FresnelDielectric>*>(result)));
 }
 
 TEST(TranslucentMaterialTest, SpecularTransmission) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto diffuse =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto specular =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto eta_incident = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.5));
-  auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::TranslucentMaterial material(reflectance, transmittance,
-                                                diffuse, specular, eta_incident,
-                                                eta_transmitted, sigma, false);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
+  ReferenceCounted<ValueTexture2D<visual>> sigma =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  TranslucentMaterial material(reflectance, transmittance, diffuse, specular,
+                               eta_incident, eta_transmitted, sigma, false);
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-
-  auto* casted = dynamic_cast<const iris::bxdfs::MicrofacetBtdf<
-      iris::bxdfs::TrowbridgeReitzDistribution,
-      iris::bxdfs::FresnelDielectric>*>(result);
-  EXPECT_TRUE(casted);
+  EXPECT_TRUE((dynamic_cast<const MicrofacetBtdf<TrowbridgeReitzDistribution,
+                                                 FresnelDielectric>*>(result)));
 }
 
 TEST(TranslucentMaterialTest, All) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto diffuse =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto specular =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto eta_incident = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_transmitted = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.5));
-  auto sigma = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::TranslucentMaterial material(reflectance, transmittance,
-                                                diffuse, specular, eta_incident,
-                                                eta_transmitted, sigma, true);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
+  ReferenceCounted<ValueTexture2D<visual>> sigma =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  TranslucentMaterial material(reflectance, transmittance, diffuse, specular,
+                               eta_incident, eta_transmitted, sigma, true);
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(
-      dynamic_cast<const iris::bxdfs::internal::CompositeBxdf<4>*>(result));
+  EXPECT_TRUE(dynamic_cast<const CompositeBxdf<4>*>(result));
 }
+
+}  // namespace
+}  // namespace materials
+}  // namespace iris

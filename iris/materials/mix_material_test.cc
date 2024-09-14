@@ -14,7 +14,11 @@ namespace {
 
 using ::iris::bxdfs::MockBxdf;
 using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetBxdfAllocator;
+using ::iris::testing::GetSpectralAllocator;
 using ::iris::textures::ConstantValueTexture2D;
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::IsNull;
@@ -59,14 +63,14 @@ TEST(MixMaterialTest, Evaluate) {
   MixMaterial mix_material(std::move(mock_material0), std::move(mock_material1),
                            std::move(attenuation));
 
-  const Bxdf* bxdf = mix_material.Evaluate(
-      TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      testing::GetSpectralAllocator(), testing::GetBxdfAllocator());
+  const Bxdf* bxdf =
+      mix_material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                            GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(bxdf);
 
-  const Reflector* reflector = bxdf->Reflectance(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator());
+  const Reflector* reflector =
+      bxdf->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                        Bxdf::Hemisphere::BTDF, GetSpectralAllocator());
   ASSERT_TRUE(reflector);
 
   EXPECT_EQ(0.28125, reflector->Reflectance(1.0));

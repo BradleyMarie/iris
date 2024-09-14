@@ -1,25 +1,31 @@
 #define _USE_MATH_DEFINES
-#include "iris/bxdfs/microfacet_bxdf.h"
+#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 
-#include <algorithm>
-#include <cassert>
 #include <cmath>
 
 #include "iris/bxdfs/math.h"
 
 namespace iris {
 namespace bxdfs {
+namespace microfacet_distributions {
 namespace {
+
+using ::iris::bxdfs::internal::CosSquaredTheta;
+using ::iris::bxdfs::internal::CosTheta;
+using ::iris::bxdfs::internal::SinCosPhi;
+using ::iris::bxdfs::internal::SinCosSquaredPhi;
+using ::iris::bxdfs::internal::TanSquaredTheta;
+using ::iris::bxdfs::internal::TanTheta;
 
 std::pair<geometric_t, geometric_t> TrowbridgeReitzSample11(
     const Vector& incoming, geometric_t u, geometric_t v) {
-  if (internal::CosTheta(incoming) > static_cast<geometric_t>(0.9999)) {
+  if (CosTheta(incoming) > static_cast<geometric_t>(0.9999)) {
     geometric_t r = std::sqrt(u / (static_cast<geometric_t>(1.0) - u));
     geometric_t phi = static_cast<geometric_t>(2.0 * M_PI) * v;
     return std::make_pair(r * std::cos(phi), r * std::sin(phi));
   }
 
-  geometric_t tan_theta = internal::TanTheta(incoming);
+  geometric_t tan_theta = TanTheta(incoming);
   geometric_t a = static_cast<geometric_t>(1.0) / tan_theta;
   geometric_t G1 = static_cast<geometric_t>(2.0) /
                    (static_cast<geometric_t>(1.0) +
@@ -71,36 +77,19 @@ std::pair<geometric_t, geometric_t> TrowbridgeReitzSample11(
 
 }  // namespace
 
-visual_t MicrofacetDistribution::G(const Vector& incoming,
-                                   const Vector& outgoing) const {
-  return static_cast<visual_t>(1.0) /
-         (static_cast<visual_t>(1.0) + Lambda(incoming) + Lambda(outgoing));
-}
-
-visual_t MicrofacetDistribution::G1(const Vector& vector) const {
-  return static_cast<visual_t>(1.0) /
-         (static_cast<visual_t>(1.0) + Lambda(vector));
-}
-
-visual_t MicrofacetDistribution::Pdf(const Vector& incoming,
-                                     const Vector& half_angle) const {
-  return D(half_angle) * G1(incoming) * AbsDotProduct(incoming, half_angle) /
-         internal::AbsCosTheta(incoming);
-}
-
 visual_t TrowbridgeReitzDistribution::D(const Vector& vector) const {
-  geometric_t tan_squared_theta = internal::TanSquaredTheta(vector);
+  geometric_t tan_squared_theta = TanSquaredTheta(vector);
   if (std::isinf(tan_squared_theta)) {
     return 0.0;
   }
 
-  geometric_t cos_squared_theta = internal::CosSquaredTheta(vector);
+  geometric_t cos_squared_theta = CosSquaredTheta(vector);
   geometric_t cos_4_theta = cos_squared_theta * cos_squared_theta;
   if (cos_4_theta < static_cast<geometric_t>(1e-16)) {
     return 0.0;
   }
 
-  auto [sin_squared_phi, cos_squared_phi] = internal::SinCosSquaredPhi(vector);
+  auto [sin_squared_phi, cos_squared_phi] = SinCosSquaredPhi(vector);
   geometric_t e = tan_squared_theta * (cos_squared_phi / (alpha_x_ * alpha_x_) +
                                        sin_squared_phi / (alpha_y_ * alpha_y_));
   geometric_t e_plus_1 = static_cast<geometric_t>(1.0) + e;
@@ -111,12 +100,12 @@ visual_t TrowbridgeReitzDistribution::D(const Vector& vector) const {
 }
 
 visual_t TrowbridgeReitzDistribution::Lambda(const Vector& vector) const {
-  auto tan_squared_theta = internal::TanSquaredTheta(vector);
+  auto tan_squared_theta = TanSquaredTheta(vector);
   if (std::isinf(tan_squared_theta)) {
     return 0.0;
   }
 
-  auto [sin_squared_phi, cos_squared_phi] = internal::SinCosSquaredPhi(vector);
+  auto [sin_squared_phi, cos_squared_phi] = SinCosSquaredPhi(vector);
   geometric_t alpha_squared = cos_squared_phi * alpha_x_ * alpha_x_ +
                               sin_squared_phi * alpha_y_ * alpha_y_;
 
@@ -134,7 +123,7 @@ Vector TrowbridgeReitzDistribution::Sample(const Vector& incoming,
 
   auto [slope_x, slope_y] =
       TrowbridgeReitzSample11(normalized_stretched_incoming, u, v);
-  auto [sin_phi, cos_phi] = internal::SinCosPhi(normalized_stretched_incoming);
+  auto [sin_phi, cos_phi] = SinCosPhi(normalized_stretched_incoming);
 
   geometric_t tmp = cos_phi * slope_x - sin_phi * slope_y;
   slope_y = sin_phi * slope_x + cos_phi * slope_y;
@@ -162,5 +151,6 @@ visual_t TrowbridgeReitzDistribution::RoughnessToAlpha(visual_t roughness) {
          static_cast<visual_t>(0.000640711) * x4;
 }
 
+}  // namespace microfacet_distributions
 }  // namespace bxdfs
 }  // namespace iris

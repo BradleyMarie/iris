@@ -2,7 +2,6 @@
 #define _IRIS_MATERIALS_TRANSLUCENT_MATERIAL_
 
 #include <cassert>
-#include <memory>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -19,21 +18,17 @@ namespace materials {
 class TranslucentMaterial final : public Material {
  public:
   TranslucentMaterial(
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           reflectance,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           transmittance,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           diffuse,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           specular,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+      ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
       bool remap_roughness)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
@@ -57,21 +52,17 @@ class TranslucentMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       reflectance_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       transmittance_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       diffuse_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       specular_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
   bool remap_roughness_;
 };
 

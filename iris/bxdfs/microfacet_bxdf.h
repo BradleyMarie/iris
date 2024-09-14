@@ -1,13 +1,13 @@
 #ifndef _IRIS_BXDFS_MICROFACET_BXDF_
 #define _IRIS_BXDFS_MICROFACET_BXDF_
 
-#include <algorithm>
 #include <cmath>
 #include <concepts>
 
 #include "iris/bxdf.h"
 #include "iris/bxdfs/fresnel.h"
 #include "iris/bxdfs/math.h"
+#include "iris/bxdfs/microfacet_distribution.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
 #include "iris/sampler.h"
@@ -16,35 +16,6 @@
 
 namespace iris {
 namespace bxdfs {
-
-class MicrofacetDistribution {
- public:
-  visual_t G(const Vector& incoming, const Vector& outgoing) const;
-  visual_t G1(const Vector& vector) const;
-  visual_t Pdf(const Vector& incoming, const Vector& half_angle) const;
-
-  virtual visual_t D(const Vector& vector) const = 0;
-  virtual visual_t Lambda(const Vector& vector) const = 0;
-  virtual Vector Sample(const Vector& incoming, geometric_t u,
-                        geometric_t v) const = 0;
-};
-
-class TrowbridgeReitzDistribution final : public MicrofacetDistribution {
- public:
-  TrowbridgeReitzDistribution(visual_t alpha_x, visual_t alpha_y)
-      : alpha_x_(std::max(static_cast<visual>(0.001), alpha_x)),
-        alpha_y_(std::max(static_cast<visual>(0.001), alpha_y)) {}
-
-  visual_t D(const Vector& vector) const override;
-  visual_t Lambda(const Vector& vector) const override;
-  Vector Sample(const Vector& incoming, geometric_t u,
-                geometric_t v) const override;
-
-  static visual_t RoughnessToAlpha(visual_t roughness);
-
- private:
-  visual_t alpha_x_, alpha_y_;
-};
 
 template <typename M, typename F>
   requires std::derived_from<M, MicrofacetDistribution> &&

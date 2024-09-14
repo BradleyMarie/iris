@@ -2,7 +2,6 @@
 #define _IRIS_MATERIALS_PLASTIC_MATERIAL_
 
 #include <cassert>
-#include <memory>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -19,15 +18,13 @@ namespace materials {
 class PlasticMaterial final : public Material {
  public:
   PlasticMaterial(
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           diffuse,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           specular,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+      ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
       bool remap_roughness)
       : diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
@@ -47,15 +44,13 @@ class PlasticMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       diffuse_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       specular_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
   bool remap_roughness_;
 };
 

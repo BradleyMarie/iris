@@ -9,7 +9,7 @@ namespace materials {
 const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
                                   SpectralAllocator& spectral_allocator,
                                   BxdfAllocator& bxdf_allocator) const {
-  visual_t attenuation = interpolation_->Evaluate(texture_coordinates);
+  visual attenuation = interpolation_->Evaluate(texture_coordinates);
 
   const Bxdf* bxdf0 = material0_->Evaluate(texture_coordinates,
                                            spectral_allocator, bxdf_allocator);

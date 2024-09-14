@@ -2,7 +2,6 @@
 #define _IRIS_MATERIALS_GLASS_MATERIAL_
 
 #include <cassert>
-#include <memory>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -19,14 +18,12 @@ namespace materials {
 class GlassMaterial final : public Material {
  public:
   GlassMaterial(
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           reflectance,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           transmittance,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted)
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
         eta_incident_(std::move(eta_incident)),
@@ -42,14 +39,12 @@ class GlassMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       reflectance_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       transmittance_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
 };
 
 }  // namespace materials

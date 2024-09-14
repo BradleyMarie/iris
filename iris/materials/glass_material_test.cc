@@ -1,10 +1,5 @@
-#define _USE_MATH_DEFINES
 #include "iris/materials/glass_material.h"
 
-#include <cmath>
-#include <memory>
-
-#include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/specular_bxdf.h"
 #include "iris/reflectors/mock_reflector.h"
@@ -12,116 +7,116 @@
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
 
-TEST(GlassMaterialTest, EvaluateEmpty) {
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto eta_front = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_back = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_front),
-      std::move(eta_back));
+namespace iris {
+namespace materials {
+namespace {
 
-  ASSERT_FALSE(
-      material.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        iris::testing::GetSpectralAllocator(),
-                        iris::testing::GetBxdfAllocator()));
+using ::iris::bxdfs::FresnelDielectric;
+using ::iris::bxdfs::SpecularBrdf;
+using ::iris::bxdfs::SpecularBtdf;
+using ::iris::bxdfs::SpecularBxdf;
+using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetBxdfAllocator;
+using ::iris::testing::GetSpectralAllocator;
+using ::iris::textures::ConstantPointerTexture2D;
+using ::iris::textures::ConstantValueTexture2D;
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
+
+TEST(GlassMaterialTest, EvaluateEmpty) {
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> eta_front =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_back =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  GlassMaterial material(std::move(reflectance), std::move(transmittance),
+                         std::move(eta_front), std::move(eta_back));
+
+  ASSERT_FALSE(material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                                 GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(GlassMaterialTest, EvaluateBrdf) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto eta_front = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_back = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_front),
-      std::move(eta_back));
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> eta_front =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_back =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  GlassMaterial material(std::move(reflectance), std::move(transmittance),
+                         std::move(eta_front), std::move(eta_back));
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<
-              const iris::bxdfs::SpecularBrdf<iris::bxdfs::FresnelDielectric>*>(
-      result));
+  EXPECT_TRUE(dynamic_cast<const SpecularBrdf<FresnelDielectric>*>(result));
 }
 
 TEST(GlassMaterialTest, EvaluateBtdf) {
-  auto transmitter =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> transmitter =
+      MakeReferenceCounted<MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(
-          iris::ReferenceCounted<iris::Reflector>());
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(transmitter);
-  auto eta_front = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_back = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_front),
-      std::move(eta_back));
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(transmitter);
+  ReferenceCounted<ValueTexture2D<visual>> eta_front =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_back =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  GlassMaterial material(std::move(reflectance), std::move(transmittance),
+                         std::move(eta_front), std::move(eta_back));
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<
-              const iris::bxdfs::SpecularBtdf<iris::bxdfs::FresnelDielectric>*>(
-      result));
+  EXPECT_TRUE(dynamic_cast<const SpecularBtdf<FresnelDielectric>*>(result));
 }
 
 TEST(GlassMaterialTest, Evaluate) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
-  auto transmitter =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+  ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
+  ReferenceCounted<Reflector> transmitter =
+      MakeReferenceCounted<MockReflector>();
 
-  auto reflectance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(reflector);
-  auto transmittance =
-      iris::MakeReferenceCounted<iris::textures::ConstantPointerTexture2D<
-          iris::Reflector, iris::SpectralAllocator>>(transmitter);
-  auto eta_front = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  auto eta_back = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(1.0));
-  iris::materials::GlassMaterial material(
-      std::move(reflectance), std::move(transmittance), std::move(eta_front),
-      std::move(eta_back));
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance = MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(transmitter);
+  ReferenceCounted<ValueTexture2D<visual>> eta_front =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_back =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  GlassMaterial material(std::move(reflectance), std::move(transmittance),
+                         std::move(eta_front), std::move(eta_back));
 
-  auto* result = material.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      iris::testing::GetSpectralAllocator(), iris::testing::GetBxdfAllocator());
+  const Bxdf* result =
+      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                        GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const iris::bxdfs::SpecularBxdf*>(result));
+  EXPECT_TRUE(dynamic_cast<const SpecularBxdf*>(result));
 }
+
+}  // namespace
+}  // namespace materials
+}  // namespace iris

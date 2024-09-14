@@ -2,7 +2,6 @@
 #define _IRIS_MATERIALS_MIRROR_MATERIAL_
 
 #include <cassert>
-#include <memory>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -18,9 +17,9 @@ namespace materials {
 
 class MirrorMaterial final : public Material {
  public:
-  MirrorMaterial(iris::ReferenceCounted<
-                 textures::PointerTexture2D<Reflector, SpectralAllocator>>
-                     reflectance)
+  MirrorMaterial(
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+          reflectance)
       : reflectance_(std::move(reflectance)) {
     assert(reflectance_);
   }
@@ -30,8 +29,7 @@ class MirrorMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       reflectance_;
 };
 

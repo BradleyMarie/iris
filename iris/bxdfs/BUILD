@@ -111,7 +111,7 @@ cc_test(
 cc_library(
     name = "math",
     hdrs = ["math.h"],
-    visibility = ["//visibility:private"],
+    visibility = ["//iris/bxdfs:__subpackages__"],
     deps = [
         "//iris:float",
         "//iris:vector",
@@ -129,11 +129,11 @@ cc_test(
 
 cc_library(
     name = "microfacet_bxdf",
-    srcs = ["microfacet_bxdf.cc"],
     hdrs = ["microfacet_bxdf.h"],
     deps = [
         ":fresnel",
         ":math",
+        ":microfacet_distribution",
         "//iris:bxdf",
         "//iris:float",
         "//iris:reflector",
@@ -151,6 +151,27 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "microfacet_distribution",
+    srcs = ["microfacet_distribution.cc"],
+    hdrs = ["microfacet_distribution.h"],
+    visibility = ["//iris/bxdfs:__subpackages__"],
+    deps = [
+        ":math",
+        "//iris:float",
+        "//iris:vector",
+    ],
+)
+
+cc_test(
+    name = "microfacet_distribution_test",
+    srcs = ["microfacet_distribution_test.cc"],
+    deps = [
+        ":microfacet_distribution",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -2,7 +2,6 @@
 #define _IRIS_MATERIALS_MATTE_MATERIAL_
 
 #include <cassert>
-#include <memory>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -18,10 +17,10 @@ namespace materials {
 
 class MatteMaterial final : public Material {
  public:
-  MatteMaterial(iris::ReferenceCounted<
-                    textures::PointerTexture2D<Reflector, SpectralAllocator>>
-                    reflectance,
-                iris::ReferenceCounted<textures::ValueTexture2D<visual>> sigma)
+  MatteMaterial(
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+          reflectance,
+      ReferenceCounted<textures::ValueTexture2D<visual>> sigma)
       : reflectance_(std::move(reflectance)), sigma_(std::move(sigma)) {
     assert(reflectance_);
     assert(sigma_);
@@ -32,10 +31,9 @@ class MatteMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       reflectance_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> sigma_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> sigma_;
 };
 
 }  // namespace materials

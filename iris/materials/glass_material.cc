@@ -5,13 +5,18 @@
 namespace iris {
 namespace materials {
 
+using ::iris::bxdfs::FresnelDielectric;
+using ::iris::bxdfs::SpecularBrdf;
+using ::iris::bxdfs::SpecularBtdf;
+using ::iris::bxdfs::SpecularBxdf;
+
 const Bxdf* GlassMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  auto* reflector =
+  const Reflector* reflector =
       reflectance_->Evaluate(texture_coordinates, spectral_allocator);
-  auto* transmittance =
+  const Reflector* transmittance =
       transmittance_->Evaluate(texture_coordinates, spectral_allocator);
 
   if (reflector == nullptr && transmittance == nullptr) {
@@ -23,21 +28,18 @@ const Bxdf* GlassMaterial::Evaluate(
   visual eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
 
   if (transmittance == nullptr) {
-    return &bxdf_allocator
-                .Allocate<bxdfs::SpecularBrdf<bxdfs::FresnelDielectric>>(
-                    *reflector,
-                    bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
+    return &bxdf_allocator.Allocate<SpecularBrdf<FresnelDielectric>>(
+        *reflector, FresnelDielectric(eta_incident, eta_transmitted));
   }
 
   if (reflector == nullptr) {
-    return &bxdf_allocator
-                .Allocate<bxdfs::SpecularBtdf<bxdfs::FresnelDielectric>>(
-                    *transmittance, eta_incident, eta_transmitted,
-                    bxdfs::FresnelDielectric(eta_incident, eta_transmitted));
+    return &bxdf_allocator.Allocate<SpecularBtdf<FresnelDielectric>>(
+        *transmittance, eta_incident, eta_transmitted,
+        FresnelDielectric(eta_incident, eta_transmitted));
   }
 
-  return &bxdf_allocator.Allocate<bxdfs::SpecularBxdf>(
-      *reflector, *transmittance, eta_incident, eta_transmitted);
+  return &bxdf_allocator.Allocate<SpecularBxdf>(*reflector, *transmittance,
+                                                eta_incident, eta_transmitted);
 }
 
 }  // namespace materials

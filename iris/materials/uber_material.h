@@ -2,7 +2,6 @@
 #define _IRIS_MATERIALS_UBER_MATERIAL_
 
 #include <cassert>
-#include <memory>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -19,23 +18,19 @@ namespace materials {
 class UberMaterial final : public Material {
  public:
   UberMaterial(
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           reflectance,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           transmittance,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           diffuse,
-      iris::ReferenceCounted<
-          textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
           specular,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> opacity,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
-      iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
+      ReferenceCounted<textures::ValueTexture2D<visual>> opacity,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+      ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
+      ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
       bool remap_roughness)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
@@ -63,23 +58,19 @@ class UberMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       reflectance_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       transmittance_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       diffuse_;
-  iris::ReferenceCounted<
-      textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
       specular_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> opacity_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u_;
-  iris::ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> opacity_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v_;
   bool remap_roughness_;
 };
 
