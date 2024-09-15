@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "iris/bxdfs/math.h"
+#include "iris/bxdfs/internal/math.h"
 
 namespace iris {
 namespace bxdfs {

@@ -9,8 +9,8 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:vector",
-        "//iris/bxdfs:math",
         "//iris/bxdfs:microfacet_distribution",
+        "//iris/bxdfs/internal:math",
     ],
 )
 

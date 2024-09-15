@@ -7,7 +7,6 @@ cc_library(
     srcs = ["ashikhmin_shirley_brdf.cc"],
     hdrs = ["ashikhmin_shirley_brdf.h"],
     deps = [
-        ":math",
         ":microfacet_distribution",
         "//iris:bxdf",
         "//iris:bxdf_allocator",
@@ -140,30 +139,11 @@ cc_test(
 )
 
 cc_library(
-    name = "math",
-    hdrs = ["math.h"],
-    visibility = ["//iris/bxdfs:__subpackages__"],
-    deps = [
-        "//iris:float",
-        "//iris:vector",
-    ],
-)
-
-cc_test(
-    name = "math_test",
-    srcs = ["math_test.cc"],
-    deps = [
-        ":math",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "microfacet_bxdf",
+    srcs = ["microfacet_bxdf.cc"],
     hdrs = ["microfacet_bxdf.h"],
     deps = [
         ":fresnel",
-        ":math",
         ":microfacet_distribution",
         "//iris:bxdf",
         "//iris:float",
@@ -171,6 +151,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
+        "//iris/bxdfs/internal:math",
     ],
 )
 
@@ -192,9 +173,9 @@ cc_library(
     hdrs = ["microfacet_distribution.h"],
     visibility = ["//iris/bxdfs:__subpackages__"],
     deps = [
-        ":math",
         "//iris:float",
         "//iris:vector",
+        "//iris/bxdfs/internal:math",
     ],
 )
 
@@ -226,7 +207,6 @@ cc_library(
     srcs = ["oren_nayar_bxdf.cc"],
     hdrs = ["oren_nayar_bxdf.h"],
     deps = [
-        ":math",
         "//iris:bxdf",
         "//iris:float",
         "//iris:reflector",
@@ -255,7 +235,6 @@ cc_library(
     hdrs = ["specular_bxdf.h"],
     deps = [
         ":fresnel",
-        ":math",
         "//iris:bxdf",
         "//iris:float",
         "//iris:reflector",

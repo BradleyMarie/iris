@@ -6,7 +6,6 @@
 #include <cmath>
 
 #include "iris/bxdfs/internal/math.h"
-#include "iris/bxdfs/math.h"
 
 namespace iris {
 namespace bxdfs {
