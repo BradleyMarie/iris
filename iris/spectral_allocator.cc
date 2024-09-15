@@ -113,6 +113,27 @@ class ScaledReflectors final : public Reflector {
   const Reflector& attenuation_;
 };
 
+class PerfectReflector final : public Reflector {
+ public:
+  visual_t Reflectance(visual_t wavelength) const override {
+    return static_cast<visual_t>(1.0);
+  }
+};
+
+class InvertedReflector final : public Reflector {
+ public:
+  InvertedReflector(const Reflector& reflector) : reflector_(reflector) {}
+
+  visual_t Reflectance(visual_t wavelength) const override {
+    visual_t inverted =
+        static_cast<visual_t>(1.0) - reflector_.Reflectance(wavelength);
+    return std::max(static_cast<visual_t>(0.0), inverted);
+  }
+
+ private:
+  const Reflector& reflector_;
+};
+
 class UnboundedScaledReflector final : public Reflector {
  public:
   UnboundedScaledReflector(const Reflector& reflector, visual_t scalar)
@@ -230,6 +251,20 @@ const Reflector* SpectralAllocator::Scale(const Reflector* reflector,
   }
 
   return &arena_.Allocate<ScaledReflectors>(*reflector, *attenuation);
+}
+
+const Reflector* SpectralAllocator::Invert(const Reflector* reflector) {
+  static const PerfectReflector perfect_reflector;
+
+  if (!reflector) {
+    return &perfect_reflector;
+  }
+
+  if (reflector == &perfect_reflector) {
+    return nullptr;
+  }
+
+  return &arena_.Allocate<InvertedReflector>(*reflector);
 }
 
 const Reflector* SpectralAllocator::UnboundedAdd(const Reflector* addend0,

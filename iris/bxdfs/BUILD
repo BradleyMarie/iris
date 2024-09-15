@@ -3,6 +3,37 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "ashikhmin_shirley_brdf",
+    srcs = ["ashikhmin_shirley_brdf.cc"],
+    hdrs = ["ashikhmin_shirley_brdf.h"],
+    deps = [
+        ":math",
+        ":microfacet_distribution",
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+        "//iris/bxdfs/internal:math",
+    ],
+)
+
+cc_test(
+    name = "ashikhmin_shirley_brdf_test",
+    srcs = ["ashikhmin_shirley_brdf_test.cc"],
+    deps = [
+        ":ashikhmin_shirley_brdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "attenuated_bxdf",
     srcs = ["attenuated_bxdf.cc"],
     hdrs = ["attenuated_bxdf.h"],
