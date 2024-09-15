@@ -182,6 +182,39 @@ cc_test(
 )
 
 cc_library(
+    name = "substrate_material",
+    srcs = ["substrate_material.cc"],
+    hdrs = ["substrate_material.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:ashikhmin_shirley_brdf",
+        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "substrate_material_test",
+    srcs = ["substrate_material_test.cc"],
+    deps = [
+        ":substrate_material",
+        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "translucent_material",
     srcs = ["translucent_material.cc"],
     hdrs = ["translucent_material.h"],

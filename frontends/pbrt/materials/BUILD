@@ -143,6 +143,7 @@ cc_library(
         ":mirror",
         ":mix",
         ":plastic",
+        ":substrate",
         ":translucent",
         ":uber",
         "//frontends/pbrt:material_manager",
@@ -178,6 +179,29 @@ cc_test(
     srcs = ["plastic_test.cc"],
     deps = [
         ":plastic",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "substrate",
+    srcs = ["substrate.cc"],
+    hdrs = ["substrate.h"],
+    deps = [
+        ":bumpmap",
+        ":material_builder",
+        "//iris/materials:substrate_material",
+    ],
+)
+
+cc_test(
+    name = "substrate_test",
+    srcs = ["substrate_test.cc"],
+    deps = [
+        ":substrate",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",

@@ -10,6 +10,7 @@
 #include "frontends/pbrt/materials/mirror.h"
 #include "frontends/pbrt/materials/mix.h"
 #include "frontends/pbrt/materials/plastic.h"
+#include "frontends/pbrt/materials/substrate.h"
 #include "frontends/pbrt/materials/translucent.h"
 #include "frontends/pbrt/materials/uber.h"
 #include "frontends/pbrt/quoted_string.h"
@@ -21,11 +22,14 @@ namespace {
 
 static const std::unordered_map<std::string_view,
                                 const std::unique_ptr<const MaterialBuilder>&>
-    g_materials = {
-        {"glass", g_glass_builder},     {"matte", g_matte_builder},
-        {"mirror", g_mirror_builder},   {"mix", g_mix_builder},
-        {"plastic", g_plastic_builder}, {"translucent", g_translucent_builder},
-        {"uber", g_uber_builder}};
+    g_materials = {{"glass", g_glass_builder},
+                   {"matte", g_matte_builder},
+                   {"mirror", g_mirror_builder},
+                   {"mix", g_mix_builder},
+                   {"plastic", g_plastic_builder},
+                   {"substrate", g_substrate_builder},
+                   {"translucent", g_translucent_builder},
+                   {"uber", g_uber_builder}};
 
 }  // namespace
 
