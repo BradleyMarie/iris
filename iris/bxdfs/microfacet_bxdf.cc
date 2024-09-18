@@ -56,20 +56,13 @@ std::optional<Vector> MicrofacetBrdf::SampleDiffuse(
 std::optional<Bxdf::SampleResult> MicrofacetBrdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  if (incoming.z == static_cast<geometric_t>(0.0)) {
+  std::optional<Vector> outgoing =
+      SampleDiffuse(incoming, surface_normal, sampler);
+  if (!outgoing) {
     return std::nullopt;
   }
 
-  Vector half_angle =
-      distribution_.Sample(incoming, sampler.Next(), sampler.Next());
-
-  std::optional<Vector> outgoing = internal::Reflect(incoming, half_angle);
-  if (!outgoing || outgoing->z == static_cast<geometric>(0.0) ||
-      std::signbit(incoming.z) != std::signbit(outgoing->z)) {
-    return std::nullopt;
-  }
-
-  return Bxdf::SampleResult{*outgoing};
+  return SampleResult{*outgoing};
 }
 
 visual_t MicrofacetBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
@@ -161,27 +154,13 @@ std::optional<Vector> MicrofacetBtdf::SampleDiffuse(
 std::optional<Bxdf::SampleResult> MicrofacetBtdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  if (incoming.z == static_cast<geometric>(0.0)) {
-    return std::nullopt;
-  }
-
-  Vector half_angle =
-      distribution_.Sample(incoming, sampler.Next(), sampler.Next());
-  if (DotProduct(incoming, half_angle) < static_cast<geometric_t>(0.0)) {
-    return std::nullopt;
-  }
-
-  std::optional<Vector> outgoing = internal::Refract(
-      incoming, half_angle, RelativeRefractiveRatio(incoming));
+  std::optional<Vector> outgoing =
+      SampleDiffuse(incoming, surface_normal, sampler);
   if (!outgoing) {
     return std::nullopt;
   }
 
-  if (std::signbit(incoming.z) == std::signbit(outgoing->z)) {
-    return std::nullopt;
-  }
-
-  return Bxdf::SampleResult{*outgoing};
+  return SampleResult{*outgoing};
 }
 
 visual_t MicrofacetBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
