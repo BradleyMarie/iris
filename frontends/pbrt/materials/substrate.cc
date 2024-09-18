@@ -103,12 +103,12 @@ std::shared_ptr<NestedMaterialBuilder> SubstrateObjectBuilder::Build(
     specular_texture = ks->second.GetReflectorTextures(1).front();
   }
 
-  auto u_roughness = parameters.find("u_roughness");
+  auto u_roughness = parameters.find("uroughness");
   if (u_roughness != parameters.end()) {
     u_roughness_texture = u_roughness->second.GetFloatTextures(1).front();
   }
 
-  auto v_roughness = parameters.find("v_roughness");
+  auto v_roughness = parameters.find("vroughness");
   if (v_roughness != parameters.end()) {
     v_roughness_texture = v_roughness->second.GetFloatTextures(1).front();
   }
@@ -161,12 +161,12 @@ MaterialBuilderResult NestedSubstrateObjectBuilder::Build(
     specular_texture = ks->second.GetReflectorTextures(1).front();
   }
 
-  auto u_roughness = parameters.find("u_roughness");
+  auto u_roughness = parameters.find("uroughness");
   if (u_roughness != parameters.end()) {
     u_roughness_texture = u_roughness->second.GetFloatTextures(1).front();
   }
 
-  auto v_roughness = parameters.find("v_roughness");
+  auto v_roughness = parameters.find("vroughness");
   if (v_roughness != parameters.end()) {
     v_roughness_texture = v_roughness->second.GetFloatTextures(1).front();
   }

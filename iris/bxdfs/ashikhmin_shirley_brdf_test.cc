@@ -127,13 +127,35 @@ TEST(AshikhminShirleyBrdf, PdfBTDF) {
                           Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
-TEST(AshikhminShirleyBrdf, PdfNoHalfAngle) {
+TEST(AshikhminShirleyBrdf, PdfNoIncomingZ) {
   MockReflector reflector;
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
-  EXPECT_EQ(0.0, brdf.Pdf(Vector(0.0, 1.0, 0.0), Vector(0.0, -1.0, 0.0),
-                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_NEAR(0.159154,
+              brdf.Pdf(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
+                       Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              0.001);
+}
+
+TEST(AshikhminShirleyBrdf, PdfNoOutgoingZ) {
+  MockReflector reflector;
+  TestMicrofacetDistribution distribution;
+  AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
+
+  EXPECT_EQ(0.0, brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
+                          Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+}
+
+TEST(AshikhminShirleyBrdf, PdfOppositeHemispheres) {
+  MockReflector reflector;
+  TestMicrofacetDistribution distribution;
+  AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
+
+  EXPECT_NEAR(0.159154,
+              brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                       Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              0.001);
 }
 
 TEST(AshikhminShirleyBrdf, Pdf) {
@@ -141,7 +163,7 @@ TEST(AshikhminShirleyBrdf, Pdf) {
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
-  EXPECT_NEAR(0.28415,
+  EXPECT_NEAR(0.22165,
               brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                        Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
               0.001);
@@ -157,14 +179,39 @@ TEST(AshikhminShirleyBrdf, ReflectanceWrongHemishphere) {
                              Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
-TEST(AshikhminShirleyBrdf, ReflectanceNoHalfAngle) {
+TEST(AshikhminShirleyBrdf, ReflectanceNoIncomingZ) {
   MockReflector reflector;
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
   EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+            brdf.Reflectance(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
                              Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
+}
+
+TEST(AshikhminShirleyBrdf, ReflectanceNoOutgoingZ) {
+  MockReflector reflector;
+  TestMicrofacetDistribution distribution;
+  AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
+
+  EXPECT_EQ(nullptr,
+            brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
+                             Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
+}
+
+TEST(AshikhminShirleyBrdf, ReflectanceOppositeHemispheres) {
+  MockReflector diffuse;
+  EXPECT_CALL(diffuse, Reflectance(_)).WillRepeatedly(Return(0.1));
+  MockReflector specular;
+  EXPECT_CALL(specular, Reflectance(_)).WillRepeatedly(Return(0.2));
+  TestMicrofacetDistribution distribution;
+  AshikhminShirleyBrdf brdf(diffuse, specular, distribution);
+
+  const Reflector* reflectance =
+      brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                       Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+  ASSERT_TRUE(reflectance);
+  EXPECT_NEAR(0.0290, reflectance->Reflectance(0.5), 0.001);
 }
 
 TEST(AshikhminShirleyBrdf, Reflectance) {
@@ -175,11 +222,11 @@ TEST(AshikhminShirleyBrdf, Reflectance) {
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(diffuse, specular, distribution);
 
-  const Reflector* reflector =
+  const Reflector* reflectance =
       brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                        Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
-  ASSERT_TRUE(reflector);
-  EXPECT_NEAR(0.0790, reflector->Reflectance(0.5), 0.001);
+  ASSERT_TRUE(reflectance);
+  EXPECT_NEAR(0.0790, reflectance->Reflectance(0.5), 0.001);
 }
 
 }  // namespace

@@ -2,6 +2,7 @@
 #include "iris/bxdfs/ashikhmin_shirley_brdf.h"
 
 #include <cmath>
+#include <iostream>
 
 #include "iris/bxdfs/internal/math.h"
 
@@ -11,6 +12,15 @@ namespace internal {
 namespace {
 
 visual_t Pow5(visual_t value) { return value * value * value * value * value; }
+
+const Reflector* SchlickFresnel(const Reflector* specular,
+                                const Reflector* inverted_specular,
+                                visual_t cos_theta,
+                                SpectralAllocator& allocator) {
+  visual_t attenuation = Pow5(static_cast<visual_t>(1.0) - cos_theta);
+  inverted_specular = allocator.Scale(inverted_specular, attenuation);
+  return allocator.Add(specular, inverted_specular);
+}
 
 }  // namespace
 
@@ -39,7 +49,13 @@ std::optional<Bxdf::SampleResult> AshikhminShirleyBrdf::Sample(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler) const {
-  return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler)};
+  std::optional<Vector> outgoing =
+      SampleDiffuse(incoming, surface_normal, sampler);
+  if (!outgoing.has_value()) {
+    return std::nullopt;
+  }
+
+  return SampleResult{*outgoing};
 }
 
 visual_t AshikhminShirleyBrdf::Pdf(const Vector& incoming,
@@ -50,16 +66,19 @@ visual_t AshikhminShirleyBrdf::Pdf(const Vector& incoming,
     return static_cast<visual_t>(0.0);
   }
 
-  std::optional<Vector> half_angle = internal::HalfAngle(incoming, outgoing);
-  if (!half_angle.has_value()) {
-    return static_cast<visual_t>(0.0);
-  }
-
   visual_t diffuse_pdf =
       static_cast<visual_t>(0.5 * M_1_PI) * internal::AbsCosTheta(outgoing);
+
+  if (incoming.z == static_cast<geometric>(0.0) ||
+      outgoing.z == static_cast<geometric>(0.0) ||
+      std::signbit(incoming.z) != std::signbit(outgoing.z)) {
+    return diffuse_pdf;
+  }
+
+  Vector half_angle = *internal::HalfAngle(incoming, outgoing);
   visual_t specular_pdf =
-      distribution_.Pdf(incoming, *half_angle) /
-      (static_cast<visual_t>(4.0) * PositiveDotProduct(incoming, outgoing));
+      distribution_.Pdf(incoming, half_angle) /
+      (static_cast<visual_t>(8.0) * DotProduct(incoming, half_angle));
 
   return diffuse_pdf + specular_pdf;
 }
@@ -71,26 +90,8 @@ const Reflector* AshikhminShirleyBrdf::Reflectance(
     return nullptr;
   }
 
-  std::optional<Vector> half_angle = internal::HalfAngle(incoming, outgoing);
-  if (!half_angle.has_value()) {
-    return nullptr;
-  }
-
   visual_t cos_theta_incoming = AbsCosTheta(incoming);
   visual_t cos_theta_outgoing = AbsCosTheta(outgoing);
-
-  visual_t specular_attenuation =
-      distribution_.D(*half_angle) /
-      (static_cast<visual_t>(4.0) * AbsDotProduct(outgoing, *half_angle) *
-       std::max(cos_theta_incoming, cos_theta_outgoing));
-
-  const Reflector* inverted_specular = allocator.Invert(&specular_);
-  const Reflector* attenuated_inversed_specular = allocator.Scale(
-      inverted_specular, Pow5(static_cast<visual_t>(1.0) - cos_theta_outgoing));
-  const Reflector* attenuated_specular =
-      allocator.Add(attenuated_inversed_specular, &specular_);
-  const Reflector* specular =
-      allocator.Scale(attenuated_specular, specular_attenuation);
 
   visual_t diffuse_attenuation =
       static_cast<visual_t>(28.0 / (23.0 * M_PI)) *
@@ -101,12 +102,31 @@ const Reflector* AshikhminShirleyBrdf::Reflectance(
        Pow5(static_cast<visual_t>(1.0) -
             static_cast<visual_t>(0.5) * cos_theta_outgoing));
 
-  const Reflector* attenuated_diffuse =
-      allocator.Scale(&diffuse_, diffuse_attenuation);
+  const Reflector* inverted_specular = allocator.Invert(&specular_);
+  const Reflector* unattenuated_diffuse =
+      allocator.Scale(&diffuse_, inverted_specular);
   const Reflector* diffuse =
-      allocator.Scale(attenuated_diffuse, inverted_specular);
+      allocator.Scale(unattenuated_diffuse, diffuse_attenuation);
 
-  return allocator.Add(diffuse, specular);
+  if (incoming.z == static_cast<geometric>(0.0) ||
+      outgoing.z == static_cast<geometric>(0.0) ||
+      std::signbit(incoming.z) != std::signbit(outgoing.z)) {
+    return diffuse;
+  }
+
+  Vector half_angle = *internal::HalfAngle(incoming, outgoing);
+  visual_t cos_theta_half_angle = DotProduct(outgoing, half_angle);
+
+  visual_t specular_attenuation =
+      distribution_.D(half_angle) /
+      (static_cast<visual_t>(4.0) * cos_theta_half_angle *
+       std::max(cos_theta_incoming, cos_theta_outgoing));
+  const Reflector* unattenuated_specular = SchlickFresnel(
+      &specular_, inverted_specular, cos_theta_half_angle, allocator);
+  const Reflector* specular =
+      allocator.UnboundedScale(unattenuated_specular, specular_attenuation);
+
+  return allocator.UnboundedAdd(diffuse, specular);
 }
 
 }  // namespace internal
