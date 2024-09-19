@@ -91,11 +91,23 @@ std::shared_ptr<NestedMaterialBuilder> MixObjectBuilder::Build(
       material_manager.Get(name1->second.GetStringValues(1).front());
   MaterialBuilderResult material1 =
       material1_builder->Build({}, material_manager, texture_manager);
+  if (std::get<2>(material1)) {
+    front_normal_map = std::move(std::get<2>(material1));
+  }
+  if (std::get<3>(material1)) {
+    back_normal_map = std::move(std::get<3>(material1));
+  }
 
   std::shared_ptr<NestedMaterialBuilder> material2_builder =
       material_manager.Get(name2->second.GetStringValues(1).front());
   MaterialBuilderResult material2 =
       material2_builder->Build({}, material_manager, texture_manager);
+  if (std::get<2>(material2)) {
+    front_normal_map = std::move(std::get<2>(material2));
+  }
+  if (std::get<3>(material2)) {
+    back_normal_map = std::move(std::get<3>(material2));
+  }
 
   auto amount = parameters.find("amount");
   if (amount != parameters.end()) {
@@ -111,8 +123,8 @@ std::shared_ptr<NestedMaterialBuilder> MixObjectBuilder::Build(
   }
 
   return std::make_unique<NestedMixObjectBuilder>(
-      std::move(std::get<0>(material1)), std::move(std::get<0>(material2)),
-      std::move(std::get<1>(material1)), std::move(std::get<1>(material2)),
+      std::move(std::get<0>(material1)), std::move(std::get<1>(material1)),
+      std::move(std::get<0>(material2)), std::move(std::get<1>(material2)),
       std::move(amount_texture), std::move(front_normal_map),
       std::move(back_normal_map));
 }
@@ -142,6 +154,12 @@ MaterialBuilderResult NestedMixObjectBuilder::Build(
         material1_builder->Build({}, material_manager, texture_manager);
     material1_front = std::move(std::get<0>(material1));
     material1_back = std::move(std::get<1>(material1));
+    if (std::get<2>(material1)) {
+      front_normal_map = std::move(std::get<2>(material1));
+    }
+    if (std::get<3>(material1)) {
+      back_normal_map = std::move(std::get<3>(material1));
+    }
   }
 
   auto name2 = parameters.find("namedmaterial2");
@@ -152,6 +170,12 @@ MaterialBuilderResult NestedMixObjectBuilder::Build(
         material2_builder->Build({}, material_manager, texture_manager);
     material2_front = std::move(std::get<0>(material2));
     material2_back = std::move(std::get<1>(material2));
+    if (std::get<2>(material2)) {
+      front_normal_map = std::move(std::get<2>(material2));
+    }
+    if (std::get<3>(material2)) {
+      back_normal_map = std::move(std::get<3>(material2));
+    }
   }
 
   auto amount = parameters.find("amount");
