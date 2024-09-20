@@ -83,11 +83,15 @@ class NestedUberObjectBuilder : public NestedMaterialBuilder {
             MakeReferenceCounted<materials::UberMaterial>(
                 reflectance_, transmittance_, diffuse_, specular_, opacity_,
                 eta_front_, eta_back_, uroughness_ ? uroughness_ : roughness_,
-                vroughness_ ? vroughness_ : roughness_, remap_roughness_),
+                vroughness_ ? vroughness_
+                            : (uroughness_ ? uroughness_ : roughness_),
+                remap_roughness_),
             MakeReferenceCounted<materials::UberMaterial>(
                 reflectance_, transmittance_, diffuse_, specular_, opacity_,
                 eta_back_, eta_front_, uroughness_ ? uroughness_ : roughness_,
-                vroughness_ ? vroughness_ : roughness_, remap_roughness_),
+                vroughness_ ? vroughness_
+                            : (uroughness_ ? uroughness_ : roughness_),
+                remap_roughness_),
             front_bump, back_bump)) {}
 
   MaterialBuilderResult Build(
@@ -298,17 +302,19 @@ MaterialBuilderResult NestedUberObjectBuilder::Build(
           reflectance_texture, transmittance_texture, diffuse_texture,
           specular_texture, opacity_texture, eta_front_, eta_back_texture,
           uroughness_texture ? uroughness_texture : roughness_texture,
-          vroughness_texture ? vroughness_texture : roughness_texture,
+          vroughness_texture
+              ? vroughness_texture
+              : (uroughness_texture ? uroughness_texture : roughness_texture),
           remap_roughness);
   ReferenceCounted<Material> back_material =
       MakeReferenceCounted<materials::UberMaterial>(
           std::move(reflectance_texture), std::move(transmittance_texture),
           std::move(diffuse_texture), std::move(specular_texture),
           std::move(opacity_texture), std::move(eta_back_texture), eta_front_,
-          uroughness_texture ? std::move(uroughness_texture)
-                             : roughness_texture,
-          vroughness_texture ? std::move(vroughness_texture)
-                             : roughness_texture,
+          uroughness_texture ? uroughness_texture : roughness_texture,
+          vroughness_texture
+              ? vroughness_texture
+              : (uroughness_texture ? uroughness_texture : roughness_texture),
           remap_roughness);
 
   return std::make_tuple(std::move(front_material), std::move(back_material),
