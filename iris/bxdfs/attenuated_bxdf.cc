@@ -48,7 +48,7 @@ class AttenuatedBxdf final : public Bxdf {
                                SpectralAllocator& allocator) const override {
     const Reflector* reflectance =
         bxdf_.Reflectance(incoming, outgoing, hemisphere, allocator);
-    return allocator.Scale(reflectance, attenuation_);
+    return allocator.UnboundedScale(reflectance, attenuation_);
   }
 
  private:
