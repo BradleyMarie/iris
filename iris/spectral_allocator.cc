@@ -2,11 +2,19 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 #include "iris/internal/arena.h"
 
 namespace iris {
 namespace {
+
+class ZeroSpectrum final : public Spectrum {
+ public:
+  visual_t Intensity(visual_t wavelength) const override {
+    return static_cast<visual_t>(0.0);
+  }
+};
 
 class SumSpectrum final : public Spectrum {
  public:
@@ -166,6 +174,60 @@ class UnboundedSumReflector final : public Reflector {
   const Reflector& addend1_;
 };
 
+class FresnelConductorReflector final : public Reflector {
+ public:
+  FresnelConductorReflector(visual_t cos_theta_incident,
+                            const Spectrum& eta_incident,
+                            const Spectrum& eta_transmitted, const Spectrum& k)
+      : cos_theta_incident_(cos_theta_incident),
+        eta_incident_(eta_incident),
+        eta_transmitted_(eta_transmitted),
+        k_(k) {
+    assert(cos_theta_incident >= 0.0 && cos_theta_incident <= 1.0);
+  }
+
+  visual_t Reflectance(visual_t wavelength) const override {
+    visual_t eta_incident = std::max(static_cast<visual_t>(1.0),
+                                     eta_incident_.Intensity(wavelength));
+    visual_t eta_transmitted = std::max(static_cast<visual_t>(1.0),
+                                        eta_transmitted_.Intensity(wavelength));
+    visual_t k = k_.Intensity(wavelength);
+
+    visual_t cos_theta_incident_squared =
+        cos_theta_incident_ * cos_theta_incident_;
+    visual_t sin_theta_incident_squared =
+        static_cast<visual_t>(1.0) - cos_theta_incident_squared;
+
+    visual_t eta = eta_transmitted / eta_incident;
+    visual_t eta_squared = eta * eta;
+
+    visual_t eta_k = k / eta_incident;
+    visual_t eta_k_squared = eta_k * eta_k;
+
+    visual_t t0 = eta_squared - eta_k_squared - sin_theta_incident_squared;
+    visual_t a_squared_plus_b_squared = std::sqrt(
+        t0 * t0 + static_cast<visual_t>(4.0) * eta_squared * eta_k_squared);
+    visual_t t1 = a_squared_plus_b_squared + cos_theta_incident_squared;
+    visual_t a =
+        std::sqrt(static_cast<visual_t>(0.5) * (a_squared_plus_b_squared + t0));
+    visual_t t2 = static_cast<visual_t>(2.0) * cos_theta_incident_ * a;
+    visual_t reflectance_s = (t1 - t2) / (t1 + t2);
+
+    visual_t t3 = cos_theta_incident_squared * a_squared_plus_b_squared +
+                  sin_theta_incident_squared * sin_theta_incident_squared;
+    visual_t t4 = t2 * sin_theta_incident_squared;
+    visual_t reflectance_p = reflectance_s * (t3 - t4) / (t3 + t4);
+
+    return static_cast<visual_t>(0.5) * (reflectance_p + reflectance_s);
+  }
+
+ private:
+  const visual_t cos_theta_incident_;
+  const Spectrum& eta_incident_;
+  const Spectrum& eta_transmitted_;
+  const Spectrum& k_;
+};
+
 }  // namespace
 
 const Spectrum* SpectralAllocator::Add(const Spectrum* addend0,
@@ -293,6 +355,34 @@ const Reflector* SpectralAllocator::UnboundedScale(const Reflector* reflector,
   }
 
   return reflector;
+}
+
+const Reflector* SpectralAllocator::FresnelConductor(
+    visual_t cos_theta_incident, const Spectrum* eta_incident,
+    const Spectrum* eta_transmitted, const Spectrum* k) {
+  static const ZeroSpectrum zero_spectrum;
+
+  if (cos_theta_incident == static_cast<visual_t>(0.0)) {
+    return nullptr;
+  }
+
+  cos_theta_incident =
+      std::min(static_cast<visual_t>(1.0), std::abs(cos_theta_incident));
+
+  if (!eta_incident) {
+    eta_incident = &zero_spectrum;
+  }
+
+  if (!eta_transmitted) {
+    eta_transmitted = &zero_spectrum;
+  }
+
+  if (!k) {
+    k = &zero_spectrum;
+  }
+
+  return &arena_.Allocate<FresnelConductorReflector>(
+      cos_theta_incident, *eta_incident, *eta_transmitted, *k);
 }
 
 }  // namespace iris

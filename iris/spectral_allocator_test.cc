@@ -240,3 +240,39 @@ TEST(SpectralAllocator, ReflectorUnboundedScale) {
   EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(testing::Return(0.5));
   EXPECT_EQ(1.0, allocator.UnboundedScale(&reflector, 2.0)->Reflectance(1.0));
 }
+
+TEST(SpectralAllocator, FresnelConductorPerpendicular) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  EXPECT_EQ(nullptr,
+            allocator.FresnelConductor(0.0, nullptr, nullptr, nullptr));
+}
+
+TEST(SpectralAllocator, FresnelConductorGlancing) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  EXPECT_NEAR(1.0,
+              allocator.FresnelConductor(0.0001, nullptr, nullptr, nullptr)
+                  ->Reflectance(1.0),
+              0.001);
+}
+
+TEST(SpectralAllocator, FresnelConductor) {
+  iris::internal::Arena arena;
+  iris::SpectralAllocator allocator(arena);
+
+  iris::spectra::MockSpectrum eta_incident;
+  EXPECT_CALL(eta_incident, Intensity(1.0)).WillOnce(testing::Return(1.0));
+  iris::spectra::MockSpectrum eta_transmitted;
+  EXPECT_CALL(eta_transmitted, Intensity(1.0)).WillOnce(testing::Return(2.0));
+  iris::spectra::MockSpectrum k;
+  EXPECT_CALL(k, Intensity(1.0)).WillOnce(testing::Return(2.0));
+
+  EXPECT_NEAR(
+      0.4018,
+      allocator.FresnelConductor(0.5, &eta_incident, &eta_transmitted, &k)
+          ->Reflectance(1.0),
+      0.001);
+}
