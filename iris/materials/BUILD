@@ -68,6 +68,41 @@ cc_test(
 )
 
 cc_library(
+    name = "metal_material",
+    srcs = ["metal_material.cc"],
+    hdrs = ["metal_material.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:microfacet_bxdf",
+        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
+        "//iris/reflectors:uniform_reflector",
+        "//iris/textures:texture2d",
+    ],
+)
+
+cc_test(
+    name = "metal_material_test",
+    srcs = ["metal_material_test.cc"],
+    deps = [
+        ":metal_material",
+        "//iris/bxdfs:microfacet_bxdf",
+        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
+        "//iris/spectra:mock_spectrum",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "mirror_material",
     srcs = ["mirror_material.cc"],
     hdrs = ["mirror_material.h"],

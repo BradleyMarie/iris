@@ -45,7 +45,27 @@ class FresnelDielectric final : public Fresnel {
       SpectralAllocator& allocator) const override;
 
  private:
-  visual_t eta_front_, eta_back_;
+  visual_t eta_front_;
+  visual_t eta_back_;
+};
+
+class FresnelConductor final : public Fresnel {
+ public:
+  FresnelConductor(const Spectrum* eta_front, const Spectrum* eta_back,
+                   const Spectrum* k)
+      : eta_front_(eta_front), eta_back_(eta_back), k_(k) {}
+
+  const Reflector* AttenuateReflectance(
+      const Reflector& reflectance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override;
+  const Reflector* AttenuateTransmittance(
+      const Reflector& transmittance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override;
+
+ private:
+  const Spectrum* eta_front_;
+  const Spectrum* eta_back_;
+  const Spectrum* k_;
 };
 
 }  // namespace bxdfs

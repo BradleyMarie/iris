@@ -35,5 +35,29 @@ const Reflector* FresnelDielectric::AttenuateTransmittance(
                          static_cast<visual_t>(1.0) - fresnel_reflectance);
 }
 
+const Reflector* FresnelConductor::AttenuateReflectance(
+    const Reflector& reflectance, visual_t cos_theta_incident,
+    SpectralAllocator& allocator) const {
+  const Spectrum* eta_incident =
+      std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
+  const Spectrum* eta_transmitted =
+      std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
+  const Reflector* fresnel = allocator.FresnelConductor(
+      cos_theta_incident, eta_incident, eta_transmitted, k_);
+  return allocator.Scale(&reflectance, fresnel);
+}
+
+const Reflector* FresnelConductor::AttenuateTransmittance(
+    const Reflector& transmittance, visual_t cos_theta_incident,
+    SpectralAllocator& allocator) const {
+  const Spectrum* eta_incident =
+      std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
+  const Spectrum* eta_transmitted =
+      std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
+  const Reflector* fresnel = allocator.FresnelConductor(
+      cos_theta_incident, eta_incident, eta_transmitted, k_);
+  return allocator.Scale(&transmittance, allocator.Invert(fresnel));
+}
+
 }  // namespace bxdfs
 }  // namespace iris
