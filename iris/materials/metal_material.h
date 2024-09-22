@@ -17,25 +17,18 @@ namespace materials {
 
 class MetalMaterial final : public Material {
  public:
-  MetalMaterial(
-      ReferenceCounted<textures::PointerTexture2D<Spectrum, SpectralAllocator>>
-          k,
-      ReferenceCounted<textures::PointerTexture2D<Spectrum, SpectralAllocator>>
-          eta_incident,
-      ReferenceCounted<textures::PointerTexture2D<Spectrum, SpectralAllocator>>
-          eta_transmitted,
-      ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
-      ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
-      bool remap_roughness)
+  MetalMaterial(ReferenceCounted<Spectrum> k,
+                ReferenceCounted<Spectrum> eta_incident,
+                ReferenceCounted<Spectrum> eta_transmitted,
+                ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
+                ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
+                bool remap_roughness)
       : k_(std::move(k)),
         eta_incident_(std::move(eta_incident)),
         eta_transmitted_(std::move(eta_transmitted)),
         roughness_u_(std::move(roughness_u)),
         roughness_v_(std::move(roughness_v)),
         remap_roughness_(remap_roughness) {
-    assert(k_);
-    assert(eta_incident_);
-    assert(eta_transmitted_);
     assert(roughness_u_);
     assert(roughness_v_);
   }
@@ -45,11 +38,9 @@ class MetalMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<textures::PointerTexture2D<Spectrum, SpectralAllocator>> k_;
-  ReferenceCounted<textures::PointerTexture2D<Spectrum, SpectralAllocator>>
-      eta_incident_;
-  ReferenceCounted<textures::PointerTexture2D<Spectrum, SpectralAllocator>>
-      eta_transmitted_;
+  ReferenceCounted<Spectrum> k_;
+  ReferenceCounted<Spectrum> eta_incident_;
+  ReferenceCounted<Spectrum> eta_transmitted_;
   ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u_;
   ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v_;
   bool remap_roughness_;

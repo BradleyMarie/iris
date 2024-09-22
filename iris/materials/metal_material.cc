@@ -22,12 +22,6 @@ const Bxdf* MetalMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  const Spectrum* eta_incident =
-      eta_incident_->Evaluate(texture_coordinates, spectral_allocator);
-  const Spectrum* eta_transmitted =
-      eta_transmitted_->Evaluate(texture_coordinates, spectral_allocator);
-  const Spectrum* k = k_->Evaluate(texture_coordinates, spectral_allocator);
-
   visual roughness_u = roughness_u_->Evaluate(texture_coordinates);
   visual roughness_v = roughness_v_->Evaluate(texture_coordinates);
   if (remap_roughness_) {
@@ -38,7 +32,7 @@ const Bxdf* MetalMaterial::Evaluate(
   return &bxdf_allocator.Allocate<
       MicrofacetBrdf<TrowbridgeReitzDistribution, FresnelConductor>>(
       *kWhite, TrowbridgeReitzDistribution(roughness_u, roughness_v),
-      FresnelConductor(eta_incident, eta_transmitted, k));
+      FresnelConductor(eta_incident_.Get(), eta_transmitted_.Get(), k_.Get()));
 }
 
 }  // namespace materials

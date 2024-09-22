@@ -94,7 +94,6 @@ cc_test(
         ":metal_material",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
-        "//iris/spectra:mock_spectrum",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
