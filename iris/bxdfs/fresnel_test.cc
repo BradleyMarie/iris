@@ -89,26 +89,12 @@ TEST(FresnelConductor, ReflectanceNegativeCosTheta) {
   EXPECT_NEAR(0.200000, attenuated->Reflectance(1.0), 0.001);
 }
 
-TEST(FresnelConductor, TransmittancePositiveCosTheta) {
+TEST(FresnelConductor, Transmittance) {
   MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
   MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(1.0)).WillRepeatedly(Return(1.0));
   FresnelConductor fresnel(&spectrum, &spectrum, &spectrum);
-  const Reflector* attenuated = fresnel.AttenuateTransmittance(
-      reflector, 1.0, testing::GetSpectralAllocator());
-  EXPECT_NEAR(0.800000, attenuated->Reflectance(1.0), 0.001);
-}
-
-TEST(FresnelConductor, TransmittanceNegativeCosTheta) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(1.0)).WillRepeatedly(Return(1.0));
-  FresnelConductor fresnel(&spectrum, &spectrum, &spectrum);
-  const Reflector* attenuated = fresnel.AttenuateTransmittance(
-      reflector, -1.0, testing::GetSpectralAllocator());
-  EXPECT_NEAR(0.800000, attenuated->Reflectance(1.0), 0.001);
+  EXPECT_FALSE(fresnel.AttenuateTransmittance(reflector, 1.0,
+                                              testing::GetSpectralAllocator()));
 }
 
 }  // namespace

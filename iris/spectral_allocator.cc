@@ -178,20 +178,18 @@ class FresnelConductorReflector final : public Reflector {
  public:
   FresnelConductorReflector(visual_t cos_theta_incident,
                             const Spectrum& eta_incident,
-                            const Spectrum& eta_transmitted, const Spectrum& k)
+                            const Spectrum& eta_transmitted,
+                            const Spectrum& k_transmitted)
       : cos_theta_incident_(cos_theta_incident),
         eta_incident_(eta_incident),
         eta_transmitted_(eta_transmitted),
-        k_(k) {
-    assert(cos_theta_incident >= 0.0 && cos_theta_incident <= 1.0);
-  }
+        k_transmitted_(k_transmitted) {}
 
   visual_t Reflectance(visual_t wavelength) const override {
     visual_t eta_incident = std::max(static_cast<visual_t>(1.0),
                                      eta_incident_.Intensity(wavelength));
-    visual_t eta_transmitted = std::max(static_cast<visual_t>(1.0),
-                                        eta_transmitted_.Intensity(wavelength));
-    visual_t k = k_.Intensity(wavelength);
+    visual_t eta_transmitted = eta_transmitted_.Intensity(wavelength);
+    visual_t k_transmitted = k_transmitted_.Intensity(wavelength);
 
     visual_t cos_theta_incident_squared =
         cos_theta_incident_ * cos_theta_incident_;
@@ -201,7 +199,7 @@ class FresnelConductorReflector final : public Reflector {
     visual_t eta = eta_transmitted / eta_incident;
     visual_t eta_squared = eta * eta;
 
-    visual_t eta_k = k / eta_incident;
+    visual_t eta_k = k_transmitted / eta_incident;
     visual_t eta_k_squared = eta_k * eta_k;
 
     visual_t t0 = eta_squared - eta_k_squared - sin_theta_incident_squared;
@@ -225,7 +223,7 @@ class FresnelConductorReflector final : public Reflector {
   const visual_t cos_theta_incident_;
   const Spectrum& eta_incident_;
   const Spectrum& eta_transmitted_;
-  const Spectrum& k_;
+  const Spectrum& k_transmitted_;
 };
 
 }  // namespace
@@ -359,7 +357,7 @@ const Reflector* SpectralAllocator::UnboundedScale(const Reflector* reflector,
 
 const Reflector* SpectralAllocator::FresnelConductor(
     visual_t cos_theta_incident, const Spectrum* eta_incident,
-    const Spectrum* eta_transmitted, const Spectrum* k) {
+    const Spectrum* eta_transmitted, const Spectrum* k_transmitted) {
   static const ZeroSpectrum zero_spectrum;
 
   if (cos_theta_incident == static_cast<visual_t>(0.0)) {
@@ -377,12 +375,12 @@ const Reflector* SpectralAllocator::FresnelConductor(
     eta_transmitted = &zero_spectrum;
   }
 
-  if (!k) {
-    k = &zero_spectrum;
+  if (!k_transmitted) {
+    k_transmitted = &zero_spectrum;
   }
 
   return &arena_.Allocate<FresnelConductorReflector>(
-      cos_theta_incident, *eta_incident, *eta_transmitted, *k);
+      cos_theta_incident, *eta_incident, *eta_transmitted, *k_transmitted);
 }
 
 }  // namespace iris

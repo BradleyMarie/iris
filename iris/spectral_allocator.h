@@ -31,12 +31,12 @@ class SpectralAllocator {
                                   visual_t attenuation);
 
   // Special case for Fresnel conductors interfaces as an optimization.
-  // Passing `nullptr` for `eta_incident` or `eta_transmitted` as well as
-  // Intensity values returned less than 1.0 will be be clamped to 1.0.
+  // Passing `nullptr` for `eta_incident` as well as Intensity values returned
+  // from it less than 1.0 will be be clamped to 1.0.
   const Reflector* FresnelConductor(visual_t cos_theta_incident,
                                     const Spectrum* eta_incident,
                                     const Spectrum* eta_transmitted,
-                                    const Spectrum* k);
+                                    const Spectrum* k_transmitted);
 
  private:
   SpectralAllocator(const SpectralAllocator&) = delete;
