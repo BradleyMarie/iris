@@ -31,8 +31,8 @@ class GlassObjectBuilder : public MaterialBuilder {
 
   std::shared_ptr<NestedMaterialBuilder> Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 };
 
 class NestedGlassObjectBuilder : public NestedMaterialBuilder {
@@ -60,8 +60,8 @@ class NestedGlassObjectBuilder : public NestedMaterialBuilder {
 
   MaterialBuilderResult Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 
  private:
   const ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
@@ -75,8 +75,8 @@ class NestedGlassObjectBuilder : public NestedMaterialBuilder {
 
 std::shared_ptr<NestedMaterialBuilder> GlassObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   ReferenceCounted<NormalMap> front_normal_map;
   ReferenceCounted<NormalMap> back_normal_map;
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
@@ -121,8 +121,8 @@ std::shared_ptr<NestedMaterialBuilder> GlassObjectBuilder::Build(
 
 MaterialBuilderResult NestedGlassObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   if (parameters.empty()) {
     return default_;
   }

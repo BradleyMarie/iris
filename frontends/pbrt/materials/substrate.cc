@@ -32,8 +32,8 @@ class SubstrateObjectBuilder : public MaterialBuilder {
 
   std::shared_ptr<NestedMaterialBuilder> Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 };
 
 class NestedSubstrateObjectBuilder : public NestedMaterialBuilder {
@@ -59,8 +59,8 @@ class NestedSubstrateObjectBuilder : public NestedMaterialBuilder {
 
   MaterialBuilderResult Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 
  private:
   const ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
@@ -77,8 +77,8 @@ class NestedSubstrateObjectBuilder : public NestedMaterialBuilder {
 
 std::shared_ptr<NestedMaterialBuilder> SubstrateObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   ReferenceCounted<NormalMap> front_normal_map;
   ReferenceCounted<NormalMap> back_normal_map;
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
@@ -134,8 +134,8 @@ std::shared_ptr<NestedMaterialBuilder> SubstrateObjectBuilder::Build(
 
 MaterialBuilderResult NestedSubstrateObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   if (parameters.empty()) {
     return std::make_tuple(std::get<0>(default_), std::get<0>(default_),
                            std::get<1>(default_), std::get<2>(default_));

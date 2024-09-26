@@ -1,4 +1,4 @@
-#include "frontends/pbrt/materials/plastic.h"
+#include "frontends/pbrt/materials/metal.h"
 
 #include <memory>
 #include <sstream>
@@ -18,14 +18,14 @@ using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
 static const MaterialManager g_material_manager;
 static TextureManager g_texture_manager;
 
-TEST(Plastic, Empty) {
+TEST(Metal, Empty) {
   std::stringstream input("");
   Tokenizer tokenizer(input);
 
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager;
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
-      *g_plastic_builder, tokenizer, std::filesystem::current_path(),
+      *g_metal_builder, tokenizer, std::filesystem::current_path(),
       spectrum_manager, texture_manager, g_material_manager, texture_manager,
       static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
@@ -49,16 +49,17 @@ TEST(Plastic, Empty) {
   EXPECT_FALSE(std::get<3>(result1));
 }
 
-TEST(Plastic, WithDefaults) {
+TEST(Metal, WithDefaults) {
   std::stringstream input(
-      "\"float Kd\" 1.0 \"float Ks\" 1.0 \"float roughness\" 0.5 \"bool "
+      "\"rgb k\" [1.5 1.2 1.3] \"rgb eta\" [1.5 1.2 1.3] \"float roughness\" "
+      "0.5 \"float uroughness\" 0.5 \"float vroughness\" 0.5 \"bool "
       "remaproughness\" \"false\" \"float bumpmap\" 0.5");
   Tokenizer tokenizer(input);
 
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager;
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
-      *g_plastic_builder, tokenizer, std::filesystem::current_path(),
+      *g_metal_builder, tokenizer, std::filesystem::current_path(),
       spectrum_manager, texture_manager, g_material_manager, texture_manager,
       static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
@@ -82,14 +83,14 @@ TEST(Plastic, WithDefaults) {
   EXPECT_TRUE(std::get<3>(result1));
 }
 
-TEST(Plastic, OverridesDefaults) {
+TEST(Metal, OverridesDefaults) {
   std::stringstream input0("");
   Tokenizer tokenizer0(input0);
 
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager;
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
-      *g_plastic_builder, tokenizer0, std::filesystem::current_path(),
+      *g_metal_builder, tokenizer0, std::filesystem::current_path(),
       spectrum_manager, texture_manager, g_material_manager, texture_manager,
       static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
@@ -104,7 +105,8 @@ TEST(Plastic, OverridesDefaults) {
   EXPECT_FALSE(std::get<3>(result1));
 
   std::stringstream input1(
-      "\"float Kd\" 1.0 \"float Ks\" 1.0 \"float roughness\" 0.5 \"bool "
+      "\"rgb k\" [1.5 1.2 1.3] \"rgb eta\" [1.5 1.2 1.3] \"float roughness\" "
+      "0.5 \"float uroughness\" 0.5 \"float vroughness\" 0.5 \"bool "
       "remaproughness\" \"false\" \"float bumpmap\" 0.5");
   Tokenizer tokenizer1(input1);
 

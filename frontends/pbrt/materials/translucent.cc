@@ -38,8 +38,8 @@ class TranslucentObjectBuilder : public MaterialBuilder {
 
   std::shared_ptr<NestedMaterialBuilder> Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 };
 
 class NestedTranslucentObjectBuilder : public NestedMaterialBuilder {
@@ -76,8 +76,8 @@ class NestedTranslucentObjectBuilder : public NestedMaterialBuilder {
 
   MaterialBuilderResult Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 
  private:
   const ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
@@ -97,8 +97,8 @@ class NestedTranslucentObjectBuilder : public NestedMaterialBuilder {
 
 std::shared_ptr<NestedMaterialBuilder> TranslucentObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   ReferenceCounted<NormalMap> front_normal_map;
   ReferenceCounted<NormalMap> back_normal_map;
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
@@ -170,8 +170,8 @@ std::shared_ptr<NestedMaterialBuilder> TranslucentObjectBuilder::Build(
 
 MaterialBuilderResult NestedTranslucentObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   if (parameters.empty()) {
     return default_;
   }

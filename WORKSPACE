@@ -21,6 +21,13 @@ http_archive(
 )
 
 http_archive(
+    name = "libspd",
+    sha256 = "9c906a7764db5747ff19642ecdaab6c181da1d81c5db6691bc5cc5ef311c0db7",
+    strip_prefix = "libspd-9d970474acae30a6bb0efc28d8b995b204ca30e2",
+    url = "https://github.com/BradleyMarie/libspd/archive/9d970474acae30a6bb0efc28d8b995b204ca30e2.zip",
+)
+
+http_archive(
     name = "plyodine",
     sha256 = "80c6bbe307d23eefe04a87f4dfd6b00c4ddc66ad23da1dcfb2143e504ed43015",
     strip_prefix = "plyodine-8fcd221e86b47c4263a622cf94e77116cdd59d9b",

@@ -53,6 +53,7 @@ cc_library(
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt:texture_manager",
         "//iris:material",
         "//iris:normal_map",
@@ -76,6 +77,29 @@ cc_test(
     srcs = ["matte_test.cc"],
     deps = [
         ":matte",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:material_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "metal",
+    srcs = ["metal.cc"],
+    hdrs = ["metal.h"],
+    deps = [
+        ":bumpmap",
+        ":material_builder",
+        "//iris/materials:metal_material",
+    ],
+)
+
+cc_test(
+    name = "metal_test",
+    srcs = ["metal_test.cc"],
+    deps = [
+        ":metal",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
@@ -140,6 +164,7 @@ cc_library(
         ":glass",
         ":material_builder",
         ":matte",
+        ":metal",
         ":mirror",
         ":mix",
         ":plastic",

@@ -13,8 +13,8 @@ class TestObjectBuilder : public materials::NestedMaterialBuilder {
 
   materials::MaterialBuilderResult Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override {
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override {
     ReferenceCounted<Material> material0;
     ReferenceCounted<Material> material1;
     ReferenceCounted<NormalMap> normal_map0;

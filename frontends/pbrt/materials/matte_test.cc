@@ -26,12 +26,14 @@ TEST(Matte, Empty) {
   TextureManager texture_manager;
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
       *g_matte_builder, tokenizer, std::filesystem::current_path(),
-      spectrum_manager, texture_manager, g_material_manager, texture_manager);
+      spectrum_manager, texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
 
   MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, g_material_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
@@ -39,7 +41,8 @@ TEST(Matte, Empty) {
 
   MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, g_material_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
   EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
   EXPECT_FALSE(std::get<2>(result1));
@@ -55,12 +58,14 @@ TEST(Matte, WithDefaults) {
   TextureManager texture_manager;
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
       *g_matte_builder, tokenizer, std::filesystem::current_path(),
-      spectrum_manager, texture_manager, g_material_manager, texture_manager);
+      spectrum_manager, texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
 
   MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, g_material_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_TRUE(std::get<2>(result1));
@@ -68,7 +73,8 @@ TEST(Matte, WithDefaults) {
 
   MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, g_material_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
   EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));
@@ -83,12 +89,14 @@ TEST(Matte, OverridesDefaults) {
   TextureManager texture_manager;
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
       *g_matte_builder, tokenizer0, std::filesystem::current_path(),
-      spectrum_manager, texture_manager, g_material_manager, texture_manager);
+      spectrum_manager, texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
 
   MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer0, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, g_material_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
@@ -100,7 +108,8 @@ TEST(Matte, OverridesDefaults) {
 
   MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer1, std::filesystem::current_path(), spectrum_manager,
-      texture_manager, g_material_manager, texture_manager);
+      texture_manager, g_material_manager, texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_NE(std::get<0>(result1), std::get<0>(result2));
   EXPECT_NE(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));

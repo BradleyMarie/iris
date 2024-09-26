@@ -177,6 +177,8 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:spectrum",
         "//iris/textures:texture2d",
+        "@libspd//libspd/readers:emissive_spd_reader",
+        "@libspd//libspd/readers:reflective_spd_reader",
     ],
 )
 
@@ -184,7 +186,9 @@ cc_test(
     name = "parameter_test",
     srcs = ["parameter_test.cc"],
     data = [
+        "test_data/emissive.spd",
         "test_data/include_empty.pbrt",
+        "test_data/reflective.spd",
     ],
     deps = [
         ":parameter",

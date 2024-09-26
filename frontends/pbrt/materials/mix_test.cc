@@ -25,8 +25,8 @@ class TestObjectBuilder : public materials::NestedMaterialBuilder {
 
   materials::MaterialBuilderResult Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override {
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override {
     ReferenceCounted<Material> material0 = MakeReferenceCounted<MockMaterial>();
     ReferenceCounted<Material> material1 = MakeReferenceCounted<MockMaterial>();
     ReferenceCounted<NormalMap> normal_map0;
@@ -46,7 +46,8 @@ TEST(Mix, Empty) {
       BuildObject(*g_mix_builder, tokenizer, std::filesystem::current_path(),
                   spectrum_manager, texture_manager,
                   static_cast<const MaterialManager&>(material_manager),
-                  texture_manager),
+                  texture_manager,
+                  static_cast<SpectrumManager&>(spectrum_manager)),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Missing required mix parameter: namedmaterial1");
 }
@@ -64,7 +65,8 @@ TEST(Mix, MissingOne) {
       BuildObject(*g_mix_builder, tokenizer, std::filesystem::current_path(),
                   spectrum_manager, texture_manager,
                   static_cast<const MaterialManager&>(material_manager),
-                  texture_manager),
+                  texture_manager,
+                  static_cast<SpectrumManager&>(spectrum_manager)),
       testing::ExitedWithCode(EXIT_FAILURE),
       "ERROR: Missing required mix parameter: namedmaterial2");
 }
@@ -83,13 +85,14 @@ TEST(Mix, WithDefaults) {
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
       *g_mix_builder, tokenizer, std::filesystem::current_path(),
       spectrum_manager, texture_manager,
-      static_cast<const MaterialManager&>(material_manager), texture_manager);
+      static_cast<const MaterialManager&>(material_manager), texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
 
   MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
       texture_manager, static_cast<const MaterialManager&>(material_manager),
-      texture_manager);
+      texture_manager, static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_TRUE(std::get<2>(result1));
@@ -98,7 +101,7 @@ TEST(Mix, WithDefaults) {
   MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer, std::filesystem::current_path(), spectrum_manager,
       texture_manager, static_cast<const MaterialManager&>(material_manager),
-      texture_manager);
+      texture_manager, static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_EQ(std::get<0>(result1), std::get<0>(result2));
   EXPECT_EQ(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));
@@ -119,13 +122,14 @@ TEST(Mix, OverridesDefaults) {
   std::shared_ptr<NestedMaterialBuilder> result0 = BuildObject(
       *g_mix_builder, tokenizer0, std::filesystem::current_path(),
       spectrum_manager, texture_manager,
-      static_cast<const MaterialManager&>(material_manager), texture_manager);
+      static_cast<const MaterialManager&>(material_manager), texture_manager,
+      static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(result0);
 
   MaterialBuilderResult result1 = BuildObject(
       *result0, tokenizer0, std::filesystem::current_path(), spectrum_manager,
       texture_manager, static_cast<const MaterialManager&>(material_manager),
-      texture_manager);
+      texture_manager, static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_TRUE(std::get<0>(result1));
   EXPECT_TRUE(std::get<1>(result1));
   EXPECT_FALSE(std::get<2>(result1));
@@ -139,7 +143,7 @@ TEST(Mix, OverridesDefaults) {
   MaterialBuilderResult result2 = BuildObject(
       *result0, tokenizer1, std::filesystem::current_path(), spectrum_manager,
       texture_manager, static_cast<const MaterialManager&>(material_manager),
-      texture_manager);
+      texture_manager, static_cast<SpectrumManager&>(spectrum_manager));
   EXPECT_NE(std::get<0>(result1), std::get<0>(result2));
   EXPECT_NE(std::get<1>(result1), std::get<1>(result2));
   EXPECT_TRUE(std::get<2>(result2));

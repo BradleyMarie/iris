@@ -232,7 +232,7 @@ bool Parser::Material() {
       BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
                   *spectrum_manager_, *texture_manager_,
                   static_cast<const MaterialManager&>(*material_manager_),
-                  *texture_manager_);
+                  *texture_manager_, *spectrum_manager_);
 
   return true;
 }
@@ -544,7 +544,7 @@ void Parser::InitializeDefault() {
       BuildObject(materials::Default(), empty_tokenizer, *search_root_,
                   *spectrum_manager_, *texture_manager_,
                   static_cast<const MaterialManager&>(*material_manager_),
-                  *texture_manager_);
+                  *texture_manager_, *spectrum_manager_);
   attributes_.emplace_back(
       default_material,
       std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,

@@ -46,8 +46,8 @@ class UberObjectBuilder : public MaterialBuilder {
 
   std::shared_ptr<NestedMaterialBuilder> Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 };
 
 class NestedUberObjectBuilder : public NestedMaterialBuilder {
@@ -96,8 +96,8 @@ class NestedUberObjectBuilder : public NestedMaterialBuilder {
 
   MaterialBuilderResult Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager& material_manager,
-      TextureManager& texture_manager) const override;
+      const MaterialManager& material_manager, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 
  private:
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
@@ -117,8 +117,8 @@ class NestedUberObjectBuilder : public NestedMaterialBuilder {
 
 std::shared_ptr<NestedMaterialBuilder> UberObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   ReferenceCounted<NormalMap> front_normal_map;
   ReferenceCounted<NormalMap> back_normal_map;
   ReferenceCounted<ValueTexture2D<visual>> uroughness_texture;
@@ -215,8 +215,8 @@ std::shared_ptr<NestedMaterialBuilder> UberObjectBuilder::Build(
 
 MaterialBuilderResult NestedUberObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   if (parameters.empty()) {
     return std::make_tuple(std::get<0>(default_), std::get<1>(default_),
                            std::get<2>(default_), std::get<3>(default_));

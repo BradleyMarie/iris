@@ -28,7 +28,8 @@ class MixObjectBuilder : public MaterialBuilder {
 
   std::shared_ptr<NestedMaterialBuilder> Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager&, TextureManager& texture_manager) const override;
+      const MaterialManager&, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 };
 
 class NestedMixObjectBuilder : public NestedMaterialBuilder {
@@ -53,7 +54,8 @@ class NestedMixObjectBuilder : public NestedMaterialBuilder {
 
   MaterialBuilderResult Build(
       const std::unordered_map<std::string_view, Parameter>& parameters,
-      const MaterialManager&, TextureManager& texture_manager) const override;
+      const MaterialManager&, TextureManager& texture_manager,
+      SpectrumManager& spectrum_manager) const override;
 
  private:
   const ReferenceCounted<Material> m1_front_;
@@ -66,8 +68,8 @@ class NestedMixObjectBuilder : public NestedMaterialBuilder {
 
 std::shared_ptr<NestedMaterialBuilder> MixObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   ReferenceCounted<NormalMap> front_normal_map;
   ReferenceCounted<NormalMap> back_normal_map;
   ReferenceCounted<ValueTexture2D<visual>> amount_texture =
@@ -89,8 +91,8 @@ std::shared_ptr<NestedMaterialBuilder> MixObjectBuilder::Build(
 
   std::shared_ptr<NestedMaterialBuilder> material1_builder =
       material_manager.Get(name1->second.GetStringValues(1).front());
-  MaterialBuilderResult material1 =
-      material1_builder->Build({}, material_manager, texture_manager);
+  MaterialBuilderResult material1 = material1_builder->Build(
+      {}, material_manager, texture_manager, spectrum_manager);
   if (std::get<2>(material1)) {
     front_normal_map = std::move(std::get<2>(material1));
   }
@@ -100,8 +102,8 @@ std::shared_ptr<NestedMaterialBuilder> MixObjectBuilder::Build(
 
   std::shared_ptr<NestedMaterialBuilder> material2_builder =
       material_manager.Get(name2->second.GetStringValues(1).front());
-  MaterialBuilderResult material2 =
-      material2_builder->Build({}, material_manager, texture_manager);
+  MaterialBuilderResult material2 = material2_builder->Build(
+      {}, material_manager, texture_manager, spectrum_manager);
   if (std::get<2>(material2)) {
     front_normal_map = std::move(std::get<2>(material2));
   }
@@ -131,8 +133,8 @@ std::shared_ptr<NestedMaterialBuilder> MixObjectBuilder::Build(
 
 MaterialBuilderResult NestedMixObjectBuilder::Build(
     const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MaterialManager& material_manager,
-    TextureManager& texture_manager) const {
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) const {
   if (parameters.empty()) {
     return std::make_tuple(std::get<0>(default_), std::get<1>(default_),
                            std::get<2>(default_), std::get<3>(default_));
@@ -150,8 +152,8 @@ MaterialBuilderResult NestedMixObjectBuilder::Build(
   if (name1 != parameters.end()) {
     std::shared_ptr<NestedMaterialBuilder> material1_builder =
         material_manager.Get(name1->second.GetStringValues(1).front());
-    MaterialBuilderResult material1 =
-        material1_builder->Build({}, material_manager, texture_manager);
+    MaterialBuilderResult material1 = material1_builder->Build(
+        {}, material_manager, texture_manager, spectrum_manager);
     material1_front = std::move(std::get<0>(material1));
     material1_back = std::move(std::get<1>(material1));
     if (std::get<2>(material1)) {
@@ -166,8 +168,8 @@ MaterialBuilderResult NestedMixObjectBuilder::Build(
   if (name2 != parameters.end()) {
     std::shared_ptr<NestedMaterialBuilder> material2_builder =
         material_manager.Get(name2->second.GetStringValues(1).front());
-    MaterialBuilderResult material2 =
-        material2_builder->Build({}, material_manager, texture_manager);
+    MaterialBuilderResult material2 = material2_builder->Build(
+        {}, material_manager, texture_manager, spectrum_manager);
     material2_front = std::move(std::get<0>(material2));
     material2_back = std::move(std::get<1>(material2));
     if (std::get<2>(material2)) {

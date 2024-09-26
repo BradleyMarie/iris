@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "frontends/pbrt/color.h"
@@ -43,7 +44,9 @@ class ParameterList {
   const std::vector<int64_t>& GetIntegerValues() const;
   const std::vector<Vector>& GetNormalValues() const;
   const std::vector<Point>& GetPoint3Values() const;
-  const std::map<visual, visual>& GetSpectrumValues() const;
+  const std::variant<const std::map<visual, visual>*,
+                     const std::vector<std::string_view>*>&
+  GetSpectrumValues() const;
   const std::vector<std::string_view>& GetStringValues() const;
   const std::vector<std::string_view>& GetTextureValues() const;
   const std::vector<Vector>& GetVector3Values() const;
@@ -71,7 +74,10 @@ class ParameterList {
   std::vector<Color> colors_;
   std::vector<long double> floats_;
   std::vector<int64_t> integers_;
-  std::map<visual, visual> spectrum_;
+  std::variant<const std::map<visual, visual>*,
+               const std::vector<std::string_view>*>
+      spectrum_;
+  std::map<visual, visual> spectrum_storage_;
   std::vector<std::string_view> strings_;
   std::vector<std::string> string_storage_;
   std::vector<Point> points_;

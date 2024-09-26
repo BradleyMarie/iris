@@ -5,6 +5,7 @@
 #include <tuple>
 
 #include "frontends/pbrt/object_builder.h"
+#include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/material.h"
 #include "iris/normal_map.h"
@@ -22,11 +23,11 @@ typedef std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
     MaterialBuilderResult;
 
 typedef ObjectBuilder<MaterialBuilderResult, const MaterialManager&,
-                      TextureManager&>
+                      TextureManager&, SpectrumManager&>
     NestedMaterialBuilder;
 
 typedef ObjectBuilder<std::shared_ptr<NestedMaterialBuilder>,
-                      const MaterialManager&, TextureManager&>
+                      const MaterialManager&, TextureManager&, SpectrumManager&>
     MaterialBuilder;
 
 }  // namespace materials

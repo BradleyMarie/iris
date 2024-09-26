@@ -193,7 +193,9 @@ const std::vector<Point>& ParameterList::GetPoint3Values() const {
   return points_;
 }
 
-const std::map<visual, visual>& ParameterList::GetSpectrumValues() const {
+const std::variant<const std::map<visual, visual>*,
+                   const std::vector<std::string_view>*>&
+ParameterList::GetSpectrumValues() const {
   assert(type_.value() == SPECTRUM);
   return spectrum_;
 }
@@ -308,47 +310,53 @@ ParameterList::Type ParameterList::ParseSpectrum(Tokenizer& tokenizer,
       ParseData<std::string, std::string_view, ParseRawStringToken>(
           tokenizer, type_name, string_storage_);
 
-  floats_.clear();
-  if (string_storage_[0].empty() || string_storage_[0][0] != '"') {
+  if (!string_storage_[0].empty() && string_storage_[0][0] != '"') {
+    floats_.clear();
     for (size_t i = 0; i < num_added; i++) {
       ParseSingle<long double, long double, ParseFloatToken>(
           string_storage_[i], type_name, i, floats_);
     }
+
+    if (floats_.size() % 2 != 0) {
+      std::cerr << "ERROR: The number of values in a " << type_name
+                << " parameter list cannot be odd" << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    spectrum_storage_.clear();
+    for (size_t i = 0; i < floats_.size(); i += 2) {
+      if (floats_[i] < 0.0 || floats_[i + 1] < 0.0) {
+        std::cerr << "ERROR: The values in an " << type_name
+                  << " parameter list cannot be negative" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      visual wavelength = static_cast<visual>(floats_[i]);
+      visual intensity = static_cast<visual>(floats_[i + 1]);
+      if (!std::isfinite(wavelength) || !std::isfinite(intensity)) {
+        std::cerr << "ERROR: A " << type_name
+                  << " parameter list value was out of range" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      auto result = spectrum_storage_.emplace(wavelength, intensity);
+      if (!result.second) {
+        std::cerr << "ERROR: A " << type_name
+                  << " parameter list contained duplicate wavelengths"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    spectrum_ = &spectrum_storage_;
   } else {
-    // TODO: Parse SPD file
-    std::cerr << "ERROR: SPD File Support not implemented" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (floats_.size() % 2 != 0) {
-    std::cerr << "ERROR: The number of values in a " << type_name
-              << " parameter list cannot be odd" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  spectrum_.clear();
-  for (size_t i = 0; i < floats_.size(); i += 2) {
-    if (floats_[i] < 0.0 || floats_[i + 1] < 0.0) {
-      std::cerr << "ERROR: The values in an " << type_name
-                << " parameter list cannot be negative" << std::endl;
-      exit(EXIT_FAILURE);
+    strings_.clear();
+    for (size_t i = 0; i < num_added; i++) {
+      ParseSingle<std::string_view, std::string_view, ParseStringToken>(
+          string_storage_[i], type_name, i, strings_);
     }
 
-    visual wavelength = static_cast<visual>(floats_[i]);
-    visual intensity = static_cast<visual>(floats_[i + 1]);
-    if (!std::isfinite(wavelength) || !std::isfinite(intensity)) {
-      std::cerr << "ERROR: A " << type_name
-                << " parameter list value was out of range" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    auto result = spectrum_.emplace(wavelength, intensity);
-    if (!result.second) {
-      std::cerr << "ERROR: A " << type_name
-                << " parameter list contained duplicate wavelengths"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
+    spectrum_ = &strings_;
   }
 
   return SPECTRUM;

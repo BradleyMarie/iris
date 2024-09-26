@@ -7,6 +7,7 @@
 #include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/glass.h"
 #include "frontends/pbrt/materials/matte.h"
+#include "frontends/pbrt/materials/metal.h"
 #include "frontends/pbrt/materials/mirror.h"
 #include "frontends/pbrt/materials/mix.h"
 #include "frontends/pbrt/materials/plastic.h"
@@ -24,6 +25,7 @@ static const std::unordered_map<std::string_view,
                                 const std::unique_ptr<const MaterialBuilder>&>
     g_materials = {{"glass", g_glass_builder},
                    {"matte", g_matte_builder},
+                   {"metal", g_metal_builder},
                    {"mirror", g_mirror_builder},
                    {"mix", g_mix_builder},
                    {"plastic", g_plastic_builder},
@@ -127,7 +129,7 @@ void ParseNamed(Tokenizer& tokenizer, const std::filesystem::path& search_root,
 
   std::shared_ptr<NestedMaterialBuilder> result =
       material_builder->second->Build(parameters, material_manager,
-                                      texture_manager);
+                                      texture_manager, spectrum_manager);
   material_manager.Put(name, result);
 }
 

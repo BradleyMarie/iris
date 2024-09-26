@@ -415,7 +415,16 @@ TEST(ParameterList, SpectrumDuplicateWavelengths) {
       "ERROR: A spectrum parameter list contained duplicate wavelengths");
 }
 
-TEST(ParameterList, Spectrum) {
+TEST(ParameterList, SpectrumFailedToParseString) {
+  std::stringstream input("\"spectrum name\" [\"abc\" abc]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  EXPECT_EXIT(parameter_list.ParseFrom(tokenizer),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Failed to parse spectrum value: abc");
+}
+
+TEST(ParameterList, SpectrumFloats) {
   std::stringstream input("\"spectrum name\" [1 2 3 4]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
   iris::pbrt_frontend::ParameterList parameter_list;
@@ -423,9 +432,30 @@ TEST(ParameterList, Spectrum) {
   EXPECT_EQ("name", parameter_list.GetName());
   EXPECT_EQ(iris::pbrt_frontend::ParameterList::SPECTRUM,
             parameter_list.GetType());
-  ASSERT_EQ(2u, parameter_list.GetSpectrumValues().size());
-  ASSERT_EQ(2, parameter_list.GetSpectrumValues().at(1));
-  ASSERT_EQ(4, parameter_list.GetSpectrumValues().at(3));
+
+  const std::map<iris::visual, iris::visual>* values =
+      std::get<const std::map<iris::visual, iris::visual>*>(
+          parameter_list.GetSpectrumValues());
+  ASSERT_EQ(2u, values->size());
+  ASSERT_EQ(2, values->at(1));
+  ASSERT_EQ(4, values->at(3));
+}
+
+TEST(ParameterList, SpectrumStrings) {
+  std::stringstream input("\"spectrum name\" [\"abc\" \"def\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+  EXPECT_EQ("name", parameter_list.GetName());
+  EXPECT_EQ(iris::pbrt_frontend::ParameterList::SPECTRUM,
+            parameter_list.GetType());
+
+  const std::vector<std::string_view>* values =
+      std::get<const std::vector<std::string_view>*>(
+          parameter_list.GetSpectrumValues());
+  ASSERT_EQ(2u, values->size());
+  ASSERT_EQ("abc", values->at(0));
+  ASSERT_EQ("def", values->at(1));
 }
 
 TEST(ParameterList, StringNotQuoted) {

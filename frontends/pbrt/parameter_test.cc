@@ -741,6 +741,60 @@ TEST(Parameter, ReflectorSpectrum) {
   EXPECT_NE(nullptr, parameter.GetReflectors(1u, 1u).at(0).Get());
 }
 
+TEST(Parameter, ReflectorFileNotFound) {
+  std::stringstream input("\"spectrum name\" [\"notafile\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::REFLECTOR,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Could not find file specified in parameter list: name");
+}
+
+TEST(Parameter, ReflectorEmissiveSpd) {
+  std::string path = RunfilePath("emissive.spd");
+  std::stringstream input("\"spectrum name\" [" + path + "]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::REFLECTOR,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: SPD file parsing failed with error: The input contained a sample "
+      "with a spectral power greater than one");
+}
+
+TEST(Parameter, ReflectorReflectiveSpd) {
+  std::string path = RunfilePath("reflective.spd");
+  std::stringstream input("\"spectrum name\" [" + path + " " + path + "]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::REFLECTOR,
+                     spectrum_manager, texture_manager);
+  EXPECT_EQ(2u, parameter.GetReflectors(2u, 2u).size());
+  EXPECT_NE(nullptr, parameter.GetReflectors(2u, 2u).at(0).Get());
+  EXPECT_NE(nullptr, parameter.GetReflectors(2u, 2u).at(1).Get());
+}
+
 TEST(Parameter, ReflectorTextureWrongType) {
   std::stringstream input("\"integer name\" [1]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -918,6 +972,60 @@ TEST(Parameter, ReflectorTextureTooMany) {
               "ERROR: Too many values in parameter list: name");
 }
 
+TEST(Parameter, ReflectorTextureFileNotFound) {
+  std::stringstream input("\"spectrum name\" [\"notafile\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Could not find file specified in parameter list: name");
+}
+
+TEST(Parameter, ReflectorTextureEmissiveSpd) {
+  std::string path = RunfilePath("emissive.spd");
+  std::stringstream input("\"spectrum name\" [" + path + "]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: SPD file parsing failed with error: The input contained a sample "
+      "with a spectral power greater than one");
+}
+
+TEST(Parameter, ReflectorTextureReflectiveSpd) {
+  std::string path = RunfilePath("reflective.spd");
+  std::stringstream input("\"spectrum name\" [" + path + " " + path + "]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::REFLECTOR_TEXTURE,
+                     spectrum_manager, texture_manager);
+  EXPECT_EQ(2u, parameter.GetReflectorTextures(2u, 2u).size());
+  EXPECT_NE(nullptr, parameter.GetReflectorTextures(2u, 2u).at(0).Get());
+  EXPECT_NE(nullptr, parameter.GetReflectorTextures(2u, 2u).at(1).Get());
+}
+
 TEST(Parameter, ReflectorFloatTexture) {
   std::stringstream input("\"float name\" [1]");
   iris::pbrt_frontend::Tokenizer tokenizer(input);
@@ -1065,6 +1173,41 @@ TEST(Parameter, SpectrumTooManySampled) {
 
   ASSERT_EQ(1u, parameter.GetSpectra(1u, 1u).size());
   EXPECT_NE(nullptr, parameter.GetSpectra(1u, 1u).at(0).Get());
+}
+
+TEST(Parameter, SpectrumFileNotFound) {
+  std::stringstream input("\"spectrum name\" [\"notafile\"]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  EXPECT_EXIT(
+      parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                         iris::pbrt_frontend::Parameter::SPECTRUM,
+                         spectrum_manager, texture_manager),
+      testing::ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Could not find file specified in parameter list: name");
+}
+
+TEST(Parameter, SpectrumEmissiveSpd) {
+  std::string path = RunfilePath("emissive.spd");
+  std::stringstream input("\"spectrum name\" [" + path + " " + path + "]");
+  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  iris::pbrt_frontend::ParameterList parameter_list;
+  ASSERT_TRUE(parameter_list.ParseFrom(tokenizer));
+
+  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
+  iris::pbrt_frontend::TextureManager texture_manager;
+  iris::pbrt_frontend::Parameter parameter;
+  parameter.LoadFrom(parameter_list, std::filesystem::current_path(),
+                     iris::pbrt_frontend::Parameter::SPECTRUM, spectrum_manager,
+                     texture_manager);
+  EXPECT_EQ(2u, parameter.GetSpectra(2u, 2u).size());
+  EXPECT_NE(nullptr, parameter.GetSpectra(2u, 2u).at(0).Get());
+  EXPECT_NE(nullptr, parameter.GetSpectra(2u, 2u).at(1).Get());
 }
 
 TEST(Parameter, StringWrongType) {

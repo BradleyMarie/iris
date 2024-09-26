@@ -2,11 +2,18 @@
 
 #include <cassert>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <unordered_map>
 
+#include "libspd/readers/emissive_spd_reader.h"
+#include "libspd/readers/reflective_spd_reader.h"
+
 namespace iris::pbrt_frontend {
 namespace {
+
+using libspd::ReadEmissiveSpdFrom;
+using libspd::ReadReflectiveSpdFrom;
 
 template <ParameterList::Type type, typename StoredType>
 void ParseSimpleType(
@@ -44,6 +51,69 @@ const std::vector<ReturnType>& GetValues(const Parameter& parameter,
   }
 
   return result;
+}
+
+template <typename Type>
+void ParseSpectralType(
+    const std::variant<const std::map<visual, visual>*,
+                       const std::vector<std::string_view>*>& var,
+    std::string_view parameter_list_name,
+    const std::filesystem::path& search_path, bool reflective,
+    SpectrumManager& spectrum_manager,
+    ReferenceCounted<Type> (SpectrumManager::*impl)(
+        const std::map<visual, visual>&),
+    std::vector<ReferenceCounted<Type>>& result) {
+  if (std::holds_alternative<const std::map<visual, visual>*>(var)) {
+    const std::map<visual, visual>& value_map =
+        *std::get<const std::map<visual, visual>*>(var);
+
+    if (reflective) {
+      for (const auto& entry : value_map) {
+        if (entry.second > static_cast<visual>(1.0)) {
+          std::cerr << "ERROR: Out of range value in parameter list: "
+                    << parameter_list_name << std::endl;
+          exit(EXIT_FAILURE);
+        }
+      }
+    }
+
+    result.push_back((spectrum_manager.*impl)(value_map));
+    return;
+  }
+
+  const std::vector<std::string_view>& file_paths =
+      *std::get<const std::vector<std::string_view>*>(var);
+  std::filesystem::path file_path;
+  for (const auto& str : file_paths) {
+    file_path = str;
+    if (file_path.is_relative()) {
+      file_path = search_path / file_path;
+    }
+
+    if (!std::filesystem::is_regular_file(file_path)) {
+      std::cerr << "ERROR: Could not find file specified in parameter list: "
+                << parameter_list_name << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    std::ifstream file(std::filesystem::weakly_canonical(file_path),
+                       std::ios::in | std::ios::binary);
+
+    std::expected<std::map<visual, visual>, std::string> values;
+    if (reflective) {
+      values = ReadReflectiveSpdFrom<visual>(file);
+    } else {
+      values = ReadEmissiveSpdFrom<visual>(file);
+    }
+
+    if (!values) {
+      std::cerr << "ERROR: SPD file parsing failed with error: "
+                << values.error() << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    result.push_back((spectrum_manager.*impl)(values.value()));
+  }
 }
 
 }  // namespace
@@ -253,16 +323,9 @@ void Parameter::ParseReflector(const ParameterList& parameter_list,
   }
 
   if (parameter_list.GetType() == ParameterList::SPECTRUM) {
-    for (const auto& entry : parameter_list.GetSpectrumValues()) {
-      if (entry.second > 1.0) {
-        std::cerr << "ERROR: Out of range value in parameter list: "
-                  << GetName() << std::endl;
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    reflectors_.push_back(
-        spectrum_manager.AllocateReflector(parameter_list.GetSpectrumValues()));
+    ParseSpectralType(parameter_list.GetSpectrumValues(), GetName(),
+                      search_path, true, spectrum_manager,
+                      &SpectrumManager::AllocateReflector, reflectors_);
     return;
   }
 
@@ -307,18 +370,14 @@ void Parameter::ParseReflectorTexture(const ParameterList& parameter_list,
   }
 
   if (parameter_list.GetType() == ParameterList::SPECTRUM) {
-    for (const auto& entry : parameter_list.GetSpectrumValues()) {
-      if (entry.second > 1.0) {
-        std::cerr << "ERROR: Out of range value in parameter list: "
-                  << GetName() << std::endl;
-        exit(EXIT_FAILURE);
-      }
+    ParseSpectralType(parameter_list.GetSpectrumValues(), GetName(),
+                      search_path, true, spectrum_manager,
+                      &SpectrumManager::AllocateReflector, reflectors_);
+    for (auto& reflector : reflectors_) {
+      reflector_textures_.push_back(
+          texture_manager.AllocateUniformReflectorTexture(
+              std::move(reflector)));
     }
-
-    reflector_textures_.push_back(
-        texture_manager.AllocateUniformReflectorTexture(
-            spectrum_manager.AllocateReflector(
-                parameter_list.GetSpectrumValues())));
     return;
   }
 
@@ -347,8 +406,9 @@ void Parameter::ParseSpectrum(const ParameterList& parameter_list,
   }
 
   if (parameter_list.GetType() == ParameterList::SPECTRUM) {
-    spectra_.push_back(
-        spectrum_manager.AllocateSpectrum(parameter_list.GetSpectrumValues()));
+    ParseSpectralType(parameter_list.GetSpectrumValues(), GetName(),
+                      search_path, false, spectrum_manager,
+                      &SpectrumManager::AllocateSpectrum, spectra_);
     return;
   }
 

@@ -20,7 +20,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
     const std::shared_ptr<ObjectBuilder<
         std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
                    ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        const MaterialManager&, TextureManager&>>& material_builder,
+        const MaterialManager&, TextureManager&, SpectrumManager&>>&
+        material_builder,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
     const Matrix& model_to_world, bool reverse_orientation);

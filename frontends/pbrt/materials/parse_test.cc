@@ -46,6 +46,12 @@ TEST(Parse, Matte) {
   Parse(tokenizer);
 }
 
+TEST(Parse, Metal) {
+  std::stringstream input("\"metal\"");
+  Tokenizer tokenizer(input);
+  Parse(tokenizer);
+}
+
 TEST(Parse, Mirror) {
   std::stringstream input("\"mirror\"");
   Tokenizer tokenizer(input);
@@ -171,6 +177,19 @@ TEST(ParseNamed, Glass) {
 
 TEST(ParseNamed, Matte) {
   std::stringstream input("\"name\" \"string type\" \"matte\"");
+  Tokenizer tokenizer(input);
+
+  MaterialManager material_manager;
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+
+  ParseNamed(tokenizer, std::filesystem::current_path(), material_manager,
+             spectrum_manager, texture_manager);
+  EXPECT_NE(nullptr, material_manager.Get("name"));
+}
+
+TEST(ParseNamed, Metal) {
+  std::stringstream input("\"name\" \"string type\" \"metal\"");
   Tokenizer tokenizer(input);
 
   MaterialManager material_manager;
