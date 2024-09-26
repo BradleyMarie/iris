@@ -5,7 +5,6 @@
 #include <array>
 #include <cassert>
 #include <concepts>
-#include <iterator>
 #include <optional>
 
 #include "iris/bxdf.h"
@@ -23,20 +22,20 @@ namespace internal {
 template <size_t N>
 class CompositeBxdf final : public Bxdf {
  public:
-  CompositeBxdf(const Bxdf* bxdfs[], size_t num_bxdfs) : num_bxdfs_(num_bxdfs) {
-    std::copy(bxdfs, bxdfs + num_bxdfs, bxdfs_.data());
-    auto partition_iter = std::stable_partition(
-        bxdfs_.data(), bxdfs_.data() + num_bxdfs_,
-        [](const Bxdf* bxdf) { return bxdf->IsDiffuse(); });
-
-    num_diffuse_bxdfs_ = std::distance(bxdfs_.begin(), partition_iter);
-
-    diffuse_pdf_ = static_cast<visual_t>(0.0);
-    for (size_t i = 0; i < num_diffuse_bxdfs_; i++) {
+  CompositeBxdf(const Bxdf* bxdfs[], size_t num_bxdfs)
+      : num_bxdfs_(num_bxdfs),
+        num_diffuse_bxdfs_(0),
+        diffuse_pdf_(static_cast<visual_t>(0.0)) {
+    size_t specular_location = num_bxdfs - 1;
+    for (size_t i = 0; i < num_bxdfs; i++) {
       visual_t pdf;
-      bxdfs_[i]->IsDiffuse(&pdf);
-      diffuse_pdf_ += std::clamp(pdf, static_cast<visual_t>(0.0),
-                                 static_cast<visual_t>(1.0));
+      if (bxdfs[i]->IsDiffuse(&pdf)) {
+        diffuse_pdf_ += std::clamp(pdf, static_cast<visual_t>(0.0),
+                                   static_cast<visual_t>(1.0));
+        bxdfs_[num_diffuse_bxdfs_++] = bxdfs[i];
+      } else {
+        bxdfs_[specular_location--] = bxdfs[i];
+      }
     }
 
     if (num_bxdfs_ != 0) {
@@ -127,21 +126,23 @@ const Bxdf* MakeCompositeBxdf(BxdfAllocator& allocator,
                               std::convertible_to<const Bxdf*> auto... args) {
   auto storage = std::to_array<const Bxdf*>({args...});
 
-  auto partition_iter =
-      std::stable_partition(storage.begin(), storage.end(),
-                            [](const Bxdf* bxdf) { return bxdf != nullptr; });
-  auto num_elements = std::distance(storage.begin(), partition_iter);
+  size_t num_bxdfs = 0;
+  for (size_t i = 0; i < storage.size(); i++) {
+    if (storage[i] != nullptr) {
+      std::swap(storage[i], storage[num_bxdfs++]);
+    }
+  }
 
-  if (num_elements == 0) {
+  if (num_bxdfs == 0) {
     return nullptr;
   }
 
-  if (num_elements == 1) {
+  if (num_bxdfs == 1) {
     return storage.front();
   }
 
   return &allocator.Allocate<internal::CompositeBxdf<storage.size()>>(
-      storage.data(), num_elements);
+      storage.data(), num_bxdfs);
 }
 
 }  // namespace bxdfs

@@ -199,14 +199,14 @@ TEST(CompositeBxdfTest, SampleSpecular) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
+  EXPECT_CALL(bxdf0, Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _))
+      .WillOnce(Return(Bxdf::SampleResult{Vector(1.0, 0.0, 0.0), std::nullopt,
+                                          &bxdf0, 1.0}));
+
   MockBxdf bxdf1;
   EXPECT_CALL(bxdf1, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
-
-  EXPECT_CALL(bxdf1, Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _))
-      .WillOnce(Return(Bxdf::SampleResult{Vector(1.0, 0.0, 0.0), std::nullopt,
-                                          &bxdf1, 1.0}));
 
   const Bxdf* composite =
       MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
@@ -214,7 +214,7 @@ TEST(CompositeBxdfTest, SampleSpecular) {
       Vector(1.0, 0.0, 0.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_EQ(Vector(1.0, 0.0, 0.0), sample->direction);
   EXPECT_FALSE(sample->differentials);
-  EXPECT_EQ(&bxdf1, sample->bxdf_override);
+  EXPECT_EQ(&bxdf0, sample->bxdf_override);
   EXPECT_EQ(0.5, sample->pdf_weight);
 }
 
