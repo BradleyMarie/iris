@@ -36,9 +36,9 @@ cc_test(
 )
 
 cc_library(
-    name = "perspective_camera",
-    srcs = ["perspective_camera.cc"],
-    hdrs = ["perspective_camera.h"],
+    name = "pinhole_camera",
+    srcs = ["pinhole_camera.cc"],
+    hdrs = ["pinhole_camera.h"],
     deps = [
         "//iris:camera",
         "//iris:float",
@@ -49,10 +49,32 @@ cc_library(
 )
 
 cc_test(
-    name = "perspective_camera_test",
-    srcs = ["perspective_camera_test.cc"],
+    name = "pinhole_camera_test",
+    srcs = ["pinhole_camera_test.cc"],
     deps = [
-        ":perspective_camera",
+        ":pinhole_camera",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "thin_lens_camera",
+    srcs = ["thin_lens_camera.cc"],
+    hdrs = ["thin_lens_camera.h"],
+    deps = [
+        "//iris:camera",
+        "//iris:float",
+        "//iris:matrix",
+        "//iris:ray_differential",
+        "//iris:vector",
+    ],
+)
+
+cc_test(
+    name = "thin_lens_camera_test",
+    srcs = ["thin_lens_camera_test.cc"],
+    deps = [
+        ":thin_lens_camera",
         "@com_google_googletest//:gtest_main",
     ],
 )

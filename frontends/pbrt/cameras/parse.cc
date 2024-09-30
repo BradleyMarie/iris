@@ -7,7 +7,9 @@
 #include "frontends/pbrt/cameras/perspective.h"
 #include "frontends/pbrt/quoted_string.h"
 
-namespace iris::pbrt_frontend::cameras {
+namespace iris {
+namespace pbrt_frontend {
+namespace cameras {
 namespace {
 
 static const std::unordered_map<std::string_view,
@@ -53,4 +55,6 @@ Default() {
   return *g_perspective_builder;
 }
 
-}  // namespace iris::pbrt_frontend::cameras
+}  // namespace cameras
+}  // namespace pbrt_frontend
+}  // namespace iris

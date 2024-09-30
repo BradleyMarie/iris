@@ -1,4 +1,4 @@
-#include "iris/cameras/perspective_camera.h"
+#include "iris/cameras/pinhole_camera.h"
 
 #include <cassert>
 #include <cmath>
@@ -6,10 +6,9 @@
 namespace iris {
 namespace cameras {
 
-PerspectiveCamera::PerspectiveCamera(
-    const Matrix& world_to_camera,
-    const std::array<geometric_t, 2>& half_frame_size,
-    geometric_t half_fov) noexcept
+PinholeCamera::PinholeCamera(const Matrix& world_to_camera,
+                             const std::array<geometric_t, 2>& half_frame_size,
+                             geometric_t half_fov) noexcept
     : world_to_camera_(world_to_camera),
       half_frame_size_(half_frame_size),
       image_plane_distance_(std::min(half_frame_size[0], half_frame_size[1]) /
@@ -19,7 +18,7 @@ PerspectiveCamera::PerspectiveCamera(
   assert(std::isfinite(std::tan(half_fov)) && 0.0 < std::tan(half_fov));
 }
 
-RayDifferential PerspectiveCamera::Compute(
+RayDifferential PinholeCamera::Compute(
     const std::array<geometric_t, 2>& image_uv,
     const std::array<geometric_t, 2>& image_uv_dxdy,
     const std::optional<std::array<geometric_t, 2>>& lens_uv) const {
@@ -44,7 +43,7 @@ RayDifferential PerspectiveCamera::Compute(
   return Normalize(RayDifferential(base, dx, dy));
 }
 
-bool PerspectiveCamera::HasLens() const { return false; }
+bool PinholeCamera::HasLens() const { return false; }
 
 }  // namespace cameras
 }  // namespace iris

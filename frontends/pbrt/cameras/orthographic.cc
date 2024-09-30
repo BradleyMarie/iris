@@ -2,7 +2,9 @@
 
 #include "iris/cameras/orthographic_camera.h"
 
-namespace iris::pbrt_frontend::cameras {
+namespace iris {
+namespace pbrt_frontend {
+namespace cameras {
 namespace {
 
 static const std::unordered_map<std::string_view, Parameter::Type>
@@ -71,4 +73,6 @@ const std::unique_ptr<const ObjectBuilder<
     const MatrixManager::Transformation&>>
     g_orthographic_builder = std::make_unique<OrthographicObjectBuilder>();
 
-}  // namespace iris::pbrt_frontend::cameras
+}  // namespace cameras
+}  // namespace pbrt_frontend
+}  // namespace iris

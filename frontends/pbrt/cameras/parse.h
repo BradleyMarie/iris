@@ -8,7 +8,9 @@
 #include "frontends/pbrt/object_builder.h"
 #include "iris/camera.h"
 
-namespace iris::pbrt_frontend::cameras {
+namespace iris {
+namespace pbrt_frontend {
+namespace cameras {
 
 const ObjectBuilder<
     std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>,
@@ -20,6 +22,8 @@ const ObjectBuilder<
     const MatrixManager::Transformation&>&
 Default();
 
-}  // namespace iris::pbrt_frontend::cameras
+}  // namespace cameras
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_CAMERAS_PARSE_

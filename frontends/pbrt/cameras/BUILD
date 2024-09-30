@@ -58,7 +58,8 @@ cc_library(
         "//frontends/pbrt:matrix_manager",
         "//frontends/pbrt:object_builder",
         "//iris:camera",
-        "//iris/cameras:perspective_camera",
+        "//iris/cameras:pinhole_camera",
+        "//iris/cameras:thin_lens_camera",
     ],
 )
 
