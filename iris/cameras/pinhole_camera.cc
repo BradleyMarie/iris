@@ -31,13 +31,13 @@ RayDifferential PinholeCamera::Compute(
 
   Vector dx_direction(
       std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv_dxdy[0]),
-      base_direction.y, image_plane_distance_);
+      base_direction.y, base_direction.z);
   Ray dx = world_to_camera_.InverseMultiply(Ray(origin, dx_direction));
 
   Vector dy_direction(
       base_direction.x,
       std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv_dxdy[1]),
-      image_plane_distance_);
+      base_direction.z);
   Ray dy = world_to_camera_.InverseMultiply(Ray(origin, dy_direction));
 
   return Normalize(RayDifferential(base, dx, dy));
