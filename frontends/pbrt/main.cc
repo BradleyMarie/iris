@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
 
 #ifdef _XOPEN_SOURCE
   if (nice(absl::GetFlag(FLAGS_nice_increment)) == -1) {
-    std::cerr << "WARNING: Failed to lower the adjust of the process"
+    std::cerr << "WARNING: Failed to adjust the niceness of the process"
               << std::endl;
   }
 #endif
