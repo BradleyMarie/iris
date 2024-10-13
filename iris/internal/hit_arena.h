@@ -7,7 +7,8 @@
 #include "iris/internal/arena.h"
 #include "iris/internal/hit.h"
 
-namespace iris::internal {
+namespace iris {
+namespace internal {
 
 class HitArena final {
  public:
@@ -25,6 +26,7 @@ class HitArena final {
   Arena arena_;
 };
 
-}  // namespace iris::internal
+}  // namespace internal
+}  // namespace iris
 
 #endif  // _IRIS_INTERNAL_HIT_ARENA_

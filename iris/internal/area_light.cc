@@ -2,17 +2,18 @@
 
 #include "iris/internal/visibility_tester.h"
 
-namespace iris::internal {
+namespace iris {
+namespace internal {
 namespace {
 
 std::optional<Vector> ToLight(
     const Point& model_origin,
     const std::variant<std::monostate, Point, Vector>& sample) {
-  if (const auto* to_geometry = std::get_if<Vector>(&sample)) {
+  if (const Vector* to_geometry = std::get_if<Vector>(&sample)) {
     return *to_geometry;
   }
 
-  if (const auto* on_geometry = std::get_if<Point>(&sample)) {
+  if (const Point* on_geometry = std::get_if<Point>(&sample)) {
     return *on_geometry - model_origin;
   }
 
@@ -33,18 +34,18 @@ std::optional<Light::SampleResult> AreaLight::Sample(
           ? model_to_world_->InverseMultiply(hit_point.ApproximateLocation())
           : hit_point.ApproximateLocation();
 
-  auto model_to_light = ToLight(
+  std::optional<Vector> model_to_light = ToLight(
       model_origin, geometry_.SampleBySolidAngle(model_origin, face_, sampler));
   if (!model_to_light) {
     return std::nullopt;
   }
 
-  auto to_light =
+  Vector to_light =
       Normalize(model_to_world_ ? model_to_world_->Multiply(*model_to_light)
                                 : *model_to_light);
 
   visual_t pdf;
-  auto* emission =
+  const Spectrum* emission =
       Emission(hit_point.CreateRay(to_light), tester, allocator, &pdf);
   if (!emission) {
     return std::nullopt;
@@ -57,10 +58,9 @@ const Spectrum* AreaLight::Emission(const Ray& to_light,
                                     iris::VisibilityTester& tester,
                                     SpectralAllocator& allocator,
                                     visual_t* pdf) const {
-  internal::VisibilityTester& internal_tester =
-      static_cast<internal::VisibilityTester&>(tester);
+  VisibilityTester& internal_tester = static_cast<VisibilityTester&>(tester);
 
-  auto result =
+  std::optional<VisibilityTester::VisibleResult> result =
       internal_tester.Visible(to_light, geometry_, model_to_world_, face_);
   if (!result) {
     return nullptr;
@@ -73,10 +73,12 @@ const Spectrum* AreaLight::Emission(const Ray& to_light,
   return &result->emission;
 }
 
-visual_t AreaLight::Power(const PowerMatcher& power_matcher) const {
+visual_t AreaLight::Power(const PowerMatcher& power_matcher,
+                          geometric_t world_radius_squared) const {
   visual_t unit_power =
       geometry_.GetEmissiveMaterial(face_)->UnitPower(power_matcher);
   return unit_power * geometry_.ComputeSurfaceArea(face_, model_to_world_);
 }
 
-}  // namespace iris::internal
+}  // namespace internal
+}  // namespace iris

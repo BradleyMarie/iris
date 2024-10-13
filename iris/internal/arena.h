@@ -5,7 +5,8 @@
 #include <type_traits>
 #include <vector>
 
-namespace iris::internal {
+namespace iris {
+namespace internal {
 
 class Arena final {
  public:
@@ -15,7 +16,7 @@ class Arena final {
 
   template <typename T, typename... Args>
   T& Allocate(Args&&... args) {
-    auto* result = new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
+    T* result = new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
     return *result;
   }
 
@@ -29,6 +30,7 @@ class Arena final {
   size_t data_index_ = 0;
 };
 
-}  // namespace iris::internal
+}  // namespace internal
+}  // namespace iris
 
 #endif  // _IRIS_INTERNAL_ARENA_

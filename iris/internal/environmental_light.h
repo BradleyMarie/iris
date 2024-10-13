@@ -3,7 +3,6 @@
 
 #include <optional>
 
-#include "iris/bounding_box.h"
 #include "iris/environmental_light.h"
 #include "iris/float.h"
 #include "iris/geometry.h"
@@ -17,12 +16,12 @@
 #include "iris/spectrum.h"
 #include "iris/visibility_tester.h"
 
-namespace iris::internal {
+namespace iris {
+namespace internal {
 
 class EnvironmentalLight final : public Light {
  public:
-  EnvironmentalLight(const iris::EnvironmentalLight& light,
-                     const BoundingBox& scene_bounds) noexcept;
+  EnvironmentalLight(const iris::EnvironmentalLight& light) noexcept;
 
   std::optional<SampleResult> Sample(
       const HitPoint& hit_point, Sampler sampler,
@@ -33,13 +32,14 @@ class EnvironmentalLight final : public Light {
                            SpectralAllocator& allocator,
                            visual_t* pdf = nullptr) const override;
 
-  visual_t Power(const PowerMatcher& power_matcher) const override;
+  visual_t Power(const PowerMatcher& power_matcher,
+                 visual_t world_radius_squared) const override;
 
  private:
   const iris::EnvironmentalLight& light_;
-  visual_t power_scalar_;
 };
 
-}  // namespace iris::internal
+}  // namespace internal
+}  // namespace iris
 
 #endif  // _IRIS_INTERNAL_ENVIRONMENTAL_LIGHT_

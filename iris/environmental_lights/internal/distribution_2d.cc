@@ -17,9 +17,9 @@ std::vector<Distribution1D> ComputeRows(std::span<const visual> values,
   rows.reserve(size.first);
 
   for (size_t y = 0; y < size.first; y += 1) {
-    auto start = values.begin() + size.second * y;
-    auto end = start + size.second;
-    rows.emplace_back(std::span<const visual>(start, end));
+    auto start_iter = values.begin() + size.second * y;
+    auto end_iter = start_iter + size.second;
+    rows.emplace_back(std::span<const visual>(start_iter, end_iter));
   }
 
   return rows;
@@ -27,7 +27,7 @@ std::vector<Distribution1D> ComputeRows(std::span<const visual> values,
 
 Distribution1D ComputeRowDistribution(const std::vector<Distribution1D>& rows) {
   std::vector<visual> averages;
-  for (const auto& entry : rows) {
+  for (const Distribution1D& entry : rows) {
     averages.push_back(entry.Average());
   }
   return Distribution1D(std::move(averages));

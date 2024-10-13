@@ -1,5 +1,5 @@
-#ifndef _IRIS_LIGHTS_POINT_LIGHT_
-#define _IRIS_LIGHTS_POINT_LIGHT_
+#ifndef _IRIS_LIGHTS_DIRECTIONAL_LIGHT_
+#define _IRIS_LIGHTS_DIRECTIONAL_LIGHT_
 
 #include <cassert>
 #include <optional>
@@ -19,10 +19,11 @@
 namespace iris {
 namespace lights {
 
-class PointLight final : public Light {
+class DirectionalLight final : public Light {
  public:
-  PointLight(Point location, iris::ReferenceCounted<Spectrum> spectrum) noexcept
-      : spectrum_(std::move(spectrum)), location_(location) {
+  DirectionalLight(Vector to_light,
+                   iris::ReferenceCounted<Spectrum> spectrum) noexcept
+      : spectrum_(std::move(spectrum)), to_light_(to_light) {
     assert(spectrum_);
   }
 
@@ -39,10 +40,10 @@ class PointLight final : public Light {
 
  private:
   const iris::ReferenceCounted<Spectrum> spectrum_;
-  const Point location_;
+  const Vector to_light_;
 };
 
 }  // namespace lights
 }  // namespace iris
 
-#endif  // _IRIS_LIGHTS_POINT_LIGHT_
+#endif  // _IRIS_LIGHTS_DIRECTIONAL_LIGHT_

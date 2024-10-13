@@ -2,32 +2,40 @@
 
 #include "googletest/include/gtest/gtest.h"
 
-TEST(Arena, AllocateZero) {
-  iris::internal::Arena arena;
+namespace iris {
+namespace internal {
+namespace {
 
-  auto* alloc0 = arena.Allocate(0);
+TEST(Arena, AllocateZero) {
+  Arena arena;
+
+  void* alloc0 = arena.Allocate(0);
   EXPECT_EQ(nullptr, alloc0);
 }
 
 TEST(Arena, Allocate) {
-  iris::internal::Arena arena;
+  Arena arena;
 
-  auto& alloc0 = arena.Allocate<char>('c');
-  auto& alloc1 = arena.Allocate<char>('b');
+  char& alloc0 = arena.Allocate<char>('c');
+  char& alloc1 = arena.Allocate<char>('b');
   EXPECT_EQ('c', alloc0);
   EXPECT_EQ('b', alloc1);
 }
 
 TEST(Arena, AllocateAndClear) {
-  iris::internal::Arena arena;
+  Arena arena;
 
-  auto& alloc0 = arena.Allocate<char>('c');
+  char& alloc0 = arena.Allocate<char>('c');
   EXPECT_EQ('c', alloc0);
 
   arena.Clear();
 
-  auto& alloc1 = arena.Allocate<char>('b');
+  char& alloc1 = arena.Allocate<char>('b');
   EXPECT_EQ('b', alloc1);
 
   EXPECT_EQ(&alloc0, &alloc1);
 }
+
+}  // namespace
+}  // namespace internal
+}  // namespace iris

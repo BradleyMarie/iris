@@ -14,7 +14,8 @@
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
 
-namespace iris::internal {
+namespace iris {
+namespace internal {
 
 class AreaLight final : public Light {
  public:
@@ -30,7 +31,8 @@ class AreaLight final : public Light {
                            SpectralAllocator& allocator,
                            visual_t* pdf = nullptr) const override;
 
-  visual_t Power(const PowerMatcher& power_matcher) const override;
+  visual_t Power(const PowerMatcher& power_matcher,
+                 geometric_t world_radius_squared) const override;
 
  private:
   const Geometry& geometry_;
@@ -38,6 +40,7 @@ class AreaLight final : public Light {
   const face_t face_;
 };
 
-}  // namespace iris::internal
+}  // namespace internal
+}  // namespace iris
 
 #endif  // _IRIS_INTERNAL_AREA_LIGHT_

@@ -1,5 +1,7 @@
-#include "iris/lights/point_light.h"
+#define _USE_MATH_DEFINES
+#include "iris/lights/directional_light.h"
 
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -26,14 +28,14 @@ using ::iris::testing::GetSpectralAllocator;
 using ::testing::Ref;
 using ::testing::Return;
 
-TEST(PointLightTest, SampleHits) {
+TEST(DirectionalLightTest, SampleHits) {
   MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
 
-  PointLight light(Point(0.0, 0.0, 0.0), spectrum);
+  DirectionalLight light(Vector(0.0, 0.0, 1.0), spectrum);
   std::optional<Light::SampleResult> result =
       light.Sample(HitPoint(Point(0.0, 0.0, -1.0), PositionError(0.0, 0.0, 0.0),
                             Vector(1.0, 0.0, 0.0)),
@@ -45,14 +47,14 @@ TEST(PointLightTest, SampleHits) {
   EXPECT_EQ(Vector(0.0, 0.0, 1.0), result->to_light);
 }
 
-TEST(PointLightTest, SampleMisses) {
+TEST(DirectionalLightTest, SampleMisses) {
   MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
 
-  PointLight light(Point(0.0, 0.0, 0.0), spectrum);
+  DirectionalLight light(Vector(0.0, 0.0, 1.0), spectrum);
   EXPECT_FALSE(
       light.Sample(HitPoint(Point(0.0, 0.0, -1.0), PositionError(0.0, 0.0, 0.0),
                             Vector(1.0, 0.0, 0.0)),
@@ -60,11 +62,11 @@ TEST(PointLightTest, SampleMisses) {
                    GetSpectralAllocator()));
 }
 
-TEST(PointLightTest, Emission) {
+TEST(DirectionalLightTest, Emission) {
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
 
-  PointLight light(Point(0.0, 0.0, 0.0), spectrum);
+  DirectionalLight light(Vector(0.0, 0.0, 1.0), spectrum);
 
   visual_t pdf;
   EXPECT_EQ(nullptr,
@@ -73,15 +75,15 @@ TEST(PointLightTest, Emission) {
                            GetSpectralAllocator(), &pdf));
 }
 
-TEST(PointLightTest, Power) {
+TEST(DirectionalLightTest, Power) {
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
 
-  PointLight light(Point(0.0, 0.0, 0.0), spectrum);
+  DirectionalLight light(Vector(0.0, 0.0, 1.0), spectrum);
 
   MockPowerMatcher power_matcher;
   EXPECT_CALL(power_matcher, Match(Ref(*spectrum))).WillOnce(Return(1.0));
-  EXPECT_EQ(1.0, light.Power(power_matcher, 2.0));
+  EXPECT_NEAR(M_PI, light.Power(power_matcher, 1.0), 0.0001);
 }
 
 }  // namespace

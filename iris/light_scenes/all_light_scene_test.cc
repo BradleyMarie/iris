@@ -1,6 +1,7 @@
 #include "iris/light_scenes/all_light_scene.h"
 
 #include <limits>
+#include <memory>
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/lights/mock_light.h"
@@ -9,47 +10,58 @@
 #include "iris/scenes/list_scene.h"
 #include "iris/testing/light_sample_allocator.h"
 
-const static iris::power_matchers::MockPowerMatcher kPowerMatcher;
+namespace iris {
+namespace light_scenes {
+namespace {
+
+using ::iris::lights::MockLight;
+using ::iris::power_matchers::MockPowerMatcher;
+using ::iris::random::MockRandom;
+using ::iris::testing::GetLightSampleAllocator;
+
+const static MockPowerMatcher kPowerMatcher;
 
 TEST(AllLightSceneTest, NoLights) {
-  iris::random::MockRandom rng;
-  auto scene_objects = iris::SceneObjects::Builder().Build();
-  auto light_scene =
-      iris::light_scenes::AllLightScene::Builder::Create()->Build(
-          scene_objects, kPowerMatcher);
-  EXPECT_EQ(nullptr,
-            light_scene->Sample(iris::Point(0.0, 0.0, 0.0), rng,
-                                iris::testing::GetLightSampleAllocator()));
+  MockRandom rng;
+  SceneObjects scene_objects = SceneObjects::Builder().Build();
+  std::unique_ptr<LightScene> light_scene =
+      AllLightScene::Builder::Create()->Build(scene_objects, kPowerMatcher);
+  EXPECT_EQ(nullptr, light_scene->Sample(Point(0.0, 0.0, 0.0), rng,
+                                         GetLightSampleAllocator()));
 }
 
 TEST(AllLightSceneTest, TwoLights) {
-  auto light0 = iris::MakeReferenceCounted<iris::lights::MockLight>();
-  auto* light0_ptr = light0.Get();
+  ReferenceCounted<MockLight> light0 = MakeReferenceCounted<MockLight>();
+  const Light* light0_ptr = light0.Get();
 
-  auto light1 = iris::MakeReferenceCounted<iris::lights::MockLight>();
-  auto* light1_ptr = light1.Get();
+  ReferenceCounted<MockLight> light1 = MakeReferenceCounted<MockLight>();
+  const Light* light1_ptr = light1.Get();
 
-  iris::random::MockRandom rng;
-  auto light_scene_builder = iris::SceneObjects::Builder();
-  light_scene_builder.Add(std::move(light0));
-  light_scene_builder.Add(std::move(light1));
-  auto objects = light_scene_builder.Build();
-  auto light_scene =
-      iris::light_scenes::AllLightScene::Builder::Create()->Build(
-          objects, kPowerMatcher);
+  MockRandom rng;
 
-  auto light_samples =
-      light_scene->Sample(iris::Point(0.0, 0.0, 0.0), rng,
-                          iris::testing::GetLightSampleAllocator());
+  SceneObjects::Builder scene_builder;
+  scene_builder.Add(std::move(light0));
+  scene_builder.Add(std::move(light1));
+  SceneObjects objects = scene_builder.Build();
+
+  std::unique_ptr<LightScene> light_scene =
+      AllLightScene::Builder::Create()->Build(objects, kPowerMatcher);
+
+  const LightSample* light_samples =
+      light_scene->Sample(Point(0.0, 0.0, 0.0), rng, GetLightSampleAllocator());
   ASSERT_NE(nullptr, light_samples);
 
-  auto* light1_sample = light_samples;
+  const LightSample* light1_sample = light_samples;
   EXPECT_EQ(light1_ptr, &light1_sample->light);
   EXPECT_FALSE(light1_sample->pdf);
   ASSERT_NE(nullptr, light1_sample->next);
 
-  auto* light0_sample = light1_sample->next;
+  const LightSample* light0_sample = light1_sample->next;
   EXPECT_EQ(light0_ptr, &light0_sample->light);
   EXPECT_FALSE(light0_sample->pdf);
   EXPECT_EQ(nullptr, light0_sample->next);
 }
+
+}  // namespace
+}  // namespace light_scenes
+}  // namespace iris

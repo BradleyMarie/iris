@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -90,6 +90,7 @@ cc_test(
     srcs = ["power_light_scene_test.cc"],
     deps = [
         ":power_light_scene",
+        "//iris/geometry:mock_geometry",
         "//iris/lights:mock_light",
         "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mock_random",

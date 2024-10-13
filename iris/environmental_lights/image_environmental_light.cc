@@ -127,9 +127,9 @@ const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
   return allocator.Scale(spectra_[index].Get(), scalar_.Get());
 }
 
-visual_t ImageEnvironmentalLight::UnitPower(
-    const PowerMatcher& power_matcher) const {
-  return power_;
+visual_t ImageEnvironmentalLight::Power(const PowerMatcher& power_matcher,
+                                        visual_t world_radius_squared) const {
+  return world_radius_squared * power_;
 }
 
 }  // namespace environmental_lights

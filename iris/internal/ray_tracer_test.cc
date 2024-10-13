@@ -5,38 +5,47 @@
 #include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 
+namespace iris {
+namespace internal {
+namespace {
+
+using ::iris::geometry::MockBasicGeometry;
+using ::iris::scenes::ListScene;
+using ::testing::_;
+using ::testing::Invoke;
+using ::testing::Return;
+
 TEST(RayTracerTest, NoGeometry) {
-  iris::internal::RayTracer ray_tracer;
-  auto scene_objects = iris::SceneObjects::Builder().Build();
-  auto scene = iris::scenes::ListScene::Builder::Create()->Build(scene_objects);
-  EXPECT_EQ(nullptr, ray_tracer.Trace(iris::Ray(iris::Point(0.0, 0.0, 0.0),
-                                                iris::Vector(1.0, 1.0, 1.0)),
-                                      0.0, 1.0, *scene));
+  RayTracer ray_tracer;
+  SceneObjects scene_objects = SceneObjects::Builder().Build();
+  std::unique_ptr<Scene> scene =
+      ListScene::Builder::Create()->Build(scene_objects);
+  EXPECT_EQ(nullptr,
+            ray_tracer.Trace(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0)),
+                             0.0, 1.0, *scene));
 }
 
 TEST(RayTracerTest, WithGeometry) {
-  iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(1.0, 1.0, 1.0));
-  auto geometry =
-      iris::MakeReferenceCounted<iris::geometry::MockBasicGeometry>();
+  Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
+  ReferenceCounted<MockBasicGeometry> geometry =
+      MakeReferenceCounted<MockBasicGeometry>();
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
-      .WillOnce(testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0),
-                                                  iris::Point(0.0, 1.0, 2.0))));
-  EXPECT_CALL(*geometry, Trace(ray, testing::_))
-      .WillOnce(testing::Invoke(
-          [&](const iris::Ray& trace_ray, iris::HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(
-                nullptr, 1.0, static_cast<iris::geometric_t>(0.0), 2, 3);
-          }));
+      .WillOnce(
+          Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
+  EXPECT_CALL(*geometry, Trace(ray, _))
+      .WillOnce(Invoke([&](const Ray& trace_ray, HitAllocator& hit_allocator) {
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3);
+      }));
 
-  auto* geometry_ptr = geometry.Get();
+  const Geometry* geometry_ptr = geometry.Get();
 
-  auto builder = iris::SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
-  auto objects = builder.Build();
-  auto scene = iris::scenes::ListScene::Builder().Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = ListScene::Builder().Build(objects);
 
-  iris::internal::RayTracer ray_tracer;
-  auto* hit = ray_tracer.Trace(ray, 0.0, 2.0, *scene);
+  RayTracer ray_tracer;
+  const Hit* hit = ray_tracer.Trace(ray, 0.0, 2.0, *scene);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
   EXPECT_EQ(0.0, hit->distance_error);
@@ -47,3 +56,7 @@ TEST(RayTracerTest, WithGeometry) {
   EXPECT_EQ(nullptr, hit->model_to_world);
   EXPECT_EQ(nullptr, hit->additional_data);
 }
+
+}  // namespace
+}  // namespace internal
+}  // namespace iris

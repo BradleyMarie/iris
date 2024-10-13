@@ -4,6 +4,14 @@
 
 namespace iris {
 namespace light_scenes {
+namespace {
+
+visual_t ComputeWorldRadiusSquared(const BoundingBox& bounds) {
+  Vector radius = static_cast<geometric_t>(0.5) * (bounds.upper - bounds.lower);
+  return DotProduct(radius, radius);
+}
+
+}  // namespace
 
 std::unique_ptr<LightScene::Builder> PowerLightScene::Builder::Create() {
   return std::make_unique<PowerLightScene::Builder>();
@@ -22,10 +30,15 @@ PowerLightScene::PowerLightScene(const SceneObjects& scene_objects,
     return;
   }
 
+  visual_t world_radius_squared =
+      ComputeWorldRadiusSquared(scene_objects.GetBounds());
+
   visual_t total_pdf = static_cast<visual_t>(0.0);
   for (size_t i = 0; i < scene_objects.NumLights(); i++) {
-    pdf_.push_back(scene_objects.GetLight(i).Power(power_matcher));
-    total_pdf += pdf_.back();
+    visual_t power =
+        scene_objects.GetLight(i).Power(power_matcher, world_radius_squared);
+    total_pdf += power;
+    pdf_.push_back(power);
   }
 
   visual_t running_pdf = static_cast<visual_t>(0.0);

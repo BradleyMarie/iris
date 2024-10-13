@@ -34,7 +34,7 @@ void SingleGeometryScene::Trace(const Ray& ray,
 bool VisibilityTester::Intersects(const Ray& ray, const Geometry& geometry,
                                   const Matrix* model_to_world, face_t face) {
   SingleGeometryScene geometry_scene(geometry, model_to_world);
-  for (auto* geometry_hit = ray_tracer_.Trace(
+  for (Hit* geometry_hit = ray_tracer_.Trace(
            ray, minimum_distance_, std::numeric_limits<geometric>::infinity(),
            geometry_scene);
        geometry_hit;
@@ -59,7 +59,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
   // The distance from the previous intersection cannot be used as a bound
   // since it may be be discarded in a full scene intersection if part of
   // CSG
-  auto* scene_hit =
+  Hit* scene_hit =
       ray_tracer_.Trace(ray, minimum_distance_,
                         std::numeric_limits<geometric>::infinity(), scene_);
   if (!scene_hit || scene_hit->geometry != &geometry ||
@@ -86,7 +86,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
   }
 
   SpectralAllocator spectral_allocator(arena_);
-  auto* spectrum =
+  const Spectrum* spectrum =
       emissive_material->Evaluate(texture_coordinates, spectral_allocator);
   if (!spectrum) {
     return std::nullopt;
@@ -94,7 +94,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
 
   Point model_origin =
       model_to_world ? model_to_world->InverseMultiply(ray.origin) : ray.origin;
-  auto pdf = geometry.ComputePdfBySolidAngle(
+  std::optional<visual_t> pdf = geometry.ComputePdfBySolidAngle(
       model_origin, face, scene_hit->additional_data, model_hit_point);
   if (pdf.value_or(0.0) <= 0.0) {
     return std::nullopt;

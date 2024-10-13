@@ -28,7 +28,8 @@ class EnvironmentalLight : public ReferenceCountable {
                                    SpectralAllocator& allocator,
                                    visual_t* pdf = nullptr) const = 0;
 
-  virtual visual_t UnitPower(const PowerMatcher& power_matcher) const = 0;
+  virtual visual_t Power(const PowerMatcher& power_matcher,
+                         visual_t world_radius_squared) const = 0;
 
   virtual ~EnvironmentalLight() {}
 };

@@ -94,7 +94,7 @@ SceneObjects SceneObjects::Builder::Build() {
 
   if (environmental_light_) {
     lights_.insert(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
-        std::cref(*environmental_light_), bounds_builder_.Build()));
+        std::cref(*environmental_light_)));
   }
 
   SceneObjects result(MoveToVector(std::move(geometry_)),

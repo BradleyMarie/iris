@@ -1,7 +1,5 @@
 #include "iris/lights/point_light.h"
 
-#include <limits>
-
 namespace iris {
 namespace lights {
 
@@ -24,7 +22,8 @@ const Spectrum* PointLight::Emission(const Ray& to_light,
   return nullptr;
 }
 
-visual_t PointLight::Power(const PowerMatcher& power_matcher) const {
+visual_t PointLight::Power(const PowerMatcher& power_matcher,
+                           visual_t world_radius_squared) const {
   return power_matcher.Match(*spectrum_);
 }
 

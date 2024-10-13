@@ -19,7 +19,8 @@ class MockEnvironmentalLight final : public EnvironmentalLight {
               (Sampler&, SpectralAllocator&), (const override));
   MOCK_METHOD(const Spectrum*, Emission,
               (const Vector&, SpectralAllocator&, visual_t*), (const override));
-  MOCK_METHOD(visual_t, UnitPower, (const PowerMatcher&), (const override));
+  MOCK_METHOD(visual_t, Power, (const PowerMatcher&, visual_t),
+              (const override));
 };
 
 }  // namespace environmental_lights

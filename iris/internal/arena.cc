@@ -1,6 +1,7 @@
 #include "iris/internal/arena.h"
 
-namespace iris::internal {
+namespace iris {
+namespace internal {
 
 void* Arena::Allocate(size_t size) {
   if (size == 0) {
@@ -20,4 +21,5 @@ void* Arena::Allocate(size_t size) {
 
 void Arena::Clear() { data_index_ = 0; }
 
-}  // namespace iris::internal
+}  // namespace internal
+}  // namespace iris

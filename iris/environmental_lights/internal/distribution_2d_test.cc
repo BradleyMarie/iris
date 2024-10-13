@@ -3,17 +3,26 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random/mock_random.h"
 
+namespace iris {
+namespace environmental_lights {
+namespace internal {
+namespace {
+
+using ::iris::random::MockRandom;
+using ::testing::InSequence;
+using ::testing::Return;
+
 TEST(Distribution2D, Sample) {
-  std::vector<iris::visual> values = {1.0, 1.0, 3.0, 3.0};
-  iris::environmental_lights::internal::Distribution2D dist(values, {2, 2});
+  std::vector<visual> values = {1.0, 1.0, 3.0, 3.0};
+  Distribution2D dist(values, {2, 2});
 
   {
-    testing::InSequence sequence;
+    InSequence sequence;
 
-    iris::random::MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.125));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.5));
-    iris::Sampler sampler(rng);
+    MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.125));
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.5));
+    Sampler sampler(rng);
 
     auto [u, v] = dist.Sample(sampler);
     EXPECT_EQ(0.5, u);
@@ -21,12 +30,12 @@ TEST(Distribution2D, Sample) {
   }
 
   {
-    testing::InSequence sequence;
+    InSequence sequence;
 
-    iris::random::MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.25));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.75));
-    iris::Sampler sampler(rng);
+    MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
+    Sampler sampler(rng);
 
     auto [u, v] = dist.Sample(sampler);
     EXPECT_EQ(0.75, u);
@@ -35,18 +44,18 @@ TEST(Distribution2D, Sample) {
 }
 
 TEST(Distribution2D, SampleAll) {
-  std::vector<iris::visual> values = {1.0, 1.0, 3.0, 3.0};
-  iris::environmental_lights::internal::Distribution2D dist(values, {2, 2});
+  std::vector<visual> values = {1.0, 1.0, 3.0, 3.0};
+  Distribution2D dist(values, {2, 2});
 
   {
-    testing::InSequence sequence;
+    InSequence sequence;
 
-    iris::random::MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.125));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.5));
-    iris::Sampler sampler(rng);
+    MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.125));
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.5));
+    Sampler sampler(rng);
 
-    iris::visual_t pdf;
+    visual_t pdf;
     size_t offset;
     auto [u, v] = dist.Sample(sampler, &pdf, &offset);
     EXPECT_EQ(0.5, u);
@@ -56,14 +65,14 @@ TEST(Distribution2D, SampleAll) {
   }
 
   {
-    testing::InSequence sequence;
+    InSequence sequence;
 
-    iris::random::MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.25));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(testing::Return(0.75));
-    iris::Sampler sampler(rng);
+    MockRandom rng;
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
+    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
+    Sampler sampler(rng);
 
-    iris::visual_t pdf;
+    visual_t pdf;
     size_t offset;
     auto [u, v] = dist.Sample(sampler, &pdf, &offset);
     EXPECT_EQ(0.75, u);
@@ -74,9 +83,14 @@ TEST(Distribution2D, SampleAll) {
 }
 
 TEST(Distribution2D, Pdf) {
-  std::vector<iris::visual> values = {1.0, 1.0, 3.0, 3.0};
-  iris::environmental_lights::internal::Distribution2D dist(values, {2, 2});
+  std::vector<visual> values = {1.0, 1.0, 3.0, 3.0};
+  Distribution2D dist(values, {2, 2});
 
   EXPECT_EQ(0.5, dist.Pdf(0.5, 0.25));
   EXPECT_EQ(1.5, dist.Pdf(0.75, 0.5));
 }
+
+}  // namespace
+}  // namespace internal
+}  // namespace environmental_lights
+}  // namespace iris

@@ -25,7 +25,8 @@ class MockLight final : public Light {
   MOCK_METHOD(const Spectrum*, Emission,
               (const Ray&, VisibilityTester&, SpectralAllocator&, visual_t*),
               (const override));
-  MOCK_METHOD(visual_t, Power, (const PowerMatcher&), (const override));
+  MOCK_METHOD(visual_t, Power, (const PowerMatcher&, visual_t),
+              (const override));
 };
 
 }  // namespace lights

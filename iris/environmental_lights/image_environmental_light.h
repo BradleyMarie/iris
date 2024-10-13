@@ -32,7 +32,8 @@ class ImageEnvironmentalLight final : public EnvironmentalLight {
   const Spectrum* Emission(const Vector& to_light, SpectralAllocator& allocator,
                            visual_t* pdf) const override;
 
-  visual_t UnitPower(const PowerMatcher& power_matcher) const override;
+  visual_t Power(const PowerMatcher& power_matcher,
+                 visual_t world_radius_squared) const override;
 
  private:
   std::vector<ReferenceCounted<Spectrum>> spectra_;
