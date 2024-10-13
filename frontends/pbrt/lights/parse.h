@@ -12,13 +12,17 @@
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
 
-namespace iris::pbrt_frontend::lights {
+namespace iris {
+namespace pbrt_frontend {
+namespace lights {
 
 const ObjectBuilder<
     std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>,
     SpectrumManager&, const Matrix&>&
 Parse(Tokenizer& tokenizer);
 
-}  // namespace iris::pbrt_frontend::lights
+}  // namespace lights
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_LIGHTS_PARSE_

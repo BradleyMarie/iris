@@ -3,6 +3,32 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
+    name = "distant",
+    srcs = ["distant.cc"],
+    hdrs = ["distant.h"],
+    deps = [
+        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:spectrum_manager",
+        "//iris:environmental_light",
+        "//iris:light",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris/lights:directional_light",
+    ],
+)
+
+cc_test(
+    name = "distant_test",
+    srcs = ["distant_test.cc"],
+    deps = [
+        ":distant",
+        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "infinite",
     srcs = ["infinite.cc"],
     hdrs = ["infinite.h"],
@@ -43,6 +69,7 @@ cc_library(
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":distant",
         ":infinite",
         "//frontends/pbrt:object_builder",
         "//frontends/pbrt:quoted_string",

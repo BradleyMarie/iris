@@ -4,8 +4,12 @@
 #include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 
-namespace iris::pbrt_frontend::lights {
+namespace iris {
+namespace pbrt_frontend {
+namespace lights {
 namespace {
+
+using ::iris::environmental_lights::ImageEnvironmentalLight;
 
 static const std::unordered_map<std::string_view, Parameter::Type>
     g_parameters = {
@@ -15,7 +19,7 @@ static const std::unordered_map<std::string_view, Parameter::Type>
         {"scale", Parameter::SPECTRUM},
 };
 
-static const Color kDefaultColor = Color({1.0, 1.0, 1.0}, Color::Space::RGB);
+static const Color kDefaultColor({1.0, 1.0, 1.0}, Color::Space::RGB);
 
 class InfiniteBuilder
     : public ObjectBuilder<std::variant<ReferenceCounted<Light>,
@@ -44,15 +48,14 @@ InfiniteBuilder::Build(
   ReferenceCounted<Spectrum> scalar = spectra.front();
 
   auto l_iter = parameters.find("L");
-  auto scale_iter = parameters.find("scale");
-  if (l_iter != parameters.end() && scale_iter != parameters.end()) {
-    std::cerr << "ERROR: Cannot specify parameters together: L, scale"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  } else if (l_iter != parameters.end()) {
+  if (l_iter != parameters.end()) {
     scalar = l_iter->second.GetSpectra().front();
-  } else if (scale_iter != parameters.end()) {
-    scalar = scale_iter->second.GetSpectra().front();
+  }
+
+  auto scale_iter = parameters.find("scale");
+  if (scale_iter != parameters.end()) {
+    scalar = spectrum_manager.AllocateSpectrum(
+        l_iter->second.GetSpectra().front(), scalar);
   }
 
   auto mapname_iter = parameters.find("mapname");
@@ -129,8 +132,8 @@ InfiniteBuilder::Build(
     }
   }
 
-  return MakeReferenceCounted<environmental_lights::ImageEnvironmentalLight>(
-      std::move(spectra), luma, size, model_to_world);
+  return MakeReferenceCounted<ImageEnvironmentalLight>(std::move(spectra), luma,
+                                                       size, model_to_world);
 }
 
 };  // namespace
@@ -140,4 +143,6 @@ extern const std::unique_ptr<const ObjectBuilder<
     SpectrumManager&, const Matrix&>>
     g_infinite_builder = std::make_unique<InfiniteBuilder>();
 
-}  // namespace iris::pbrt_frontend::lights
+}  // namespace lights
+}  // namespace pbrt_frontend
+}  // namespace iris

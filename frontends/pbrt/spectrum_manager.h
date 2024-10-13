@@ -25,7 +25,8 @@ class SpectrumManager {
   // that they will outlive the returned spectrum.
   virtual ReferenceCounted<Spectrum> AllocateSpectrum(
       const ReferenceCounted<Spectrum>& spectrum0,
-      const ReferenceCounted<Spectrum>& spectrum1, visual_t* luma) = 0;
+      const ReferenceCounted<Spectrum>& spectrum1,
+      visual_t* luma = nullptr) = 0;
 
   virtual ReferenceCounted<Reflector> AllocateReflector(const Color& color) = 0;
 

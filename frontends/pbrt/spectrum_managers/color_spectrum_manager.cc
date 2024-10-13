@@ -93,9 +93,9 @@ ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
   }
 
   Color rgb_color = ToRGB(color);
-  if (rgb_color.values[0] <= static_cast<visual>(0.0) &&
-      rgb_color.values[1] <= static_cast<visual>(0.0) &&
-      rgb_color.values[2] <= static_cast<visual>(0.0)) {
+  if (rgb_color.values[0] <= static_cast<visual_t>(0.0) &&
+      rgb_color.values[1] <= static_cast<visual_t>(0.0) &&
+      rgb_color.values[2] <= static_cast<visual_t>(0.0)) {
     return ReferenceCounted<Spectrum>();
   }
 
@@ -179,9 +179,9 @@ ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
 ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
     const Color& color) {
   Color rgb_color = ToRGB(color);
-  if (rgb_color.values[0] <= static_cast<visual>(0.0) &&
-      rgb_color.values[1] <= static_cast<visual>(0.0) &&
-      rgb_color.values[2] <= static_cast<visual>(0.0)) {
+  if (rgb_color.values[0] <= static_cast<visual_t>(0.0) &&
+      rgb_color.values[1] <= static_cast<visual_t>(0.0) &&
+      rgb_color.values[2] <= static_cast<visual_t>(0.0)) {
     return ReferenceCounted<Reflector>();
   }
 

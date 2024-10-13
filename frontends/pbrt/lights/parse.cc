@@ -3,10 +3,13 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "frontends/pbrt/lights/distant.h"
 #include "frontends/pbrt/lights/infinite.h"
 #include "frontends/pbrt/quoted_string.h"
 
-namespace iris::pbrt_frontend::lights {
+namespace iris {
+namespace pbrt_frontend {
+namespace lights {
 namespace {
 
 static const std::unordered_map<
@@ -14,7 +17,8 @@ static const std::unordered_map<
                           std::variant<ReferenceCounted<Light>,
                                        ReferenceCounted<EnvironmentalLight>>,
                           SpectrumManager&, const Matrix&>>&>
-    g_lights = {{"infinite", g_infinite_builder}};
+    g_lights = {{"distant", g_distant_builder},
+                {"infinite", g_infinite_builder}};
 
 }  // namespace
 
@@ -22,14 +26,14 @@ const ObjectBuilder<
     std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>,
     SpectrumManager&, const Matrix&>&
 Parse(Tokenizer& tokenizer) {
-  auto type = tokenizer.Next();
+  std::optional<std::string_view> type = tokenizer.Next();
   if (!type) {
     std::cerr << "ERROR: Too few parameters to directive: LightSource"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  auto unquoted = Unquote(*type);
+  std::optional<std::string_view> unquoted = Unquote(*type);
   if (!unquoted) {
     std::cerr << "ERROR: Parameter to LightSource must be a string"
               << std::endl;
@@ -46,4 +50,6 @@ Parse(Tokenizer& tokenizer) {
   return *iter->second;
 }
 
-}  // namespace iris::pbrt_frontend::lights
+}  // namespace lights
+}  // namespace pbrt_frontend
+}  // namespace iris

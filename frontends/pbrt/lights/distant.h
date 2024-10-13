@@ -1,5 +1,5 @@
-#ifndef _FRONTENDS_PBRT_LIGHTS_INFINITE_
-#define _FRONTENDS_PBRT_LIGHTS_INFINITE_
+#ifndef _FRONTENDS_PBRT_LIGHTS_DISTANT_
+#define _FRONTENDS_PBRT_LIGHTS_DISTANT_
 
 #include <memory>
 
@@ -17,10 +17,10 @@ namespace lights {
 extern const std::unique_ptr<const ObjectBuilder<
     std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>,
     SpectrumManager&, const Matrix&>>
-    g_infinite_builder;
+    g_distant_builder;
 
 }  // namespace lights
 }  // namespace pbrt_frontend
 }  // namespace iris
 
-#endif  // _FRONTENDS_PBRT_LIGHTS_INFINITE_
+#endif  // _FRONTENDS_PBRT_LIGHTS_DISTANT_
