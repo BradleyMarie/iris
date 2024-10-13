@@ -20,6 +20,13 @@ class SpectrumManager {
   virtual ReferenceCounted<Spectrum> AllocateSpectrum(
       const std::map<visual, visual>& wavelengths, visual_t* luma) = 0;
 
+  // Returns spectrum0 scaled by spectrum1. Both spectra are are guaranteed to
+  // have been allocated by *this* allocator; however, there is no guarantee
+  // that they will outlive the returned spectrum.
+  virtual ReferenceCounted<Spectrum> AllocateSpectrum(
+      const ReferenceCounted<Spectrum>& spectrum0,
+      const ReferenceCounted<Spectrum>& spectrum1, visual_t* luma) = 0;
+
   virtual ReferenceCounted<Reflector> AllocateReflector(const Color& color) = 0;
 
   virtual ReferenceCounted<Reflector> AllocateReflector(

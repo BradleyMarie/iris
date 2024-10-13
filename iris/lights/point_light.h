@@ -21,7 +21,7 @@ namespace lights {
 
 class PointLight final : public Light {
  public:
-  PointLight(Point location, iris::ReferenceCounted<Spectrum> spectrum) noexcept
+  PointLight(Point location, ReferenceCounted<Spectrum> spectrum) noexcept
       : spectrum_(std::move(spectrum)), location_(location) {
     assert(spectrum_);
   }
@@ -38,7 +38,7 @@ class PointLight final : public Light {
                  visual_t world_radius_squared) const override;
 
  private:
-  const iris::ReferenceCounted<Spectrum> spectrum_;
+  const ReferenceCounted<Spectrum> spectrum_;
   const Point location_;
 };
 

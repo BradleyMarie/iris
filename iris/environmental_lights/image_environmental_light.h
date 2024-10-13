@@ -23,7 +23,6 @@ class ImageEnvironmentalLight final : public EnvironmentalLight {
   ImageEnvironmentalLight(std::vector<ReferenceCounted<Spectrum>> spectra,
                           std::span<const visual> luma,
                           std::pair<size_t, size_t> size,
-                          ReferenceCounted<Spectrum> scalar,
                           const Matrix& model_to_world);
 
   std::optional<SampleResult> Sample(
@@ -39,7 +38,6 @@ class ImageEnvironmentalLight final : public EnvironmentalLight {
   std::vector<ReferenceCounted<Spectrum>> spectra_;
   internal::Distribution2D distribution_;
   std::pair<size_t, size_t> size_;
-  ReferenceCounted<Spectrum> scalar_;
   Matrix model_to_world_;
   visual_t power_;
 };

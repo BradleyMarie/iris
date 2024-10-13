@@ -6,7 +6,10 @@
 #include "iris/float.h"
 #include "iris/spectrum.h"
 
-namespace iris::pbrt_frontend::spectrum_managers::internal {
+namespace iris {
+namespace pbrt_frontend {
+namespace spectrum_managers {
+namespace internal {
 
 class ColorSpectrum final : public Spectrum {
  public:
@@ -22,6 +25,9 @@ class ColorSpectrum final : public Spectrum {
   const std::array<visual_t, 3> values_;
 };
 
-}  // namespace iris::pbrt_frontend::spectrum_managers::internal
+}  // namespace internal
+}  // namespace spectrum_managers
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_SPECTRUM_MANAGERS_INTERNAL_COLOR_SPECTRUM_

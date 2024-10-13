@@ -6,7 +6,9 @@
 #include "iris/color_matcher.h"
 #include "iris/power_matcher.h"
 
-namespace iris::pbrt_frontend::spectrum_managers {
+namespace iris {
+namespace pbrt_frontend {
+namespace spectrum_managers {
 
 class ColorColorMatcher final : public ColorMatcher {
  public:
@@ -37,6 +39,10 @@ class ColorSpectrumManager final : public SpectrumManager {
       const std::map<visual, visual>& wavelengths,
       visual_t* luma = nullptr) override;
 
+  ReferenceCounted<Spectrum> AllocateSpectrum(
+      const ReferenceCounted<Spectrum>& spectrum0,
+      const ReferenceCounted<Spectrum>& spectrum1, visual_t* luma) override;
+
   ReferenceCounted<Reflector> AllocateReflector(const Color& color) override;
 
   ReferenceCounted<Reflector> AllocateReflector(
@@ -48,6 +54,8 @@ class ColorSpectrumManager final : public SpectrumManager {
   visual_t spectral_scalar_;
 };
 
-}  // namespace iris::pbrt_frontend::spectrum_managers
+}  // namespace spectrum_managers
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_SPECTRUM_MANAGERS_COLOR_SPECTRUM_MANAGER_

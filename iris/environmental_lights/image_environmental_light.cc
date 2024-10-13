@@ -69,11 +69,10 @@ visual_t SafeDivide(visual_t numerator, visual_t denominator) {
 ImageEnvironmentalLight::ImageEnvironmentalLight(
     std::vector<ReferenceCounted<Spectrum>> spectra,
     std::span<const visual> luma, std::pair<size_t, size_t> size,
-    ReferenceCounted<Spectrum> scalar, const Matrix& model_to_world)
+    const Matrix& model_to_world)
     : spectra_(std::move(spectra)),
       distribution_(ScaleLuma(luma, size, power_), size),
       size_(size),
-      scalar_(std::move(scalar)),
       model_to_world_(model_to_world) {
   assert(!spectra_.empty());
   assert(spectra_.size() == size.first * size.second);
@@ -87,8 +86,7 @@ std::optional<EnvironmentalLight::SampleResult> ImageEnvironmentalLight::Sample(
   size_t offset;
   auto [u, v] = distribution_.Sample(sampler, &pdf, &offset);
 
-  const Spectrum* spectrum =
-      allocator.Scale(spectra_[offset].Get(), scalar_.Get());
+  const Spectrum* spectrum = spectra_[offset].Get();
   if (!spectrum) {
     return std::nullopt;
   }
@@ -124,7 +122,7 @@ const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
   size_t y = v * static_cast<geometric_t>(size_.first);
   size_t index = y * size_.second + x;
 
-  return allocator.Scale(spectra_[index].Get(), scalar_.Get());
+  return spectra_[index].Get();
 }
 
 visual_t ImageEnvironmentalLight::Power(const PowerMatcher& power_matcher,

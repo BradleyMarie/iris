@@ -6,20 +6,26 @@
 #include "iris/reflectors/sampled_reflector.h"
 #include "iris/spectra/sampled_spectrum.h"
 
-namespace iris::pbrt_frontend::spectrum_managers {
+namespace iris {
+namespace pbrt_frontend {
+namespace spectrum_managers {
 namespace {
+
+using ::iris::pbrt_frontend::spectrum_managers::internal::ColorReflector;
+using ::iris::pbrt_frontend::spectrum_managers::internal::ColorSpectrum;
 
 static iris::color_matchers::CieColorMatcher g_color_matcher;
 
 visual_t ComputeSpectralScalar(bool all_spectra_are_reflective) {
   if (!all_spectra_are_reflective) {
-    return 1.0;
+    return static_cast<visual_t>(1.0);
   }
 
   std::map<visual, visual> wavelengths = {
       {static_cast<visual>(1.0), static_cast<visual>(1.0)}};
   iris::spectra::SampledSpectrum sampled_spectrum(wavelengths);
-  return 1.0 / g_color_matcher.Match(sampled_spectrum)[1];
+  return static_cast<visual_t>(1.0) /
+         g_color_matcher.Match(sampled_spectrum)[1];
 }
 
 Color ToRGB(const Color& color) {
@@ -48,8 +54,9 @@ visual_t ToLuma(const Color& color) {
 
 std::array<visual_t, 3> ColorColorMatcher::Match(
     const Spectrum& spectrum) const {
-  return {spectrum.Intensity(0.5), spectrum.Intensity(1.5),
-          spectrum.Intensity(2.5)};
+  return {spectrum.Intensity(static_cast<visual_t>(0.5)),
+          spectrum.Intensity(static_cast<visual_t>(1.5)),
+          spectrum.Intensity(static_cast<visual_t>(2.5))};
 }
 
 iris::Color::Space ColorColorMatcher::ColorSpace() const {
@@ -57,14 +64,18 @@ iris::Color::Space ColorColorMatcher::ColorSpace() const {
 }
 
 visual_t ColorAlbedoMatcher::Match(const Reflector& reflector) const {
-  iris::Color color(reflector.Reflectance(0.5), reflector.Reflectance(1.5),
-                    reflector.Reflectance(2.5), iris::Color::LINEAR_SRGB);
+  iris::Color color(reflector.Reflectance(static_cast<visual_t>(0.5)),
+                    reflector.Reflectance(static_cast<visual_t>(1.5)),
+                    reflector.Reflectance(static_cast<visual_t>(2.5)),
+                    iris::Color::LINEAR_SRGB);
   return color.Luma();
 }
 
 visual_t ColorPowerMatcher::Match(const Spectrum& spectrum) const {
-  iris::Color color(spectrum.Intensity(0.5), spectrum.Intensity(1.5),
-                    spectrum.Intensity(2.5), iris::Color::LINEAR_SRGB);
+  iris::Color color(spectrum.Intensity(static_cast<visual_t>(0.5)),
+                    spectrum.Intensity(static_cast<visual_t>(1.5)),
+                    spectrum.Intensity(static_cast<visual_t>(2.5)),
+                    iris::Color::LINEAR_SRGB);
   return color.Luma();
 }
 
@@ -82,14 +93,13 @@ ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
   }
 
   Color rgb_color = ToRGB(color);
-  if (rgb_color.values[0] <= 0.0 && rgb_color.values[1] <= 0.0 &&
-      rgb_color.values[2] <= 0.0) {
+  if (rgb_color.values[0] <= static_cast<visual>(0.0) &&
+      rgb_color.values[1] <= static_cast<visual>(0.0) &&
+      rgb_color.values[2] <= static_cast<visual>(0.0)) {
     return ReferenceCounted<Spectrum>();
   }
 
-  return iris::MakeReferenceCounted<
-      iris::pbrt_frontend::spectrum_managers::internal::ColorSpectrum>(
-      rgb_color);
+  return MakeReferenceCounted<ColorSpectrum>(rgb_color);
 }
 
 ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
@@ -106,26 +116,76 @@ ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
   }
 
   auto rgb_color = xyz_color.ConvertTo(iris::Color::LINEAR_SRGB);
-  if (rgb_color.r <= 0.0 && rgb_color.g <= 0.0 && rgb_color.b <= 0.0) {
+  if (rgb_color.r <= static_cast<visual>(0.0) &&
+      rgb_color.g <= static_cast<visual>(0.0) &&
+      rgb_color.b <= static_cast<visual>(0.0)) {
     return ReferenceCounted<Spectrum>();
   }
 
-  return iris::MakeReferenceCounted<
-      iris::pbrt_frontend::spectrum_managers::internal::ColorSpectrum>(
-      rgb_color);
+  return MakeReferenceCounted<ColorSpectrum>(rgb_color);
+}
+
+ReferenceCounted<Spectrum> ColorSpectrumManager::AllocateSpectrum(
+    const ReferenceCounted<Spectrum>& spectrum0,
+    const ReferenceCounted<Spectrum>& spectrum1, visual_t* luma) {
+  if (!spectrum0) {
+    if (luma) {
+      *luma = static_cast<visual_t>(0.0);
+    }
+
+    return spectrum0;
+  }
+
+  if (!spectrum1) {
+    if (luma) {
+      *luma = static_cast<visual_t>(0.0);
+    }
+
+    return spectrum1;
+  }
+
+  visual_t spectrum0_r = spectrum0->Intensity(static_cast<visual_t>(0.5));
+  visual_t spectrum0_g = spectrum0->Intensity(static_cast<visual_t>(1.5));
+  visual_t spectrum0_b = spectrum0->Intensity(static_cast<visual_t>(2.5));
+
+  visual_t spectrum1_r = spectrum1->Intensity(static_cast<visual_t>(0.5));
+  visual_t spectrum1_g = spectrum1->Intensity(static_cast<visual_t>(1.5));
+  visual_t spectrum1_b = spectrum1->Intensity(static_cast<visual_t>(2.5));
+
+  visual r = spectrum0_r * spectrum1_r;
+  visual g = spectrum0_g * spectrum1_g;
+  visual b = spectrum0_b * spectrum1_b;
+  Color rgb_color({r, g, b}, Color::RGB);
+
+  if (luma) {
+    *luma = ToLuma(rgb_color);
+  }
+
+  if (spectrum0_r == static_cast<visual_t>(1.0) &&
+      spectrum0_g == static_cast<visual_t>(1.0) &&
+      spectrum0_b == static_cast<visual_t>(1.0)) {
+    return spectrum1;
+  }
+
+  if (spectrum1_r == static_cast<visual_t>(1.0) &&
+      spectrum1_g == static_cast<visual_t>(1.0) &&
+      spectrum1_b == static_cast<visual_t>(1.0)) {
+    return spectrum0;
+  }
+
+  return MakeReferenceCounted<ColorSpectrum>(rgb_color);
 }
 
 ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
     const Color& color) {
   Color rgb_color = ToRGB(color);
-  if (rgb_color.values[0] <= 0.0 && rgb_color.values[1] <= 0.0 &&
-      rgb_color.values[2] <= 0.0) {
+  if (rgb_color.values[0] <= static_cast<visual>(0.0) &&
+      rgb_color.values[1] <= static_cast<visual>(0.0) &&
+      rgb_color.values[2] <= static_cast<visual>(0.0)) {
     return ReferenceCounted<Reflector>();
   }
 
-  return iris::MakeReferenceCounted<
-      iris::pbrt_frontend::spectrum_managers::internal::ColorReflector>(
-      rgb_color);
+  return MakeReferenceCounted<ColorReflector>(rgb_color);
 }
 
 ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
@@ -140,7 +200,9 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
   iris::Color xyz_color(values[0], values[1], values[2],
                         g_color_matcher.ColorSpace());
   auto rgb_color = xyz_color.ConvertTo(iris::Color::LINEAR_SRGB);
-  if (rgb_color.r <= 0.0 && rgb_color.g <= 0.0 && rgb_color.b <= 0.0) {
+  if (rgb_color.r <= static_cast<visual>(0.0) &&
+      rgb_color.g <= static_cast<visual>(0.0) &&
+      rgb_color.b <= static_cast<visual>(0.0)) {
     return ReferenceCounted<Reflector>();
   }
 
@@ -150,11 +212,11 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
                   std::min(static_cast<visual>(1.0), rgb_color.b),
                   iris::Color::LINEAR_SRGB);
 
-  return iris::MakeReferenceCounted<
-      iris::pbrt_frontend::spectrum_managers::internal::ColorReflector>(
-      bounded_rgb_color);
+  return MakeReferenceCounted<ColorReflector>(bounded_rgb_color);
 }
 
 void ColorSpectrumManager::Clear() {}
 
-}  // namespace iris::pbrt_frontend::spectrum_managers
+}  // namespace spectrum_managers
+}  // namespace pbrt_frontend
+}  // namespace iris

@@ -22,7 +22,7 @@ namespace lights {
 class DirectionalLight final : public Light {
  public:
   DirectionalLight(Vector to_light,
-                   iris::ReferenceCounted<Spectrum> spectrum) noexcept
+                   ReferenceCounted<Spectrum> spectrum) noexcept
       : spectrum_(std::move(spectrum)), to_light_(to_light) {
     assert(spectrum_);
   }
@@ -39,7 +39,7 @@ class DirectionalLight final : public Light {
                  visual_t world_radius_squared) const override;
 
  private:
-  const iris::ReferenceCounted<Spectrum> spectrum_;
+  const ReferenceCounted<Spectrum> spectrum_;
   const Vector to_light_;
 };
 

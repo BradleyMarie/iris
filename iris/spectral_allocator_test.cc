@@ -55,24 +55,6 @@ TEST(SpectralAllocator, SpectrumScale) {
   EXPECT_EQ(0.25, allocator.Scale(&spectrum, 0.5)->Intensity(1.0));
 }
 
-TEST(SpectralAllocator, SpectraScaleNullptr) {
-  iris::internal::Arena arena;
-  iris::SpectralAllocator allocator(arena);
-
-  iris::spectra::MockSpectrum spectrum;
-  EXPECT_EQ(nullptr, allocator.Scale(nullptr, &spectrum));
-  EXPECT_EQ(nullptr, allocator.Scale(&spectrum, nullptr));
-}
-
-TEST(SpectralAllocator, SpectraScale) {
-  iris::internal::Arena arena;
-  iris::SpectralAllocator allocator(arena);
-
-  iris::spectra::MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(1.0)).WillRepeatedly(testing::Return(0.5));
-  EXPECT_EQ(0.25, allocator.Scale(&spectrum, &spectrum)->Intensity(1.0));
-}
-
 TEST(SpectralAllocator, SpectrumReflectNullptr) {
   iris::internal::Arena arena;
   iris::SpectralAllocator allocator(arena);

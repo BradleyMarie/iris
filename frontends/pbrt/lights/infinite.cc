@@ -97,9 +97,12 @@ InfiniteBuilder::Build(
             exit(EXIT_FAILURE);
           }
 
+          ReferenceCounted<Spectrum> pixel_spectrum =
+              spectrum_manager.AllocateSpectrum(Color{{r, g, b}, Color::RGB});
+
           visual_t luma_value;
           spectra.push_back(spectrum_manager.AllocateSpectrum(
-              Color{{r, g, b}, Color::RGB}, &luma_value));
+              pixel_spectrum, scalar, &luma_value));
           luma.push_back(luma_value);
         }
       }
@@ -127,7 +130,7 @@ InfiniteBuilder::Build(
   }
 
   return MakeReferenceCounted<environmental_lights::ImageEnvironmentalLight>(
-      std::move(spectra), luma, size, std::move(scalar), model_to_world);
+      std::move(spectra), luma, size, model_to_world);
 }
 
 };  // namespace
