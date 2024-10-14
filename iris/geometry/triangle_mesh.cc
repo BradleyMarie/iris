@@ -356,7 +356,7 @@ std::optional<visual_t> Triangle::ComputePdfBySolidAngle(
   const auto* additional = static_cast<const AdditionalData*>(additional_data);
 
   geometric_t cos_theta =
-      AbsDotProduct(to_sample, Normalize(additional->surface_normal));
+      ClampedAbsDotProduct(to_sample, Normalize(additional->surface_normal));
   geometric_t surface_area =
       additional->surface_normal.Length() * static_cast<geometric_t>(0.5);
 

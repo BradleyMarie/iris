@@ -78,7 +78,7 @@ visual_t AshikhminShirleyBrdf::Pdf(const Vector& incoming,
   Vector half_angle = *internal::HalfAngle(incoming, outgoing);
   visual_t specular_pdf =
       distribution_.Pdf(incoming, half_angle) /
-      (static_cast<visual_t>(8.0) * DotProduct(incoming, half_angle));
+      (static_cast<visual_t>(8.0) * ClampedDotProduct(incoming, half_angle));
 
   return diffuse_pdf + specular_pdf;
 }
@@ -115,7 +115,7 @@ const Reflector* AshikhminShirleyBrdf::Reflectance(
   }
 
   Vector half_angle = *internal::HalfAngle(incoming, outgoing);
-  visual_t cos_theta_half_angle = DotProduct(outgoing, half_angle);
+  visual_t cos_theta_half_angle = ClampedDotProduct(outgoing, half_angle);
 
   visual_t specular_attenuation =
       distribution_.D(half_angle) /

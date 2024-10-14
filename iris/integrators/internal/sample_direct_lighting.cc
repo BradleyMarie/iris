@@ -29,7 +29,7 @@ const Spectrum* DeltaLight(const Light::SampleResult& sample,
   }
 
   visual_t falloff =
-      AbsDotProduct(intersection.shading_normal, sample.to_light);
+      ClampedAbsDotProduct(intersection.shading_normal, sample.to_light);
   auto* spectrum = allocator.Scale(&sample.emission, falloff);
   return allocator.Reflect(spectrum, &diffuse->reflector);
 }
@@ -45,7 +45,7 @@ const Spectrum* FromLightSample(
   }
 
   visual_t falloff =
-      AbsDotProduct(intersection.shading_normal, sample.to_light);
+      ClampedAbsDotProduct(intersection.shading_normal, sample.to_light);
   visual_t weight = PowerHeuristic(*sample.pdf, diffuse->pdf);
   visual_t attenuation = (falloff * weight) / *sample.pdf;
   auto* spectrum = allocator.Scale(&sample.emission, attenuation);
@@ -65,7 +65,7 @@ const Spectrum* FromBsdfSample(
   }
 
   visual_t falloff =
-      AbsDotProduct(intersection.shading_normal, sample.direction);
+      ClampedAbsDotProduct(intersection.shading_normal, sample.direction);
   visual_t weight = PowerHeuristic(sample.pdf, light_pdf);
   visual_t attenuation = (falloff * weight) / sample.pdf;
   auto* spectrum = allocator.Scale(emissions, attenuation);

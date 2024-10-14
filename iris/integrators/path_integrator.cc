@@ -67,9 +67,9 @@ const Spectrum* PathIntegrator::Integrate(
 
     visual_t attenuation = static_cast<visual_t>(1.0);
     if (bsdf_sample->diffuse) {
-      attenuation =
-          AbsDotProduct(trace_result.surface_intersection->shading_normal,
-                        bsdf_sample->direction);
+      attenuation = ClampedAbsDotProduct(
+          trace_result.surface_intersection->shading_normal,
+          bsdf_sample->direction);
     }
 
     attenuation /= bsdf_sample->pdf;

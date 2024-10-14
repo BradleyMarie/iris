@@ -20,8 +20,8 @@ visual_t MicrofacetDistribution::G1(const Vector& vector) const {
 
 visual_t MicrofacetDistribution::Pdf(const Vector& incoming,
                                      const Vector& half_angle) const {
-  return D(half_angle) * G1(incoming) * AbsDotProduct(incoming, half_angle) /
-         AbsCosTheta(incoming);
+  return D(half_angle) * G1(incoming) *
+         ClampedAbsDotProduct(incoming, half_angle) / AbsCosTheta(incoming);
 }
 
 }  // namespace bxdfs

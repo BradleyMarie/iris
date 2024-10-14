@@ -79,7 +79,7 @@ visual_t MicrofacetBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
     return static_cast<visual_t>(0.0);
   }
 
-  visual_t dot_product = DotProduct(incoming, *half_angle);
+  visual_t dot_product = ClampedDotProduct(incoming, *half_angle);
   return distribution_.Pdf(incoming, *half_angle) /
          (static_cast<visual_t>(4.0) * dot_product);
 }

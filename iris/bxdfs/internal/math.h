@@ -91,8 +91,9 @@ static inline std::optional<Vector> Reflect(const Vector& vector,
     return std::nullopt;
   }
 
-  return static_cast<geometric_t>(2.0) * DotProduct(vector, normal) * normal -
-         vector;
+  geometric_t scalar =
+      static_cast<geometric_t>(2.0) * DotProduct(vector, normal);
+  return scalar * normal - vector;
 }
 
 static inline std::optional<Vector> Refract(
