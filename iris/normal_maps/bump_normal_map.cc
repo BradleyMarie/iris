@@ -29,7 +29,7 @@ std::pair<geometric_t, geometric_t> ComputeNormal(
                      (std::abs(texture_coordinates.differentials->dv_dx) +
                       std::abs(texture_coordinates.differentials->dv_dy));
 
-    if (du != static_cast<geometric_t>(0.0)) {
+    if (dv != static_cast<geometric_t>(0.0)) {
       TextureCoordinates texture_coordinates_dv{
           {texture_coordinates.uv[0], texture_coordinates.uv[1] + dv},
           texture_coordinates.differentials};
