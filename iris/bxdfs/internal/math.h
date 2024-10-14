@@ -15,20 +15,21 @@ namespace bxdfs {
 namespace internal {
 
 static inline geometric_t CosTheta(const Vector& vector) {
-  return static_cast<geometric_t>(vector.z);
+  return std::clamp(static_cast<geometric_t>(vector.z),
+                    static_cast<geometric_t>(-1.0),
+                    static_cast<geometric_t>(1.0));
 }
 
 static inline geometric_t AbsCosTheta(const Vector& vector) {
-  return std::abs(CosTheta(vector));
+  return std::min(static_cast<geometric>(1.0), std::abs(vector.z));
 }
 
 static inline geometric_t CosSquaredTheta(const Vector& vector) {
-  return CosTheta(vector) * CosTheta(vector);
+  return std::min(static_cast<geometric_t>(1.0), vector.z * vector.z);
 }
 
 static inline geometric_t SinSquaredTheta(const Vector& vector) {
-  return static_cast<geometric_t>(1.0) -
-         std::min(static_cast<geometric_t>(1.0), CosSquaredTheta(vector));
+  return static_cast<geometric_t>(1.0) - CosSquaredTheta(vector);
 }
 
 static inline geometric_t SinTheta(const Vector& vector) {
