@@ -180,8 +180,8 @@ visual_t MicrofacetBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
     return static_cast<visual_t>(0.0);
   }
 
-  visual_t dp_incoming = DotProduct(incoming, *half_angle);
-  visual_t dp_outgoing = DotProduct(outgoing, *half_angle);
+  visual_t dp_incoming = ClampedDotProduct(incoming, *half_angle);
+  visual_t dp_outgoing = ClampedDotProduct(outgoing, *half_angle);
 
   if (std::signbit(dp_incoming) == std::signbit(dp_outgoing)) {
     return static_cast<visual_t>(0.0);
@@ -219,8 +219,8 @@ const Reflector* MicrofacetBtdf::Reflectance(
                           ? -*maybe_half_angle
                           : *maybe_half_angle;
 
-  visual_t dp_incoming = DotProduct(incoming, half_angle);
-  visual_t dp_outgoing = DotProduct(outgoing, half_angle);
+  visual_t dp_incoming = ClampedDotProduct(incoming, half_angle);
+  visual_t dp_outgoing = ClampedDotProduct(outgoing, half_angle);
 
   if (std::signbit(dp_incoming) == std::signbit(dp_outgoing)) {
     return nullptr;
