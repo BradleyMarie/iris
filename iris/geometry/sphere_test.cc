@@ -1,5 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/geometry/sphere.h"
+
+#include <numbers>
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
@@ -240,12 +241,12 @@ TEST_F(Sphere, ComputeSurfaceArea) {
 
   iris::visual_t surface_area0 =
       sphere->ComputeSurfaceArea(FRONT_FACE, nullptr);
-  EXPECT_NEAR(16.0 * M_PI, surface_area0, 0.001);
+  EXPECT_NEAR(16.0 * std::numbers::pi, surface_area0, 0.001);
 
   iris::Matrix model_to_world = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
   iris::visual_t surface_area1 =
       sphere->ComputeSurfaceArea(FRONT_FACE, &model_to_world);
-  EXPECT_NEAR(64.0 * M_PI, surface_area1, 0.001);
+  EXPECT_NEAR(64.0 * std::numbers::pi, surface_area1, 0.001);
 }
 
 TEST_F(Sphere, SampleBySolidAngle) {

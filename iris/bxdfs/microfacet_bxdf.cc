@@ -245,8 +245,7 @@ const Reflector* MicrofacetBtdf::Reflectance(
   visual_t attenuation = std::abs(numer / denom);
 
   // It may be better to do this in the integrator
-  attenuation *=
-      static_cast<visual_t>(1.0) / (refractive_ratio * refractive_ratio);
+  attenuation /= refractive_ratio * refractive_ratio;
 
   return allocator.UnboundedScale(transmittance, attenuation);
 }

@@ -1,9 +1,8 @@
-#define _USE_MATH_DEFINES
 #include "iris/lights/directional_light.h"
 
-#include <cmath>
 #include <limits>
 #include <memory>
+#include <numbers>
 #include <optional>
 
 #include "googlemock/include/gmock/gmock.h"
@@ -83,7 +82,7 @@ TEST(DirectionalLightTest, Power) {
 
   MockPowerMatcher power_matcher;
   EXPECT_CALL(power_matcher, Match(Ref(*spectrum))).WillOnce(Return(1.0));
-  EXPECT_NEAR(M_PI, light.Power(power_matcher, 1.0), 0.0001);
+  EXPECT_NEAR(std::numbers::pi, light.Power(power_matcher, 1.0), 0.0001);
 }
 
 }  // namespace

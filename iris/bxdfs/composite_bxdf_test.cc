@@ -1,8 +1,5 @@
 #include "iris/bxdfs/composite_bxdf.h"
 
-#define _USE_MATH_CONSTANTS
-#include <cmath>
-
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/mock_bxdf.h"
 #include "iris/random/mock_random.h"

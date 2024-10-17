@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/materials/plastic_material.h"
 
-#include <cmath>
+#include <numbers>
 
 #include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
@@ -72,7 +71,8 @@ TEST(PlasticMaterialTest, LambertianOnly) {
       result->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                           Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
-  EXPECT_NEAR(M_1_PI, returned_reflector->Reflectance(1.0), 0.0001);
+  EXPECT_NEAR(std::numbers::inv_pi, returned_reflector->Reflectance(1.0),
+              0.0001);
 }
 
 TEST(PlasticMaterialTest, SpecularOnly) {

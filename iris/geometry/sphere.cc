@@ -1,9 +1,8 @@
-#define _USE_MATH_DEFINES
 #include "iris/geometry/sphere.h"
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
+#include <numbers>
 
 namespace iris {
 namespace geometry {
@@ -153,7 +152,7 @@ visual_t Sphere::ComputeSurfaceArea(face_t face,
     radius_squared *= model_to_world->m[0][0] * model_to_world->m[0][0];
   }
 
-  return static_cast<visual_t>(4.0 * M_PI) * radius_squared;
+  return static_cast<visual_t>(4.0 * std::numbers::pi) * radius_squared;
 }
 
 std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
@@ -180,7 +179,9 @@ std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
     geometric_t sampled_sin_theta = std::sqrt(
         static_cast<geometric_t>(1.0) - sampled_cos_theta * sampled_cos_theta);
 
-    geometric_t sampled_phi = std::lerp(-M_PI, M_PI, sampler.Next());
+    geometric_t sampled_phi =
+        std::lerp(-std::numbers::pi_v<geometric_t>,
+                  std::numbers::pi_v<geometric_t>, sampler.Next());
 
     return sampled_sin_theta *
                (std::cos(sampled_phi) * vx + std::sin(sampled_phi) * vy) +
@@ -192,7 +193,8 @@ std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
   }
 
   geometric_t z = std::lerp(-radius_, radius_, sampler.Next());
-  geometric_t phi = std::lerp(-M_PI, M_PI, sampler.Next());
+  geometric_t phi = std::lerp(-std::numbers::pi_v<geometric_t>,
+                              std::numbers::pi_v<geometric_t>, sampler.Next());
 
   geometric_t r = std::sqrt(
       std::max(static_cast<geometric_t>(0.0), radius_squared_ - z * z));
@@ -209,13 +211,15 @@ std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
     Vector to_center = center_ - origin;
     geometric_t distance_to_center_squared = DotProduct(to_center, to_center);
 
-    geometric_t sin_theta_squared =
-        radius_squared_ / distance_to_center_squared;
-    geometric_t cos_theta_squared =
+    visual_t sin_theta_squared =
+        static_cast<visual_t>(radius_squared_ / distance_to_center_squared);
+    visual_t cos_theta_squared =
         std::max(static_cast<geometric_t>(0.0),
                  static_cast<geometric_t>(1.0) - sin_theta_squared);
-    geometric_t cos_theta = std::sqrt(cos_theta_squared);
-    return static_cast<visual_t>(1.0 / (2.0 * M_PI * (1.0 - cos_theta)));
+    visual_t cos_theta = std::sqrt(cos_theta_squared);
+
+    return static_cast<visual_t>(std::numbers::inv_pi / 2.0) /
+           (static_cast<visual_t>(1.0) - cos_theta);
   }
 
   geometric_t distance_to_sample_squared;
@@ -224,7 +228,8 @@ std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
   geometric_t cos_theta = DotProduct(Normalize(surface_normal), to_face);
 
   return static_cast<visual_t>(distance_to_sample_squared /
-                               (cos_theta * 4.0 * M_PI * radius_squared_));
+                               (cos_theta * radius_squared_)) *
+         static_cast<visual_t>(std::numbers::inv_pi / 4.0);
 }
 
 BoundingBox Sphere::ComputeBounds(const Matrix* model_to_world) const {

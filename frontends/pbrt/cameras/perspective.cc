@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "frontends/pbrt/cameras/perspective.h"
 
-#include <optional>
+#include <numbers>
 
 #include "iris/cameras/pinhole_camera.h"
 #include "iris/cameras/thin_lens_camera.h"
@@ -118,9 +117,9 @@ PerspectiveObjectBuilder::Build(
   }
 
   if (half_fov) {
-    *half_fov *= static_cast<geometric_t>(M_PI / 180.0);
+    *half_fov *= static_cast<geometric_t>(std::numbers::pi / 180.0);
   } else {
-    half_fov = static_cast<geometric_t>(M_PI_4);
+    half_fov = static_cast<geometric_t>(std::numbers::pi / 4.0);
   }
 
   return [aspect_ratio, half_fov, focus_distance, lens_radius, screen_window,

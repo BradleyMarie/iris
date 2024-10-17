@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/bxdfs/lambertian_bxdf.h"
 
-#include <cmath>
+#include <numbers>
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random/mock_random.h"
@@ -83,7 +82,7 @@ TEST(LambertianBrdfTest, DiffusePdfTransmitted) {
 TEST(LambertianBrdfTest, DiffusePdfReflected) {
   MockReflector reflector;
   LambertianBrdf bxdf(reflector);
-  EXPECT_NEAR(M_1_PI,
+  EXPECT_NEAR(std::numbers::inv_pi,
               bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                        Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF),
               0.001);
@@ -120,7 +119,7 @@ TEST(LambertianBrdfTest, Reflectance) {
       bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                        Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);
+  EXPECT_NEAR(std::numbers::inv_pi, result->Reflectance(1.0), 0.0001);
 }
 
 TEST(LambertianBtdfTest, IsDiffuse) {
@@ -191,7 +190,7 @@ TEST(LambertianBtdfTest, DiffusePdfReflected) {
 TEST(LambertianBtdfTest, DiffusePdfTransmitted) {
   MockReflector reflector;
   LambertianBtdf bxdf(reflector);
-  EXPECT_NEAR(M_1_PI,
+  EXPECT_NEAR(std::numbers::inv_pi,
               bxdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                        Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF),
               0.001);
@@ -228,7 +227,7 @@ TEST(LambertianBtdfTest, Reflectance) {
       bxdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
                        Bxdf::Hemisphere::BTDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_NEAR(M_1_PI, result->Reflectance(1.0), 0.0001);
+  EXPECT_NEAR(std::numbers::inv_pi, result->Reflectance(1.0), 0.0001);
 }
 
 }  // namespace bxdfs

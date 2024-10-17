@@ -1,8 +1,7 @@
-#define _USE_MATH_DEFINES
 #include "iris/bxdfs/ashikhmin_shirley_brdf.h"
 
-#include <cmath>
 #include <iostream>
+#include <numbers>
 
 #include "iris/bxdfs/internal/math.h"
 
@@ -94,7 +93,7 @@ const Reflector* AshikhminShirleyBrdf::Reflectance(
   visual_t cos_theta_outgoing = AbsCosTheta(outgoing);
 
   visual_t diffuse_attenuation =
-      static_cast<visual_t>(28.0 / (23.0 * M_PI)) *
+      static_cast<visual_t>(28.0 * std::numbers::inv_pi / 23.0) *
       (static_cast<visual_t>(1.0) -
        Pow5(static_cast<visual_t>(1.0) -
             static_cast<visual_t>(0.5) * cos_theta_incoming)) *

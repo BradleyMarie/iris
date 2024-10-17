@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/bxdf_allocator.h"
 
-#include <cmath>
+#include <numbers>
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/lambertian_bxdf.h"
@@ -15,7 +14,7 @@ TEST(BxdfAllocatorTest, Allocate) {
   const iris::Bxdf& bxdf =
       allocator.Allocate<iris::bxdfs::LambertianBrdf>(reflector);
   EXPECT_NEAR(
-      M_1_PI,
+      std::numbers::inv_pi,
       bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
                iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF),
       0.01);

@@ -1,9 +1,8 @@
-#define _USE_MATH_DEFINES
 #include "iris/bxdfs/internal/math.h"
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
+#include <numbers>
 
 namespace iris {
 namespace bxdfs {
@@ -73,10 +72,11 @@ Vector CosineSampleHemisphere(geometric incoming_z, Sampler& sampler) {
   geometric_t theta, radius;
   if (std::abs(u) > std::abs(v)) {
     radius = u;
-    theta = M_PI_4 * (v / u);
+    theta = static_cast<geometric_t>(std::numbers::pi / 4.0) * (v / u);
   } else {
     radius = v;
-    theta = M_PI_2 - M_PI_4 * (u / v);
+    theta = static_cast<geometric_t>(std::numbers::pi / 2.0) -
+            static_cast<geometric_t>(std::numbers::pi / 4.0) * (u / v);
   }
 
   geometric_t x = radius * std::cos(theta);

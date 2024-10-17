@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/bxdfs/lambertian_bxdf.h"
 
-#include <cmath>
+#include <numbers>
 
 #include "iris/bxdfs/internal/math.h"
 
@@ -37,7 +36,8 @@ visual_t LambertianBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
     return static_cast<visual_t>(0.0);
   }
 
-  return static_cast<visual_t>(std::abs(outgoing.z * M_1_PI));
+  return std::abs(static_cast<visual_t>(outgoing.z) *
+                  std::numbers::inv_pi_v<visual_t>);
 }
 
 const Reflector* LambertianBrdf::Reflectance(
@@ -47,7 +47,7 @@ const Reflector* LambertianBrdf::Reflectance(
     return nullptr;
   }
 
-  return allocator.Scale(&reflector_, M_1_PI);
+  return allocator.Scale(&reflector_, std::numbers::inv_pi_v<visual_t>);
 }
 
 bool LambertianBtdf::IsDiffuse(visual_t* diffuse_pdf) const {
@@ -79,7 +79,8 @@ visual_t LambertianBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
     return static_cast<visual_t>(0.0);
   }
 
-  return static_cast<visual_t>(std::abs(outgoing.z * M_1_PI));
+  return std::abs(static_cast<visual_t>(outgoing.z) *
+                  std::numbers::inv_pi_v<visual_t>);
 }
 
 const Reflector* LambertianBtdf::Reflectance(
@@ -89,7 +90,7 @@ const Reflector* LambertianBtdf::Reflectance(
     return nullptr;
   }
 
-  return allocator.Scale(&transmittance_, M_1_PI);
+  return allocator.Scale(&transmittance_, std::numbers::inv_pi_v<visual_t>);
 }
 
 }  // namespace bxdfs

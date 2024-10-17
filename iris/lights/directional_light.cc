@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/lights/directional_light.h"
 
-#include <cmath>
+#include <numbers>
 
 namespace iris {
 namespace lights {
@@ -26,7 +25,7 @@ const Spectrum* DirectionalLight::Emission(const Ray& to_light,
 
 visual_t DirectionalLight::Power(const PowerMatcher& power_matcher,
                                  visual_t world_radius_squared) const {
-  return static_cast<visual_t>(M_PI) * world_radius_squared *
+  return std::numbers::pi_v<visual_t> * world_radius_squared *
          power_matcher.Match(*spectrum_);
 }
 

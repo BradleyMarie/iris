@@ -1,4 +1,3 @@
-#define _USE_MATH_DEFINES
 #include "frontends/pbrt/matrix_manager.h"
 
 #include <array>
@@ -6,6 +5,7 @@
 #include <charconv>
 #include <cstdlib>
 #include <iostream>
+#include <numbers>
 #include <string_view>
 #include <unordered_map>
 
@@ -113,8 +113,9 @@ void MatrixManager::Rotate(Tokenizer& tokenizer) {
     exit(EXIT_FAILURE);
   }
 
-  Transform(Matrix::Rotation((values[0] / 180.0) * M_PI, values[1], values[2],
-                             values[3])
+  Transform(Matrix::Rotation(
+                static_cast<geometric>(values[0] / (180.0 * std::numbers::pi)),
+                values[1], values[2], values[3])
                 .value());
 }
 

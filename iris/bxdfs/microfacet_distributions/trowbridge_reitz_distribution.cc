@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 
-#include <cmath>
+#include <numbers>
 
 #include "iris/bxdfs/internal/math.h"
 
@@ -21,7 +20,7 @@ std::pair<geometric_t, geometric_t> TrowbridgeReitzSample11(
     const Vector& incoming, geometric_t u, geometric_t v) {
   if (CosTheta(incoming) > static_cast<geometric_t>(0.9999)) {
     geometric_t r = std::sqrt(u / (static_cast<geometric_t>(1.0) - u));
-    geometric_t phi = static_cast<geometric_t>(2.0 * M_PI) * v;
+    geometric_t phi = static_cast<geometric_t>(2.0 * std::numbers::pi) * v;
     return std::make_pair(r * std::cos(phi), r * std::sin(phi));
   }
 
@@ -94,9 +93,9 @@ visual_t TrowbridgeReitzDistribution::D(const Vector& vector) const {
                                        sin_squared_phi / (alpha_y_ * alpha_y_));
   geometric_t e_plus_1 = static_cast<geometric_t>(1.0) + e;
 
-  return static_cast<geometric_t>(1.0) /
-         (static_cast<geometric_t>(M_PI) * alpha_x_ * alpha_y_ * cos_4_theta *
-          e_plus_1 * e_plus_1);
+  return std::numbers::inv_pi_v<visual_t> /
+         static_cast<visual_t>(alpha_x_ * alpha_y_ * cos_4_theta * e_plus_1 *
+                               e_plus_1);
 }
 
 visual_t TrowbridgeReitzDistribution::Lambda(const Vector& vector) const {

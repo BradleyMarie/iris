@@ -1,7 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "iris/cameras/thin_lens_camera.h"
 
-#include <cmath>
+#include <numbers>
 
 #include "googletest/include/gtest/gtest.h"
 
@@ -15,15 +14,15 @@ constexpr std::array<geometric_t, 2> kLensCenter = {0.5, 0.5};
 
 TEST(ThinLensCameraTest, HasLens) {
   ThinLensCamera camera(Matrix::Identity(),
-                        std::array<geometric_t, 2>({1.0, 1.0}), M_PI_4,
-                        kLensRadius, kFocusDistance);
+                        std::array<geometric_t, 2>({1.0, 1.0}),
+                        std::numbers::pi / 4.0, kLensRadius, kFocusDistance);
   EXPECT_TRUE(camera.HasLens());
 }
 
 TEST(ThinLensCameraTest, FourCorners) {
   ThinLensCamera camera(Matrix::Identity(),
-                        std::array<geometric_t, 2>({1.0, 1.0}), M_PI_4,
-                        kLensRadius, kFocusDistance);
+                        std::array<geometric_t, 2>({1.0, 1.0}),
+                        std::numbers::pi / 4.0, kLensRadius, kFocusDistance);
 
   RayDifferential top_left =
       camera.Compute({0.0, 0.0}, {0.0, 0.0}, kLensCenter);
@@ -64,8 +63,8 @@ TEST(ThinLensCameraTest, FourCorners) {
 
 TEST(ThinLensCameraTest, Center) {
   ThinLensCamera camera(Matrix::Identity(),
-                        std::array<geometric_t, 2>({1.0, 1.0}), M_PI_4,
-                        kLensRadius, kFocusDistance);
+                        std::array<geometric_t, 2>({1.0, 1.0}),
+                        std::numbers::pi / 4.0, kLensRadius, kFocusDistance);
   RayDifferential ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, kLensCenter);
   EXPECT_NEAR(0.0, ray.origin.x, 0.001);
   EXPECT_NEAR(0.0, ray.origin.y, 0.001);
@@ -77,8 +76,8 @@ TEST(ThinLensCameraTest, Center) {
 
 TEST(ThinLensCameraTest, ScaledCenter) {
   ThinLensCamera camera(Matrix::Scalar(2.0, 1.0, 2.0).value().Inverse(),
-                        std::array<geometric_t, 2>({1.0, 1.0}), M_PI_4,
-                        kLensRadius, kFocusDistance);
+                        std::array<geometric_t, 2>({1.0, 1.0}),
+                        std::numbers::pi / 4.0, kLensRadius, kFocusDistance);
   RayDifferential ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, kLensCenter);
   EXPECT_NEAR(0.0, ray.origin.x, 0.001);
   EXPECT_NEAR(0.0, ray.origin.y, 0.001);
@@ -90,8 +89,8 @@ TEST(ThinLensCameraTest, ScaledCenter) {
 
 TEST(ThinLensCameraTest, TranslatedCenter) {
   ThinLensCamera camera(Matrix::Translation(1.0, 2.0, 3.0).value().Inverse(),
-                        std::array<geometric_t, 2>({1.0, 1.0}), M_PI_4,
-                        kLensRadius, kFocusDistance);
+                        std::array<geometric_t, 2>({1.0, 1.0}),
+                        std::numbers::pi / 4.0, kLensRadius, kFocusDistance);
   RayDifferential ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, kLensCenter);
   EXPECT_NEAR(1.0, ray.origin.x, 0.001);
   EXPECT_NEAR(2.0, ray.origin.y, 0.001);
@@ -103,8 +102,8 @@ TEST(ThinLensCameraTest, TranslatedCenter) {
 
 TEST(ThinLensCameraTest, Differentials) {
   ThinLensCamera camera(Matrix::Identity(),
-                        std::array<geometric_t, 2>({1.0, 1.0}), M_PI_4,
-                        kLensRadius, kFocusDistance);
+                        std::array<geometric_t, 2>({1.0, 1.0}),
+                        std::numbers::pi / 4.0, kLensRadius, kFocusDistance);
 
   std::array<geometric_t, 2> derivatives({1.0, 1.0});
   RayDifferential top_left =
@@ -138,8 +137,8 @@ TEST(ThinLensCameraTest, Differentials) {
 
 TEST(ThinLensCameraTest, WithLensEffect) {
   ThinLensCamera camera(Matrix::Identity(),
-                        std::array<geometric_t, 2>({1.0, 1.0}), M_PI_4,
-                        kLensRadius, kFocusDistance);
+                        std::array<geometric_t, 2>({1.0, 1.0}),
+                        std::numbers::pi / 4.0, kLensRadius, kFocusDistance);
   RayDifferential ray = camera.Compute({0.5, 0.5}, {0.5, 0.5},
                                        std::array<geometric_t, 2>({0.0, 0.0}));
   EXPECT_NEAR(-0.70710670948028564, ray.origin.x, 0.001);
