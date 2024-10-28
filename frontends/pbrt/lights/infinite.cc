@@ -55,7 +55,7 @@ InfiniteBuilder::Build(
   auto scale_iter = parameters.find("scale");
   if (scale_iter != parameters.end()) {
     scalar = spectrum_manager.AllocateSpectrum(
-        l_iter->second.GetSpectra().front(), scalar);
+        scale_iter->second.GetSpectra().front(), scalar);
   }
 
   auto mapname_iter = parameters.find("mapname");
