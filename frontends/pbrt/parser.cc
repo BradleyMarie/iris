@@ -440,8 +440,7 @@ bool Parser::Shape() {
       *tokenizers_.back().tokenizer, *search_root_, *material_manager_,
       *spectrum_manager_, *texture_manager_, attributes_.back().material,
       attributes_.back().emissive_material.first,
-      attributes_.back().emissive_material.second,
-      current_object_name_ ? Matrix::Identity() : matrix_manager_->Get().start,
+      attributes_.back().emissive_material.second, matrix_manager_->Get().start,
       attributes_.back().reverse_orientation);
 
   if (current_object_name_) {
