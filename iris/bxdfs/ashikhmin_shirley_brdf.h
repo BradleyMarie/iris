@@ -4,6 +4,7 @@
 #include <concepts>
 
 #include "iris/bxdf.h"
+#include "iris/bxdfs/helpers/diffuse_bxdf.h"
 #include "iris/bxdfs/microfacet_distribution.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
@@ -15,29 +16,23 @@ namespace iris {
 namespace bxdfs {
 namespace internal {
 
-class AshikhminShirleyBrdf final : public Bxdf {
+class AshikhminShirleyBrdf final : public helpers::DiffuseBxdf {
  public:
   AshikhminShirleyBrdf(const Reflector& diffuse, const Reflector& specular,
                        const MicrofacetDistribution& distribution) noexcept
       : diffuse_(diffuse), specular_(specular), distribution_(distribution) {}
 
-  bool IsDiffuse(visual_t* diffuse_pdf) const override;
-
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
                                       Sampler& sampler) const override;
 
-  std::optional<SampleResult> Sample(
-      const Vector& incoming, const std::optional<Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override;
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override;
 
-  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
-               const Vector& surface_normal,
-               Hemisphere hemisphere) const override;
-
-  const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               Hemisphere hemisphere,
-                               SpectralAllocator& allocator) const override;
+  const Reflector* ReflectanceDiffuse(
+      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+      SpectralAllocator& allocator) const override;
 
  private:
   const Reflector& diffuse_;
@@ -49,15 +44,11 @@ class AshikhminShirleyBrdf final : public Bxdf {
 
 template <typename M>
   requires std::derived_from<M, MicrofacetDistribution>
-class AshikhminShirleyBrdf final : public Bxdf {
+class AshikhminShirleyBrdf final : public helpers::DiffuseBxdf {
  public:
   AshikhminShirleyBrdf(const Reflector& diffuse, const Reflector& specular,
                        const M& distribution) noexcept
       : distribution_(distribution), impl_(diffuse, specular, distribution_) {}
-
-  bool IsDiffuse(visual_t* diffuse_pdf) const override {
-    return impl_.IsDiffuse(diffuse_pdf);
-  }
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -65,22 +56,16 @@ class AshikhminShirleyBrdf final : public Bxdf {
     return impl_.SampleDiffuse(incoming, surface_normal, sampler);
   }
 
-  std::optional<SampleResult> Sample(
-      const Vector& incoming, const std::optional<Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override {
-    return impl_.Sample(incoming, differentials, surface_normal, sampler);
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override {
+    return impl_.PdfDiffuse(incoming, outgoing, surface_normal, hemisphere);
   }
 
-  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
-               const Vector& surface_normal,
-               Hemisphere hemisphere) const override {
-    return impl_.Pdf(incoming, outgoing, surface_normal, hemisphere);
-  }
-
-  const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               Hemisphere hemisphere,
-                               SpectralAllocator& allocator) const override {
-    return impl_.Reflectance(incoming, outgoing, hemisphere, allocator);
+  const Reflector* ReflectanceDiffuse(
+      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+      SpectralAllocator& allocator) const override {
+    return impl_.ReflectanceDiffuse(incoming, outgoing, hemisphere, allocator);
   }
 
  private:

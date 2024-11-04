@@ -57,6 +57,7 @@ cc_test(
         "//iris/internal:arena",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/testing:spectral_allocator",
         "@com_google_googletest//:gtest_main",
     ],
 )

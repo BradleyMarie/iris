@@ -2,6 +2,7 @@
 #define _IRIS_BXDFS_MOCK_BXDF_
 
 #include <optional>
+#include <variant>
 
 #include "googlemock/include/gmock/gmock.h"
 #include "iris/bxdf.h"
@@ -17,16 +18,17 @@ namespace bxdfs {
 class MockBxdf final : public Bxdf {
  public:
   MOCK_METHOD(bool, IsDiffuse, (visual_t*), (const override));
-  MOCK_METHOD(std::optional<Vector>, SampleDiffuse,
-              (const Vector&, const Vector&, Sampler&), (const override));
-  MOCK_METHOD(std::optional<SampleResult>, Sample,
+  MOCK_METHOD((std::variant<std::monostate, DiffuseSample, SpecularSample>),
+              Sample,
               (const Vector&, const std::optional<Differentials>& differentials,
                const Vector&, Sampler&),
               (const override));
-  MOCK_METHOD(visual_t, Pdf,
+  MOCK_METHOD(std::optional<Vector>, SampleDiffuse,
+              (const Vector&, const Vector&, Sampler&), (const override));
+  MOCK_METHOD(visual_t, PdfDiffuse,
               (const Vector&, const Vector&, const Vector&, Hemisphere),
               (const override));
-  MOCK_METHOD(const Reflector*, Reflectance,
+  MOCK_METHOD(const Reflector*, ReflectanceDiffuse,
               (const Vector&, const Vector&, Hemisphere, SpectralAllocator&),
               (const override));
 };

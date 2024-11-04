@@ -6,263 +6,261 @@
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 
-static const iris::PositionError kError = iris::PositionError(0.0, 0.0, 0.0);
+namespace iris {
+namespace integrators {
+namespace internal {
+namespace {
 
-static const iris::Point kOrigin = iris::Point(0.0, 0.0, 0.0);
-static const iris::Point kDxOrigin = iris::Point(1.0, 0.0, 0.0);
-static const iris::Point kDyOrigin = iris::Point(0.0, 1.0, 0.0);
-static const iris::Vector kDirection =
-    iris::Normalize(iris::Vector(0.0, 0.0, 1.0));
+using ::iris::bxdfs::MockBxdf;
+using ::iris::random::MockRandom;
+using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetSpectralAllocator;
+using ::testing::_;
+using ::testing::DoAll;
+using ::testing::Eq;
+using ::testing::Not;
+using ::testing::NotNull;
+using ::testing::Return;
+using ::testing::SetArgPointee;
 
-static const iris::Vector kOutgoing =
-    iris::Normalize(iris::Vector(0.0, 0.0, -1.0));
-static const iris::Vector kSurfaceNormal =
-    iris::Normalize(iris::Vector(0.0, 0.0, -1.0));
+constexpr PositionError kError = PositionError(0.0, 0.0, 0.0);
+constexpr Point kOrigin = Point(0.0, 0.0, 0.0);
+constexpr Point kDxOrigin = Point(1.0, 0.0, 0.0);
+constexpr Point kDyOrigin = Point(0.0, 1.0, 0.0);
+
+static const Vector kDirection = Normalize(Vector(0.0, 0.0, 1.0));
+static const Vector kOutgoing = Normalize(Vector(0.0, 0.0, -1.0));
+static const Vector kSurfaceNormal = Normalize(Vector(0.0, 0.0, -1.0));
 
 TEST(SampleIndirectLighting, NoSample) {
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
-                           testing::_))
-      .WillOnce(testing::Return(std::nullopt));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+      .WillOnce(Return(std::monostate()));
 
-  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
 
-  iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::HitPoint(kOrigin, kError, kSurfaceNormal), std::nullopt,
+  RayTracer::SurfaceIntersection intersection{
+      bsdf, HitPoint(kOrigin, kError, kSurfaceNormal), std::nullopt,
       kSurfaceNormal, kSurfaceNormal};
 
-  iris::RayDifferential initial_ray(iris::Ray(kOrigin, kDirection));
-  iris::RayDifferential actual_ray(iris::Ray(kOrigin, kDirection));
+  RayDifferential initial_ray(Ray(kOrigin, kDirection));
+  RayDifferential actual_ray(Ray(kOrigin, kDirection));
 
-  EXPECT_FALSE(iris::integrators::internal::SampleIndirectLighting(
-      intersection, iris::Sampler(rng), iris::testing::GetSpectralAllocator(),
-      actual_ray));
+  EXPECT_FALSE(SampleIndirectLighting(intersection, Sampler(rng),
+                                      GetSpectralAllocator(), actual_ray));
   EXPECT_EQ(initial_ray, actual_ray);
 }
 
 TEST(SampleIndirectLighting, Sample) {
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
-                           testing::_))
-      .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{kOutgoing, std::nullopt, &bxdf}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+      .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillOnce(Return(&reflector));
 
-  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
 
-  iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::HitPoint(kOrigin, kError, kSurfaceNormal), std::nullopt,
+  RayTracer::SurfaceIntersection intersection{
+      bsdf, HitPoint(kOrigin, kError, kSurfaceNormal), std::nullopt,
       kSurfaceNormal, kSurfaceNormal};
 
-  iris::RayDifferential actual_ray(iris::Ray(kOrigin, kDirection));
-  auto indirect = iris::integrators::internal::SampleIndirectLighting(
-      intersection, iris::Sampler(rng), iris::testing::GetSpectralAllocator(),
-      actual_ray);
+  RayDifferential actual_ray(Ray(kOrigin, kDirection));
+  std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
+      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
 
-  iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(2.0))),
-                kDirection));
+  RayDifferential expected_ray(
+      Ray(Point(std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(2.0))),
+          kDirection));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
 TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
-                           testing::_))
-      .WillRepeatedly(testing::Return(
-          iris::Bxdf::SampleResult{kOutgoing, {{kOutgoing, kOutgoing}}}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+      .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillOnce(Return(&reflector));
 
-  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
 
-  iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::HitPoint(kOrigin, kError, kSurfaceNormal), std::nullopt,
+  RayTracer::SurfaceIntersection intersection{
+      bsdf, HitPoint(kOrigin, kError, kSurfaceNormal), std::nullopt,
       kSurfaceNormal, kSurfaceNormal};
 
-  iris::RayDifferential actual_ray(iris::Ray(kOrigin, kDirection),
-                                   iris::Ray(kDxOrigin, kDirection),
-                                   iris::Ray(kDyOrigin, kDirection));
-  auto indirect = iris::integrators::internal::SampleIndirectLighting(
-      intersection, iris::Sampler(rng), iris::testing::GetSpectralAllocator(),
-      actual_ray);
+  RayDifferential actual_ray(Ray(kOrigin, kDirection),
+                             Ray(kDxOrigin, kDirection),
+                             Ray(kDyOrigin, kDirection));
+  std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
+      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
-  EXPECT_TRUE(indirect->differentials);
 
-  iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(2.0))),
-                kDirection));
+  RayDifferential expected_ray(
+      Ray(Point(std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(2.0))),
+          kDirection));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
 TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Eq(std::nullopt), testing::_,
-                           testing::_))
-      .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{kOutgoing}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+      .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillOnce(Return(&reflector));
 
-  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
 
-  iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::HitPoint(kOrigin, kError, kSurfaceNormal),
-      iris::RayTracer::Differentials{kDxOrigin, kDyOrigin}, kSurfaceNormal,
+  RayTracer::SurfaceIntersection intersection{
+      bsdf, HitPoint(kOrigin, kError, kSurfaceNormal),
+      RayTracer::Differentials{kDxOrigin, kDyOrigin}, kSurfaceNormal,
       kSurfaceNormal};
 
-  iris::RayDifferential actual_ray(iris::Ray(kOrigin, kDirection));
-  auto indirect = iris::integrators::internal::SampleIndirectLighting(
-      intersection, iris::Sampler(rng), iris::testing::GetSpectralAllocator(),
-      actual_ray);
+  RayDifferential actual_ray(Ray(kOrigin, kDirection));
+  std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
+      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
   EXPECT_FALSE(indirect->differentials);
 
-  iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(2.0))),
-                kDirection));
+  RayDifferential expected_ray(
+      Ray(Point(std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(2.0))),
+          kDirection));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
 TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
-                           testing::_, testing::_))
-      .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{kOutgoing}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, Sample(_, Not(Eq(std::nullopt)), _, _))
+      .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillOnce(Return(&reflector));
 
-  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
 
-  iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::HitPoint(kOrigin, kError, kSurfaceNormal),
-      iris::RayTracer::Differentials{kDxOrigin, kDyOrigin}, kSurfaceNormal,
+  RayTracer::SurfaceIntersection intersection{
+      bsdf, HitPoint(kOrigin, kError, kSurfaceNormal),
+      RayTracer::Differentials{kDxOrigin, kDyOrigin}, kSurfaceNormal,
       kSurfaceNormal};
 
-  iris::RayDifferential actual_ray(iris::Ray(kOrigin, kDirection),
-                                   iris::Ray(kDxOrigin, kDirection),
-                                   iris::Ray(kDyOrigin, kDirection));
-  auto indirect = iris::integrators::internal::SampleIndirectLighting(
-      intersection, iris::Sampler(rng), iris::testing::GetSpectralAllocator(),
-      actual_ray);
+  RayDifferential actual_ray(Ray(kOrigin, kDirection),
+                             Ray(kDxOrigin, kDirection),
+                             Ray(kDyOrigin, kDirection));
+  std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
+      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
   EXPECT_FALSE(indirect->differentials);
 
-  iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(2.0))),
-                kDirection));
+  RayDifferential expected_ray(
+      Ray(Point(std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(2.0))),
+          kDirection));
   EXPECT_EQ(expected_ray, actual_ray);
 }
 
 TEST(SampleIndirectLighting, SampleWithDifferentials) {
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(bxdf, Sample(testing::_, testing::Not(testing::Eq(std::nullopt)),
-                           testing::_, testing::_))
-      .WillRepeatedly(testing::Return(iris::Bxdf::SampleResult{
-          kOutgoing, {{kOutgoing, kOutgoing}}, &bxdf}));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(1.0));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
+  EXPECT_CALL(bxdf, Sample(_, Not(Eq(std::nullopt)), _, _))
+      .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
+                                            kOutgoing,
+                                            reflector,
+                                            {{kOutgoing, kOutgoing}},
+                                            1.0}));
 
-  iris::Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
 
-  iris::RayTracer::SurfaceIntersection intersection{
-      bsdf, iris::HitPoint(kOrigin, kError, kSurfaceNormal),
-      iris::RayTracer::Differentials{kDxOrigin, kDyOrigin}, kSurfaceNormal,
+  RayTracer::SurfaceIntersection intersection{
+      bsdf, HitPoint(kOrigin, kError, kSurfaceNormal),
+      RayTracer::Differentials{kDxOrigin, kDyOrigin}, kSurfaceNormal,
       kSurfaceNormal};
 
-  iris::RayDifferential actual_ray(iris::Ray(kOrigin, kDirection),
-                                   iris::Ray(kDxOrigin, kDirection),
-                                   iris::Ray(kDyOrigin, kDirection));
-  auto indirect = iris::integrators::internal::SampleIndirectLighting(
-      intersection, iris::Sampler(rng), iris::testing::GetSpectralAllocator(),
-      actual_ray);
+  RayDifferential actual_ray(Ray(kOrigin, kDirection),
+                             Ray(kDxOrigin, kDirection),
+                             Ray(kDyOrigin, kDirection));
+  std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
+      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
   EXPECT_TRUE(indirect->differentials);
 
-  iris::RayDifferential expected_ray(
-      iris::Ray(iris::Point(std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(-2.0)),
-                            std::nextafter(static_cast<iris::geometric>(0.0),
-                                           static_cast<iris::geometric>(2.0))),
-                kDirection),
-      iris::Ray(kDxOrigin, kDirection), iris::Ray(kDyOrigin, kDirection));
+  RayDifferential expected_ray(
+      Ray(Point(std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(-2.0)),
+                std::nextafter(static_cast<geometric>(0.0),
+                               static_cast<geometric>(2.0))),
+          kDirection),
+      Ray(kDxOrigin, kDirection), Ray(kDyOrigin, kDirection));
   EXPECT_EQ(expected_ray, actual_ray);
 }
+
+}  // namespace
+}  // namespace internal
+}  // namespace integrators
+}  // namespace iris

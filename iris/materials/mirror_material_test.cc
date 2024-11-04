@@ -39,11 +39,6 @@ TEST(MirrorMaterialTest, Evaluate) {
       material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-
-  const Reflector* returned_reflector =
-      result->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
-  EXPECT_EQ(reflector.Get(), returned_reflector);
 }
 
 }  // namespace

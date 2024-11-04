@@ -3,13 +3,17 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random/mock_random.h"
 
-using iris::Random;
-using iris::integrators::internal::RussianRoulette;
-using iris::random::MockRandom;
+namespace iris {
+namespace integrators {
+namespace internal {
+namespace {
+
+using ::iris::random::MockRandom;
+using ::testing::Return;
 
 TEST(RussianRoulette, AboveThreshold) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(testing::Return(0.0));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
   EXPECT_CALL(rng, DiscardVisual(1));
 
   RussianRoulette roulette(0.95, 100.0);
@@ -19,7 +23,7 @@ TEST(RussianRoulette, AboveThreshold) {
 
 TEST(RussianRoulette, AboveMaximumSuccess) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(testing::Return(0.0));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
 
   RussianRoulette roulette(0.75, 1.0);
   auto result = roulette.Evaluate(rng, 0.99);
@@ -29,7 +33,7 @@ TEST(RussianRoulette, AboveMaximumSuccess) {
 
 TEST(RussianRoulette, AboveMaximumFails) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(testing::Return(1.0));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
 
   RussianRoulette roulette(0.75, 1.0);
   auto result = roulette.Evaluate(rng, 0.99);
@@ -38,7 +42,7 @@ TEST(RussianRoulette, AboveMaximumFails) {
 
 TEST(RussianRoulette, BelowMaximumSuccess) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(testing::Return(0.0));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
 
   RussianRoulette roulette(0.75, 1.0);
   auto result = roulette.Evaluate(rng, 0.5);
@@ -48,9 +52,14 @@ TEST(RussianRoulette, BelowMaximumSuccess) {
 
 TEST(RussianRoulette, BelowMaximumFails) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(testing::Return(1.0));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
 
   RussianRoulette roulette(0.75, 1.0);
   auto result = roulette.Evaluate(rng, 0.5);
   ASSERT_FALSE(result.has_value());
 }
+
+}  // namespace
+}  // namespace internal
+}  // namespace integrators
+}  // namespace iris

@@ -31,23 +31,23 @@ class AttenuatedBxdf final : public Bxdf {
     return bxdf_.SampleDiffuse(incoming, surface_normal, sampler);
   }
 
-  std::optional<SampleResult> Sample(
+  std::variant<std::monostate, DiffuseSample, SpecularSample> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler) const override {
     return bxdf_.Sample(incoming, differentials, surface_normal, sampler);
   }
 
-  visual_t Pdf(const Vector& incoming, const Vector& outgoing,
-               const Vector& surface_normal,
-               Hemisphere hemisphere) const override {
-    return bxdf_.Pdf(incoming, outgoing, surface_normal, hemisphere);
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override {
+    return bxdf_.PdfDiffuse(incoming, outgoing, surface_normal, hemisphere);
   }
 
-  const Reflector* Reflectance(const Vector& incoming, const Vector& outgoing,
-                               Hemisphere hemisphere,
-                               SpectralAllocator& allocator) const override {
+  const Reflector* ReflectanceDiffuse(
+      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+      SpectralAllocator& allocator) const override {
     const Reflector* reflectance =
-        bxdf_.Reflectance(incoming, outgoing, hemisphere, allocator);
+        bxdf_.ReflectanceDiffuse(incoming, outgoing, hemisphere, allocator);
     return allocator.UnboundedScale(reflectance, attenuation_);
   }
 

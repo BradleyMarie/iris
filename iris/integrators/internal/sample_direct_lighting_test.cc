@@ -10,12 +10,28 @@
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
 
-using iris::integrators::internal::EstimateDirectLighting;
-using iris::integrators::internal::SampleDirectLighting;
-using iris::integrators::internal::internal::DeltaLight;
-using iris::integrators::internal::internal::FromBsdfSample;
-using iris::integrators::internal::internal::FromLightSample;
-using iris::integrators::internal::internal::PowerHeuristic;
+namespace iris {
+namespace integrators {
+namespace internal {
+namespace {
+
+using ::iris::bxdfs::MockBxdf;
+using ::iris::integrators::internal::internal::DeltaLight;
+using ::iris::integrators::internal::internal::FromBsdfSample;
+using ::iris::integrators::internal::internal::FromLightSample;
+using ::iris::integrators::internal::internal::PowerHeuristic;
+using ::iris::lights::MockLight;
+using ::iris::random::MockRandom;
+using ::iris::reflectors::MockReflector;
+using ::iris::spectra::MockSpectrum;
+using ::iris::testing::GetAlwaysVisibleVisibilityTester;
+using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::ScopedListLightSampler;
+using ::testing::_;
+using ::testing::DoAll;
+using ::testing::NotNull;
+using ::testing::Return;
+using ::testing::SetArgPointee;
 
 TEST(PowerHeuristict, Test) {
   EXPECT_NEAR(0.5, PowerHeuristic(1.0, 1.0), 0.001);
@@ -23,646 +39,597 @@ TEST(PowerHeuristict, Test) {
 }
 
 TEST(DeltaLight, NoReflectance) {
-  iris::spectra::MockSpectrum spectrum;
-  iris::Vector to_light(1.0, 0.0, 0.0);
+  MockSpectrum spectrum;
+  Vector to_light(1.0, 0.0, 0.0);
 
-  iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(1.0));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(0.0));
 
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, to_light, to_light),
-      iris::HitPoint(iris::Point(0.0, 0.0, 0.0),
-                     iris::PositionError(0.0, 0.0, 0.0), to_light),
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, to_light, to_light),
+      HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0), to_light),
       std::nullopt, to_light, to_light};
 
-  EXPECT_EQ(
-      nullptr,
-      DeltaLight(light_sample, iris::Ray(iris::Point(0.0, 0.0, 0.0), to_light),
-                 intersection, iris::testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr,
+            DeltaLight(light_sample, Ray(Point(0.0, 0.0, 0.0), to_light),
+                       intersection, GetSpectralAllocator()));
 }
 
 TEST(DeltaLight, WithReflectance) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::spectra::MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+  MockSpectrum spectrum;
+  EXPECT_CALL(spectrum, Intensity(_)).WillOnce(Return(1.0));
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(1.0))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
+      .WillOnce(Return(static_cast<visual_t>(0.25)));
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(100.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(&reflector));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _))
+      .WillOnce(Return(static_cast<visual_t>(100.0)));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillOnce(Return(&reflector));
 
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0),
-                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  auto* result = DeltaLight(light_sample, trace_ray, intersection,
-                            iris::testing::GetSpectralAllocator());
+  const Spectrum* result =
+      DeltaLight(light_sample, trace_ray, intersection, GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
   EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
 }
 
 TEST(FromLightSample, NoReflectance) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::spectra::MockSpectrum spectrum;
+  MockSpectrum spectrum;
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(100.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(nullptr));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _))
+      .WillOnce(Return(static_cast<visual_t>(100.0)));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _)).WillOnce(Return(nullptr));
 
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0),
-                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  auto* result =
-      FromLightSample(light_sample, trace_ray, intersection,
-                      iris::testing::GetAlwaysVisibleVisibilityTester(),
-                      iris::testing::GetSpectralAllocator());
+  const Spectrum* result = FromLightSample(
+      light_sample, trace_ray, intersection, GetAlwaysVisibleVisibilityTester(),
+      GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
 }
 
 TEST(FromLightSample, WithReflectance) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::spectra::MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+  MockSpectrum spectrum;
+  EXPECT_CALL(spectrum, Intensity(_)).WillOnce(Return(1.0));
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::Light::SampleResult light_sample{spectrum, to_light,
-                                         static_cast<iris::visual_t>(1.0)};
+  Light::SampleResult light_sample{spectrum, to_light, 1.0};
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(1.0))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
+      .WillOnce(Return(static_cast<visual_t>(0.5)));
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(2.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(&reflector));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _))
+      .WillOnce(Return(static_cast<visual_t>(2.0)));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillOnce(Return(&reflector));
 
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0),
-                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  auto* result =
-      FromLightSample(light_sample, trace_ray, intersection,
-                      iris::testing::GetAlwaysVisibleVisibilityTester(),
-                      iris::testing::GetSpectralAllocator());
+  const Spectrum* result = FromLightSample(
+      light_sample, trace_ray, intersection, GetAlwaysVisibleVisibilityTester(),
+      GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
   EXPECT_NEAR(0.05, result->Intensity(1.0), 0.001);
 }
 
 TEST(FromBsdfSample, NoEmission) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
-                                       static_cast<iris::visual_t>(1.0)};
+  Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
 
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0),
-                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Emission(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(nullptr));
+  MockLight light;
+  EXPECT_CALL(light, Emission(_, _, _, _)).WillOnce(Return(nullptr));
 
-  auto* result =
-      FromBsdfSample(bsdf_sample, light, trace_ray, intersection,
-                     iris::testing::GetAlwaysVisibleVisibilityTester(),
-                     iris::testing::GetSpectralAllocator());
+  const Spectrum* result = FromBsdfSample(
+      bsdf_sample, light, trace_ray, intersection,
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
 }
 
 TEST(FromBsdfSample, ZeroPdf) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
-                                       static_cast<iris::visual_t>(1.0)};
+  Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
 
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0),
-                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Emission(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::DoAll(testing::SetArgPointee<3, iris::visual_t>(0.0),
-                               testing::Return(nullptr)));
+  MockLight light;
+  EXPECT_CALL(light, Emission(_, _, _, _))
+      .WillOnce(DoAll(SetArgPointee<3, visual_t>(0.0), Return(nullptr)));
 
-  auto* result =
-      FromBsdfSample(bsdf_sample, light, trace_ray, intersection,
-                     iris::testing::GetAlwaysVisibleVisibilityTester(),
-                     iris::testing::GetSpectralAllocator());
+  const Spectrum* result = FromBsdfSample(
+      bsdf_sample, light, trace_ray, intersection,
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
 }
 
 TEST(FromBsdfSample, NegativePdf) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
-                                       static_cast<iris::visual_t>(1.0)};
+  Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
 
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0),
-                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Emission(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::DoAll(testing::SetArgPointee<3, iris::visual_t>(-1.0),
-                               testing::Return(nullptr)));
+  MockLight light;
+  EXPECT_CALL(light, Emission(_, _, _, _))
+      .WillOnce(DoAll(SetArgPointee<3, visual_t>(-1.0), Return(nullptr)));
 
-  auto* result =
-      FromBsdfSample(bsdf_sample, light, trace_ray, intersection,
-                     iris::testing::GetAlwaysVisibleVisibilityTester(),
-                     iris::testing::GetSpectralAllocator());
+  const Spectrum* result = FromBsdfSample(
+      bsdf_sample, light, trace_ray, intersection,
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
 }
 
 TEST(FromBsdfSample, WithEmission) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(1.0))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.5)));
+      .WillOnce(Return(static_cast<visual_t>(0.5)));
 
-  iris::Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt,
-                                       static_cast<iris::visual_t>(1.0)};
+  Bsdf::SampleResult bsdf_sample{reflector, to_light, std::nullopt, 1.0};
 
-  iris::bxdfs::MockBxdf bxdf;
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
 
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal),
-      iris::HitPoint(trace_ray.Endpoint(1.0),
-                     iris::PositionError(0.0, 0.0, 0.0), surface_normal),
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  iris::spectra::MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+  MockSpectrum spectrum;
+  EXPECT_CALL(spectrum, Intensity(_)).WillOnce(Return(1.0));
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Emission(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::DoAll(testing::SetArgPointee<3, iris::visual_t>(2.0),
-                               testing::Return(&spectrum)));
+  MockLight light;
+  EXPECT_CALL(light, Emission(_, _, _, _))
+      .WillOnce(DoAll(SetArgPointee<3, visual_t>(2.0), Return(&spectrum)));
 
-  auto* result =
-      FromBsdfSample(bsdf_sample, light, trace_ray, intersection,
-                     iris::testing::GetAlwaysVisibleVisibilityTester(),
-                     iris::testing::GetSpectralAllocator());
+  const Spectrum* result = FromBsdfSample(
+      bsdf_sample, light, trace_ray, intersection,
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
   EXPECT_NEAR(0.05, result->Intensity(1.0), 0.001);
 }
 
 TEST(EstimateDirectLighting, NoSamples) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
-      .WillOnce(testing::Return(to_light));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.0)));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, _, _))
+      .WillOnce(Return(to_light));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _))
+      .WillOnce(Return(static_cast<visual_t>(0.0)));
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Sample(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(std::nullopt));
+  MockLight light;
+  EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(std::nullopt));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  auto* result = EstimateDirectLighting(
-      light, trace_ray, intersection, iris::Sampler(rng), iris::Sampler(rng),
-      iris::testing::GetAlwaysVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator());
+  const Spectrum* result = EstimateDirectLighting(
+      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_EQ(nullptr, result);
 }
 
 TEST(EstimateDirectLighting, DeltaBsdf) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(0.0), Return(false)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::reflectors::MockReflector reflector;
+  MockLight light;
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
-      .WillOnce(testing::Return(to_light));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(1.0));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
-
-  iris::lights::MockLight light;
-
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  auto* result = EstimateDirectLighting(
-      light, trace_ray, intersection, iris::Sampler(rng), iris::Sampler(rng),
-      iris::testing::GetAlwaysVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator());
+  const Spectrum* result = EstimateDirectLighting(
+      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
 }
 
 TEST(EstimateDirectLighting, DeltaLight) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
-      .WillOnce(testing::Return(to_light));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillRepeatedly(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillRepeatedly(Return(&reflector));
 
-  iris::spectra::MockSpectrum spectrum;
-  iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  MockSpectrum spectrum;
+  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Sample(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(light_sample));
+  MockLight light;
+  EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  auto* result = EstimateDirectLighting(
-      light, trace_ray, intersection, iris::Sampler(rng), iris::Sampler(rng),
-      iris::testing::GetAlwaysVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator());
+  const Spectrum* result = EstimateDirectLighting(
+      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
 
   EXPECT_CALL(reflector, Reflectance(1.0))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
-  EXPECT_CALL(spectrum, Intensity(testing::_))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+      .WillOnce(Return(static_cast<visual_t>(0.25)));
+  EXPECT_CALL(spectrum, Intensity(_)).WillOnce(Return(1.0));
   EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
 }
 
 TEST(EstimateDirectLighting, FullTest) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
-      .WillOnce(testing::Return(to_light));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, _, _))
+      .WillOnce(Return(to_light));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillRepeatedly(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillRepeatedly(Return(&reflector));
 
-  iris::spectra::MockSpectrum spectrum;
-  iris::Light::SampleResult light_sample{spectrum, to_light,
-                                         static_cast<iris::visual_t>(1.0)};
+  MockSpectrum spectrum;
+  Light::SampleResult light_sample{spectrum, to_light, 1.0};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Sample(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(light_sample));
-  EXPECT_CALL(light, Emission(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::DoAll(testing::SetArgPointee<3, iris::visual_t>(1.0),
-                               testing::Return(&spectrum)));
+  MockLight light;
+  EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
+  EXPECT_CALL(light, Emission(_, _, _, _))
+      .WillOnce(DoAll(SetArgPointee<3, visual_t>(1.0), Return(&spectrum)));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  auto* result = EstimateDirectLighting(
-      light, trace_ray, intersection, iris::Sampler(rng), iris::Sampler(rng),
-      iris::testing::GetAlwaysVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator());
+  const Spectrum* result = EstimateDirectLighting(
+      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
 
   EXPECT_CALL(reflector, Reflectance(1.0))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.25)));
-  EXPECT_CALL(spectrum, Intensity(testing::_))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
+      .WillRepeatedly(Return(static_cast<visual_t>(0.25)));
+  EXPECT_CALL(spectrum, Intensity(_)).WillRepeatedly(Return(1.0));
   EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
 }
 
 TEST(SampleDirectLighting, NoSamples) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
 
-  auto* result = SampleDirectLighting(
-      iris::testing::GetEmptyLightSampler(), trace_ray, intersection, rng,
-      iris::testing::GetAlwaysVisibleVisibilityTester(),
-      iris::testing::GetSpectralAllocator());
+  const Spectrum* result = SampleDirectLighting(
+      testing::GetEmptyLightSampler(), trace_ray, intersection, rng,
+      GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_EQ(result, nullptr);
 }
 
 TEST(SampleDirectLighting, OneZeroPdfSample) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::lights::MockLight light;
+  MockLight light;
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  iris::testing::LightSampleListEntry list[] = {
-      {&light, static_cast<iris::visual_t>(0.0)},
+  testing::LightSampleListEntry list[] = {
+      {&light, static_cast<visual_t>(0.0)},
   };
 
-  iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
-    auto* result =
-        SampleDirectLighting(light_sampler, trace_ray, intersection, rng,
-                             iris::testing::GetAlwaysVisibleVisibilityTester(),
-                             iris::testing::GetSpectralAllocator());
+  ScopedListLightSampler(list, [&](auto& light_sampler) {
+    const Spectrum* result = SampleDirectLighting(
+        light_sampler, trace_ray, intersection, rng,
+        GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_EQ(nullptr, result);
   });
 }
 
 TEST(SampleDirectLighting, OneDeltaLight) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
-      .WillOnce(testing::Return(to_light));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillRepeatedly(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillRepeatedly(Return(&reflector));
 
-  iris::spectra::MockSpectrum spectrum;
-  iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  MockSpectrum spectrum;
+  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Sample(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(light_sample));
+  MockLight light;
+  EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  iris::testing::LightSampleListEntry list[] = {
+  testing::LightSampleListEntry list[] = {
       {&light, std::nullopt},
   };
 
-  iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
-    auto* result =
-        SampleDirectLighting(light_sampler, trace_ray, intersection, rng,
-                             iris::testing::GetAlwaysVisibleVisibilityTester(),
-                             iris::testing::GetSpectralAllocator());
+  ScopedListLightSampler(list, [&](auto& light_sampler) {
+    const Spectrum* result = SampleDirectLighting(
+        light_sampler, trace_ray, intersection, rng,
+        GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 
     EXPECT_CALL(reflector, Reflectance(1.0))
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
-    EXPECT_CALL(spectrum, Intensity(testing::_))
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+        .WillOnce(Return(static_cast<visual_t>(0.25)));
+    EXPECT_CALL(spectrum, Intensity(_)).WillOnce(Return(1.0));
     EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
   });
 }
 
 TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
-      .WillOnce(testing::Return(to_light));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillRepeatedly(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillRepeatedly(Return(&reflector));
 
-  iris::spectra::MockSpectrum spectrum;
-  iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  MockSpectrum spectrum;
+  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Sample(testing::_, testing::_, testing::_, testing::_))
-      .WillOnce(testing::Return(light_sample));
+  MockLight light;
+  EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  iris::testing::LightSampleListEntry list[] = {
-      {&light, static_cast<iris::visual_t>(0.5)},
+  testing::LightSampleListEntry list[] = {
+      {&light, static_cast<visual_t>(0.5)},
   };
 
-  iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
-    auto* result =
-        SampleDirectLighting(light_sampler, trace_ray, intersection, rng,
-                             iris::testing::GetAlwaysVisibleVisibilityTester(),
-                             iris::testing::GetSpectralAllocator());
+  ScopedListLightSampler(list, [&](auto& light_sampler) {
+    const Spectrum* result = SampleDirectLighting(
+        light_sampler, trace_ray, intersection, rng,
+        GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 
     EXPECT_CALL(reflector, Reflectance(1.0))
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
-    EXPECT_CALL(spectrum, Intensity(testing::_))
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+        .WillOnce(Return(static_cast<visual_t>(0.25)));
+    EXPECT_CALL(spectrum, Intensity(_)).WillOnce(Return(1.0));
     EXPECT_NEAR(0.25, result->Intensity(1.0), 0.001);
   });
 }
 
 TEST(SampleDirectLighting, TwoDeltaLights) {
-  iris::Ray trace_ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  iris::HitPoint hit_point(trace_ray.Endpoint(1.0),
-                           iris::PositionError(0.0, 0.0, 0.0),
-                           iris::Vector(0.0, 0.0, 1.0));
-  iris::Vector surface_normal(0.0, 0.0, 1.0);
-  iris::bxdfs::MockBxdf bxdf;
-  iris::RayTracer::RayTracer::SurfaceIntersection intersection{
-      iris::Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0));
+  Vector surface_normal(0.0, 0.0, 1.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  iris::Vector to_light(0.0, 0.866025, 0.5);
+  Vector to_light(0.0, 0.866025, 0.5);
 
-  iris::reflectors::MockReflector reflector;
+  MockReflector reflector;
 
-  EXPECT_CALL(bxdf, IsDiffuse(testing::IsNull()))
-      .WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(bxdf, SampleDiffuse(-trace_ray.direction, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(to_light));
-  EXPECT_CALL(bxdf, Pdf(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
-  EXPECT_CALL(bxdf, Reflectance(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(&reflector));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillRepeatedly(Return(1.0));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillRepeatedly(Return(&reflector));
 
-  iris::spectra::MockSpectrum spectrum;
-  iris::Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  MockSpectrum spectrum;
+  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
 
-  iris::lights::MockLight light;
-  EXPECT_CALL(light, Sample(testing::_, testing::_, testing::_, testing::_))
-      .WillRepeatedly(testing::Return(light_sample));
+  MockLight light;
+  EXPECT_CALL(light, Sample(_, _, _, _)).WillRepeatedly(Return(light_sample));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(4);
 
-  iris::testing::LightSampleListEntry list[] = {
+  testing::LightSampleListEntry list[] = {
       {&light, std::nullopt},
-      {&light, static_cast<iris::visual_t>(0.5)},
+      {&light, static_cast<visual_t>(0.5)},
   };
 
-  iris::testing::ScopedListLightSampler(list, [&](auto& light_sampler) {
-    auto* result =
-        SampleDirectLighting(light_sampler, trace_ray, intersection, rng,
-                             iris::testing::GetAlwaysVisibleVisibilityTester(),
-                             iris::testing::GetSpectralAllocator());
+  ScopedListLightSampler(list, [&](auto& light_sampler) {
+    const Spectrum* result = SampleDirectLighting(
+        light_sampler, trace_ray, intersection, rng,
+        GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 
     EXPECT_CALL(reflector, Reflectance(1.0))
-        .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.25)));
-    EXPECT_CALL(spectrum, Intensity(testing::_))
-        .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(1.0)));
+        .WillRepeatedly(Return(static_cast<visual_t>(0.25)));
+    EXPECT_CALL(spectrum, Intensity(_)).WillRepeatedly(Return(1.0));
     EXPECT_NEAR(0.375, result->Intensity(1.0), 0.001);
   });
 }
+
+}  // namespace
+}  // namespace internal
+}  // namespace integrators
+}  // namespace iris

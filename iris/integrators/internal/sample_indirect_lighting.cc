@@ -27,10 +27,8 @@ std::optional<Bsdf::SampleResult> SampleIndirectLighting(
     if (differentials && bsdf_sample->differentials) {
       new (&trace_ray) RayDifferential(
           intersection.hit_point.CreateRay(bsdf_sample->direction),
-          iris::Ray(intersection.differentials->dx,
-                    bsdf_sample->differentials->dx),
-          iris::Ray(intersection.differentials->dy,
-                    bsdf_sample->differentials->dy));
+          Ray(intersection.differentials->dx, bsdf_sample->differentials->dx),
+          Ray(intersection.differentials->dy, bsdf_sample->differentials->dy));
     } else {
       new (&trace_ray) RayDifferential(
           intersection.hit_point.CreateRay(bsdf_sample->direction));

@@ -34,14 +34,6 @@ OrenNayarBrdf::OrenNayarBrdf(const Reflector& reflector, visual_t sigma)
   assert(sigma >= static_cast<visual_t>(0.0));
 }
 
-bool OrenNayarBrdf::IsDiffuse(visual_t* diffuse_pdf) const {
-  if (diffuse_pdf != nullptr) {
-    *diffuse_pdf = static_cast<visual_t>(1.0);
-  }
-
-  return true;
-}
-
 std::optional<Vector> OrenNayarBrdf::SampleDiffuse(const Vector& incoming,
                                                    const Vector& surface_normal,
                                                    Sampler& sampler) const {
@@ -49,16 +41,10 @@ std::optional<Vector> OrenNayarBrdf::SampleDiffuse(const Vector& incoming,
   return outgoing.AlignWith(surface_normal);
 }
 
-std::optional<Bxdf::SampleResult> OrenNayarBrdf::Sample(
-    const Vector& incoming,
-    const std::optional<Bxdf::Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler) const {
-  return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler)};
-}
-
-visual_t OrenNayarBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
-                            const Vector& surface_normal,
-                            Hemisphere hemisphere) const {
+visual_t OrenNayarBrdf::PdfDiffuse(const Vector& incoming,
+                                   const Vector& outgoing,
+                                   const Vector& surface_normal,
+                                   Hemisphere hemisphere) const {
   if (hemisphere != Hemisphere::BRDF) {
     return static_cast<visual_t>(0.0);
   }
@@ -67,7 +53,7 @@ visual_t OrenNayarBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
                   std::numbers::inv_pi_v<visual_t>);
 }
 
-const Reflector* OrenNayarBrdf::Reflectance(
+const Reflector* OrenNayarBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BRDF) {

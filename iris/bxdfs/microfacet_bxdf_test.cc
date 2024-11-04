@@ -64,18 +64,6 @@ class TestTransmissionFresnel final : public Fresnel {
   }
 };
 
-TEST(MicrofacetBrdf, IsDiffuse) {
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  MicrofacetBrdf brdf(reflector, distribution, fresnel);
-  EXPECT_TRUE(brdf.IsDiffuse(nullptr));
-
-  visual_t diffuse_pdf;
-  EXPECT_TRUE(brdf.IsDiffuse(&diffuse_pdf));
-  EXPECT_EQ(1.0, diffuse_pdf);
-}
-
 TEST(MicrofacetBrdf, SampleDiffuseZero) {
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -120,33 +108,15 @@ TEST(MicrofacetBrdf, SampleDiffuse) {
   EXPECT_EQ(Vector(0.0, 0.0, 1.0), *sample);
 }
 
-TEST(MicrofacetBrdf, Sample) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
-
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  MicrofacetBrdf brdf(reflector, distribution, fresnel);
-
-  std::optional<Bxdf::SampleResult> sample = brdf.Sample(
-      Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
-  ASSERT_TRUE(sample);
-  EXPECT_EQ(Vector(0.0, 0.0, 1.0), sample->direction);
-  EXPECT_FALSE(sample->differentials);
-  EXPECT_EQ(sample->bxdf_override, nullptr);
-  EXPECT_EQ(sample->pdf_weight, 1.0);
-}
-
 TEST(MicrofacetBrdf, PdfBTDF) {
   MockReflector reflector;
   TestMicrofacetDistribution distribution;
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.0, brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(0.0,
+            brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBrdf, PdfNoIncomingZ) {
@@ -155,8 +125,9 @@ TEST(MicrofacetBrdf, PdfNoIncomingZ) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.0, brdf.Pdf(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, -1.0),
-                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(0.0,
+            brdf.PdfDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, -1.0),
+                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBrdf, PdfNoOutgoingZ) {
@@ -165,8 +136,9 @@ TEST(MicrofacetBrdf, PdfNoOutgoingZ) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.0, brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 0.0),
-                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(0.0,
+            brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 0.0),
+                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBrdf, PdfDifferentBxdfHemispheres) {
@@ -175,9 +147,9 @@ TEST(MicrofacetBrdf, PdfDifferentBxdfHemispheres) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.0,
-            brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                     Normalize(Vector(0.0, 1.0, 0.0)), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(0.0, brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                                 Normalize(Vector(0.0, 1.0, 0.0)),
+                                 Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBrdf, Pdf) {
@@ -186,7 +158,8 @@ TEST(MicrofacetBrdf, Pdf) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(0.125, brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+  EXPECT_EQ(0.125,
+            brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                             Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
@@ -196,10 +169,10 @@ TEST(MicrofacetBrdf, ReflectanceWrongHemishphere) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                             Bxdf::Hemisphere::BTDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, brdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
+                                             Vector(0.0, 0.0, 1.0),
+                                             Bxdf::Hemisphere::BTDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBrdf, ReflectanceNoZIncoming) {
@@ -208,10 +181,10 @@ TEST(MicrofacetBrdf, ReflectanceNoZIncoming) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, -1.0),
-                             Bxdf::Hemisphere::BRDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, brdf.ReflectanceDiffuse(Vector(0.0, 1.0, 0.0),
+                                             Vector(0.0, 0.0, -1.0),
+                                             Bxdf::Hemisphere::BRDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBrdf, ReflectanceNoZOutgoing) {
@@ -220,10 +193,10 @@ TEST(MicrofacetBrdf, ReflectanceNoZOutgoing) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
-                             Bxdf::Hemisphere::BRDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, brdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
+                                             Vector(0.0, 1.0, 0.0),
+                                             Bxdf::Hemisphere::BRDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBrdf, ReflectanceOppositeBxdfHemispheres) {
@@ -232,10 +205,10 @@ TEST(MicrofacetBrdf, ReflectanceOppositeBxdfHemispheres) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                             Bxdf::Hemisphere::BRDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, brdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
+                                             Vector(0.0, 0.0, -1.0),
+                                             Bxdf::Hemisphere::BRDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBrdf, Reflectance) {
@@ -245,23 +218,11 @@ TEST(MicrofacetBrdf, Reflectance) {
   TestReflectionFresnel fresnel;
   MicrofacetBrdf brdf(reflector, distribution, fresnel);
 
-  const Reflector* reflectance =
-      brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
+  const Reflector* reflectance = brdf.ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
+      testing::GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.0416667, reflectance->Reflectance(1.0), 0.001);
-}
-
-TEST(MicrofacetBtdf, IsDiffuse) {
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestTransmissionFresnel fresnel;
-  MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
-  EXPECT_TRUE(btdf.IsDiffuse(nullptr));
-
-  visual_t diffuse_pdf;
-  EXPECT_TRUE(btdf.IsDiffuse(&diffuse_pdf));
-  EXPECT_EQ(1.0, diffuse_pdf);
 }
 
 TEST(MicrofacetBtdf, SampleDiffuseZero) {
@@ -308,32 +269,15 @@ TEST(MicrofacetBtdf, SampleDiffuse) {
   EXPECT_EQ(Vector(0.0, 0.0, -1.0), *sample);
 }
 
-TEST(MicrofacetBtdf, Sample) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
-
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestTransmissionFresnel fresnel;
-  MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
-
-  std::optional<Bxdf::SampleResult> sample = btdf.Sample(
-      Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
-  ASSERT_TRUE(sample);
-  EXPECT_EQ(Vector(0.0, 0.0, -1.0), sample->direction);
-  EXPECT_FALSE(sample->differentials);
-  EXPECT_EQ(sample->pdf_weight, 1.0);
-}
-
 TEST(MicrofacetBtdf, PdfBTDF) {
   MockReflector reflector;
   TestMicrofacetDistribution distribution;
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(0.0, btdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(0.0,
+            btdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                            Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(MicrofacetBtdf, PdfNoIncomingZ) {
@@ -342,8 +286,9 @@ TEST(MicrofacetBtdf, PdfNoIncomingZ) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(0.0, btdf.Pdf(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
-                          Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(0.0,
+            btdf.PdfDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
+                            Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, PdfNoOutgoingZ) {
@@ -352,8 +297,9 @@ TEST(MicrofacetBtdf, PdfNoOutgoingZ) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(0.0, btdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 0.0),
-                          Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(0.0,
+            btdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 0.0),
+                            Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, PdfSameBxdfHemispheres) {
@@ -362,9 +308,9 @@ TEST(MicrofacetBtdf, PdfSameBxdfHemispheres) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(0.0,
-            btdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                     Normalize(Vector(0.0, 1.0, 0.0)), Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(0.0, btdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                                 Normalize(Vector(0.0, 1.0, 0.0)),
+                                 Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, PdfNoHalfAngle) {
@@ -373,8 +319,9 @@ TEST(MicrofacetBtdf, PdfNoHalfAngle) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 1.0, distribution, fresnel);
 
-  EXPECT_EQ(0.0, btdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(0.0,
+            btdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, Pdf) {
@@ -383,8 +330,9 @@ TEST(MicrofacetBtdf, Pdf) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(2.0, btdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(2.0,
+            btdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(MicrofacetBtdf, ReflectanceWrongHemishphere) {
@@ -393,10 +341,10 @@ TEST(MicrofacetBtdf, ReflectanceWrongHemishphere) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            btdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                             Bxdf::Hemisphere::BRDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, btdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
+                                             Vector(0.0, 0.0, -1.0),
+                                             Bxdf::Hemisphere::BRDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBtdf, ReflectanceNoZIncoming) {
@@ -405,10 +353,10 @@ TEST(MicrofacetBtdf, ReflectanceNoZIncoming) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            btdf.Reflectance(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
-                             Bxdf::Hemisphere::BTDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, btdf.ReflectanceDiffuse(Vector(0.0, 1.0, 0.0),
+                                             Vector(0.0, 0.0, 1.0),
+                                             Bxdf::Hemisphere::BTDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBtdf, ReflectanceNoZOutgoing) {
@@ -417,10 +365,10 @@ TEST(MicrofacetBtdf, ReflectanceNoZOutgoing) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            btdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
-                             Bxdf::Hemisphere::BTDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, btdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
+                                             Vector(0.0, 1.0, 0.0),
+                                             Bxdf::Hemisphere::BTDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBtdf, ReflectanceSameBxdfHemispheres) {
@@ -429,10 +377,10 @@ TEST(MicrofacetBtdf, ReflectanceSameBxdfHemispheres) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            btdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                             Bxdf::Hemisphere::BTDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, btdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
+                                             Vector(0.0, 0.0, 1.0),
+                                             Bxdf::Hemisphere::BTDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBtdf, ReflectanceNoHalfAngle) {
@@ -441,10 +389,10 @@ TEST(MicrofacetBtdf, ReflectanceNoHalfAngle) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 1.0, distribution, fresnel);
 
-  EXPECT_EQ(nullptr,
-            btdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                             Bxdf::Hemisphere::BTDF,
-                             testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, btdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
+                                             Vector(0.0, 0.0, -1.0),
+                                             Bxdf::Hemisphere::BTDF,
+                                             testing::GetSpectralAllocator()));
 }
 
 TEST(MicrofacetBtdf, Reflectance) {
@@ -454,9 +402,9 @@ TEST(MicrofacetBtdf, Reflectance) {
   TestTransmissionFresnel fresnel;
   MicrofacetBtdf btdf(reflector, 1.0, 2.0, distribution, fresnel);
 
-  const Reflector* reflectance =
-      btdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                       Bxdf::Hemisphere::BTDF, testing::GetSpectralAllocator());
+  const Reflector* reflectance = btdf.ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
+      testing::GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.1666666, reflectance->Reflectance(1.0), 0.001);
 }

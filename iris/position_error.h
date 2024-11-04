@@ -10,7 +10,8 @@
 namespace iris {
 
 struct PositionError final {
-  explicit PositionError(geometric_t x, geometric_t y, geometric_t z) noexcept
+  constexpr explicit PositionError(geometric_t x, geometric_t y,
+                                   geometric_t z) noexcept
       : x(x), y(y), z(z) {
     assert(std::isfinite(x));
     assert(std::isfinite(y));

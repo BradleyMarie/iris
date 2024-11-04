@@ -26,14 +26,6 @@ std::optional<Vector> HalfAngle(const Vector& incoming, const Vector& outgoing,
 
 }  // namespace
 
-bool MicrofacetBrdf::IsDiffuse(visual_t* diffuse_pdf) const {
-  if (diffuse_pdf != nullptr) {
-    *diffuse_pdf = static_cast<visual_t>(1.0);
-  }
-
-  return true;
-}
-
 std::optional<Vector> MicrofacetBrdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
     Sampler& sampler) const {
@@ -53,21 +45,10 @@ std::optional<Vector> MicrofacetBrdf::SampleDiffuse(
   return *outgoing;
 }
 
-std::optional<Bxdf::SampleResult> MicrofacetBrdf::Sample(
-    const Vector& incoming, const std::optional<Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler) const {
-  std::optional<Vector> outgoing =
-      SampleDiffuse(incoming, surface_normal, sampler);
-  if (!outgoing) {
-    return std::nullopt;
-  }
-
-  return SampleResult{*outgoing};
-}
-
-visual_t MicrofacetBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
-                             const Vector& surface_normal,
-                             Hemisphere hemisphere) const {
+visual_t MicrofacetBrdf::PdfDiffuse(const Vector& incoming,
+                                    const Vector& outgoing,
+                                    const Vector& surface_normal,
+                                    Hemisphere hemisphere) const {
   if (incoming.z == static_cast<geometric>(0.0) ||
       outgoing.z == static_cast<geometric>(0.0) ||
       std::signbit(incoming.z) != std::signbit(outgoing.z)) {
@@ -84,7 +65,7 @@ visual_t MicrofacetBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
          (static_cast<visual_t>(4.0) * dot_product);
 }
 
-const Reflector* MicrofacetBrdf::Reflectance(
+const Reflector* MicrofacetBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BRDF ||
@@ -117,14 +98,6 @@ const Reflector* MicrofacetBrdf::Reflectance(
   return allocator.UnboundedScale(reflectance, attenuation);
 }
 
-bool MicrofacetBtdf::IsDiffuse(visual_t* diffuse_pdf) const {
-  if (diffuse_pdf != nullptr) {
-    *diffuse_pdf = static_cast<visual_t>(1.0);
-  }
-
-  return true;
-}
-
 std::optional<Vector> MicrofacetBtdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
     Sampler& sampler) const {
@@ -151,21 +124,10 @@ std::optional<Vector> MicrofacetBtdf::SampleDiffuse(
   return *outgoing;
 }
 
-std::optional<Bxdf::SampleResult> MicrofacetBtdf::Sample(
-    const Vector& incoming, const std::optional<Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler) const {
-  std::optional<Vector> outgoing =
-      SampleDiffuse(incoming, surface_normal, sampler);
-  if (!outgoing) {
-    return std::nullopt;
-  }
-
-  return SampleResult{*outgoing};
-}
-
-visual_t MicrofacetBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
-                             const Vector& surface_normal,
-                             Hemisphere hemisphere) const {
+visual_t MicrofacetBtdf::PdfDiffuse(const Vector& incoming,
+                                    const Vector& outgoing,
+                                    const Vector& surface_normal,
+                                    Hemisphere hemisphere) const {
   if (incoming.z == static_cast<geometric>(0.0) ||
       outgoing.z == static_cast<geometric>(0.0) ||
       std::signbit(incoming.z) == std::signbit(outgoing.z)) {
@@ -196,7 +158,7 @@ visual_t MicrofacetBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
   return distribution_.Pdf(incoming, *half_angle) * dhalf_angle_doutgoing;
 }
 
-const Reflector* MicrofacetBtdf::Reflectance(
+const Reflector* MicrofacetBtdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BTDF ||

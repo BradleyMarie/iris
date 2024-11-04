@@ -7,14 +7,6 @@
 namespace iris {
 namespace bxdfs {
 
-bool LambertianBrdf::IsDiffuse(visual_t* diffuse_pdf) const {
-  if (diffuse_pdf != nullptr) {
-    *diffuse_pdf = static_cast<visual_t>(1.0);
-  }
-
-  return true;
-}
-
 std::optional<Vector> LambertianBrdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
     Sampler& sampler) const {
@@ -22,16 +14,10 @@ std::optional<Vector> LambertianBrdf::SampleDiffuse(
   return outgoing.AlignWith(surface_normal);
 }
 
-std::optional<Bxdf::SampleResult> LambertianBrdf::Sample(
-    const Vector& incoming,
-    const std::optional<Bxdf::Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler) const {
-  return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler)};
-}
-
-visual_t LambertianBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
-                             const Vector& surface_normal,
-                             Hemisphere hemisphere) const {
+visual_t LambertianBrdf::PdfDiffuse(const Vector& incoming,
+                                    const Vector& outgoing,
+                                    const Vector& surface_normal,
+                                    Hemisphere hemisphere) const {
   if (hemisphere != Hemisphere::BRDF) {
     return static_cast<visual_t>(0.0);
   }
@@ -40,7 +26,7 @@ visual_t LambertianBrdf::Pdf(const Vector& incoming, const Vector& outgoing,
                   std::numbers::inv_pi_v<visual_t>);
 }
 
-const Reflector* LambertianBrdf::Reflectance(
+const Reflector* LambertianBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BRDF) {
@@ -50,14 +36,6 @@ const Reflector* LambertianBrdf::Reflectance(
   return allocator.Scale(&reflector_, std::numbers::inv_pi_v<visual_t>);
 }
 
-bool LambertianBtdf::IsDiffuse(visual_t* diffuse_pdf) const {
-  if (diffuse_pdf != nullptr) {
-    *diffuse_pdf = static_cast<visual_t>(1.0);
-  }
-
-  return true;
-}
-
 std::optional<Vector> LambertianBtdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
     Sampler& sampler) const {
@@ -65,16 +43,10 @@ std::optional<Vector> LambertianBtdf::SampleDiffuse(
   return outgoing.AlignAgainst(surface_normal);
 }
 
-std::optional<Bxdf::SampleResult> LambertianBtdf::Sample(
-    const Vector& incoming,
-    const std::optional<Bxdf::Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler) const {
-  return SampleResult{*SampleDiffuse(incoming, surface_normal, sampler)};
-}
-
-visual_t LambertianBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
-                             const Vector& surface_normal,
-                             Hemisphere hemisphere) const {
+visual_t LambertianBtdf::PdfDiffuse(const Vector& incoming,
+                                    const Vector& outgoing,
+                                    const Vector& surface_normal,
+                                    Hemisphere hemisphere) const {
   if (hemisphere != Hemisphere::BTDF) {
     return static_cast<visual_t>(0.0);
   }
@@ -83,7 +55,7 @@ visual_t LambertianBtdf::Pdf(const Vector& incoming, const Vector& outgoing,
                   std::numbers::inv_pi_v<visual_t>);
 }
 
-const Reflector* LambertianBtdf::Reflectance(
+const Reflector* LambertianBtdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BTDF) {

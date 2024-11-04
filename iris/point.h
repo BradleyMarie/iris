@@ -10,7 +10,7 @@
 namespace iris {
 
 struct Point final {
-  explicit Point(geometric x, geometric y, geometric z) noexcept
+  constexpr explicit Point(geometric x, geometric y, geometric z) noexcept
       : x(x), y(y), z(z) {
     assert(std::isfinite(x));
     assert(std::isfinite(y));

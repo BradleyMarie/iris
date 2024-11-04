@@ -14,7 +14,8 @@ struct Color final {
     LINEAR_SRGB = 1,
   };
 
-  explicit Color(visual_t c0, visual_t c1, visual_t c2, Space space) noexcept
+  constexpr explicit Color(visual_t c0, visual_t c1, visual_t c2,
+                           Space space) noexcept
       : x(c0), y(c1), z(c2), space(space) {
     assert(x >= 0.0);
     assert(y >= 0.0);

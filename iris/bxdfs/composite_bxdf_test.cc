@@ -15,8 +15,11 @@ using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::testing::_;
 using ::testing::DoAll;
+using ::testing::Eq;
+using ::testing::FieldsAre;
 using ::testing::IsNull;
 using ::testing::NotNull;
+using ::testing::Ref;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
@@ -132,57 +135,14 @@ TEST(CompositeBxdfTest, SampleAllDifuse) {
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
   EXPECT_CALL(bxdf1, Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _))
-      .WillOnce(Return(Bxdf::SampleResult{Vector(1.0, 0.0, 0.0), std::nullopt,
-                                          nullptr, 1.0}));
+      .WillOnce(Return(Bxdf::DiffuseSample{Vector(1.0, 0.0, 0.0)}));
 
   const Bxdf* composite =
       MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
-  std::optional<Bxdf::SampleResult> sample = composite->Sample(
-      Vector(1.0, 0.0, 0.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
-  EXPECT_EQ(Vector(1.0, 0.0, 0.0), sample->direction);
-  EXPECT_FALSE(sample->differentials);
-  EXPECT_EQ(nullptr, sample->bxdf_override);
-  EXPECT_EQ(1.0, sample->pdf_weight);
-}
-
-TEST(CompositeBxdfTest, SampleOneDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.2));
-  EXPECT_CALL(rng, DiscardGeometric(1));
-  Sampler sampler(rng);
-
-  MockBxdf bxdf0;
-  EXPECT_CALL(bxdf0, IsDiffuse(NotNull()))
-      .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
-
-  MockBxdf bxdf1;
-  EXPECT_CALL(bxdf1, IsDiffuse(NotNull()))
-      .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
-
-  MockBxdf bxdf2;
-  EXPECT_CALL(bxdf2, IsDiffuse(NotNull()))
-      .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf2, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
-
-  MockBxdf bxdf3;
-  EXPECT_CALL(bxdf3, IsDiffuse(NotNull()))
-      .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf3, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
-
-  EXPECT_CALL(bxdf3, Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _))
-      .WillOnce(Return(Bxdf::SampleResult{Vector(1.0, 0.0, 0.0), std::nullopt,
-                                          nullptr, 1.0}));
-
-  const Bxdf* composite = MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0,
-                                            &bxdf1, &bxdf2, &bxdf3);
-  std::optional<Bxdf::SampleResult> sample = composite->Sample(
-      Vector(1.0, 0.0, 0.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
-  EXPECT_EQ(Vector(1.0, 0.0, 0.0), sample->direction);
-  EXPECT_FALSE(sample->differentials);
-  EXPECT_EQ(nullptr, sample->bxdf_override);
-  EXPECT_EQ(0.25, sample->pdf_weight);
+  auto result = composite->Sample(Vector(1.0, 0.0, 0.0), std::nullopt,
+                                  Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_THAT(std::get<Bxdf::DiffuseSample>(result),
+              FieldsAre(Vector(1.0, 0.0, 0.0)));
 }
 
 TEST(CompositeBxdfTest, SampleSpecular) {
@@ -191,14 +151,17 @@ TEST(CompositeBxdfTest, SampleSpecular) {
   EXPECT_CALL(rng, DiscardGeometric(1));
   Sampler sampler(rng);
 
+  MockReflector reflector;
+
   MockBxdf bxdf0;
   EXPECT_CALL(bxdf0, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
   EXPECT_CALL(bxdf0, Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _))
-      .WillOnce(Return(Bxdf::SampleResult{Vector(1.0, 0.0, 0.0), std::nullopt,
-                                          &bxdf0, 1.0}));
+      .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
+                                            Vector(1.0, 0.0, 0.0), reflector,
+                                            std::nullopt, 1.0}));
 
   MockBxdf bxdf1;
   EXPECT_CALL(bxdf1, IsDiffuse(NotNull()))
@@ -207,12 +170,11 @@ TEST(CompositeBxdfTest, SampleSpecular) {
 
   const Bxdf* composite =
       MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
-  std::optional<Bxdf::SampleResult> sample = composite->Sample(
-      Vector(1.0, 0.0, 0.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
-  EXPECT_EQ(Vector(1.0, 0.0, 0.0), sample->direction);
-  EXPECT_FALSE(sample->differentials);
-  EXPECT_EQ(&bxdf0, sample->bxdf_override);
-  EXPECT_EQ(0.5, sample->pdf_weight);
+  auto result = composite->Sample(Vector(1.0, 0.0, 0.0), std::nullopt,
+                                  Vector(0.0, 0.0, 1.0), sampler);
+  EXPECT_THAT(std::get<Bxdf::SpecularSample>(result),
+              FieldsAre(Bxdf::Hemisphere::BRDF, Vector(1.0, 0.0, 0.0),
+                        Ref(reflector), Eq(std::nullopt), Eq(0.5)));
 }
 
 TEST(CompositeBxdfTest, PdfAllSpecular) {
@@ -223,8 +185,9 @@ TEST(CompositeBxdfTest, PdfAllSpecular) {
 
   const Bxdf* composite =
       MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf, &bxdf);
-  EXPECT_EQ(0.0, composite->Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(0.0, composite->PdfDiffuse(
+                     Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, PdfOneBxdf) {
@@ -233,13 +196,14 @@ TEST(CompositeBxdfTest, PdfOneBxdf) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf, Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                        Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf, PdfDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                               Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(1.0));
 
   const Bxdf* composite = MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf);
-  EXPECT_EQ(1.0, composite->Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(1.0, composite->PdfDiffuse(
+                     Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, PdfTwoBxdfs) {
@@ -248,8 +212,8 @@ TEST(CompositeBxdfTest, PdfTwoBxdfs) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf0, Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                         Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf0, PdfDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(1.0));
 
   MockBxdf bxdf1;
@@ -257,14 +221,15 @@ TEST(CompositeBxdfTest, PdfTwoBxdfs) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf1, Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                         Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf1, PdfDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(static_cast<visual_t>(2.0)));
 
   const Bxdf* composite =
       MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
-  EXPECT_EQ(1.5, composite->Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(1.5, composite->PdfDiffuse(
+                     Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, PdfTwoBxdfsOneSpecular) {
@@ -278,14 +243,15 @@ TEST(CompositeBxdfTest, PdfTwoBxdfsOneSpecular) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf1, Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                         Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf1, PdfDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(static_cast<visual_t>(3.0)));
 
   const Bxdf* composite =
       MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
-  EXPECT_EQ(3.0, composite->Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(3.0, composite->PdfDiffuse(
+                     Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(CompositeBxdfTest, Reflectance) {
@@ -296,7 +262,8 @@ TEST(CompositeBxdfTest, Reflectance) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf0, Reflectance(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+  EXPECT_CALL(bxdf0,
+              ReflectanceDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
                                  Bxdf::Hemisphere::BRDF, _))
       .WillOnce(Return(&reflector0));
   MockReflector reflector1;
@@ -307,13 +274,14 @@ TEST(CompositeBxdfTest, Reflectance) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf1, Reflectance(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+  EXPECT_CALL(bxdf1,
+              ReflectanceDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
                                  Bxdf::Hemisphere::BRDF, _))
       .WillOnce(Return(&reflector1));
 
   const Bxdf* composite =
       MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
-  const Reflector* result = composite->Reflectance(
+  const Reflector* result = composite->ReflectanceDiffuse(
       Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0), Bxdf::Hemisphere::BRDF,
       testing::GetSpectralAllocator());
   EXPECT_EQ(0.75, result->Reflectance(1.0));
@@ -325,8 +293,8 @@ TEST(CompositeBxdfTest, MakeCompositeWithNullptr) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf0, Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                         Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf0, PdfDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(1.0));
 
   MockBxdf bxdf1;
@@ -334,16 +302,17 @@ TEST(CompositeBxdfTest, MakeCompositeWithNullptr) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf1, Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                         Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
+  EXPECT_CALL(bxdf1, PdfDiffuse(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(static_cast<visual_t>(2.0)));
 
   const Bxdf* composite = MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0,
                                             &bxdf1, nullptr, nullptr, nullptr);
   ASSERT_TRUE(composite);
 
-  EXPECT_EQ(1.5, composite->Pdf(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
-                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(1.5, composite->PdfDiffuse(
+                     Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
+                     Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 }  // namespace

@@ -7,15 +7,23 @@
 #include "iris/internal/arena.h"
 #include "iris/reflectors/mock_reflector.h"
 
+namespace iris {
+namespace {
+
+using ::iris::bxdfs::LambertianBrdf;
+using ::iris::internal::Arena;
+using ::iris::reflectors::MockReflector;
+
 TEST(BxdfAllocatorTest, Allocate) {
-  iris::internal::Arena arena;
-  iris::BxdfAllocator allocator(arena);
-  iris::reflectors::MockReflector reflector;
-  const iris::Bxdf& bxdf =
-      allocator.Allocate<iris::bxdfs::LambertianBrdf>(reflector);
-  EXPECT_NEAR(
-      std::numbers::inv_pi,
-      bxdf.Pdf(iris::Vector(0.0, 0.0, 1.0), iris::Vector(0.0, 0.0, 1.0),
-               iris::Vector(0.0, 0.0, 1.0), iris::Bxdf::Hemisphere::BRDF),
-      0.01);
+  Arena arena;
+  BxdfAllocator allocator(arena);
+  MockReflector reflector;
+  const Bxdf& bxdf = allocator.Allocate<LambertianBrdf>(reflector);
+  EXPECT_NEAR(std::numbers::inv_pi,
+              bxdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                              Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              0.01);
 }
+
+}  // namespace
+}  // namespace iris

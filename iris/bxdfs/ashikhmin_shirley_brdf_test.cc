@@ -35,17 +35,6 @@ class TestMicrofacetDistribution final : public MicrofacetDistribution {
   Vector vector_;
 };
 
-TEST(AshikhminShirleyBrdf, IsDiffuse) {
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
-  EXPECT_TRUE(brdf.IsDiffuse(nullptr));
-
-  visual_t diffuse_pdf;
-  EXPECT_TRUE(brdf.IsDiffuse(&diffuse_pdf));
-  EXPECT_EQ(1.0, diffuse_pdf);
-}
-
 TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.49));
@@ -80,51 +69,14 @@ TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {
   EXPECT_NEAR(sample->z, 0.27999, 0.001);
 }
 
-TEST(AshikhminShirleyBrdf, SampleMicrofacet) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.49));
-  Sampler sampler(rng);
-
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
-
-  std::optional<Bxdf::SampleResult> sample = brdf.Sample(
-      Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
-  ASSERT_TRUE(sample);
-  EXPECT_FALSE(sample->differentials);
-  EXPECT_NEAR(sample->direction.x, 0.0, 0.001);
-  EXPECT_NEAR(sample->direction.y, 0.0, 0.001);
-  EXPECT_NEAR(sample->direction.z, 1.0, 0.001);
-  EXPECT_EQ(sample->pdf_weight, 1.0);
-}
-
-TEST(AshikhminShirleyBrdf, SampleLambertian) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.51));
-  Sampler sampler(rng);
-
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
-
-  std::optional<Bxdf::SampleResult> sample = brdf.Sample(
-      Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler);
-  ASSERT_TRUE(sample);
-  EXPECT_FALSE(sample->differentials);
-  EXPECT_NEAR(sample->direction.x, -0.9598, 0.001);
-  EXPECT_NEAR(sample->direction.y, 0.01570, 0.001);
-  EXPECT_NEAR(sample->direction.z, 0.27999, 0.001);
-  EXPECT_EQ(sample->pdf_weight, 1.0);
-}
-
 TEST(AshikhminShirleyBrdf, PdfBTDF) {
   MockReflector reflector;
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
-  EXPECT_EQ(0.0, brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+  EXPECT_EQ(0.0,
+            brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(AshikhminShirleyBrdf, PdfNoIncomingZ) {
@@ -133,8 +85,8 @@ TEST(AshikhminShirleyBrdf, PdfNoIncomingZ) {
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
   EXPECT_NEAR(0.159154,
-              brdf.Pdf(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
-                       Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              brdf.PdfDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
+                              Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
               0.001);
 }
 
@@ -143,8 +95,9 @@ TEST(AshikhminShirleyBrdf, PdfNoOutgoingZ) {
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
-  EXPECT_EQ(0.0, brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
-                          Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_EQ(0.0,
+            brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
+                            Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(AshikhminShirleyBrdf, PdfOppositeHemispheres) {
@@ -153,8 +106,8 @@ TEST(AshikhminShirleyBrdf, PdfOppositeHemispheres) {
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
   EXPECT_NEAR(0.159154,
-              brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                       Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                              Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
               0.001);
 }
 
@@ -164,8 +117,8 @@ TEST(AshikhminShirleyBrdf, Pdf) {
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
   EXPECT_NEAR(0.22165,
-              brdf.Pdf(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                       Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              brdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                              Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
               0.001);
 }
 
@@ -174,9 +127,9 @@ TEST(AshikhminShirleyBrdf, ReflectanceWrongHemishphere) {
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
-  EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                             Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, brdf.ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                         Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(AshikhminShirleyBrdf, ReflectanceNoIncomingZ) {
@@ -184,9 +137,9 @@ TEST(AshikhminShirleyBrdf, ReflectanceNoIncomingZ) {
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
-  EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
-                             Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, brdf.ReflectanceDiffuse(
+                         Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
 TEST(AshikhminShirleyBrdf, ReflectanceNoOutgoingZ) {
@@ -194,9 +147,9 @@ TEST(AshikhminShirleyBrdf, ReflectanceNoOutgoingZ) {
   TestMicrofacetDistribution distribution;
   AshikhminShirleyBrdf brdf(reflector, reflector, distribution);
 
-  EXPECT_EQ(nullptr,
-            brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
-                             Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, brdf.ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
 TEST(AshikhminShirleyBrdf, ReflectanceOppositeHemispheres) {
@@ -208,8 +161,8 @@ TEST(AshikhminShirleyBrdf, ReflectanceOppositeHemispheres) {
   AshikhminShirleyBrdf brdf(diffuse, specular, distribution);
 
   const Reflector* reflectance =
-      brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                       Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+      brdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                              Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.0290, reflectance->Reflectance(0.5), 0.001);
 }
@@ -223,8 +176,8 @@ TEST(AshikhminShirleyBrdf, Reflectance) {
   AshikhminShirleyBrdf brdf(diffuse, specular, distribution);
 
   const Reflector* reflectance =
-      brdf.Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                       Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+      brdf.ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                              Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.0790, reflectance->Reflectance(0.5), 0.001);
 }

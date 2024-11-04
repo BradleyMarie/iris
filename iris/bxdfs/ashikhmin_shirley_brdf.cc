@@ -23,14 +23,6 @@ const Reflector* SchlickFresnel(const Reflector* specular,
 
 }  // namespace
 
-bool AshikhminShirleyBrdf::IsDiffuse(visual_t* diffuse_pdf) const {
-  if (diffuse_pdf) {
-    *diffuse_pdf = static_cast<visual_t>(1.0);
-  }
-
-  return true;
-}
-
 std::optional<Vector> AshikhminShirleyBrdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
     Sampler& sampler) const {
@@ -44,23 +36,10 @@ std::optional<Vector> AshikhminShirleyBrdf::SampleDiffuse(
   return internal::Reflect(incoming, half_angle);
 }
 
-std::optional<Bxdf::SampleResult> AshikhminShirleyBrdf::Sample(
-    const Vector& incoming,
-    const std::optional<Bxdf::Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler) const {
-  std::optional<Vector> outgoing =
-      SampleDiffuse(incoming, surface_normal, sampler);
-  if (!outgoing.has_value()) {
-    return std::nullopt;
-  }
-
-  return SampleResult{*outgoing};
-}
-
-visual_t AshikhminShirleyBrdf::Pdf(const Vector& incoming,
-                                   const Vector& outgoing,
-                                   const Vector& surface_normal,
-                                   Hemisphere hemisphere) const {
+visual_t AshikhminShirleyBrdf::PdfDiffuse(const Vector& incoming,
+                                          const Vector& outgoing,
+                                          const Vector& surface_normal,
+                                          Hemisphere hemisphere) const {
   if (hemisphere != Hemisphere::BRDF) {
     return static_cast<visual_t>(0.0);
   }
@@ -82,7 +61,7 @@ visual_t AshikhminShirleyBrdf::Pdf(const Vector& incoming,
   return diffuse_pdf + specular_pdf;
 }
 
-const Reflector* AshikhminShirleyBrdf::Reflectance(
+const Reflector* AshikhminShirleyBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
   if (hemisphere != Hemisphere::BRDF) {

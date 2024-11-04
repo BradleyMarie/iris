@@ -79,15 +79,11 @@ const Spectrum* EstimateDirectLighting(
     const RayTracer::SurfaceIntersection intersection, Sampler bsdf_sampler,
     Sampler light_sampler, VisibilityTester& visibility_tester,
     SpectralAllocator& allocator) {
-  auto bsdf_sample = intersection.bsdf.Sample(
-      traced_ray.direction, std::nullopt, std::move(bsdf_sampler), allocator,
-      /*diffuse_only=*/true);
-
-  if (bsdf_sample && !bsdf_sample->diffuse) {
+  if (!intersection.bsdf.IsDiffuse()) {
     return nullptr;
   }
 
-  auto light_sample =
+  std::optional<Light::SampleResult> light_sample =
       light.Sample(intersection.hit_point, std::move(light_sampler),
                    visibility_tester, allocator);
 
@@ -101,6 +97,10 @@ const Spectrum* EstimateDirectLighting(
     light_spectrum = internal::FromLightSample(
         *light_sample, traced_ray, intersection, visibility_tester, allocator);
   }
+
+  std::optional<Bsdf::SampleResult> bsdf_sample = intersection.bsdf.Sample(
+      traced_ray.direction, std::nullopt, std::move(bsdf_sampler), allocator,
+      /*diffuse_only=*/true);
 
   const Spectrum* bsdf_spectrum = nullptr;
   if (bsdf_sample) {

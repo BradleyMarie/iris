@@ -8,10 +8,10 @@
 namespace iris {
 
 struct RayDifferential final : public Ray {
-  explicit RayDifferential(const Ray& base) noexcept : Ray(base) {}
+  constexpr explicit RayDifferential(const Ray& base) noexcept : Ray(base) {}
 
-  explicit RayDifferential(const Ray& base, const Ray& dx,
-                           const Ray& dy) noexcept
+  constexpr explicit RayDifferential(const Ray& base, const Ray& dx,
+                                     const Ray& dy) noexcept
       : Ray(base), differentials(Differentials{dx, dy}) {}
 
   RayDifferential(const RayDifferential&) noexcept = default;

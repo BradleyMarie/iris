@@ -67,9 +67,9 @@ TEST(PlasticMaterialTest, LambertianOnly) {
                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
-  const Reflector* returned_reflector =
-      result->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+  const Reflector* returned_reflector = result->ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
+      GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(std::numbers::inv_pi, returned_reflector->Reflectance(1.0),
               0.0001);
@@ -101,9 +101,9 @@ TEST(PlasticMaterialTest, SpecularOnly) {
                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
-  const Reflector* returned_reflector =
-      result->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+  const Reflector* returned_reflector = result->ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
+      GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(0.0031830, returned_reflector->Reflectance(1.0), 0.0001);
 }
@@ -134,9 +134,9 @@ TEST(PlasticMaterialTest, Remap) {
                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
-  const Reflector* returned_reflector =
-      result->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+  const Reflector* returned_reflector = result->ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
+      GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(0.0012107628, returned_reflector->Reflectance(1.0), 0.0001);
 }
@@ -166,9 +166,9 @@ TEST(PlasticMaterialTest, Both) {
                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
-  const Reflector* returned_reflector =
-      result->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+  const Reflector* returned_reflector = result->ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
+      GetSpectralAllocator());
   ASSERT_TRUE(returned_reflector);
   EXPECT_NEAR(0.321492, returned_reflector->Reflectance(1.0), 0.01);
 }

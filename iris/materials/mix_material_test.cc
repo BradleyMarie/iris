@@ -36,20 +36,18 @@ TEST(MixMaterialTest, Evaluate) {
   EXPECT_CALL(reflector1, Reflectance(1.0)).WillOnce(Return(0.125));
 
   MockBxdf mock_bxdf0;
-  EXPECT_CALL(mock_bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
   EXPECT_CALL(mock_bxdf0, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(mock_bxdf0,
-              Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Bxdf::Hemisphere::BTDF, _))
+              ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                                 Bxdf::Hemisphere::BTDF, _))
       .WillOnce(Return(&reflector0));
   MockBxdf mock_bxdf1;
-  EXPECT_CALL(mock_bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
   EXPECT_CALL(mock_bxdf1, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(mock_bxdf1,
-              Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                          Bxdf::Hemisphere::BTDF, _))
+              ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                                 Bxdf::Hemisphere::BTDF, _))
       .WillOnce(Return(&reflector1));
 
   ReferenceCounted<MockMaterial> mock_material0 =
@@ -69,8 +67,8 @@ TEST(MixMaterialTest, Evaluate) {
   ASSERT_TRUE(bxdf);
 
   const Reflector* reflector =
-      bxdf->Reflectance(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                        Bxdf::Hemisphere::BTDF, GetSpectralAllocator());
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator());
   ASSERT_TRUE(reflector);
 
   EXPECT_EQ(0.28125, reflector->Reflectance(1.0));
