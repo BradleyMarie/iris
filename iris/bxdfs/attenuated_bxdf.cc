@@ -33,8 +33,10 @@ class AttenuatedBxdf final : public Bxdf {
 
   std::variant<std::monostate, DiffuseSample, SpecularSample> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override {
-    return bxdf_.Sample(incoming, differentials, surface_normal, sampler);
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override {
+    return bxdf_.Sample(incoming, differentials, surface_normal, sampler,
+                        allocator);
   }
 
   visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,

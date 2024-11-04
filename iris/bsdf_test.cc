@@ -60,7 +60,7 @@ TEST(BsdfTest, SampleFails) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(std::monostate()));
 
   MockRandom rng;
@@ -93,7 +93,7 @@ TEST(BsdfTest, SampleOutgoingZeroDP) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kInvalid}));
 
   MockRandom rng;
@@ -109,7 +109,7 @@ TEST(BsdfTest, SampleZeroPdf) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBtdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BTDF))
@@ -128,7 +128,7 @@ TEST(BsdfTest, SampleNegativePdf) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBtdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BTDF))
@@ -147,7 +147,7 @@ TEST(BsdfTest, SampleNoReflector) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBtdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BTDF))
@@ -171,7 +171,7 @@ TEST(BsdfTest, SampleAdjustByDiffusePdf) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(0.5), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBtdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BTDF))
@@ -200,7 +200,7 @@ TEST(BsdfTest, SampleBtdf) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBtdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BTDF))
@@ -229,7 +229,7 @@ TEST(BsdfTest, SampleBrdf) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBrdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBrdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BRDF))
@@ -286,7 +286,8 @@ TEST(BsdfTest, SampleWithInputDerivatives) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf,
+              Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBtdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BTDF))
@@ -316,7 +317,8 @@ TEST(BsdfTest, SampleSpecularInvalidPdf) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf,
+              Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
                                             kBtdfOutgoing,
                                             reflector,
@@ -339,7 +341,8 @@ TEST(BsdfTest, SampleSpecularWrongHemisphere) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf,
+              Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
                                             kBtdfOutgoing,
                                             reflector,
@@ -362,7 +365,7 @@ TEST(BsdfTest, SampleSpecularWithNoDifferentials) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
                                       reflector, std::nullopt, 1.0}));
@@ -387,7 +390,8 @@ TEST(BsdfTest, SampleSpecularWithOnlyIncomingDifferentials) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf,
+              Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
                                       reflector, std::nullopt, 1.0}));
@@ -413,7 +417,8 @@ TEST(BsdfTest, SampleSpecularWithDifferentials) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf, Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _))
+  EXPECT_CALL(bxdf,
+              Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
                                             kBtdfOutgoing,
                                             reflector,
@@ -575,7 +580,7 @@ TEST(BsdfTest, Normalize) {
   MockReflector reflector;
 
   MockBxdf bxdf;
-  EXPECT_CALL(bxdf, Sample(kIncoming, _, kSurfaceNormal, _))
+  EXPECT_CALL(bxdf, Sample(kIncoming, _, kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kBtdfOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBtdfOutgoing, kSurfaceNormal,
                                Bxdf::Hemisphere::BTDF))

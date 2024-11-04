@@ -54,11 +54,12 @@ class CompositeBxdf final : public Bxdf {
 
   std::variant<std::monostate, DiffuseSample, SpecularSample> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override {
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override {
     size_t index = sampler.NextIndex(num_bxdfs_);
 
-    auto sample =
-        bxdfs_[index]->Sample(incoming, differentials, surface_normal, sampler);
+    auto sample = bxdfs_[index]->Sample(incoming, differentials, surface_normal,
+                                        sampler, allocator);
     if (SpecularSample* specular_sample = std::get_if<SpecularSample>(&sample);
         specular_sample != nullptr) {
       specular_sample->pdf /= static_cast<visual_t>(num_bxdfs_);

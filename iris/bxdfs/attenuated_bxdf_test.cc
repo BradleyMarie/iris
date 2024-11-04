@@ -15,6 +15,7 @@ namespace {
 
 using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -86,13 +87,14 @@ TEST(AttenuatedBrdfTest, Sample) {
 
   MockBxdf mock_bxdf;
   EXPECT_CALL(mock_bxdf, Sample(Vector(0.0, 0.0, 1.0), Eq(std::nullopt),
-                                Vector(0.0, 0.0, 1.0), Ref(sampler)))
+                                Vector(0.0, 0.0, 1.0), Ref(sampler), _))
       .WillOnce(Return(Bxdf::DiffuseSample{Vector(1.0, 2.0, 3.0)}));
 
   const Bxdf* bxdf =
       CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
-  auto result = bxdf->Sample(Vector(0.0, 0.0, 1.0), std::nullopt,
-                             Vector(0.0, 0.0, 1.0), sampler);
+  auto result =
+      bxdf->Sample(Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
+                   sampler, GetSpectralAllocator());
   EXPECT_THAT(std::get<Bxdf::DiffuseSample>(result),
               FieldsAre(Vector(1.0, 2.0, 3.0)));
 }

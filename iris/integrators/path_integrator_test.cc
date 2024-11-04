@@ -86,7 +86,7 @@ TEST(PathIntegratorTest, BounceLimit) {
   MockBxdf specular;
   EXPECT_CALL(specular, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(specular, Sample(_, _, _, _))
+  EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector, std::nullopt, 1.0}));
@@ -157,7 +157,7 @@ TEST(PathIntegratorTest, BsdfSampleFails) {
   MockBxdf specular;
   EXPECT_CALL(specular, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(specular, Sample(_, _, _, _))
+  EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(std::monostate()));
 
   MockSpectrum spectrum;
@@ -195,11 +195,11 @@ TEST(PathIntegratorTest, TwoSpecularBouncesHitsEmissive) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(specular1, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(specular0, Sample(_, _, _, _))
+  EXPECT_CALL(specular0, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector, std::nullopt, 1.0}));
-  EXPECT_CALL(specular1, Sample(_, _, _, _))
+  EXPECT_CALL(specular1, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector, std::nullopt, 1.0}));
@@ -243,10 +243,10 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(specular, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(diffuse, Sample(_, _, _, _))
+  EXPECT_CALL(diffuse, Sample(_, _, _, _, _))
       .WillRepeatedly(
           Return(Bxdf::DiffuseSample{Normalize(Vector(1.0, 0.0, -1.0))}));
-  EXPECT_CALL(specular, Sample(_, _, _, _))
+  EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector, std::nullopt, 1.0}));
@@ -291,7 +291,7 @@ TEST(PathIntegratorTest, SpecularBounceRouletteFails) {
   MockBxdf specular;
   EXPECT_CALL(specular, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(specular, Sample(_, _, _, _))
+  EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector, std::nullopt, 1.0}));
@@ -331,7 +331,7 @@ TEST(PathIntegratorTest, OneSpecularBounceRoulettePasses) {
   MockBxdf specular;
   EXPECT_CALL(specular, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(specular, Sample(_, _, _, _))
+  EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector, std::nullopt, 1.0}));
@@ -379,11 +379,11 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(specular1, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(specular0, Sample(_, _, _, _))
+  EXPECT_CALL(specular0, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector0, std::nullopt, 1.0}));
-  EXPECT_CALL(specular1, Sample(_, _, _, _))
+  EXPECT_CALL(specular1, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
                                reflector1, std::nullopt, 1.0}));
@@ -427,7 +427,7 @@ TEST(PathIntegratorTest, DirectLighting) {
   MockBxdf diffuse;
   EXPECT_CALL(diffuse, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(diffuse, Sample(_, _, _, _))
+  EXPECT_CALL(diffuse, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(Bxdf::DiffuseSample{to_light}));
   EXPECT_CALL(diffuse, PdfDiffuse(_, _, _, _))
       .WillRepeatedly(Return(static_cast<visual_t>(1.0)));

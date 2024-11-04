@@ -13,6 +13,8 @@ namespace {
 
 using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetBxdfAllocator;
+using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -34,8 +36,7 @@ TEST(CompositeBxdfTest, IsNotDiffuse) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
   EXPECT_FALSE(composite->IsDiffuse(nullptr));
 
   visual_t diffuse_pdf;
@@ -54,8 +55,7 @@ TEST(CompositeBxdfTest, IsDiffuse) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
   EXPECT_TRUE(composite->IsDiffuse(nullptr));
 
   visual_t diffuse_pdf;
@@ -78,8 +78,7 @@ TEST(CompositeBxdfTest, SampleDiffuseNone) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
   std::optional<Vector> sample = composite->SampleDiffuse(
       Vector(1.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0), sampler);
   EXPECT_FALSE(sample);
@@ -111,7 +110,7 @@ TEST(CompositeBxdfTest, SampleDiffuse) {
       .WillOnce(Return(Vector(1.0, 0.0, 0.0)));
 
   const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1, &bxdf2);
+      MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1, &bxdf2);
   std::optional<Vector> sample = composite->SampleDiffuse(
       Vector(1.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
@@ -134,13 +133,14 @@ TEST(CompositeBxdfTest, SampleAllDifuse) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(true));
 
-  EXPECT_CALL(bxdf1, Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _))
+  EXPECT_CALL(bxdf1,
+              Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{Vector(1.0, 0.0, 0.0)}));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
-  auto result = composite->Sample(Vector(1.0, 0.0, 0.0), std::nullopt,
-                                  Vector(0.0, 0.0, 1.0), sampler);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
+  auto result =
+      composite->Sample(Vector(1.0, 0.0, 0.0), std::nullopt,
+                        Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
   EXPECT_THAT(std::get<Bxdf::DiffuseSample>(result),
               FieldsAre(Vector(1.0, 0.0, 0.0)));
 }
@@ -158,7 +158,8 @@ TEST(CompositeBxdfTest, SampleSpecular) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
-  EXPECT_CALL(bxdf0, Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _))
+  EXPECT_CALL(bxdf0,
+              Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
                                             Vector(1.0, 0.0, 0.0), reflector,
                                             std::nullopt, 1.0}));
@@ -168,10 +169,10 @@ TEST(CompositeBxdfTest, SampleSpecular) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
-  auto result = composite->Sample(Vector(1.0, 0.0, 0.0), std::nullopt,
-                                  Vector(0.0, 0.0, 1.0), sampler);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
+  auto result =
+      composite->Sample(Vector(1.0, 0.0, 0.0), std::nullopt,
+                        Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
   EXPECT_THAT(std::get<Bxdf::SpecularSample>(result),
               FieldsAre(Bxdf::Hemisphere::BRDF, Vector(1.0, 0.0, 0.0),
                         Ref(reflector), Eq(std::nullopt), Eq(0.5)));
@@ -183,8 +184,7 @@ TEST(CompositeBxdfTest, PdfAllSpecular) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf, &bxdf);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf, &bxdf);
   EXPECT_EQ(0.0, composite->PdfDiffuse(
                      Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
@@ -200,7 +200,7 @@ TEST(CompositeBxdfTest, PdfOneBxdf) {
                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(1.0));
 
-  const Bxdf* composite = MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf);
   EXPECT_EQ(1.0, composite->PdfDiffuse(
                      Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
@@ -225,8 +225,7 @@ TEST(CompositeBxdfTest, PdfTwoBxdfs) {
                                 Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(static_cast<visual_t>(2.0)));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
   EXPECT_EQ(1.5, composite->PdfDiffuse(
                      Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
@@ -247,8 +246,7 @@ TEST(CompositeBxdfTest, PdfTwoBxdfsOneSpecular) {
                                 Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(static_cast<visual_t>(3.0)));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
   EXPECT_EQ(3.0, composite->PdfDiffuse(
                      Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
@@ -279,8 +277,7 @@ TEST(CompositeBxdfTest, Reflectance) {
                                  Bxdf::Hemisphere::BRDF, _))
       .WillOnce(Return(&reflector1));
 
-  const Bxdf* composite =
-      MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0, &bxdf1);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
   const Reflector* result = composite->ReflectanceDiffuse(
       Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0), Bxdf::Hemisphere::BRDF,
       testing::GetSpectralAllocator());
@@ -306,8 +303,8 @@ TEST(CompositeBxdfTest, MakeCompositeWithNullptr) {
                                 Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF))
       .WillOnce(Return(static_cast<visual_t>(2.0)));
 
-  const Bxdf* composite = MakeCompositeBxdf(testing::GetBxdfAllocator(), &bxdf0,
-                                            &bxdf1, nullptr, nullptr, nullptr);
+  const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1,
+                                            nullptr, nullptr, nullptr);
   ASSERT_TRUE(composite);
 
   EXPECT_EQ(1.5, composite->PdfDiffuse(

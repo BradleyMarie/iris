@@ -21,7 +21,7 @@ class MockBxdf final : public Bxdf {
   MOCK_METHOD((std::variant<std::monostate, DiffuseSample, SpecularSample>),
               Sample,
               (const Vector&, const std::optional<Differentials>& differentials,
-               const Vector&, Sampler&),
+               const Vector&, Sampler&, SpectralAllocator&),
               (const override));
   MOCK_METHOD(std::optional<Vector>, SampleDiffuse,
               (const Vector&, const Vector&, Sampler&), (const override));

@@ -24,9 +24,10 @@ class SpecularBxdf : public Bxdf {
 
   std::variant<std::monostate, DiffuseSample, SpecularSample> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override final {
-    std::optional<SpecularSample> result =
-        SampleSpecular(incoming, differentials, surface_normal, sampler);
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override final {
+    std::optional<SpecularSample> result = SampleSpecular(
+        incoming, differentials, surface_normal, sampler, allocator);
     if (!result) {
       return std::monostate();
     }
@@ -54,7 +55,8 @@ class SpecularBxdf : public Bxdf {
 
   virtual std::optional<SpecularSample> SampleSpecular(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const = 0;
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const = 0;
 
  protected:
   ~SpecularBxdf() = default;

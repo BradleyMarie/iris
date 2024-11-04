@@ -22,6 +22,7 @@ cc_test(
         ":diffuse_bxdf",
         "//iris/random:mock_random",
         "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
         "@com_google_googletest//:gtest_main",
     ],
 )

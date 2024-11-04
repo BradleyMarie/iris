@@ -24,7 +24,8 @@ class SpecularBrdf final : public helpers::SpecularBxdf {
   std::optional<Bxdf::SpecularSample> SampleSpecular(
       const Vector& incoming,
       const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override;
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override;
 
  private:
   const Reflector& reflectance_;
@@ -44,7 +45,8 @@ class SpecularBtdf final : public helpers::SpecularBxdf {
   std::optional<Bxdf::SpecularSample> SampleSpecular(
       const Vector& incoming,
       const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override;
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override;
 
  private:
   const Reflector& transmittance_;
@@ -64,9 +66,10 @@ class SpecularBrdf final : public helpers::SpecularBxdf {
   std::optional<Bxdf::SpecularSample> SampleSpecular(
       const Vector& incoming,
       const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override {
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override {
     return impl_.SampleSpecular(incoming, differentials, surface_normal,
-                                sampler);
+                                sampler, allocator);
   }
 
  private:
@@ -86,9 +89,10 @@ class SpecularBtdf final : public helpers::SpecularBxdf {
   std::optional<Bxdf::SpecularSample> SampleSpecular(
       const Vector& incoming,
       const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override {
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override {
     return impl_.SampleSpecular(incoming, differentials, surface_normal,
-                                sampler);
+                                sampler, allocator);
   }
 
  private:
@@ -110,7 +114,8 @@ class SpecularBxdf final : public helpers::SpecularBxdf {
   std::optional<Bxdf::SpecularSample> SampleSpecular(
       const Vector& incoming,
       const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override;
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override;
 
  private:
   const Reflector& reflectance_;

@@ -39,7 +39,7 @@ TEST(SampleIndirectLighting, NoSample) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _, _))
       .WillOnce(Return(std::monostate()));
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
@@ -65,7 +65,7 @@ TEST(SampleIndirectLighting, Sample) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
   EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
@@ -103,7 +103,7 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
   EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
@@ -143,7 +143,7 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _))
+  EXPECT_CALL(bxdf, Sample(_, Eq(std::nullopt), _, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
   EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
@@ -183,7 +183,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(1.0), Return(true)));
-  EXPECT_CALL(bxdf, Sample(_, Not(Eq(std::nullopt)), _, _))
+  EXPECT_CALL(bxdf, Sample(_, Not(Eq(std::nullopt)), _, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kOutgoing}));
   EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _)).WillOnce(Return(1.0));
   EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
@@ -225,7 +225,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
-  EXPECT_CALL(bxdf, Sample(_, Not(Eq(std::nullopt)), _, _))
+  EXPECT_CALL(bxdf, Sample(_, Not(Eq(std::nullopt)), _, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
                                             kOutgoing,
                                             reflector,

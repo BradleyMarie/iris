@@ -14,6 +14,7 @@ namespace {
 using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetSpectralAllocator;
+using ::testing::_;
 using ::testing::Eq;
 using ::testing::FieldsAre;
 using ::testing::Ref;
@@ -23,7 +24,7 @@ class MockSpecularBxdf final : public SpecularBxdf {
  public:
   MOCK_METHOD(std::optional<Bxdf::SpecularSample>, SampleSpecular,
               (const Vector&, const std::optional<Bxdf::Differentials>&,
-               const Vector&, Sampler&),
+               const Vector&, Sampler&, SpectralAllocator&),
               (const override));
 };
 
@@ -44,12 +45,13 @@ TEST(SpecularBxdfTest, Sample) {
 
   MockSpecularBxdf bxdf;
   EXPECT_CALL(bxdf, SampleSpecular(Vector(0.0, 1.0, 0.0), Eq(std::nullopt),
-                                   Vector(0.0, 0.0, 1.0), Ref(sampler)))
+                                   Vector(0.0, 0.0, 1.0), Ref(sampler), _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
                                             Vector(1.0, 2.0, 3.0), reflector,
                                             std::nullopt, 1.0}));
-  auto sample = bxdf.Sample(Vector(0.0, 1.0, 0.0), std::nullopt,
-                            Vector(0.0, 0.0, 1.0), sampler);
+  auto sample =
+      bxdf.Sample(Vector(0.0, 1.0, 0.0), std::nullopt, Vector(0.0, 0.0, 1.0),
+                  sampler, GetSpectralAllocator());
   EXPECT_THAT(std::get<Bxdf::SpecularSample>(sample),
               FieldsAre(Bxdf::Hemisphere::BRDF, Vector(1.0, 2.0, 3.0),
                         Ref(reflector), Eq(std::nullopt), Eq(1.0)));
@@ -62,10 +64,11 @@ TEST(SpecularBxdfTest, SampleFails) {
 
   MockSpecularBxdf bxdf;
   EXPECT_CALL(bxdf, SampleSpecular(Vector(0.0, 1.0, 0.0), Eq(std::nullopt),
-                                   Vector(0.0, 0.0, 1.0), Ref(sampler)))
+                                   Vector(0.0, 0.0, 1.0), Ref(sampler), _))
       .WillOnce(Return(std::nullopt));
-  auto sample = bxdf.Sample(Vector(0.0, 1.0, 0.0), std::nullopt,
-                            Vector(0.0, 0.0, 1.0), sampler);
+  auto sample =
+      bxdf.Sample(Vector(0.0, 1.0, 0.0), std::nullopt, Vector(0.0, 0.0, 1.0),
+                  sampler, GetSpectralAllocator());
   EXPECT_TRUE(std::holds_alternative<std::monostate>(sample));
 }
 

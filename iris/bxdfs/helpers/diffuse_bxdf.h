@@ -24,7 +24,8 @@ class DiffuseBxdf : public Bxdf {
 
   std::variant<std::monostate, DiffuseSample, SpecularSample> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler) const override final {
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override final {
     std::optional<Vector> direction =
         SampleDiffuse(incoming, surface_normal, sampler);
     if (!direction) {

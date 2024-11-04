@@ -35,7 +35,8 @@ std::array<Vector, 4> ComputeState(const Vector& surface_normal,
 std::optional<std::pair<Vector, std::optional<Bxdf::SpecularSample>>>
 SampleBxdf(const Bxdf& bxdf, const Vector& incoming,
            const std::optional<Bxdf::Differentials>& differentials,
-           const Vector& surface_normal, Sampler& sampler, bool diffuse_only) {
+           const Vector& surface_normal, Sampler& sampler,
+           SpectralAllocator& allocator, bool diffuse_only) {
   if (diffuse_only) {
     std::optional<Vector> outgoing =
         bxdf.SampleDiffuse(incoming, surface_normal, sampler);
@@ -46,7 +47,8 @@ SampleBxdf(const Bxdf& bxdf, const Vector& incoming,
     return std::make_pair(*outgoing, std::nullopt);
   }
 
-  auto sample = bxdf.Sample(incoming, differentials, surface_normal, sampler);
+  auto sample =
+      bxdf.Sample(incoming, differentials, surface_normal, sampler, allocator);
   switch (sample.index()) {
     case 0:  // std::monostate
       return std::nullopt;
@@ -121,8 +123,9 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
   std::optional<Bxdf::Differentials> local_incoming_differentials =
       ToLocal(differentials);
 
-  auto sample = SampleBxdf(bxdf_, local_incoming, local_incoming_differentials,
-                           local_surface_normal_, sampler, diffuse_only);
+  auto sample =
+      SampleBxdf(bxdf_, local_incoming, local_incoming_differentials,
+                 local_surface_normal_, sampler, allocator, diffuse_only);
   if (!sample) {
     return std::nullopt;
   }
