@@ -12,6 +12,10 @@ constexpr Vector kShadingNormal(static_cast<geometric>(0.0),
                                 static_cast<geometric>(0.0),
                                 static_cast<geometric>(1.0));
 
+Vector GetReflectedVector(const Vector& incoming) {
+  return Vector(-incoming.x, -incoming.y, incoming.z);
+}
+
 std::optional<Bxdf::Differentials> GetReflectedDifferentials(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials) {
@@ -19,9 +23,8 @@ std::optional<Bxdf::Differentials> GetReflectedDifferentials(
     return std::nullopt;
   }
 
-  return Bxdf::Differentials{
-      Vector(-differentials->dx.x, -differentials->dx.y, differentials->dx.z),
-      Vector(-differentials->dy.x, -differentials->dy.y, differentials->dy.z)};
+  return Bxdf::Differentials{GetReflectedVector(differentials->dx),
+                             GetReflectedVector(differentials->dy)};
 }
 
 std::optional<Bxdf::Differentials> GetRefractedDifferentials(
@@ -49,6 +52,45 @@ std::optional<Bxdf::Differentials> GetRefractedDifferentials(
   return Bxdf::Differentials{*outgoing_dx, *outgoing_dy};
 }
 
+std::optional<Bxdf::SpecularSample> SampleSpecularReflection(
+    const Vector& incoming,
+    const std::optional<Bxdf::Differentials>& differentials,
+    const Reflector* reflectance, visual_t pdf) {
+  if (!reflectance) {
+    return std::nullopt;
+  }
+
+  return Bxdf::SpecularSample{
+      Bxdf::Hemisphere::BRDF, GetReflectedVector(incoming), *reflectance,
+      GetReflectedDifferentials(incoming, differentials), pdf};
+}
+
+std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
+    const Vector& incoming,
+    const std::optional<Bxdf::Differentials>& differentials,
+    const Reflector* transmittance, visual_t relative_refractive_index,
+    visual_t pdf, SpectralAllocator& allocator) {
+  if (!transmittance) {
+    return std::nullopt;
+  }
+
+  std::optional<Vector> outgoing = internal::Refract(
+      incoming, kShadingNormal.AlignWith(incoming), relative_refractive_index);
+  if (!outgoing) {
+    return std::nullopt;
+  }
+
+  // It may be better to scale by relative_refractive_index in the integrator
+  transmittance = allocator.UnboundedScale(
+      transmittance, relative_refractive_index * relative_refractive_index);
+
+  return Bxdf::SpecularSample{
+      Bxdf::Hemisphere::BTDF, *outgoing, *transmittance,
+      GetRefractedDifferentials(incoming, differentials,
+                                relative_refractive_index),
+      pdf};
+}
+
 }  // namespace
 
 namespace internal {
@@ -59,47 +101,26 @@ std::optional<Bxdf::SpecularSample> SpecularBrdf::SampleSpecular(
     SpectralAllocator& allocator) const {
   const Reflector* reflectance = fresnel_.AttenuateReflectance(
       reflectance_, internal::CosTheta(incoming), allocator);
-  if (!reflectance) {
-    return std::nullopt;
-  }
 
-  Vector reflected(-incoming.x, -incoming.y, incoming.z);
-  std::optional<Differentials> outgoing_diffs =
-      GetReflectedDifferentials(incoming, differentials);
+  std::optional<Bxdf::SpecularSample> result = SampleSpecularReflection(
+      incoming, differentials, reflectance, static_cast<visual_t>(1.0));
 
-  return Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF, reflected, *reflectance,
-                              outgoing_diffs, static_cast<visual_t>(1.0)};
+  return result;
 }
 
 std::optional<Bxdf::SpecularSample> SpecularBtdf::SampleSpecular(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler,
     SpectralAllocator& allocator) const {
-  geometric_t relative_refractive_index =
-      relative_refractive_index_[std::signbit(incoming.z)];
-
-  std::optional<Vector> outgoing = internal::Refract(
-      incoming, kShadingNormal.AlignWith(incoming), relative_refractive_index);
-  if (!outgoing) {
-    return std::nullopt;
-  }
-
   const Reflector* transmittance = fresnel_.AttenuateTransmittance(
       transmittance_, internal::CosTheta(incoming), allocator);
-  if (!transmittance) {
-    return std::nullopt;
-  }
 
-  std::optional<Differentials> outgoing_diffs = GetRefractedDifferentials(
-      incoming, differentials, relative_refractive_index);
+  std::optional<Bxdf::SpecularSample> result = SampleSpecularTransmission(
+      incoming, differentials, transmittance,
+      relative_refractive_index_[std::signbit(incoming.z)],
+      static_cast<visual_t>(1.0), allocator);
 
-  // It may be better to do this in the integrator
-  visual_t pdf = static_cast<visual_t>(1.0) /
-                 static_cast<visual_t>(relative_refractive_index *
-                                       relative_refractive_index);
-
-  return Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, *outgoing, *transmittance,
-                              outgoing_diffs, pdf};
+  return result;
 }
 
 }  // namespace internal
@@ -109,50 +130,29 @@ std::optional<Bxdf::SpecularSample> SpecularBxdf::SampleSpecular(
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler,
     SpectralAllocator& allocator) const {
-  geometric_t eta_incident = refractive_indices_[std::signbit(incoming.z)];
-  geometric_t eta_transmitted = refractive_indices_[!std::signbit(incoming.z)];
   visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
-      internal::CosTheta(incoming), eta_incident, eta_transmitted);
-  assert(fresnel_reflectance >= static_cast<visual_t>(0.0) &&
-         fresnel_reflectance <= static_cast<visual_t>(1.0));
+      internal::CosTheta(incoming),
+      refractive_indices_[std::signbit(incoming.z)],
+      refractive_indices_[!std::signbit(incoming.z)]);
 
-  if (visual_t sample = sampler.Next();
-      sample < fresnel_reflectance ||
-      fresnel_reflectance == static_cast<visual_t>(1.0)) {
-    Vector outgoing(-incoming.x, -incoming.y, incoming.z);
-    std::optional<Bxdf::Differentials> outgoing_diffs =
-        GetReflectedDifferentials(incoming, differentials);
+  if (visual_t sample = sampler.Next(); fresnel_reflectance < sample) {
+    visual_t fresnel_transmittance =
+        static_cast<visual_t>(1.0) - fresnel_reflectance;
 
-    return Bxdf::SpecularSample{
-        Bxdf::Hemisphere::BRDF, outgoing,
-        *allocator.Scale(&reflectance_, fresnel_reflectance), outgoing_diffs,
-        fresnel_reflectance};
+    std::optional<Bxdf::SpecularSample> result = SampleSpecularTransmission(
+        incoming, differentials,
+        allocator.Scale(&transmittance_, fresnel_transmittance),
+        relative_refractive_index_[std::signbit(incoming.z)],
+        fresnel_transmittance, allocator);
+
+    return result;
   }
 
-  geometric_t relative_refractive_index =
-      relative_refractive_index_[std::signbit(incoming.z)];
+  std::optional<Bxdf::SpecularSample> result = SampleSpecularReflection(
+      incoming, differentials,
+      allocator.Scale(&reflectance_, fresnel_reflectance), fresnel_reflectance);
 
-  std::optional<Vector> outgoing = internal::Refract(
-      incoming, kShadingNormal.AlignWith(incoming), relative_refractive_index);
-  if (!outgoing) {
-    return std::nullopt;
-  }
-
-  std::optional<Bxdf::Differentials> outgoing_diffs = GetRefractedDifferentials(
-      incoming, differentials, relative_refractive_index);
-
-  visual_t fresnel_transmittance =
-      static_cast<visual_t>(1.0) - fresnel_reflectance;
-
-  // It may be better to do this in the integrator
-  visual_t pdf =
-      fresnel_transmittance / static_cast<visual_t>(relative_refractive_index *
-                                                    relative_refractive_index);
-
-  return Bxdf::SpecularSample{
-      Bxdf::Hemisphere::BTDF, *outgoing,
-      *allocator.Scale(&transmittance_, fresnel_transmittance), outgoing_diffs,
-      pdf};
+  return result;
 }
 
 }  // namespace bxdfs
