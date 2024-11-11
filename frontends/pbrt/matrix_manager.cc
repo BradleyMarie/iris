@@ -114,7 +114,7 @@ void MatrixManager::Rotate(Tokenizer& tokenizer) {
   }
 
   Transform(Matrix::Rotation(
-                static_cast<geometric>(values[0] / (180.0 * std::numbers::pi)),
+                values[0] * static_cast<geometric_t>(std::numbers::pi / 180.0),
                 values[1], values[2], values[3])
                 .value());
 }
