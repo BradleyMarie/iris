@@ -280,6 +280,35 @@ TEST(BsdfTest, SampleDiffuse) {
   EXPECT_TRUE(result->diffuse);
 }
 
+TEST(BsdfTest, SamplePartiallyDiffuse) {
+  MockReflector reflector;
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(0.5), Return(true)));
+  EXPECT_CALL(bxdf, SampleDiffuse(kIncoming, kSurfaceNormal, _))
+      .WillOnce(Return(kBrdfOutgoing));
+  EXPECT_CALL(bxdf, PdfDiffuse(kIncoming, kBrdfOutgoing, kSurfaceNormal,
+                               Bxdf::Hemisphere::BRDF))
+      .WillOnce(Return(static_cast<visual_t>(0.5)));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(kIncoming, kBrdfOutgoing,
+                                       Bxdf::Hemisphere::BRDF, _))
+      .WillOnce(Return(&reflector));
+
+  MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, Sampler(rng),
+                  GetSpectralAllocator(), /*diffuse_only=*/true);
+  EXPECT_TRUE(result);
+  EXPECT_EQ(&reflector, &result->reflector);
+  EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
+  EXPECT_EQ(0.5, result->pdf);
+  EXPECT_TRUE(result->diffuse);
+}
+
 TEST(BsdfTest, SampleWithInputDerivatives) {
   MockReflector reflector;
 

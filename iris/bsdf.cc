@@ -155,10 +155,14 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
 
   assert(is_diffuse_ && diffuse_pdf_ >= static_cast<visual_t>(0.0));
 
-  visual_t pdf = diffuse_pdf_ * bxdf_.PdfDiffuse(local_incoming, sample->first,
-                                                 local_surface_normal_, type);
+  visual_t pdf = bxdf_.PdfDiffuse(local_incoming, sample->first,
+                                  local_surface_normal_, type);
   if (pdf <= static_cast<visual_t>(0.0)) {
     return std::nullopt;
+  }
+
+  if (!diffuse_only) {
+    pdf *= diffuse_pdf_;
   }
 
   const Reflector* reflector =
