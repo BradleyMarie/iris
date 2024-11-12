@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <numbers>
 
 namespace iris {
 namespace cameras {
@@ -30,10 +31,11 @@ Point SampleLens(const std::array<geometric_t, 2>& uv,
 
   geometric_t theta;
   if (std::abs(u) > std::abs(v)) {
-    theta = M_PI_4 * (v / u);
+    theta = static_cast<geometric_t>(std::numbers::pi * 0.25) * (v / u);
     lens_radius *= u;
   } else {
-    theta = M_PI_2 - M_PI_4 * (u / v);
+    theta = static_cast<geometric_t>(std::numbers::pi * 0.5) -
+            static_cast<geometric_t>(std::numbers::pi * 0.25) * (u / v);
     lens_radius *= v;
   }
 

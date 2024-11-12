@@ -11,23 +11,6 @@ namespace {
 static const geometric_t kLimit = std::nextafter(static_cast<geometric_t>(1.0),
                                                  static_cast<geometric_t>(0.0));
 
-std::pair<geometric_t, geometric_t> DirectionToUV(const Vector& direction) {
-  geometric_t cos_phi = std::clamp(direction.z, static_cast<geometric_t>(-1.0),
-                                   static_cast<geometric_t>(1.0));
-  geometric_t phi = std::acos(cos_phi);
-
-  geometric_t theta = std::atan2(direction.y, direction.x);
-  if (theta < static_cast<geometric_t>(0.0)) {
-    theta += static_cast<geometric_t>(2.0 * std::numbers::pi);
-  }
-
-  return std::make_pair(
-      std::clamp(theta / static_cast<geometric_t>(2.0 * std::numbers::pi),
-                 static_cast<geometric_t>(0.0), kLimit),
-      std::clamp(phi / std::numbers::pi_v<geometric_t>,
-                 static_cast<geometric_t>(0.0), kLimit));
-}
-
 std::vector<visual> ScaleLuma(std::span<const visual> luma,
                               std::pair<size_t, size_t> size, visual_t& power) {
   assert(size.first * size.second == luma.size());
@@ -47,7 +30,7 @@ std::vector<visual> ScaleLuma(std::span<const visual> luma,
     total_weight += weight;
   }
 
-  power *= static_cast<visual_t>(4.0 * M_PI) / total_weight;
+  power *= static_cast<visual_t>(4.0 * std::numbers::pi) / total_weight;
 
   return scaled_values;
 }
@@ -108,13 +91,26 @@ const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
                                                   SpectralAllocator& allocator,
                                                   visual_t* pdf) const {
   Vector model_to_light = Normalize(model_to_world_.InverseMultiply(to_light));
-  auto [u, v] = DirectionToUV(model_to_light);
+
+  geometric_t cos_phi =
+      std::clamp(model_to_light.z, static_cast<geometric_t>(-1.0),
+                 static_cast<geometric_t>(1.0));
+  geometric_t phi = std::acos(cos_phi);
+
+  geometric_t theta = std::atan2(model_to_light.y, model_to_light.x);
+  if (theta < static_cast<geometric_t>(0.0)) {
+    theta += static_cast<geometric_t>(2.0 * std::numbers::pi);
+  }
+
+  geometric_t u =
+      std::clamp(theta / static_cast<geometric_t>(2.0 * std::numbers::pi),
+                 static_cast<geometric_t>(0.0), kLimit);
+  geometric_t v = std::clamp(phi / std::numbers::pi_v<geometric_t>,
+                             static_cast<geometric_t>(0.0), kLimit);
 
   if (pdf) {
-    geometric_t cos_phi = model_to_light.z;
     geometric_t sin_phi =
-        std::sqrt(static_cast<geometric_t>(1.0) -
-                  std::min(static_cast<geometric_t>(1.0), cos_phi * cos_phi));
+        std::sqrt(static_cast<geometric_t>(1.0) - cos_phi * cos_phi);
     *pdf = SafeDivide(
         distribution_.Pdf(u, v),
         static_cast<geometric_t>(2.0 * std::numbers::pi * std::numbers::pi) *
