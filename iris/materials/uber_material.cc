@@ -87,7 +87,7 @@ const Bxdf* UberMaterial::Evaluate(
     if (const Reflector* transmittance =
             transmittance_->Evaluate(texture_coordinates, spectral_allocator);
         transmittance != nullptr) {
-      specular_brdf = &bxdf_allocator.Allocate<SpecularBtdf<FresnelDielectric>>(
+      specular_btdf = &bxdf_allocator.Allocate<SpecularBtdf<FresnelDielectric>>(
           *spectral_allocator.Scale(transmittance, opacity), eta_incident,
           eta_transmitted, FresnelDielectric(eta_incident, eta_transmitted));
     }

@@ -313,6 +313,10 @@ cc_test(
     srcs = ["uber_material_test.cc"],
     deps = [
         ":uber_material",
+        "//iris/bxdfs:lambertian_bxdf",
+        "//iris/bxdfs:microfacet_bxdf",
+        "//iris/bxdfs:specular_bxdf",
+        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/reflectors:uniform_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",

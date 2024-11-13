@@ -1,6 +1,10 @@
 #include "iris/materials/uber_material.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bxdfs/lambertian_bxdf.h"
+#include "iris/bxdfs/microfacet_bxdf.h"
+#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
+#include "iris/bxdfs/specular_bxdf.h"
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -10,6 +14,13 @@ namespace iris {
 namespace materials {
 namespace {
 
+using ::iris::bxdfs::FresnelDielectric;
+using ::iris::bxdfs::FresnelNoOp;
+using ::iris::bxdfs::LambertianBrdf;
+using ::iris::bxdfs::MicrofacetBrdf;
+using ::iris::bxdfs::SpecularBrdf;
+using ::iris::bxdfs::SpecularBtdf;
+using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
@@ -47,8 +58,7 @@ TEST(UberMaterialTest, TransparencyOnly) {
   const Bxdf* result =
       material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                         GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_FALSE(result->IsDiffuse());
+  ASSERT_TRUE(dynamic_cast<const SpecularBtdf<FresnelNoOp>*>(result));
 }
 
 TEST(UberMaterialTest, OpaqueOnlyAllTermsEmpty) {
@@ -68,8 +78,7 @@ TEST(UberMaterialTest, LambertianOnly) {
   const Bxdf* result =
       material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                         GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_TRUE(result->IsDiffuse());
+  ASSERT_TRUE(dynamic_cast<const LambertianBrdf*>(result));
 }
 
 TEST(UberMaterialTest, SpecularReflectionOnly) {
@@ -79,8 +88,7 @@ TEST(UberMaterialTest, SpecularReflectionOnly) {
   const Bxdf* result =
       material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                         GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_FALSE(result->IsDiffuse());
+  ASSERT_TRUE(dynamic_cast<const SpecularBrdf<FresnelDielectric>*>(result));
 }
 
 TEST(UberMaterialTest, SpecularTransmissionOnly) {
@@ -90,8 +98,7 @@ TEST(UberMaterialTest, SpecularTransmissionOnly) {
   const Bxdf* result =
       material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                         GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_FALSE(result->IsDiffuse());
+  ASSERT_TRUE(dynamic_cast<const SpecularBtdf<FresnelDielectric>*>(result));
 }
 
 TEST(UberMaterialTest, MicrofacetOnly) {
@@ -101,8 +108,8 @@ TEST(UberMaterialTest, MicrofacetOnly) {
   const Bxdf* result =
       material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                         GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_TRUE(result->IsDiffuse());
+  ASSERT_TRUE((dynamic_cast<const MicrofacetBrdf<TrowbridgeReitzDistribution,
+                                                 FresnelDielectric>*>(result)));
 }
 
 TEST(UberMaterialTest, DiffuseAndMicrofacetOnly) {
