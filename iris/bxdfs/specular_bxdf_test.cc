@@ -29,7 +29,7 @@ TEST(SpecularBrdfTest, Sample) {
       GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BRDF);
   EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &reflector);
+  EXPECT_EQ(result->reflectance, &reflector);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(result->pdf, 1.0);
 }
@@ -46,7 +46,7 @@ TEST(SpecularBrdfTest, SampleWithDerivatives) {
       Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BRDF);
   EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &reflector);
+  EXPECT_EQ(result->reflectance, &reflector);
   ASSERT_TRUE(result->differentials);
   EXPECT_EQ(Vector(-1.0, -0.5, 1.0), result->differentials->dx);
   EXPECT_EQ(Vector(-0.5, -1.0, 1.0), result->differentials->dy);
@@ -65,7 +65,7 @@ TEST(SpecularBtdfTest, SampleFront) {
       GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
   EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &reflector);
+  EXPECT_EQ(result->reflectance, &reflector);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(result->pdf, 1.0);
 }
@@ -82,7 +82,7 @@ TEST(SpecularBtdfTest, SampleBack) {
       GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
   EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &reflector);
+  EXPECT_EQ(result->reflectance, &reflector);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(result->pdf, 1.0);
 }
@@ -99,7 +99,7 @@ TEST(SpecularBtdfTest, SampleWithDerivatives) {
       Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
   EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &reflector);
+  EXPECT_EQ(result->reflectance, &reflector);
   ASSERT_TRUE(result->differentials);
   EXPECT_EQ(Vector(-1.0, -0.5, -1.0), result->differentials->dx);
   EXPECT_EQ(Vector(-0.5, -1.0, -1.0), result->differentials->dy);
@@ -120,7 +120,7 @@ TEST(SpecularBxdfTest, SampleTransmittanceFront) {
       GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
   EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &transmitter);
+  EXPECT_EQ(result->reflectance, &transmitter);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(result->pdf, 1.0);
 }
@@ -139,7 +139,7 @@ TEST(SpecularBxdfTest, SampleTransmittanceBack) {
       GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
   EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &transmitter);
+  EXPECT_EQ(result->reflectance, &transmitter);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(result->pdf, 1.0);
 }
@@ -158,7 +158,7 @@ TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
       Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
   EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
   EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result->direction);
-  EXPECT_EQ(&result->reflectance, &transmitter);
+  EXPECT_EQ(result->reflectance, &transmitter);
   ASSERT_TRUE(result->differentials);
   EXPECT_EQ(Vector(-1.0, -0.5, -1.0), result->differentials->dx);
   EXPECT_EQ(Vector(-0.5, -1.0, -1.0), result->differentials->dy);

@@ -35,8 +35,16 @@ class AttenuatedBxdf final : public Bxdf {
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler,
       SpectralAllocator& allocator) const override {
-    return bxdf_.Sample(incoming, differentials, surface_normal, sampler,
-                        allocator);
+    auto sample = bxdf_.Sample(incoming, differentials, surface_normal, sampler,
+                               allocator);
+
+    if (SpecularSample* specular_sample = std::get_if<SpecularSample>(&sample);
+        specular_sample != nullptr) {
+      specular_sample->reflectance =
+          allocator.UnboundedScale(specular_sample->reflectance, attenuation_);
+    }
+
+    return sample;
   }
 
   visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,

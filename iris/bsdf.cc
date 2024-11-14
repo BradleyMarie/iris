@@ -61,7 +61,8 @@ SampleBxdf(const Bxdf& bxdf, const Vector& incoming,
 
   const Bxdf::SpecularSample& specular_sample =
       std::get<Bxdf::SpecularSample>(sample);
-  if (specular_sample.pdf <= static_cast<visual_t>(0.0)) {
+  if (specular_sample.reflectance == nullptr ||
+      specular_sample.pdf <= static_cast<visual_t>(0.0)) {
     return std::nullopt;
   }
 
@@ -148,7 +149,7 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
     }
 
     return Bsdf::SampleResult{
-        sample->second->reflectance, world_outgoing,
+        *sample->second->reflectance, world_outgoing,
         ToWorld(differentials, sample->second->differentials),
         sample->second->pdf, false};
   }

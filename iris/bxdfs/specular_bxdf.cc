@@ -61,7 +61,7 @@ std::optional<Bxdf::SpecularSample> SampleSpecularReflection(
   }
 
   return Bxdf::SpecularSample{
-      Bxdf::Hemisphere::BRDF, GetReflectedVector(incoming), *reflectance,
+      Bxdf::Hemisphere::BRDF, GetReflectedVector(incoming), reflectance,
       GetReflectedDifferentials(incoming, differentials), pdf};
 }
 
@@ -85,7 +85,7 @@ std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
       transmittance, relative_refractive_index * relative_refractive_index);
 
   return Bxdf::SpecularSample{
-      Bxdf::Hemisphere::BTDF, *outgoing, *transmittance,
+      Bxdf::Hemisphere::BTDF, *outgoing, transmittance,
       GetRefractedDifferentials(incoming, differentials,
                                 relative_refractive_index),
       pdf};

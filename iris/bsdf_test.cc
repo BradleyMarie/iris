@@ -350,9 +350,33 @@ TEST(BsdfTest, SampleSpecularInvalidPdf) {
               Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
                                             kBtdfOutgoing,
-                                            reflector,
+                                            &reflector,
                                             {{kBtdfOutgoing, kBtdfOutgoing}},
                                             0.0}));
+
+  MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+
+  Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}}, Sampler(rng),
+                  GetSpectralAllocator());
+  EXPECT_FALSE(result);
+}
+
+TEST(BsdfTest, SampleSpecularInvalidReflector) {
+  MockReflector reflector;
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(0.0), Return(false)));
+  EXPECT_CALL(bxdf,
+              Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
+      .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
+                                            kBtdfOutgoing,
+                                            nullptr,
+                                            {{kBtdfOutgoing, kBtdfOutgoing}},
+                                            1.0}));
 
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -374,7 +398,7 @@ TEST(BsdfTest, SampleSpecularWrongHemisphere) {
               Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
                                             kBtdfOutgoing,
-                                            reflector,
+                                            &reflector,
                                             {{kBtdfOutgoing, kBtdfOutgoing}},
                                             1.0}));
 
@@ -397,7 +421,7 @@ TEST(BsdfTest, SampleSpecularWithNoDifferentials) {
   EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
-                                      reflector, std::nullopt, 1.0}));
+                                      &reflector, std::nullopt, 1.0}));
 
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -423,7 +447,7 @@ TEST(BsdfTest, SampleSpecularWithOnlyIncomingDifferentials) {
               Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
-                                      reflector, std::nullopt, 1.0}));
+                                      &reflector, std::nullopt, 1.0}));
 
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -450,7 +474,7 @@ TEST(BsdfTest, SampleSpecularWithDifferentials) {
               Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
                                             kBtdfOutgoing,
-                                            reflector,
+                                            &reflector,
                                             {{kBtdfOutgoing, kBtdfOutgoing}},
                                             1.0}));
 

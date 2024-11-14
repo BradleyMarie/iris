@@ -161,7 +161,7 @@ TEST(CompositeBxdfTest, SampleSpecular) {
   EXPECT_CALL(bxdf0,
               Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
-                                            Vector(1.0, 0.0, 0.0), reflector,
+                                            Vector(1.0, 0.0, 0.0), &reflector,
                                             std::nullopt, 1.0}));
 
   MockBxdf bxdf1;
@@ -175,7 +175,7 @@ TEST(CompositeBxdfTest, SampleSpecular) {
                         Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
   EXPECT_THAT(std::get<Bxdf::SpecularSample>(result),
               FieldsAre(Bxdf::Hemisphere::BRDF, Vector(1.0, 0.0, 0.0),
-                        Ref(reflector), Eq(std::nullopt), Eq(0.5)));
+                        Eq(&reflector), Eq(std::nullopt), Eq(0.5)));
 }
 
 TEST(CompositeBxdfTest, PdfAllSpecular) {

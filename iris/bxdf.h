@@ -33,7 +33,7 @@ class Bxdf {
   struct SpecularSample {
     const Hemisphere hemisphere;
     const Vector direction;
-    const Reflector& reflectance;
+    const Reflector* reflectance;
     const std::optional<Differentials> differentials;
     visual_t pdf;
   };

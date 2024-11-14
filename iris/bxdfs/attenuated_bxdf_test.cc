@@ -99,6 +99,38 @@ TEST(AttenuatedBrdfTest, Sample) {
               FieldsAre(Vector(1.0, 2.0, 3.0)));
 }
 
+TEST(AttenuatedBrdfTest, SampleSpecular) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(2.0)).WillRepeatedly(Return(0.5));
+
+  MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
+  Sampler sampler(rng);
+
+  MockBxdf mock_bxdf;
+  EXPECT_CALL(mock_bxdf, Sample(Vector(0.0, 0.0, 1.0), Eq(std::nullopt),
+                                Vector(0.0, 0.0, 1.0), Ref(sampler), _))
+      .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
+                                            Vector(1.0, 2.0, 3.0), &reflector,
+                                            std::nullopt, 1.0}));
+
+  const Bxdf* bxdf =
+      CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+  auto result =
+      bxdf->Sample(Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
+                   sampler, GetSpectralAllocator());
+  const Bxdf::SpecularSample& specular_sample =
+      std::get<Bxdf::SpecularSample>(result);
+
+  EXPECT_EQ(specular_sample.hemisphere, Bxdf::Hemisphere::BTDF);
+  EXPECT_EQ(specular_sample.direction, Vector(1.0, 2.0, 3.0));
+  EXPECT_NE(specular_sample.reflectance, &reflector);
+  EXPECT_FALSE(specular_sample.differentials);
+  EXPECT_EQ(specular_sample.pdf, 1.0);
+
+  EXPECT_EQ(0.25, specular_sample.reflectance->Reflectance(2.0));
+}
+
 TEST(AttenuatedBrdfTest, PdfDiffuse) {
   MockBxdf mock_bxdf;
   EXPECT_CALL(mock_bxdf,

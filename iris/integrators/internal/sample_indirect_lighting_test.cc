@@ -228,7 +228,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
   EXPECT_CALL(bxdf, Sample(_, Not(Eq(std::nullopt)), _, _, _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF,
                                             kOutgoing,
-                                            reflector,
+                                            &reflector,
                                             {{kOutgoing, kOutgoing}},
                                             1.0}));
 
