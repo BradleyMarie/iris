@@ -11,14 +11,18 @@
 namespace iris {
 namespace integrators {
 
+using ::iris::integrators::internal::PathBuilder;
+using ::iris::integrators::internal::RussianRoulette;
+using ::iris::integrators::internal::SampleDirectLighting;
+using ::iris::integrators::internal::SampleIndirectLighting;
+
 PathIntegrator::PathIntegrator(visual maximum_path_continue_probability,
                                visual always_continue_path_throughput,
                                uint8_t min_bounces,
                                uint8_t max_bounces) noexcept
     : maximum_path_continue_probability_(
-          std::max(static_cast<visual>(0.0),
-                   std::min(static_cast<visual>(1.0),
-                            maximum_path_continue_probability))),
+          std::clamp(maximum_path_continue_probability,
+                     static_cast<visual>(0.0), static_cast<visual>(1.0))),
       always_continue_path_throughput_(
           std::max(static_cast<visual>(0.0), always_continue_path_throughput)),
       min_bounces_(min_bounces),
@@ -32,24 +36,25 @@ const Spectrum* PathIntegrator::Integrate(
     RayDifferential ray, RayTracer& ray_tracer, LightSampler& light_sampler,
     VisibilityTester& visibility_tester, const AlbedoMatcher& albedo_matcher,
     SpectralAllocator& spectral_allocator, Random& rng) {
-  internal::RussianRoulette russian_roulette(maximum_path_continue_probability_,
-                                             always_continue_path_throughput_);
-  internal::PathBuilder path_builder(reflectors_, spectra_, attenuations_);
+  RussianRoulette russian_roulette(maximum_path_continue_probability_,
+                                   always_continue_path_throughput_);
+  PathBuilder path_builder(reflectors_, spectra_, attenuations_);
 
   visual_t path_throughput = 1.0;
   bool add_light_emissions = true;
   for (uint8_t bounces = 0;; bounces++) {
-    auto trace_result = ray_tracer.Trace(ray);
+    RayTracer::TraceResult trace_result = ray_tracer.Trace(ray);
 
     if (add_light_emissions) {
       path_builder.Add(trace_result.emission, spectral_allocator);
+      add_light_emissions = false;
     }
 
     if (!trace_result.surface_intersection) {
       break;
     }
 
-    auto* direct_lighting = internal::SampleDirectLighting(
+    const Spectrum* direct_lighting = SampleDirectLighting(
         light_sampler, ray, *trace_result.surface_intersection, rng,
         visibility_tester, spectral_allocator);
     path_builder.Add(direct_lighting, spectral_allocator);
@@ -58,26 +63,32 @@ const Spectrum* PathIntegrator::Integrate(
       break;
     }
 
-    auto bsdf_sample = internal::SampleIndirectLighting(
-        *trace_result.surface_intersection, iris::Sampler(rng),
-        spectral_allocator, /*modified*/ ray);
+    std::optional<Bsdf::SampleResult> bsdf_sample =
+        SampleIndirectLighting(*trace_result.surface_intersection,
+                               iris::Sampler(rng), spectral_allocator,
+                               /*modified*/ ray);
     if (!bsdf_sample) {
       break;
     }
 
-    visual_t attenuation = static_cast<visual_t>(1.0);
+    visual_t attenuation;
     if (bsdf_sample->diffuse) {
       attenuation = ClampedAbsDotProduct(
           trace_result.surface_intersection->shading_normal,
           bsdf_sample->direction);
+    } else {
+      attenuation = static_cast<visual_t>(1.0);
+      add_light_emissions = true;
     }
 
     attenuation /= bsdf_sample->pdf;
+
     path_throughput *=
         albedo_matcher.Match(bsdf_sample->reflector) * attenuation;
 
     if (min_bounces_ <= bounces) {
-      auto roulette_pdf = russian_roulette.Evaluate(rng, path_throughput);
+      std::optional<visual_t> roulette_pdf =
+          russian_roulette.Evaluate(rng, path_throughput);
       if (!roulette_pdf) {
         break;
       }
@@ -87,8 +98,6 @@ const Spectrum* PathIntegrator::Integrate(
       attenuation *= inverse_roulette_pdf;
       path_throughput *= inverse_roulette_pdf;
     }
-
-    add_light_emissions = !bsdf_sample->diffuse;
 
     path_builder.Bounce(&bsdf_sample->reflector, attenuation);
   }
