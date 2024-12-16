@@ -15,7 +15,7 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:spectrum",
         "//iris:visibility_tester",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -55,6 +55,6 @@ cc_test(
         "//iris/testing:ray_tracer",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

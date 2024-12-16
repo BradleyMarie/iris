@@ -18,7 +18,7 @@ using ::bazel::tools::cpp::runfiles::Runfiles;
 
 std::string RawRunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
-  const char* base_path = "__main__/frontends/pbrt/test_data/";
+  const char* base_path = "_main/frontends/pbrt/test_data/";
   return runfiles->Rlocation(base_path + path);
 }
 

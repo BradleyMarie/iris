@@ -19,6 +19,6 @@ cc_test(
     deps = [
         ":math",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

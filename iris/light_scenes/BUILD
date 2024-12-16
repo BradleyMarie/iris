@@ -27,7 +27,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -37,7 +37,7 @@ cc_library(
     hdrs = ["mock_light_scene.h"],
     deps = [
         "//iris:light_scene",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -66,7 +66,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -96,6 +96,6 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

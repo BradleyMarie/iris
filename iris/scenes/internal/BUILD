@@ -24,7 +24,7 @@ cc_test(
         ":bvh_builder",
         "//iris:reference_counted",
         "//iris/geometry:mock_geometry",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -43,7 +43,7 @@ cc_test(
     srcs = ["bvh_node_test.cc"],
     deps = [
         ":bvh_node",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -75,6 +75,6 @@ cc_test(
         "//iris/scenes/internal:bvh_builder",
         "//iris/testing:hit_allocator",
         "//iris/testing:intersector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

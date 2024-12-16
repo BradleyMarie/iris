@@ -24,7 +24,7 @@ cc_test(
         ":distant",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -59,7 +59,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -88,6 +88,6 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

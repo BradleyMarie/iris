@@ -19,6 +19,6 @@ cc_test(
     srcs = ["trowbridge_reitz_distribution_test.cc"],
     deps = [
         ":trowbridge_reitz_distribution",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

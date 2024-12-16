@@ -10,7 +10,7 @@ using bazel::tools::cpp::runfiles::Runfiles;
 
 std::ifstream RunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
-  const char* base_path = "__main__/iris/file/test_data/";
+  const char* base_path = "_main/iris/file/test_data/";
   return std::ifstream(runfiles->Rlocation(base_path + path),
                        std::ios::in | std::ofstream::binary);
 }

@@ -47,8 +47,7 @@ bazel-iris-cpp
 bazel-out
 bazel-testlogs
 
-# Continue using WORKSPACE
-MODULE.bazel
+# Bazel lockfile
 MODULE.bazel.lock
 
 # VS Code

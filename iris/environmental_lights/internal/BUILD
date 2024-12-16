@@ -18,7 +18,7 @@ cc_test(
     deps = [
         ":distribution_1d",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -39,6 +39,6 @@ cc_test(
     deps = [
         ":distribution_2d",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

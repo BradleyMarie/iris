@@ -36,7 +36,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -51,7 +51,7 @@ cc_test(
     srcs = ["arena_test.cc"],
     deps = [
         ":arena",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -86,7 +86,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -105,7 +105,7 @@ cc_test(
     srcs = ["hit_arena_test.cc"],
     deps = [
         ":hit_arena",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -140,7 +140,7 @@ cc_test(
         "//iris:scene_objects",
         "//iris/geometry:mock_geometry",
         "//iris/scenes:list_scene",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -170,6 +170,6 @@ cc_test(
         "//iris/geometry:mock_geometry",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

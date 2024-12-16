@@ -18,7 +18,7 @@ cc_test(
     srcs = ["halton_image_sampler_test.cc"],
     deps = [
         ":halton_image_sampler",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -30,7 +30,7 @@ cc_library(
         "//iris:float",
         "//iris:image_sampler",
         "//iris:random",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -51,7 +51,7 @@ cc_test(
     deps = [
         ":random_image_sampler",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -71,7 +71,7 @@ cc_test(
     srcs = ["sobol_image_sampler_test.cc"],
     deps = [
         ":sobol_image_sampler",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -92,6 +92,6 @@ cc_test(
     deps = [
         ":stratified_image_sampler",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

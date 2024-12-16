@@ -29,7 +29,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -58,7 +58,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -86,7 +86,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -109,7 +109,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -137,7 +137,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -167,7 +167,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -188,7 +188,7 @@ cc_test(
     srcs = ["microfacet_distribution_test.cc"],
     deps = [
         ":microfacet_distribution",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -202,7 +202,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -230,7 +230,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -259,6 +259,6 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

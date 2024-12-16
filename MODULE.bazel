@@ -1,0 +1,24 @@
+"iris is a ray tracer written in C++23"
+module(name = "iris", version = "head", compatibility_level = 1)
+
+# Bazel Central Registry dependencies
+bazel_dep(name = "abseil-cpp", version = "20240722.0")
+bazel_dep(name = "googletest", version = "1.15.2")
+bazel_dep(name = "rules_cc", version = "0.1.0")
+
+# Other Dependencies
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "libspd",
+    sha256 = "9c906a7764db5747ff19642ecdaab6c181da1d81c5db6691bc5cc5ef311c0db7",
+    strip_prefix = "libspd-9d970474acae30a6bb0efc28d8b995b204ca30e2",
+    url = "https://github.com/BradleyMarie/libspd/archive/9d970474acae30a6bb0efc28d8b995b204ca30e2.zip",
+)
+
+http_archive(
+    name = "plyodine",
+    sha256 = "80c6bbe307d23eefe04a87f4dfd6b00c4ddc66ad23da1dcfb2143e504ed43015",
+    strip_prefix = "plyodine-8fcd221e86b47c4263a622cf94e77116cdd59d9b",
+    url = "https://github.com/BradleyMarie/plyodine/archive/8fcd221e86b47c4263a622cf94e77116cdd59d9b.zip",
+)

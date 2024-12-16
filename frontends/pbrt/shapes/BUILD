@@ -17,7 +17,7 @@ cc_test(
     deps = [
         ":alpha_adapter",
         "//iris:reference_counted",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -45,7 +45,7 @@ cc_test(
     deps = [
         ":parse",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -77,7 +77,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -101,7 +101,7 @@ cc_test(
         ":sphere",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -126,6 +126,6 @@ cc_test(
         ":trianglemesh",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

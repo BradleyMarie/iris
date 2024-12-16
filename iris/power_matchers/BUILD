@@ -10,6 +10,6 @@ cc_library(
         "//iris:float",
         "//iris:power_matcher",
         "//iris:spectrum",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

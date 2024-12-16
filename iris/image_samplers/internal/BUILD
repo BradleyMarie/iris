@@ -17,7 +17,7 @@ cc_test(
     srcs = ["halton_sequence_test.cc"],
     deps = [
         ":halton_sequence",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -38,7 +38,7 @@ cc_test(
         ":low_discrepancy_image_sampler",
         ":mock_low_discrepancy_sequence",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -58,7 +58,7 @@ cc_test(
     deps = [
         ":low_discrepancy_sequence",
         ":mock_low_discrepancy_sequence",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -68,7 +68,7 @@ cc_library(
     hdrs = ["mock_low_discrepancy_sequence.h"],
     deps = [
         ":low_discrepancy_sequence",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -89,6 +89,6 @@ cc_test(
     srcs = ["sobol_sequence_test.cc"],
     deps = [
         ":sobol_sequence",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

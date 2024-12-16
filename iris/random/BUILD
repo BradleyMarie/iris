@@ -9,7 +9,7 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:random",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -28,6 +28,6 @@ cc_test(
     srcs = ["mersenne_twister_random_test.cc"],
     deps = [
         ":mersenne_twister_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

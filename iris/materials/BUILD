@@ -29,7 +29,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -63,7 +63,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -97,7 +97,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -129,7 +129,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -163,7 +163,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -177,7 +177,7 @@ cc_library(
         "//iris:material",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -211,7 +211,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -244,7 +244,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -281,7 +281,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -321,6 +321,6 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

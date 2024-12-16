@@ -26,7 +26,7 @@ cc_test(
         "//iris:scene_objects",
         "//iris/geometry:mock_geometry",
         "//iris/testing:intersector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -51,6 +51,6 @@ cc_test(
         "//iris:scene_objects",
         "//iris/geometry:mock_geometry",
         "//iris/testing:intersector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

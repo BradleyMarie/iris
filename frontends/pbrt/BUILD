@@ -20,7 +20,7 @@ cc_test(
     deps = [
         ":build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -63,7 +63,7 @@ cc_test(
         ":image_manager",
         "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -76,10 +76,10 @@ cc_binary(
         "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
         "//iris/color_matchers:cie_color_matcher",
         "//iris/random:mersenne_twister_random",
-        "@com_google_absl//absl/flags:config",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_absl//absl/flags:usage",
+        "@abseil-cpp//absl/flags:config",
+        "@abseil-cpp//absl/flags:flag",
+        "@abseil-cpp//absl/flags:parse",
+        "@abseil-cpp//absl/flags:usage",
     ],
 )
 
@@ -98,7 +98,7 @@ cc_test(
     deps = [
         ":material_manager",
         "//iris/materials:mock_material",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -118,7 +118,7 @@ cc_test(
     srcs = ["matrix_manager_test.cc"],
     deps = [
         ":matrix_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -137,7 +137,7 @@ cc_test(
     deps = [
         ":object_builder",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -159,7 +159,7 @@ cc_test(
     srcs = ["parameter_list_test.cc"],
     deps = [
         ":parameter_list",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -194,7 +194,7 @@ cc_test(
         ":parameter",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -247,7 +247,7 @@ cc_test(
         "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mersenne_twister_random",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -284,7 +284,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -319,7 +319,7 @@ cc_test(
     deps = [
         ":texture_manager",
         "//iris/reflectors:mock_reflector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -334,7 +334,7 @@ cc_test(
     srcs = ["quoted_string_test.cc"],
     deps = [
         ":quoted_string",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -353,6 +353,6 @@ cc_test(
     deps = [
         ":tokenizer",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

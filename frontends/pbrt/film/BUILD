@@ -21,7 +21,7 @@ cc_test(
         ":image",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -42,7 +42,7 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 

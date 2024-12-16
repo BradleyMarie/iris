@@ -29,7 +29,7 @@ cc_test(
     srcs = ["bounding_box_test.cc"],
     deps = [
         ":bounding_box",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -58,7 +58,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -80,7 +80,7 @@ cc_test(
         ":bxdf_allocator",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/reflectors:mock_reflector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -132,7 +132,7 @@ cc_test(
     srcs = ["color_test.cc"],
     deps = [
         ":color",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -185,7 +185,7 @@ cc_test(
     srcs = ["framebuffer_test.cc"],
     deps = [
         ":framebuffer",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -221,7 +221,7 @@ cc_test(
         "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -265,7 +265,7 @@ cc_test(
     deps = [
         ":hit_allocator",
         "//iris/internal:hit_arena",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -288,7 +288,7 @@ cc_test(
     visibility = ["//visibility:public"],
     deps = [
         ":hit_point",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -334,7 +334,7 @@ cc_test(
         ":intersector",
         "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -376,7 +376,7 @@ cc_test(
         ":light_sample_allocator",
         "//iris/internal:arena",
         "//iris/lights:mock_light",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -412,7 +412,7 @@ cc_test(
         "//iris/light_scenes:mock_light_scene",
         "//iris/lights:mock_light",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -461,7 +461,7 @@ cc_test(
     srcs = ["matrix_test.cc"],
     deps = [
         ":matrix",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -492,7 +492,7 @@ cc_test(
     srcs = ["point_test.cc"],
     deps = [
         ":point",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -510,7 +510,7 @@ cc_test(
     srcs = ["position_error_test.cc"],
     deps = [
         ":position_error",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -540,7 +540,7 @@ cc_test(
     deps = [
         ":random",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -558,7 +558,7 @@ cc_test(
     srcs = ["ray_differential_test.cc"],
     deps = [
         ":ray_differential",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -578,7 +578,7 @@ cc_test(
     srcs = ["ray_test.cc"],
     deps = [
         ":ray",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -615,7 +615,7 @@ cc_test(
         "//iris/normal_maps:mock_normal_map",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -640,7 +640,7 @@ cc_test(
     srcs = ["reference_counted_test.cc"],
     deps = [
         ":reference_counted",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -697,7 +697,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -718,7 +718,7 @@ cc_test(
     deps = [
         ":sampler",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -747,7 +747,7 @@ cc_test(
         "//iris/environmental_lights:mock_environmental_light",
         "//iris/geometry:mock_geometry",
         "//iris/lights:mock_light",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -791,7 +791,7 @@ cc_test(
         "//iris/internal:arena",
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -810,7 +810,7 @@ cc_test(
     srcs = ["texture_coordinates_test.cc"],
     deps = [
         ":texture_coordinates",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -828,7 +828,7 @@ cc_test(
     srcs = ["vector_test.cc"],
     deps = [
         ":vector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -854,6 +854,6 @@ cc_test(
         "//iris/internal:arena",
         "//iris/internal:ray_tracer",
         "//iris/scenes:list_scene",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

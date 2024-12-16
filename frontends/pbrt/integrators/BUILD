@@ -19,7 +19,7 @@ cc_test(
     srcs = ["light_scenes_test.cc"],
     deps = [
         ":light_scenes",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -41,7 +41,7 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -66,7 +66,7 @@ cc_test(
         ":path",
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -85,7 +85,7 @@ cc_test(
     deps = [
         ":pixel_bounds",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 

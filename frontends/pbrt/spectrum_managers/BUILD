@@ -27,7 +27,7 @@ cc_test(
         ":color_spectrum_manager",
         "//frontends/pbrt/spectrum_managers/internal:color_reflector",
         "//frontends/pbrt/spectrum_managers/internal:color_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 

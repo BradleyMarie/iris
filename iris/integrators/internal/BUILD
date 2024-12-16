@@ -21,7 +21,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -41,7 +41,7 @@ cc_test(
     deps = [
         ":russian_roulette",
         "//iris/random:mock_random",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -74,7 +74,7 @@ cc_test(
         "//iris/testing:light_sampler",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -99,6 +99,6 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

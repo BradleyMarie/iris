@@ -18,7 +18,7 @@ cc_test(
     deps = [
         ":constant_texture",
         "//iris/spectra:mock_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -39,7 +39,7 @@ cc_test(
     deps = [
         ":image_texture",
         "//iris/reflectors:mock_reflector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -62,7 +62,7 @@ cc_test(
         ":scaled_texture",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -91,6 +91,6 @@ cc_test(
     deps = [
         ":uv_texture",
         "//iris/reflectors:mock_reflector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

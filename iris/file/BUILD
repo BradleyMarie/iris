@@ -22,7 +22,7 @@ cc_test(
     deps = [
         ":exr_writer",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -45,6 +45,6 @@ cc_test(
     deps = [
         ":pfm_writer",
         "@bazel_tools//tools/cpp/runfiles",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

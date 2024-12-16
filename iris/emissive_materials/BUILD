@@ -23,7 +23,7 @@ cc_test(
         "//iris/power_matchers:mock_power_matcher",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -36,6 +36,6 @@ cc_library(
         "//iris:power_matcher",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

@@ -9,7 +9,7 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:spectrum",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -28,6 +28,6 @@ cc_test(
     srcs = ["sampled_spectrum_test.cc"],
     deps = [
         ":sampled_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

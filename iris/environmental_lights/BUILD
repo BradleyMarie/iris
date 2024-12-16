@@ -29,7 +29,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -45,6 +45,6 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:spectrum",
         "//iris:vector",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

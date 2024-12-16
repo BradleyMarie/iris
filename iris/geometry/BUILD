@@ -11,7 +11,7 @@ cc_test(
         ":sphere",
         "//iris/materials:mock_material",
         "//iris/testing:hit_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -33,7 +33,7 @@ cc_library(
     hdrs = ["mock_geometry.h"],
     deps = [
         "//iris:geometry",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -57,7 +57,7 @@ cc_test(
         "//iris/normal_maps:mock_normal_map",
         "//iris/random:mock_random",
         "//iris/testing:hit_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -82,6 +82,6 @@ cc_test(
         "//iris/normal_maps:mock_normal_map",
         "//iris/random:mock_random",
         "//iris/testing:hit_allocator",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

@@ -10,6 +10,6 @@ cc_library(
         "//iris:albedo_matcher",
         "//iris:float",
         "//iris:reflector",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

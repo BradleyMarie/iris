@@ -9,7 +9,7 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:reflector",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -29,7 +29,7 @@ cc_test(
     srcs = ["sampled_reflector_test.cc"],
     deps = [
         ":sampled_reflector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -49,6 +49,6 @@ cc_test(
     srcs = ["uniform_reflector_test.cc"],
     deps = [
         ":uniform_reflector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

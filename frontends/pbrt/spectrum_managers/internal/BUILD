@@ -19,7 +19,7 @@ cc_test(
     srcs = ["color_reflector_test.cc"],
     deps = [
         ":color_reflector",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -40,6 +40,6 @@ cc_test(
     srcs = ["color_spectrum_test.cc"],
     deps = [
         ":color_spectrum",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

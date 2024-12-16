@@ -10,7 +10,7 @@ cc_library(
         "//iris:camera",
         "//iris:float",
         "//iris:ray_differential",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )
 
@@ -31,7 +31,7 @@ cc_test(
     srcs = ["orthographic_camera_test.cc"],
     deps = [
         ":orthographic_camera",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -53,7 +53,7 @@ cc_test(
     srcs = ["pinhole_camera_test.cc"],
     deps = [
         ":pinhole_camera",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -75,6 +75,6 @@ cc_test(
     srcs = ["thin_lens_camera_test.cc"],
     deps = [
         ":thin_lens_camera",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

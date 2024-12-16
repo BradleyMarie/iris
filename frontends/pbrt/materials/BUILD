@@ -20,7 +20,7 @@ cc_test(
     deps = [
         ":bumpmap",
         "//iris/textures:constant_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -43,7 +43,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -80,7 +80,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -103,7 +103,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -128,7 +128,7 @@ cc_test(
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris/materials:mock_material",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -151,7 +151,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -183,7 +183,7 @@ cc_test(
         ":parse",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -195,7 +195,7 @@ cc_library(
         ":bumpmap",
         ":material_builder",
         "//iris/materials:plastic_material",
-        "@com_google_absl//absl/flags:flag",
+        "@abseil-cpp//absl/flags:flag",
     ],
 )
 
@@ -207,7 +207,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -230,7 +230,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -253,7 +253,7 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -277,6 +277,6 @@ cc_test(
         "//frontends/pbrt:build_objects",
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )

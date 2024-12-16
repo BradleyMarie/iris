@@ -24,7 +24,7 @@ cc_test(
         ":bump_normal_map",
         "//iris/textures:constant_texture",
         "//iris/textures:image_texture",
-        "@com_google_googletest//:gtest_main",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -38,6 +38,6 @@ cc_library(
         "//iris:reference_countable",
         "//iris:texture_coordinates",
         "//iris:vector",
-        "@com_google_googletest//:gtest",
+        "@googletest//:gtest",
     ],
 )

@@ -11,7 +11,7 @@ static const std::string kName = "name";
 
 std::string RunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
-  const char* base_path = "__main__/frontends/pbrt/textures/test_data/";
+  const char* base_path = "_main/frontends/pbrt/textures/test_data/";
   return std::string("\"") + runfiles->Rlocation(base_path + path) +
          std::string("\"");
 }
