@@ -25,5 +25,5 @@ bazel_dep(name = "plyodine")
 git_override(
     module_name = "plyodine",
     remote = "https://github.com/bradleymarie/plyodine.git",
-    commit = "7323685df340b61df0e8a6d4427ae31d2eb2273b",
+    commit = "d4d4912a97201126eb8870fa5a645e685f5e9581",
 )

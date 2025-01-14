@@ -23,8 +23,6 @@ class TriangleMeshReader final
   TriangleMeshReader(const Matrix& model_to_world)
       : model_to_world_(model_to_world) {}
 
-  void Start() override {}
-
   void AddVertex(const std::array<geometric, 3>& position,
                  const std::array<geometric, 3>* maybe_normal,
                  const std::array<geometric, 2>* maybe_uv) override {
@@ -54,7 +52,7 @@ class TriangleMeshReader final
     }
   }
 
-  void AddFace(const std::array<uint32_t, 3>& face) override {
+  void AddTriangle(const std::array<uint32_t, 3>& face) override {
     faces.emplace_back(face[0], face[1], face[2]);
   }
 
@@ -117,10 +115,9 @@ PlyMeshBuilder::Build(
   }
 
   TriangleMeshReader reader(model_to_world);
-  auto result = reader.ReadFrom(file_stream);
-  if (!result) {
+  if (std::error_code error = reader.ReadFrom(file_stream); error) {
     std::cerr << "ERROR: PLY file parsing failed with message: "
-              << result.error() << std::endl;
+              << error.message() << std::endl;
     exit(EXIT_FAILURE);
   }
 
