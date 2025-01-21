@@ -21,8 +21,26 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: build
+    - name: debug build
+      env:
+        CC: gcc-${{ matrix.gcc }}
+        CXX: g++-${{ matrix.gcc }}
       run: bazel build ...
 
-    - name: test
+    - name: debug tests
+      env:
+        CC: gcc-${{ matrix.gcc }}
+        CXX: g++-${{ matrix.gcc }}
       run: bazel test ...
+
+    - name: optimized build
+      env:
+        CC: gcc-${{ matrix.gcc }}
+        CXX: g++-${{ matrix.gcc }}
+      run: bazel build -c opt ...
+
+    - name: optimized tests
+      env:
+        CC: gcc-${{ matrix.gcc }}
+        CXX: g++-${{ matrix.gcc }}
+      run: bazel test -c opt ...
