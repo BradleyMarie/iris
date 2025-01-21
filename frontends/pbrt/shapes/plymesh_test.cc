@@ -52,8 +52,7 @@ TEST(PlyMesh, Empty) {
           search_path, spectrum_manager, texture_manager, material, material,
           normal, normal, emissive, emissive, iris::Matrix::Identity()),
       testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: PLY file parsing failed with message: The first line of "
-      "the input must exactly contain the magic string");
+      "ERROR: PLY file parsing failed with message: The first line of the header must contain only 'ply'");
 }
 
 TEST(PlyMesh, Quads) {
