@@ -2,10 +2,17 @@
 
 #include "frontends/pbrt/build_objects.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
+#include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
-using bazel::tools::cpp::runfiles::Runfiles;
+namespace iris {
+namespace pbrt_frontend {
+namespace shapes {
+namespace {
+
+using ::bazel::tools::cpp::runfiles::Runfiles;
+using ::testing::StartsWith;
 
 std::string RawRunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
@@ -15,19 +22,18 @@ std::string RawRunfilePath(const std::string& path) {
 
 TEST(PlyMesh, NoIndices) {
   std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  const iris::ReferenceCounted<iris::Material> material;
-  const iris::ReferenceCounted<iris::NormalMap> normal;
-  const iris::ReferenceCounted<iris::EmissiveMaterial> emissive;
+  spectrum_managers::TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  const ReferenceCounted<Material> material;
+  const ReferenceCounted<NormalMap> normal;
+  const ReferenceCounted<EmissiveMaterial> emissive;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
-                  std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, material, material, normal, normal, emissive,
-                  emissive, iris::Matrix::Identity()),
+  EXPECT_EXIT(BuildObject(*g_plymesh_builder, tokenizer,
+                          std::filesystem::current_path(), spectrum_manager,
+                          texture_manager, material, material, normal, normal,
+                          emissive, emissive, Matrix::Identity()),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing required plymesh parameter: filename");
 }
@@ -38,21 +44,20 @@ TEST(PlyMesh, Empty) {
       std::filesystem::weakly_canonical(file_path).parent_path();
 
   std::stringstream input("\"string filename\" \"empty.ply\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  const iris::ReferenceCounted<iris::Material> material;
-  const iris::ReferenceCounted<iris::NormalMap> normal;
-  const iris::ReferenceCounted<iris::EmissiveMaterial> emissive;
+  spectrum_managers::TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  const ReferenceCounted<Material> material;
+  const ReferenceCounted<NormalMap> normal;
+  const ReferenceCounted<EmissiveMaterial> emissive;
 
   EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer,
-          search_path, spectrum_manager, texture_manager, material, material,
-          normal, normal, emissive, emissive, iris::Matrix::Identity()),
+      BuildObject(*g_plymesh_builder, tokenizer, search_path, spectrum_manager,
+                  texture_manager, material, material, normal, normal, emissive,
+                  emissive, Matrix::Identity()),
       testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: PLY file parsing failed with message: The first line of the header must contain only 'ply'");
+      StartsWith("ERROR: PLY file parsing failed with message"));
 }
 
 TEST(PlyMesh, Quads) {
@@ -61,18 +66,18 @@ TEST(PlyMesh, Quads) {
       std::filesystem::weakly_canonical(file_path).parent_path();
 
   std::stringstream input("\"string filename\" \"quads.ply\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  const iris::ReferenceCounted<iris::Material> material;
-  const iris::ReferenceCounted<iris::NormalMap> normal;
-  const iris::ReferenceCounted<iris::EmissiveMaterial> emissive;
+  spectrum_managers::TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  const ReferenceCounted<Material> material;
+  const ReferenceCounted<NormalMap> normal;
+  const ReferenceCounted<EmissiveMaterial> emissive;
 
-  auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer, search_path,
-      spectrum_manager, texture_manager, material, material, normal, normal,
-      emissive, emissive, iris::Matrix::Identity());
+  auto result =
+      BuildObject(*g_plymesh_builder, tokenizer, search_path, spectrum_manager,
+                  texture_manager, material, material, normal, normal, emissive,
+                  emissive, Matrix::Identity());
   EXPECT_EQ(12u, result.first.size());
 }
 
@@ -83,17 +88,22 @@ TEST(PlyMesh, Triangles) {
 
   std::stringstream input(
       "\"float alpha\" [0.0] \"string filename\" \"triangles.ply\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Tokenizer tokenizer(input);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  const iris::ReferenceCounted<iris::Material> material;
-  const iris::ReferenceCounted<iris::NormalMap> normal;
-  const iris::ReferenceCounted<iris::EmissiveMaterial> emissive;
+  spectrum_managers::TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  const ReferenceCounted<Material> material;
+  const ReferenceCounted<NormalMap> normal;
+  const ReferenceCounted<EmissiveMaterial> emissive;
 
-  auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::shapes::g_plymesh_builder, tokenizer, search_path,
-      spectrum_manager, texture_manager, material, material, normal, normal,
-      emissive, emissive, iris::Matrix::Identity());
+  auto result =
+      BuildObject(*g_plymesh_builder, tokenizer, search_path, spectrum_manager,
+                  texture_manager, material, material, normal, normal, emissive,
+                  emissive, Matrix::Identity());
   EXPECT_EQ(4u, result.first.size());
 }
+
+}  // namespace
+}  // namespace shapes
+}  // namespace pbrt_frontend
+}  // namespace iris
