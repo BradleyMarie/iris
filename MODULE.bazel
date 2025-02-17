@@ -4,8 +4,8 @@ module(name = "iris", version = "head", compatibility_level = 1)
 # Bazel Central Registry dependencies
 bazel_dep(name = "abseil-cpp", version = "20240722.0")
 bazel_dep(name = "googletest", version = "1.15.2")
-bazel_dep(name = "plyodine", version = "1.0.0")
-bazel_dep(name = "rules_cc", version = "0.1.0")
+bazel_dep(name = "plyodine", version = "1.0.3")
+bazel_dep(name = "rules_cc", version = "0.1.1")
 
 # Git Dependencies
 bazel_dep(name = "libfbsdf")
