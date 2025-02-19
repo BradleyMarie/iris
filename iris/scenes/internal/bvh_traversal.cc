@@ -14,7 +14,7 @@ class Intersector {
   Intersector(geometric_t min_dist, geometric_t max_dist)
       : minimum_distance(min_dist), maximum_distance(max_dist) {}
 
-  virtual void Intersect(const BVHNode& bvh_node) = 0;
+  virtual bool Intersect(const BVHNode& bvh_node) = 0;
 
   geometric_t minimum_distance;
   geometric_t maximum_distance;
@@ -29,15 +29,20 @@ class GeometryIntersector : public Intersector {
         scene_objects_(scene_objects),
         intersector_(intersector) {}
 
-  void Intersect(const BVHNode& bvh_node) override {
+  bool Intersect(const BVHNode& bvh_node) override {
     auto [start_index, num_shapes] = bvh_node.Shapes();
     for (size_t i = 0; i < num_shapes; i++) {
       auto [geometry, model_to_world] =
           scene_objects_.GetGeometry(start_index + i);
-      intersector_.Intersect(geometry, model_to_world);
+      if (intersector_.Intersect(geometry, model_to_world)) {
+        return true;
+      }
     }
+
     minimum_distance = intersector_.MinimumDistance();
     maximum_distance = intersector_.MaximumDistance();
+
+    return false;
   }
 
  private:
@@ -55,7 +60,7 @@ class NestedGeometryIntersector : public Intersector {
         geometry_(geometry),
         hit_allocator_(hit_allocator) {}
 
-  void Intersect(const BVHNode& bvh_node) override {
+  bool Intersect(const BVHNode& bvh_node) override {
     auto [start_index, num_shapes] = bvh_node.Shapes();
     for (size_t i = 0; i < num_shapes; i++) {
       for (Hit* hit_list = geometry_[start_index + i]->Trace(hit_allocator_);
@@ -67,6 +72,8 @@ class NestedGeometryIntersector : public Intersector {
         }
       }
     }
+
+    return false;
   }
 
   Hit* closest_hit = nullptr;
@@ -97,11 +104,13 @@ void Intersect(const BVHNode& bvh, const Ray& ray, Intersector& intersector) {
         continue;
       }
 
-      intersector.Intersect(*current);
+      if (intersector.Intersect(*current)) {
+        return;
+      }
     }
 
     if (queue_size == 0) {
-      break;
+      return;
     }
 
     queue_size -= 1;

@@ -87,58 +87,6 @@ TEST(VisibilityTesterTest, WrongFace) {
   EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 2));
 }
 
-TEST(VisibilityTesterTest, SucceedsSecondHit) {
-  Ray world_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  Ray model_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-
-  std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
-  std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
-
-  ReferenceCounted<MockGeometry> geometry =
-      MakeReferenceCounted<MockGeometry>();
-  EXPECT_CALL(*geometry, Trace(model_ray, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
-        iris::Hit* good_hit =
-            &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
-        return &hit_allocator.Allocate(good_hit, 0.5, 100, 200, g_data);
-      }));
-
-  SceneObjects::Builder builder;
-
-  SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
-
-  RayTracer ray_tracer;
-  Arena arena;
-  VisibilityTester visibility_tester(*scene, 0.0, ray_tracer, arena);
-
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1));
-}
-
-TEST(VisibilityTesterTest, SceneTraceMisses) {
-  Ray world_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  Ray model_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-
-  ReferenceCounted<MockGeometry> geometry =
-      MakeReferenceCounted<MockGeometry>();
-  EXPECT_CALL(*geometry, Trace(model_ray, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
-      }));
-
-  SceneObjects::Builder builder;
-
-  SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
-
-  RayTracer ray_tracer;
-  Arena arena;
-  VisibilityTester visibility_tester(*scene, 0.0, ray_tracer, arena);
-
-  EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry, nullptr, 1));
-}
-
 TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
   Ray world_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
   Ray model_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
@@ -147,7 +95,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
       MakeReferenceCounted<MockGeometry>();
   EXPECT_CALL(*geometry, Trace(model_ray, _))
       .WillRepeatedly(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
       }));
 
   ReferenceCounted<MockGeometry> scene_geometry =
@@ -161,7 +109,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*scene_geometry, Trace(model_ray, _))
       .WillRepeatedly(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, g_data);
       }));
 
   SceneObjects::Builder builder;
@@ -189,10 +137,17 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(_))
       .WillRepeatedly(Return(nullptr));
-  EXPECT_CALL(*geometry, Trace(_, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 1, 2, g_data);
-      }));
+  {
+    testing::InSequence sequence;
+    EXPECT_CALL(*geometry, Trace(_, _))
+        .WillOnce(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
+          return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, g_data);
+        }));
+    EXPECT_CALL(*geometry, Trace(_, _))
+        .WillOnce(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
+          return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, g_data);
+        }));
+  }
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
@@ -225,11 +180,11 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
     testing::InSequence sequence;
     EXPECT_CALL(*geometry, Trace(model_ray, _))
         .WillOnce(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
-          return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+          return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, g_data);
         }));
     EXPECT_CALL(*geometry, Trace(model_ray, _))
         .WillOnce(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
-          return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 3, 4, g_data);
+          return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 3, 4, g_data);
         }));
   }
   const Geometry* geometry_ptr = geometry.Get();
@@ -434,8 +389,53 @@ TEST(VisibilityTesterTest, NegativePdf) {
 
   EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1));
 }
-
 TEST(VisibilityTesterTest, Succeeds) {
+  Ray world_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
+  Ray model_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
+
+  std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
+  std::unique_ptr<EmissiveMaterial> emissive_material =
+      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+
+  ReferenceCounted<MockGeometry> geometry =
+      MakeReferenceCounted<MockGeometry>();
+  EXPECT_CALL(*geometry, Trace(model_ray, _))
+      .WillRepeatedly(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+      }));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
+      .WillRepeatedly(Return(emissive_material.get()));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
+      .WillRepeatedly(Return(nullptr));
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
+      .WillOnce(Invoke(
+          [&](const Point& hit_point,
+              const std::optional<Geometry::Differentials>& differentials,
+              face_t face, const void* additional_data) {
+            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+            return std::nullopt;
+          }));
+  EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
+                                                Point(1.0, 0.0, 0.0)))
+      .WillOnce(Return(1.0));
+  const Geometry* geometry_ptr = geometry.Get();
+
+  SceneObjects objects = SceneObjects::Builder().Build();
+  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+
+  RayTracer ray_tracer;
+  Arena arena;
+  VisibilityTester visibility_tester(*scene, 0.0, ray_tracer, arena);
+
+  std::optional<VisibilityTester::VisibleResult> result =
+      visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1);
+  ASSERT_TRUE(result);
+  EXPECT_EQ(spectrum.get(), &result->emission);
+  EXPECT_EQ(Point(1.0, 0.0, 0.0), result->hit_point);
+}
+
+TEST(VisibilityTesterTest, SceneTraceMissSucceeds) {
   Ray world_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
   Ray model_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
 

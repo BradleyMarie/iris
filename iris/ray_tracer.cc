@@ -227,9 +227,9 @@ std::optional<Geometry::Differentials> MaybeTransformDifferentials(
 RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
   SpectralAllocator spectral_allocator(arena_);
 
-  auto* hit =
-      ray_tracer_.Trace(ray, minimum_distance_,
-                        std::numeric_limits<geometric_t>::infinity(), scene_);
+  auto* hit = ray_tracer_.TraceClosestHit(
+      ray, minimum_distance_, std::numeric_limits<geometric_t>::infinity(),
+      scene_);
   if (!hit) {
     return HandleMiss(ray, environmental_light_, spectral_allocator);
   }

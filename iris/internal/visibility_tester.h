@@ -33,9 +33,6 @@ class VisibilityTester final : public iris::VisibilityTester {
  private:
   VisibilityTester(const VisibilityTester&) = delete;
   VisibilityTester& operator=(const VisibilityTester&) = delete;
-
-  bool Intersects(const Ray& ray, const Geometry& geometry,
-                  const Matrix* model_to_world, face_t face);
 };
 
 }  // namespace internal

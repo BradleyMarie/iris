@@ -31,44 +31,29 @@ void SingleGeometryScene::Trace(const Ray& ray,
 
 }  // namespace
 
-bool VisibilityTester::Intersects(const Ray& ray, const Geometry& geometry,
-                                  const Matrix* model_to_world, face_t face) {
-  SingleGeometryScene geometry_scene(geometry, model_to_world);
-  for (Hit* geometry_hit = ray_tracer_.Trace(
-           ray, minimum_distance_, std::numeric_limits<geometric>::infinity(),
-           geometry_scene);
-       geometry_hit;
-       geometry_hit = static_cast<internal::Hit*>(geometry_hit->next)) {
-    if (geometry_hit->front == face) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
     const Ray& ray, const Geometry& geometry, const Matrix* model_to_world,
     face_t face) {
-  // Optimization: Check that the face is visible along the ray before tracing
-  // the entire scene
-  if (!Intersects(ray, geometry, model_to_world, face)) {
+  // Optimization: Find the closest point on the geometry in isolation
+  SingleGeometryScene geometry_scene(geometry, model_to_world);
+  Hit* geometry_hit = ray_tracer_.TraceClosestHit(
+      ray, minimum_distance_, std::numeric_limits<geometric>::infinity(),
+      geometry_scene);
+  if (!geometry_hit || geometry_hit->front != face) {
     return std::nullopt;
   }
 
-  // The distance from the previous intersection cannot be used as a bound
-  // since it may be be discarded in a full scene intersection if part of
-  // CSG
-  Hit* scene_hit =
-      ray_tracer_.Trace(ray, minimum_distance_,
-                        std::numeric_limits<geometric>::infinity(), scene_);
-  if (!scene_hit || scene_hit->geometry != &geometry ||
-      scene_hit->model_to_world != model_to_world || scene_hit->front != face) {
+  // Check if there are any intersections between the ray origin and the hit
+  if (Hit* scene_hit = ray_tracer_.TraceAnyHit(ray, minimum_distance_,
+                                               geometry_hit->distance, scene_);
+      scene_hit && (scene_hit->geometry != &geometry ||
+                    scene_hit->model_to_world != model_to_world ||
+                    scene_hit->front != face)) {
     return std::nullopt;
   }
 
   // Compute Spectrum
-  Point world_hit_point = ray.Endpoint(scene_hit->distance);
+  Point world_hit_point = ray.Endpoint(geometry_hit->distance);
   Point model_hit_point = model_to_world
                               ? model_to_world->InverseMultiply(world_hit_point)
                               : world_hit_point;
@@ -76,7 +61,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
   TextureCoordinates texture_coordinates =
       geometry
           .ComputeTextureCoordinates(model_hit_point, std::nullopt, face,
-                                     scene_hit->additional_data)
+                                     geometry_hit->additional_data)
           .value_or(TextureCoordinates{0.0, 0.0});
 
   const EmissiveMaterial* emissive_material =
@@ -95,7 +80,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
   Point model_origin =
       model_to_world ? model_to_world->InverseMultiply(ray.origin) : ray.origin;
   std::optional<visual_t> pdf = geometry.ComputePdfBySolidAngle(
-      model_origin, face, scene_hit->additional_data, model_hit_point);
+      model_origin, face, geometry_hit->additional_data, model_hit_point);
   if (pdf.value_or(0.0) <= 0.0) {
     return std::nullopt;
   }

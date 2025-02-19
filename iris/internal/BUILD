@@ -149,6 +149,7 @@ cc_library(
     srcs = ["visibility_tester.cc"],
     hdrs = ["visibility_tester.h"],
     deps = [
+        ":hit",
         ":ray_tracer",
         "//iris:float",
         "//iris:geometry",

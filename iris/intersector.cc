@@ -7,7 +7,7 @@
 
 namespace iris {
 
-void Intersector::Intersect(const Geometry& geometry) {
+bool Intersector::Intersect(const Geometry& geometry) {
   HitAllocator allocator(ray_, hit_arena_);
 
   for (auto* hit_list = geometry.Trace(allocator); hit_list;
@@ -19,13 +19,20 @@ void Intersector::Intersect(const Geometry& geometry) {
         full_hit->distance < closest_hit_distance_ &&
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
       full_hit->model_ray.emplace(ray_);
-      closest_hit_ = hit_list;
+      hit_ = hit_list;
       closest_hit_distance_ = hit_list->distance;
+
+      if (find_any_hit_) {
+        done_ = true;
+        break;
+      }
     }
   }
+
+  return done_;
 }
 
-void Intersector::Intersect(const Geometry& geometry,
+bool Intersector::Intersect(const Geometry& geometry,
                             const Matrix* model_to_world) {
   Ray trace_ray =
       model_to_world ? model_to_world->InverseMultiplyWithError(ray_) : ray_;
@@ -41,13 +48,20 @@ void Intersector::Intersect(const Geometry& geometry,
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
       full_hit->model_ray.emplace(trace_ray);
       full_hit->model_to_world = model_to_world;
-      closest_hit_ = hit_list;
+      hit_ = hit_list;
       closest_hit_distance_ = hit_list->distance;
+
+      if (find_any_hit_) {
+        done_ = true;
+        break;
+      }
     }
   }
+
+  return done_;
 }
 
-void Intersector::Intersect(const Geometry& geometry,
+bool Intersector::Intersect(const Geometry& geometry,
                             const Matrix& model_to_world) {
   Ray trace_ray = model_to_world.InverseMultiplyWithError(ray_);
   HitAllocator allocator(trace_ray, hit_arena_);
@@ -62,10 +76,17 @@ void Intersector::Intersect(const Geometry& geometry,
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
       full_hit->model_ray.emplace(trace_ray);
       full_hit->model_to_world = &model_to_world;
-      closest_hit_ = hit_list;
+      hit_ = hit_list;
       closest_hit_distance_ = hit_list->distance;
+
+      if (find_any_hit_) {
+        done_ = true;
+        break;
+      }
     }
   }
+
+  return done_;
 }
 
 }  // namespace iris

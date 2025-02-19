@@ -16,8 +16,10 @@ std::unique_ptr<Scene> ListScene::Builder::Build(
 
 void ListScene::Trace(const Ray& ray, Intersector& intersector) const {
   for (size_t i = 0; i < scene_objects_.NumGeometry(); i++) {
-    auto entry = scene_objects_.GetGeometry(i);
-    intersector.Intersect(entry.first, entry.second);
+    auto [geometry, model_to_world] = scene_objects_.GetGeometry(i);
+    if (intersector.Intersect(geometry, model_to_world)) {
+      break;
+    }
   }
 }
 
