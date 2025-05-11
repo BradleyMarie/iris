@@ -1,5 +1,7 @@
 #include "iris/materials/mirror_material.h"
 
+#include <utility>
+
 #include "iris/bxdfs/specular_bxdf.h"
 
 namespace iris {
@@ -20,6 +22,16 @@ const Bxdf* MirrorMaterial::Evaluate(
 
   return &bxdf_allocator.Allocate<SpecularBrdf<FresnelNoOp>>(*reflector,
                                                              FresnelNoOp());
+}
+
+ReferenceCounted<Material> MakeMirrorMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        reflectance) {
+  if (!reflectance) {
+    return ReferenceCounted<Material>();
+  }
+
+  return MakeReferenceCounted<MirrorMaterial>(std::move(reflectance));
 }
 
 }  // namespace materials

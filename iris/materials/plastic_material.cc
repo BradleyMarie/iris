@@ -29,9 +29,12 @@ const Bxdf* PlasticMaterial::Evaluate(
   if (const Reflector* specular =
           specular_->Evaluate(texture_coordinates, spectral_allocator);
       specular != nullptr) {
-    visual roughness = roughness_->Evaluate(texture_coordinates);
-    if (remap_roughness_) {
-      roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
+    visual roughness = static_cast<visual>(0.0);
+    if (roughness_) {
+      roughness = roughness_->Evaluate(texture_coordinates);
+      if (remap_roughness_) {
+        roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
+      }
     }
 
     visual eta_incident = eta_incident_->Evaluate(texture_coordinates);
@@ -44,6 +47,24 @@ const Bxdf* PlasticMaterial::Evaluate(
   }
 
   return MakeCompositeBxdf(bxdf_allocator, lambertian_brdf, microfacet_brdf);
+}
+
+ReferenceCounted<Material> MakePlasticMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        diffuse,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        specular,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
+    bool remap_roughness) {
+  if (!diffuse && !specular) {
+    return ReferenceCounted<Material>();
+  }
+
+  return MakeReferenceCounted<PlasticMaterial>(
+      std::move(diffuse), std::move(specular), std::move(eta_incident),
+      std::move(eta_transmitted), std::move(roughness), remap_roughness);
 }
 
 }  // namespace materials

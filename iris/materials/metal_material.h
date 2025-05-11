@@ -28,10 +28,7 @@ class MetalMaterial final : public Material {
         eta_transmitted_(std::move(eta_transmitted)),
         roughness_u_(std::move(roughness_u)),
         roughness_v_(std::move(roughness_v)),
-        remap_roughness_(remap_roughness) {
-    assert(roughness_u_);
-    assert(roughness_v_);
-  }
+        remap_roughness_(remap_roughness) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,

@@ -22,11 +22,7 @@ class MixMaterial final : public Material {
               ReferenceCounted<textures::ValueTexture2D<visual>> interpolation)
       : material0_(std::move(material0)),
         material1_(std::move(material1)),
-        interpolation_(std::move(interpolation)) {
-    assert(material0_);
-    assert(material1_);
-    assert(interpolation_);
-  }
+        interpolation_(std::move(interpolation)) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,

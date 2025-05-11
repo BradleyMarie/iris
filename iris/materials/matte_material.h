@@ -23,7 +23,6 @@ class MatteMaterial final : public Material {
       ReferenceCounted<textures::ValueTexture2D<visual>> sigma)
       : reflectance_(std::move(reflectance)), sigma_(std::move(sigma)) {
     assert(reflectance_);
-    assert(sigma_);
   }
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
@@ -35,6 +34,11 @@ class MatteMaterial final : public Material {
       reflectance_;
   ReferenceCounted<textures::ValueTexture2D<visual>> sigma_;
 };
+
+ReferenceCounted<Material> MakeMatteMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        reflectance,
+    ReferenceCounted<textures::ValueTexture2D<visual>> sigma);
 
 }  // namespace materials
 }  // namespace iris

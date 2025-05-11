@@ -22,6 +22,27 @@ using ::iris::textures::ConstantValueTexture2D;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
 
+TEST(SubstrateMaterialTest, NullMaterial) {
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> roughness =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+
+  EXPECT_FALSE(MakeSubstrateMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      roughness, roughness, true));
+  EXPECT_TRUE(MakeSubstrateMaterial(
+      reflectance,
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      roughness, roughness, true));
+  EXPECT_TRUE(MakeSubstrateMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      reflectance, roughness, roughness, true));
+}
+
 TEST(SubstrateMaterialTest, EvaluateEmpty) {
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
       MakeReferenceCounted<
@@ -29,11 +50,12 @@ TEST(SubstrateMaterialTest, EvaluateEmpty) {
           ReferenceCounted<Reflector>());
   ReferenceCounted<ValueTexture2D<visual>> roughness =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  SubstrateMaterial material(reflectance, reflectance, roughness, roughness,
-                             true);
 
-  ASSERT_FALSE(material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                 GetSpectralAllocator(), GetBxdfAllocator()));
+  ReferenceCounted<Material> material = MakeSubstrateMaterial(
+      reflectance, reflectance, roughness, roughness, true);
+
+  ASSERT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(SubstrateMaterialTest, Evaluate) {
@@ -44,12 +66,13 @@ TEST(SubstrateMaterialTest, Evaluate) {
           ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
   ReferenceCounted<ValueTexture2D<visual>> roughness =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.0);
-  SubstrateMaterial material(reflectance, reflectance, roughness, roughness,
-                             true);
+
+  ReferenceCounted<Material> material = MakeSubstrateMaterial(
+      reflectance, reflectance, roughness, roughness, true);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(
       dynamic_cast<const AshikhminShirleyBrdf<TrowbridgeReitzDistribution>*>(

@@ -30,7 +30,7 @@ visual_t FesnelDielectricReflectance(visual_t cos_theta_incident,
       static_cast<visual_t>(0.0),
       static_cast<visual_t>(1.0) - cos_theta_incident * cos_theta_incident));
   visual_t sin_theta_transmission =
-      eta_incident / eta_transmission * sin_theta_incident;
+      (eta_incident / eta_transmission) * sin_theta_incident;
 
   if (sin_theta_transmission >= static_cast<visual_t>(1.0)) {
     return static_cast<visual_t>(1.0);

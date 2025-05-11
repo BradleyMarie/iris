@@ -23,6 +23,31 @@ using ::iris::textures::ConstantValueTexture2D;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
 
+TEST(GlassMaterialTest, NullMaterial) {
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> eta_front =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_back =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+
+  EXPECT_FALSE(MakeGlassMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      std::move(eta_front), std::move(eta_back)));
+
+  EXPECT_TRUE(MakeGlassMaterial(
+      reflectance,
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      std::move(eta_front), std::move(eta_back)));
+
+  EXPECT_TRUE(MakeGlassMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      reflectance, std::move(eta_front), std::move(eta_back)));
+}
+
 TEST(GlassMaterialTest, EvaluateEmpty) {
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
       MakeReferenceCounted<
@@ -36,11 +61,13 @@ TEST(GlassMaterialTest, EvaluateEmpty) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> eta_back =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  GlassMaterial material(std::move(reflectance), std::move(transmittance),
-                         std::move(eta_front), std::move(eta_back));
 
-  ASSERT_FALSE(material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                 GetSpectralAllocator(), GetBxdfAllocator()));
+  ReferenceCounted<Material> material =
+      MakeGlassMaterial(std::move(reflectance), std::move(transmittance),
+                        std::move(eta_front), std::move(eta_back));
+
+  ASSERT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(GlassMaterialTest, EvaluateBrdf) {
@@ -57,12 +84,14 @@ TEST(GlassMaterialTest, EvaluateBrdf) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> eta_back =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  GlassMaterial material(std::move(reflectance), std::move(transmittance),
-                         std::move(eta_front), std::move(eta_back));
+
+  ReferenceCounted<Material> material =
+      MakeGlassMaterial(std::move(reflectance), std::move(transmittance),
+                        std::move(eta_front), std::move(eta_back));
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(dynamic_cast<const SpecularBrdf<FresnelDielectric>*>(result));
 }
@@ -82,12 +111,14 @@ TEST(GlassMaterialTest, EvaluateBtdf) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> eta_back =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  GlassMaterial material(std::move(reflectance), std::move(transmittance),
-                         std::move(eta_front), std::move(eta_back));
+
+  ReferenceCounted<Material> material =
+      MakeGlassMaterial(std::move(reflectance), std::move(transmittance),
+                        std::move(eta_front), std::move(eta_back));
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(dynamic_cast<const SpecularBtdf<FresnelDielectric>*>(result));
 }
@@ -107,12 +138,14 @@ TEST(GlassMaterialTest, Evaluate) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> eta_back =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  GlassMaterial material(std::move(reflectance), std::move(transmittance),
-                         std::move(eta_front), std::move(eta_back));
+
+  ReferenceCounted<Material> material =
+      MakeGlassMaterial(std::move(reflectance), std::move(transmittance),
+                        std::move(eta_front), std::move(eta_back));
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(dynamic_cast<const SpecularBxdf*>(result));
 }

@@ -41,17 +41,7 @@ class UberMaterial final : public Material {
         eta_transmitted_(std::move(eta_transmitted)),
         roughness_u_(std::move(roughness_u)),
         roughness_v_(std::move(roughness_v)),
-        remap_roughness_(remap_roughness) {
-    assert(reflectance_);
-    assert(transmittance_);
-    assert(diffuse_);
-    assert(specular_);
-    assert(opacity_);
-    assert(eta_incident_);
-    assert(eta_transmitted_);
-    assert(roughness_u_);
-    assert(roughness_v_);
-  }
+        remap_roughness_(remap_roughness) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
@@ -73,6 +63,22 @@ class UberMaterial final : public Material {
   ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v_;
   bool remap_roughness_;
 };
+
+ReferenceCounted<Material> MakeUberMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        reflectance,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        transmittance,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        diffuse,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        specular,
+    ReferenceCounted<textures::ValueTexture2D<visual>> opacity,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
+    bool remap_roughness);
 
 }  // namespace materials
 }  // namespace iris

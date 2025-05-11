@@ -37,15 +37,7 @@ class TranslucentMaterial final : public Material {
         eta_incident_(std::move(eta_incident)),
         eta_transmitted_(std::move(eta_transmitted)),
         roughness_(std::move(roughness)),
-        remap_roughness_(remap_roughness) {
-    assert(reflectance_);
-    assert(transmittance_);
-    assert(diffuse_);
-    assert(eta_incident_);
-    assert(eta_transmitted_);
-    assert(specular_);
-    assert(roughness_);
-  }
+        remap_roughness_(remap_roughness) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
@@ -65,6 +57,20 @@ class TranslucentMaterial final : public Material {
   ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
   bool remap_roughness_;
 };
+
+ReferenceCounted<Material> MakeTranslucentMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        reflectance,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        transmittance,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        diffuse,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        specular,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
+    bool remap_roughness);
 
 }  // namespace materials
 }  // namespace iris

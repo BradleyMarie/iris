@@ -2,6 +2,7 @@
 #define _IRIS_TEXTURES_SCALED_TEXTURE_
 
 #include <cassert>
+#include <utility>
 
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
@@ -35,6 +36,22 @@ class ScaledSpectralTexture2D final
   const ReferenceCounted<PointerTexture2D<Return, SpectralAllocator>> texture1_;
 };
 
+template <typename Return>
+ReferenceCounted<ScaledSpectralTexture2D<Return>> MakeScaledSpectralTexture2D(
+    ReferenceCounted<PointerTexture2D<Return, SpectralAllocator>> texture0,
+    ReferenceCounted<PointerTexture2D<Return, SpectralAllocator>> texture1) {
+  if (!texture0) {
+    return ReferenceCounted<ScaledSpectralTexture2D<Return>>();
+  }
+
+  if (!texture1) {
+    return ReferenceCounted<ScaledSpectralTexture2D<Return>>();
+  }
+
+  return MakeReferenceCounted<ScaledSpectralTexture2D<Return>>(
+      std::move(texture0), std::move(texture1));
+}
+
 template <typename T>
 class ScaledValueTexture2D final : public ValueTexture2D<T> {
  public:
@@ -53,6 +70,22 @@ class ScaledValueTexture2D final : public ValueTexture2D<T> {
   ReferenceCounted<ValueTexture2D<T>> texture0_;
   ReferenceCounted<ValueTexture2D<T>> texture1_;
 };
+
+template <typename T>
+ReferenceCounted<ScaledValueTexture2D<T>> MakeScaledValueTexture2D(
+    ReferenceCounted<ValueTexture2D<T>> texture0,
+    ReferenceCounted<ValueTexture2D<T>> texture1) {
+  if (!texture0) {
+    return ReferenceCounted<ScaledValueTexture2D<T>>();
+  }
+
+  if (!texture1) {
+    return ReferenceCounted<ScaledValueTexture2D<T>>();
+  }
+
+  return MakeReferenceCounted<ScaledValueTexture2D<T>>(std::move(texture0),
+                                                       std::move(texture1));
+}
 
 }  // namespace textures
 }  // namespace iris

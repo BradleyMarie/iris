@@ -22,11 +22,22 @@ const Bxdf* MetalMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  visual roughness_u = roughness_u_->Evaluate(texture_coordinates);
-  visual roughness_v = roughness_v_->Evaluate(texture_coordinates);
-  if (remap_roughness_) {
-    roughness_u = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_u);
-    roughness_v = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_v);
+  visual roughness_u = static_cast<visual>(0.0);
+  if (roughness_u_) {
+    roughness_u_->Evaluate(texture_coordinates);
+
+    if (remap_roughness_) {
+      roughness_u = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_u);
+    }
+  }
+
+  visual roughness_v = static_cast<visual>(0.0);
+  if (roughness_v_) {
+    roughness_v_->Evaluate(texture_coordinates);
+
+    if (remap_roughness_) {
+      roughness_v = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_v);
+    }
   }
 
   return &bxdf_allocator.Allocate<

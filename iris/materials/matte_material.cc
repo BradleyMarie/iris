@@ -19,12 +19,28 @@ const Bxdf* MatteMaterial::Evaluate(
     return nullptr;
   }
 
-  visual sigma = sigma_->Evaluate(texture_coordinates);
+  visual sigma = static_cast<visual>(0.0);
+  if (sigma_) {
+    sigma = sigma_->Evaluate(texture_coordinates);
+  }
+
   if (sigma <= static_cast<visual>(0.0)) {
     return &bxdf_allocator.Allocate<LambertianBrdf>(*reflector);
   }
 
   return &bxdf_allocator.Allocate<OrenNayarBrdf>(*reflector, sigma);
+}
+
+ReferenceCounted<Material> MakeMatteMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        reflectance,
+    ReferenceCounted<textures::ValueTexture2D<visual>> sigma) {
+  if (!reflectance) {
+    return ReferenceCounted<Material>();
+  }
+
+  return MakeReferenceCounted<MatteMaterial>(std::move(reflectance),
+                                             std::move(sigma));
 }
 
 }  // namespace materials

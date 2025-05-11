@@ -17,15 +17,21 @@ using ::iris::textures::ConstantPointerTexture2D;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
 
+TEST(MirrorMaterialTest, NullMaterial) {
+  EXPECT_FALSE(MakeMirrorMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>()));
+}
+
 TEST(MirrorMaterialTest, EvaluateEmpty) {
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
       MakeReferenceCounted<
           ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
           ReferenceCounted<Reflector>());
-  MirrorMaterial material(std::move(reflectance));
+  ReferenceCounted<Material> material =
+      MakeMirrorMaterial(std::move(reflectance));
 
-  ASSERT_FALSE(material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                 GetSpectralAllocator(), GetBxdfAllocator()));
+  ASSERT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(MirrorMaterialTest, Evaluate) {
@@ -33,11 +39,12 @@ TEST(MirrorMaterialTest, Evaluate) {
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
       MakeReferenceCounted<
           ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  MirrorMaterial material(std::move(reflectance));
+  ReferenceCounted<Material> material =
+      MakeMirrorMaterial(std::move(reflectance));
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

@@ -27,12 +27,7 @@ class GlassMaterial final : public Material {
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
         eta_incident_(std::move(eta_incident)),
-        eta_transmitted_(std::move(eta_transmitted)) {
-    assert(reflectance_);
-    assert(transmittance_);
-    assert(eta_incident_);
-    assert(eta_transmitted_);
-  }
+        eta_transmitted_(std::move(eta_transmitted)) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
@@ -46,6 +41,14 @@ class GlassMaterial final : public Material {
   ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
   ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
 };
+
+ReferenceCounted<Material> MakeGlassMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        reflectance,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        transmittance,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted);
 
 }  // namespace materials
 }  // namespace iris

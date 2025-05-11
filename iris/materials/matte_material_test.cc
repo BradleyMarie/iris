@@ -22,6 +22,12 @@ using ::iris::textures::ConstantValueTexture2D;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
 
+TEST(MatteMaterialTest, NullMaterial) {
+  EXPECT_FALSE(MakeMatteMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0)));
+}
+
 TEST(MatteMaterialTest, EvaluateEmpty) {
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
       MakeReferenceCounted<
@@ -29,10 +35,11 @@ TEST(MatteMaterialTest, EvaluateEmpty) {
           ReferenceCounted<Reflector>());
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  MatteMaterial material(std::move(reflectance), std::move(sigma));
+  ReferenceCounted<Material> material =
+      MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
-  ASSERT_FALSE(material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                 GetSpectralAllocator(), GetBxdfAllocator()));
+  ASSERT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(MatteMaterialTest, EvaluateLambertian) {
@@ -43,11 +50,12 @@ TEST(MatteMaterialTest, EvaluateLambertian) {
           ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.0);
-  MatteMaterial material(std::move(reflectance), std::move(sigma));
+  ReferenceCounted<Material> material =
+      MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(dynamic_cast<const LambertianBrdf*>(result));
 }
@@ -60,11 +68,12 @@ TEST(MatteMaterialTest, EvaluateOrenNayar) {
           ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  MatteMaterial material(std::move(reflectance), std::move(sigma));
+  ReferenceCounted<Material> material =
+      MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(dynamic_cast<const OrenNayarBrdf*>(result));
 }

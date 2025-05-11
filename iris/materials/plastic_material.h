@@ -32,11 +32,8 @@ class PlasticMaterial final : public Material {
         eta_transmitted_(std::move(eta_transmitted)),
         roughness_(std::move(roughness)),
         remap_roughness_(remap_roughness) {
-    assert(diffuse_);
-    assert(specular_);
     assert(eta_incident_);
     assert(eta_transmitted_);
-    assert(roughness_);
   }
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
@@ -53,6 +50,16 @@ class PlasticMaterial final : public Material {
   ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
   bool remap_roughness_;
 };
+
+ReferenceCounted<Material> MakePlasticMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        diffuse,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        specular,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
+    bool remap_roughness);
 
 }  // namespace materials
 }  // namespace iris

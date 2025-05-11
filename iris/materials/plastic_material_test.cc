@@ -23,6 +23,31 @@ using ::iris::textures::ValueTexture2D;
 using ::testing::_;
 using ::testing::Return;
 
+TEST(PlasticMaterialTest, NullMaterial) {
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
+      MakeReferenceCounted<
+          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
+          ReferenceCounted<Reflector>());
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> sigma =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+
+  EXPECT_FALSE(MakePlasticMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      eta_incident, eta_transmitted, std::move(sigma), false));
+  EXPECT_TRUE(MakePlasticMaterial(
+      reflectance,
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      eta_incident, eta_transmitted, std::move(sigma), false));
+  EXPECT_TRUE(MakePlasticMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      reflectance, eta_incident, eta_transmitted, std::move(sigma), false));
+}
+
 TEST(PlasticMaterialTest, NoBxdfs) {
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
       MakeReferenceCounted<
@@ -34,11 +59,13 @@ TEST(PlasticMaterialTest, NoBxdfs) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  PlasticMaterial material(reflectance, reflectance, eta_incident,
-                           eta_transmitted, std::move(sigma), false);
 
-  EXPECT_FALSE(material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                 GetSpectralAllocator(), GetBxdfAllocator()));
+  ReferenceCounted<Material> material =
+      MakePlasticMaterial(reflectance, reflectance, eta_incident,
+                          eta_transmitted, std::move(sigma), false);
+
+  EXPECT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(PlasticMaterialTest, LambertianOnly) {
@@ -59,12 +86,14 @@ TEST(PlasticMaterialTest, LambertianOnly) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  PlasticMaterial material(reflectance, specular, eta_incident, eta_transmitted,
-                           std::move(sigma), false);
+
+  ReferenceCounted<Material> material =
+      MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
+                          std::move(sigma), false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(
@@ -93,12 +122,14 @@ TEST(PlasticMaterialTest, SpecularOnly) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  PlasticMaterial material(reflectance, specular, eta_incident, eta_transmitted,
-                           std::move(sigma), false);
+
+  ReferenceCounted<Material> material =
+      MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
+                          std::move(sigma), false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(
@@ -126,12 +157,14 @@ TEST(PlasticMaterialTest, Remap) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  PlasticMaterial material(reflectance, specular, eta_incident, eta_transmitted,
-                           std::move(sigma), true);
+
+  ReferenceCounted<Material> material =
+      MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
+                          std::move(sigma), true);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(
@@ -158,12 +191,14 @@ TEST(PlasticMaterialTest, Both) {
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  PlasticMaterial material(reflectance, specular, eta_incident, eta_transmitted,
-                           std::move(sigma), false);
+
+  ReferenceCounted<Material> material =
+      MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
+                          std::move(sigma), false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(

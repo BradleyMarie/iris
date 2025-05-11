@@ -33,6 +33,10 @@ class MirrorMaterial final : public Material {
       reflectance_;
 };
 
+ReferenceCounted<Material> MakeMirrorMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        reflectance);
+
 }  // namespace materials
 }  // namespace iris
 

@@ -50,99 +50,136 @@ static const ReferenceCounted<ValueTexture2D<visual>> kTranslucent =
 static const ReferenceCounted<ValueTexture2D<visual>> kOpaque =
     MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
 
+TEST(UberMaterialTest, NullMaterial) {
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> empty;
+  EXPECT_FALSE(MakeUberMaterial(empty, empty, empty, empty, kTransparent,
+                                kEtaIncident, kEtaTransmitted, kRoughness,
+                                kRoughness, false));
+  EXPECT_FALSE(MakeUberMaterial(kWhite, empty, empty, empty, kTransparent,
+                                kEtaIncident, kEtaTransmitted, kRoughness,
+                                kRoughness, false));
+  EXPECT_FALSE(MakeUberMaterial(empty, kWhite, empty, empty, kTransparent,
+                                kEtaIncident, kEtaTransmitted, kRoughness,
+                                kRoughness, false));
+  EXPECT_FALSE(MakeUberMaterial(empty, empty, kWhite, empty, kTransparent,
+                                kEtaIncident, kEtaTransmitted, kRoughness,
+                                kRoughness, false));
+  EXPECT_FALSE(MakeUberMaterial(empty, empty, empty, kWhite, kTransparent,
+                                kEtaIncident, kEtaTransmitted, kRoughness,
+                                kRoughness, false));
+  EXPECT_FALSE(MakeUberMaterial(kWhite, kWhite, empty, empty, kTransparent,
+                                kEtaIncident, kEtaTransmitted, kRoughness,
+                                kRoughness, false));
+  EXPECT_FALSE(MakeUberMaterial(empty, empty, kWhite, kWhite, kTransparent,
+                                kEtaIncident, kEtaTransmitted, kRoughness,
+                                kRoughness, false));
+  EXPECT_TRUE(MakeUberMaterial(kWhite, empty, kWhite, empty, kTransparent,
+                               kEtaIncident, kEtaTransmitted, kRoughness,
+                               kRoughness, false));
+  EXPECT_TRUE(MakeUberMaterial(empty, kWhite, empty, kWhite, kTransparent,
+                               kEtaIncident, kEtaTransmitted, kRoughness,
+                               kRoughness, false));
+}
+
 TEST(UberMaterialTest, TransparencyOnly) {
-  UberMaterial material(kWhite, kWhite, kWhite, kWhite, kTransparent,
-                        kEtaIncident, kEtaTransmitted, kRoughness, kRoughness,
-                        false);
+  ReferenceCounted<Material> material = MakeUberMaterial(
+      kWhite, kWhite, kWhite, kWhite, kTransparent, kEtaIncident,
+      kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(dynamic_cast<const SpecularBtdf<FresnelNoOp>*>(result));
 }
 
 TEST(UberMaterialTest, OpaqueOnlyAllTermsEmpty) {
-  UberMaterial material(kBlack, kBlack, kBlack, kBlack, kOpaque, kEtaIncident,
-                        kEtaTransmitted, kRoughness, kRoughness, false);
+  ReferenceCounted<Material> material =
+      MakeUberMaterial(kBlack, kBlack, kBlack, kBlack, kOpaque, kEtaIncident,
+                       kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   EXPECT_FALSE(result);
 }
 
 TEST(UberMaterialTest, LambertianOnly) {
-  UberMaterial material(kBlack, kBlack, kWhite, kBlack, kOpaque, kEtaIncident,
-                        kEtaTransmitted, kRoughness, kRoughness, false);
+  ReferenceCounted<Material> material =
+      MakeUberMaterial(kBlack, kBlack, kWhite, kBlack, kOpaque, kEtaIncident,
+                       kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(dynamic_cast<const LambertianBrdf*>(result));
 }
 
 TEST(UberMaterialTest, SpecularReflectionOnly) {
-  UberMaterial material(kWhite, kBlack, kBlack, kBlack, kOpaque, kEtaIncident,
-                        kEtaTransmitted, kRoughness, kRoughness, false);
+  ReferenceCounted<Material> material =
+      MakeUberMaterial(kWhite, kBlack, kBlack, kBlack, kOpaque, kEtaIncident,
+                       kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(dynamic_cast<const SpecularBrdf<FresnelDielectric>*>(result));
 }
 
 TEST(UberMaterialTest, SpecularTransmissionOnly) {
-  UberMaterial material(kBlack, kWhite, kBlack, kBlack, kOpaque, kEtaIncident,
-                        kEtaTransmitted, kRoughness, kRoughness, false);
+  ReferenceCounted<Material> material =
+      MakeUberMaterial(kBlack, kWhite, kBlack, kBlack, kOpaque, kEtaIncident,
+                       kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(dynamic_cast<const SpecularBtdf<FresnelDielectric>*>(result));
 }
 
 TEST(UberMaterialTest, MicrofacetOnly) {
-  UberMaterial material(kBlack, kBlack, kBlack, kWhite, kOpaque, kEtaIncident,
-                        kEtaTransmitted, kRoughness, kRoughness, false);
+  ReferenceCounted<Material> material =
+      MakeUberMaterial(kBlack, kBlack, kBlack, kWhite, kOpaque, kEtaIncident,
+                       kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE((dynamic_cast<const MicrofacetBrdf<TrowbridgeReitzDistribution,
                                                  FresnelDielectric>*>(result)));
 }
 
 TEST(UberMaterialTest, DiffuseAndMicrofacetOnly) {
-  UberMaterial material(kBlack, kBlack, kWhite, kWhite, kOpaque, kEtaIncident,
-                        kEtaTransmitted, kRoughness, kRoughness, false);
+  ReferenceCounted<Material> material =
+      MakeUberMaterial(kBlack, kBlack, kWhite, kWhite, kOpaque, kEtaIncident,
+                       kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(result->IsDiffuse());
 }
 
 TEST(UberMaterialTest, SpecularOnly) {
-  UberMaterial material(kWhite, kWhite, kBlack, kBlack, kTranslucent,
-                        kEtaIncident, kEtaTransmitted, kRoughness, kRoughness,
-                        false);
+  ReferenceCounted<Material> material = MakeUberMaterial(
+      kWhite, kWhite, kBlack, kBlack, kTranslucent, kEtaIncident,
+      kEtaTransmitted, kRoughness, kRoughness, false);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_FALSE(result->IsDiffuse());
 }
 
 TEST(UberMaterialTest, All) {
-  UberMaterial material(kWhite, kWhite, kWhite, kWhite, kTranslucent,
-                        kEtaIncident, kEtaTransmitted, kRoughness, kRoughness,
-                        true);
+  ReferenceCounted<Material> material = MakeUberMaterial(
+      kWhite, kWhite, kWhite, kWhite, kTranslucent, kEtaIncident,
+      kEtaTransmitted, kRoughness, kRoughness, true);
 
   const Bxdf* result =
-      material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        GetSpectralAllocator(), GetBxdfAllocator());
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(result->IsDiffuse());
 }

@@ -29,12 +29,7 @@ class SubstrateMaterial final : public Material {
         specular_(std::move(specular)),
         roughness_u_(std::move(roughness_u)),
         roughness_v_(std::move(roughness_v)),
-        remap_roughness_(remap_roughness) {
-    assert(diffuse_);
-    assert(specular_);
-    assert(roughness_u_);
-    assert(roughness_v_);
-  }
+        remap_roughness_(remap_roughness) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
@@ -49,6 +44,15 @@ class SubstrateMaterial final : public Material {
   ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v_;
   bool remap_roughness_;
 };
+
+ReferenceCounted<Material> MakeSubstrateMaterial(
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        diffuse,
+    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+        specular,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
+    bool remap_roughness);
 
 }  // namespace materials
 }  // namespace iris
