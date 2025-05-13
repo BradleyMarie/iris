@@ -4,14 +4,15 @@
 #include <memory>
 
 #include "frontends/pbrt/integrators/result.h"
-#include "frontends/pbrt/object_builder.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::integrators {
+namespace iris {
+namespace pbrt_frontend {
 
-const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer);
+std::unique_ptr<IntegratorResult> ParseIntegrator(
+    const pbrt_proto::v3::Integrator& integrator);
 
-const ObjectBuilder<Result>& Default();
-
-}  // namespace iris::pbrt_frontend::integrators
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_INTEGRATORS_PARSE_

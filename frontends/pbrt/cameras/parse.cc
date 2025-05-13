@@ -1,60 +1,42 @@
 #include "frontends/pbrt/cameras/parse.h"
 
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 
 #include "frontends/pbrt/cameras/orthographic.h"
 #include "frontends/pbrt/cameras/perspective.h"
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/matrix_manager.h"
+#include "iris/camera.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
-namespace cameras {
-namespace {
 
-static const std::unordered_map<std::string_view,
-                                const std::unique_ptr<const ObjectBuilder<
-                                    std::function<std::unique_ptr<Camera>(
-                                        const std::pair<size_t, size_t>&)>,
-                                    const MatrixManager::Transformation&>>&>
-    g_cameras = {{"orthographic", g_orthographic_builder},
-                 {"perspective", g_perspective_builder}};
+using ::pbrt_proto::v3::Camera;
 
-}  // namespace
-
-const ObjectBuilder<
-    std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>,
-    const MatrixManager::Transformation&>&
-Parse(Tokenizer& tokenizer) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: Camera" << std::endl;
-    exit(EXIT_FAILURE);
+std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
+ParseCamera(const Camera& camera,
+            const MatrixManager::Transformation& transformation) {
+  std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
+      result;
+  switch (camera.camera_type_case()) {
+    case Camera::kEnvironment:
+      break;
+    case Camera::kOrthographic:
+      result = cameras::MakeOrthographic(camera.orthographic(), transformation);
+      break;
+    case Camera::kPerspective:
+      result = cameras::MakePerspective(camera.perspective(), transformation);
+      break;
+    case Camera::kRealistic:
+      break;
+    case Camera::CAMERA_TYPE_NOT_SET:
+      break;
   }
 
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to Camera must be a string" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto iter = g_cameras.find(*unquoted);
-  if (iter == g_cameras.end()) {
-    std::cerr << "ERROR: Unsupported type for directive Camera: " << *unquoted
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return *iter->second;
+  return result;
 }
 
-const ObjectBuilder<
-    std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>,
-    const MatrixManager::Transformation&>&
-Default() {
-  return *g_perspective_builder;
-}
-
-}  // namespace cameras
 }  // namespace pbrt_frontend
 }  // namespace iris

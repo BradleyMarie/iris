@@ -18,7 +18,6 @@
 #include "frontends/pbrt/renderable.h"
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
-#include "frontends/pbrt/tokenizer.h"
 #include "iris/camera.h"
 #include "iris/image_sampler.h"
 #include "iris/integrator.h"

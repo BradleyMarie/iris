@@ -2,70 +2,53 @@
 #define _FRONTENDS_PBRT_TEXTURE_MANAGER_
 
 #include <string>
-#include <string_view>
 #include <unordered_map>
 
+#include "frontends/pbrt/spectrum_manager.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/textures/texture2d.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
 
 class TextureManager {
  public:
-  ReferenceCounted<textures::ValueTexture2D<visual>>
-  AllocateUniformFloatTexture(visual value);
+  using FloatTexturePtr = ReferenceCounted<textures::ValueTexture2D<visual>>;
+  using ReflectorTexturePtr = ReferenceCounted<
+      textures::PointerTexture2D<Reflector, SpectralAllocator>>;
 
-  ReferenceCounted<Reflector> AllocateUniformReflector(visual reflectance);
+  explicit TextureManager(SpectrumManager& spectrum_manager)
+      : spectrum_manager_(spectrum_manager) {}
 
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-  AllocateUniformReflectorTexture(iris::ReferenceCounted<Reflector> reflector);
+  FloatTexturePtr AllocateFloatTexture(visual value);
+  FloatTexturePtr AllocateFloatTexture(
+      const pbrt_proto::v3::FloatTextureParameter& parameter);
 
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-  AllocateUniformReflectorTexture(visual reflectance);
+  ReflectorTexturePtr AllocateReflectorTexture(visual value);
+  ReflectorTexturePtr AllocateReflectorTexture(
+      const pbrt_proto::v3::Spectrum& spectrum);
+  ReflectorTexturePtr AllocateReflectorTexture(
+      const pbrt_proto::v3::SpectrumTextureParameter& parameter);
 
-  ReferenceCounted<textures::ValueTexture2D<visual>> GetFloatTexture(
-      std::string_view name) const;
+  FloatTexturePtr GetFloatTexture(const std::string& name) const;
+  ReflectorTexturePtr GetReflectorTexture(const std::string& name) const;
 
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-  GetReflectorTexture(std::string_view name) const;
-
-  void Put(std::string_view name,
-           ReferenceCounted<textures::ValueTexture2D<visual>> texture);
-
-  void Put(
-      std::string_view name,
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          texture);
+  void Put(const std::string& name, FloatTexturePtr texture);
+  void Put(const std::string& name, ReflectorTexturePtr texture);
 
  private:
-  std::unordered_map<visual, ReferenceCounted<textures::ValueTexture2D<visual>>>
-      uniform_float_textures_;
-
-  std::unordered_map<const Reflector*,
-                     ReferenceCounted<textures::PointerTexture2D<
-                         Reflector, SpectralAllocator>>>
-      uniform_reflector_textures_;
-
-  std::unordered_map<visual, ReferenceCounted<Reflector>>
-      uniform_value_reflectors_;
-
-  std::unordered_map<visual, ReferenceCounted<textures::PointerTexture2D<
-                                 Reflector, SpectralAllocator>>>
-      uniform_value_reflector_textures_;
-
-  std::unordered_map<std::string,
-                     ReferenceCounted<textures::ValueTexture2D<visual>>>
-      float_textures_;
-
-  std::unordered_map<std::string, ReferenceCounted<textures::PointerTexture2D<
-                                      Reflector, SpectralAllocator>>>
-      reflector_textures_;
-
-  mutable std::string temp_key_;
+  std::unordered_map<visual, FloatTexturePtr> constant_float_textures_;
+  std::unordered_map<const Reflector*, ReflectorTexturePtr>
+      constant_reflector_textures_;
+  std::unordered_map<std::string, FloatTexturePtr> float_textures_;
+  std::unordered_map<std::string, ReflectorTexturePtr> reflector_textures_;
+  SpectrumManager& spectrum_manager_;
 };
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_TEXTURE_MANAGER_

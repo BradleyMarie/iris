@@ -1,40 +1,67 @@
 #include "frontends/pbrt/integrators/parse.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-TEST(Parse, TooFewParameters) {
-  std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::integrators::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Integrator");
+namespace iris {
+namespace pbrt_frontend {
+namespace {
+
+using ::pbrt_proto::v3::Integrator;
+
+TEST(Default, Empty) {
+  Integrator integrator;
+  EXPECT_FALSE(ParseIntegrator(integrator));
 }
 
-TEST(Parse, NotAString) {
-  std::stringstream input("1.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::integrators::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to Integrator must be a string");
+TEST(ParseIntegrator, AmbientOcclusion) {
+  Integrator integrator;
+  integrator.mutable_ambientocclusion();
+  EXPECT_FALSE(ParseIntegrator(integrator));
 }
 
-TEST(Parse, InvalidType) {
-  std::stringstream input("\"NotAType\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::integrators::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported type for directive Integrator: NotAType");
+TEST(ParseIntegrator, Bdpt) {
+  Integrator integrator;
+  integrator.mutable_bdpt();
+  EXPECT_FALSE(ParseIntegrator(integrator));
 }
 
-TEST(Parse, Path) {
-  std::stringstream input("\"path\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  iris::pbrt_frontend::integrators::Parse(tokenizer);
+TEST(ParseIntegrator, DirectLighting) {
+  Integrator integrator;
+  integrator.mutable_directlighting();
+  EXPECT_FALSE(ParseIntegrator(integrator));
 }
 
-TEST(Default, Default) {
-  std::stringstream input("\"path\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EQ(&iris::pbrt_frontend::integrators::Parse(tokenizer),
-            &iris::pbrt_frontend::integrators::Default());
+TEST(ParseIntegrator, Mlt) {
+  Integrator integrator;
+  integrator.mutable_mlt();
+  EXPECT_FALSE(ParseIntegrator(integrator));
 }
+
+TEST(ParseIntegrator, Path) {
+  Integrator integrator;
+  integrator.mutable_path();
+  EXPECT_TRUE(ParseIntegrator(integrator));
+}
+
+TEST(ParseIntegrator, Sppm) {
+  Integrator integrator;
+  integrator.mutable_sppm();
+  EXPECT_FALSE(ParseIntegrator(integrator));
+}
+
+TEST(ParseIntegrator, VolPath) {
+  Integrator integrator;
+  integrator.mutable_volpath();
+  EXPECT_FALSE(ParseIntegrator(integrator));
+}
+
+TEST(ParseIntegrator, Whitted) {
+  Integrator integrator;
+  integrator.mutable_whitted();
+  EXPECT_FALSE(ParseIntegrator(integrator));
+}
+
+}  // namespace
+}  // namespace pbrt_frontend
+}  // namespace iris

@@ -1,84 +1,79 @@
 #include "frontends/pbrt/lights/infinite.h"
 
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+
+#include "frontends/pbrt/defaults.h"
+#include "frontends/pbrt/spectrum_manager.h"
+#include "iris/environmental_light.h"
 #include "iris/environmental_lights/image_environmental_light.h"
+#include "iris/matrix.h"
+#include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace lights {
-namespace {
 
 using ::iris::environmental_lights::ImageEnvironmentalLight;
+using ::pbrt_proto::v3::LightSource;
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"L", Parameter::SPECTRUM},
-        {"mapname", Parameter::FILE_PATH},
-        {"samples", Parameter::INTEGER},
-        {"scale", Parameter::SPECTRUM},
-};
+ReferenceCounted<EnvironmentalLight> MakeInfinite(
+    const pbrt_proto::v3::LightSource::Infinite& infinite,
+    const std::filesystem::path& search_root, const Matrix& model_to_world,
+    SpectrumManager& spectrum_manager) {
+  LightSource::Infinite with_defaults = Defaults().light_sources().infinite();
+  with_defaults.MergeFrom(infinite);
 
-static const Color kDefaultColor({1.0, 1.0, 1.0}, Color::Space::RGB);
-
-class InfiniteBuilder
-    : public ObjectBuilder<std::variant<ReferenceCounted<Light>,
-                                        ReferenceCounted<EnvironmentalLight>>,
-                           SpectrumManager&, const Matrix&> {
- public:
-  InfiniteBuilder() : ObjectBuilder(g_parameters) {}
-
-  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-        SpectrumManager& spectrum_manager,
-        const Matrix& model_to_world) const override;
-};
-
-std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-InfiniteBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters,
-    SpectrumManager& spectrum_manager, const Matrix& model_to_world) const {
-  visual_t default_luma;
-  std::vector<ReferenceCounted<Spectrum>> spectra = {
-      spectrum_manager.AllocateSpectrum(kDefaultColor, &default_luma)};
-  std::vector<visual> luma = {default_luma};
-  std::pair<size_t, size_t> size(1, 1);
-
-  // The interface for scaling the image should be cleaned up
-  ReferenceCounted<Spectrum> scalar = spectra.front();
-
-  auto l_iter = parameters.find("L");
-  if (l_iter != parameters.end()) {
-    scalar = l_iter->second.GetSpectra().front();
+  ReferenceCounted<Spectrum> l =
+      spectrum_manager.AllocateSpectrum(with_defaults.l());
+  if (!l) {
+    return ReferenceCounted<EnvironmentalLight>();
   }
 
-  auto scale_iter = parameters.find("scale");
-  if (scale_iter != parameters.end()) {
-    scalar = spectrum_manager.AllocateSpectrum(
-        scale_iter->second.GetSpectra().front(), scalar);
+  ReferenceCounted<Spectrum> scale =
+      spectrum_manager.AllocateSpectrum(with_defaults.scale());
+  if (!scale) {
+    return ReferenceCounted<EnvironmentalLight>();
   }
 
-  auto mapname_iter = parameters.find("mapname");
-  if (mapname_iter != parameters.end()) {
-    spectra.clear();
-    luma.clear();
+  visual_t scaled_luma;
+  ReferenceCounted<Spectrum> scaled =
+      spectrum_manager.AllocateSpectrum(l, scale, &scaled_luma);
+  if (!scaled) {
+    return ReferenceCounted<EnvironmentalLight>();
+  }
 
-    const auto extension =
-        mapname_iter->second.GetFilePaths().front().extension();
-    if (extension == ".png") {
+  std::vector<ReferenceCounted<Spectrum>> spectra;
+  std::vector<visual> luma;
+  std::pair<size_t, size_t> size;
+  if (with_defaults.has_mapname()) {
+    std::filesystem::path filename = with_defaults.mapname();
+    if (filename.is_relative()) {
+      filename = search_root / filename;
+    }
+
+    if (!std::filesystem::is_regular_file(filename)) {
+      std::cerr << "ERROR: Could not find file: " << with_defaults.mapname()
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    if (filename.extension() == ".png") {
       std::cerr << "ERROR: Unimplemented image file type: .png" << std::endl;
       exit(EXIT_FAILURE);
-    } else if (extension == ".tga") {
+    } else if (filename.extension() == ".tga") {
       std::cerr << "ERROR: Unimplemented image file type: .tga" << std::endl;
       exit(EXIT_FAILURE);
-    } else if (extension == ".exr") {
+    } else if (filename.extension() == ".exr") {
       float* values;
       int width, height;
       const char* error_message;
-      int error =
-          LoadEXR(&values, &width, &height,
-                  mapname_iter->second.GetFilePaths().front().native().c_str(),
-                  &error_message);
+      int error = LoadEXR(&values, &width, &height, filename.native().c_str(),
+                          &error_message);
       if (error < 0) {
         std::cerr << "ERROR: Image loading failed with error: " << error_message
                   << std::endl;
@@ -101,11 +96,11 @@ InfiniteBuilder::Build(
           }
 
           ReferenceCounted<Spectrum> pixel_spectrum =
-              spectrum_manager.AllocateSpectrum(Color{{r, g, b}, Color::RGB});
+              spectrum_manager.AllocateSpectrum(r, g, b);
 
           visual_t luma_value;
           spectra.push_back(spectrum_manager.AllocateSpectrum(
-              pixel_spectrum, scalar, &luma_value));
+              pixel_spectrum, scaled, &luma_value));
           luma.push_back(luma_value);
         }
       }
@@ -116,13 +111,13 @@ InfiniteBuilder::Build(
       size.second = static_cast<size_t>(width);
     } else {
       std::stringstream stream;
-      if (extension.empty()) {
-        stream << mapname_iter->second.GetFilePaths().front().filename();
+      if (filename.extension().empty()) {
+        stream << filename.filename();
         std::string filename = stream.str();
         std::cerr << "ERROR: Unsupported image file (no extension): "
                   << filename.substr(1, filename.size() - 2) << std::endl;
       } else {
-        stream << extension;
+        stream << filename.extension();
         std::string ext = stream.str();
         std::cerr << "ERROR: Unsupported image file type: "
                   << ext.substr(1, ext.size() - 2) << std::endl;
@@ -130,18 +125,16 @@ InfiniteBuilder::Build(
 
       exit(EXIT_FAILURE);
     }
+  } else {
+    spectra.push_back(scaled);
+    luma.push_back(scaled_luma);
+    size.first = 1;
+    size.second = 1;
   }
 
   return MakeReferenceCounted<ImageEnvironmentalLight>(std::move(spectra), luma,
                                                        size, model_to_world);
 }
-
-};  // namespace
-
-extern const std::unique_ptr<const ObjectBuilder<
-    std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>,
-    SpectrumManager&, const Matrix&>>
-    g_infinite_builder = std::make_unique<InfiniteBuilder>();
 
 }  // namespace lights
 }  // namespace pbrt_frontend

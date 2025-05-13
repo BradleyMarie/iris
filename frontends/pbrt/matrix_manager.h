@@ -6,47 +6,60 @@
 #include <unordered_map>
 #include <utility>
 
-#include "frontends/pbrt/tokenizer.h"
 #include "iris/matrix.h"
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
 
 class MatrixManager {
  public:
   MatrixManager();
   ~MatrixManager();
 
-  bool TryParse(Tokenizer& tokenizer);
+  // Types
+  enum class ActiveTransformation { START, END, ALL };
 
   struct Transformation {
     Matrix start;
     Matrix end;
   };
 
+  // Accessor
   const Transformation& Get();
 
-  void Push();
-  void Pop();
+  // Matrix Manipulation
+  void Identity();
+  void Translate(geometric x, geometric y, geometric z);
+  void Scale(geometric x, geometric y, geometric z);
+  void Rotate(geometric theta, geometric x, geometric y, geometric z);
+  void LookAt(geometric eye_x, geometric eye_y, geometric eye_z,
+              geometric look_x, geometric look_y, geometric look_z,
+              geometric up_x, geometric up_y, geometric up_z);
+  void CoordinateSystem(const std::string& name);
+  void CoordSysTransform(const std::string& name);
+  void Transform(geometric m00, geometric m01, geometric m02, geometric m03,
+                 geometric m10, geometric m11, geometric m12, geometric m13,
+                 geometric m20, geometric m21, geometric m22, geometric m23,
+                 geometric m30, geometric m31, geometric m32, geometric m33);
+  void ConcatTransform(geometric m00, geometric m01, geometric m02,
+                       geometric m03, geometric m10, geometric m11,
+                       geometric m12, geometric m13, geometric m20,
+                       geometric m21, geometric m22, geometric m23,
+                       geometric m30, geometric m31, geometric m32,
+                       geometric m33);
+
+  // Stack Manipulation
+  void ActiveTransform(ActiveTransformation active_transform);
+  void AttributeBegin();
+  void AttributeEnd();
+  void TransformBegin();
+  void TransformEnd();
 
  private:
-  enum class ActiveTransformation { START, END, ALL };
   enum class PushPopReason { ATTRIBUTE, TRANSFORM };
 
   void Push(PushPopReason reason);
   void Pop(PushPopReason reason);
-
-  void Identity(Tokenizer& tokenizer);
-  void Translate(Tokenizer& tokenizer);
-  void Scale(Tokenizer& tokenizer);
-  void Rotate(Tokenizer& tokenizer);
-  void LookAt(Tokenizer& tokenizer);
-  void CoordinateSystem(Tokenizer& tokenizer);
-  void CoordSysTransform(Tokenizer& tokenizer);
-  void Transform(Tokenizer& tokenizer);
-  void ConcatTransform(Tokenizer& tokenizer);
-  void ActiveTransform(Tokenizer& tokenizer);
-  void TransformBegin(Tokenizer& tokenizer);
-  void TransformEnd(Tokenizer& tokenizer);
 
   void Transform(const Matrix& m);
   void Set(const Matrix& m);
@@ -57,6 +70,7 @@ class MatrixManager {
   std::unordered_map<std::string, std::pair<Matrix, Matrix>> coord_systems_;
 };
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_MATRIX_MANAGER_

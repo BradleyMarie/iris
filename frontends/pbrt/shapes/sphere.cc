@@ -1,78 +1,54 @@
 #include "frontends/pbrt/shapes/sphere.h"
 
+#include <cmath>
+#include <cstdio>
+#include <iostream>
+#include <utility>
+#include <vector>
+
+#include "iris/emissive_material.h"
+#include "iris/geometry.h"
 #include "iris/geometry/sphere.h"
+#include "iris/material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::shapes {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
+namespace shapes {
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"radius", Parameter::FLOAT},
-};
+using ::iris::geometry::AllocateSphere;
+using ::pbrt_proto::v3::Shape;
 
-class SphereBuilder
-    : public ObjectBuilder<
-          std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-          const ReferenceCounted<iris::Material>&,
-          const ReferenceCounted<iris::Material>&,
-          const ReferenceCounted<iris::NormalMap>&,
-          const ReferenceCounted<iris::NormalMap>&,
-          const ReferenceCounted<EmissiveMaterial>&,
-          const ReferenceCounted<EmissiveMaterial>&, const Matrix&> {
- public:
-  SphereBuilder() : ObjectBuilder(g_parameters) {}
-
-  std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Build(
-      const std::unordered_map<std::string_view, Parameter>& parameters,
-      const ReferenceCounted<iris::Material>& front_material,
-      const ReferenceCounted<iris::Material>& back_material,
-      const ReferenceCounted<iris::NormalMap>& front_normal_map,
-      const ReferenceCounted<iris::NormalMap>& back_normal_map,
-      const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
-      const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
-      const Matrix& model_to_world) const override;
-};
-
-std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> SphereBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters,
-    const ReferenceCounted<iris::Material>& front_material,
-    const ReferenceCounted<iris::Material>& back_material,
-    const ReferenceCounted<iris::NormalMap>& front_normal_map,
-    const ReferenceCounted<iris::NormalMap>& back_normal_map,
+std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeSphere(
+    const Shape::Sphere& sphere, const Matrix& model_to_world,
+    const ReferenceCounted<Material>& front_material,
+    const ReferenceCounted<Material>& back_material,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
-    const Matrix& model_to_world) const {
-  geometric radius = 1.0;
-
-  auto radius_iter = parameters.find("radius");
-  if (radius_iter != parameters.end()) {
-    radius = radius_iter->second.GetFloatValues().front();
-    if (!std::isfinite(radius)) {
-      std::cerr << "ERROR: Out of range value for parameter: radius"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
+    const ReferenceCounted<NormalMap>& front_normal_map,
+    const ReferenceCounted<NormalMap>& back_normal_map) {
+  if (!std::isfinite(sphere.radius()) || sphere.radius() < 0.0) {
+    std::cerr << "ERROR: Out of range value for parameter: radius" << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  auto sphere = iris::geometry::AllocateSphere(
-      Point(0.0, 0.0, 0.0), radius, front_material, back_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+  if (sphere.radius() == 0.0) {
+    return std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>(
+        {}, model_to_world);
+  }
 
-  return std::make_pair(std::vector<ReferenceCounted<Geometry>>({sphere}),
+  ReferenceCounted<Geometry> geometry = AllocateSphere(
+      Point(0.0, 0.0, 0.0), static_cast<geometric>(sphere.radius()),
+      front_material, back_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
+
+  return std::make_pair(std::vector<ReferenceCounted<Geometry>>({geometry}),
                         model_to_world);
 }
 
-};  // namespace
-
-extern const std::unique_ptr<const ObjectBuilder<
-    std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-    const ReferenceCounted<iris::Material>&,
-    const ReferenceCounted<iris::Material>&,
-    const ReferenceCounted<iris::NormalMap>&,
-    const ReferenceCounted<iris::NormalMap>&,
-    const ReferenceCounted<EmissiveMaterial>&,
-    const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>
-    g_sphere_builder = std::make_unique<SphereBuilder>();
-
-}  // namespace iris::pbrt_frontend::shapes
+}  // namespace shapes
+}  // namespace pbrt_frontend
+}  // namespace iris

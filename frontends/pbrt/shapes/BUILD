@@ -17,6 +17,7 @@ cc_test(
     deps = [
         ":alpha_adapter",
         "//iris:reference_counted",
+        "//iris/textures:texture2d",
         "@googletest//:gtest_main",
     ],
 )
@@ -31,11 +32,17 @@ cc_library(
         ":sphere",
         ":trianglemesh",
         "//frontends/pbrt:material_manager",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
+        "//frontends/pbrt:spectrum_manager",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/materials:parse",
+        "//frontends/pbrt/materials:result",
+        "//iris:emissive_material",
         "//iris:geometry",
+        "//iris:material",
         "//iris:matrix",
+        "//iris:normal_map",
         "//iris:reference_counted",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -44,7 +51,17 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
+        "//frontends/pbrt:material_manager",
+        "//frontends/pbrt:spectrum_manager",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/materials:result",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:emissive_material",
+        "//iris:geometry",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:reference_counted",
         "@googletest//:gtest_main",
     ],
 )
@@ -55,11 +72,16 @@ cc_library(
     hdrs = ["plymesh.h"],
     deps = [
         ":alpha_adapter",
-        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:emissive_material",
         "//iris:geometry",
+        "//iris:material",
         "//iris:matrix",
+        "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/geometry:triangle_mesh",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
         "@plyodine//plyodine/readers:triangle_mesh_reader",
     ],
 )
@@ -69,15 +91,20 @@ cc_test(
     srcs = ["plymesh_test.cc"],
     data = [
         "test_data/empty.ply",
-        "test_data/quads.ply",
         "test_data/triangles.ply",
     ],
     deps = [
         ":plymesh",
-        "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:emissive_material",
+        "//iris:geometry",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:reference_counted",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -86,11 +113,14 @@ cc_library(
     srcs = ["sphere.cc"],
     hdrs = ["sphere.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
+        "//iris:emissive_material",
         "//iris:geometry",
+        "//iris:material",
         "//iris:matrix",
+        "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/geometry:sphere",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -99,9 +129,14 @@ cc_test(
     srcs = ["sphere_test.cc"],
     deps = [
         ":sphere",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:emissive_material",
+        "//iris:geometry",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:reference_counted",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -111,11 +146,16 @@ cc_library(
     hdrs = ["trianglemesh.h"],
     deps = [
         ":alpha_adapter",
-        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:emissive_material",
         "//iris:geometry",
+        "//iris:material",
         "//iris:matrix",
+        "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/geometry:triangle_mesh",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -124,8 +164,14 @@ cc_test(
     srcs = ["trianglemesh_test.cc"],
     deps = [
         ":trianglemesh",
-        "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:emissive_material",
+        "//iris:geometry",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:reference_counted",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

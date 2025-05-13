@@ -7,9 +7,12 @@ cc_library(
     srcs = ["diffuse.cc"],
     hdrs = ["diffuse.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:spectrum_manager",
+        "//iris:emissive_material",
         "//iris:reference_counted",
         "//iris/emissive_materials:constant_emissive_material",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -18,9 +21,9 @@ cc_test(
     srcs = ["diffuse_test.cc"],
     deps = [
         ":diffuse",
-        "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -31,10 +34,10 @@ cc_library(
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":diffuse",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:tokenizer",
+        "//frontends/pbrt:spectrum_manager",
         "//iris:emissive_material",
         "//iris:reference_counted",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -43,6 +46,8 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

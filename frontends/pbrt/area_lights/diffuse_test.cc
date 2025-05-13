@@ -1,67 +1,60 @@
 #include "frontends/pbrt/area_lights/diffuse.h"
 
-#include "frontends/pbrt/build_objects.h"
+#include <cstdlib>
+
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-static iris::pbrt_frontend::TextureManager g_texture_manager;
+namespace iris {
+namespace pbrt_frontend {
+namespace area_lights {
+namespace {
+
+using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
+using ::pbrt_proto::v3::AreaLightSource;
+using ::testing::ExitedWithCode;
 
 TEST(Diffuse, Empty) {
-  std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  TestSpectrumManager spectrum_manager;
+  AreaLightSource::Diffuse diffuse;
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto result0 = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager));
-  EXPECT_TRUE(result0.first);
-  EXPECT_FALSE(result0.second);
+  auto [front, back] = MakeDiffuse(diffuse, spectrum_manager);
+  EXPECT_TRUE(front);
+  EXPECT_FALSE(back);
 }
 
 TEST(Diffuse, TooLowSamples) {
-  std::stringstream input("\"integer samples\" 0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  TestSpectrumManager spectrum_manager;
+  AreaLightSource::Diffuse diffuse;
+  diffuse.set_samples(0);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-          std::filesystem::current_path(), spectrum_manager, texture_manager,
-          static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager)),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: samples");
+  EXPECT_EXIT(MakeDiffuse(diffuse, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: samples");
 }
 
 TEST(Diffuse, TooHighSamples) {
-  std::stringstream input("\"integer samples\" 256");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  TestSpectrumManager spectrum_manager;
+  AreaLightSource::Diffuse diffuse;
+  diffuse.set_samples(256);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-          std::filesystem::current_path(), spectrum_manager, texture_manager,
-          static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager)),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: samples");
+  EXPECT_EXIT(MakeDiffuse(diffuse, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: samples");
 }
 
-TEST(Diffuse, SetsAll) {
-  std::stringstream input(
-      "\"color L\" [2.0 2.0 2.0] \"integer samples\" 2 "
-      "\"bool twosided\" \"true\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(Diffuse, TwoSided) {
+  TestSpectrumManager spectrum_manager;
+  AreaLightSource::Diffuse diffuse;
+  diffuse.set_twosided(true);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto result0 = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::area_lights::g_diffuse_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      static_cast<iris::pbrt_frontend::SpectrumManager&>(spectrum_manager));
-  EXPECT_TRUE(result0.first);
-  EXPECT_TRUE(result0.second);
+  auto [front, back] = MakeDiffuse(diffuse, spectrum_manager);
+  EXPECT_TRUE(front);
+  EXPECT_TRUE(back);
 }
+
+}  // namespace
+}  // namespace area_lights
+}  // namespace pbrt_frontend
+}  // namespace iris

@@ -9,9 +9,10 @@
 
 #include "iris/framebuffer.h"
 
-namespace iris::pbrt_frontend::film {
+namespace iris {
+namespace pbrt_frontend {
 
-struct Result {
+struct FilmResult {
   std::filesystem::path filename;
   std::pair<size_t, size_t> resolution;
   std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
@@ -21,6 +22,7 @@ struct Result {
   std::optional<visual_t> max_sample_luminance;
 };
 
-}  // namespace iris::pbrt_frontend::film
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_FILM_RESULT_

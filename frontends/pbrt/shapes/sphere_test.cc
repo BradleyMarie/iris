@@ -1,39 +1,60 @@
 #include "frontends/pbrt/shapes/sphere.h"
 
-#include "frontends/pbrt/build_objects.h"
-#include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/emissive_material.h"
+#include "iris/geometry.h"
+#include "iris/material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-TEST(Sphere, Empty) {
-  std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+namespace iris {
+namespace pbrt_frontend {
+namespace shapes {
+namespace {
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  const iris::ReferenceCounted<iris::Material> material;
-  const iris::ReferenceCounted<iris::NormalMap> normal;
-  const iris::ReferenceCounted<iris::EmissiveMaterial> emissive;
+using ::pbrt_proto::v3::Shape;
+using ::testing::ExitedWithCode;
 
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::shapes::g_sphere_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      material, material, normal, normal, emissive, emissive,
-      iris::Matrix::Identity());
+TEST(MakeSphere, Empty) {
+  Shape::Sphere sphere;
+
+  auto result = MakeSphere(
+      sphere, Matrix::Identity(), ReferenceCounted<Material>(),
+      ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
+      ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
+      ReferenceCounted<NormalMap>());
+  EXPECT_EQ(1u, result.first.size());
 }
 
-TEST(Sphere, WithRadius) {
-  std::stringstream input("\"float radius\" 0.5");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(MakeSphere, BadRadius) {
+  Shape::Sphere sphere;
+  sphere.set_radius(-1.0);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  const iris::ReferenceCounted<iris::Material> material;
-  const iris::ReferenceCounted<iris::NormalMap> normal;
-  const iris::ReferenceCounted<iris::EmissiveMaterial> emissive;
-
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::shapes::g_sphere_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      material, material, normal, normal, emissive, emissive,
-      iris::Matrix::Identity());
+  EXPECT_EXIT(
+      MakeSphere(sphere, Matrix::Identity(), ReferenceCounted<Material>(),
+                 ReferenceCounted<Material>(),
+                 ReferenceCounted<EmissiveMaterial>(),
+                 ReferenceCounted<EmissiveMaterial>(),
+                 ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>()),
+      ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Out of range value for parameter: radius");
 }
+
+TEST(MakeSphere, ZeroRadius) {
+  Shape::Sphere sphere;
+  sphere.set_radius(0.0);
+
+  auto result = MakeSphere(
+      sphere, Matrix::Identity(), ReferenceCounted<Material>(),
+      ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
+      ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
+      ReferenceCounted<NormalMap>());
+  EXPECT_TRUE(result.first.empty());
+}
+
+}  // namespace
+}  // namespace shapes
+}  // namespace pbrt_frontend
+}  // namespace iris

@@ -1,20 +1,30 @@
 #include "frontends/pbrt/shapes/plymesh.h"
 
 #include <fstream>
+#include <utility>
 #include <vector>
 
+#include "frontends/pbrt/defaults.h"
 #include "frontends/pbrt/shapes/alpha_adapter.h"
+#include "frontends/pbrt/texture_manager.h"
+#include "iris/emissive_material.h"
+#include "iris/geometry.h"
 #include "iris/geometry/triangle_mesh.h"
+#include "iris/material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 #include "plyodine/readers/triangle_mesh_reader.h"
 
-namespace iris::pbrt_frontend::shapes {
+namespace iris {
+namespace pbrt_frontend {
+namespace shapes {
 namespace {
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"alpha", Parameter::FLOAT_TEXTURE},
-        {"filename", Parameter::FILE_PATH},
-};
+using ::iris::geometry::AllocateTriangleMesh;
+using ::iris::textures::ValueTexture2D;
+using ::pbrt_proto::v3::Shape;
 
 class TriangleMeshReader final
     : public plyodine::TriangleMeshReader<geometric, geometric, geometric,
@@ -65,48 +75,33 @@ class TriangleMeshReader final
   const Matrix& model_to_world_;
 };
 
-class PlyMeshBuilder
-    : public ObjectBuilder<
-          std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-          const ReferenceCounted<iris::Material>&,
-          const ReferenceCounted<iris::Material>&,
-          const ReferenceCounted<iris::NormalMap>&,
-          const ReferenceCounted<iris::NormalMap>&,
-          const ReferenceCounted<EmissiveMaterial>&,
-          const ReferenceCounted<EmissiveMaterial>&, const Matrix&> {
- public:
-  PlyMeshBuilder() : ObjectBuilder(g_parameters) {}
+}  // namespace
 
-  std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Build(
-      const std::unordered_map<std::string_view, Parameter>& parameters,
-      const ReferenceCounted<iris::Material>& front_material,
-      const ReferenceCounted<iris::Material>& back_material,
-      const ReferenceCounted<iris::NormalMap>& front_normal_map,
-      const ReferenceCounted<iris::NormalMap>& back_normal_map,
-      const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
-      const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
-      const Matrix& model_to_world) const override;
-};
-
-std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>
-PlyMeshBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters,
-    const ReferenceCounted<iris::Material>& front_material,
-    const ReferenceCounted<iris::Material>& back_material,
-    const ReferenceCounted<iris::NormalMap>& front_normal_map,
-    const ReferenceCounted<iris::NormalMap>& back_normal_map,
+std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
+    const pbrt_proto::v3::Shape::PlyMesh& plymesh, const Matrix& model_to_world,
+    const ReferenceCounted<Material>& front_material,
+    const ReferenceCounted<Material>& back_material,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
-    const Matrix& model_to_world) const {
-  auto filename_iter = parameters.find("filename");
-  if (filename_iter == parameters.end()) {
-    std::cerr << "ERROR: Missing required plymesh parameter: filename"
-              << std::endl;
+    const ReferenceCounted<NormalMap>& front_normal_map,
+    const ReferenceCounted<NormalMap>& back_normal_map,
+    const std::filesystem::path& search_root, TextureManager& texture_manager) {
+  Shape::PlyMesh with_defaults = Defaults().shapes().plymesh();
+  with_defaults.MergeFrom(plymesh);
+
+  std::filesystem::path path = with_defaults.filename();
+  if (path.is_relative()) {
+    path = search_root / path;
+  }
+
+  if (!std::filesystem::is_regular_file(path)) {
+    std::cerr
+        << "ERROR: Could not open file specified by plymesh parameter: filename"
+        << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  std::ifstream file_stream(filename_iter->second.GetFilePaths(1).front(),
-                            std::ios::in | std::ios::binary);
+  std::ifstream file_stream(path, std::ios::in | std::ios::binary);
   if (file_stream.fail()) {
     std::cerr
         << "ERROR: Could not open file specified by plymesh parameter: filename"
@@ -121,22 +116,21 @@ PlyMeshBuilder::Build(
     exit(EXIT_FAILURE);
   }
 
-  ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask;
-  auto alpha = parameters.find("alpha");
-  if (alpha != parameters.end()) {
-    alpha_mask = MakeReferenceCounted<internal::AlphaAdapter>(
-        alpha->second.GetFloatTextures().front());
+  ReferenceCounted<ValueTexture2D<bool>> alpha_mask;
+  if (with_defaults.has_alpha() && with_defaults.alpha().float_value() <= 1.0) {
+    alpha_mask = MakeReferenceCounted<AlphaAdapter>(
+        texture_manager.AllocateFloatTexture(with_defaults.alpha()));
   }
 
-  std::vector<iris::ReferenceCounted<iris::Geometry>> triangles;
+  std::vector<ReferenceCounted<Geometry>> triangles;
   if (model_to_world.SwapsHandedness()) {
-    triangles = iris::geometry::AllocateTriangleMesh(
+    triangles = AllocateTriangleMesh(
         reader.positions, reader.faces, reader.normals, reader.uvs,
         std::move(alpha_mask), back_material, front_material,
         back_emissive_material, front_emissive_material, back_normal_map,
         front_normal_map);
   } else {
-    triangles = iris::geometry::AllocateTriangleMesh(
+    triangles = AllocateTriangleMesh(
         reader.positions, reader.faces, reader.normals, reader.uvs,
         std::move(alpha_mask), front_material, back_material,
         front_emissive_material, back_emissive_material, front_normal_map,
@@ -146,16 +140,6 @@ PlyMeshBuilder::Build(
   return std::make_pair(std::move(triangles), Matrix::Identity());
 }
 
-}  // namespace
-
-extern const std::unique_ptr<const ObjectBuilder<
-    std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-    const ReferenceCounted<iris::Material>&,
-    const ReferenceCounted<iris::Material>&,
-    const ReferenceCounted<iris::NormalMap>&,
-    const ReferenceCounted<iris::NormalMap>&,
-    const ReferenceCounted<EmissiveMaterial>&,
-    const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>
-    g_plymesh_builder = std::make_unique<PlyMeshBuilder>();
-
-}  // namespace iris::pbrt_frontend::shapes
+}  // namespace shapes
+}  // namespace pbrt_frontend
+}  // namespace iris

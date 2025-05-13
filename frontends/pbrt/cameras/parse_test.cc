@@ -1,54 +1,53 @@
 #include "frontends/pbrt/cameras/parse.h"
 
+#include "frontends/pbrt/matrix_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
-namespace cameras {
 namespace {
 
+using ::pbrt_proto::v3::Camera;
 using ::testing::ExitedWithCode;
 
-TEST(Parse, TooFewParameters) {
-  std::stringstream input("");
-  Tokenizer tokenizer(input);
-  EXPECT_EXIT(Parse(tokenizer), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Camera");
+MatrixManager::Transformation Identity() {
+  return {Matrix::Identity(), Matrix::Identity()};
 }
 
-TEST(Parse, NotAString) {
-  std::stringstream input("1.0");
-  Tokenizer tokenizer(input);
-  EXPECT_EXIT(Parse(tokenizer), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to Camera must be a string");
+TEST(ParseCamera, Empty) {
+  Camera camera;
+  EXPECT_FALSE(ParseCamera(camera, Identity()));
 }
 
-TEST(Parse, InvalidType) {
-  std::stringstream input("\"NotAType\"");
-  Tokenizer tokenizer(input);
-  EXPECT_EXIT(Parse(tokenizer), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported type for directive Camera: NotAType");
+TEST(ParseCamera, Environment) {
+  Camera camera;
+  camera.mutable_environment();
+
+  EXPECT_FALSE(ParseCamera(camera, Identity()));
 }
 
-TEST(Parse, Orthographic) {
-  std::stringstream input("\"orthographic\"");
-  Tokenizer tokenizer(input);
-  Parse(tokenizer);
+TEST(ParseCamera, Orthographic) {
+  Camera camera;
+  camera.mutable_orthographic();
+
+  EXPECT_TRUE(ParseCamera(camera, Identity()));
 }
 
-TEST(Parse, Perspective) {
-  std::stringstream input("\"perspective\"");
-  Tokenizer tokenizer(input);
-  Parse(tokenizer);
+TEST(ParseCamera, Perspective) {
+  Camera camera;
+  camera.mutable_perspective();
+
+  EXPECT_TRUE(ParseCamera(camera, Identity()));
 }
 
-TEST(Default, Default) {
-  std::stringstream input("\"perspective\"");
-  Tokenizer tokenizer(input);
-  EXPECT_EQ(&Parse(tokenizer), &Default());
+TEST(ParseCamera, Realistic) {
+  Camera camera;
+  camera.mutable_realistic();
+
+  EXPECT_FALSE(ParseCamera(camera, Identity()));
 }
 
 }  // namespace
-}  // namespace cameras
 }  // namespace pbrt_frontend
 }  // namespace iris

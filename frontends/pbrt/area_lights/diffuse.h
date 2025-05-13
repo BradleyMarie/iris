@@ -1,21 +1,24 @@
 #ifndef _FRONTENDS_PBRT_AREA_LIGHTS_DIFFUSE_
 #define _FRONTENDS_PBRT_AREA_LIGHTS_DIFFUSE_
 
-#include <memory>
 #include <utility>
 
-#include "frontends/pbrt/object_builder.h"
+#include "frontends/pbrt/spectrum_manager.h"
 #include "iris/emissive_material.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::area_lights {
+namespace iris {
+namespace pbrt_frontend {
+namespace area_lights {
 
-extern const std::unique_ptr<
-    const ObjectBuilder<std::pair<iris::ReferenceCounted<EmissiveMaterial>,
-                                  iris::ReferenceCounted<EmissiveMaterial>>,
-                        SpectrumManager&>>
-    g_diffuse_builder;
+std::pair<ReferenceCounted<EmissiveMaterial>,
+          ReferenceCounted<EmissiveMaterial>>
+MakeDiffuse(const pbrt_proto::v3::AreaLightSource::Diffuse& diffuse,
+            SpectrumManager& spectrum_manager);
 
-}  // namespace iris::pbrt_frontend::area_lights
+}  // namespace area_lights
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_AREA_LIGHTS_DIFFUSE_

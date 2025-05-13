@@ -7,9 +7,10 @@ cc_library(
     srcs = ["halton.cc"],
     hdrs = ["halton.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
         "//iris:image_sampler",
         "//iris/image_samplers:halton_image_sampler",
+        "//third_party/gruenschloss/halton",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -18,9 +19,8 @@ cc_test(
     srcs = ["halton_test.cc"],
     deps = [
         ":halton",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -34,9 +34,8 @@ cc_library(
         ":random",
         ":sobol",
         ":stratified",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:tokenizer",
         "//iris:image_sampler",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -46,6 +45,7 @@ cc_test(
     deps = [
         ":parse",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -54,9 +54,9 @@ cc_library(
     srcs = ["random.cc"],
     hdrs = ["random.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
         "//iris:image_sampler",
         "//iris/image_samplers:random_image_sampler",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -65,9 +65,8 @@ cc_test(
     srcs = ["random_test.cc"],
     deps = [
         ":random",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -76,9 +75,9 @@ cc_library(
     srcs = ["sobol.cc"],
     hdrs = ["sobol.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
         "//iris:image_sampler",
         "//iris/image_samplers:sobol_image_sampler",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -87,9 +86,8 @@ cc_test(
     srcs = ["sobol_test.cc"],
     deps = [
         ":sobol",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -98,9 +96,9 @@ cc_library(
     srcs = ["stratified.cc"],
     hdrs = ["stratified.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
         "//iris:image_sampler",
         "//iris/image_samplers:stratified_image_sampler",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -109,8 +107,7 @@ cc_test(
     srcs = ["stratified_test.cc"],
     deps = [
         ":stratified",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

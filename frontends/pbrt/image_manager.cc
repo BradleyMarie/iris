@@ -8,7 +8,8 @@
 
 #include "third_party/stb/stb_image.h"
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
 namespace {
 
 visual GammaCorrect(visual_t value) {
@@ -479,9 +480,9 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
             b = GammaCorrect(b);
           }
 
-          Color color({r, g, b}, Color::RGB);
-          float_values.push_back(std::min(
-              static_cast<visual>(1.0), spectrum_manager_.ComputeLuma(color)));
+          float_values.push_back(
+              std::min(static_cast<visual>(1.0),
+                       spectrum_manager_.ComputeLuma(r, g, b)));
         }
       }
     }
@@ -514,9 +515,10 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
           stbi_uc r = values[num_channels * ((ny - y - 1) * nx + x) + 0];
           stbi_uc g = values[num_channels * ((ny - y - 1) * nx + x) + 1];
           stbi_uc b = values[num_channels * ((ny - y - 1) * nx + x) + 2];
-          Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
-          float_values.push_back(std::min(
-              static_cast<visual>(1.0), spectrum_manager_.ComputeLuma(color)));
+          float_values.push_back(
+              std::min(static_cast<visual>(1.0),
+                       spectrum_manager_.ComputeLuma(float_lut[r], float_lut[g],
+                                                     float_lut[b])));
         }
       }
     }
@@ -566,8 +568,7 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
             grey = GammaCorrect(grey);
           }
 
-          reflector_values.push_back(
-              texture_manager_.AllocateUniformReflector(grey));
+          reflector_values.push_back(spectrum_manager_.AllocateReflector(grey));
         }
       }
     } else {
@@ -588,9 +589,8 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
             b = GammaCorrect(b);
           }
 
-          Color color({r, g, b}, Color::RGB);
           reflector_values.push_back(
-              spectrum_manager_.AllocateReflector(color));
+              spectrum_manager_.AllocateReflector(r, g, b));
         }
       }
     }
@@ -613,7 +613,7 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
     if (num_channels == 1 || num_channels == 2) {
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
-          reflector_values.push_back(texture_manager_.AllocateUniformReflector(
+          reflector_values.push_back(spectrum_manager_.AllocateReflector(
               float_lut[values[num_channels * ((ny - y - 1) * nx + x)]]));
         }
       }
@@ -629,8 +629,8 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
 
           ReferenceCounted<Reflector>& reflector = reflector_map[key];
           if (!reflector) {
-            Color color({float_lut[r], float_lut[g], float_lut[b]}, Color::RGB);
-            reflector = spectrum_manager_.AllocateReflector(color);
+            reflector = spectrum_manager_.AllocateReflector(
+                float_lut[r], float_lut[g], float_lut[b]);
           }
 
           reflector_values.push_back(reflector);
@@ -649,4 +649,5 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
   return result;
 }
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris

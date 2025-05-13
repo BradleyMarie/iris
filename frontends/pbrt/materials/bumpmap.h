@@ -1,18 +1,20 @@
 #ifndef _FRONTENDS_PBRT_MATERIALS_BUMPMAP_
 #define _FRONTENDS_PBRT_MATERIALS_BUMPMAP_
 
-#include <utility>
+#include <array>
 
+#include "frontends/pbrt/texture_manager.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "iris/textures/texture2d.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace materials {
 
-std::pair<ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>> MakeBumpMap(
-    const ReferenceCounted<textures::ValueTexture2D<visual>>& texture);
+std::array<ReferenceCounted<NormalMap>, 2> MakeBumpMap(
+    const pbrt_proto::v3::FloatTextureParameter& bumpmap,
+    TextureManager& texture_manager);
 
 }  // namespace materials
 }  // namespace pbrt_frontend

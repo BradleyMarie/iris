@@ -3,8 +3,8 @@ module(name = "iris", version = "head", compatibility_level = 1)
 
 # Bazel Central Registry dependencies
 bazel_dep(name = "abseil-cpp", version = "20240722.0")
-bazel_dep(name = "googletest", version = "1.15.2")
-bazel_dep(name = "plyodine", version = "1.0.3")
+bazel_dep(name = "googletest", version = "1.17.0")
+bazel_dep(name = "plyodine", version = "1.0.4")
 bazel_dep(name = "rules_cc", version = "0.1.1")
 
 # Git Dependencies
@@ -20,4 +20,11 @@ git_override(
     module_name = "libspd",
     remote = "https://github.com/bradleymarie/libspd.git",
     commit = "4fbad05b280bb54a4e97b5cef044764bc8c99f43",
+)
+
+bazel_dep(name = "pbrt_proto")
+git_override(
+    module_name = "pbrt_proto",
+    remote = "https://github.com/bradleymarie/pbrt_proto.git",
+    commit = "1ccdff5a1784f861640999f27563208f49639537",
 )

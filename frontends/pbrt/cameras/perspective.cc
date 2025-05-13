@@ -1,130 +1,84 @@
 #include "frontends/pbrt/cameras/perspective.h"
 
+#include <cstdint>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
 #include <numbers>
+#include <optional>
+#include <utility>
 
+#include "frontends/pbrt/matrix_manager.h"
+#include "iris/camera.h"
 #include "iris/cameras/pinhole_camera.h"
 #include "iris/cameras/thin_lens_camera.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace cameras {
-namespace {
 
-constexpr geometric_t kDefaultFocalDistance = 1000000.0;
-constexpr geometric_t kDefaultLensRadius = 0.0;
+using ::iris::cameras::PinholeCamera;
+using ::iris::cameras::ThinLensCamera;
+using ::pbrt_proto::v3::Camera;
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"focaldistance", Parameter::FLOAT},
-        {"fov", Parameter::FLOAT},
-        {"frameaspectratio", Parameter::FLOAT},
-        {"halffov", Parameter::FLOAT},
-        {"lensradius", Parameter::FLOAT},
-        {"shutteropen", Parameter::FLOAT},
-        {"shutterclose", Parameter::FLOAT},
-};
+std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
+MakePerspective(const Camera::Perspective& perspective,
+                const MatrixManager::Transformation& transformation) {
+  if (perspective.focaldistance() <= 0.0) {
+    std::cerr << "ERROR: Out of range value for parameter: focaldistance"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-class PerspectiveObjectBuilder
-    : public ObjectBuilder<std::function<std::unique_ptr<Camera>(
-                               const std::pair<size_t, size_t>&)>,
-                           const MatrixManager::Transformation&> {
- public:
-  PerspectiveObjectBuilder() : ObjectBuilder(g_parameters) {}
+  if (perspective.fov() <= 0.0 || perspective.fov() >= 180.0) {
+    std::cerr << "ERROR: Out of range value for parameter: fov" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-  std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>
-  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-        const MatrixManager::Transformation& transformation) const override;
-};
+  if (perspective.lensradius() < 0.0) {
+    std::cerr << "ERROR: Out of range value for parameter: lensradius"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>
-PerspectiveObjectBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MatrixManager::Transformation& transformation) const {
   std::optional<geometric_t> aspect_ratio;
-  geometric_t focus_distance = kDefaultFocalDistance;
-  std::optional<geometric_t> fov;
-  std::optional<geometric_t> half_fov;
-  geometric_t lens_radius = kDefaultLensRadius;
-  std::optional<std::array<geometric_t, 4>> screen_window;
-
-  auto focaldistance = parameters.find("focaldistance");
-  if (focaldistance != parameters.end()) {
-    auto value = focaldistance->second.GetFloatValues(1).front();
-    if (value <= 0.0) {
-      std::cerr << "ERROR: Out of range value for parameter: focaldistance"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    focus_distance = static_cast<geometric_t>(value);
-  }
-
-  auto fullfov = parameters.find("fov");
-  if (fullfov != parameters.end()) {
-    auto value = fullfov->second.GetFloatValues(1).front();
-    if (value <= 0.0 || value >= 180.0) {
-      std::cerr << "ERROR: Out of range value for parameter: fov" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    fov = static_cast<geometric_t>(value);
-  }
-
-  auto frameaspectratio = parameters.find("frameaspectratio");
-  if (frameaspectratio != parameters.end()) {
-    auto value = frameaspectratio->second.GetFloatValues(1).front();
-    if (value <= 0.0) {
+  if (perspective.has_frameaspectratio()) {
+    if (perspective.frameaspectratio() <= 0.0) {
       std::cerr << "ERROR: Out of range value for parameter: frameaspectratio"
                 << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    aspect_ratio = static_cast<geometric_t>(value);
+    aspect_ratio = perspective.frameaspectratio();
   }
 
-  auto halffov = parameters.find("halffov");
-  if (halffov != parameters.end()) {
-    auto value = halffov->second.GetFloatValues(1).front();
-    if (value <= 0.0 || value >= 90.0) {
-      std::cerr << "ERROR: Out of range value for parameter: halffov"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    half_fov = static_cast<geometric_t>(value);
-  }
-
-  auto lensradius = parameters.find("lensradius");
-  if (lensradius != parameters.end()) {
-    auto value = lensradius->second.GetFloatValues(1).front();
-    if (value < 0.0) {
-      std::cerr << "ERROR: Out of range value for parameter: lensradius"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    lens_radius = static_cast<geometric_t>(value);
-  }
-
-  if (fov && half_fov) {
+  if (perspective.has_fov() && perspective.has_halffov()) {
     std::cerr << "ERROR: Cannot specify parameters together: fov, halffov"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (fov) {
-    half_fov = static_cast<geometric_t>(fov.value() * 0.5);
-  }
+  geometric_t half_fov;
+  if (perspective.has_halffov()) {
+    if (perspective.halffov() <= 0.0 || perspective.halffov() >= 90.0) {
+      std::cerr << "ERROR: Out of range value for parameter: halffov"
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
 
-  if (half_fov) {
-    *half_fov *= static_cast<geometric_t>(std::numbers::pi / 180.0);
+    half_fov = static_cast<geometric_t>(perspective.halffov() *
+                                        (std::numbers::pi / 180.0));
   } else {
-    half_fov = static_cast<geometric_t>(std::numbers::pi / 4.0);
+    half_fov = static_cast<geometric_t>(perspective.fov() *
+                                        (std::numbers::pi / 360.0));
   }
 
-  return [aspect_ratio, half_fov, focus_distance, lens_radius, screen_window,
+  return [aspect_ratio, half_fov, focus_distance = perspective.focaldistance(),
+          lens_radius = perspective.lensradius(),
           transformation](const std::pair<size_t, size_t>& image_dimensions)
-             -> std::unique_ptr<Camera> {
+             -> std::unique_ptr<iris::Camera> {
     geometric_t actual_aspect_ratio = aspect_ratio.value_or(
         static_cast<intermediate_t>(image_dimensions.second) /
         static_cast<intermediate_t>(image_dimensions.first));
@@ -138,23 +92,17 @@ PerspectiveObjectBuilder::Build(
       half_frame_size[1] = 1.0 / actual_aspect_ratio;
     }
 
-    if (lens_radius == kDefaultLensRadius) {
-      return std::make_unique<iris::cameras::PinholeCamera>(
-          transformation.start, half_frame_size, half_fov.value());
+    if (lens_radius == 0.0) {
+      return std::make_unique<PinholeCamera>(transformation.start,
+                                             half_frame_size, half_fov);
     }
 
-    return std::make_unique<iris::cameras::ThinLensCamera>(
-        transformation.start, half_frame_size, half_fov.value(), lens_radius,
-        focus_distance);
+    return std::make_unique<ThinLensCamera>(
+        transformation.start, half_frame_size, half_fov,
+        static_cast<geometric_t>(lens_radius),
+        static_cast<geometric_t>(focus_distance));
   };
 }
-
-}  // namespace
-
-const std::unique_ptr<const ObjectBuilder<
-    std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>,
-    const MatrixManager::Transformation&>>
-    g_perspective_builder = std::make_unique<PerspectiveObjectBuilder>();
 
 }  // namespace cameras
 }  // namespace pbrt_frontend

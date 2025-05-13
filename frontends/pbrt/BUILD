@@ -3,32 +3,32 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//frontends/pbrt:__subpackages__"])
 
 cc_library(
-    name = "build_objects",
-    hdrs = ["build_objects.h"],
-    deps = [
-        ":object_builder",
-        ":parameter_list",
-        ":spectrum_manager",
-        ":texture_manager",
-        ":tokenizer",
-    ],
-)
-
-cc_test(
-    name = "build_objects_test",
-    srcs = ["build_objects_test.cc"],
-    deps = [
-        ":build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "color",
     hdrs = ["color.h"],
     deps = [
         "//iris:float",
+    ],
+)
+
+cc_library(
+    name = "defaults_embed",
+    srcs = ["defaults_embed.c"],
+    hdrs = ["defaults_embed.h"],
+    additional_compiler_inputs = ["@pbrt_proto//pbrt_proto/v3:defaults_txtpb"],
+    copts = [
+        "-std=c23",
+        "-DDEFAULTS_BINPB=$(location @pbrt_proto//pbrt_proto/v3:defaults_txtpb)",
+    ],
+)
+
+cc_library(
+    name = "defaults",
+    srcs = ["defaults.cc"],
+    hdrs = ["defaults.h"],
+    deps = [
+        ":defaults_embed",
+        "@abseil-cpp//absl/log:check",
+        "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
     ],
 )
 
@@ -61,7 +61,11 @@ cc_test(
     ],
     deps = [
         ":image_manager",
+        ":texture_manager",
         "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris/textures:image_texture",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
     ],
@@ -88,7 +92,8 @@ cc_library(
     srcs = ["material_manager.cc"],
     hdrs = ["material_manager.h"],
     deps = [
-        "//frontends/pbrt/materials:material_builder",
+        "//frontends/pbrt/materials:result",
+        "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
     ],
 )
 
@@ -97,8 +102,10 @@ cc_test(
     srcs = ["material_manager_test.cc"],
     deps = [
         ":material_manager",
+        "//frontends/pbrt/materials:result",
         "//iris/materials:mock_material",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
     ],
 )
 
@@ -107,8 +114,6 @@ cc_library(
     srcs = ["matrix_manager.cc"],
     hdrs = ["matrix_manager.h"],
     deps = [
-        ":quoted_string",
-        ":tokenizer",
         "//iris:matrix",
     ],
 )
@@ -118,82 +123,6 @@ cc_test(
     srcs = ["matrix_manager_test.cc"],
     deps = [
         ":matrix_manager",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "object_builder",
-    hdrs = ["object_builder.h"],
-    deps = [
-        ":parameter",
-        ":parameter_list",
-    ],
-)
-
-cc_test(
-    name = "object_builder_test",
-    srcs = ["object_builder_test.cc"],
-    deps = [
-        ":object_builder",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "parameter_list",
-    srcs = ["parameter_list.cc"],
-    hdrs = ["parameter_list.h"],
-    deps = [
-        ":color",
-        ":quoted_string",
-        ":tokenizer",
-        "//iris:point",
-        "//iris:vector",
-    ],
-)
-
-cc_test(
-    name = "parameter_list_test",
-    srcs = ["parameter_list_test.cc"],
-    deps = [
-        ":parameter_list",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "parameter",
-    srcs = ["parameter.cc"],
-    hdrs = ["parameter.h"],
-    deps = [
-        ":color",
-        ":parameter_list",
-        ":spectrum_manager",
-        ":texture_manager",
-        "//iris:reference_counted",
-        "//iris:reflector",
-        "//iris:spectral_allocator",
-        "//iris:spectrum",
-        "//iris/textures:texture2d",
-        "@libspd//libspd/readers:emissive_spd_reader",
-        "@libspd//libspd/readers:reflective_spd_reader",
-    ],
-)
-
-cc_test(
-    name = "parameter_test",
-    srcs = ["parameter_test.cc"],
-    data = [
-        "test_data/emissive.spd",
-        "test_data/include_empty.pbrt",
-        "test_data/reflective.spd",
-    ],
-    deps = [
-        ":parameter",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
     ],
 )
@@ -292,10 +221,10 @@ cc_library(
     name = "spectrum_manager",
     hdrs = ["spectrum_manager.h"],
     deps = [
-        ":color",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectrum",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -304,6 +233,7 @@ cc_library(
     srcs = ["texture_manager.cc"],
     hdrs = ["texture_manager.h"],
     deps = [
+        ":spectrum_manager",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
@@ -318,41 +248,8 @@ cc_test(
     srcs = ["texture_manager_test.cc"],
     deps = [
         ":texture_manager",
-        "//iris/reflectors:mock_reflector",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "quoted_string",
-    srcs = ["quoted_string.cc"],
-    hdrs = ["quoted_string.h"],
-)
-
-cc_test(
-    name = "quoted_string_test",
-    srcs = ["quoted_string_test.cc"],
-    deps = [
-        ":quoted_string",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "tokenizer",
-    srcs = ["tokenizer.cc"],
-    hdrs = ["tokenizer.h"],
-)
-
-cc_test(
-    name = "tokenizer_test",
-    srcs = ["tokenizer_test.cc"],
-    data = [
-        "test_data/include_empty.pbrt",
-    ],
-    deps = [
-        ":tokenizer",
-        "@bazel_tools//tools/cpp/runfiles",
+        "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
     ],
 )

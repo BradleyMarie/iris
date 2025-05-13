@@ -1,49 +1,37 @@
 #include "frontends/pbrt/cameras/orthographic.h"
 
+#include <cstdint>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <utility>
+
+#include "frontends/pbrt/matrix_manager.h"
+#include "iris/camera.h"
 #include "iris/cameras/orthographic_camera.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace cameras {
-namespace {
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"focaldistance", Parameter::FLOAT},
-        {"frameaspectratio", Parameter::FLOAT},
-        {"lensradius", Parameter::FLOAT},
-        {"shutteropen", Parameter::FLOAT},
-        {"shutterclose", Parameter::FLOAT},
-};
+using ::iris::cameras::OrthographicCamera;
+using ::pbrt_proto::v3::Camera;
 
-class OrthographicObjectBuilder
-    : public ObjectBuilder<std::function<std::unique_ptr<Camera>(
-                               const std::pair<size_t, size_t>&)>,
-                           const MatrixManager::Transformation&> {
- public:
-  OrthographicObjectBuilder() : ObjectBuilder(g_parameters) {}
-
-  std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>
-  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-        const MatrixManager::Transformation& transformation) const override;
-};
-
-std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>
-OrthographicObjectBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters,
-    const MatrixManager::Transformation& transformation) const {
+std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
+MakeOrthographic(const Camera::Orthographic& orthographic,
+                 const MatrixManager::Transformation& transformation) {
   std::optional<geometric_t> aspect_ratio;
-
-  auto frameaspectratio = parameters.find("frameaspectratio");
-  if (frameaspectratio != parameters.end()) {
-    auto value = frameaspectratio->second.GetFloatValues(1).front();
-    if (value <= 0.0) {
+  if (orthographic.has_frameaspectratio()) {
+    if (orthographic.frameaspectratio() <= 0.0) {
       std::cerr << "ERROR: Out of range value for parameter: frameaspectratio"
                 << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    aspect_ratio = static_cast<geometric_t>(value);
+    aspect_ratio = orthographic.frameaspectratio();
   }
 
   return [aspect_ratio,
@@ -61,17 +49,10 @@ OrthographicObjectBuilder::Build(
       half_frame_size[1] = static_cast<geometric_t>(1.0 / actual_aspect_ratio);
     }
 
-    return std::make_unique<iris::cameras::OrthographicCamera>(
-        transformation.start, half_frame_size);
+    return std::make_unique<OrthographicCamera>(transformation.start,
+                                                half_frame_size);
   };
 }
-
-}  // namespace
-
-const std::unique_ptr<const ObjectBuilder<
-    std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>,
-    const MatrixManager::Transformation&>>
-    g_orthographic_builder = std::make_unique<OrthographicObjectBuilder>();
 
 }  // namespace cameras
 }  // namespace pbrt_frontend

@@ -1,53 +1,44 @@
 #include "frontends/pbrt/samplers/parse.h"
 
-#include <cstdlib>
-#include <iostream>
+#include <memory>
 
-#include "frontends/pbrt/quoted_string.h"
 #include "frontends/pbrt/samplers/halton.h"
 #include "frontends/pbrt/samplers/random.h"
 #include "frontends/pbrt/samplers/sobol.h"
 #include "frontends/pbrt/samplers/stratified.h"
+#include "iris/image_sampler.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::samplers {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
 
-static const std::unordered_map<std::string_view,
-                                const std::unique_ptr<const ObjectBuilder<
-                                    std::unique_ptr<iris::ImageSampler>>>&>
-    g_samplers = {{"halton", g_halton_builder},
-                  {"random", g_random_builder},
-                  {"sobol", g_sobol_builder},
-                  {"stratified", g_stratified_builder}};
+using ::pbrt_proto::v3::Sampler;
 
-}  // namespace
-
-const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>& Parse(
-    Tokenizer& tokenizer) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: Sampler" << std::endl;
-    exit(EXIT_FAILURE);
+std::unique_ptr<ImageSampler> ParseSamper(const Sampler& sampler) {
+  std::unique_ptr<ImageSampler> result;
+  switch (sampler.sampler_type_case()) {
+    case Sampler::kHalton:
+      result = samplers::MakeHalton(sampler.halton());
+      break;
+    case Sampler::kMaxmindist:
+      break;
+    case Sampler::kRandom:
+      result = samplers::MakeRandom(sampler.random());
+      break;
+    case Sampler::kSobol:
+      result = samplers::MakeSobol(sampler.sobol());
+      break;
+    case Sampler::kStratified:
+      result = samplers::MakeStratified(sampler.stratified());
+      break;
+    case Sampler::kZerotwosequence:
+      break;
+    case Sampler::SAMPLER_TYPE_NOT_SET:
+      break;
   }
 
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to Sampler must be a string" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto iter = g_samplers.find(*unquoted);
-  if (iter == g_samplers.end()) {
-    std::cerr << "ERROR: Unsupported type for directive Sampler: " << *unquoted
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return *iter->second;
+  return result;
 }
 
-const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>& Default() {
-  return *g_halton_builder;
-}
-
-}  // namespace iris::pbrt_frontend::samplers
+}  // namespace pbrt_frontend
+}  // namespace iris

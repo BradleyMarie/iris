@@ -1,74 +1,228 @@
 #include "frontends/pbrt/texture_manager.h"
 
+#include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
+#include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
-#include "iris/reflectors/mock_reflector.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-TEST(TextureManager, AllocateUniformFloatTexture) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto texture0 = texture_manager.AllocateUniformFloatTexture(1.0);
-  auto texture1 = texture_manager.AllocateUniformFloatTexture(1.0);
-  EXPECT_EQ(texture0.Get(), texture1.Get());
+namespace iris {
+namespace pbrt_frontend {
+namespace {
+
+using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
+using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
+using ::pbrt_proto::v3::FloatTextureParameter;
+using ::pbrt_proto::v3::Spectrum;
+using ::pbrt_proto::v3::SpectrumTextureParameter;
+
+TEST(TextureManager, AllocateFloatTexture) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  TextureManager::FloatTexturePtr tex0 =
+      texture_manager.AllocateFloatTexture(1.0);
+  EXPECT_TRUE(tex0);
+  EXPECT_EQ(tex0, texture_manager.AllocateFloatTexture(1.0));
 }
 
-TEST(TextureManager, AllocateUniformFloatReflector) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+TEST(TextureManager, AllocateFloatTextureNull) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
 
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto reflector0 = texture_manager.AllocateUniformReflector(1.0);
-  auto reflector1 = texture_manager.AllocateUniformReflector(1.0);
-  EXPECT_EQ(reflector0.Get(), reflector1.Get());
+  EXPECT_FALSE(texture_manager.AllocateFloatTexture(0.0));
 }
 
-TEST(TextureManager, AllocateUniformFloatReflectorZero) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto reflector = texture_manager.AllocateUniformReflector(0.0);
-  EXPECT_FALSE(reflector.Get());
+TEST(TextureManager, AllocateFloatTextureEmpty) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  FloatTextureParameter parameter;
+
+  EXPECT_FALSE(texture_manager.AllocateFloatTexture(parameter));
 }
 
-TEST(TextureManager, AllocateUniformFloatReflectorTexture) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto texture0 = texture_manager.AllocateUniformReflectorTexture(1.0);
-  auto texture1 = texture_manager.AllocateUniformReflectorTexture(1.0);
-  EXPECT_EQ(texture0.Get(), texture1.Get());
+TEST(TextureManager, AllocateFloatTextureUniform) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  FloatTextureParameter parameter;
+  parameter.set_float_value(1.0);
+
+  EXPECT_TRUE(texture_manager.AllocateFloatTexture(parameter));
 }
 
-TEST(TextureManager, AllocateUniformReflectorTexture) {
-  auto reflector =
-      iris::MakeReferenceCounted<iris::reflectors::MockReflector>();
+TEST(TextureManager, AllocateFloatTextureByName) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
 
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto texture0 = texture_manager.AllocateUniformReflectorTexture(reflector);
-  auto texture1 = texture_manager.AllocateUniformReflectorTexture(reflector);
-  EXPECT_EQ(texture0.Get(), texture1.Get());
+  FloatTextureParameter parameter;
+  parameter.set_float_texture_name("a");
+
+  EXPECT_EXIT(texture_manager.AllocateFloatTexture(parameter),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: No float texture defined with name: \"a\"");
+}
+
+TEST(TextureManager, AllocateReflectorTexture) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  EXPECT_TRUE(texture_manager.AllocateFloatTexture(1.0));
+}
+
+TEST(TextureManager, AllocateReflectorTextureNull) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  EXPECT_FALSE(texture_manager.AllocateReflectorTexture(0.0));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumNull) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  Spectrum spectrum;
+
+  EXPECT_FALSE(texture_manager.AllocateReflectorTexture(spectrum));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrum) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  Spectrum spectrum;
+  spectrum.set_uniform_spectrum(1.0);
+
+  EXPECT_TRUE(texture_manager.AllocateReflectorTexture(spectrum));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterEmpty) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+
+  EXPECT_FALSE(texture_manager.AllocateReflectorTexture(parameter));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterUniform) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+  parameter.set_uniform_spectrum(1.0);
+
+  EXPECT_TRUE(texture_manager.AllocateReflectorTexture(parameter));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterBlackbody) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+  parameter.mutable_blackbody_spectrum();
+
+  EXPECT_EXIT(texture_manager.AllocateReflectorTexture(parameter),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Blackbody spectrum parsing is not implemented");
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterRgb) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+  parameter.mutable_rgb_spectrum()->set_r(1.0);
+  parameter.mutable_rgb_spectrum()->set_g(1.0);
+  parameter.mutable_rgb_spectrum()->set_b(1.0);
+
+  EXPECT_TRUE(texture_manager.AllocateReflectorTexture(parameter));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterXyz) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+  parameter.mutable_xyz_spectrum()->set_x(1.0);
+  parameter.mutable_xyz_spectrum()->set_y(1.0);
+  parameter.mutable_xyz_spectrum()->set_z(1.0);
+
+  EXPECT_TRUE(texture_manager.AllocateReflectorTexture(parameter));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterSampled) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+  auto& sample = *parameter.mutable_sampled_spectrum()->add_samples();
+  sample.set_wavelength(1.0);
+  sample.set_intensity(1.0);
+
+  EXPECT_TRUE(texture_manager.AllocateReflectorTexture(parameter));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterFile) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+  parameter.set_sampled_spectrum_filename("a");
+
+  EXPECT_TRUE(texture_manager.AllocateReflectorTexture(parameter));
+}
+
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterNamed) {
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  SpectrumTextureParameter parameter;
+  parameter.set_spectrum_texture_name("a");
+
+  EXPECT_EXIT(texture_manager.AllocateReflectorTexture(parameter),
+              testing::ExitedWithCode(EXIT_FAILURE),
+              "ERROR: No spectrum texture defined with name: \"a\"");
 }
 
 TEST(TextureManager, FloatTextureGetFails) {
-  iris::pbrt_frontend::TextureManager texture_manager;
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
   EXPECT_EXIT(texture_manager.GetFloatTexture("test"),
               testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: test");
+              "ERROR: No float texture defined with name: \"test\"");
 }
 
 TEST(TextureManager, ReflectorTextureGetFails) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  EXPECT_EXIT(texture_manager.GetFloatTexture("test"),
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("test"),
               testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: test");
+              "ERROR: No spectrum texture defined with name: \"test\"");
 }
 
 TEST(TextureManager, FloatTextureGetSucceeds) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::ReferenceCounted<iris::textures::ValueTexture2D<iris::visual>> texture;
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  TextureManager::FloatTexturePtr texture;
   texture_manager.Put("test", texture);
+
   EXPECT_EQ(nullptr, texture_manager.GetFloatTexture("test").Get());
 }
 
 TEST(TextureManager, ReflectorTextureGetSucceeds) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::ReferenceCounted<iris::textures::PointerTexture2D<
-      iris::Reflector, iris::SpectralAllocator>>
-      texture;
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+
+  TextureManager::ReflectorTexturePtr texture;
   texture_manager.Put("test", texture);
+
   EXPECT_EQ(nullptr, texture_manager.GetReflectorTexture("test").Get());
 }
+
+}  // namespace
+}  // namespace pbrt_frontend
+}  // namespace iris

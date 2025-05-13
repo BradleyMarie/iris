@@ -1,9 +1,5 @@
 #include "frontends/pbrt/materials/parse.h"
 
-#include <cstdlib>
-#include <iostream>
-#include <unordered_map>
-
 #include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/glass.h"
 #include "frontends/pbrt/materials/matte.h"
@@ -11,130 +7,90 @@
 #include "frontends/pbrt/materials/mirror.h"
 #include "frontends/pbrt/materials/mix.h"
 #include "frontends/pbrt/materials/plastic.h"
+#include "frontends/pbrt/materials/result.h"
 #include "frontends/pbrt/materials/substrate.h"
 #include "frontends/pbrt/materials/translucent.h"
 #include "frontends/pbrt/materials/uber.h"
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/spectrum_manager.h"
+#include "frontends/pbrt/texture_manager.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
-namespace materials {
-namespace {
 
-static const std::unordered_map<std::string_view,
-                                const std::unique_ptr<const MaterialBuilder>&>
-    g_materials = {{"glass", g_glass_builder},
-                   {"matte", g_matte_builder},
-                   {"metal", g_metal_builder},
-                   {"mirror", g_mirror_builder},
-                   {"mix", g_mix_builder},
-                   {"plastic", g_plastic_builder},
-                   {"substrate", g_substrate_builder},
-                   {"translucent", g_translucent_builder},
-                   {"uber", g_uber_builder}};
+using ::pbrt_proto::v3::MakeNamedMaterial;
+using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::v3::Shape;
 
-}  // namespace
-
-const MaterialBuilder& Parse(Tokenizer& tokenizer) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: Material"
-              << std::endl;
-    exit(EXIT_FAILURE);
+MaterialResult ParseMaterial(const Material& material,
+                             const Shape::MaterialOverrides& overrides,
+                             const MaterialManager& material_manager,
+                             TextureManager& texture_manager,
+                             SpectrumManager& spectrum_manager) {
+  MaterialResult result;
+  switch (material.material_type_case()) {
+    case Material::kDisney:
+      break;
+    case Material::kFourier:
+      break;
+    case Material::kGlass:
+      result =
+          materials::MakeGlass(material.glass(), overrides, texture_manager);
+      break;
+    case Material::kHair:
+      break;
+    case Material::kKdsubsurface:
+      break;
+    case Material::kMatte:
+      result =
+          materials::MakeMatte(material.matte(), overrides, texture_manager);
+      break;
+    case Material::kMetal:
+      result = materials::MakeMetal(material.metal(), overrides,
+                                    texture_manager, spectrum_manager);
+      break;
+    case Material::kMirror:
+      result =
+          materials::MakeMirror(material.mirror(), overrides, texture_manager);
+      break;
+    case Material::kMix:
+      result = materials::MakeMix(material.mix(), overrides, material_manager,
+                                  texture_manager);
+      break;
+    case Material::kPlastic:
+      result = materials::MakePlastic(material.plastic(), overrides,
+                                      texture_manager);
+      break;
+    case Material::kSubstrate:
+      result = materials::MakeSubstrate(material.substrate(), overrides,
+                                        texture_manager);
+      break;
+    case Material::kSubsurface:
+      break;
+    case Material::kTranslucent:
+      result = materials::MakeTranslucent(material.translucent(), overrides,
+                                          texture_manager);
+      break;
+    case Material::kUber:
+      result = materials::MakeUber(material.uber(), overrides, texture_manager);
+      break;
+    case Material::MATERIAL_TYPE_NOT_SET:
+      break;
   }
-
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to Material must be a string" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto iter = g_materials.find(*unquoted);
-  if (iter == g_materials.end()) {
-    std::cerr << "ERROR: Unsupported type for directive Material: " << *unquoted
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return *iter->second;
+  return result;
 }
 
-void ParseNamed(Tokenizer& tokenizer, const std::filesystem::path& search_root,
-                MaterialManager& material_manager,
-                SpectrumManager& spectrum_manager,
-                TextureManager& texture_manager) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: MakeNamedMaterial"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to MakeNamedMaterial must be a string"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  std::string name(unquoted->begin(), unquoted->end());
-
-  std::unordered_map<std::string_view, std::unique_ptr<ParameterList>>
-      parameter_lists;
-
-  auto parameter_list = std::make_unique<ParameterList>();
-  while (parameter_list->ParseFrom(tokenizer)) {
-    auto insertion_result = parameter_lists.emplace(parameter_list->GetName(),
-                                                    std::move(parameter_list));
-
-    if (!insertion_result.second) {
-      std::cerr << "ERROR: A parameter was specified twice: "
-                << insertion_result.first->first << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    parameter_list = std::make_unique<ParameterList>();
-  }
-
-  auto type_iter = parameter_lists.find("type");
-  if (type_iter == parameter_lists.end()) {
-    std::cerr << "ERROR: Missing required parameter to MakeNamedMaterial: type"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  Parameter type_parameter;
-  type_parameter.LoadFrom(*type_iter->second, search_root, Parameter::STRING,
-                          spectrum_manager, texture_manager);
-
-  auto material_builder =
-      g_materials.find(type_parameter.GetStringValues(1).front());
-  if (material_builder == g_materials.end()) {
-    std::cerr << "ERROR: Unsupported type for directive MakeNamedMaterial: "
-              << type_parameter.GetStringValues(1).front() << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  parameter_lists.erase(type_iter);
-
-  std::unordered_set<std::string_view> parameters_parsed;
-  std::unordered_map<std::string_view, Parameter> parameters;
-  for (const auto& [parameter_name, parameter_list] : parameter_lists) {
-    auto parameter = material_builder->second
-                         ->Parse(*parameter_list, search_root, spectrum_manager,
-                                 texture_manager, parameters_parsed)
-                         .value();
-    parameters[parameter_name] = std::move(parameter);
-  }
-
-  std::shared_ptr<NestedMaterialBuilder> result =
-      material_builder->second->Build(parameters, material_manager,
-                                      texture_manager, spectrum_manager);
-  material_manager.Put(name, result);
+MaterialResult ParseMakeNamedMaterial(const MakeNamedMaterial& named_material,
+                                      MaterialManager& material_manager,
+                                      TextureManager& texture_manager,
+                                      SpectrumManager& spectrum_manager) {
+  MaterialResult result = ParseMaterial(
+      named_material.material(), Shape::MaterialOverrides::default_instance(),
+      material_manager, texture_manager, spectrum_manager);
+  material_manager.Put(named_material.name(),
+                       {named_material.material(), result});
+  return result;
 }
 
-const MaterialBuilder& Default() { return *g_matte_builder; }
-
-}  // namespace materials
 }  // namespace pbrt_frontend
 }  // namespace iris

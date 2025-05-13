@@ -1,108 +1,116 @@
 #include "frontends/pbrt/textures/parse.h"
 
-#include <unordered_map>
-
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/image_manager.h"
+#include "frontends/pbrt/spectrum_manager.h"
+#include "frontends/pbrt/texture_manager.h"
 #include "frontends/pbrt/textures/constant.h"
 #include "frontends/pbrt/textures/imagemap.h"
 #include "frontends/pbrt/textures/scale.h"
+#include "iris/reference_counted.h"
+#include "iris/reflector.h"
+#include "iris/spectral_allocator.h"
+#include "iris/textures/texture2d.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::textures {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
 
-static const std::unordered_map<
-    std::string_view,
-    const std::unique_ptr<const ObjectBuilder<
-        void, ImageManager&, TextureManager&, const std::string&>>&>
-    g_float_textures = {{"constant", g_float_constant_builder},
-                        {"imagemap", g_float_imagemap_builder},
-                        {"scale", g_float_scale_builder}};
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
+using ::pbrt_proto::v3::FloatTexture;
+using ::pbrt_proto::v3::SpectrumTexture;
 
-static const std::unordered_map<
-    std::string_view,
-    const std::unique_ptr<const ObjectBuilder<
-        void, ImageManager&, TextureManager&, const std::string&>>&>
-    g_spectral_textures = {{"constant", g_spectrum_constant_builder},
-                           {"imagemap", g_spectrum_imagemap_builder},
-                           {"scale", g_spectrum_scale_builder}};
-
-}  // namespace
-
-const ObjectBuilder<void, ImageManager&, TextureManager&, const std::string&>&
-Parse(Tokenizer& tokenizer, std::string& name) {
-  auto name_token = tokenizer.Next();
-  if (!name_token) {
-    std::cerr << "ERROR: Too few parameters to directive: Texture" << std::endl;
-    exit(EXIT_FAILURE);
+void ParseFloatTexture(const FloatTexture& float_texture,
+                       ImageManager& image_manager,
+                       TextureManager& texture_manager) {
+  ReferenceCounted<ValueTexture2D<visual>> result;
+  switch (float_texture.float_texture_type_case()) {
+    case FloatTexture::kBilerp:
+      break;
+    case FloatTexture::kCheckerboard2D:
+      break;
+    case FloatTexture::kCheckerboard3D:
+      break;
+    case FloatTexture::kConstant:
+      result =
+          textures::MakeConstant(float_texture.constant(), texture_manager);
+      break;
+    case FloatTexture::kDots:
+      break;
+    case FloatTexture::kFbm:
+      break;
+    case FloatTexture::kImagemap:
+      result = textures::MakeImageMap(float_texture.imagemap(), image_manager,
+                                      texture_manager);
+      break;
+    case FloatTexture::kMarble:
+      break;
+    case FloatTexture::kMix:
+      break;
+    case FloatTexture::kPtex:
+      break;
+    case FloatTexture::kScale:
+      result = textures::MakeScale(float_texture.scale(), texture_manager);
+      break;
+    case FloatTexture::kWindy:
+      break;
+    case FloatTexture::kWrinkled:
+      break;
+    case FloatTexture::FLOAT_TEXTURE_TYPE_NOT_SET:
+      break;
   }
 
-  auto unquoted_name = Unquote(*name_token);
-  if (!unquoted_name) {
-    std::cerr << "ERROR: Name of Texture must be a string" << std::endl;
-    exit(EXIT_FAILURE);
+  if (result) {
+    texture_manager.Put(float_texture.name(), std::move(result));
   }
-
-  name = *unquoted_name;
-
-  auto kind = tokenizer.Next();
-  if (!kind) {
-    std::cerr << "ERROR: Too few parameters to directive: Texture" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted_kind = Unquote(*kind);
-  if (!unquoted_kind) {
-    std::cerr << "ERROR: Value type of Texture must be a string"
-              << *unquoted_kind << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  bool float_texture;
-  if (*unquoted_kind == "float") {
-    float_texture = true;
-  } else if (*unquoted_kind == "spectrum" || *unquoted_kind == "color") {
-    float_texture = false;
-  } else {
-    std::cerr << "ERROR: Unsupported value type for directive Texture: "
-              << *unquoted_kind << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: Texture" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted_type = Unquote(*type);
-  if (!unquoted_type) {
-    std::cerr << "ERROR: Type of Texture must be a string" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const ObjectBuilder<void, ImageManager&, TextureManager&, const std::string&>*
-      result;
-  if (float_texture) {
-    auto iter = g_float_textures.find(*unquoted_type);
-    if (iter == g_float_textures.end()) {
-      std::cerr << "ERROR: Unsupported type for directive Texture: "
-                << *unquoted_type << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    result = iter->second.get();
-  } else {
-    auto iter = g_spectral_textures.find(*unquoted_type);
-    if (iter == g_spectral_textures.end()) {
-      std::cerr << "ERROR: Unsupported type for directive Texture: "
-                << *unquoted_type << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    result = iter->second.get();
-  }
-
-  return *result;
 }
 
-}  // namespace iris::pbrt_frontend::textures
+void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
+                          ImageManager& image_manager,
+                          TextureManager& texture_manager) {
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> result;
+  switch (spectrum_texture.spectrum_texture_type_case()) {
+    case SpectrumTexture::kBilerp:
+      break;
+    case SpectrumTexture::kCheckerboard2D:
+      break;
+    case SpectrumTexture::kCheckerboard3D:
+      break;
+    case SpectrumTexture::kConstant:
+      result =
+          textures::MakeConstant(spectrum_texture.constant(), texture_manager);
+      break;
+    case SpectrumTexture::kDots:
+      break;
+    case SpectrumTexture::kFbm:
+      break;
+    case SpectrumTexture::kImagemap:
+      result = textures::MakeImageMap(spectrum_texture.imagemap(),
+                                      image_manager, texture_manager);
+      break;
+    case SpectrumTexture::kMarble:
+      break;
+    case SpectrumTexture::kMix:
+      break;
+    case SpectrumTexture::kPtex:
+      break;
+    case SpectrumTexture::kScale:
+      result = textures::MakeScale(spectrum_texture.scale(), texture_manager);
+      break;
+    case SpectrumTexture::kUv:
+      break;
+    case SpectrumTexture::kWindy:
+      break;
+    case SpectrumTexture::kWrinkled:
+      break;
+    case SpectrumTexture::SPECTRUM_TEXTURE_TYPE_NOT_SET:
+      break;
+  }
+
+  if (result) {
+    texture_manager.Put(spectrum_texture.name(), std::move(result));
+  }
+}
+
+}  // namespace pbrt_frontend
+}  // namespace iris

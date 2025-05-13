@@ -2,74 +2,13 @@
 
 #include <array>
 #include <cassert>
-#include <charconv>
 #include <cstdlib>
 #include <iostream>
 #include <numbers>
-#include <string_view>
 #include <unordered_map>
 
-#include "frontends/pbrt/quoted_string.h"
-
-namespace iris::pbrt_frontend {
-namespace {
-
-bool MaybeConsumeBracket(Tokenizer& tokenizer) {
-  auto next_token = tokenizer.Peek();
-  if (!next_token) {
-    return false;
-  }
-
-  if (next_token != "[") {
-    return false;
-  }
-
-  tokenizer.Next();
-
-  return true;
-}
-
-template <size_t N>
-std::array<geometric, N> ParseFloats(Tokenizer& tokenizer,
-                                     std::string_view type_name) {
-  bool bracketed = MaybeConsumeBracket(tokenizer);
-
-  std::array<geometric, N> result;
-  for (size_t i = 0; i < N; i++) {
-    auto token = tokenizer.Next();
-    if (!token) {
-      std::cerr << "ERROR: Too few parameters to directive " << type_name
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    if (std::from_chars(token->data(), token->data() + token->size(), result[i])
-            .ec != std::errc{}) {
-      std::cerr << "ERROR: Failed to parse " << type_name
-                << " parameter: " << *token << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    if (!std::isfinite(result[i])) {
-      std::cerr << "ERROR: Out of range " << type_name
-                << " parameter: " << *token << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  if (bracketed) {
-    auto token = tokenizer.Next();
-    if (!token || *token != "]") {
-      std::cerr << "ERROR: Unterminated parameter list for " << type_name
-                << " directive" << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  return result;
-}
-
-};  // namespace
+namespace iris {
+namespace pbrt_frontend {
 
 MatrixManager::MatrixManager() {
   transformation_stack_.emplace(Matrix::Identity(), Matrix::Identity());
@@ -87,60 +26,55 @@ MatrixManager::~MatrixManager() {
   }
 }
 
-void MatrixManager::Identity(Tokenizer& tokenizer) { Set(Matrix::Identity()); }
+void MatrixManager::Identity() { Set(Matrix::Identity()); }
 
-void MatrixManager::Translate(Tokenizer& tokenizer) {
-  auto values = ParseFloats<3>(tokenizer, "Translate");
-  Transform(Matrix::Translation(values[0], values[1], values[2]).value());
+void MatrixManager::Translate(geometric x, geometric y, geometric z) {
+  Transform(Matrix::Translation(x, y, z).value());
 }
 
-void MatrixManager::Scale(Tokenizer& tokenizer) {
-  auto values = ParseFloats<3>(tokenizer, "Scale");
-  if (values[0] == 0.0 || values[1] == 0.0 || values[2] == 0.0) {
+void MatrixManager::Scale(geometric x, geometric y, geometric z) {
+  if (x == 0.0 || y == 0.0 || z == 0.0) {
     std::cerr << "ERROR: Parameters to Scale must be non-zero" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  Transform(Matrix::Scalar(values[0], values[1], values[2]).value());
+  Transform(Matrix::Scalar(x, y, z).value());
 }
 
-void MatrixManager::Rotate(Tokenizer& tokenizer) {
-  auto values = ParseFloats<4>(tokenizer, "Rotate");
-  if (values[1] == 0.0 && values[2] == 0.0 && values[3] == 0.0) {
+void MatrixManager::Rotate(geometric theta, geometric x, geometric y,
+                           geometric z) {
+  if (x == 0.0 && y == 0.0 && z == 0.0) {
     std::cerr
         << "ERROR: One of the x, y, or z parameters to Rotate must be non-zero"
         << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  Transform(Matrix::Rotation(
-                values[0] * static_cast<geometric_t>(std::numbers::pi / 180.0),
-                values[1], values[2], values[3])
-                .value());
+  Transform(
+      Matrix::Rotation(
+          theta * static_cast<geometric_t>(std::numbers::pi / 180.0), x, y, z)
+          .value());
 }
 
-void MatrixManager::LookAt(Tokenizer& tokenizer) {
-  auto values = ParseFloats<9>(tokenizer, "LookAt");
-  if (values[0] == values[3] && values[1] == values[4] &&
-      values[2] == values[5]) {
+void MatrixManager::LookAt(geometric eye_x, geometric eye_y, geometric eye_z,
+                           geometric look_x, geometric look_y, geometric look_z,
+                           geometric up_x, geometric up_y, geometric up_z) {
+  if (eye_x == look_x && eye_y == look_y && eye_z == look_z) {
     std::cerr << "ERROR: eye and look_at parameters to LookAt must not be equal"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (values[6] == 0.0 && values[7] == 0.0 && values[8] == 0.0) {
+  if (up_x == 0.0 && up_y == 0.0 && up_z == 0.0) {
     std::cerr << "ERROR: One of up_x, up_y, or up_z parameters to LookAt must "
                  "be non-zero"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  auto look_at =
-      Matrix::LookAt(values[0], values[1], values[2], values[3], values[4],
-                     values[5], values[6], values[7], values[8]);
+  auto look_at = Matrix::LookAt(eye_x, eye_y, eye_z, look_x, look_y, look_z,
+                                up_x, up_y, up_z);
   if (!look_at.has_value()) {
-    assert(look_at.error() ==
-           std::string_view("up and look_at must be perpendicular"));
     std::cerr << "ERROR: Up parameter to LookAt must not be parallel with look "
                  "direction"
               << std::endl;
@@ -151,49 +85,18 @@ void MatrixManager::LookAt(Tokenizer& tokenizer) {
   Transform(look_at.value().Inverse());
 }
 
-void MatrixManager::CoordinateSystem(Tokenizer& tokenizer) {
-  auto next = tokenizer.Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive CoordinateSystem"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (!Unquote(*next)) {
-    std::cerr << "ERROR: Invalid parameter to directive CoordinateSystem: "
-              << *next << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  std::string key(next->begin(), next->end());
-
-  coord_systems_.erase(key);
-  coord_systems_.emplace(std::move(key),
-                         std::make_pair(transformation_stack_.top().start,
-                                        transformation_stack_.top().end));
+void MatrixManager::CoordinateSystem(const std::string& name) {
+  coord_systems_.erase(name);
+  coord_systems_.emplace(name, std::make_pair(transformation_stack_.top().start,
+                                              transformation_stack_.top().end));
 }
 
-void MatrixManager::CoordSysTransform(Tokenizer& tokenizer) {
-  auto next = tokenizer.Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive CoordSysTransform"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (!Unquote(*next)) {
-    std::cerr << "ERROR: Invalid parameter to directive CoordSysTransform: "
-              << *next << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  std::string key(next->begin(), next->end());
-
-  auto iter = coord_systems_.find(key);
+void MatrixManager::CoordSysTransform(const std::string& name) {
+  auto iter = coord_systems_.find(name);
   if (iter == coord_systems_.end()) {
     std::cerr << "ERROR: Unknown coordinate system name specified for "
-                 "directive CoordSysTransform: "
-              << *next << std::endl;
+                 "directive CoordSysTransform: \""
+              << name << "\"" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -201,13 +104,17 @@ void MatrixManager::CoordSysTransform(Tokenizer& tokenizer) {
   transformation_stack_.emplace(iter->second.first, iter->second.second);
 }
 
-void MatrixManager::Transform(Tokenizer& tokenizer) {
-  auto values = ParseFloats<16>(tokenizer, "Transform");
+void MatrixManager::Transform(geometric m00, geometric m01, geometric m02,
+                              geometric m03, geometric m10, geometric m11,
+                              geometric m12, geometric m13, geometric m20,
+                              geometric m21, geometric m22, geometric m23,
+                              geometric m30, geometric m31, geometric m32,
+                              geometric m33) {
   std::array<std::array<geometric, 4>, 4> values2d = {
-      std::array<geometric, 4>{values[0], values[4], values[8], values[12]},
-      std::array<geometric, 4>{values[1], values[5], values[9], values[13]},
-      std::array<geometric, 4>{values[2], values[6], values[10], values[14]},
-      std::array<geometric, 4>{values[3], values[7], values[11], values[15]}};
+      std::array<geometric, 4>{m00, m10, m20, m30},
+      std::array<geometric, 4>{m01, m11, m21, m31},
+      std::array<geometric, 4>{m02, m12, m22, m32},
+      std::array<geometric, 4>{m03, m13, m23, m33}};
 
   auto matrix = Matrix::Create(values2d);
   if (!matrix.has_value()) {
@@ -219,13 +126,17 @@ void MatrixManager::Transform(Tokenizer& tokenizer) {
   Set(matrix.value());
 }
 
-void MatrixManager::ConcatTransform(Tokenizer& tokenizer) {
-  auto values = ParseFloats<16>(tokenizer, "ConcatTransform");
+void MatrixManager::ConcatTransform(geometric m00, geometric m01, geometric m02,
+                                    geometric m03, geometric m10, geometric m11,
+                                    geometric m12, geometric m13, geometric m20,
+                                    geometric m21, geometric m22, geometric m23,
+                                    geometric m30, geometric m31, geometric m32,
+                                    geometric m33) {
   std::array<std::array<geometric, 4>, 4> values2d = {
-      std::array<geometric, 4>{values[0], values[4], values[8], values[12]},
-      std::array<geometric, 4>{values[1], values[5], values[9], values[13]},
-      std::array<geometric, 4>{values[2], values[6], values[10], values[14]},
-      std::array<geometric, 4>{values[3], values[7], values[11], values[15]}};
+      std::array<geometric, 4>{m00, m10, m20, m30},
+      std::array<geometric, 4>{m01, m11, m21, m31},
+      std::array<geometric, 4>{m02, m12, m22, m32},
+      std::array<geometric, 4>{m03, m13, m23, m33}};
 
   auto matrix = Matrix::Create(values2d);
   if (!matrix.has_value()) {
@@ -238,34 +149,17 @@ void MatrixManager::ConcatTransform(Tokenizer& tokenizer) {
   Transform(matrix.value());
 }
 
-void MatrixManager::ActiveTransform(Tokenizer& tokenizer) {
-  auto next = tokenizer.Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive ActiveTransform"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (*next == "StartTime") {
-    active_transform_stack_.top() = ActiveTransformation::START;
-  } else if (*next == "EndTime") {
-    active_transform_stack_.top() = ActiveTransformation::END;
-  } else if (*next == "All") {
-    active_transform_stack_.top() = ActiveTransformation::ALL;
-  } else {
-    std::cerr << "ERROR: Invalid parameter to ActiveTransform: " << *next
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
+void MatrixManager::ActiveTransform(ActiveTransformation active_transform) {
+  active_transform_stack_.top() = active_transform;
 }
 
-void MatrixManager::TransformBegin(Tokenizer& tokenizer) {
-  Push(PushPopReason::TRANSFORM);
-}
+void MatrixManager::AttributeBegin() { Push(PushPopReason::ATTRIBUTE); }
 
-void MatrixManager::TransformEnd(Tokenizer& tokenizer) {
-  Pop(PushPopReason::TRANSFORM);
-}
+void MatrixManager::AttributeEnd() { Pop(PushPopReason::ATTRIBUTE); }
+
+void MatrixManager::TransformBegin() { Push(PushPopReason::TRANSFORM); }
+
+void MatrixManager::TransformEnd() { Pop(PushPopReason::TRANSFORM); }
 
 void MatrixManager::Transform(const Matrix& m) {
   Matrix start = (active_transform_stack_.top() != ActiveTransformation::END)
@@ -293,49 +187,9 @@ void MatrixManager::Set(const Matrix& m) {
   transformation_stack_.emplace(start, end);
 }
 
-bool MatrixManager::TryParse(Tokenizer& tokenizer) {
-  auto next = tokenizer.Peek();
-  if (!next) {
-    return false;
-  }
-
-  static const std::unordered_map<std::string_view,
-                                  void (MatrixManager::*)(Tokenizer&)>
-      callbacks = {
-          {"ActiveTransform", &MatrixManager::ActiveTransform},
-          {"ConcatTransform", &MatrixManager::ConcatTransform},
-          {"CoordinateSystem", &MatrixManager::CoordinateSystem},
-          {"CoordSysTransform", &MatrixManager::CoordSysTransform},
-          {"Identity", &MatrixManager::Identity},
-          {"LookAt", &MatrixManager::LookAt},
-          {"Rotate", &MatrixManager::Rotate},
-          {"Scale", &MatrixManager::Scale},
-          {"Transform", &MatrixManager::Transform},
-          {"TransformBegin", &MatrixManager::TransformBegin},
-          {"TransformEnd", &MatrixManager::TransformEnd},
-          {"Translate", &MatrixManager::Translate},
-      };
-
-  auto iter = callbacks.find(*next);
-  if (iter == callbacks.end()) {
-    return false;
-  }
-
-  // Consume peeked token
-  tokenizer.Next();
-
-  (this->*iter->second)(tokenizer);
-
-  return true;
-}
-
 const MatrixManager::Transformation& MatrixManager::Get() {
   return transformation_stack_.top();
 }
-
-void MatrixManager::Push() { Push(PushPopReason::ATTRIBUTE); }
-
-void MatrixManager::Pop() { Pop(PushPopReason::ATTRIBUTE); }
 
 void MatrixManager::Push(PushPopReason reason) {
   transformation_stack_.emplace(transformation_stack_.top());
@@ -364,4 +218,5 @@ void MatrixManager::Pop(PushPopReason reason) {
   stack_manipulation_reasons_.pop();
 }
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris

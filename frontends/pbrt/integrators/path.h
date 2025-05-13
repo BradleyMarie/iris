@@ -4,12 +4,17 @@
 #include <memory>
 
 #include "frontends/pbrt/integrators/result.h"
-#include "frontends/pbrt/object_builder.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::integrators {
+namespace iris {
+namespace pbrt_frontend {
+namespace integrators {
 
-extern const std::unique_ptr<const ObjectBuilder<Result>> g_path_builder;
+std::unique_ptr<IntegratorResult> MakePath(
+    const pbrt_proto::v3::Integrator::Path& path);
 
-}  // namespace iris::pbrt_frontend::integrators
+}  // namespace integrators
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_INTEGRATORS_PATH_

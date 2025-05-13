@@ -3,27 +3,6 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
-    name = "light_scenes",
-    srcs = ["light_scenes.cc"],
-    hdrs = ["light_scenes.h"],
-    deps = [
-        "//iris:light_scene",
-        "//iris/light_scenes:all_light_scene",
-        "//iris/light_scenes:one_light_scene",
-        "//iris/light_scenes:power_light_scene",
-    ],
-)
-
-cc_test(
-    name = "light_scenes_test",
-    srcs = ["light_scenes_test.cc"],
-    deps = [
-        ":light_scenes",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
@@ -31,8 +10,7 @@ cc_library(
     deps = [
         ":path",
         ":result",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:tokenizer",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -50,12 +28,12 @@ cc_library(
     srcs = ["path.cc"],
     hdrs = ["path.h"],
     deps = [
-        ":light_scenes",
-        ":pixel_bounds",
         ":result",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
+        "//iris:light_scene",
         "//iris/integrators:path_integrator",
+        "//iris/light_scenes:one_light_scene",
+        "//iris/light_scenes:power_light_scene",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -64,27 +42,6 @@ cc_test(
     srcs = ["path_test.cc"],
     deps = [
         ":path",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "pixel_bounds",
-    srcs = ["pixel_bounds.cc"],
-    hdrs = ["pixel_bounds.h"],
-    deps = [
-        "//frontends/pbrt:parameter",
-    ],
-)
-
-cc_test(
-    name = "pixel_bounds_test",
-    srcs = ["pixel_bounds_test.cc"],
-    deps = [
-        ":pixel_bounds",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
     ],
 )

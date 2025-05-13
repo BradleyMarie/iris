@@ -3,15 +3,18 @@
 
 #include <memory>
 
-#include "frontends/pbrt/object_builder.h"
 #include "iris/image_sampler.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::samplers {
+namespace iris {
+namespace pbrt_frontend {
+namespace samplers {
 
-extern const std::unique_ptr<
-    const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>>
-    g_stratified_builder;
+std::unique_ptr<ImageSampler> MakeStratified(
+    const pbrt_proto::v3::Sampler::Stratified& stratified);
 
-}  // namespace iris::pbrt_frontend::samplers
+}  // namespace samplers
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_SAMPLERS_STRATIFIED_

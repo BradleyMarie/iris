@@ -1,286 +1,364 @@
 #include "frontends/pbrt/textures/imagemap.h"
 
-#include "frontends/pbrt/build_objects.h"
+#include <limits>
+#include <memory>
+
+#include "frontends/pbrt/image_manager.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
+#include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
-using bazel::tools::cpp::runfiles::Runfiles;
+namespace iris {
+namespace pbrt_frontend {
+namespace textures {
+namespace {
 
-static const std::string kName = "name";
+using ::bazel::tools::cpp::runfiles::Runfiles;
+using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
+using ::pbrt_proto::v3::FloatTexture;
+using ::pbrt_proto::v3::SpectrumTexture;
+using ::testing::ExitedWithCode;
 
 std::string RunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
-  const char* base_path = "_main/frontends/pbrt/textures/test_data/";
-  return std::string("\"") + runfiles->Rlocation(base_path + path) +
-         std::string("\"");
+  return runfiles->Rlocation("_main/frontends/pbrt/textures/test_data/" + path);
 }
 
-TEST(Image, Empty) {
-  std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, Empty) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing required image parameter: filename");
 }
 
-TEST(Image, BadFiletype) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.txt"));
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, InfiniteMaxAnisotropy) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported image file type: .txt");
-}
-
-TEST(Image, NoExtension) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image"));
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
-
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported image file \\(no extension\\): image");
-}
-
-TEST(Image, BadUScale) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"float uscale\" 0.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
-
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: uscale");
-}
-
-TEST(Image, BadVScale) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"float vscale\" 0.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
-
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: vscale");
-}
-
-TEST(Image, BadMaxAnisotropy) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"float maxanisotropy\" 0.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
-
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Out of range value for parameter: maxanisotropy");
 }
 
-TEST(Image, BadMapping) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"string mapping\" \"abc\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, NegativeMaxAnisotropy) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_maxanisotropy(-1.0);
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: mapping");
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: maxanisotropy");
 }
 
-TEST(Image, UVMapping) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"string mapping\" \"uv\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, Scale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
 
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      image_manager, texture_manager, kName);
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: maxanisotropy");
 }
 
-TEST(Image, BadWrapping) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"string wrap\" \"abc\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, InfiniteUDelta) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_udelta(std::numeric_limits<double>::infinity());
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_float_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: wrap");
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: udelta");
 }
 
-TEST(Image, BlackWrapping) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"string wrap\" \"black\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, InfiniteUScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_uscale(std::numeric_limits<double>::infinity());
 
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      image_manager, texture_manager, kName);
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: uscale");
 }
 
-TEST(Image, ClampWrapping) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"string wrap\" \"clamp\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, ZeroUScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_uscale(0.0);
 
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      image_manager, texture_manager, kName);
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: uscale");
 }
 
-TEST(Image, RepeatWrapping) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"string wrap\" \"repeat\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, InfiniteVDelta) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_vdelta(std::numeric_limits<double>::infinity());
 
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      image_manager, texture_manager, kName);
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: vdelta");
 }
 
-TEST(Image, FloatAllParams) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"bool gamma\" \"false\""
-                          " \"float scale\" 1.0"
-                          " \"float udelta\" 0.0"
-                          " \"float uscale\" 1.0"
-                          " \"float vdelta\" 0.0"
-                          " \"float vscale\" 1.0"
-                          " \"string wrap\" \"repeat\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, InfiniteVScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_vscale(std::numeric_limits<double>::infinity());
 
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::textures::g_float_imagemap_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      image_manager, texture_manager, kName);
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: vscale");
 }
 
-TEST(Image, SpectrumBadScale) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"float scale\" 2.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, ZeroVScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_vscale(0.0);
 
-  EXPECT_EXIT(iris::pbrt_frontend::BuildObject(
-                  *iris::pbrt_frontend::textures::g_spectrum_imagemap_builder,
-                  tokenizer, std::filesystem::current_path(), spectrum_manager,
-                  texture_manager, image_manager, texture_manager, kName),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: scale");
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: vscale");
 }
 
-TEST(Image, SpectrumAllParams) {
-  std::stringstream input("\"string filename\" " + RunfilePath("image.png") +
-                          " \"string mapping\" \"uv\""
-                          " \"float maxanisotropy\" 8.0"
-                          " \"bool gamma\" \"false\""
-                          " \"float scale\" 1.0"
-                          " \"float udelta\" 0.0"
-                          " \"float uscale\" 1.0"
-                          " \"float vdelta\" 0.0"
-                          " \"float vscale\" 1.0"
-                          " \"string wrap\" \"repeat\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(FloatImageMap, PngSucceeds) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image.png"));
 
-  iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::textures::g_spectrum_imagemap_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager,
-      image_manager, texture_manager, kName);
+  EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
 }
+
+TEST(FloatImageMap, NoExtension) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image"));
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported image file \\(no extension\\): image");
+}
+
+TEST(FloatImageMap, BadExtension) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image.txt"));
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported image file type: .txt");
+}
+
+TEST(SpectrumImageMap, Empty) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Missing required image parameter: filename");
+}
+
+TEST(SpectrumImageMap, InfiniteMaxAnisotropy) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: maxanisotropy");
+}
+
+TEST(SpectrumImageMap, NegativeMaxAnisotropy) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_maxanisotropy(-1.0);
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: maxanisotropy");
+}
+
+TEST(SpectrumImageMap, Scale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: maxanisotropy");
+}
+
+TEST(SpectrumImageMap, InfiniteUDelta) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_udelta(std::numeric_limits<double>::infinity());
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: udelta");
+}
+
+TEST(SpectrumImageMap, InfiniteUScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_uscale(std::numeric_limits<double>::infinity());
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: uscale");
+}
+
+TEST(SpectrumImageMap, ZeroUScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_uscale(0.0);
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: uscale");
+}
+
+TEST(SpectrumImageMap, InfiniteVDelta) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_vdelta(std::numeric_limits<double>::infinity());
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: vdelta");
+}
+
+TEST(SpectrumImageMap, InfiniteVScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_vscale(std::numeric_limits<double>::infinity());
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: vscale");
+}
+
+TEST(SpectrumImageMap, ZeroVScale) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_vscale(0.0);
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: vscale");
+}
+
+TEST(SpectrumImageMap, PngSucceeds) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image.png"));
+
+  EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
+}
+
+TEST(SpectrumImageMap, NoExtension) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image"));
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported image file \\(no extension\\): image");
+}
+
+TEST(SpectrumImageMap, BadExtension) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image.txt"));
+
+  EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported image file type: .txt");
+}
+
+}  // namespace
+}  // namespace textures
+}  // namespace pbrt_frontend
+}  // namespace iris

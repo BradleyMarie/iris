@@ -8,14 +8,16 @@
 #include "iris/integrator.h"
 #include "iris/light_scene.h"
 
-namespace iris::pbrt_frontend::integrators {
+namespace iris {
+namespace pbrt_frontend {
 
-struct Result {
-  std::unique_ptr<iris::Integrator> integrator;
-  std::unique_ptr<iris::LightScene::Builder> light_scene_builder;
+struct IntegratorResult {
+  std::unique_ptr<Integrator> integrator;
+  std::unique_ptr<LightScene::Builder> light_scene_builder;
   std::optional<std::array<size_t, 4>> pixel_bounds;
 };
 
-}  // namespace iris::pbrt_frontend::integrators
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_INTEGRATORS_RESULT_

@@ -4,12 +4,16 @@
 #include <memory>
 
 #include "frontends/pbrt/film/result.h"
-#include "frontends/pbrt/object_builder.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::film {
+namespace iris {
+namespace pbrt_frontend {
+namespace film {
 
-extern const std::unique_ptr<const ObjectBuilder<Result>> g_image_builder;
+std::unique_ptr<FilmResult> MakeImage(const pbrt_proto::v3::Film::Image& image);
 
-}  // namespace iris::pbrt_frontend::film
+}  // namespace film
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_FILM_IMAGE_

@@ -1,6 +1,13 @@
 #include "frontends/pbrt/materials/bumpmap.h"
 
+#include <utility>
+
+#include "frontends/pbrt/texture_manager.h"
+#include "iris/normal_map.h"
 #include "iris/normal_maps/bump_normal_map.h"
+#include "iris/reference_counted.h"
+#include "iris/textures/texture2d.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -8,6 +15,7 @@ namespace materials {
 
 using ::iris::normals::BumpNormalMap;
 using ::iris::textures::ValueTexture2D;
+using ::pbrt_proto::v3::FloatTextureParameter;
 
 class PbrtFrontBumpMap final : public NormalMap {
  public:
@@ -58,15 +66,21 @@ class PbrtBackBumpMap final : public NormalMap {
   ReferenceCounted<NormalMap> front_bump_map_;
 };
 
-std::pair<ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>> MakeBumpMap(
-    const ReferenceCounted<ValueTexture2D<visual>>& texture) {
+std::array<ReferenceCounted<NormalMap>, 2> MakeBumpMap(
+    const FloatTextureParameter& bumpmap, TextureManager& texture_manager) {
+  ReferenceCounted<ValueTexture2D<visual>> texture =
+      texture_manager.AllocateFloatTexture(bumpmap);
+  if (!texture) {
+    return std::array<ReferenceCounted<NormalMap>, 2>();
+  }
+
   ReferenceCounted<NormalMap> bump_map =
       MakeReferenceCounted<BumpNormalMap>(texture);
   ReferenceCounted<NormalMap> front_bump_map =
       MakeReferenceCounted<PbrtFrontBumpMap>(std::move(bump_map));
   ReferenceCounted<NormalMap> back_bump_map =
       MakeReferenceCounted<PbrtBackBumpMap>(front_bump_map);
-  return std::make_pair(std::move(front_bump_map), std::move(back_bump_map));
+  return {std::move(front_bump_map), std::move(back_bump_map)};
 }
 
 }  // namespace materials

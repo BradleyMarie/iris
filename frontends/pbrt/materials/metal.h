@@ -1,15 +1,19 @@
 #ifndef _FRONTENDS_PBRT_MATERIALS_METAL_
 #define _FRONTENDS_PBRT_MATERIALS_METAL_
 
-#include <memory>
-
-#include "frontends/pbrt/materials/material_builder.h"
+#include "frontends/pbrt/materials/result.h"
+#include "frontends/pbrt/spectrum_manager.h"
+#include "frontends/pbrt/texture_manager.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace materials {
 
-extern const std::unique_ptr<const MaterialBuilder> g_metal_builder;
+MaterialResult MakeMetal(
+    const pbrt_proto::v3::Material::Metal& metal,
+    const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
+    TextureManager& texture_manager, SpectrumManager& spectrum_manager);
 
 }  // namespace materials
 }  // namespace pbrt_frontend

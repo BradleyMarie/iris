@@ -7,13 +7,13 @@ cc_library(
     srcs = ["distant.cc"],
     hdrs = ["distant.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:defaults",
         "//frontends/pbrt:spectrum_manager",
-        "//iris:environmental_light",
         "//iris:light",
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/lights:directional_light",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -22,9 +22,10 @@ cc_test(
     srcs = ["distant_test.cc"],
     deps = [
         ":distant",
-        "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:matrix",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -33,15 +34,15 @@ cc_library(
     srcs = ["infinite.cc"],
     hdrs = ["infinite.h"],
     deps = [
-        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:defaults",
         "//frontends/pbrt:spectrum_manager",
         "//iris:environmental_light",
-        "//iris:light",
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/environmental_lights:image_environmental_light",
         "//third_party/stb:stb_image",
         "//third_party/tinyexr",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -56,10 +57,10 @@ cc_test(
     ],
     deps = [
         ":infinite",
-        "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "@bazel_tools//tools/cpp/runfiles",
+        "//iris:matrix",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -71,15 +72,12 @@ cc_library(
     deps = [
         ":distant",
         ":infinite",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
         "//frontends/pbrt:spectrum_manager",
-        "//frontends/pbrt:texture_manager",
-        "//frontends/pbrt:tokenizer",
         "//iris:environmental_light",
         "//iris:light",
         "//iris:matrix",
         "//iris:reference_counted",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -88,6 +86,12 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:environmental_light",
+        "//iris:light",
+        "//iris:matrix",
+        "//iris:reference_counted",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

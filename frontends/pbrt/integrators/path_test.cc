@@ -1,114 +1,114 @@
 #include "frontends/pbrt/integrators/path.h"
 
-#include "frontends/pbrt/build_objects.h"
-#include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
+#include <cstdint>
+
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
+
+namespace iris {
+namespace pbrt_frontend {
+namespace integrators {
+namespace {
+
+using ::pbrt_proto::v3::Integrator;
+using ::testing::ExitedWithCode;
 
 TEST(Path, Empty) {
-  std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-  auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager);
-  EXPECT_NE(nullptr, result.integrator.get());
-  EXPECT_NE(nullptr, result.light_scene_builder.get());
-  EXPECT_FALSE(result.pixel_bounds);
+  Integrator::Path path;
+  EXPECT_TRUE(MakePath(path));
 }
 
-TEST(Path, TooLowMaxDepth) {
-  std::stringstream input("\"integer maxdepth\" -1");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(Path, MaxDepthNegative) {
+  Integrator::Path path;
+  path.set_maxdepth(-1);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-          std::filesystem::current_path(), spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: maxdepth");
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: maxdepth");
 }
 
-TEST(Path, TooHighMaxDepth) {
-  std::stringstream input("\"integer maxdepth\" 256");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(Path, MaxDepthTooHigh) {
+  Integrator::Path path;
+  path.set_maxdepth(256);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-          std::filesystem::current_path(), spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: maxdepth");
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: maxdepth");
 }
 
 TEST(Path, NegativeRrthreshold) {
-  std::stringstream input("\"float rrthreshold\" -1.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+  Integrator::Path path;
+  path.set_rrthreshold(-1.0);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-          std::filesystem::current_path(), spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Out of range value for parameter: rrthreshold");
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Out of range value for parameter: rrthreshold");
 }
 
-TEST(Path, BadLightSampleStrategy) {
-  std::stringstream input("\"string lightsamplestrategy\" \"aaa\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(Path, NegativePixelbounds0) {
+  Integrator::Path path;
+  path.mutable_pixelbounds()->set_x_min(-1);
+  path.mutable_pixelbounds()->set_x_max(1);
+  path.mutable_pixelbounds()->set_y_min(0);
+  path.mutable_pixelbounds()->set_y_max(1);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-          std::filesystem::current_path(), spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported value for parameter lightsamplestrategy: aaa");
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "Negative value in parameter list: pixelbounds");
 }
 
-TEST(Path, BadPixelBounds) {
-  std::stringstream input("\"integer pixelbounds\" [-1 2 3 4]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(Path, NegativePixelbounds1) {
+  Integrator::Path path;
+  path.mutable_pixelbounds()->set_x_min(0);
+  path.mutable_pixelbounds()->set_x_max(-1);
+  path.mutable_pixelbounds()->set_y_min(0);
+  path.mutable_pixelbounds()->set_y_max(1);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-
-  EXPECT_EXIT(
-      iris::pbrt_frontend::BuildObject(
-          *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-          std::filesystem::current_path(), spectrum_manager, texture_manager),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Negative value in parameter list: pixelbounds");
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "Negative value in parameter list: pixelbounds");
 }
 
-TEST(Path, AllSpecified) {
-  std::stringstream input(
-      "\"integer maxdepth\" 4 \"float rrthreshold\" 0.5 \"string "
-      "lightsamplestrategy\" \"uniform\" \"integer pixelbounds\" [1 2 3 4]");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
+TEST(Path, NegativePixelbounds2) {
+  Integrator::Path path;
+  path.mutable_pixelbounds()->set_x_min(0);
+  path.mutable_pixelbounds()->set_x_max(1);
+  path.mutable_pixelbounds()->set_y_min(-1);
+  path.mutable_pixelbounds()->set_y_max(1);
 
-  iris::pbrt_frontend::spectrum_managers::TestSpectrumManager spectrum_manager;
-  iris::pbrt_frontend::TextureManager texture_manager;
-
-  auto result = iris::pbrt_frontend::BuildObject(
-      *iris::pbrt_frontend::integrators::g_path_builder, tokenizer,
-      std::filesystem::current_path(), spectrum_manager, texture_manager);
-  EXPECT_NE(nullptr, result.integrator.get());
-  EXPECT_NE(nullptr, result.light_scene_builder.get());
-  EXPECT_EQ(1u, result.pixel_bounds.value().at(0));
-  EXPECT_EQ(2u, result.pixel_bounds.value().at(1));
-  EXPECT_EQ(3u, result.pixel_bounds.value().at(2));
-  EXPECT_EQ(4u, result.pixel_bounds.value().at(3));
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "Negative value in parameter list: pixelbounds");
 }
+
+TEST(Path, NegativePixelbounds3) {
+  Integrator::Path path;
+  path.mutable_pixelbounds()->set_x_min(0);
+  path.mutable_pixelbounds()->set_x_max(1);
+  path.mutable_pixelbounds()->set_y_min(0);
+  path.mutable_pixelbounds()->set_y_max(-1);
+
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "Negative value in parameter list: pixelbounds");
+}
+
+TEST(Path, InvalidPixelboundsX) {
+  Integrator::Path path;
+  path.mutable_pixelbounds()->set_x_min(1);
+  path.mutable_pixelbounds()->set_x_max(0);
+  path.mutable_pixelbounds()->set_y_min(0);
+  path.mutable_pixelbounds()->set_y_max(1);
+
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Invalid values for parameter list: pixelbounds");
+}
+
+TEST(Path, InvalidPixelboundsY) {
+  Integrator::Path path;
+  path.mutable_pixelbounds()->set_x_min(0);
+  path.mutable_pixelbounds()->set_x_max(1);
+  path.mutable_pixelbounds()->set_y_min(1);
+  path.mutable_pixelbounds()->set_y_max(0);
+
+  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Invalid values for parameter list: pixelbounds");
+}
+
+}  // namespace
+}  // namespace integrators
+}  // namespace pbrt_frontend
+}  // namespace iris

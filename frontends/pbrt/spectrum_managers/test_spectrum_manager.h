@@ -1,7 +1,13 @@
 #ifndef _FRONTENDS_PBRT_SPECTRUM_MANAGERS_TEST_SPECTRUM_MANAGER_
 #define _FRONTENDS_PBRT_SPECTRUM_MANAGERS_TEST_SPECTRUM_MANAGER_
 
+#include <map>
+
 #include "frontends/pbrt/spectrum_manager.h"
+#include "iris/reference_counted.h"
+#include "iris/reflector.h"
+#include "iris/spectrum.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -9,23 +15,17 @@ namespace spectrum_managers {
 
 class TestSpectrumManager final : public SpectrumManager {
  public:
-  visual_t ComputeLuma(const Color& color) override;
+  visual_t ComputeLuma(visual_t r, visual_t g, visual_t b) override;
 
   ReferenceCounted<Spectrum> AllocateSpectrum(
-      const Color& color, visual_t* luma = nullptr) override;
+      const pbrt_proto::v3::Spectrum& spectrum, visual_t* luma) override;
 
-  ReferenceCounted<Spectrum> AllocateSpectrum(
-      const std::map<visual, visual>& wavelengths,
-      visual_t* luma = nullptr) override;
+  ReferenceCounted<Reflector> AllocateReflector(
+      const pbrt_proto::v3::Spectrum& spectrum) override;
 
   ReferenceCounted<Spectrum> AllocateSpectrum(
       const ReferenceCounted<Spectrum>& spectrum0,
       const ReferenceCounted<Spectrum>& spectrum1, visual_t* luma) override;
-
-  ReferenceCounted<Reflector> AllocateReflector(const Color& color) override;
-
-  ReferenceCounted<Reflector> AllocateReflector(
-      const std::map<visual, visual>& wavelengths) override;
 
   void Clear() override;
 };

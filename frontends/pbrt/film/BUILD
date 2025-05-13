@@ -8,9 +8,11 @@ cc_library(
     hdrs = ["image.h"],
     deps = [
         ":result",
-        "//frontends/pbrt:object_builder",
+        "//frontends/pbrt:defaults",
+        "//iris:framebuffer",
         "//iris/file:exr_writer",
         "//iris/file:pfm_writer",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -19,9 +21,9 @@ cc_test(
     srcs = ["image_test.cc"],
     deps = [
         ":image",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        ":result",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -33,7 +35,7 @@ cc_library(
     deps = [
         ":image",
         ":result",
-        "//frontends/pbrt:object_builder",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -43,6 +45,7 @@ cc_test(
     deps = [
         ":parse",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 

@@ -1,43 +1,27 @@
 #include "frontends/pbrt/film/parse.h"
 
-#include <cstdlib>
-#include <iostream>
+#include <memory>
 
 #include "frontends/pbrt/film/image.h"
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/film/result.h"
 
-namespace iris::pbrt_frontend::film {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
 
-static const std::unordered_map<
-    std::string_view, const std::unique_ptr<const ObjectBuilder<Result>>&>
-    g_film = {{"image", g_image_builder}};
+using ::pbrt_proto::v3::Film;
 
-}  // namespace
-
-const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: Film" << std::endl;
-    exit(EXIT_FAILURE);
+std::unique_ptr<FilmResult> ParseFilm(const Film& film) {
+  std::unique_ptr<FilmResult> result;
+  switch (film.film_type_case()) {
+    case Film::kImage:
+      result = film::MakeImage(film.image());
+      break;
+    case Film::FILM_TYPE_NOT_SET:
+      break;
   }
 
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to Film must be a string" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto iter = g_film.find(*unquoted);
-  if (iter == g_film.end()) {
-    std::cerr << "ERROR: Unsupported type for directive Film: " << *unquoted
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return *iter->second;
+  return result;
 }
 
-const ObjectBuilder<Result>& Default() { return *g_image_builder; }
-
-}  // namespace iris::pbrt_frontend::film
+}  // namespace pbrt_frontend
+}  // namespace iris

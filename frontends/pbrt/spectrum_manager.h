@@ -3,22 +3,22 @@
 
 #include <map>
 
-#include "frontends/pbrt/color.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectrum.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris::pbrt_frontend {
 
 class SpectrumManager {
  public:
-  virtual visual_t ComputeLuma(const Color& color) = 0;
-
-  virtual ReferenceCounted<Spectrum> AllocateSpectrum(const Color& color,
-                                                      visual_t* luma) = 0;
+  virtual visual_t ComputeLuma(visual_t r, visual_t g, visual_t b) = 0;
 
   virtual ReferenceCounted<Spectrum> AllocateSpectrum(
-      const std::map<visual, visual>& wavelengths, visual_t* luma) = 0;
+      const pbrt_proto::v3::Spectrum& spectrum, visual_t* luma = nullptr) = 0;
+
+  virtual ReferenceCounted<Reflector> AllocateReflector(
+      const pbrt_proto::v3::Spectrum& spectrum) = 0;
 
   // Returns spectrum0 scaled by spectrum1. Both spectra are are guaranteed to
   // have been allocated by *this* allocator; however, there is no guarantee
@@ -28,22 +28,41 @@ class SpectrumManager {
       const ReferenceCounted<Spectrum>& spectrum1,
       visual_t* luma = nullptr) = 0;
 
-  virtual ReferenceCounted<Reflector> AllocateReflector(const Color& color) = 0;
-
-  virtual ReferenceCounted<Reflector> AllocateReflector(
-      const std::map<visual, visual>& wavelengths) = 0;
-
   virtual void Clear() = 0;
 
-  // These are here to facilitate the implementation of sperctral parsing,
-  // otherwise it would be sufficient to just set luma to nullptr by default.
-  ReferenceCounted<Spectrum> AllocateSpectrum(const Color& color) {
-    return AllocateSpectrum(color, nullptr);
+  ReferenceCounted<Reflector> AllocateReflector(visual_t uniform) {
+    pbrt_proto::v3::Spectrum spectrum;
+    spectrum.set_uniform_spectrum(uniform);
+    return AllocateReflector(spectrum);
+  }
+
+  ReferenceCounted<Reflector> AllocateReflector(visual_t r, visual_t g,
+                                                visual_t b) {
+    pbrt_proto::v3::Spectrum spectrum;
+    spectrum.mutable_rgb_spectrum()->set_r(r);
+    spectrum.mutable_rgb_spectrum()->set_g(g);
+    spectrum.mutable_rgb_spectrum()->set_b(b);
+    return AllocateReflector(spectrum);
+  }
+
+  ReferenceCounted<Spectrum> AllocateSpectrum(visual_t r, visual_t g,
+                                              visual_t b) {
+    pbrt_proto::v3::Spectrum spectrum;
+    spectrum.mutable_rgb_spectrum()->set_r(r);
+    spectrum.mutable_rgb_spectrum()->set_g(g);
+    spectrum.mutable_rgb_spectrum()->set_b(b);
+    return AllocateSpectrum(spectrum);
   }
 
   ReferenceCounted<Spectrum> AllocateSpectrum(
       const std::map<visual, visual>& wavelengths) {
-    return AllocateSpectrum(wavelengths, nullptr);
+    pbrt_proto::v3::Spectrum spectrum;
+    for (const auto& [wavelength, intensity] : wavelengths) {
+      auto& sample = *spectrum.mutable_sampled_spectrum()->add_samples();
+      sample.set_wavelength(wavelength);
+      sample.set_intensity(wavelength);
+    }
+    return AllocateSpectrum(spectrum);
   }
 };
 

@@ -7,9 +7,9 @@ cc_library(
     srcs = ["color_reflector.cc"],
     hdrs = ["color_reflector.h"],
     deps = [
-        "//frontends/pbrt:color",
         "//iris:color",
         "//iris:float",
+        "//iris:reference_counted",
         "//iris:reflector",
     ],
 )
@@ -28,9 +28,9 @@ cc_library(
     srcs = ["color_spectrum.cc"],
     hdrs = ["color_spectrum.h"],
     deps = [
-        "//frontends/pbrt:color",
         "//iris:color",
         "//iris:float",
+        "//iris:reference_counted",
         "//iris:spectrum",
     ],
 )

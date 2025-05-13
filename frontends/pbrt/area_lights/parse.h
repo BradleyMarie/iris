@@ -3,18 +3,20 @@
 
 #include <utility>
 
-#include "frontends/pbrt/object_builder.h"
-#include "frontends/pbrt/tokenizer.h"
+#include "frontends/pbrt/spectrum_manager.h"
 #include "iris/emissive_material.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::area_lights {
+namespace iris {
+namespace pbrt_frontend {
 
-const ObjectBuilder<std::pair<iris::ReferenceCounted<EmissiveMaterial>,
-                              iris::ReferenceCounted<EmissiveMaterial>>,
-                    SpectrumManager&>&
-Parse(Tokenizer& tokenizer);
+std::pair<ReferenceCounted<EmissiveMaterial>,
+          ReferenceCounted<EmissiveMaterial>>
+ParseAreaLightSource(const pbrt_proto::v3::AreaLightSource& area_light_source,
+                     SpectrumManager& spectrum_manager);
 
-}  // namespace iris::pbrt_frontend::area_lights
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_AREA_LIGHTS_PARSE_

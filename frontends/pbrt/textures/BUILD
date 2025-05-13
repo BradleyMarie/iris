@@ -7,10 +7,13 @@ cc_library(
     srcs = ["constant.cc"],
     hdrs = ["constant.h"],
     deps = [
-        "//frontends/pbrt:image_manager",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
         "//frontends/pbrt:texture_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "//iris/textures:texture2d",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -19,9 +22,10 @@ cc_test(
     srcs = ["constant_test.cc"],
     deps = [
         ":constant",
-        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -30,13 +34,16 @@ cc_library(
     srcs = ["imagemap.cc"],
     hdrs = ["imagemap.h"],
     deps = [
+        "//frontends/pbrt:defaults",
         "//frontends/pbrt:image_manager",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
         "//frontends/pbrt:texture_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
         "//iris/textures:image_texture",
         "//iris/textures:scaled_texture",
-        "//third_party/stb:stb_image",
+        "//iris/textures:texture2d",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -50,7 +57,8 @@ cc_test(
     ],
     deps = [
         ":imagemap",
-        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:image_manager",
+        "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
@@ -67,8 +75,6 @@ cc_library(
         ":imagemap",
         ":scale",
         "//frontends/pbrt:image_manager",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
         "//frontends/pbrt:texture_manager",
     ],
 )
@@ -77,11 +83,12 @@ cc_test(
     name = "parse_test",
     srcs = ["parse_test.cc"],
     deps = [
-        ":constant",
-        ":imagemap",
         ":parse",
-        ":scale",
+        "//frontends/pbrt:image_manager",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -90,11 +97,14 @@ cc_library(
     srcs = ["scale.cc"],
     hdrs = ["scale.h"],
     deps = [
-        "//frontends/pbrt:image_manager",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:quoted_string",
+        "//frontends/pbrt:defaults",
         "//frontends/pbrt:texture_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
         "//iris/textures:scaled_texture",
+        "//iris/textures:texture2d",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -103,8 +113,9 @@ cc_test(
     srcs = ["scale_test.cc"],
     deps = [
         ":scale",
-        "//frontends/pbrt:build_objects",
+        "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

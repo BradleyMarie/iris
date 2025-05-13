@@ -4,7 +4,9 @@
 #include "iris/reference_counted.h"
 #include "iris/textures/texture2d.h"
 
-namespace iris::pbrt_frontend::shapes::internal {
+namespace iris {
+namespace pbrt_frontend {
+namespace shapes {
 
 class AlphaAdapter : public textures::ValueTexture2D<bool> {
  public:
@@ -19,6 +21,8 @@ class AlphaAdapter : public textures::ValueTexture2D<bool> {
   ReferenceCounted<textures::ValueTexture2D<visual>> alpha_;
 };
 
-}  // namespace iris::pbrt_frontend::shapes::internal
+}  // namespace shapes
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_SHAPES_PARSE_

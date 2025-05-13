@@ -1,59 +1,55 @@
 #include "frontends/pbrt/samplers/parse.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-TEST(Parse, TooFewParameters) {
-  std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::samplers::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Sampler");
+namespace iris {
+namespace pbrt_frontend {
+namespace {
+
+using ::pbrt_proto::v3::Sampler;
+
+TEST(ParseSamper, Empty) {
+  Sampler sampler;
+  EXPECT_FALSE(ParseSamper(sampler));
 }
 
-TEST(Parse, NotAString) {
-  std::stringstream input("1.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::samplers::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to Sampler must be a string");
+TEST(ParseSamper, Halton) {
+  Sampler sampler;
+  sampler.mutable_halton();
+  EXPECT_TRUE(ParseSamper(sampler));
 }
 
-TEST(Parse, InvalidType) {
-  std::stringstream input("\"NotAType\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::samplers::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported type for directive Sampler: NotAType");
+TEST(ParseSamper, MaxMinDist) {
+  Sampler sampler;
+  sampler.mutable_maxmindist();
+  EXPECT_FALSE(ParseSamper(sampler));
 }
 
-TEST(Parse, Halton) {
-  std::stringstream input("\"halton\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  iris::pbrt_frontend::samplers::Parse(tokenizer);
+TEST(ParseSamper, Random) {
+  Sampler sampler;
+  sampler.mutable_random();
+  EXPECT_TRUE(ParseSamper(sampler));
 }
 
-TEST(Parse, Random) {
-  std::stringstream input("\"random\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  iris::pbrt_frontend::samplers::Parse(tokenizer);
+TEST(ParseSamper, Sobol) {
+  Sampler sampler;
+  sampler.mutable_sobol();
+  EXPECT_TRUE(ParseSamper(sampler));
 }
 
-TEST(Parse, Sobol) {
-  std::stringstream input("\"sobol\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  iris::pbrt_frontend::samplers::Parse(tokenizer);
+TEST(ParseSamper, Stratified) {
+  Sampler sampler;
+  sampler.mutable_stratified();
+  EXPECT_TRUE(ParseSamper(sampler));
 }
 
-
-TEST(Parse, Stratified) {
-  std::stringstream input("\"stratified\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  iris::pbrt_frontend::samplers::Parse(tokenizer);
+TEST(ParseSamper, ZeroTwoSequence) {
+  Sampler sampler;
+  sampler.mutable_zerotwosequence();
+  EXPECT_FALSE(ParseSamper(sampler));
 }
 
-TEST(Default, Default) {
-  std::stringstream input("\"halton\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EQ(&iris::pbrt_frontend::samplers::Parse(tokenizer),
-            &iris::pbrt_frontend::samplers::Default());
-}
+}  // namespace
+}  // namespace pbrt_frontend
+}  // namespace iris

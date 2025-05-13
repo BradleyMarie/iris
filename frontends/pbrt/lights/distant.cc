@@ -1,102 +1,65 @@
 #include "frontends/pbrt/lights/distant.h"
 
+#include <cstdlib>
+#include <iostream>
+
+#include "frontends/pbrt/defaults.h"
+#include "frontends/pbrt/spectrum_manager.h"
+#include "iris/light.h"
 #include "iris/lights/directional_light.h"
+#include "iris/matrix.h"
+#include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace lights {
-namespace {
 
 using ::iris::lights::DirectionalLight;
+using ::pbrt_proto::v3::LightSource;
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"from", Parameter::POINT3},
-        {"L", Parameter::SPECTRUM},
-        {"scale", Parameter::SPECTRUM},
-        {"to", Parameter::POINT3},
-};
+ReferenceCounted<Light> MakeDistant(const LightSource::Distant& distant,
+                                    const Matrix& model_to_world,
+                                    SpectrumManager& spectrum_manager) {
+  LightSource::Distant with_defaults = Defaults().light_sources().distant();
+  with_defaults.MergeFrom(distant);
 
-static const Point kDefaultFrom(static_cast<geometric>(0.0),
-                                static_cast<geometric>(0.0),
-                                static_cast<geometric>(0.0));
-static const Color kDefaultColor({static_cast<visual_t>(1.0),
-                                  static_cast<visual_t>(1.0),
-                                  static_cast<visual_t>(1.0)},
-                                 Color::Space::RGB);
-static const Point kDefaultTo(static_cast<geometric>(0.0),
-                              static_cast<geometric>(0.0),
-                              static_cast<geometric>(1.0));
-
-class DistantBuilder
-    : public ObjectBuilder<std::variant<ReferenceCounted<Light>,
-                                        ReferenceCounted<EnvironmentalLight>>,
-                           SpectrumManager&, const Matrix&> {
- public:
-  DistantBuilder() : ObjectBuilder(g_parameters) {}
-
-  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-  Build(const std::unordered_map<std::string_view, Parameter>& parameters,
-        SpectrumManager& spectrum_manager,
-        const Matrix& model_to_world) const override;
-};
-
-std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-DistantBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters,
-    SpectrumManager& spectrum_manager, const Matrix& model_to_world) const {
-  std::optional<Point> origin;
-  ReferenceCounted<Spectrum> spectrum = {
-      spectrum_manager.AllocateSpectrum(kDefaultColor)};
-  ReferenceCounted<Spectrum> scalar = {
-      spectrum_manager.AllocateSpectrum(kDefaultColor)};
-  std::optional<Point> destination;
-
-  auto from = parameters.find("from");
-  if (from != parameters.end()) {
-    origin.emplace(from->second.GetPoint3Values(1).front());
-  }
-
-  auto l = parameters.find("L");
-  if (l != parameters.end()) {
-    spectrum = l->second.GetSpectra(1).front();
-  }
-
-  auto scale = parameters.find("scale");
-  if (scale != parameters.end()) {
-    scalar = scale->second.GetSpectra(1).front();
-  }
-
-  auto to = parameters.find("to");
-  if (to != parameters.end()) {
-    destination.emplace(to->second.GetPoint3Values(1).front());
-  }
-
-  Point world_origin = model_to_world.Multiply(origin.value_or(kDefaultFrom));
-  Point world_destination =
-      model_to_world.Multiply(destination.value_or(kDefaultTo));
-
-  if (world_origin == world_destination) {
+  if (with_defaults.to().x() == with_defaults.from().x() &&
+      with_defaults.to().y() == with_defaults.from().y() &&
+      with_defaults.to().z() == with_defaults.from().z()) {
     std::cerr << "ERROR: from and to must not be the same point" << std::endl;
     exit(EXIT_FAILURE);
   }
 
+  ReferenceCounted<Spectrum> l =
+      spectrum_manager.AllocateSpectrum(with_defaults.l());
+  if (!l) {
+    return ReferenceCounted<Light>();
+  }
+
+  ReferenceCounted<Spectrum> scale =
+      spectrum_manager.AllocateSpectrum(with_defaults.scale());
+  if (!scale) {
+    return ReferenceCounted<Light>();
+  }
+
   ReferenceCounted<Spectrum> scaled =
-      spectrum_manager.AllocateSpectrum(spectrum, scalar);
+      spectrum_manager.AllocateSpectrum(l, scale);
   if (!scaled) {
     return ReferenceCounted<Light>();
   }
 
-  return MakeReferenceCounted<DirectionalLight>(
-      world_origin - world_destination, std::move(scaled));
+  Point model_from(with_defaults.from().x(), with_defaults.from().y(),
+                   with_defaults.from().z());
+  Point model_to(with_defaults.to().x(), with_defaults.to().y(),
+                 with_defaults.to().z());
+  Point world_from = model_to_world.Multiply(model_from);
+  Point world_to = model_to_world.Multiply(model_to);
+  Vector world_direction = world_from - world_to;
+
+  return MakeReferenceCounted<DirectionalLight>(world_direction,
+                                                std::move(scaled));
 }
-
-};  // namespace
-
-extern const std::unique_ptr<const ObjectBuilder<
-    std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>,
-    SpectrumManager&, const Matrix&>>
-    g_distant_builder = std::make_unique<DistantBuilder>();
 
 }  // namespace lights
 }  // namespace pbrt_frontend

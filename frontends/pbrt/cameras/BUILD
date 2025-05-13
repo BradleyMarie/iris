@@ -8,9 +8,9 @@ cc_library(
     hdrs = ["orthographic.h"],
     deps = [
         "//frontends/pbrt:matrix_manager",
-        "//frontends/pbrt:object_builder",
         "//iris:camera",
         "//iris/cameras:orthographic_camera",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -19,10 +19,9 @@ cc_test(
     srcs = ["orthographic_test.cc"],
     deps = [
         ":orthographic",
-        ":parse",
-        "//frontends/pbrt:build_objects",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//frontends/pbrt:matrix_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -35,9 +34,8 @@ cc_library(
         ":orthographic",
         ":perspective",
         "//frontends/pbrt:matrix_manager",
-        "//frontends/pbrt:object_builder",
-        "//frontends/pbrt:tokenizer",
         "//iris:camera",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -46,7 +44,9 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
+        "//frontends/pbrt:matrix_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -56,10 +56,10 @@ cc_library(
     hdrs = ["perspective.h"],
     deps = [
         "//frontends/pbrt:matrix_manager",
-        "//frontends/pbrt:object_builder",
         "//iris:camera",
         "//iris/cameras:pinhole_camera",
         "//iris/cameras:thin_lens_camera",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -69,8 +69,8 @@ cc_test(
     deps = [
         ":parse",
         ":perspective",
-        "//frontends/pbrt:build_objects",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

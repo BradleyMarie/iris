@@ -1,50 +1,36 @@
 #include "frontends/pbrt/area_lights/parse.h"
 
-#include <cstdlib>
-#include <iostream>
-#include <unordered_map>
+#include <utility>
 
 #include "frontends/pbrt/area_lights/diffuse.h"
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/spectrum_manager.h"
+#include "iris/emissive_material.h"
+#include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::area_lights {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
 
-static const std::unordered_map<
-    std::string_view, const std::unique_ptr<const ObjectBuilder<
-                          std::pair<iris::ReferenceCounted<EmissiveMaterial>,
-                                    iris::ReferenceCounted<EmissiveMaterial>>,
-                          SpectrumManager&>>&>
-    g_area_lights = {{"diffuse", g_diffuse_builder}};
+using ::pbrt_proto::v3::AreaLightSource;
 
-}  // namespace
-
-const ObjectBuilder<std::pair<iris::ReferenceCounted<EmissiveMaterial>,
-                              iris::ReferenceCounted<EmissiveMaterial>>,
-                    SpectrumManager&>&
-Parse(Tokenizer& tokenizer) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: AreaLightSource"
-              << std::endl;
-    exit(EXIT_FAILURE);
+std::pair<ReferenceCounted<EmissiveMaterial>,
+          ReferenceCounted<EmissiveMaterial>>
+ParseAreaLightSource(const pbrt_proto::v3::AreaLightSource& area_light_source,
+                     SpectrumManager& spectrum_manager) {
+  std::pair<ReferenceCounted<EmissiveMaterial>,
+            ReferenceCounted<EmissiveMaterial>>
+      result;
+  switch (area_light_source.area_light_source_type_case()) {
+    case AreaLightSource::kDiffuse:
+      result = area_lights::MakeDiffuse(area_light_source.diffuse(),
+                                        spectrum_manager);
+      break;
+    case AreaLightSource::AREA_LIGHT_SOURCE_TYPE_NOT_SET:
+      break;
   }
 
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to AreaLightSource must be a string"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto iter = g_area_lights.find(*unquoted);
-  if (iter == g_area_lights.end()) {
-    std::cerr << "ERROR: Unsupported type for directive AreaLightSource: "
-              << *unquoted << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return *iter->second;
+  return result;
 }
 
-}  // namespace iris::pbrt_frontend::area_lights
+}  // namespace pbrt_frontend
+}  // namespace iris

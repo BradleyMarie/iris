@@ -1,25 +1,35 @@
 #ifndef _FRONTENDS_PBRT_SHAPE_PLYMESH_
 #define _FRONTENDS_PBRT_SHAPE_PLYMESH_
 
+#include <filesystem>
+#include <utility>
 #include <vector>
 
-#include "frontends/pbrt/object_builder.h"
+#include "frontends/pbrt/texture_manager.h"
+#include "iris/emissive_material.h"
 #include "iris/geometry.h"
+#include "iris/material.h"
 #include "iris/matrix.h"
+#include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::shapes {
+namespace iris {
+namespace pbrt_frontend {
+namespace shapes {
 
-extern const std::unique_ptr<const ObjectBuilder<
-    std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-    const ReferenceCounted<iris::Material>&,
-    const ReferenceCounted<iris::Material>&,
-    const ReferenceCounted<iris::NormalMap>&,
-    const ReferenceCounted<iris::NormalMap>&,
-    const ReferenceCounted<EmissiveMaterial>&,
-    const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>
-    g_plymesh_builder;
+std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
+    const pbrt_proto::v3::Shape::PlyMesh& plymesh, const Matrix& model_to_world,
+    const ReferenceCounted<Material>& front_material,
+    const ReferenceCounted<Material>& back_material,
+    const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
+    const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
+    const ReferenceCounted<NormalMap>& front_normal_map,
+    const ReferenceCounted<NormalMap>& back_normal_map,
+    const std::filesystem::path& search_root, TextureManager& texture_manager);
 
-}  // namespace iris::pbrt_frontend::shapes
+}  // namespace shapes
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_SHAPE_PLYMESH_

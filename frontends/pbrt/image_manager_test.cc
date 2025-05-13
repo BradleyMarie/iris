@@ -1,12 +1,25 @@
 #include "frontends/pbrt/image_manager.h"
 
+#include <filesystem>
+#include <memory>
 #include <set>
+#include <unordered_map>
 
 #include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
+#include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/reference_counted.h"
+#include "iris/reflector.h"
+#include "iris/textures/image_texture.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
-using bazel::tools::cpp::runfiles::Runfiles;
+namespace iris {
+namespace pbrt_frontend {
+namespace {
+
+using ::bazel::tools::cpp::runfiles::Runfiles;
+using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
+using ::iris::textures::Image2D;
 
 std::string RawRunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
@@ -15,11 +28,10 @@ std::string RawRunfilePath(const std::string& path) {
 }
 
 TEST(ImageManager, MissingFile) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
+
   EXPECT_EXIT(image_manager.LoadFloatImageFromSDR("notarealfile", true),
               testing::ExitedWithCode(EXIT_FAILURE),
               "ERROR: Failed to load image: notarealfile");
@@ -29,13 +41,11 @@ TEST(ImageManager, MissingFile) {
 }
 
 TEST(ImageManager, FloatImageSizesCorrect) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  std::set<std::shared_ptr<iris::textures::Image2D<iris::visual>>> images;
+  std::set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadFloatImageFromSDR(
                       RawRunfilePath("g8.png"), true))
@@ -109,15 +119,11 @@ TEST(ImageManager, FloatImageSizesCorrect) {
 }
 
 TEST(ImageManager, ReflectorImageSizesCorrect) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  std::set<std::shared_ptr<
-      iris::textures::Image2D<iris::ReferenceCounted<iris::Reflector>>>>
-      images;
+  std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadReflectorImageFromSDR(
                       RawRunfilePath("g8.png"), true))
@@ -191,13 +197,11 @@ TEST(ImageManager, ReflectorImageSizesCorrect) {
 }
 
 TEST(ImageManager, ReusesFloatImages) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  std::set<std::shared_ptr<iris::textures::Image2D<iris::visual>>> images;
+  std::set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadFloatImageFromSDR(
                       RawRunfilePath("g8.png"), true))
@@ -329,15 +333,11 @@ TEST(ImageManager, ReusesFloatImages) {
 }
 
 TEST(ImageManager, ReusesReflectorImages) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
-  std::set<std::shared_ptr<
-      iris::textures::Image2D<iris::ReferenceCounted<iris::Reflector>>>>
-      images;
+  std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadReflectorImageFromSDR(
                       RawRunfilePath("g8.png"), true))
@@ -468,74 +468,10 @@ TEST(ImageManager, ReusesReflectorImages) {
                    .second);
 }
 
-TEST(ImageManager, ReusesUniformReflectors) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
-
-  auto g8 =
-      image_manager.LoadReflectorImageFromSDR(RawRunfilePath("g8.png"), false);
-  auto g8_corrected =
-      image_manager.LoadReflectorImageFromSDR(RawRunfilePath("g8.png"), true);
-  EXPECT_NE(g8->Get(0, 0), g8_corrected->Get(0, 0));
-  EXPECT_EQ(g8->Get(0, 1), g8_corrected->Get(0, 1));
-  EXPECT_NE(g8->Get(1, 0), g8_corrected->Get(1, 0));
-  EXPECT_NE(g8->Get(1, 1), g8_corrected->Get(1, 1));
-
-  auto ga8 =
-      image_manager.LoadReflectorImageFromSDR(RawRunfilePath("ga8.png"), false);
-  EXPECT_EQ(ga8->Get(0, 0), g8->Get(0, 0));
-  EXPECT_EQ(ga8->Get(0, 1), g8->Get(0, 1));
-  EXPECT_EQ(ga8->Get(1, 0), g8->Get(1, 0));
-  EXPECT_EQ(ga8->Get(1, 1), g8->Get(1, 1));
-
-  auto ga8_corrected =
-      image_manager.LoadReflectorImageFromSDR(RawRunfilePath("ga8.png"), true);
-  EXPECT_EQ(ga8_corrected->Get(0, 0), g8_corrected->Get(0, 0));
-  EXPECT_EQ(ga8_corrected->Get(0, 1), g8_corrected->Get(0, 1));
-  EXPECT_EQ(ga8_corrected->Get(1, 0), g8_corrected->Get(1, 0));
-  EXPECT_EQ(ga8_corrected->Get(1, 1), g8_corrected->Get(1, 1));
-}
-
-TEST(ImageManager, ReusesColorReflectors) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
-
-  auto rgb8 = image_manager.LoadReflectorImageFromSDR(
-      RawRunfilePath("rgb8.png"), false);
-  auto rgb8_corrected =
-      image_manager.LoadReflectorImageFromSDR(RawRunfilePath("rgb8.png"), true);
-  EXPECT_NE(rgb8->Get(0, 0), rgb8_corrected->Get(0, 0));
-  EXPECT_NE(rgb8->Get(0, 1), rgb8_corrected->Get(0, 1));
-  EXPECT_NE(rgb8->Get(1, 0), rgb8_corrected->Get(1, 0));
-  EXPECT_NE(rgb8->Get(1, 1), rgb8_corrected->Get(1, 1));
-
-  auto rgba8 = image_manager.LoadReflectorImageFromSDR(
-      RawRunfilePath("rgba8.png"), false);
-  EXPECT_EQ(rgba8->Get(0, 0), rgb8->Get(0, 0));
-  EXPECT_EQ(rgba8->Get(0, 1), rgb8->Get(0, 1));
-  EXPECT_EQ(rgba8->Get(1, 0), rgb8->Get(1, 0));
-  EXPECT_EQ(rgba8->Get(1, 1), rgb8->Get(1, 1));
-
-  auto rgba8_corrected = image_manager.LoadReflectorImageFromSDR(
-      RawRunfilePath("rgba8.png"), true);
-  EXPECT_EQ(rgba8_corrected->Get(0, 0), rgb8_corrected->Get(0, 0));
-  EXPECT_EQ(rgba8_corrected->Get(0, 1), rgb8_corrected->Get(0, 1));
-  EXPECT_EQ(rgba8_corrected->Get(1, 0), rgb8_corrected->Get(1, 0));
-  EXPECT_EQ(rgba8_corrected->Get(1, 1), rgb8_corrected->Get(1, 1));
-}
-
 TEST(ImageManager, LinearFloatValues) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
   auto g8 =
       image_manager.LoadFloatImageFromSDR(RawRunfilePath("g8.png"), false);
@@ -571,11 +507,9 @@ TEST(ImageManager, LinearFloatValues) {
 }
 
 TEST(ImageManager, LinearReflectorValues) {
-  iris::pbrt_frontend::TextureManager texture_manager;
-  iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager spectrum_manager(
-      true);
-  iris::pbrt_frontend::ImageManager image_manager(texture_manager,
-                                                  spectrum_manager);
+  ColorSpectrumManager spectrum_manager(true);
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(texture_manager, spectrum_manager);
 
   auto g8 =
       image_manager.LoadReflectorImageFromSDR(RawRunfilePath("g8.png"), false);
@@ -625,3 +559,7 @@ TEST(ImageManager, LinearReflectorValues) {
   EXPECT_EQ(1.0, rgba16->Get(0, 1)->Reflectance(1.5));
   EXPECT_EQ(1.0, rgba16->Get(0, 1)->Reflectance(2.5));
 }
+
+}  // namespace
+}  // namespace pbrt_frontend
+}  // namespace iris

@@ -1,29 +1,32 @@
 #ifndef _FRONTENDS_PBRT_MATERIAL_MANAGER_
 #define _FRONTENDS_PBRT_MATERIAL_MANAGER_
 
-#include <memory>
 #include <string>
-#include <string_view>
 #include <unordered_map>
+#include <utility>
 
-#include "frontends/pbrt/materials/material_builder.h"
+#include "frontends/pbrt/materials/result.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 
 class MaterialManager {
  public:
-  std::shared_ptr<materials::NestedMaterialBuilder> Get(
-      std::string_view name) const;
-  void Put(std::string_view name,
-           std::shared_ptr<materials::NestedMaterialBuilder> texture);
-  void Clear();
+  const std::pair<pbrt_proto::v3::Material, MaterialResult>& Get(
+      const std::string& name) const;
+
+  void Put(const std::string& name,
+           std::pair<pbrt_proto::v3::Material, MaterialResult> material) {
+    materials_[name] = std::move(material);
+  }
+
+  void Clear() { materials_.clear(); }
 
  private:
   std::unordered_map<std::string,
-                     std::shared_ptr<materials::NestedMaterialBuilder>>
+                     std::pair<pbrt_proto::v3::Material, MaterialResult>>
       materials_;
-  mutable std::string temp_key_;
 };
 
 }  // namespace pbrt_frontend

@@ -1,44 +1,41 @@
 #include "frontends/pbrt/integrators/parse.h"
 
-#include <cstdlib>
-#include <iostream>
-
 #include "frontends/pbrt/integrators/path.h"
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/integrators/result.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::integrators {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
 
-static const std::unordered_map<
-    std::string_view, const std::unique_ptr<const ObjectBuilder<Result>>&>
-    g_integrators = {{"path", g_path_builder}};
+using pbrt_proto::v3::Integrator;
 
-}  // namespace
-
-const ObjectBuilder<Result>& Parse(Tokenizer& tokenizer) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: Integrator"
-              << std::endl;
-    exit(EXIT_FAILURE);
+std::unique_ptr<IntegratorResult> ParseIntegrator(
+    const Integrator& integrator) {
+  std::unique_ptr<IntegratorResult> result;
+  switch (integrator.integrator_type_case()) {
+    case Integrator::kAmbientocclusion:
+      break;
+    case Integrator::kBdpt:
+      break;
+    case Integrator::kDirectlighting:
+      break;
+    case Integrator::kMlt:
+      break;
+    case Integrator::kPath:
+      result = integrators::MakePath(integrator.path());
+      break;
+    case Integrator::kSppm:
+      break;
+    case Integrator::kVolpath:
+      break;
+    case Integrator::kWhitted:
+      break;
+    case Integrator::INTEGRATOR_TYPE_NOT_SET:
+      break;
   }
 
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to Integrator must be a string" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto iter = g_integrators.find(*unquoted);
-  if (iter == g_integrators.end()) {
-    std::cerr << "ERROR: Unsupported type for directive Integrator: "
-              << *unquoted << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return *iter->second;
+  return result;
 }
 
-const ObjectBuilder<Result>& Default() { return *g_path_builder; }
-
-}  // namespace iris::pbrt_frontend::integrators
+}  // namespace pbrt_frontend
+}  // namespace iris

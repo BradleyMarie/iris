@@ -1,23 +1,19 @@
 #ifndef _FRONTENDS_PBRT_LIGHTS_DISTANT_
 #define _FRONTENDS_PBRT_LIGHTS_DISTANT_
 
-#include <memory>
-
-#include "frontends/pbrt/object_builder.h"
 #include "frontends/pbrt/spectrum_manager.h"
-#include "iris/environmental_light.h"
 #include "iris/light.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace lights {
 
-extern const std::unique_ptr<const ObjectBuilder<
-    std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>,
-    SpectrumManager&, const Matrix&>>
-    g_distant_builder;
+ReferenceCounted<Light> MakeDistant(
+    const pbrt_proto::v3::LightSource::Distant& distant,
+    const Matrix& model_to_world, SpectrumManager& spectrum_manager);
 
 }  // namespace lights
 }  // namespace pbrt_frontend

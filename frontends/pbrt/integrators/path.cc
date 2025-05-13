@@ -1,86 +1,82 @@
 #include "frontends/pbrt/integrators/path.h"
 
+#include <cstdlib>
+#include <iostream>
 #include <limits>
 
-#include "frontends/pbrt/integrators/light_scenes.h"
-#include "frontends/pbrt/integrators/pixel_bounds.h"
 #include "iris/integrators/path_integrator.h"
+#include "iris/light_scene.h"
+#include "iris/light_scenes/one_light_scene.h"
+#include "iris/light_scenes/power_light_scene.h"
 
-namespace iris::pbrt_frontend::integrators {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
+namespace integrators {
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"lightsamplestrategy", Parameter::STRING},
-        {"maxdepth", Parameter::INTEGER},
-        {"pixelbounds", Parameter::INTEGER},
-        {"rrthreshold", Parameter::FLOAT},
-};
+using ::iris::integrators::PathIntegrator;
+using ::iris::light_scenes::OneLightScene;
+using ::iris::light_scenes::PowerLightScene;
+using ::pbrt_proto::v3::Integrator;
 
-class PathObjectBuilder : public ObjectBuilder<Result> {
- public:
-  PathObjectBuilder() : ObjectBuilder(g_parameters) {}
+constexpr visual kMaximumContinueProbability = 0.95;
+constexpr uint8_t kMinBounces = 3;
 
-  Result Build(const std::unordered_map<std::string_view, Parameter>&
-                   parameters) const override;
-};
+std::unique_ptr<IntegratorResult> MakePath(const Integrator::Path& path) {
+  if (path.maxdepth() < 0 ||
+      path.maxdepth() > std::numeric_limits<uint8_t>::max()) {
+    std::cerr << "ERROR: Out of range value for parameter: maxdepth"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-Result PathObjectBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters) const {
-  std::string_view sample_strategy = "power";  // TODO: This should be spatial
+  if (path.rrthreshold() < 0.0) {
+    std::cerr << "ERROR: Out of range value for parameter: rrthreshold"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
   std::optional<std::array<size_t, 4>> pixel_bounds;
-  visual maximum_path_continue_probability = 0.95;
-  visual always_continue_path_throughput = 1.0;
-  uint8_t min_bounces = 3;
-  uint8_t max_bounces = 5;
-
-  auto maxdepth = parameters.find("maxdepth");
-  if (maxdepth != parameters.end()) {
-    auto value = maxdepth->second.GetIntegerValues(1).front();
-    if (value < 0 || value > std::numeric_limits<uint8_t>::max()) {
-      std::cerr << "ERROR: Out of range value for parameter: maxdepth"
+  if (path.has_pixelbounds()) {
+    if (path.pixelbounds().x_min() < 0 || path.pixelbounds().x_max() < 0 ||
+        path.pixelbounds().y_min() < 0 || path.pixelbounds().y_max() < 0) {
+      std::cerr << "ERROR: Negative value in parameter list: pixelbounds"
                 << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    max_bounces = value;
-  }
-
-  auto rrthreshold = parameters.find("rrthreshold");
-  if (rrthreshold != parameters.end()) {
-    auto value = rrthreshold->second.GetFloatValues(1).front();
-    if (value < 0.0) {
-      std::cerr << "ERROR: Out of range value for parameter: rrthreshold"
+    if (path.pixelbounds().x_max() < path.pixelbounds().x_min() ||
+        path.pixelbounds().y_max() < path.pixelbounds().y_min()) {
+      std::cerr << "ERROR: Invalid values for parameter list: pixelbounds"
                 << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    always_continue_path_throughput = value;
+    pixel_bounds = std::array<size_t, 4>(
+        {static_cast<size_t>(path.pixelbounds().x_min()),
+         static_cast<size_t>(path.pixelbounds().x_max()),
+         static_cast<size_t>(path.pixelbounds().y_min()),
+         static_cast<size_t>(path.pixelbounds().y_max())});
   }
 
-  auto integrator = std::make_unique<iris::integrators::PathIntegrator>(
-      maximum_path_continue_probability, always_continue_path_throughput,
-      min_bounces, max_bounces);
-
-  auto lightsamplestrategy = parameters.find("lightsamplestrategy");
-  if (lightsamplestrategy != parameters.end()) {
-    sample_strategy = lightsamplestrategy->second.GetStringValues(1).front();
+  std::unique_ptr<LightScene::Builder> light_scene_builder;
+  switch (path.lightsamplestrategy()) {
+    case Integrator::SPATIAL:
+      // TODO: Implement
+    case Integrator::POWER:
+      light_scene_builder = std::make_unique<PowerLightScene::Builder>();
+      break;
+    case Integrator::UNIFORM:
+      light_scene_builder = std::make_unique<OneLightScene::Builder>();
+      break;
   }
 
-  auto light_scene_builder = ParseLightScene(sample_strategy);
-
-  auto pixelbounds = parameters.find("pixelbounds");
-  if (pixelbounds != parameters.end()) {
-    pixel_bounds = ParsePixelBounds(pixelbounds->second);
-  }
-
-  return Result{std::move(integrator), std::move(light_scene_builder),
-                pixel_bounds};
+  return std::make_unique<IntegratorResult>(IntegratorResult{
+      std::make_unique<PathIntegrator>(
+          kMaximumContinueProbability, static_cast<visual>(path.rrthreshold()),
+          kMinBounces, static_cast<uint8_t>(path.maxdepth())),
+      std::move(light_scene_builder), pixel_bounds});
 }
 
-}  // namespace
-
-const std::unique_ptr<const ObjectBuilder<Result>> g_path_builder(
-    std::make_unique<PathObjectBuilder>());
-
-}  // namespace iris::pbrt_frontend::integrators
+}  // namespace integrators
+}  // namespace pbrt_frontend
+}  // namespace iris

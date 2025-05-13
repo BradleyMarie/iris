@@ -1,137 +1,93 @@
 #include "frontends/pbrt/film/image.h"
 
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <functional>
+#include <iostream>
 #include <limits>
 
+#include "frontends/pbrt/defaults.h"
+#include "frontends/pbrt/film/result.h"
 #include "iris/file/exr_writer.h"
 #include "iris/file/pfm_writer.h"
+#include "iris/framebuffer.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::film {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
+namespace film {
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"cropwindow", Parameter::FLOAT},
-        {"diagonal", Parameter::FLOAT},
-        {"filename", Parameter::STRING},
-        {"maxsampleluminance", Parameter::FLOAT},
-        {"scale", Parameter::FLOAT},
-        {"xresolution", Parameter::INTEGER},
-        {"yresolution", Parameter::INTEGER},
-};
+using ::iris::file::WriteExr;
+using ::iris::file::WritePfm;
+using ::pbrt_proto::v3::Film;
 
-const int64_t kMaxImageDimensionSize = 16384u;
+constexpr int32_t kMaxImageDimensionSize = 16384u;
 
-class ImageObjectBuilder : public ObjectBuilder<Result> {
- public:
-  ImageObjectBuilder() : ObjectBuilder(g_parameters) {}
+std::unique_ptr<FilmResult> MakeImage(const Film::Image& image) {
+  Film::Image with_defaults = Defaults().films().image();
+  with_defaults.MergeFrom(image);
 
-  Result Build(const std::unordered_map<std::string_view, Parameter>&
-                   parameters) const override;
-};
-
-Result ImageObjectBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters) const {
-  std::array<geometric_t, 4> crop_window = {0.0, 1.0, 0.0, 1.0};
-  geometric_t diagonal = 35.0;
-  std::filesystem::path filename = "pbrt.exr";
-  visual_t scale = 1.0;
-  std::optional<visual_t> max_sample_luminance = std::nullopt;
-  size_t x_resolution = 640;
-  size_t y_resolution = 480;
-
-  auto cropwindow = parameters.find("cropwindow");
-  if (cropwindow != parameters.end()) {
-    auto values = cropwindow->second.GetFloatValues(4, 4);
-    for (size_t i = 0; i < 4; i++) {
-      if (values[i] < 0.0 || values[i] > 1.0) {
-        std::cerr << "ERROR: Out of range value for parameter: cropwindow"
-                  << std::endl;
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    if (values[0] >= values[1] || values[2] >= values[3]) {
-      std::cerr << "ERROR: Invalid values for parameter list: cropwindow"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    crop_window[0] = values[0];
-    crop_window[1] = values[1];
-    crop_window[2] = values[2];
-    crop_window[3] = values[3];
+  if (with_defaults.cropwindow().x_min() < 0.0 ||
+      with_defaults.cropwindow().x_min() > 1.0 ||
+      with_defaults.cropwindow().x_max() < 0.0 ||
+      with_defaults.cropwindow().x_max() > 1.0 ||
+      with_defaults.cropwindow().y_min() < 0.0 ||
+      with_defaults.cropwindow().y_min() > 1.0 ||
+      with_defaults.cropwindow().y_max() < 0.0 ||
+      with_defaults.cropwindow().y_max() > 1.0) {
+    std::cerr << "ERROR: Out of range value for parameter: cropwindow"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  auto diagonal_iter = parameters.find("diagonal");
-  if (diagonal_iter != parameters.end()) {
-    auto value = diagonal_iter->second.GetFloatValues(1).front();
-    if (value <= 0.0) {
-      std::cerr << "ERROR: Out of range value for parameter: diagonal"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    diagonal = static_cast<iris::visual_t>(value);
+  if (with_defaults.cropwindow().x_min() >=
+          with_defaults.cropwindow().x_max() ||
+      with_defaults.cropwindow().y_min() >=
+          with_defaults.cropwindow().y_max()) {
+    std::cerr << "ERROR: Invalid values for parameter list: cropwindow"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  auto filename_iter = parameters.find("filename");
-  if (filename_iter != parameters.end()) {
-    filename = filename_iter->second.GetStringValues(1).front();
+  if (with_defaults.xresolution() <= 0 ||
+      with_defaults.xresolution() > kMaxImageDimensionSize) {
+    std::cerr << "ERROR: Out of range value for parameter: xresolution"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  auto maxsampleluminance = parameters.find("maxsampleluminance");
-  if (maxsampleluminance != parameters.end()) {
-    auto value = maxsampleluminance->second.GetFloatValues(1).front();
-    if (value <= 0.0) {
-      std::cerr << "ERROR: Out of range value for parameter: maxsampleluminance"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    max_sample_luminance = static_cast<iris::visual_t>(value);
+  if (with_defaults.yresolution() <= 0 ||
+      with_defaults.yresolution() > kMaxImageDimensionSize) {
+    std::cerr << "ERROR: Out of range value for parameter: yresolution"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  auto scale_iter = parameters.find("scale");
-  if (scale_iter != parameters.end()) {
-    auto value = scale_iter->second.GetFloatValues(1).front();
-    if (value <= 0.0) {
-      std::cerr << "ERROR: Out of range value for parameter: scale"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    scale = static_cast<iris::visual_t>(value);
+  if (with_defaults.diagonal() <= 0.0) {
+    std::cerr << "ERROR: Out of range value for parameter: diagonal"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  auto x_resolution_iter = parameters.find("xresolution");
-  if (x_resolution_iter != parameters.end()) {
-    auto value = x_resolution_iter->second.GetIntegerValues(1).front();
-    if (value <= 0 || value > kMaxImageDimensionSize) {
-      std::cerr << "ERROR: Out of range value for parameter: xresolution"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    x_resolution = value;
+  if (with_defaults.scale() <= 0.0) {
+    std::cerr << "ERROR: Out of range value for parameter: scale" << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  auto y_resolution_iter = parameters.find("yresolution");
-  if (y_resolution_iter != parameters.end()) {
-    auto value = y_resolution_iter->second.GetIntegerValues(1).front();
-    if (value <= 0 || value > kMaxImageDimensionSize) {
-      std::cerr << "ERROR: Out of range value for parameter: yresolution"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    y_resolution = value;
+  if (with_defaults.maxsampleluminance() <= 0.0) {
+    std::cerr << "ERROR: Out of range value for parameter: maxsampleluminance"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
+  std::filesystem::path filename = with_defaults.filename();
   std::function<void(Framebuffer&, std::ofstream&)> write_to_file_function;
   if (filename.extension() == ".exr") {
     write_to_file_function = [](Framebuffer& framebuffer,
                                 std::ofstream& output) {
-      bool success = file::WriteExr(framebuffer, output);
+      bool success = WriteExr(framebuffer, output);
       if (!success) {
         std::cerr << "ERROR: Failed to write output file" << std::endl;
         exit(EXIT_FAILURE);
@@ -140,7 +96,7 @@ Result ImageObjectBuilder::Build(
   } else if (filename.extension() == ".pfm") {
     write_to_file_function = [](Framebuffer& framebuffer,
                                 std::ofstream& output) {
-      file::WritePfm(framebuffer, iris::Color::LINEAR_SRGB, output);
+      WritePfm(framebuffer, Color::LINEAR_SRGB, output);
     };
   } else {
     std::cerr << "ERROR: Unsupported file extension for parameter: filename"
@@ -149,14 +105,18 @@ Result ImageObjectBuilder::Build(
   }
 
   std::array<size_t, 4> crop_pixels;
-  crop_pixels[0] = crop_window[2] * y_resolution;
-  crop_pixels[1] = crop_window[3] * y_resolution;
-  crop_pixels[2] = crop_window[0] * x_resolution;
-  crop_pixels[3] = crop_window[1] * x_resolution;
+  crop_pixels[0] = static_cast<size_t>(with_defaults.cropwindow().y_min() *
+                                       with_defaults.yresolution());
+  crop_pixels[1] = static_cast<size_t>(with_defaults.cropwindow().y_max() *
+                                       with_defaults.yresolution());
+  crop_pixels[2] = static_cast<size_t>(with_defaults.cropwindow().x_min() *
+                                       with_defaults.xresolution());
+  crop_pixels[3] = static_cast<size_t>(with_defaults.cropwindow().x_max() *
+                                       with_defaults.xresolution());
 
   std::function<void(Framebuffer&, std::ofstream&)> write_function =
-      [crop_pixels, scale, write_to_file_function](Framebuffer& framebuffer,
-                                                   std::ofstream& output) {
+      [crop_pixels, scale = with_defaults.scale(), write_to_file_function](
+          Framebuffer& framebuffer, std::ofstream& output) {
         auto size = framebuffer.Size();
 
         if (scale != 1.0) {
@@ -185,24 +145,24 @@ Result ImageObjectBuilder::Build(
       };
 
   std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
-      skip_pixel_function = [crop_pixels](
-                                std::pair<size_t, size_t> pixel,
-                                std::pair<size_t, size_t> image_dimensions) {
-        return pixel.first < crop_pixels[0] || pixel.first >= crop_pixels[1] ||
-               pixel.second < crop_pixels[2] || pixel.second >= crop_pixels[3];
-      };
+      skip_pixel_function =
+          [crop_pixels](std::pair<size_t, size_t> pixel,
+                        std::pair<size_t, size_t> with_defaults_dimensions) {
+            return pixel.first < crop_pixels[0] ||
+                   pixel.first >= crop_pixels[1] ||
+                   pixel.second < crop_pixels[2] ||
+                   pixel.second >= crop_pixels[3];
+          };
 
-  return Result{filename,
-                std::make_pair(y_resolution, x_resolution),
-                skip_pixel_function,
-                write_function,
-                diagonal,
-                max_sample_luminance};
+  return std::make_unique<FilmResult>(FilmResult{
+      filename,
+      std::make_pair(static_cast<size_t>(with_defaults.yresolution()),
+                     static_cast<size_t>(with_defaults.xresolution())),
+      skip_pixel_function, write_function,
+      static_cast<geometric_t>(with_defaults.diagonal()),
+      static_cast<visual_t>(with_defaults.maxsampleluminance())});
 }
 
-}  // namespace
-
-const std::unique_ptr<const ObjectBuilder<Result>> g_image_builder(
-    std::make_unique<ImageObjectBuilder>());
-
-}  // namespace iris::pbrt_frontend::film
+}  // namespace film
+}  // namespace pbrt_frontend
+}  // namespace iris

@@ -1,50 +1,32 @@
 #include "frontends/pbrt/samplers/random.h"
 
-#include <limits>
+#include <cstdint>
+#include <cstdlib>
+#include <iostream>
+#include <memory>
 
+#include "iris/image_sampler.h"
 #include "iris/image_samplers/random_image_sampler.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::samplers {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
+namespace samplers {
 
-static const std::unordered_map<std::string_view, Parameter::Type>
-    g_parameters = {
-        {"pixelsamples", Parameter::INTEGER},
-};
+using ::iris::image_samplers::RandomImageSampler;
+using ::pbrt_proto::v3::Sampler;
 
-class RandomObjectBuilder
-    : public ObjectBuilder<std::unique_ptr<iris::ImageSampler>> {
- public:
-  RandomObjectBuilder() : ObjectBuilder(g_parameters) {}
-
-  std::unique_ptr<iris::ImageSampler> Build(
-      const std::unordered_map<std::string_view, Parameter>& parameters)
-      const override;
-};
-
-std::unique_ptr<iris::ImageSampler> RandomObjectBuilder::Build(
-    const std::unordered_map<std::string_view, Parameter>& parameters) const {
-  uint32_t pixel_samples = 16;
-
-  auto pixelsamples = parameters.find("pixelsamples");
-  if (pixelsamples != parameters.end()) {
-    auto value = pixelsamples->second.GetIntegerValues(1).front();
-    if (value < 0 || value > std::numeric_limits<uint32_t>::max()) {
-      std::cerr << "ERROR: Out of range value for parameter: pixelsamples"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    pixel_samples = value;
+std::unique_ptr<ImageSampler> MakeRandom(const Sampler::Random& random) {
+  if (random.pixelsamples() < 0) {
+    std::cerr << "ERROR: Out of range value for parameter: pixelsamples"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
-  return std::make_unique<iris::image_samplers::RandomImageSampler>(
-      pixel_samples);
+  return std::make_unique<RandomImageSampler>(
+      static_cast<uint32_t>(random.pixelsamples()));
 }
 
-}  // namespace
-
-const std::unique_ptr<const ObjectBuilder<std::unique_ptr<iris::ImageSampler>>>
-    g_random_builder(std::make_unique<RandomObjectBuilder>());
-
-}  // namespace iris::pbrt_frontend::samplers
+}  // namespace samplers
+}  // namespace pbrt_frontend
+}  // namespace iris

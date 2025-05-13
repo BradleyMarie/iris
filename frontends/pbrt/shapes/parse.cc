@@ -1,101 +1,100 @@
 #include "frontends/pbrt/shapes/parse.h"
 
-#include <unordered_map>
+#include <filesystem>
+#include <utility>
+#include <vector>
 
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/material_manager.h"
+#include "frontends/pbrt/materials/parse.h"
+#include "frontends/pbrt/materials/result.h"
 #include "frontends/pbrt/shapes/plymesh.h"
 #include "frontends/pbrt/shapes/sphere.h"
 #include "frontends/pbrt/shapes/trianglemesh.h"
+#include "frontends/pbrt/spectrum_manager.h"
+#include "frontends/pbrt/texture_manager.h"
+#include "iris/emissive_material.h"
+#include "iris/geometry.h"
+#include "iris/matrix.h"
+#include "iris/reference_counted.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend::shapes {
-namespace {
+namespace iris {
+namespace pbrt_frontend {
 
-static const std::unordered_map<
-    std::string_view,
-    const std::unique_ptr<const ObjectBuilder<
-        std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>,
-        const ReferenceCounted<iris::Material>&,
-        const ReferenceCounted<iris::Material>&,
-        const ReferenceCounted<iris::NormalMap>&,
-        const ReferenceCounted<iris::NormalMap>&,
-        const ReferenceCounted<EmissiveMaterial>&,
-        const ReferenceCounted<EmissiveMaterial>&, const Matrix&>>&>
-    g_shapes = {{"plymesh", g_plymesh_builder},
-                {"sphere", g_sphere_builder},
-                {"trianglemesh", g_trianglemesh_builder}};
+using ::pbrt_proto::v3::Shape;
 
-}  // namespace
-
-std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> Parse(
-    Tokenizer& tokenizer, const std::filesystem::path& search_root,
-    const MaterialManager& material_manager, SpectrumManager& spectrum_manager,
-    TextureManager& texture_manager,
-    const std::shared_ptr<ObjectBuilder<
-        std::tuple<ReferenceCounted<Material>, ReferenceCounted<Material>,
-                   ReferenceCounted<NormalMap>, ReferenceCounted<NormalMap>>,
-        const MaterialManager&, TextureManager&, SpectrumManager&>>&
-        material_builder,
+std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
+    const pbrt_proto::v3::Shape& shape, const Matrix& model_to_world,
+    bool reverse_orientation,
+    const std::pair<pbrt_proto::v3::Material, MaterialResult>& material,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
-    const Matrix& model_to_world, bool reverse_orientation) {
-  auto type = tokenizer.Next();
-  if (!type) {
-    std::cerr << "ERROR: Too few parameters to directive: Shape" << std::endl;
-    exit(EXIT_FAILURE);
+    const std::filesystem::path& search_root,
+    const MaterialManager& material_manager, TextureManager& texture_manager,
+    SpectrumManager& spectrum_manager) {
+  MaterialResult actual_material = material.second;
+  if (shape.has_overrides()) {
+    actual_material =
+        ParseMaterial(material.first, shape.overrides(), material_manager,
+                      texture_manager, spectrum_manager);
   }
 
-  auto unquoted = Unquote(*type);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to Shape must be a string" << std::endl;
-    exit(EXIT_FAILURE);
+  const ReferenceCounted<Material>& front_material = actual_material.material;
+  const ReferenceCounted<Material>& back_material = actual_material.material;
+  const ReferenceCounted<EmissiveMaterial>& actual_front_emissive_material =
+      reverse_orientation ? back_emissive_material : front_emissive_material;
+  const ReferenceCounted<EmissiveMaterial>& actual_back_emissive_material =
+      reverse_orientation ? front_emissive_material : back_emissive_material;
+  const ReferenceCounted<NormalMap>& front_normal_map =
+      reverse_orientation ? actual_material.bumpmaps[1]
+                          : actual_material.bumpmaps[0];
+  const ReferenceCounted<NormalMap>& back_normal_map =
+      reverse_orientation ? actual_material.bumpmaps[0]
+                          : actual_material.bumpmaps[1];
+
+  std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> result(
+      {}, model_to_world);
+  switch (shape.shape_type_case()) {
+    case Shape::kCone:
+      break;
+    case Shape::kCurve:
+      break;
+    case Shape::kCylinder:
+      break;
+    case Shape::kDisk:
+      break;
+    case Shape::kHeightfield:
+      break;
+    case Shape::kHyperboloid:
+      break;
+    case Shape::kLoopsubdiv:
+      break;
+    case Shape::kNurbs:
+      break;
+    case Shape::kParaboloid:
+      break;
+    case Shape::kPlymesh:
+      return shapes::MakePlyMesh(
+          shape.plymesh(), model_to_world, front_material, back_material,
+          actual_front_emissive_material, actual_back_emissive_material,
+          front_normal_map, back_normal_map, search_root, texture_manager);
+    case Shape::kSphere:
+      return shapes::MakeSphere(shape.sphere(), model_to_world, front_material,
+                                back_material, actual_front_emissive_material,
+                                actual_back_emissive_material, front_normal_map,
+                                back_normal_map);
+    case Shape::kTrianglemesh:
+      return shapes::MakeTriangleMesh(
+          shape.trianglemesh(), model_to_world, front_material, back_material,
+          actual_front_emissive_material, actual_back_emissive_material,
+          front_normal_map, back_normal_map, texture_manager);
+      break;
+    case Shape::SHAPE_TYPE_NOT_SET:
+      break;
   }
 
-  auto iter = g_shapes.find(*unquoted);
-  if (iter == g_shapes.end()) {
-    std::cerr << "ERROR: Unsupported type for directive Shape: " << *unquoted
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  std::unordered_set<std::string_view> parameters_parsed;
-  std::unordered_map<std::string_view, Parameter> material_parameters;
-  std::unordered_map<std::string_view, Parameter> shape_parameters;
-
-  ParameterList parameter_list;
-  while (parameter_list.ParseFrom(tokenizer)) {
-    auto material_parameter =
-        material_builder->Parse(parameter_list, search_root, spectrum_manager,
-                                texture_manager, parameters_parsed,
-                                /*must_succeed=*/false);
-    if (material_parameter) {
-      auto name = *parameters_parsed.find(parameter_list.GetName());
-      material_parameters[name] = std::move(*material_parameter);
-      continue;
-    }
-
-    auto shape_parameter =
-        iter->second
-            ->Parse(parameter_list, search_root, spectrum_manager,
-                    texture_manager, parameters_parsed)
-            .value();
-    auto name = *parameters_parsed.find(parameter_list.GetName());
-    shape_parameters[name] = std::move(shape_parameter);
-  }
-
-  auto material = material_builder->Build(material_parameters, material_manager,
-                                          texture_manager, spectrum_manager);
-
-  if (reverse_orientation) {
-    return iter->second->Build(shape_parameters, std::get<1>(material),
-                               std::get<0>(material), std::get<3>(material),
-                               std::get<2>(material), back_emissive_material,
-                               front_emissive_material, model_to_world);
-  }
-
-  return iter->second->Build(shape_parameters, std::get<0>(material),
-                             std::get<1>(material), std::get<2>(material),
-                             std::get<3>(material), front_emissive_material,
-                             back_emissive_material, model_to_world);
+  return result;
 }
 
-}  // namespace iris::pbrt_frontend::shapes
+}  // namespace pbrt_frontend
+}  // namespace iris

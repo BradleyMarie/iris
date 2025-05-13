@@ -2,39 +2,25 @@
 
 #include "googletest/include/gtest/gtest.h"
 
-TEST(Parse, TooFewParameters) {
-  std::stringstream input("");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::film::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Film");
+namespace iris {
+namespace pbrt_frontend {
+namespace {
+
+using ::pbrt_proto::v3::Film;
+
+TEST(ParseAreaLightSource, Empty) {
+  Film film;
+
+  EXPECT_FALSE(ParseFilm(film));
 }
 
-TEST(Parse, NotAString) {
-  std::stringstream input("1.0");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::film::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to Film must be a string");
+TEST(ParseAreaLightSource, Image) {
+  Film film;
+  film.mutable_image();
+
+  EXPECT_TRUE(ParseFilm(film));
 }
 
-TEST(Parse, InvalidType) {
-  std::stringstream input("\"NotAType\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EXIT(iris::pbrt_frontend::film::Parse(tokenizer),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported type for directive Film: NotAType");
-}
-
-TEST(Parse, Image) {
-  std::stringstream input("\"image\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  iris::pbrt_frontend::film::Parse(tokenizer);
-}
-
-TEST(Default, Default) {
-  std::stringstream input("\"image\"");
-  iris::pbrt_frontend::Tokenizer tokenizer(input);
-  EXPECT_EQ(&iris::pbrt_frontend::film::Parse(tokenizer),
-            &iris::pbrt_frontend::film::Default());
-}
+}  // namespace
+}  // namespace pbrt_frontend
+}  // namespace iris
