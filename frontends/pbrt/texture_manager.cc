@@ -21,6 +21,22 @@ using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Spectrum;
 using ::pbrt_proto::v3::SpectrumTextureParameter;
 
+void TextureManager::AttributeBegin() {
+  float_textures_.push(float_textures_.top());
+  reflector_textures_.push(reflector_textures_.top());
+}
+
+void TextureManager::AttributeEnd() {
+  if (float_textures_.size() == 1 || reflector_textures_.size() == 1) {
+    std::cerr << "ERROR: Mismatched AttributeBegin and AttributeEnd directives"
+              << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  float_textures_.pop();
+  reflector_textures_.pop();
+}
+
 TextureManager::FloatTexturePtr TextureManager::AllocateFloatTexture(
     visual value) {
   if (value == static_cast<visual>(0.0)) {
@@ -119,7 +135,8 @@ TextureManager::ReflectorTexturePtr TextureManager::AllocateReflectorTexture(
 
 TextureManager::FloatTexturePtr TextureManager::GetFloatTexture(
     const std::string& name) const {
-  if (auto iter = float_textures_.find(name); iter != float_textures_.end()) {
+  if (auto iter = float_textures_.top().find(name);
+      iter != float_textures_.top().end()) {
     return iter->second;
   }
 
@@ -130,8 +147,8 @@ TextureManager::FloatTexturePtr TextureManager::GetFloatTexture(
 
 TextureManager::ReflectorTexturePtr TextureManager::GetReflectorTexture(
     const std::string& name) const {
-  if (auto iter = reflector_textures_.find(name);
-      iter != reflector_textures_.end()) {
+  if (auto iter = reflector_textures_.top().find(name);
+      iter != reflector_textures_.top().end()) {
     return iter->second;
   }
 
@@ -141,11 +158,11 @@ TextureManager::ReflectorTexturePtr TextureManager::GetReflectorTexture(
 }
 
 void TextureManager::Put(const std::string& name, FloatTexturePtr texture) {
-  float_textures_[name] = std::move(texture);
+  float_textures_.top()[name] = std::move(texture);
 }
 
 void TextureManager::Put(const std::string& name, ReflectorTexturePtr texture) {
-  reflector_textures_[name] = std::move(texture);
+  reflector_textures_.top()[name] = std::move(texture);
 }
 
 }  // namespace pbrt_frontend

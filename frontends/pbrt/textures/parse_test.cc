@@ -26,7 +26,7 @@ TEST(ParseFloatTexture, Empty) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Bilerp) {
@@ -41,7 +41,7 @@ TEST(ParseFloatTexture, Bilerp) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Checkerboard2D) {
@@ -56,7 +56,7 @@ TEST(ParseFloatTexture, Checkerboard2D) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Checkerboard3D) {
@@ -71,7 +71,7 @@ TEST(ParseFloatTexture, Checkerboard3D) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Constant) {
@@ -99,7 +99,7 @@ TEST(ParseFloatTexture, Dots) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Fbm) {
@@ -114,7 +114,7 @@ TEST(ParseFloatTexture, Fbm) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, ImageMap) {
@@ -143,7 +143,7 @@ TEST(ParseFloatTexture, Marble) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Mix) {
@@ -158,7 +158,7 @@ TEST(ParseFloatTexture, Mix) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, PTex) {
@@ -173,7 +173,7 @@ TEST(ParseFloatTexture, PTex) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Scale) {
@@ -201,7 +201,7 @@ TEST(ParseFloatTexture, Windy) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Wrinkled) {
@@ -216,7 +216,7 @@ TEST(ParseFloatTexture, Wrinkled) {
   ParseFloatTexture(float_texture, image_manager, texture_manager);
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No float texture defined with name: A");
+              "ERROR: No float texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Empty) {
@@ -228,9 +228,9 @@ TEST(ParseSpectrumTexture, Empty) {
   spectrum_texture.set_name("A");
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Bilerp) {
@@ -243,9 +243,9 @@ TEST(ParseSpectrumTexture, Bilerp) {
   spectrum_texture.mutable_bilerp();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Checkerboard2D) {
@@ -258,9 +258,9 @@ TEST(ParseSpectrumTexture, Checkerboard2D) {
   spectrum_texture.mutable_checkerboard2d();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Checkerboard3D) {
@@ -273,9 +273,9 @@ TEST(ParseSpectrumTexture, Checkerboard3D) {
   spectrum_texture.mutable_checkerboard3d();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Constant) {
@@ -288,7 +288,7 @@ TEST(ParseSpectrumTexture, Constant) {
   spectrum_texture.mutable_constant();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_TRUE(texture_manager.GetSpectrumTexture("A"));
+  EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
 TEST(ParseSpectrumTexture, Dots) {
@@ -301,9 +301,9 @@ TEST(ParseSpectrumTexture, Dots) {
   spectrum_texture.mutable_dots();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Fbm) {
@@ -316,9 +316,9 @@ TEST(ParseSpectrumTexture, Fbm) {
   spectrum_texture.mutable_fbm();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, ImageMap) {
@@ -346,9 +346,9 @@ TEST(ParseSpectrumTexture, Marble) {
   spectrum_texture.mutable_marble();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Mix) {
@@ -361,9 +361,9 @@ TEST(ParseSpectrumTexture, Mix) {
   spectrum_texture.mutable_mix();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, PTex) {
@@ -376,9 +376,9 @@ TEST(ParseSpectrumTexture, PTex) {
   spectrum_texture.mutable_ptex();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Scale) {
@@ -391,7 +391,7 @@ TEST(ParseSpectrumTexture, Scale) {
   spectrum_texture.mutable_scale();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_TRUE(texture_manager.GetSpectrumTexture("A"));
+  EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
 TEST(ParseSpectrumTexture, UV) {
@@ -404,9 +404,9 @@ TEST(ParseSpectrumTexture, UV) {
   spectrum_texture.mutable_uv();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Windy) {
@@ -419,9 +419,9 @@ TEST(ParseSpectrumTexture, Windy) {
   spectrum_texture.mutable_windy();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseSpectrumTexture, Wrinkled) {
@@ -434,9 +434,9 @@ TEST(ParseSpectrumTexture, Wrinkled) {
   spectrum_texture.mutable_wrinkled();
 
   ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
-  EXPECT_EXIT(texture_manager.GetSpectrumTexture("A"),
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: A");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 }  // namespace

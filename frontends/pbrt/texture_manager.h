@@ -1,6 +1,7 @@
 #ifndef _FRONTENDS_PBRT_TEXTURE_MANAGER_
 #define _FRONTENDS_PBRT_TEXTURE_MANAGER_
 
+#include <stack>
 #include <string>
 #include <unordered_map>
 
@@ -21,7 +22,13 @@ class TextureManager {
       textures::PointerTexture2D<Reflector, SpectralAllocator>>;
 
   explicit TextureManager(SpectrumManager& spectrum_manager)
-      : spectrum_manager_(spectrum_manager) {}
+      : spectrum_manager_(spectrum_manager) {
+    float_textures_.emplace();
+    reflector_textures_.emplace();
+  }
+
+  void AttributeBegin();
+  void AttributeEnd();
 
   FloatTexturePtr AllocateFloatTexture(visual value);
   FloatTexturePtr AllocateFloatTexture(
@@ -43,8 +50,9 @@ class TextureManager {
   std::unordered_map<visual, FloatTexturePtr> constant_float_textures_;
   std::unordered_map<const Reflector*, ReflectorTexturePtr>
       constant_reflector_textures_;
-  std::unordered_map<std::string, FloatTexturePtr> float_textures_;
-  std::unordered_map<std::string, ReflectorTexturePtr> reflector_textures_;
+  std::stack<std::unordered_map<std::string, FloatTexturePtr>> float_textures_;
+  std::stack<std::unordered_map<std::string, ReflectorTexturePtr>>
+      reflector_textures_;
   SpectrumManager& spectrum_manager_;
 };
 

@@ -38,8 +38,22 @@ using ::libspd::ReadReflectiveSpdFrom;
 using ::pbrt_proto::v3::SampledSpectrum;
 using ::pbrt_proto::v3::Spectrum;
 
-std::map<visual, visual> FromFile(const std::filesystem::path& path,
-                                  bool reflective) {
+visual_t WhiteSpectrumLuma() {
+  spectra::SampledSpectrum spectrum(std::map<visual, visual>{{1.0, 1.0}});
+
+  CieColorMatcher color_matcher;
+  std::array<visual, 3> colors = color_matcher.Match(spectrum);
+  Color color(colors[0], colors[1], colors[2], color_matcher.ColorSpace());
+
+  return color.Luma();
+}
+
+std::map<visual, visual> FromFile(const std::filesystem::path& search_root,
+                                  std::filesystem::path path, bool reflective) {
+  if (path.is_relative()) {
+    path = search_root / path;
+  }
+
   if (!std::filesystem::is_regular_file(path)) {
     std::cerr << "ERROR: Could not find file: " << path << std::endl;
     exit(EXIT_FAILURE);
@@ -71,21 +85,34 @@ std::map<visual, visual> ToMap(const SampledSpectrum& sampled) {
   return result;
 }
 
-Color ToColor(const std::map<visual, visual>& samples, bool reflective) {
+Color ToReflectorColor(const std::map<visual, visual>& samples) {
   CieColorMatcher color_matcher;
 
   std::array<visual, 3> colors = {0.0, 0.0, 0.0};
-  if (reflective) {
-    if (ReferenceCounted<Reflector> reflector = CreateSampledReflector(samples);
-        reflector) {
-      colors = color_matcher.Match(*reflector);
-    }
-  } else {
-    spectra::SampledSpectrum spectrum(samples);
-    colors = color_matcher.Match(spectrum);
+  if (ReferenceCounted<Reflector> reflector = CreateSampledReflector(samples);
+      reflector) {
+    colors = color_matcher.Match(*reflector);
   }
 
   Color result(colors[0], colors[1], colors[2], color_matcher.ColorSpace());
+  return result.ConvertTo(Color::LINEAR_SRGB);
+}
+
+Color ToSpectrumColor(const std::map<visual, visual>& samples,
+                      bool normalize_luma) {
+  spectra::SampledSpectrum spectrum(samples);
+
+  CieColorMatcher color_matcher;
+  std::array<visual, 3> colors = color_matcher.Match(spectrum);
+  if (normalize_luma) {
+    static const visual_t kWhiteSpectrumLuma = WhiteSpectrumLuma();
+    colors[0] /= kWhiteSpectrumLuma;
+    colors[1] /= kWhiteSpectrumLuma;
+    colors[2] /= kWhiteSpectrumLuma;
+  }
+
+  Color result(colors[0], colors[1], colors[2], color_matcher.ColorSpace());
+
   return result.ConvertTo(Color::LINEAR_SRGB);
 }
 
@@ -120,7 +147,7 @@ visual_t ColorPowerMatcher::Match(const iris::Spectrum& spectrum) const {
 
 visual_t ColorSpectrumManager::ComputeLuma(visual_t r, visual_t g, visual_t b) {
   Color color(r, g, b, Color::LINEAR_SRGB);
-  return color.ConvertTo(Color::CIE_XYZ).y;
+  return color.Luma();
 }
 
 ReferenceCounted<iris::Spectrum> ColorSpectrumManager::AllocateSpectrum(
@@ -151,13 +178,14 @@ ReferenceCounted<iris::Spectrum> ColorSpectrumManager::AllocateSpectrum(
           static_cast<visual>(spectrum.xyz_spectrum().z()), Color::CIE_XYZ);
       break;
     case Spectrum::kSampledSpectrum:
-      result = MakeColorSpectrum(ToColor(ToMap(spectrum.sampled_spectrum()),
-                                         all_sampled_spectra_are_reflective_));
+      result = MakeColorSpectrum(
+          ToSpectrumColor(ToMap(spectrum.sampled_spectrum()),
+                          all_sampled_spectra_are_reflective_));
       break;
     case Spectrum::kSampledSpectrumFilename:
-      result = MakeColorSpectrum(
-          ToColor(FromFile(spectrum.sampled_spectrum_filename(), false),
-                  all_sampled_spectra_are_reflective_));
+      result = MakeColorSpectrum(ToSpectrumColor(
+          FromFile(search_root_, spectrum.sampled_spectrum_filename(), false),
+          all_sampled_spectra_are_reflective_));
       break;
     case Spectrum::SPECTRUM_TYPE_NOT_SET:
       break;
@@ -201,12 +229,12 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
           static_cast<visual>(spectrum.xyz_spectrum().z()), Color::CIE_XYZ);
       break;
     case Spectrum::kSampledSpectrum:
-      result =
-          MakeColorReflector(ToColor(ToMap(spectrum.sampled_spectrum()), true));
+      result = MakeColorReflector(
+          ToReflectorColor(ToMap(spectrum.sampled_spectrum())));
       break;
     case Spectrum::kSampledSpectrumFilename:
-      result = MakeColorReflector(
-          ToColor(FromFile(spectrum.sampled_spectrum_filename(), true), true));
+      result = MakeColorReflector(ToReflectorColor(
+          FromFile(search_root_, spectrum.sampled_spectrum_filename(), true)));
       break;
     case Spectrum::SPECTRUM_TYPE_NOT_SET:
       break;
@@ -239,7 +267,7 @@ ReferenceCounted<iris::Spectrum> ColorSpectrumManager::AllocateSpectrum(
   visual b = spectrum0_b * spectrum1_b;
 
   if (luma) {
-    *luma = Color(r, g, b, Color::LINEAR_SRGB).ConvertTo(Color::CIE_XYZ).y;
+    *luma = Color(r, g, b, Color::LINEAR_SRGB).Luma();
   }
 
   if (spectrum0_r == static_cast<visual_t>(1.0) &&
@@ -256,8 +284,6 @@ ReferenceCounted<iris::Spectrum> ColorSpectrumManager::AllocateSpectrum(
 
   return MakeColorSpectrum(r, g, b, Color::LINEAR_SRGB);
 }
-
-void ColorSpectrumManager::Clear() {}
 
 }  // namespace spectrum_managers
 }  // namespace pbrt_frontend

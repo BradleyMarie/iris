@@ -9,7 +9,7 @@
 namespace iris {
 namespace pbrt_frontend {
 
-std::unique_ptr<ImageSampler> ParseSamper(
+std::unique_ptr<ImageSampler> ParseSampler(
     const pbrt_proto::v3::Sampler& sampler);
 
 }  // namespace pbrt_frontend

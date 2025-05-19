@@ -35,8 +35,10 @@ class ColorPowerMatcher : public PowerMatcher {
 
 class ColorSpectrumManager final : public SpectrumManager {
  public:
-  ColorSpectrumManager(bool all_spectra_are_reflective)
-      : all_sampled_spectra_are_reflective_(all_spectra_are_reflective) {}
+  ColorSpectrumManager(const std::filesystem::path& search_root,
+                       bool all_spectra_are_reflective)
+      : search_root_(search_root),
+        all_sampled_spectra_are_reflective_(all_spectra_are_reflective) {}
 
   visual_t ComputeLuma(visual_t r, visual_t g, visual_t b) override;
 
@@ -52,9 +54,8 @@ class ColorSpectrumManager final : public SpectrumManager {
       const ReferenceCounted<Spectrum>& spectrum1,
       visual_t* luma = nullptr) override;
 
-  void Clear() override;
-
  private:
+  const std::filesystem::path& search_root_;
   bool all_sampled_spectra_are_reflective_;
 };
 

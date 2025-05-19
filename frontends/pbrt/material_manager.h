@@ -1,6 +1,7 @@
 #ifndef _FRONTENDS_PBRT_MATERIAL_MANAGER_
 #define _FRONTENDS_PBRT_MATERIAL_MANAGER_
 
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -13,19 +14,22 @@ namespace pbrt_frontend {
 
 class MaterialManager {
  public:
+  MaterialManager() { materials_.emplace(); }
+
+  void AttributeBegin();
+  void AttributeEnd();
+
   const std::pair<pbrt_proto::v3::Material, MaterialResult>& Get(
       const std::string& name) const;
 
   void Put(const std::string& name,
            std::pair<pbrt_proto::v3::Material, MaterialResult> material) {
-    materials_[name] = std::move(material);
+    materials_.top()[name] = std::move(material);
   }
 
-  void Clear() { materials_.clear(); }
-
  private:
-  std::unordered_map<std::string,
-                     std::pair<pbrt_proto::v3::Material, MaterialResult>>
+  std::stack<std::unordered_map<
+      std::string, std::pair<pbrt_proto::v3::Material, MaterialResult>>>
       materials_;
 };
 

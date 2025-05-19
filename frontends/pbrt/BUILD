@@ -33,6 +33,59 @@ cc_library(
 )
 
 cc_library(
+    name = "file",
+    srcs = ["file.cc"],
+    hdrs = ["file.h"],
+    deps = [
+        "@abseil-cpp//absl/status:statusor",
+        "@pbrt_proto//pbrt_proto/v3:convert",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "file_test",
+    srcs = ["file_test.cc"],
+    data = [
+        "test_data/cornell_box.pbrt",
+        "test_data/cornell_box.pbrt.v3.binpb",
+        "test_data/cornell_box.pbrt.v3.txtpb",
+        "test_data/invalid.pbrt.v3.binpb",
+        "test_data/invalid.pbrt.v3.txtpb",
+        "test_data/rgba8.png",
+    ],
+    deps = [
+        ":file",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "directives",
+    srcs = ["directives.cc"],
+    hdrs = ["directives.h"],
+    deps = [
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "directives_test",
+    srcs = ["directives_test.cc"],
+    data = [
+        "test_data/cornell_box.pbrt",
+    ],
+    deps = [
+        ":directives",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "image_manager",
     srcs = ["image_manager.cc"],
     hdrs = ["image_manager.h"],
@@ -75,15 +128,18 @@ cc_binary(
     name = "iris",
     srcs = ["main.cc"],
     deps = [
+        ":directives",
+        ":file",
         ":parser",
-        ":tokenizer",
-        "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
-        "//iris/color_matchers:cie_color_matcher",
+        "//iris:framebuffer",
+        "//iris:renderer",
         "//iris/random:mersenne_twister_random",
         "@abseil-cpp//absl/flags:config",
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/flags:parse",
         "@abseil-cpp//absl/flags:usage",
+        "@pbrt_proto//pbrt_proto/v3:convert",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -132,29 +188,32 @@ cc_library(
     srcs = ["parser.cc"],
     hdrs = ["parser.h"],
     deps = [
-        ":build_objects",
+        ":directives",
+        ":file",
         ":image_manager",
         ":matrix_manager",
-        ":quoted_string",
         ":renderable",
         ":spectrum_manager",
         ":texture_manager",
-        ":tokenizer",
         "//frontends/pbrt/area_lights:parse",
         "//frontends/pbrt/cameras:parse",
         "//frontends/pbrt/film:parse",
+        "//frontends/pbrt/film:result",
         "//frontends/pbrt/integrators:parse",
         "//frontends/pbrt/lights:parse",
-        "//frontends/pbrt/materials:material_builder",
         "//frontends/pbrt/materials:parse",
         "//frontends/pbrt/samplers:parse",
         "//frontends/pbrt/shapes:parse",
+        "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
         "//frontends/pbrt/textures:parse",
+        "//iris:float",
         "//iris:image_sampler",
         "//iris:integrator",
         "//iris:light_scene",
         "//iris/geometry:bvh_aggregate",
         "//iris/scenes:bvh_scene",
+        "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -170,13 +229,10 @@ cc_test(
     ],
     deps = [
         ":parser",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "//iris/albedo_matchers:mock_albedo_matcher",
-        "//iris/color_matchers:mock_color_matcher",
-        "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mersenne_twister_random",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 

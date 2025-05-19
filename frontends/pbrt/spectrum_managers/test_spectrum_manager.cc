@@ -36,8 +36,6 @@ ReferenceCounted<Spectrum> TestSpectrumManager::AllocateSpectrum(
   return MakeReferenceCounted<MockSpectrum>();
 }
 
-void TestSpectrumManager::Clear() {}
-
 }  // namespace spectrum_managers
 }  // namespace pbrt_frontend
 }  // namespace iris

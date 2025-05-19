@@ -15,28 +15,32 @@
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
 
 class Renderable {
  public:
   Renderable(Renderer renderer, std::unique_ptr<Camera> camera,
              std::unique_ptr<ImageSampler> image_sampler,
              std::unique_ptr<Integrator> integrator,
+             std::unique_ptr<AlbedoMatcher> albedo_matcher,
+             std::unique_ptr<ColorMatcher> color_matcher,
              std::pair<size_t, size_t> image_dimensions) noexcept;
 
-  Framebuffer Render(const AlbedoMatcher& albedo_matcher,
-                     const ColorMatcher& color_matcher, Random& rng,
-                     const Renderer::AdditionalOptions& options =
-                         Renderer::AdditionalOptions()) const;
+  Framebuffer Render(Random& rng, const Renderer::AdditionalOptions& options =
+                                      Renderer::AdditionalOptions()) const;
 
  private:
   Renderer renderer_;
   std::unique_ptr<Camera> camera_;
   std::unique_ptr<ImageSampler> image_sampler_;
   std::unique_ptr<Integrator> integrator_;
+  std::unique_ptr<AlbedoMatcher> albedo_matcher_;
+  std::unique_ptr<ColorMatcher> color_matcher_;
   std::pair<size_t, size_t> image_dimensions_;
 };
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris
 
 #endif  // _FRONTENDS_PBRT_RENDERABLE_

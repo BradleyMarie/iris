@@ -42,8 +42,9 @@ TEST(ColorColorMatcher, ColorSpace) {
 }
 
 TEST(ColorAlbedoMatcher, Match) {
+  std::filesystem::path path = std::filesystem::current_path();
   ColorAlbedoMatcher albedo_matcher;
-  ColorSpectrumManager spectrum_manager(false);
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum xyz_spectrum;
   xyz_spectrum.mutable_xyz_spectrum()->set_x(0.6);
@@ -56,8 +57,9 @@ TEST(ColorAlbedoMatcher, Match) {
 }
 
 TEST(ColorPowerMatcher, Match) {
+  std::filesystem::path path = std::filesystem::current_path();
   ColorPowerMatcher power_matcher;
-  ColorSpectrumManager spectrum_manager(false);
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum xyz_spectrum;
   xyz_spectrum.mutable_xyz_spectrum()->set_x(0.75);
@@ -70,7 +72,8 @@ TEST(ColorPowerMatcher, Match) {
 }
 
 TEST(ColorSpectrumManager, ComputeLuma) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Color xyz(0.4, 0.5, 0.6, Color::CIE_XYZ);
   Color rgb = xyz.ConvertTo(Color::LINEAR_SRGB);
@@ -78,7 +81,8 @@ TEST(ColorSpectrumManager, ComputeLuma) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromUniform) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum uniform_spectrum;
   uniform_spectrum.set_uniform_spectrum(0.5);
@@ -91,7 +95,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromUniform) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromBlackbody) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum blackbody_spectrum;
   blackbody_spectrum.mutable_blackbody_spectrum();
@@ -102,7 +107,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromBlackbody) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromColor) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum;
   rgb_spectrum.mutable_rgb_spectrum()->set_r(0.25);
@@ -117,7 +123,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromColor) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromColorXYZ) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum xyz_spectrum;
   xyz_spectrum.mutable_xyz_spectrum()->set_x(0.4);
@@ -134,7 +141,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromColorXYZ) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromColorZero) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum;
   rgb_spectrum.mutable_rgb_spectrum()->set_r(0.0);
@@ -149,7 +157,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromColorZero) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromSpectrum) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum sampled_spectrum;
   auto& sample = *sampled_spectrum.mutable_sampled_spectrum()->add_samples();
@@ -164,7 +173,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromSpectrum) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromSpectrumZero) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum sampled_spectrum;
   auto& sample = *sampled_spectrum.mutable_sampled_spectrum()->add_samples();
@@ -179,7 +189,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromSpectrumZero) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrum) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
 
   Spectrum sampled_spectrum;
   auto& sample = *sampled_spectrum.mutable_sampled_spectrum()->add_samples();
@@ -194,7 +205,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrum) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrumZero) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
 
   Spectrum sampled_spectrum;
   auto& sample = *sampled_spectrum.mutable_sampled_spectrum()->add_samples();
@@ -209,7 +221,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromReflectiveSpectrumZero) {
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromFile) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum sampled_spectrum;
   sampled_spectrum.set_sampled_spectrum_filename(RunfilePath("emissive.spd"));
@@ -220,7 +233,8 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromFile) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromUniform) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum uniform_spectrum;
   uniform_spectrum.set_uniform_spectrum(0.5);
@@ -233,7 +247,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromUniform) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromBlackbody) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum blackbody_spectrum;
   blackbody_spectrum.mutable_blackbody_spectrum();
@@ -244,7 +259,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromBlackbody) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromColor) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum;
   rgb_spectrum.mutable_rgb_spectrum()->set_r(0.25);
@@ -259,7 +275,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromColor) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromColorXYZ) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum xyz_spectrum;
   xyz_spectrum.mutable_xyz_spectrum()->set_x(0.4);
@@ -274,7 +291,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromColorXYZ) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromColorZero) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum;
   rgb_spectrum.mutable_rgb_spectrum()->set_r(0.0);
@@ -287,7 +305,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromColorZero) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromSpectrum) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum sampled_spectrum;
   auto& sample = *sampled_spectrum.mutable_sampled_spectrum()->add_samples();
@@ -302,7 +321,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromSpectrum) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromSpectrumZero) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum sampled_spectrum;
   auto& sample = *sampled_spectrum.mutable_sampled_spectrum()->add_samples();
@@ -315,7 +335,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromSpectrumZero) {
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromFile) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum sampled_spectrum;
   sampled_spectrum.set_sampled_spectrum_filename(RunfilePath("reflective.spd"));
@@ -326,7 +347,8 @@ TEST(ColorSpectrumManager, AllocateReflectorFromFile) {
 }
 
 TEST(ColorSpectrumManager, ScaleSpectrumBothNull) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   visual_t luma;
   EXPECT_FALSE(spectrum_manager.AllocateSpectrum(
@@ -336,7 +358,8 @@ TEST(ColorSpectrumManager, ScaleSpectrumBothNull) {
 }
 
 TEST(ColorSpectrumManager, ScaleSpectrumFirstNull) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum;
   rgb_spectrum.mutable_rgb_spectrum()->set_r(1.0);
@@ -351,7 +374,8 @@ TEST(ColorSpectrumManager, ScaleSpectrumFirstNull) {
 }
 
 TEST(ColorSpectrumManager, ScaleSpectrumSecondNull) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum;
   rgb_spectrum.mutable_rgb_spectrum()->set_r(1.0);
@@ -366,7 +390,8 @@ TEST(ColorSpectrumManager, ScaleSpectrumSecondNull) {
 }
 
 TEST(ColorSpectrumManager, ScaleSpectrumFirstOne) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum0;
   rgb_spectrum0.mutable_rgb_spectrum()->set_r(1.0);
@@ -392,7 +417,8 @@ TEST(ColorSpectrumManager, ScaleSpectrumFirstOne) {
 }
 
 TEST(ColorSpectrumManager, ScaleSpectrumSecondOne) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum0;
   rgb_spectrum0.mutable_rgb_spectrum()->set_r(1.0);
@@ -418,7 +444,8 @@ TEST(ColorSpectrumManager, ScaleSpectrumSecondOne) {
 }
 
 TEST(ColorSpectrumManager, ScaleSpectrum) {
-  ColorSpectrumManager spectrum_manager(false);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum rgb_spectrum0;
   rgb_spectrum0.mutable_rgb_spectrum()->set_r(1.0);

@@ -20,6 +20,7 @@ namespace {
 using ::bazel::tools::cpp::runfiles::Runfiles;
 using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
 using ::iris::textures::Image2D;
+using ::testing::ExitedWithCode;
 
 std::string RawRunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
@@ -28,20 +29,22 @@ std::string RawRunfilePath(const std::string& path) {
 }
 
 TEST(ImageManager, MissingFile) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(texture_manager, spectrum_manager);
 
   EXPECT_EXIT(image_manager.LoadFloatImageFromSDR("notarealfile", true),
-              testing::ExitedWithCode(EXIT_FAILURE),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Failed to load image: notarealfile");
   EXPECT_EXIT(image_manager.LoadReflectorImageFromSDR("notarealfile", true),
-              testing::ExitedWithCode(EXIT_FAILURE),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Failed to load image: notarealfile");
 }
 
 TEST(ImageManager, FloatImageSizesCorrect) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(texture_manager, spectrum_manager);
 
@@ -119,7 +122,8 @@ TEST(ImageManager, FloatImageSizesCorrect) {
 }
 
 TEST(ImageManager, ReflectorImageSizesCorrect) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(texture_manager, spectrum_manager);
 
@@ -197,7 +201,8 @@ TEST(ImageManager, ReflectorImageSizesCorrect) {
 }
 
 TEST(ImageManager, ReusesFloatImages) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(texture_manager, spectrum_manager);
 
@@ -333,7 +338,8 @@ TEST(ImageManager, ReusesFloatImages) {
 }
 
 TEST(ImageManager, ReusesReflectorImages) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(texture_manager, spectrum_manager);
 
@@ -469,7 +475,8 @@ TEST(ImageManager, ReusesReflectorImages) {
 }
 
 TEST(ImageManager, LinearFloatValues) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(texture_manager, spectrum_manager);
 
@@ -507,7 +514,8 @@ TEST(ImageManager, LinearFloatValues) {
 }
 
 TEST(ImageManager, LinearReflectorValues) {
-  ColorSpectrumManager spectrum_manager(true);
+  std::filesystem::path path = std::filesystem::current_path();
+  ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(texture_manager, spectrum_manager);
 

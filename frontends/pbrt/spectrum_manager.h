@@ -28,8 +28,6 @@ class SpectrumManager {
       const ReferenceCounted<Spectrum>& spectrum1,
       visual_t* luma = nullptr) = 0;
 
-  virtual void Clear() = 0;
-
   ReferenceCounted<Reflector> AllocateReflector(visual_t uniform) {
     pbrt_proto::v3::Spectrum spectrum;
     spectrum.set_uniform_spectrum(uniform);

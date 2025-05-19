@@ -1,652 +1,636 @@
 #include "frontends/pbrt/parser.h"
 
 #include <cstdlib>
+#include <filesystem>
+#include <functional>
 #include <iostream>
+#include <memory>
+#include <stack>
 #include <unordered_map>
+#include <utility>
+#include <variant>
+#include <vector>
 
 #include "frontends/pbrt/area_lights/parse.h"
-#include "frontends/pbrt/build_objects.h"
 #include "frontends/pbrt/cameras/parse.h"
+#include "frontends/pbrt/defaults.h"
+#include "frontends/pbrt/file.h"
 #include "frontends/pbrt/film/parse.h"
+#include "frontends/pbrt/film/result.h"
+#include "frontends/pbrt/image_manager.h"
 #include "frontends/pbrt/integrators/parse.h"
+#include "frontends/pbrt/integrators/result.h"
 #include "frontends/pbrt/lights/parse.h"
+#include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/parse.h"
-#include "frontends/pbrt/quoted_string.h"
+#include "frontends/pbrt/materials/result.h"
+#include "frontends/pbrt/matrix_manager.h"
+#include "frontends/pbrt/renderable.h"
 #include "frontends/pbrt/samplers/parse.h"
 #include "frontends/pbrt/shapes/parse.h"
+#include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
+#include "frontends/pbrt/texture_manager.h"
 #include "frontends/pbrt/textures/parse.h"
+#include "iris/camera.h"
+#include "iris/emissive_material.h"
+#include "iris/environmental_light.h"
+#include "iris/float.h"
 #include "iris/geometry/bvh_aggregate.h"
+#include "iris/image_sampler.h"
+#include "iris/light.h"
+#include "iris/material.h"
+#include "iris/reference_counted.h"
+#include "iris/renderer.h"
+#include "iris/scene_objects.h"
 #include "iris/scenes/bvh_scene.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
-namespace iris::pbrt_frontend {
+namespace iris {
+namespace pbrt_frontend {
+namespace {
 
-bool Parser::AreaLightSource() {
-  if (!world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
-                 "AreaLightSource"
-              << std::endl;
-    exit(EXIT_FAILURE);
+using ::iris::geometry::AllocateBVHAggregate;
+using ::iris::pbrt_frontend::spectrum_managers::ColorAlbedoMatcher;
+using ::iris::pbrt_frontend::spectrum_managers::ColorColorMatcher;
+using ::iris::pbrt_frontend::spectrum_managers::ColorPowerMatcher;
+using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
+using ::iris::scenes::BVHScene;
+using ::pbrt_proto::v3::ActiveTransform;
+using ::pbrt_proto::v3::Directive;
+using ::pbrt_proto::v3::Shape;
+
+struct GraphicsState {
+  std::pair<ReferenceCounted<EmissiveMaterial>,
+            ReferenceCounted<EmissiveMaterial>>
+      emissive_materials;
+  std::pair<pbrt_proto::v3::Material, MaterialResult> material;
+  bool reverse_orientation = false;
+};
+
+struct State {
+  State(Directives& directives, std::filesystem::path& search_root,
+        bool always_reflective)
+      : spectrum_manager(search_root, always_reflective),
+        texture_manager(spectrum_manager),
+        image_manager(texture_manager, spectrum_manager),
+        directives_(directives) {
+    graphics.emplace();
+    graphics.top().material.first = Defaults().default_material();
+    graphics.top().material.second =
+        ParseMaterial(Defaults().default_material(),
+                      Shape::MaterialOverrides::default_instance(),
+                      material_manager, texture_manager, spectrum_manager);
   }
 
-  const auto& builder = area_lights::Parse(*tokenizers_.back().tokenizer);
-  attributes_.back().emissive_material =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_, *spectrum_manager_);
+  void Include(const std::filesystem::path& search_root,
+               const std::string& path);
+  void LightSource(const pbrt_proto::v3::LightSource& light_source,
+                   const std::filesystem::path& search_root);
+  void Shape(const pbrt_proto::v3::Shape& shape,
+             const std::filesystem::path& search_root);
+  ParsingResult WorldEnd();
 
-  return true;
+  // Various Managers
+  ColorSpectrumManager spectrum_manager;
+  TextureManager texture_manager;
+  ImageManager image_manager;
+  MatrixManager matrix_manager;
+  MaterialManager material_manager;
+  SceneObjects::Builder objects;
+
+  // Object Instancing
+  std::vector<ReferenceCounted<Geometry>> current_instance;
+  std::string current_instance_name;
+  std::unordered_map<std::string, ReferenceCounted<Geometry>> instances;
+  bool build_instance = false;
+
+  // Other State
+  std::stack<GraphicsState> graphics;
+  std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>
+      camera;
+  std::unique_ptr<FilmResult> film;
+  std::unique_ptr<IntegratorResult> integrator;
+  std::unique_ptr<ImageSampler> sampler;
+
+  // Parsing State
+  bool world_begin_encountered = false;
+
+ private:
+  Directives& directives_;
+};
+
+void State::Include(const std::filesystem::path& search_root,
+                    const std::string& path) {
+  auto [proto, file_path] = LoadFile(search_root, path);
+  std::filesystem::path parent_path = file_path.parent_path();
+  directives_.Include(std::move(proto), std::move(parent_path),
+                      std::move(file_path));
 }
 
-bool Parser::AttributeBegin() {
-  if (!world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
-                 "AttributeBegin"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  attributes_.push_back(attributes_.back());
-  matrix_manager_->Push();
-
-  return true;
-}
-
-bool Parser::AttributeEnd() {
-  if (!world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
-                 "AttributeEnd"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  attributes_.pop_back();
-  matrix_manager_->Pop();
-
-  return true;
-}
-
-bool Parser::Camera() {
-  if (world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified between WorldBegin and "
-                 "WorldEnd: Camera"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (camera_encountered_) {
-    std::cerr << "ERROR: Directive specified twice for a render: Camera"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const auto& builder = cameras::Parse(*tokenizers_.back().tokenizer);
-  camera_ = BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-                        *spectrum_manager_, *texture_manager_,
-                        matrix_manager_->Get());
-
-  camera_encountered_ = true;
-
-  return true;
-}
-
-bool Parser::Film() {
-  if (world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified between WorldBegin and "
-                 "WorldEnd: Film"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (film_encountered_) {
-    std::cerr << "ERROR: Directive specified twice for a render: Film"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const auto& builder = film::Parse(*tokenizers_.back().tokenizer);
-  auto result =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_);
-
-  image_dimensions_ = result.resolution;
-  skip_pixel_callback_ = std::move(result.skip_pixel_function);
-  maximum_sample_luminance_ = result.max_sample_luminance;
-  output_filename_ = result.filename;
-  write_function_ = result.write_function;
-
-  film_encountered_ = true;
-
-  return true;
-}
-
-bool Parser::Include() {
-  auto next = tokenizers_.back().tokenizer->Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive: Include" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted = Unquote(*next);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to Include must be a string" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  std::filesystem::path file_path(*unquoted);
-  if (file_path.is_relative()) {
-    file_path = *search_root_ / file_path;
-  }
-
-  file_path = std::filesystem::weakly_canonical(file_path);
-
-  for (const auto& entry : tokenizers_) {
-    if (entry.tokenizer->FilePath().has_value() &&
-        file_path == *entry.tokenizer->FilePath()) {
-      std::cerr << "ERROR: Detected cyclic Include of file: " << *unquoted
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  auto file = std::make_unique<std::ifstream>(file_path);
-  if (file->fail()) {
-    std::cerr << "ERROR: Failed to open file: " << *unquoted << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto tokenizer = std::make_unique<Tokenizer>(*file, file_path);
-
-  tokenizers_.emplace_back(tokenizer.get(), std::move(tokenizer),
-                           std::move(file));
-
-  return true;
-}
-
-bool Parser::Integrator() {
-  if (world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified between WorldBegin and "
-                 "WorldEnd: Integrator"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (integrator_encountered_) {
-    std::cerr << "ERROR: Directive specified twice for a render: Integrator"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const auto& builder = integrators::Parse(*tokenizers_.back().tokenizer);
-  auto object =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_);
-  integrator_ = std::move(object.integrator);
-  light_scene_builder_ = std::move(object.light_scene_builder);
-
-  integrator_encountered_ = true;
-
-  return true;
-}
-
-bool Parser::LightSource() {
-  if (!world_begin_encountered_) {
-    std::cerr
-        << "ERROR: Directive cannot be specified before WorldBegin: LightSource"
-        << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const auto& builder = lights::Parse(*tokenizers_.back().tokenizer);
-  auto light = BuildObject(
-      builder, *tokenizers_.back().tokenizer, *search_root_, *spectrum_manager_,
-      *texture_manager_, *spectrum_manager_,
-      current_object_name_ ? Matrix::Identity() : matrix_manager_->Get().start);
-
+void State::LightSource(const pbrt_proto::v3::LightSource& light_source,
+                        const std::filesystem::path& search_root) {
+  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
+      light = ParseLightSource(light_source, search_root,
+                               matrix_manager.Get().start, spectrum_manager);
   if (std::holds_alternative<ReferenceCounted<EnvironmentalLight>>(light)) {
     // TODO: Merge environmental lights
-    scene_objects_builder_.Set(
-        std::get<ReferenceCounted<EnvironmentalLight>>(light));
+    objects.Set(std::get<ReferenceCounted<EnvironmentalLight>>(light));
   } else {
-    scene_objects_builder_.Add(std::get<ReferenceCounted<iris::Light>>(light));
+    objects.Add(std::get<ReferenceCounted<Light>>(light));
   }
-
-  return true;
 }
 
-bool Parser::MakeNamedMaterial() {
-  materials::ParseNamed(*tokenizers_.back().tokenizer, *search_root_,
-                        *material_manager_, *spectrum_manager_,
-                        *texture_manager_);
-  return true;
-}
+void State::Shape(const pbrt_proto::v3::Shape& shape,
+                  const std::filesystem::path& search_root) {
+  auto [shapes, model_to_world] = ParseShape(
+      shape, matrix_manager.Get().start, graphics.top().reverse_orientation,
+      graphics.top().material,
+      (build_instance) ? ReferenceCounted<EmissiveMaterial>()
+                       : graphics.top().emissive_materials.first,
+      (build_instance) ? ReferenceCounted<EmissiveMaterial>()
+                       : graphics.top().emissive_materials.second,
+      search_root, material_manager, texture_manager, spectrum_manager);
 
-bool Parser::Material() {
-  if (!world_begin_encountered_) {
-    std::cerr
-        << "ERROR: Directive cannot be specified before WorldBegin: Material"
-        << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const auto& builder = materials::Parse(*tokenizers_.back().tokenizer);
-  attributes_.back().material =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_,
-                  static_cast<const MaterialManager&>(*material_manager_),
-                  *texture_manager_, *spectrum_manager_);
-
-  return true;
-}
-
-bool Parser::NamedMaterial() {
-  if (!world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
-                 "NamedMaterial"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto next = tokenizers_.back().tokenizer->Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive: NamedMaterial"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted = Unquote(*next);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to NamedMaterial must be a string"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  attributes_.back().material = material_manager_->Get(*unquoted);
-
-  return true;
-}
-
-bool Parser::ObjectBegin() {
-  if (!world_begin_encountered_) {
-    std::cerr
-        << "ERROR: Directive cannot be specified before WorldBegin: ObjectBegin"
-        << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (current_object_name_) {
-    std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto next = tokenizers_.back().tokenizer->Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive: ObjectBegin"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted = Unquote(*next);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to ObjectBegin must be a string"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  current_object_name_ = *unquoted;
-
-  return true;
-}
-
-bool Parser::ObjectEnd() {
-  if (!world_begin_encountered_) {
-    std::cerr
-        << "ERROR: Directive cannot be specified before WorldBegin: ObjectEnd"
-        << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (!current_object_name_) {
-    std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  objects_[std::move(*current_object_name_)] =
-      geometry::AllocateBVHAggregate(std::move(current_object_geometry_));
-  current_object_name_.reset();
-  current_object_geometry_.clear();
-
-  return true;
-}
-
-bool Parser::ObjectInstance() {
-  if (!world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
-                 "ObjectInstance"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (current_object_name_) {
-    std::cerr << "ERROR: ObjectInstance cannot be specified between "
-                 "ObjectBegin and ObjectEnd"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto next = tokenizers_.back().tokenizer->Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive: ObjectInstance"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted = Unquote(*next);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to ObjectInstance must be a string"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto iter = objects_.find(std::string(*unquoted));
-  if (iter == objects_.end()) {
-    std::cerr << "ERROR: ObjectInstance referred to an unknown object: "
-              << *unquoted << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  scene_objects_builder_.Add(iter->second, matrix_manager_->Get().start);
-
-  return true;
-}
-
-bool Parser::PixelFilter() {
-  if (world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified between WorldBegin and "
-                 "WorldEnd: PixelFilter"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (pixel_filter_encountered_) {
-    std::cerr << "ERROR: Directive specified twice for a render: PixelFilter"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto next = tokenizers_.back().tokenizer->Next();
-  if (!next) {
-    std::cerr << "ERROR: Too few parameters to directive: PixelFilter"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto unquoted = Unquote(*next);
-  if (!unquoted) {
-    std::cerr << "ERROR: Parameter to PixelFilter must be a string"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (*unquoted != "box") {
-    std::cerr << "ERROR: Unsupported type for directive PixelFilter: "
-              << *unquoted << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  pixel_filter_encountered_ = true;
-
-  return true;
-}
-
-bool Parser::ReverseOrientation() {
-  attributes_.back().reverse_orientation =
-      !attributes_.back().reverse_orientation;
-  return true;
-}
-
-bool Parser::Sampler() {
-  if (world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified between WorldBegin and "
-                 "WorldEnd: Sampler"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (sampler_encountered_) {
-    std::cerr << "ERROR: Directive specified twice for a render: Sampler"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  const auto& builder = samplers::Parse(*tokenizers_.back().tokenizer);
-  image_sampler_ =
-      BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_);
-
-  sampler_encountered_ = true;
-
-  return true;
-}
-
-bool Parser::Shape() {
-  if (!world_begin_encountered_) {
-    std::cerr << "ERROR: Directive cannot be specified before WorldBegin: Shape"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  auto [shapes, transform] = shapes::Parse(
-      *tokenizers_.back().tokenizer, *search_root_, *material_manager_,
-      *spectrum_manager_, *texture_manager_, attributes_.back().material,
-      attributes_.back().emissive_material.first,
-      attributes_.back().emissive_material.second, matrix_manager_->Get().start,
-      attributes_.back().reverse_orientation);
-
-  if (current_object_name_) {
-    current_object_geometry_.insert(current_object_geometry_.end(),
-                                    std::make_move_iterator(shapes.begin()),
-                                    std::make_move_iterator(shapes.end()));
+  if (build_instance) {
+    current_instance.insert(current_instance.end(), shapes.begin(),
+                            shapes.end());
   } else {
-    for (auto& geometry : shapes) {
-      scene_objects_builder_.Add(std::move(geometry), transform);
+    for (auto& shape : shapes) {
+      objects.Add(std::move(shape), model_to_world);
     }
   }
-
-  return true;
 }
 
-bool Parser::Texture() {
-  if (!world_begin_encountered_) {
-    std::cerr
-        << "ERROR: Directive cannot be specified before WorldBegin: Texture"
-        << std::endl;
-    exit(EXIT_FAILURE);
+ParsingResult State::WorldEnd() {
+  Renderer renderer(BVHScene::Builder(), *integrator->light_scene_builder,
+                    objects.Build(), ColorPowerMatcher());
+
+  Renderable renderable(
+      std::move(renderer), camera(film->resolution), std::move(sampler),
+      std::move(integrator->integrator), std::make_unique<ColorAlbedoMatcher>(),
+      std::make_unique<ColorColorMatcher>(), film->resolution);
+
+  return ParsingResult{std::move(renderable), film->skip_pixel_function,
+                       film->filename, film->write_function,
+                       film->max_sample_luminance};
+}
+
+MatrixManager::ActiveTransformation ToActiveTransform(
+    const ActiveTransform& active_transform) {
+  MatrixManager::ActiveTransformation result =
+      MatrixManager::ActiveTransformation::ALL;
+  switch (active_transform.active()) {
+    case ActiveTransform::ALL:
+      result = MatrixManager::ActiveTransformation::ALL;
+      break;
+    case ActiveTransform::START_TIME:
+      result = MatrixManager::ActiveTransformation::START;
+      break;
+    case ActiveTransform::END_TIME:
+      result = MatrixManager::ActiveTransformation::END;
+      break;
   }
-
-  const auto& builder =
-      textures::Parse(*tokenizers_.back().tokenizer, texture_name_);
-  BuildObject(builder, *tokenizers_.back().tokenizer, *search_root_,
-              *spectrum_manager_, *texture_manager_, *image_manager_,
-              *texture_manager_,
-              static_cast<const std::string&>(texture_name_));
-
-  return true;
+  return result;
 }
 
-bool Parser::WorldBegin() {
-  if (world_begin_encountered_) {
-    std::cerr << "ERROR: Invalid WorldBegin directive" << std::endl;
-    exit(EXIT_FAILURE);
-  }
+std::optional<ParsingResult> ParseDirective(
+    State& state, const Directive& directive,
+    const std::filesystem::path& search_root) {
+  switch (directive.directive_type_case()) {
+    case Directive::kAccelerator:
+      if (state.world_begin_encountered) {
+        std::cerr
+            << "ERROR: Directive cannot be specified between WorldBegin and "
+               "WorldEnd: Accelerator"
+            << std::endl;
+        exit(EXIT_FAILURE);
+      }
 
-  matrix_manager_ = std::make_unique<MatrixManager>();
+      // Ignored
+      break;
+    case Directive::kActiveTransform:
+      state.matrix_manager.ActiveTransform(
+          ToActiveTransform(directive.active_transform()));
+      break;
+    case Directive::kAreaLightSource:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "AreaLightSource"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
 
-  world_begin_encountered_ = true;
-  return true;
-}
+      state.graphics.top().emissive_materials = ParseAreaLightSource(
+          directive.area_light_source(), state.spectrum_manager);
+      break;
+    case Directive::kAttributeBegin:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "AttributeBegin"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
 
-bool Parser::WorldEnd() {
-  if (!world_begin_encountered_) {
-    std::cerr << "ERROR: Invalid WorldEnd directive" << std::endl;
-    exit(EXIT_FAILURE);
-  }
+      state.texture_manager.AttributeBegin();
+      state.material_manager.AttributeBegin();
+      state.matrix_manager.AttributeBegin();
+      state.graphics.push(state.graphics.top());
+      break;
+    case Directive::kAttributeEnd:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "AttributeEnd"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
 
-  return false;
-}
+      state.texture_manager.AttributeEnd();
+      state.material_manager.AttributeEnd();
+      state.matrix_manager.AttributeEnd();
+      state.graphics.pop();
+      break;
+    case Directive::kCamera:
+      if (state.world_begin_encountered) {
+        std::cerr
+            << "ERROR: Directive cannot be specified between WorldBegin and "
+               "WorldEnd: Camera"
+            << std::endl;
+        exit(EXIT_FAILURE);
+      }
 
-std::optional<std::string_view> Parser::PeekToken() {
-  while (!tokenizers_.empty()) {
-    if (tokenizers_.back().tokenizer->Peek()) {
-      return tokenizers_.back().tokenizer->Peek();
-    }
+      state.camera =
+          ParseCamera(directive.camera(), state.matrix_manager.Get());
+      break;
+    case Directive::kConcatTransform:
+      state.matrix_manager.ConcatTransform(directive.concat_transform().m00(),
+                                           directive.concat_transform().m01(),
+                                           directive.concat_transform().m02(),
+                                           directive.concat_transform().m03(),
+                                           directive.concat_transform().m10(),
+                                           directive.concat_transform().m11(),
+                                           directive.concat_transform().m12(),
+                                           directive.concat_transform().m13(),
+                                           directive.concat_transform().m20(),
+                                           directive.concat_transform().m21(),
+                                           directive.concat_transform().m22(),
+                                           directive.concat_transform().m23(),
+                                           directive.concat_transform().m30(),
+                                           directive.concat_transform().m31(),
+                                           directive.concat_transform().m32(),
+                                           directive.concat_transform().m33());
+      break;
+    case Directive::kCoordinateSystem:
+      state.matrix_manager.CoordinateSystem(
+          directive.coordinate_system().name());
+      break;
+    case Directive::kCoordSysTransform:
+      state.matrix_manager.CoordSysTransform(
+          directive.coord_sys_transform().name());
+      break;
+    case Directive::kFilm:
+      if (state.world_begin_encountered) {
+        std::cerr
+            << "ERROR: Directive cannot be specified between WorldBegin and "
+               "WorldEnd: Film"
+            << std::endl;
+        exit(EXIT_FAILURE);
+      }
 
-    tokenizers_.pop_back();
+      state.film = ParseFilm(directive.film());
+      break;
+    case Directive::kFloatTexture:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "Texture"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      ParseFloatTexture(directive.float_texture(), state.image_manager,
+                        state.texture_manager);
+      break;
+    case Directive::kIdentity:
+      state.matrix_manager.Identity();
+      break;
+    case Directive::kInclude:
+      state.Include(search_root, directive.include().path());
+      break;
+    case Directive::kIntegrator:
+      if (state.world_begin_encountered) {
+        std::cerr
+            << "ERROR: Directive cannot be specified between WorldBegin and "
+               "WorldEnd: Integrator"
+            << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.integrator = ParseIntegrator(directive.integrator());
+      break;
+    case Directive::kLightSource:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "LightSource"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.LightSource(directive.light_source(), search_root);
+      break;
+    case Directive::kLookAt:
+      state.matrix_manager.LookAt(
+          directive.look_at().eye_x(), directive.look_at().eye_y(),
+          directive.look_at().eye_z(), directive.look_at().look_x(),
+          directive.look_at().look_y(), directive.look_at().look_z(),
+          directive.look_at().up_x(), directive.look_at().up_y(),
+          directive.look_at().up_z());
+      break;
+    case Directive::kMakeNamedMaterial:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "MakeNamedMaterial"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      ParseMakeNamedMaterial(directive.make_named_material(),
+                             state.material_manager, state.texture_manager,
+                             state.spectrum_manager);
+      break;
+    case Directive::kMakeNamedMedium:
+      std::cerr << "ERROR: Directive is not implemented: MakeNamedMedium"
+                << std::endl;
+      exit(EXIT_FAILURE);
+      break;
+    case Directive::kMaterial:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "Material"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.graphics.top().material.second = ParseMaterial(
+          directive.material(), Shape::MaterialOverrides::default_instance(),
+          state.material_manager, state.texture_manager,
+          state.spectrum_manager);
+      state.graphics.top().material.first = directive.material();
+      break;
+    case Directive::kMediumInterface:
+      std::cerr << "ERROR: Directive is not implemented: MediumInterface"
+                << std::endl;
+      exit(EXIT_FAILURE);
+      break;
+    case Directive::kNamedMaterial:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "NamedMaterial"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.graphics.top().material =
+          state.material_manager.Get(directive.named_material().name());
+      break;
+    case Directive::kObjectBegin:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "ObjectBegin"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (state.build_instance) {
+        std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.current_instance_name = directive.object_begin().name();
+      state.build_instance = true;
+      break;
+    case Directive::kObjectEnd:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "ObjectEnd"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (!state.build_instance) {
+        std::cerr << "ERROR: Mismatched ObjectBegin and ObjectEnd directives"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.instances[std::move(state.current_instance_name)] =
+          AllocateBVHAggregate(std::move(state.current_instance));
+      state.current_instance_name.clear();
+      state.current_instance.clear();
+      state.build_instance = false;
+      break;
+    case Directive::kObjectInstance:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "ObjectInstance"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (state.build_instance) {
+        std::cerr << "ERROR: ObjectInstance cannot be specified between "
+                     "ObjectBegin and ObjectEnd"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (auto iter = state.instances.find(directive.object_instance().name());
+          iter != state.instances.end()) {
+        state.objects.Add(iter->second, state.matrix_manager.Get().start);
+      } else {
+        std::cerr << "ERROR: ObjectInstance referred to an unknown object: "
+                  << directive.object_instance().name() << std::endl;
+        exit(EXIT_FAILURE);
+      }
+      break;
+    case Directive::kPixelFilter:
+      if (state.world_begin_encountered) {
+        std::cerr
+            << "ERROR: Directive cannot be specified between WorldBegin and "
+               "WorldEnd: PixelFilter"
+            << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      // Ignored
+      break;
+    case Directive::kReverseOrientation:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "ReverseOrientation"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.graphics.top().reverse_orientation =
+          !state.graphics.top().reverse_orientation;
+      break;
+    case Directive::kRotate:
+      state.matrix_manager.Rotate(
+          directive.rotate().angle(), directive.rotate().x(),
+          directive.rotate().y(), directive.rotate().z());
+      break;
+    case Directive::kSampler:
+      if (state.world_begin_encountered) {
+        std::cerr
+            << "ERROR: Directive cannot be specified between WorldBegin and "
+               "WorldEnd: Sampler"
+            << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.sampler = ParseSampler(directive.sampler());
+      break;
+    case Directive::kShape:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "Shape"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.Shape(directive.shape(), search_root);
+      break;
+    case Directive::kScale:
+      state.matrix_manager.Scale(directive.scale().x(), directive.scale().y(),
+                                 directive.scale().z());
+      break;
+    case Directive::kSpectrumTexture:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "Texture"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      ParseSpectrumTexture(directive.spectrum_texture(), state.image_manager,
+                           state.texture_manager);
+      break;
+    case Directive::kTransform:
+      state.matrix_manager.Transform(
+          directive.transform().m00(), directive.transform().m01(),
+          directive.transform().m02(), directive.transform().m03(),
+          directive.transform().m10(), directive.transform().m11(),
+          directive.transform().m12(), directive.transform().m13(),
+          directive.transform().m20(), directive.transform().m21(),
+          directive.transform().m22(), directive.transform().m23(),
+          directive.transform().m30(), directive.transform().m31(),
+          directive.transform().m32(), directive.transform().m33());
+      break;
+    case Directive::kTransformBegin:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "TransformBegin"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.matrix_manager.TransformBegin();
+      break;
+    case Directive::kTransformEnd:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Directive cannot be specified before WorldBegin: "
+                     "TransformEnd"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.matrix_manager.TransformEnd();
+      break;
+    case Directive::kTransformTimes:
+      std::cerr << "ERROR: Directive is not implemented: TransformTimes"
+                << std::endl;
+      exit(EXIT_FAILURE);
+      break;
+    case Directive::kTranslate:
+      state.matrix_manager.Translate(directive.translate().x(),
+                                     directive.translate().y(),
+                                     directive.translate().z());
+      break;
+    case Directive::kWorldBegin:
+      if (state.world_begin_encountered) {
+        std::cerr << "ERROR: Invalid WorldBegin directive" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (!state.camera) {
+        std::cerr << "ERROR: The scene specified an invalid Camera"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (!state.film) {
+        std::cerr << "ERROR: The scene specified an invalid Film" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (!state.integrator) {
+        std::cerr << "ERROR: The scene specified an invalid Integrator"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      if (!state.sampler) {
+        std::cerr << "ERROR: The scene specified an invalid Sampler"
+                  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      state.world_begin_encountered = true;
+      state.matrix_manager.ActiveTransform(
+          MatrixManager::ActiveTransformation::ALL);
+      state.matrix_manager.Identity();
+      state.matrix_manager.CoordinateSystem("world");
+      break;
+    case Directive::kWorldEnd:
+      if (!state.world_begin_encountered) {
+        std::cerr << "ERROR: Invalid WorldEnd directive" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+
+      return state.WorldEnd();
+    case Directive::DIRECTIVE_TYPE_NOT_SET:
+      break;
   }
 
   return std::nullopt;
 }
 
-std::string_view Parser::NextToken() {
-  return tokenizers_.back().tokenizer->Next().value();
-}
+}  // namespace
 
-void Parser::InitializeDefault() {
-  std::stringstream empty("");
-  iris::pbrt_frontend::Tokenizer empty_tokenizer(empty);
+std::optional<ParsingResult> ParseScene(Directives& directives,
+                                        const Options& options) {
+  std::filesystem::path search_root = std::filesystem::current_path();
+  State state(directives, search_root, options.always_reflective);
 
-  auto default_film =
-      BuildObject(film::Default(), empty_tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_);
-  image_dimensions_ = default_film.resolution;
-  skip_pixel_callback_ = std::move(default_film.skip_pixel_function);
-  maximum_sample_luminance_ = std::nullopt;
-  output_filename_ = default_film.filename;
-  write_function_ = std::move(default_film.write_function);
+  directives.Include(Defaults().global_defaults(),
+                     std::filesystem::current_path());
 
-  auto default_integrator =
-      BuildObject(integrators::Default(), empty_tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_);
-  integrator_ = std::move(default_integrator.integrator);
-  light_scene_builder_ = std::move(default_integrator.light_scene_builder);
-
-  image_sampler_ =
-      BuildObject(samplers::Default(), empty_tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_);
-
-  auto default_camera = BuildObject(cameras::Default(), empty_tokenizer,
-                                    *search_root_, *spectrum_manager_,
-                                    *texture_manager_, matrix_manager_->Get());
-  camera_ = std::move(default_camera);
-
-  auto default_material =
-      BuildObject(materials::Default(), empty_tokenizer, *search_root_,
-                  *spectrum_manager_, *texture_manager_,
-                  static_cast<const MaterialManager&>(*material_manager_),
-                  *texture_manager_, *spectrum_manager_);
-  attributes_.emplace_back(
-      default_material,
-      std::pair<iris::ReferenceCounted<iris::EmissiveMaterial>,
-                iris::ReferenceCounted<iris::EmissiveMaterial>>(),
-      false);
-}
-
-std::optional<Parser::Result> Parser::ParseFrom(
-    Tokenizer& tokenizer, const std::filesystem::path& search_root) {
-  material_manager_ = std::make_unique<MaterialManager>();
-  matrix_manager_ = std::make_unique<MatrixManager>();
-  texture_manager_ = std::make_unique<TextureManager>();
-  image_manager_ =
-      std::make_unique<ImageManager>(*texture_manager_, *spectrum_manager_);
-
-  camera_encountered_ = false;
-  film_encountered_ = false;
-  integrator_encountered_ = false;
-  pixel_filter_encountered_ = false;
-  sampler_encountered_ = false;
-  world_begin_encountered_ = false;
-
-  static const std::unordered_map<std::string_view, bool (Parser::*)()>
-      callbacks = {
-          {"AreaLightSource", &Parser::AreaLightSource},
-          {"AttributeBegin", &Parser::AttributeBegin},
-          {"AttributeEnd", &Parser::AttributeEnd},
-          {"Camera", &Parser::Camera},
-          {"Film", &Parser::Film},
-          {"Include", &Parser::Include},
-          {"Integrator", &Parser::Integrator},
-          {"LightSource", &Parser::LightSource},
-          {"MakeNamedMaterial", &Parser::MakeNamedMaterial},
-          {"Material", &Parser::Material},
-          {"NamedMaterial", &Parser::NamedMaterial},
-          {"ObjectBegin", &Parser::ObjectBegin},
-          {"ObjectEnd", &Parser::ObjectEnd},
-          {"ObjectInstance", &Parser::ObjectInstance},
-          {"PixelFilter", &Parser::PixelFilter},
-          {"ReverseOrientation", &Parser::ReverseOrientation},
-          {"Sampler", &Parser::Sampler},
-          {"Shape", &Parser::Shape},
-          {"Texture", &Parser::Texture},
-          {"WorldBegin", &Parser::WorldBegin},
-          {"WorldEnd", &Parser::WorldEnd},
-      };
-
-  tokenizers_.emplace_back(&tokenizer, nullptr, nullptr);
-  search_root_ = &search_root;
-
-  InitializeDefault();
-
-  bool tokens_parsed = false;
-  for (;;) {
-    auto peeked_token = PeekToken();
-    if (!peeked_token.has_value()) {
-      if (tokens_parsed) {
-        std::cerr << "ERROR: Final directive should be WorldEnd" << std::endl;
-        exit(EXIT_FAILURE);
-      }
-
-      return std::nullopt;
-    }
-
-    tokens_parsed = true;
-
-    if (matrix_manager_->TryParse(*tokenizers_.back().tokenizer)) {
-      continue;
-    }
-
-    auto token = NextToken();
-
-    auto iter = callbacks.find(token);
-    if (iter == callbacks.end()) {
-      std::cerr << "ERROR: Invalid directive: " << token << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    if (!(this->*iter->second)()) {
-      break;
+  for (const Directive* next = directives.Next(search_root); next != nullptr;
+       next = directives.Next(search_root)) {
+    if (std::optional<ParsingResult> result =
+            ParseDirective(state, *next, search_root);
+        result) {
+      return result;
     }
   }
 
-  Renderer renderer(scenes::BVHScene::Builder(), *light_scene_builder_,
-                    scene_objects_builder_.Build(), *power_matcher_);
-  Renderable renderable(std::move(renderer), camera_(image_dimensions_),
-                        std::move(image_sampler_), std::move(integrator_),
-                        image_dimensions_);
+  if (state.world_begin_encountered) {
+    std::cerr << "ERROR: Final directive should be WorldEnd" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-  camera_ = nullptr;
-  attributes_.clear();
-  objects_.clear();
-  spectrum_manager_->Clear();
-  current_object_name_.reset();
-  current_object_geometry_.clear();
-  material_manager_.reset();
-  matrix_manager_.reset();
-  texture_manager_.reset();
-  image_manager_.reset();
-
-  return Parser::Result{std::move(renderable), std::move(skip_pixel_callback_),
-                        std::move(output_filename_), std::move(write_function_),
-                        maximum_sample_luminance_};
+  return std::nullopt;
 }
 
-}  // namespace iris::pbrt_frontend
+}  // namespace pbrt_frontend
+}  // namespace iris

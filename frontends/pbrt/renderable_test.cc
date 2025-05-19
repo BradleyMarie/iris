@@ -1,7 +1,10 @@
 #include "frontends/pbrt/renderable.h"
 
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <thread>
+#include <utility>
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/albedo_matchers/mock_albedo_matcher.h"
@@ -15,22 +18,38 @@
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
 
+namespace iris {
+namespace pbrt_frontend {
+namespace {
+
+using ::iris::albedo_matchers::MockAlbedoMatcher;
+using ::iris::cameras::MockCamera;
+using ::iris::color_matchers::MockColorMatcher;
+using ::iris::image_samplers::MockImageSampler;
+using ::iris::integrators::MockIntegrator;
+using ::iris::light_scenes::AllLightScene;
+using ::iris::power_matchers::MockPowerMatcher;
+using ::iris::random::MockRandom;
+using ::iris::scenes::ListScene;
+using ::iris::spectra::MockSpectrum;
+using ::testing::_;
+using ::testing::InSequence;
+using ::testing::Return;
+
 void RunTestBody(
     unsigned num_threads_requested, unsigned actual_num_threads,
     std::function<void(size_t, size_t)> progress_callback,
     std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
         skip_pixel_callback) {
-  iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
-  iris::power_matchers::MockPowerMatcher power_matcher;
-  auto scene_builder = iris::scenes::ListScene::Builder::Create();
-  auto light_scene_builder =
-      iris::light_scenes::AllLightScene::Builder::Create();
-  auto scene_objects = iris::SceneObjects::Builder().Build();
-  iris::Renderer renderer(*scene_builder, *light_scene_builder,
-                          std::move(scene_objects), power_matcher);
+  MockPowerMatcher power_matcher;
+  std::unique_ptr<Scene::Builder> scene_builder = ListScene::Builder::Create();
+  std::unique_ptr<LightScene::Builder> light_scene_builder =
+      AllLightScene::Builder::Create();
+  SceneObjects scene_objects = SceneObjects::Builder().Build();
+  Renderer renderer(*scene_builder, *light_scene_builder,
+                    std::move(scene_objects), power_matcher);
 
-  iris::RayDifferential trace_ray(
-      iris::Ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0)));
+  RayDifferential trace_ray(Ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0)));
   std::pair<size_t, size_t> image_dimensions = std::make_pair(32, 33);
 
   size_t num_pixels = 0;
@@ -47,24 +66,24 @@ void RunTestBody(
   size_t samples = num_pixels * samples_per_pixel;
   size_t chunks = 64;
 
-  auto rng = std::make_unique<iris::random::MockRandom>();
+  std::unique_ptr<MockRandom> rng = std::make_unique<MockRandom>();
   EXPECT_CALL(*rng, Replicate())
       .Times(chunks)
-      .WillRepeatedly(testing::Invoke(
-          []() { return std::make_unique<iris::random::MockRandom>(); }));
+      .WillRepeatedly(
+          testing::Invoke([]() { return std::make_unique<MockRandom>(); }));
 
   size_t sampler_index = 0;
-  auto image_sampler =
-      std::make_unique<iris::image_samplers::MockImageSampler>();
+  std::unique_ptr<MockImageSampler> image_sampler =
+      std::make_unique<MockImageSampler>();
   EXPECT_CALL(*image_sampler, Replicate())
       .Times(chunks)
       .WillRepeatedly(testing::Invoke([&]() {
-        auto result =
-            std::make_unique<iris::image_samplers::MockImageSampler>();
+        std::unique_ptr<MockImageSampler> result =
+            std::make_unique<MockImageSampler>();
 
         if (sampler_index % 2 == 0) {
           {
-            testing::InSequence s;
+            InSequence s;
             for (size_t i = 0; i < 32; i++) {
               if (skip_pixel_callback &&
                   skip_pixel_callback({sampler_index / 2, i},
@@ -78,17 +97,17 @@ void RunTestBody(
                                      std::make_pair(
                                          static_cast<size_t>(sampler_index / 2),
                                          static_cast<size_t>(i))));
-              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+              EXPECT_CALL(*result, NextSample(_, _))
                   .Times(samples_per_pixel)
-                  .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
+                  .WillRepeatedly(Return(ImageSampler::Sample{
                       {0.0, 0.0},
                       {1.0, 1.0},
                       std::nullopt,
-                      static_cast<iris::visual_t>(1.0) /
-                          static_cast<iris::visual_t>(samples_per_pixel),
+                      static_cast<visual_t>(1.0) /
+                          static_cast<visual_t>(samples_per_pixel),
                       *rng}));
-              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
-                  .WillOnce(testing::Return(std::nullopt));
+              EXPECT_CALL(*result, NextSample(_, _))
+                  .WillOnce(Return(std::nullopt));
             }
           }
         } else {
@@ -101,18 +120,18 @@ void RunTestBody(
                                        static_cast<size_t>(sampler_index / 2),
                                        static_cast<size_t>(32))));
             {
-              testing::InSequence s;
-              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
+              InSequence s;
+              EXPECT_CALL(*result, NextSample(_, _))
                   .Times(samples_per_pixel)
-                  .WillRepeatedly(testing::Return(iris::ImageSampler::Sample{
+                  .WillRepeatedly(Return(ImageSampler::Sample{
                       {0.0, 0.0},
                       {1.0, 1.0},
                       std::nullopt,
-                      static_cast<iris::visual_t>(1.0) /
-                          static_cast<iris::visual_t>(samples_per_pixel),
+                      static_cast<visual_t>(1.0) /
+                          static_cast<visual_t>(samples_per_pixel),
                       *rng}));
-              EXPECT_CALL(*result, NextSample(testing::_, testing::_))
-                  .WillOnce(testing::Return(std::nullopt));
+              EXPECT_CALL(*result, NextSample(_, _))
+                  .WillOnce(Return(std::nullopt));
             }
           }
         }
@@ -122,52 +141,52 @@ void RunTestBody(
         return result;
       }));
 
-  auto camera = std::make_unique<iris::cameras::MockCamera>();
+  std::unique_ptr<MockCamera> camera = std::make_unique<MockCamera>();
   EXPECT_CALL(*camera, HasLens())
       .Times(actual_num_threads)
-      .WillRepeatedly(testing::Return(false));
+      .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*camera, Compute(testing::_, testing::_, testing::_))
+  EXPECT_CALL(*camera, Compute(_, _, _))
       .Times(samples)
-      .WillRepeatedly(testing::Return(trace_ray));
+      .WillRepeatedly(Return(trace_ray));
 
-  iris::spectra::MockSpectrum spectrum;
-  auto integrator = std::make_unique<iris::integrators::MockIntegrator>();
+  MockSpectrum spectrum;
+  std::unique_ptr<MockIntegrator> integrator =
+      std::make_unique<MockIntegrator>();
   EXPECT_CALL(*integrator, Duplicate())
       .Times(actual_num_threads)
       .WillRepeatedly(testing::Invoke([&]() {
-        auto result = std::make_unique<iris::integrators::MockIntegrator>();
-        EXPECT_CALL(*result,
-                    Integrate(trace_ray, testing::_, testing::_, testing::_,
-                              testing::_, testing::_, testing::_))
-            .WillRepeatedly(testing::Return(&spectrum));
+        std::unique_ptr<MockIntegrator> result =
+            std::make_unique<MockIntegrator>();
+        EXPECT_CALL(*result, Integrate(trace_ray, _, _, _, _, _, _))
+            .WillRepeatedly(Return(&spectrum));
         return result;
       }));
 
-  iris::Color color(1.0, 1.0, 1.0, iris::Color::LINEAR_SRGB);
-  iris::color_matchers::MockColorMatcher color_matcher;
-  EXPECT_CALL(color_matcher, Match(testing::_))
+  Color color(1.0, 1.0, 1.0, Color::LINEAR_SRGB);
+  std::unique_ptr<MockColorMatcher> color_matcher =
+      std::make_unique<MockColorMatcher>();
+  EXPECT_CALL(*color_matcher, Match(_))
       .Times(samples)
-      .WillRepeatedly(
-          testing::Return(std::array<iris::visual_t, 3>({1.0, 1.0, 1.0})));
-  EXPECT_CALL(color_matcher, ColorSpace())
+      .WillRepeatedly(Return(std::array<visual_t, 3>({1.0, 1.0, 1.0})));
+  EXPECT_CALL(*color_matcher, ColorSpace())
       .Times(actual_num_threads)
-      .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
+      .WillRepeatedly(Return(Color::LINEAR_SRGB));
 
-  iris::pbrt_frontend::Renderable renderable(
-      std::move(renderer), std::move(camera), std::move(image_sampler),
-      std::move(integrator), image_dimensions);
+  Renderable renderable(std::move(renderer), std::move(camera),
+                        std::move(image_sampler), std::move(integrator),
+                        std::make_unique<MockAlbedoMatcher>(),
+                        std::move(color_matcher), image_dimensions);
 
-  iris::Renderer::AdditionalOptions options;
+  Renderer::AdditionalOptions options;
   options.num_threads = num_threads_requested;
   options.progress_callback = progress_callback;
   options.skip_pixel_callback = skip_pixel_callback;
 
-  auto framebuffer =
-      renderable.Render(albedo_matcher, color_matcher, *rng, options);
+  Framebuffer framebuffer = renderable.Render(*rng, options);
   EXPECT_EQ(image_dimensions, framebuffer.Size());
 
-  iris::Color black(0.0, 0.0, 0.0, iris::Color::LINEAR_SRGB);
+  Color black(0.0, 0.0, 0.0, Color::LINEAR_SRGB);
   for (size_t y = 0; y < image_dimensions.first; y++) {
     for (size_t x = 0; x < image_dimensions.second; x++) {
       if (!options.skip_pixel_callback ||
@@ -188,18 +207,18 @@ TEST(RendererTest, MultiThreaded) {
 
 TEST(RendererTest, Progress) {
   size_t next_value = 0;
-  iris::Renderer::ProgressCallbackFn progress_callback =
-      [&](size_t current_pixel, size_t num_pixels) {
-        EXPECT_EQ(next_value++, current_pixel);
-        EXPECT_EQ(1056u, num_pixels);
-      };
+  Renderer::ProgressCallbackFn progress_callback = [&](size_t current_pixel,
+                                                       size_t num_pixels) {
+    EXPECT_EQ(next_value++, current_pixel);
+    EXPECT_EQ(1056u, num_pixels);
+  };
 
   RunTestBody(1u, 1u, progress_callback, nullptr);
   EXPECT_EQ(1057u, next_value);
 }
 
 TEST(RendererTest, WithSkips) {
-  iris::Renderer::SkipPixelFn skip_pixel_callback =
+  Renderer::SkipPixelFn skip_pixel_callback =
       [&](std::pair<size_t, size_t> pixel,
           std::pair<size_t, size_t> image_dimensions) {
         EXPECT_EQ(32u, image_dimensions.first);
@@ -208,12 +227,16 @@ TEST(RendererTest, WithSkips) {
       };
 
   size_t next_value = 0;
-  iris::Renderer::ProgressCallbackFn progress_callback =
-      [&](size_t current_pixel, size_t num_pixels) {
-        EXPECT_EQ(next_value++, current_pixel);
-        EXPECT_EQ(528u, num_pixels);
-      };
+  Renderer::ProgressCallbackFn progress_callback = [&](size_t current_pixel,
+                                                       size_t num_pixels) {
+    EXPECT_EQ(next_value++, current_pixel);
+    EXPECT_EQ(528u, num_pixels);
+  };
 
   RunTestBody(1u, 1u, progress_callback, skip_pixel_callback);
   EXPECT_EQ(529u, next_value);
 }
+
+}  // namespace
+}  // namespace pbrt_frontend
+}  // namespace iris

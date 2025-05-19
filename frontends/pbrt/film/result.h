@@ -19,7 +19,7 @@ struct FilmResult {
       skip_pixel_function;
   std::function<void(Framebuffer&, std::ofstream&)> write_function;
   geometric_t diagonal;
-  std::optional<visual_t> max_sample_luminance;
+  visual_t max_sample_luminance;
 };
 
 }  // namespace pbrt_frontend

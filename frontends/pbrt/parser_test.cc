@@ -1,13 +1,12 @@
 #include "frontends/pbrt/parser.h"
 
+#include <cmath>
 #include <cstdlib>
+#include <filesystem>
 
-#include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
-#include "iris/albedo_matchers/mock_albedo_matcher.h"
-#include "iris/color_matchers/mock_color_matcher.h"
-#include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mersenne_twister_random.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
 namespace iris {
@@ -15,684 +14,474 @@ namespace pbrt_frontend {
 namespace {
 
 using ::bazel::tools::cpp::runfiles::Runfiles;
+using ::iris::random::MersenneTwisterRandom;
+using ::pbrt_proto::v3::PbrtProto;
+using ::testing::ExitedWithCode;
 
-std::string RawRunfilePath(const std::string& path) {
+std::string RunfilePath(const std::string& path) {
   std::unique_ptr<Runfiles> runfiles(Runfiles::CreateForTest());
   const char* base_path = "_main/frontends/pbrt/test_data/";
   return runfiles->Rlocation(base_path + path);
 }
 
-std::string RunfilePath(const std::string& path) {
-  return std::string("\"") + RawRunfilePath(path) + std::string("\"");
+TEST(ParseScene, Empty) {
+  PbrtProto proto;
+
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_FALSE(ParseScene(directives, options).has_value());
 }
 
-TEST(Parser, Empty) {
-  std::stringstream input("");
-  Tokenizer tokenizer(input);
+TEST(ParseScene, NoEnd) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_FALSE(parser.ParseFrom(tokenizer, std::filesystem::current_path()));
-}
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
 
-TEST(Parser, NoEnd) {
-  std::stringstream input("WorldBegin");
-  Tokenizer tokenizer(input);
+  Options options;
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
 }
 
-TEST(Parser, InvalidDirective) {
-  std::stringstream input("NotADirective");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Invalid directive: NotADirective");
-}
-
 TEST(AreaLightSource, BeforeWorldEnd) {
-  std::stringstream input("AreaLightSource \"diffuse\"");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_area_light_source();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "AreaLightSource");
 }
 
-TEST(AreaLightSource, TooFewArguments) {
-  std::stringstream input("WorldBegin AreaLightSource");
-  Tokenizer tokenizer(input);
+TEST(AttributeBegin, BeforeWorldEnd) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_attribute_begin();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: AreaLightSource");
-}
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
 
-TEST(AttributeBegin, BeforeWorldBegin) {
-  std::stringstream input("AttributeBegin");
-  Tokenizer tokenizer(input);
+  Options options;
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Directive cannot be specified before WorldBegin: AttributeBegin");
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "AttributeBegin");
 }
 
 TEST(AttributeBegin, Mismatched) {
-  std::stringstream input("WorldBegin AttributeBegin TransformEnd");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_attribute_begin();
+  proto.add_directives()->mutable_transform_end();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched AttributeBegin and AttributeEnd directives");
 }
 
-TEST(AttributeEnd, BeforeWorldBegin) {
-  std::stringstream input("AttributeEnd");
-  Tokenizer tokenizer(input);
+TEST(AttributeEnd, BeforeWorldEnd) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_attribute_end();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Directive cannot be specified before WorldBegin: AttributeEnd");
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "AttributeEnd");
 }
 
 TEST(AttributeEnd, Mismatched) {
-  std::stringstream input("WorldBegin AttributeEnd");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_attribute_end();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Missing AttributeBegin directive");
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Mismatched AttributeBegin and AttributeEnd directives");
 }
 
 TEST(Camera, AfterWorldBegin) {
-  std::stringstream input("WorldBegin Camera");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_camera();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Camera");
 }
 
-TEST(Camera, Duplicate) {
-  std::stringstream input("Camera \"perspective\" Camera \"perspective\"");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "Directive specified twice for a render: Camera");
-}
-
-TEST(Camera, TooFewArguments) {
-  std::stringstream input("Camera");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Camera");
-}
-
 TEST(Film, AfterWorldBegin) {
-  std::stringstream input("WorldBegin Film");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_film();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Film");
 }
 
-TEST(Film, Duplicate) {
-  std::stringstream input("Film \"image\" Film \"image\"");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "Directive specified twice for a render: Film");
-}
-
-TEST(Film, TooFewArguments) {
-  std::stringstream input("Film");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Film");
-}
-
-TEST(Include, MissingToken) {
-  std::stringstream input("Include");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Include");
-}
-
-TEST(Include, NotQuoted) {
-  std::stringstream input("Include 2.0");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to Include must be a string");
-}
-
 TEST(Include, Circular) {
-  std::filesystem::path file_path(
-      RawRunfilePath("include_circular_first.pbrt"));
-  std::filesystem::path search_path =
-      std::filesystem::weakly_canonical(file_path).parent_path();
+  PbrtProto proto;
+  proto.add_directives()->mutable_include()->set_path(
+      RunfilePath("include_circular_first.pbrt"));
 
-  std::stringstream input("Include \"include_circular_first.pbrt\"");
-  Tokenizer tokenizer(input);
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, search_path),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Detected cyclic Include of file: include_circular_first.pbrt");
-}
+  Options options;
 
-TEST(Include, CircularSelf) {
-  std::filesystem::path file_path(
-      RawRunfilePath("include_circular_first.pbrt"));
-  std::filesystem::path search_path =
-      std::filesystem::weakly_canonical(file_path).parent_path();
-
-  std::stringstream input("Include \"include_circular_self.pbrt\"");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, search_path),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Detected cyclic Include of file: include_circular_self.pbrt");
-}
-
-TEST(Include, Empty) {
-  std::stringstream input("Include " + RunfilePath("include_empty.pbrt"));
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Final directive should be WorldEnd");
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Detected cyclic Include of file:");
 }
 
 TEST(Integrator, AfterWorldBegin) {
-  std::stringstream input("WorldBegin Integrator");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_integrator();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Integrator");
 }
 
-TEST(Integrator, Duplicate) {
-  std::stringstream input("Integrator \"path\" Integrator \"path\"");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "Directive specified twice for a render: Integrator");
-}
-
-TEST(Integrator, TooFewArguments) {
-  std::stringstream input("Integrator");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Integrator");
-}
-
 TEST(LightSource, BeforeWorldBegin) {
-  std::stringstream input("LightSource");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_light_source();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
   EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: LightSource");
 }
 
-TEST(MakeNamedMaterial, TooFewArguments) {
-  std::stringstream input("MakeNamedMaterial");
-  Tokenizer tokenizer(input);
+TEST(MakeNamedMaterial, BeforeWorldBegin) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_make_named_material();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: MakeNamedMaterial");
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "MakeNamedMaterial");
 }
 
-TEST(Material, BeforeWorldEnd) {
-  std::stringstream input("Material \"matte\"");
-  Tokenizer tokenizer(input);
+TEST(Material, BeforeWorldBegin) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_material();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
   EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: Material");
 }
 
-TEST(Material, TooFewArguments) {
-  std::stringstream input("WorldBegin Material");
-  Tokenizer tokenizer(input);
+TEST(NamedMaterial, BeforeWorldBegin) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_named_material();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Material");
-}
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
 
-TEST(NamedMaterial, BeforeWorldEnd) {
-  std::stringstream input("NamedMaterial \"name\"");
-  Tokenizer tokenizer(input);
+  Options options;
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
   EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: NamedMaterial");
 }
 
-TEST(NamedMaterial, TooFewArguments) {
-  std::stringstream input("WorldBegin NamedMaterial");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: NamedMaterial");
-}
-
-TEST(NamedMaterial, NotAString) {
-  std::stringstream input("WorldBegin NamedMaterial 1");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to NamedMaterial must be a string");
-}
-
 TEST(ObjectBegin, BeforeWorldBegin) {
-  std::stringstream input("ObjectBegin");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_object_begin();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
   EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: ObjectBegin");
 }
 
 TEST(ObjectBegin, Mismatched) {
-  std::stringstream input("WorldBegin ObjectBegin \"abc\" ObjectBegin \"abc\"");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_object_begin();
+  proto.add_directives()->mutable_object_begin();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
 }
 
-TEST(ObjectBegin, TooFew) {
-  std::stringstream input("WorldBegin ObjectBegin");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: ObjectBegin");
-}
-
-TEST(ObjectBegin, NotAString) {
-  std::stringstream input("WorldBegin ObjectBegin 1");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to ObjectBegin must be a string");
-}
-
 TEST(ObjectEnd, BeforeWorldBegin) {
-  std::stringstream input("ObjectEnd");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_object_end();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
   EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: ObjectEnd");
 }
 
 TEST(ObjectEnd, Mismatched) {
-  std::stringstream input("WorldBegin ObjectEnd");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_object_end();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
 }
 
 TEST(ObjectInstance, BeforeWorldBegin) {
-  std::stringstream input("ObjectInstance");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_object_instance();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Directive cannot be specified before WorldBegin: "
-              "ObjectInstance");
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(
+      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Directive cannot be specified before WorldBegin: ObjectInstance");
 }
 
 TEST(ObjectInstance, InsideObject) {
-  std::stringstream input("WorldBegin ObjectBegin \"abc\" ObjectInstance");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_object_begin();
+  proto.add_directives()->mutable_object_instance();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance cannot be specified between ObjectBegin "
               "and ObjectEnd");
 }
 
-TEST(ObjectInstance, TooFew) {
-  std::stringstream input("WorldBegin ObjectInstance");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: ObjectInstance");
-}
-
-TEST(ObjectInstance, NotAString) {
-  std::stringstream input("WorldBegin ObjectInstance 1");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to ObjectInstance must be a string");
-}
-
 TEST(ObjectInstance, MissingObject) {
-  std::stringstream input("WorldBegin ObjectInstance \"1\"");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_object_instance()->set_name("1");
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance referred to an unknown object: 1");
 }
 
-TEST(Matrix, Parses) {
-  std::stringstream input("Identity");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Final directive should be WorldEnd");
-}
-
 TEST(PixelFilter, AfterWorldBegin) {
-  std::stringstream input("WorldBegin PixelFilter");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_pixel_filter();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: PixelFilter");
 }
 
-TEST(PixelFilter, MissingToken) {
-  std::stringstream input("PixelFilter");
-  Tokenizer tokenizer(input);
+TEST(ReverseOrientation, BeforeWorldBegin) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_reverse_orientation();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: PixelFilter");
-}
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
 
-TEST(PixelFilter, NotQuoted) {
-  std::stringstream input("PixelFilter 2.0");
-  Tokenizer tokenizer(input);
+  Options options;
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Parameter to PixelFilter must be a string");
-}
-
-TEST(PixelFilter, Duplicate) {
-  std::stringstream input("PixelFilter \"box\" PixelFilter \"box\"");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "Directive specified twice for a render: PixelFilter");
-}
-
-TEST(ReverseOrientation, Succeeds) {
-  std::stringstream input("ReverseOrientation Shape");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Directive cannot be specified before WorldBegin: Shape");
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "ReverseOrientation");
 }
 
 TEST(Sampler, AfterWorldBegin) {
-  std::stringstream input("WorldBegin Sampler");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_sampler();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Sampler");
 }
 
-TEST(Sampler, Duplicate) {
-  std::stringstream input("Sampler \"random\" Sampler \"random\"");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "Directive specified twice for a render: Sampler");
-}
-
-TEST(Sampler, TooFewArguments) {
-  std::stringstream input("Sampler");
-  Tokenizer tokenizer(input);
-
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Sampler");
-}
-
 TEST(Shape, BeforeWorldBegin) {
-  std::stringstream input("Shape");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_shape();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Directive cannot be specified before WorldBegin: Shape");
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "Shape");
 }
 
-TEST(Texture, BeforeWorldBegin) {
-  std::stringstream input("Texture WorldBegin");
-  Tokenizer tokenizer(input);
+TEST(Texture, FloatTextureBeforeWorldBegin) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_float_texture();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(
-      parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-      testing::ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Directive cannot be specified before WorldBegin: Texture");
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "Texture");
 }
 
-TEST(Texture, TooFewArguments) {
-  std::stringstream input("WorldBegin Texture");
-  Tokenizer tokenizer(input);
+TEST(Texture, SpectrumTextureBeforeWorldBegin) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_spectrum_texture();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Too few parameters to directive: Texture");
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Directive cannot be specified before WorldBegin: "
+              "Texture");
 }
 
-TEST(WorldBegin, Duplicate) {
-  std::stringstream input("WorldBegin WorldBegin");
-  Tokenizer tokenizer(input);
+TEST(WorldBegin, Mismatched) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_world_begin();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldBegin directive");
 }
 
-TEST(WorldEnd, NoWorldBegin) {
-  std::stringstream input("WorldEnd");
-  Tokenizer tokenizer(input);
+TEST(WorldEnd, Mismatched) {
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_end();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  EXPECT_EXIT(parser.ParseFrom(tokenizer, std::filesystem::current_path()),
-              testing::ExitedWithCode(EXIT_FAILURE),
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
+
+  Options options;
+
+  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldEnd directive");
 }
 
 TEST(Render, EmptyScene) {
-  std::stringstream input("WorldBegin WorldEnd");
-  Tokenizer tokenizer(input);
+  PbrtProto proto;
+  proto.add_directives()->mutable_world_begin();
+  proto.add_directives()->mutable_world_end();
 
-  Parser parser(std::make_unique<spectrum_managers::TestSpectrumManager>(),
-                std::make_unique<power_matchers::MockPowerMatcher>());
-  auto result = parser.ParseFrom(tokenizer, std::filesystem::current_path());
-  ASSERT_TRUE(result);
+  Directives directives;
+  directives.Include(proto, std::filesystem::current_path());
 
-  EXPECT_FALSE(result->skip_pixel_callback({0, 0}, {480, 640}));
-  EXPECT_FALSE(result->skip_pixel_callback({479, 639}, {480, 640}));
-  EXPECT_TRUE(result->skip_pixel_callback({480, 640}, {480, 640}));
-  EXPECT_FALSE(result->maximum_sample_luminance.has_value());
+  Options options;
+
+  std::optional<ParsingResult> result = ParseScene(directives, options);
+  ASSERT_TRUE(result.has_value());
+
+  EXPECT_FALSE(result->skip_pixel_callback({0, 0}, {720, 1280}));
+  EXPECT_FALSE(result->skip_pixel_callback({719, 1279}, {720, 1280}));
+  EXPECT_TRUE(result->skip_pixel_callback({720, 1280}, {720, 1280}));
+  EXPECT_FALSE(std::isfinite(result->max_sample_luminance));
+  EXPECT_GT(result->max_sample_luminance, 0.0);
   EXPECT_EQ("pbrt.exr", result->output_filename);
 
-  albedo_matchers::MockAlbedoMatcher albedo_matcher;
+  MersenneTwisterRandom rng;
 
-  color_matchers::MockColorMatcher color_matcher;
-  EXPECT_CALL(color_matcher, ColorSpace())
-      .WillRepeatedly(testing::Return(iris::Color::LINEAR_SRGB));
-
-  random::MersenneTwisterRandom rng;
-
-  Framebuffer framebuffer =
-      result->renderable.Render(albedo_matcher, color_matcher, rng);
+  Framebuffer framebuffer = result->renderable.Render(rng);
   std::pair<size_t, size_t> dimensions = framebuffer.Size();
-  EXPECT_EQ(480u, dimensions.first);
-  EXPECT_EQ(640u, dimensions.second);
+  EXPECT_EQ(720u, dimensions.first);
+  EXPECT_EQ(1280u, dimensions.second);
 
   for (size_t y = 0; y < dimensions.first; y++) {
     for (size_t x = 0; x < dimensions.second; x++) {
-      iris::Color color = framebuffer.Get(y, x);
+      Color color = framebuffer.Get(y, x);
       EXPECT_EQ(0.0, color.r);
       EXPECT_EQ(0.0, color.g);
       EXPECT_EQ(0.0, color.b);
-      EXPECT_EQ(iris::Color::LINEAR_SRGB, color.space);
+      EXPECT_EQ(Color::LINEAR_SRGB, color.space);
     }
   }
 }

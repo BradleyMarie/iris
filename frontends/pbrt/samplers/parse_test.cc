@@ -9,45 +9,45 @@ namespace {
 
 using ::pbrt_proto::v3::Sampler;
 
-TEST(ParseSamper, Empty) {
+TEST(ParseSampler, Empty) {
   Sampler sampler;
-  EXPECT_FALSE(ParseSamper(sampler));
+  EXPECT_FALSE(ParseSampler(sampler));
 }
 
-TEST(ParseSamper, Halton) {
+TEST(ParseSampler, Halton) {
   Sampler sampler;
   sampler.mutable_halton();
-  EXPECT_TRUE(ParseSamper(sampler));
+  EXPECT_TRUE(ParseSampler(sampler));
 }
 
-TEST(ParseSamper, MaxMinDist) {
+TEST(ParseSampler, MaxMinDist) {
   Sampler sampler;
   sampler.mutable_maxmindist();
-  EXPECT_FALSE(ParseSamper(sampler));
+  EXPECT_FALSE(ParseSampler(sampler));
 }
 
-TEST(ParseSamper, Random) {
+TEST(ParseSampler, Random) {
   Sampler sampler;
   sampler.mutable_random();
-  EXPECT_TRUE(ParseSamper(sampler));
+  EXPECT_TRUE(ParseSampler(sampler));
 }
 
-TEST(ParseSamper, Sobol) {
+TEST(ParseSampler, Sobol) {
   Sampler sampler;
   sampler.mutable_sobol();
-  EXPECT_TRUE(ParseSamper(sampler));
+  EXPECT_TRUE(ParseSampler(sampler));
 }
 
-TEST(ParseSamper, Stratified) {
+TEST(ParseSampler, Stratified) {
   Sampler sampler;
   sampler.mutable_stratified();
-  EXPECT_TRUE(ParseSamper(sampler));
+  EXPECT_TRUE(ParseSampler(sampler));
 }
 
-TEST(ParseSamper, ZeroTwoSequence) {
+TEST(ParseSampler, ZeroTwoSequence) {
   Sampler sampler;
   sampler.mutable_zerotwosequence();
-  EXPECT_FALSE(ParseSamper(sampler));
+  EXPECT_FALSE(ParseSampler(sampler));
 }
 
 }  // namespace

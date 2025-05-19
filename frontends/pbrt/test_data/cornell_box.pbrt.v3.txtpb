@@ -1,0 +1,1629 @@
+directives {
+  look_at {
+    eye_x: 278
+    eye_y: 273
+    eye_z: -800
+    look_x: 278
+    look_y: 273
+    look_z: 0
+    up_x: 0
+    up_y: 1
+    up_z: 0
+  }
+}
+directives {
+  camera {
+    perspective {
+      fov: 37.5
+    }
+  }
+}
+directives {
+  sampler {
+    stratified {
+      jitter: false
+      xsamples: 2
+      ysamples: 2
+    }
+  }
+}
+directives {
+  pixel_filter {
+    box {
+    }
+  }
+}
+directives {
+  film {
+    image {
+      xresolution: 250
+      yresolution: 250
+    }
+  }
+}
+directives {
+  integrator {
+    path {
+      maxdepth: 6
+      rrthreshold: 10000000
+    }
+  }
+}
+directives {
+  world_begin {
+  }
+}
+directives {
+  attribute_begin {
+  }
+}
+directives {
+  area_light_source {
+    diffuse {
+      L {
+        sampled_spectrum {
+          samples {
+            wavelength: 400
+            intensity: 0
+          }
+          samples {
+            wavelength: 500
+            intensity: 8
+          }
+          samples {
+            wavelength: 600
+            intensity: 15.6
+          }
+          samples {
+            wavelength: 700
+            intensity: 18.4
+          }
+        }
+      }
+    }
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 0
+        v1: 1
+        v2: 2
+      }
+      indices {
+        v0: 2
+        v1: 3
+        v2: 0
+      }
+      P {
+        x: 343
+        y: 548.7
+        z: 227
+      }
+      P {
+        x: 343
+        y: 548.7
+        z: 332
+      }
+      P {
+        x: 213
+        y: 548.7
+        z: 332
+      }
+      P {
+        x: 213
+        y: 548.7
+        z: 227
+      }
+    }
+  }
+}
+directives {
+  attribute_end {
+  }
+}
+directives {
+  make_named_material {
+    name: "white"
+    material {
+      matte {
+        Kd {
+          sampled_spectrum {
+            samples {
+              wavelength: 400
+              intensity: 0.343
+            }
+            samples {
+              wavelength: 404
+              intensity: 0.445
+            }
+            samples {
+              wavelength: 408
+              intensity: 0.551
+            }
+            samples {
+              wavelength: 412
+              intensity: 0.624
+            }
+            samples {
+              wavelength: 416
+              intensity: 0.665
+            }
+            samples {
+              wavelength: 420
+              intensity: 0.687
+            }
+            samples {
+              wavelength: 424
+              intensity: 0.708
+            }
+            samples {
+              wavelength: 428
+              intensity: 0.723
+            }
+            samples {
+              wavelength: 432
+              intensity: 0.715
+            }
+            samples {
+              wavelength: 436
+              intensity: 0.71
+            }
+            samples {
+              wavelength: 440
+              intensity: 0.745
+            }
+            samples {
+              wavelength: 444
+              intensity: 0.758
+            }
+            samples {
+              wavelength: 448
+              intensity: 0.739
+            }
+            samples {
+              wavelength: 452
+              intensity: 0.767
+            }
+            samples {
+              wavelength: 456
+              intensity: 0.777
+            }
+            samples {
+              wavelength: 460
+              intensity: 0.765
+            }
+            samples {
+              wavelength: 464
+              intensity: 0.751
+            }
+            samples {
+              wavelength: 468
+              intensity: 0.745
+            }
+            samples {
+              wavelength: 472
+              intensity: 0.748
+            }
+            samples {
+              wavelength: 476
+              intensity: 0.729
+            }
+            samples {
+              wavelength: 480
+              intensity: 0.745
+            }
+            samples {
+              wavelength: 484
+              intensity: 0.757
+            }
+            samples {
+              wavelength: 488
+              intensity: 0.753
+            }
+            samples {
+              wavelength: 492
+              intensity: 0.75
+            }
+            samples {
+              wavelength: 496
+              intensity: 0.746
+            }
+            samples {
+              wavelength: 500
+              intensity: 0.747
+            }
+            samples {
+              wavelength: 504
+              intensity: 0.735
+            }
+            samples {
+              wavelength: 508
+              intensity: 0.732
+            }
+            samples {
+              wavelength: 512
+              intensity: 0.739
+            }
+            samples {
+              wavelength: 516
+              intensity: 0.734
+            }
+            samples {
+              wavelength: 520
+              intensity: 0.725
+            }
+            samples {
+              wavelength: 524
+              intensity: 0.721
+            }
+            samples {
+              wavelength: 528
+              intensity: 0.733
+            }
+            samples {
+              wavelength: 532
+              intensity: 0.725
+            }
+            samples {
+              wavelength: 536
+              intensity: 0.732
+            }
+            samples {
+              wavelength: 540
+              intensity: 0.743
+            }
+            samples {
+              wavelength: 544
+              intensity: 0.744
+            }
+            samples {
+              wavelength: 548
+              intensity: 0.748
+            }
+            samples {
+              wavelength: 552
+              intensity: 0.728
+            }
+            samples {
+              wavelength: 556
+              intensity: 0.716
+            }
+            samples {
+              wavelength: 560
+              intensity: 0.733
+            }
+            samples {
+              wavelength: 564
+              intensity: 0.726
+            }
+            samples {
+              wavelength: 568
+              intensity: 0.713
+            }
+            samples {
+              wavelength: 572
+              intensity: 0.74
+            }
+            samples {
+              wavelength: 576
+              intensity: 0.754
+            }
+            samples {
+              wavelength: 580
+              intensity: 0.764
+            }
+            samples {
+              wavelength: 584
+              intensity: 0.752
+            }
+            samples {
+              wavelength: 588
+              intensity: 0.736
+            }
+            samples {
+              wavelength: 592
+              intensity: 0.734
+            }
+            samples {
+              wavelength: 596
+              intensity: 0.741
+            }
+            samples {
+              wavelength: 600
+              intensity: 0.74
+            }
+            samples {
+              wavelength: 604
+              intensity: 0.732
+            }
+            samples {
+              wavelength: 608
+              intensity: 0.745
+            }
+            samples {
+              wavelength: 612
+              intensity: 0.755
+            }
+            samples {
+              wavelength: 616
+              intensity: 0.751
+            }
+            samples {
+              wavelength: 620
+              intensity: 0.744
+            }
+            samples {
+              wavelength: 624
+              intensity: 0.731
+            }
+            samples {
+              wavelength: 628
+              intensity: 0.733
+            }
+            samples {
+              wavelength: 632
+              intensity: 0.744
+            }
+            samples {
+              wavelength: 636
+              intensity: 0.731
+            }
+            samples {
+              wavelength: 640
+              intensity: 0.712
+            }
+            samples {
+              wavelength: 644
+              intensity: 0.708
+            }
+            samples {
+              wavelength: 648
+              intensity: 0.729
+            }
+            samples {
+              wavelength: 652
+              intensity: 0.73
+            }
+            samples {
+              wavelength: 656
+              intensity: 0.727
+            }
+            samples {
+              wavelength: 660
+              intensity: 0.707
+            }
+            samples {
+              wavelength: 664
+              intensity: 0.703
+            }
+            samples {
+              wavelength: 668
+              intensity: 0.729
+            }
+            samples {
+              wavelength: 672
+              intensity: 0.75
+            }
+            samples {
+              wavelength: 676
+              intensity: 0.76
+            }
+            samples {
+              wavelength: 680
+              intensity: 0.751
+            }
+            samples {
+              wavelength: 684
+              intensity: 0.739
+            }
+            samples {
+              wavelength: 688
+              intensity: 0.724
+            }
+            samples {
+              wavelength: 692
+              intensity: 0.73
+            }
+            samples {
+              wavelength: 696
+              intensity: 0.74
+            }
+            samples {
+              wavelength: 700
+              intensity: 0.737
+            }
+          }
+        }
+      }
+    }
+  }
+}
+directives {
+  object_begin {
+    name: "floor"
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 0
+        v1: 1
+        v2: 2
+      }
+      indices {
+        v0: 2
+        v1: 3
+        v2: 0
+      }
+      P {
+        x: 552.8
+        y: 0
+        z: 0
+      }
+      P {
+        x: 0
+        y: 0
+        z: 0
+      }
+      P {
+        x: 0
+        y: 0
+        z: 559.2
+      }
+      P {
+        x: 549.6
+        y: 0
+        z: 559.2
+      }
+    }
+  }
+}
+directives {
+  object_end {
+  }
+}
+directives {
+  attribute_begin {
+  }
+}
+directives {
+  material {
+    matte {
+      Kd {
+        sampled_spectrum {
+          samples {
+            wavelength: 400
+            intensity: 0.04
+          }
+          samples {
+            wavelength: 404
+            intensity: 0.046
+          }
+          samples {
+            wavelength: 408
+            intensity: 0.048
+          }
+          samples {
+            wavelength: 412
+            intensity: 0.053
+          }
+          samples {
+            wavelength: 416
+            intensity: 0.049
+          }
+          samples {
+            wavelength: 420
+            intensity: 0.05
+          }
+          samples {
+            wavelength: 424
+            intensity: 0.053
+          }
+          samples {
+            wavelength: 428
+            intensity: 0.055
+          }
+          samples {
+            wavelength: 432
+            intensity: 0.057
+          }
+          samples {
+            wavelength: 436
+            intensity: 0.056
+          }
+          samples {
+            wavelength: 440
+            intensity: 0.059
+          }
+          samples {
+            wavelength: 444
+            intensity: 0.057
+          }
+          samples {
+            wavelength: 448
+            intensity: 0.061
+          }
+          samples {
+            wavelength: 452
+            intensity: 0.061
+          }
+          samples {
+            wavelength: 456
+            intensity: 0.06
+          }
+          samples {
+            wavelength: 460
+            intensity: 0.062
+          }
+          samples {
+            wavelength: 464
+            intensity: 0.062
+          }
+          samples {
+            wavelength: 468
+            intensity: 0.062
+          }
+          samples {
+            wavelength: 472
+            intensity: 0.061
+          }
+          samples {
+            wavelength: 476
+            intensity: 0.062
+          }
+          samples {
+            wavelength: 480
+            intensity: 0.06
+          }
+          samples {
+            wavelength: 484
+            intensity: 0.059
+          }
+          samples {
+            wavelength: 488
+            intensity: 0.057
+          }
+          samples {
+            wavelength: 492
+            intensity: 0.058
+          }
+          samples {
+            wavelength: 496
+            intensity: 0.058
+          }
+          samples {
+            wavelength: 500
+            intensity: 0.058
+          }
+          samples {
+            wavelength: 504
+            intensity: 0.056
+          }
+          samples {
+            wavelength: 508
+            intensity: 0.055
+          }
+          samples {
+            wavelength: 512
+            intensity: 0.056
+          }
+          samples {
+            wavelength: 516
+            intensity: 0.059
+          }
+          samples {
+            wavelength: 520
+            intensity: 0.057
+          }
+          samples {
+            wavelength: 524
+            intensity: 0.055
+          }
+          samples {
+            wavelength: 528
+            intensity: 0.059
+          }
+          samples {
+            wavelength: 532
+            intensity: 0.059
+          }
+          samples {
+            wavelength: 536
+            intensity: 0.058
+          }
+          samples {
+            wavelength: 540
+            intensity: 0.059
+          }
+          samples {
+            wavelength: 544
+            intensity: 0.061
+          }
+          samples {
+            wavelength: 548
+            intensity: 0.061
+          }
+          samples {
+            wavelength: 552
+            intensity: 0.063
+          }
+          samples {
+            wavelength: 556
+            intensity: 0.063
+          }
+          samples {
+            wavelength: 560
+            intensity: 0.067
+          }
+          samples {
+            wavelength: 564
+            intensity: 0.068
+          }
+          samples {
+            wavelength: 568
+            intensity: 0.072
+          }
+          samples {
+            wavelength: 572
+            intensity: 0.08
+          }
+          samples {
+            wavelength: 576
+            intensity: 0.09
+          }
+          samples {
+            wavelength: 580
+            intensity: 0.099
+          }
+          samples {
+            wavelength: 584
+            intensity: 0.124
+          }
+          samples {
+            wavelength: 588
+            intensity: 0.154
+          }
+          samples {
+            wavelength: 592
+            intensity: 0.192
+          }
+          samples {
+            wavelength: 596
+            intensity: 0.255
+          }
+          samples {
+            wavelength: 600
+            intensity: 0.287
+          }
+          samples {
+            wavelength: 604
+            intensity: 0.349
+          }
+          samples {
+            wavelength: 608
+            intensity: 0.402
+          }
+          samples {
+            wavelength: 612
+            intensity: 0.443
+          }
+          samples {
+            wavelength: 616
+            intensity: 0.487
+          }
+          samples {
+            wavelength: 620
+            intensity: 0.513
+          }
+          samples {
+            wavelength: 624
+            intensity: 0.558
+          }
+          samples {
+            wavelength: 628
+            intensity: 0.584
+          }
+          samples {
+            wavelength: 632
+            intensity: 0.62
+          }
+          samples {
+            wavelength: 636
+            intensity: 0.606
+          }
+          samples {
+            wavelength: 640
+            intensity: 0.609
+          }
+          samples {
+            wavelength: 644
+            intensity: 0.651
+          }
+          samples {
+            wavelength: 648
+            intensity: 0.612
+          }
+          samples {
+            wavelength: 652
+            intensity: 0.61
+          }
+          samples {
+            wavelength: 656
+            intensity: 0.65
+          }
+          samples {
+            wavelength: 660
+            intensity: 0.638
+          }
+          samples {
+            wavelength: 664
+            intensity: 0.627
+          }
+          samples {
+            wavelength: 668
+            intensity: 0.62
+          }
+          samples {
+            wavelength: 672
+            intensity: 0.63
+          }
+          samples {
+            wavelength: 676
+            intensity: 0.628
+          }
+          samples {
+            wavelength: 680
+            intensity: 0.642
+          }
+          samples {
+            wavelength: 684
+            intensity: 0.639
+          }
+          samples {
+            wavelength: 688
+            intensity: 0.657
+          }
+          samples {
+            wavelength: 692
+            intensity: 0.639
+          }
+          samples {
+            wavelength: 696
+            intensity: 0.635
+          }
+          samples {
+            wavelength: 700
+            intensity: 0.642
+          }
+        }
+      }
+    }
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 0
+        v1: 1
+        v2: 2
+      }
+      indices {
+        v0: 2
+        v1: 3
+        v2: 0
+      }
+      P {
+        x: 552.8
+        y: 0
+        z: 0
+      }
+      P {
+        x: 549.6
+        y: 0
+        z: 559.2
+      }
+      P {
+        x: 556
+        y: 548.8
+        z: 559.2
+      }
+      P {
+        x: 556
+        y: 548.8
+        z: 0
+      }
+    }
+  }
+}
+directives {
+  attribute_end {
+  }
+}
+directives {
+  material {
+    matte {
+    }
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 0
+        v1: 1
+        v2: 2
+      }
+      indices {
+        v0: 2
+        v1: 3
+        v2: 0
+      }
+      P {
+        x: 0
+        y: 0
+        z: 559.2
+      }
+      P {
+        x: 0
+        y: 0
+        z: 0
+      }
+      P {
+        x: 0
+        y: 548.8
+        z: 0
+      }
+      P {
+        x: 0
+        y: 548.8
+        z: 559.2
+      }
+    }
+    overrides {
+      Kd {
+        sampled_spectrum {
+          samples {
+            wavelength: 400
+            intensity: 0.092
+          }
+          samples {
+            wavelength: 404
+            intensity: 0.096
+          }
+          samples {
+            wavelength: 408
+            intensity: 0.098
+          }
+          samples {
+            wavelength: 412
+            intensity: 0.097
+          }
+          samples {
+            wavelength: 416
+            intensity: 0.098
+          }
+          samples {
+            wavelength: 420
+            intensity: 0.095
+          }
+          samples {
+            wavelength: 424
+            intensity: 0.095
+          }
+          samples {
+            wavelength: 428
+            intensity: 0.097
+          }
+          samples {
+            wavelength: 432
+            intensity: 0.095
+          }
+          samples {
+            wavelength: 436
+            intensity: 0.094
+          }
+          samples {
+            wavelength: 440
+            intensity: 0.097
+          }
+          samples {
+            wavelength: 444
+            intensity: 0.098
+          }
+          samples {
+            wavelength: 448
+            intensity: 0.096
+          }
+          samples {
+            wavelength: 452
+            intensity: 0.101
+          }
+          samples {
+            wavelength: 456
+            intensity: 0.103
+          }
+          samples {
+            wavelength: 460
+            intensity: 0.104
+          }
+          samples {
+            wavelength: 464
+            intensity: 0.107
+          }
+          samples {
+            wavelength: 468
+            intensity: 0.109
+          }
+          samples {
+            wavelength: 472
+            intensity: 0.112
+          }
+          samples {
+            wavelength: 476
+            intensity: 0.115
+          }
+          samples {
+            wavelength: 480
+            intensity: 0.125
+          }
+          samples {
+            wavelength: 484
+            intensity: 0.14
+          }
+          samples {
+            wavelength: 488
+            intensity: 0.16
+          }
+          samples {
+            wavelength: 492
+            intensity: 0.187
+          }
+          samples {
+            wavelength: 496
+            intensity: 0.229
+          }
+          samples {
+            wavelength: 500
+            intensity: 0.285
+          }
+          samples {
+            wavelength: 504
+            intensity: 0.343
+          }
+          samples {
+            wavelength: 508
+            intensity: 0.39
+          }
+          samples {
+            wavelength: 512
+            intensity: 0.435
+          }
+          samples {
+            wavelength: 516
+            intensity: 0.464
+          }
+          samples {
+            wavelength: 520
+            intensity: 0.472
+          }
+          samples {
+            wavelength: 524
+            intensity: 0.476
+          }
+          samples {
+            wavelength: 528
+            intensity: 0.481
+          }
+          samples {
+            wavelength: 532
+            intensity: 0.462
+          }
+          samples {
+            wavelength: 536
+            intensity: 0.447
+          }
+          samples {
+            wavelength: 540
+            intensity: 0.441
+          }
+          samples {
+            wavelength: 544
+            intensity: 0.426
+          }
+          samples {
+            wavelength: 548
+            intensity: 0.406
+          }
+          samples {
+            wavelength: 552
+            intensity: 0.373
+          }
+          samples {
+            wavelength: 556
+            intensity: 0.347
+          }
+          samples {
+            wavelength: 560
+            intensity: 0.337
+          }
+          samples {
+            wavelength: 564
+            intensity: 0.314
+          }
+          samples {
+            wavelength: 568
+            intensity: 0.285
+          }
+          samples {
+            wavelength: 572
+            intensity: 0.277
+          }
+          samples {
+            wavelength: 576
+            intensity: 0.266
+          }
+          samples {
+            wavelength: 580
+            intensity: 0.25
+          }
+          samples {
+            wavelength: 584
+            intensity: 0.23
+          }
+          samples {
+            wavelength: 588
+            intensity: 0.207
+          }
+          samples {
+            wavelength: 592
+            intensity: 0.186
+          }
+          samples {
+            wavelength: 596
+            intensity: 0.171
+          }
+          samples {
+            wavelength: 600
+            intensity: 0.16
+          }
+          samples {
+            wavelength: 604
+            intensity: 0.148
+          }
+          samples {
+            wavelength: 608
+            intensity: 0.141
+          }
+          samples {
+            wavelength: 612
+            intensity: 0.136
+          }
+          samples {
+            wavelength: 616
+            intensity: 0.13
+          }
+          samples {
+            wavelength: 620
+            intensity: 0.126
+          }
+          samples {
+            wavelength: 624
+            intensity: 0.123
+          }
+          samples {
+            wavelength: 628
+            intensity: 0.121
+          }
+          samples {
+            wavelength: 632
+            intensity: 0.122
+          }
+          samples {
+            wavelength: 636
+            intensity: 0.119
+          }
+          samples {
+            wavelength: 640
+            intensity: 0.114
+          }
+          samples {
+            wavelength: 644
+            intensity: 0.115
+          }
+          samples {
+            wavelength: 648
+            intensity: 0.117
+          }
+          samples {
+            wavelength: 652
+            intensity: 0.117
+          }
+          samples {
+            wavelength: 656
+            intensity: 0.118
+          }
+          samples {
+            wavelength: 660
+            intensity: 0.12
+          }
+          samples {
+            wavelength: 664
+            intensity: 0.122
+          }
+          samples {
+            wavelength: 668
+            intensity: 0.128
+          }
+          samples {
+            wavelength: 672
+            intensity: 0.132
+          }
+          samples {
+            wavelength: 676
+            intensity: 0.139
+          }
+          samples {
+            wavelength: 680
+            intensity: 0.144
+          }
+          samples {
+            wavelength: 684
+            intensity: 0.146
+          }
+          samples {
+            wavelength: 688
+            intensity: 0.15
+          }
+          samples {
+            wavelength: 692
+            intensity: 0.152
+          }
+          samples {
+            wavelength: 696
+            intensity: 0.157
+          }
+          samples {
+            wavelength: 700
+            intensity: 0.159
+          }
+        }
+      }
+      eta {
+      }
+    }
+  }
+}
+directives {
+  object_instance {
+    name: "floor"
+  }
+}
+directives {
+  named_material {
+    name: "white"
+  }
+}
+directives {
+  attribute_begin {
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 0
+        v1: 1
+        v2: 2
+      }
+      indices {
+        v0: 2
+        v1: 3
+        v2: 0
+      }
+      P {
+        x: 556
+        y: 548.8
+        z: 0
+      }
+      P {
+        x: 556
+        y: 548.8
+        z: 559.2
+      }
+      P {
+        x: 0
+        y: 548.8
+        z: 559.2
+      }
+      P {
+        x: 0
+        y: 548.8
+        z: 0
+      }
+    }
+  }
+}
+directives {
+  attribute_end {
+  }
+}
+directives {
+  attribute_begin {
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 0
+        v1: 1
+        v2: 2
+      }
+      indices {
+        v0: 2
+        v1: 3
+        v2: 0
+      }
+      P {
+        x: 549.6
+        y: 0
+        z: 559.2
+      }
+      P {
+        x: 0
+        y: 0
+        z: 559.2
+      }
+      P {
+        x: 0
+        y: 548.8
+        z: 559.2
+      }
+      P {
+        x: 556
+        y: 548.8
+        z: 559.2
+      }
+    }
+  }
+}
+directives {
+  attribute_end {
+  }
+}
+directives {
+  attribute_begin {
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 3
+        v1: 2
+        v2: 0
+      }
+      indices {
+        v0: 2
+        v1: 1
+        v2: 0
+      }
+      indices {
+        v0: 7
+        v1: 6
+        v2: 4
+      }
+      indices {
+        v0: 6
+        v1: 5
+        v2: 4
+      }
+      indices {
+        v0: 11
+        v1: 10
+        v2: 8
+      }
+      indices {
+        v0: 10
+        v1: 9
+        v2: 8
+      }
+      indices {
+        v0: 15
+        v1: 14
+        v2: 12
+      }
+      indices {
+        v0: 14
+        v1: 13
+        v2: 12
+      }
+      indices {
+        v0: 19
+        v1: 18
+        v2: 16
+      }
+      indices {
+        v0: 18
+        v1: 17
+        v2: 16
+      }
+      P {
+        x: 130
+        y: 165
+        z: 65
+      }
+      P {
+        x: 82
+        y: 165
+        z: 225
+      }
+      P {
+        x: 240
+        y: 165
+        z: 272
+      }
+      P {
+        x: 290
+        y: 165
+        z: 114
+      }
+      P {
+        x: 290
+        y: 0
+        z: 114
+      }
+      P {
+        x: 290
+        y: 165
+        z: 114
+      }
+      P {
+        x: 240
+        y: 165
+        z: 272
+      }
+      P {
+        x: 240
+        y: 0
+        z: 272
+      }
+      P {
+        x: 130
+        y: 0
+        z: 65
+      }
+      P {
+        x: 130
+        y: 165
+        z: 65
+      }
+      P {
+        x: 290
+        y: 165
+        z: 114
+      }
+      P {
+        x: 290
+        y: 0
+        z: 114
+      }
+      P {
+        x: 82
+        y: 0
+        z: 225
+      }
+      P {
+        x: 82
+        y: 165
+        z: 225
+      }
+      P {
+        x: 130
+        y: 165
+        z: 65
+      }
+      P {
+        x: 130
+        y: 0
+        z: 65
+      }
+      P {
+        x: 240
+        y: 0
+        z: 272
+      }
+      P {
+        x: 240
+        y: 165
+        z: 272
+      }
+      P {
+        x: 82
+        y: 165
+        z: 225
+      }
+      P {
+        x: 82
+        y: 0
+        z: 225
+      }
+    }
+  }
+}
+directives {
+  attribute_end {
+  }
+}
+directives {
+  attribute_begin {
+  }
+}
+directives {
+  shape {
+    trianglemesh {
+      indices {
+        v0: 3
+        v1: 2
+        v2: 0
+      }
+      indices {
+        v0: 2
+        v1: 1
+        v2: 0
+      }
+      indices {
+        v0: 7
+        v1: 6
+        v2: 4
+      }
+      indices {
+        v0: 6
+        v1: 5
+        v2: 4
+      }
+      indices {
+        v0: 11
+        v1: 10
+        v2: 8
+      }
+      indices {
+        v0: 10
+        v1: 9
+        v2: 8
+      }
+      indices {
+        v0: 15
+        v1: 14
+        v2: 12
+      }
+      indices {
+        v0: 14
+        v1: 13
+        v2: 12
+      }
+      indices {
+        v0: 19
+        v1: 18
+        v2: 16
+      }
+      indices {
+        v0: 18
+        v1: 17
+        v2: 16
+      }
+      P {
+        x: 423
+        y: 330
+        z: 247
+      }
+      P {
+        x: 265
+        y: 330
+        z: 296
+      }
+      P {
+        x: 314
+        y: 330
+        z: 456
+      }
+      P {
+        x: 472
+        y: 330
+        z: 406
+      }
+      P {
+        x: 423
+        y: 0
+        z: 247
+      }
+      P {
+        x: 423
+        y: 330
+        z: 247
+      }
+      P {
+        x: 472
+        y: 330
+        z: 406
+      }
+      P {
+        x: 472
+        y: 0
+        z: 406
+      }
+      P {
+        x: 472
+        y: 0
+        z: 406
+      }
+      P {
+        x: 472
+        y: 330
+        z: 406
+      }
+      P {
+        x: 314
+        y: 330
+        z: 456
+      }
+      P {
+        x: 314
+        y: 0
+        z: 456
+      }
+      P {
+        x: 314
+        y: 0
+        z: 456
+      }
+      P {
+        x: 314
+        y: 330
+        z: 456
+      }
+      P {
+        x: 265
+        y: 330
+        z: 296
+      }
+      P {
+        x: 265
+        y: 0
+        z: 296
+      }
+      P {
+        x: 265
+        y: 0
+        z: 296
+      }
+      P {
+        x: 265
+        y: 330
+        z: 296
+      }
+      P {
+        x: 423
+        y: 330
+        z: 247
+      }
+      P {
+        x: 423
+        y: 0
+        z: 247
+      }
+    }
+  }
+}
+directives {
+  attribute_end {
+  }
+}
+directives {
+  world_end {
+  }
+}

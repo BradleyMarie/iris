@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <thread>
+#include <tuple>
 
 #ifdef __linux__
 #include <sys/ioctl.h>
@@ -21,11 +22,14 @@
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
 #include "absl/flags/usage_config.h"
+#include "frontends/pbrt/directives.h"
+#include "frontends/pbrt/file.h"
 #include "frontends/pbrt/parser.h"
-#include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
-#include "frontends/pbrt/tokenizer.h"
-#include "iris/color_matchers/cie_color_matcher.h"
+#include "iris/framebuffer.h"
 #include "iris/random/mersenne_twister_random.h"
+#include "iris/renderer.h"
+#include "pbrt_proto/v3/convert.h"
+#include "pbrt_proto/v3/pbrt.pb.h"
 
 #ifdef INSTRUMENTED_BUILD
 ABSL_FLAG(
@@ -58,6 +62,18 @@ ABSL_FLAG(unsigned int, num_threads, 0,
 ABSL_FLAG(bool, spectral, false, "If true, spectral rendering is performed.");
 
 namespace {
+
+using ::iris::Framebuffer;
+using ::iris::Renderer;
+using ::iris::pbrt_frontend::Directives;
+using ::iris::pbrt_frontend::LoadFile;
+using ::iris::pbrt_frontend::Options;
+using ::iris::pbrt_frontend::ParseScene;
+using ::iris::pbrt_frontend::ParsingResult;
+using ::iris::random::MersenneTwisterRandom;
+using ::pbrt_proto::v3::Convert;
+using ::pbrt_proto::v3::Directive;
+using ::pbrt_proto::v3::PbrtProto;
 
 #if defined NDEBUG
 static const std::string kDebug;
@@ -108,28 +124,10 @@ int main(int argc, char** argv) {
     absl::SetFlag(&FLAGS_num_threads, std::thread::hardware_concurrency());
   }
 
-  std::unique_ptr<iris::pbrt_frontend::SpectrumManager> spectral_manager;
-  std::unique_ptr<iris::AlbedoMatcher> albedo_matcher;
-  std::unique_ptr<iris::ColorMatcher> color_matcher;
-  std::unique_ptr<iris::PowerMatcher> power_matcher;
   if (absl::GetFlag(FLAGS_spectral)) {
-    spectral_manager = nullptr;
-    color_matcher = std::make_unique<iris::color_matchers::CieColorMatcher>();
-    power_matcher = nullptr;
-
     std::cerr << "ERROR: Spectral rendering is not yet implemented"
               << std::endl;
     exit(EXIT_FAILURE);
-  } else {
-    spectral_manager = std::make_unique<
-        iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager>(
-        absl::GetFlag(FLAGS_all_spectra_are_reflective));
-    albedo_matcher = std::make_unique<
-        iris::pbrt_frontend::spectrum_managers::ColorAlbedoMatcher>();
-    color_matcher = std::make_unique<
-        iris::pbrt_frontend::spectrum_managers::ColorColorMatcher>();
-    power_matcher = std::make_unique<
-        iris::pbrt_frontend::spectrum_managers::ColorPowerMatcher>();
   }
 
 #ifdef _XOPEN_SOURCE
@@ -140,36 +138,39 @@ int main(int argc, char** argv) {
 #endif
 
 #ifdef INSTRUMENTED_BUILD
-  const auto& cpu_profile = absl::GetFlag(FLAGS_cpu_profile);
+  const std::string& cpu_profile = absl::GetFlag(FLAGS_cpu_profile);
   if (!cpu_profile.empty()) {
     ProfilerStart(cpu_profile.c_str());
   }
 #endif  // INSTRUMENTED_BUILD
 
-  std::unique_ptr<iris::pbrt_frontend::Tokenizer> tokenizer;
-  std::unique_ptr<std::ifstream> file_input;
+  PbrtProto proto;
   std::filesystem::path search_root;
+  std::optional<std::filesystem::path> file_path;
   if (unparsed.size() == 1) {
-    tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(std::cin);
-    search_root = std::filesystem::current_path();
-  } else {
-    file_input = std::make_unique<std::ifstream>(unparsed.at(1));
-    if (file_input->fail()) {
-      std::cerr << "ERROR: Failed to open file: " << unparsed.at(1)
-                << std::endl;
+    absl::StatusOr<PbrtProto> parsed = Convert(std::cin);
+    if (!parsed.ok()) {
+      std::cerr << "ERROR: Failed to parse input from console: "
+                << parsed.status().message() << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    auto file_path = std::filesystem::weakly_canonical(unparsed.at(1));
-    tokenizer = std::make_unique<iris::pbrt_frontend::Tokenizer>(*file_input,
-                                                                 file_path);
-    search_root = file_path.parent_path();
+    search_root = std::filesystem::current_path();
+  } else {
+    std::tie(proto, file_path) =
+        LoadFile(std::filesystem::current_path(), unparsed.at(1));
+    search_root = file_path->parent_path();
   }
 
-  iris::pbrt_frontend::Parser parser(std::move(spectral_manager),
-                                     std::move(power_matcher));
+  Directives directives;
+  directives.Include(std::move(proto), std::move(search_root),
+                     std::move(file_path));
+
+  Options options;
+  options.always_reflective = absl::GetFlag(FLAGS_all_spectra_are_reflective);
+
   for (size_t render_index = 0;; render_index += 1) {
-    auto result = parser.ParseFrom(*tokenizer, search_root);
+    std::optional<ParsingResult> result = ParseScene(directives, options);
     if (!result) {
       if (render_index == 0) {
         std::cerr << "ERROR: Render input was empty." << std::endl;
@@ -181,90 +182,92 @@ int main(int argc, char** argv) {
 
     bool first = true;
     auto start_time = std::chrono::steady_clock::now();
-    iris::Renderer::ProgressCallbackFn progress_callback =
-        [&](size_t current_pixel, size_t num_pixels) {
-          auto current_time = std::chrono::steady_clock::now();
+    Renderer::ProgressCallbackFn progress_callback = [&](size_t current_pixel,
+                                                         size_t num_pixels) {
+      auto current_time = std::chrono::steady_clock::now();
 
-          std::string prefix;
-          if (unparsed.size() == 1) {
-            prefix = "Rendering (" + std::to_string(render_index + 1) + ") [";
-          } else {
-            prefix = "Rendering [";
-          }
+      std::string prefix;
+      if (unparsed.size() == 1) {
+        prefix = "Rendering (" + std::to_string(render_index + 1) + ") [";
+      } else {
+        prefix = "Rendering [";
+      }
 
-          std::chrono::duration<float> elapsed_time(current_time - start_time);
-          float chunks_per_second = static_cast<float>(current_pixel) /
-                                    static_cast<float>(elapsed_time.count());
-          int elapsed_time_seconds = elapsed_time.count();
-          int estimated_time_remaining_seconds =
-              static_cast<float>(num_pixels - current_pixel) /
-              chunks_per_second;
+      std::chrono::duration<float> elapsed_time(current_time - start_time);
+      float chunks_per_second = static_cast<float>(current_pixel) /
+                                static_cast<float>(elapsed_time.count());
+      int elapsed_time_seconds = elapsed_time.count();
+      int estimated_time_remaining_seconds =
+          static_cast<float>(num_pixels - current_pixel) / chunks_per_second;
 
-          std::string suffix = "] (";
-          if (current_pixel == num_pixels) {
-            suffix += std::to_string(elapsed_time_seconds) + "s)";
-          } else if (first) {
-            suffix += std::to_string(elapsed_time_seconds) + "s|?s)";
-          } else {
-            suffix += std::to_string(elapsed_time_seconds) + "s|" +
-                      std::to_string(estimated_time_remaining_seconds) + "s)";
-          }
+      std::string suffix = "] (";
+      if (current_pixel == num_pixels) {
+        suffix += std::to_string(elapsed_time_seconds) + "s)";
+      } else if (first) {
+        suffix += std::to_string(elapsed_time_seconds) + "s|?s)";
+      } else {
+        suffix += std::to_string(elapsed_time_seconds) + "s|" +
+                  std::to_string(estimated_time_remaining_seconds) + "s)";
+      }
 
-          while (suffix.size() < kReservedSuffixSpace) {
-            suffix.push_back(' ');
-          }
+      while (suffix.size() < kReservedSuffixSpace) {
+        suffix.push_back(' ');
+      }
 
-          if (current_pixel == num_pixels) {
-            suffix.push_back('\n');
-          } else {
-            suffix.push_back('\r');
-          }
+      if (current_pixel == num_pixels) {
+        suffix.push_back('\n');
+      } else {
+        suffix.push_back('\r');
+      }
 
-          size_t text_width = kDefaultProgressWidth;
+      size_t text_width = kDefaultProgressWidth;
 
 #ifdef __linux__
-          struct winsize window;
-          int result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
-          if (result >= 0) {
-            text_width = window.ws_col;
-          }
+      struct winsize window;
+      int result = ioctl(STDOUT_FILENO, TIOCGWINSZ, &window);
+      if (result >= 0) {
+        text_width = window.ws_col;
+      }
 #endif
 
-          size_t bar_width = text_width - prefix.size() - suffix.size();
-          float progress = static_cast<float>(current_pixel) /
-                           static_cast<float>(num_pixels);
-          size_t bar_length = bar_width * progress;
+      size_t bar_width = text_width - prefix.size() - suffix.size();
+      float progress =
+          static_cast<float>(current_pixel) / static_cast<float>(num_pixels);
+      size_t bar_length = bar_width * progress;
 
-          std::string bar;
-          for (size_t i = 0; i < bar_width; i++) {
-            if (i < bar_length) {
-              bar += "=";
-            } else if (i == bar_length) {
-              bar += ">";
-            } else {
-              bar += " ";
-            }
-          }
+      std::string bar;
+      for (size_t i = 0; i < bar_width; i++) {
+        if (i < bar_length) {
+          bar += "=";
+        } else if (i == bar_length) {
+          bar += ">";
+        } else {
+          bar += " ";
+        }
+      }
 
-          std::cout << prefix << bar << suffix << std::flush;
+      std::cout << prefix << bar << suffix << std::flush;
 
-          first = false;
-        };
+      first = false;
+    };
 
     std::ofstream output(result->output_filename, std::ofstream::out |
                                                       std::ofstream::binary |
                                                       std::ofstream::trunc);
 
-    iris::Renderer::AdditionalOptions options;
+    Renderer::AdditionalOptions options;
     options.minimum_distance = absl::GetFlag(FLAGS_epsilon);
     options.num_threads = absl::GetFlag(FLAGS_num_threads);
     options.progress_callback = std::move(progress_callback);
     options.skip_pixel_callback = std::move(result->skip_pixel_callback);
-    options.maximum_sample_luminance = result->maximum_sample_luminance;
 
-    iris::random::MersenneTwisterRandom rng;  // TODO: Support other RNG
-    auto framebuffer = result->renderable.Render(*albedo_matcher,
-                                                 *color_matcher, rng, options);
+    if (std::isfinite(result->max_sample_luminance) &&
+        result->max_sample_luminance > 0.0) {
+      options.maximum_sample_luminance = result->max_sample_luminance;
+    }
+
+    MersenneTwisterRandom rng;  // TODO: Support other RNG
+    Framebuffer framebuffer = result->renderable.Render(rng, options);
 
     result->output_write_function(framebuffer, output);
   }

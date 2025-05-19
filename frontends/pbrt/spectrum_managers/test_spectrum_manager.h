@@ -26,8 +26,6 @@ class TestSpectrumManager final : public SpectrumManager {
   ReferenceCounted<Spectrum> AllocateSpectrum(
       const ReferenceCounted<Spectrum>& spectrum0,
       const ReferenceCounted<Spectrum>& spectrum1, visual_t* luma) override;
-
-  void Clear() override;
 };
 
 }  // namespace spectrum_managers

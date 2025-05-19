@@ -1,5 +1,6 @@
 #include "frontends/pbrt/film/image.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <memory>
 
@@ -28,7 +29,8 @@ TEST(Image, Empty) {
   EXPECT_FALSE(result->skip_pixel_function({719, 1279}, {720, 1280}));
   EXPECT_TRUE(result->skip_pixel_function({720, 1280}, {720, 1280}));
   EXPECT_EQ(35.0, result->diagonal);
-  EXPECT_FALSE(result->max_sample_luminance);
+  EXPECT_FALSE(std::isfinite(result->max_sample_luminance));
+  EXPECT_GT(result->max_sample_luminance, 0.0);
 }
 
 TEST(Image, NegativeCropWindow0) {
