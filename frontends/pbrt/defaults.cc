@@ -4,7 +4,6 @@
 
 #include "absl/log/check.h"
 #include "frontends/pbrt/defaults_embed.h"
-#include "google/protobuf/text_format.h"
 #include "pbrt_proto/v3/defaults.pb.h"
 
 namespace iris {
@@ -13,8 +12,7 @@ namespace {
 
 pbrt_proto::v3::Defaults BuildDefaults() {
   pbrt_proto::v3::Defaults result;
-  CHECK(google::protobuf::TextFormat::ParseFromString(
-      std::string_view(kDefaults, kDefaultsSize), &result));
+  CHECK(result.ParseFromString(std::string_view(kDefaults, kDefaultsSize)));
   return result;
 }
 

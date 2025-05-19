@@ -10,15 +10,23 @@ cc_library(
     ],
 )
 
+cc_binary(
+    name = "defaults_embed_generate",
+    srcs = ["defaults_embed_generate.cc"],
+)
+
+genrule(
+    name = "defaults_embed_src",
+    srcs = ["@pbrt_proto//pbrt_proto/v3:defaults_binpb"],
+    outs = ["defaults_embed.c"],
+    cmd = "./$(location :defaults_embed_generate) $(location @pbrt_proto//pbrt_proto/v3:defaults_binpb) > $@",
+    tools = [":defaults_embed_generate"],
+)
+
 cc_library(
     name = "defaults_embed",
-    srcs = ["defaults_embed.c"],
+    srcs = [":defaults_embed.c"],
     hdrs = ["defaults_embed.h"],
-    additional_compiler_inputs = ["@pbrt_proto//pbrt_proto/v3:defaults_txtpb"],
-    copts = [
-        "-std=c23",
-        "-DDEFAULTS_BINPB=$(location @pbrt_proto//pbrt_proto/v3:defaults_txtpb)",
-    ],
 )
 
 cc_library(
@@ -29,6 +37,29 @@ cc_library(
         ":defaults_embed",
         "@abseil-cpp//absl/log:check",
         "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "directives",
+    srcs = ["directives.cc"],
+    hdrs = ["directives.h"],
+    deps = [
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "directives_test",
+    srcs = ["directives_test.cc"],
+    data = [
+        "test_data/cornell_box.pbrt",
+    ],
+    deps = [
+        ":directives",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -56,29 +87,6 @@ cc_test(
     ],
     deps = [
         ":file",
-        "@bazel_tools//tools/cpp/runfiles",
-        "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
-    ],
-)
-
-cc_library(
-    name = "directives",
-    srcs = ["directives.cc"],
-    hdrs = ["directives.h"],
-    deps = [
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
-    ],
-)
-
-cc_test(
-    name = "directives_test",
-    srcs = ["directives_test.cc"],
-    data = [
-        "test_data/cornell_box.pbrt",
-    ],
-    deps = [
-        ":directives",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
