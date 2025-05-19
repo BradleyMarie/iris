@@ -238,7 +238,6 @@ cc_test(
     srcs = ["substrate_material_test.cc"],
     deps = [
         ":substrate_material",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",

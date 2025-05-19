@@ -15,7 +15,7 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::AshikhminShirleyBrdf;
+using ::iris::bxdfs::MakeAshikhminShirleyBrdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 
 class SubstrateMaterial final : public Material {
@@ -84,10 +84,9 @@ const Bxdf* SubstrateMaterial::Evaluate(
     }
   }
 
-  return &bxdf_allocator
-              .Allocate<AshikhminShirleyBrdf<TrowbridgeReitzDistribution>>(
-                  *diffuse, *specular,
-                  TrowbridgeReitzDistribution(roughness_u, roughness_v));
+  return MakeAshikhminShirleyBrdf(
+      bxdf_allocator, diffuse, specular,
+      TrowbridgeReitzDistribution(roughness_u, roughness_v));
 }
 
 }  // namespace

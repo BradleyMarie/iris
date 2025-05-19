@@ -80,9 +80,9 @@ const Reflector* AshikhminShirleyBrdf::ReflectanceDiffuse(
        Pow5(static_cast<visual_t>(1.0) -
             static_cast<visual_t>(0.5) * cos_theta_outgoing));
 
-  const Reflector* inverted_specular = allocator.Invert(&specular_);
+  const Reflector* inverted_specular = allocator.Invert(specular_);
   const Reflector* unattenuated_diffuse =
-      allocator.Scale(&diffuse_, inverted_specular);
+      allocator.Scale(diffuse_, inverted_specular);
   const Reflector* diffuse =
       allocator.Scale(unattenuated_diffuse, diffuse_attenuation);
 
@@ -100,7 +100,7 @@ const Reflector* AshikhminShirleyBrdf::ReflectanceDiffuse(
       (static_cast<visual_t>(4.0) * cos_theta_half_angle *
        std::max(cos_theta_incoming, cos_theta_outgoing));
   const Reflector* unattenuated_specular = SchlickFresnel(
-      &specular_, inverted_specular, cos_theta_half_angle, allocator);
+      specular_, inverted_specular, cos_theta_half_angle, allocator);
   const Reflector* specular =
       allocator.UnboundedScale(unattenuated_specular, specular_attenuation);
 

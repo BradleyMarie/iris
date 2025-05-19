@@ -1,8 +1,6 @@
 #include "iris/materials/substrate_material.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/ashikhmin_shirley_brdf.h"
-#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -12,8 +10,6 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::AshikhminShirleyBrdf;
-using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
@@ -74,9 +70,6 @@ TEST(SubstrateMaterialTest, Evaluate) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(
-      dynamic_cast<const AshikhminShirleyBrdf<TrowbridgeReitzDistribution>*>(
-          result));
 }
 
 }  // namespace

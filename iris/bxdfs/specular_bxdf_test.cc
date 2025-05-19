@@ -109,6 +109,11 @@ TEST(SpecularBtdfTest, SampleWithDerivatives) {
   EXPECT_EQ(result->pdf, 1.0);
 }
 
+TEST(SpecularBxdfTest, Null) {
+  EXPECT_FALSE(
+      MakeSpecularBxdf(GetBxdfAllocator(), nullptr, nullptr, 1.0, 1.0));
+}
+
 TEST(SpecularBxdfTest, SampleTransmittanceFront) {
   MockReflector reflector;
   MockReflector transmitter;
