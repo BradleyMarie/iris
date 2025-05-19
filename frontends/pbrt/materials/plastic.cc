@@ -38,12 +38,8 @@ MaterialResult MakePlastic(const Material::Plastic& plastic,
   with_defaults.MergeFrom(plastic);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  FloatTextureParameter eta_front;
-  eta_front.set_float_value(kDefaultEtaFront);
-
-  FloatTextureParameter eta_back;
-  eta_back.set_float_value(kDefaultEtaBack);
-
+  visual eta_front = kDefaultEtaFront;
+  visual eta_back = kDefaultEtaBack;
   if (absl::GetFlag(FLAGS_reverse_plastic_eta)) {
     std::swap(eta_front, eta_back);
   }

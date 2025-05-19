@@ -28,14 +28,11 @@ MaterialResult MakeGlass(const Material::Glass& glass,
   with_defaults.MergeFrom(glass);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  FloatTextureParameter eta_front;
-  eta_front.set_float_value(kDefaultEtaFront);
-
   return MaterialResult{
       MakeGlassMaterial(
           texture_manager.AllocateReflectorTexture(with_defaults.kr()),
           texture_manager.AllocateReflectorTexture(with_defaults.kt()),
-          texture_manager.AllocateFloatTexture(eta_front),
+          texture_manager.AllocateFloatTexture(kDefaultEtaFront),
           texture_manager.AllocateFloatTexture(with_defaults.eta())),
       MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
