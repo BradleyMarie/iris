@@ -5,6 +5,7 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
+#include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
@@ -13,8 +14,14 @@ namespace {
 
 using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetBxdfAllocator;
 using ::testing::_;
 using ::testing::Return;
+
+TEST(LambertianBrdfTest, NullReflector) {
+  EXPECT_FALSE(MakeLambertianBrdf(GetBxdfAllocator(), nullptr));
+  EXPECT_FALSE(MakeLambertianBtdf(GetBxdfAllocator(), nullptr));
+}
 
 TEST(LambertianBrdfTest, SampleDiffuseAligned) {
   MockReflector reflector;
@@ -22,9 +29,9 @@ TEST(LambertianBrdfTest, SampleDiffuseAligned) {
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
   Sampler sampler(rng);
 
-  LambertianBrdf bxdf(reflector);
-  std::optional<Vector> result =
-      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
+  const Bxdf* bxdf = MakeLambertianBrdf(GetBxdfAllocator(), &reflector);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -37,8 +44,8 @@ TEST(LambertianBrdfTest, SampleDiffuseUnaligned) {
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
   Sampler sampler(rng);
 
-  LambertianBrdf bxdf(reflector);
-  std::optional<Vector> result = bxdf.SampleDiffuse(
+  const Bxdf* bxdf = MakeLambertianBrdf(GetBxdfAllocator(), &reflector);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, 0.707106709, 0.0001);
@@ -48,18 +55,18 @@ TEST(LambertianBrdfTest, SampleDiffuseUnaligned) {
 
 TEST(LambertianBrdfTest, DiffusePdfTransmitted) {
   MockReflector reflector;
-  LambertianBrdf bxdf(reflector);
+  const Bxdf* bxdf = MakeLambertianBrdf(GetBxdfAllocator(), &reflector);
   EXPECT_EQ(0.0,
-            bxdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                             Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(LambertianBrdfTest, DiffusePdfReflected) {
   MockReflector reflector;
-  LambertianBrdf bxdf(reflector);
+  const Bxdf* bxdf = MakeLambertianBrdf(GetBxdfAllocator(), &reflector);
   EXPECT_NEAR(std::numbers::inv_pi,
-              bxdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF),
+              bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF),
               0.001);
 }
 
@@ -67,8 +74,8 @@ TEST(LambertianBrdfTest, ReflectanceBtdf) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  LambertianBrdf bxdf(reflector);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeLambertianBrdf(GetBxdfAllocator(), &reflector);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
       testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
@@ -78,8 +85,8 @@ TEST(LambertianBrdfTest, ReflectanceTransmitted) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  LambertianBrdf bxdf(reflector);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeLambertianBrdf(GetBxdfAllocator(), &reflector);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
       testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
@@ -89,8 +96,8 @@ TEST(LambertianBrdfTest, Reflectance) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  LambertianBrdf bxdf(reflector);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeLambertianBrdf(GetBxdfAllocator(), &reflector);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
       testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
@@ -103,9 +110,9 @@ TEST(LambertianBtdfTest, SampleDiffuseAligned) {
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
   Sampler sampler(rng);
 
-  LambertianBtdf bxdf(reflector);
-  std::optional<Vector> result =
-      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
+  const Bxdf* bxdf = MakeLambertianBtdf(GetBxdfAllocator(), &reflector);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -118,9 +125,9 @@ TEST(LambertianBtdfTest, SampleDiffuseUnaligned) {
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
   Sampler sampler(rng);
 
-  LambertianBtdf bxdf(reflector);
-  std::optional<Vector> result =
-      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
+  const Bxdf* bxdf = MakeLambertianBtdf(GetBxdfAllocator(), &reflector);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -129,18 +136,18 @@ TEST(LambertianBtdfTest, SampleDiffuseUnaligned) {
 
 TEST(LambertianBtdfTest, DiffusePdfReflected) {
   MockReflector reflector;
-  LambertianBtdf bxdf(reflector);
+  const Bxdf* bxdf = MakeLambertianBtdf(GetBxdfAllocator(), &reflector);
   EXPECT_EQ(0.0,
-            bxdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                            Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                             Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
 TEST(LambertianBtdfTest, DiffusePdfTransmitted) {
   MockReflector reflector;
-  LambertianBtdf bxdf(reflector);
+  const Bxdf* bxdf = MakeLambertianBtdf(GetBxdfAllocator(), &reflector);
   EXPECT_NEAR(std::numbers::inv_pi,
-              bxdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF),
+              bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF),
               0.001);
 }
 
@@ -148,8 +155,8 @@ TEST(LambertianBtdfTest, ReflectanceBrdf) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  LambertianBtdf bxdf(reflector);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeLambertianBtdf(GetBxdfAllocator(), &reflector);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
       testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
@@ -159,8 +166,8 @@ TEST(LambertianBtdfTest, ReflectanceReflected) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  LambertianBtdf bxdf(reflector);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeLambertianBtdf(GetBxdfAllocator(), &reflector);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
       testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
@@ -170,8 +177,8 @@ TEST(LambertianBtdfTest, Reflectance) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  LambertianBtdf bxdf(reflector);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeLambertianBtdf(GetBxdfAllocator(), &reflector);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
       testing::GetSpectralAllocator());
   ASSERT_TRUE(result);

@@ -5,6 +5,7 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
+#include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
@@ -13,8 +14,13 @@ namespace {
 
 using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
+using ::iris::testing::GetBxdfAllocator;
 using ::testing::_;
 using ::testing::Return;
+
+TEST(OrenNayarBrdfTest, NullReflector) {
+  EXPECT_FALSE(MakeOrenNayarBrdf(GetBxdfAllocator(), nullptr, 1.0));
+}
 
 TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {
   MockReflector reflector;
@@ -22,9 +28,9 @@ TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
   Sampler sampler(rng);
 
-  OrenNayarBrdf bxdf(reflector, 0.1);
-  std::optional<Vector> result =
-      bxdf.SampleDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, -0.707106709, 0.0001);
   EXPECT_NEAR(result->y, -0.707106709, 0.0001);
@@ -37,8 +43,8 @@ TEST(OrenNayarBrdfTest, SampleDiffuseUnaligned) {
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
   Sampler sampler(rng);
 
-  OrenNayarBrdf bxdf(reflector, 0.1);
-  std::optional<Vector> result = bxdf.SampleDiffuse(
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), sampler);
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->x, 0.707106709, 0.0001);
@@ -48,18 +54,18 @@ TEST(OrenNayarBrdfTest, SampleDiffuseUnaligned) {
 
 TEST(OrenNayarBrdfTest, DiffusePdfTransmitted) {
   MockReflector reflector;
-  OrenNayarBrdf bxdf(reflector, 0.1);
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
   EXPECT_EQ(0.0,
-            bxdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                            Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                             Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
 TEST(OrenNayarBrdfTest, DiffusePdfReflected) {
   MockReflector reflector;
-  OrenNayarBrdf bxdf(reflector, 0.1);
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
   EXPECT_NEAR(std::numbers::inv_pi,
-              bxdf.PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF),
+              bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF),
               0.001);
 }
 
@@ -67,8 +73,8 @@ TEST(OrenNayarBrdfTest, ReflectanceBtdf) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  OrenNayarBrdf bxdf(reflector, 0.1);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
       testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
@@ -78,8 +84,8 @@ TEST(OrenNayarBrdfTest, ReflectanceTransmitted) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  OrenNayarBrdf bxdf(reflector, 0.1);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
       testing::GetSpectralAllocator());
   ASSERT_FALSE(result);
@@ -89,8 +95,8 @@ TEST(OrenNayarBrdfTest, ReflectanceVertical) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  OrenNayarBrdf bxdf(reflector, 0.1);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
       testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
@@ -101,8 +107,8 @@ TEST(OrenNayarBrdfTest, ReflectanceIncomingDominant) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  OrenNayarBrdf bxdf(reflector, 10.0);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 10.0);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Normalize(Vector(0.0, 1.0, 2.0)), Normalize(Vector(0.0, 1.0, 1.0)),
       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
@@ -113,8 +119,8 @@ TEST(OrenNayarBrdfTest, ReflectanceOutgoingDominant) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
-  OrenNayarBrdf bxdf(reflector, 10.0);
-  const Reflector* result = bxdf.ReflectanceDiffuse(
+  const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 10.0);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
       Normalize(Vector(0.0, 1.0, 1.0)), Normalize(Vector(0.0, 1.0, 2.0)),
       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
   ASSERT_TRUE(result);

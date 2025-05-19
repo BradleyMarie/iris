@@ -4,11 +4,40 @@
 #include <cassert>
 #include <numbers>
 
+#include "iris/bxdf.h"
+#include "iris/bxdf_allocator.h"
+#include "iris/bxdfs/helpers/diffuse_bxdf.h"
 #include "iris/bxdfs/internal/math.h"
+#include "iris/float.h"
+#include "iris/reflector.h"
+#include "iris/sampler.h"
+#include "iris/spectral_allocator.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
+
+class OrenNayarBrdf final : public helpers::DiffuseBxdf {
+ public:
+  OrenNayarBrdf(const Reflector& reflector, visual_t sigma);
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override;
+
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override;
+
+  const Reflector* ReflectanceDiffuse(
+      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+      SpectralAllocator& allocator) const override;
+
+ private:
+  const Reflector& reflector_;
+  const visual_t a_, b_;
+};
 
 visual_t ComputeA(visual_t sigma) {
   visual_t sigma_radians =
@@ -26,8 +55,6 @@ visual_t ComputeB(visual_t sigma) {
   return static_cast<visual_t>(0.45) * sigma_squared /
          (sigma_squared + static_cast<visual_t>(0.09));
 }
-
-}  // namespace
 
 OrenNayarBrdf::OrenNayarBrdf(const Reflector& reflector, visual_t sigma)
     : reflector_(reflector), a_(ComputeA(sigma)), b_(ComputeB(sigma)) {
@@ -84,6 +111,17 @@ const Reflector* OrenNayarBrdf::ReflectanceDiffuse(
   return allocator.UnboundedScale(
       &reflector_, std::numbers::inv_pi_v<visual_t> *
                        (a_ + b_ * cosine * sin_alpha * tan_beta));
+}
+
+}  // namespace
+
+const Bxdf* MakeOrenNayarBrdf(BxdfAllocator& bxdf_allocator,
+                              const Reflector* reflector, visual_t sigma) {
+  if (!reflector) {
+    return nullptr;
+  }
+
+  return &bxdf_allocator.Allocate<OrenNayarBrdf>(*reflector, sigma);
 }
 
 }  // namespace bxdfs

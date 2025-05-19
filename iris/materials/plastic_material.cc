@@ -20,8 +20,8 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::LambertianBrdf;
 using ::iris::bxdfs::MakeCompositeBxdf;
+using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MicrofacetBrdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 
@@ -67,11 +67,9 @@ const Bxdf* PlasticMaterial::Evaluate(
     BxdfAllocator& bxdf_allocator) const {
   const Bxdf* lambertian_brdf = nullptr;
   if (diffuse_) {
-    if (const Reflector* diffuse =
-            diffuse_->Evaluate(texture_coordinates, spectral_allocator);
-        diffuse) {
-      lambertian_brdf = &bxdf_allocator.Allocate<LambertianBrdf>(*diffuse);
-    }
+    lambertian_brdf = MakeLambertianBrdf(
+        bxdf_allocator,
+        diffuse_->Evaluate(texture_coordinates, spectral_allocator));
   }
 
   const Bxdf* microfacet_brdf = nullptr;

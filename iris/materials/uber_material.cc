@@ -24,7 +24,7 @@ namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::FresnelNoOp;
-using ::iris::bxdfs::LambertianBrdf;
+using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MicrofacetBrdf;
 using ::iris::bxdfs::SpecularBrdf;
 using ::iris::bxdfs::SpecularBtdf;
@@ -122,13 +122,11 @@ const Bxdf* UberMaterial::Evaluate(
     }
 
     if (diffuse_) {
-      const Reflector* diffuse =
-          diffuse_->Evaluate(texture_coordinates, spectral_allocator);
-
-      if (diffuse != nullptr) {
-        lambertian_brdf = &bxdf_allocator.Allocate<LambertianBrdf>(
-            *spectral_allocator.Scale(diffuse, opacity));
-      }
+      lambertian_brdf = MakeLambertianBrdf(
+          bxdf_allocator,
+          spectral_allocator.Scale(
+              diffuse_->Evaluate(texture_coordinates, spectral_allocator),
+              opacity));
     }
 
     if (specular_) {

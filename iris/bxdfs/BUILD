@@ -119,6 +119,7 @@ cc_library(
     hdrs = ["lambertian_bxdf.h"],
     deps = [
         "//iris:bxdf",
+        "//iris:bxdf_allocator",
         "//iris:float",
         "//iris:reflector",
         "//iris:sampler",
@@ -136,6 +137,7 @@ cc_test(
         ":lambertian_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
     ],
@@ -212,6 +214,7 @@ cc_library(
     hdrs = ["oren_nayar_bxdf.h"],
     deps = [
         "//iris:bxdf",
+        "//iris:bxdf_allocator",
         "//iris:float",
         "//iris:reflector",
         "//iris:sampler",
@@ -229,6 +232,7 @@ cc_test(
         ":oren_nayar_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
     ],

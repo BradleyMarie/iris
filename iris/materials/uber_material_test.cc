@@ -1,7 +1,6 @@
 #include "iris/materials/uber_material.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/bxdfs/specular_bxdf.h"
@@ -16,7 +15,6 @@ namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::FresnelNoOp;
-using ::iris::bxdfs::LambertianBrdf;
 using ::iris::bxdfs::MicrofacetBrdf;
 using ::iris::bxdfs::SpecularBrdf;
 using ::iris::bxdfs::SpecularBtdf;
@@ -111,7 +109,7 @@ TEST(UberMaterialTest, LambertianOnly) {
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(dynamic_cast<const LambertianBrdf*>(result));
+  ASSERT_TRUE(result);
 }
 
 TEST(UberMaterialTest, SpecularReflectionOnly) {

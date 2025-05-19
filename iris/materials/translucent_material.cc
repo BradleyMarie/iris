@@ -20,9 +20,9 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::LambertianBrdf;
-using ::iris::bxdfs::LambertianBtdf;
 using ::iris::bxdfs::MakeCompositeBxdf;
+using ::iris::bxdfs::MakeLambertianBrdf;
+using ::iris::bxdfs::MakeLambertianBtdf;
 using ::iris::bxdfs::MicrofacetBrdf;
 using ::iris::bxdfs::MicrofacetBtdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
@@ -89,26 +89,15 @@ const Bxdf* TranslucentMaterial::Evaluate(
         transmittance_->Evaluate(texture_coordinates, spectral_allocator);
   }
 
-  if (reflectance == nullptr && transmittance == nullptr) {
-    return nullptr;
-  }
-
   const Bxdf* lambertian_brdf = nullptr;
   const Bxdf* lambertian_btdf = nullptr;
   if (diffuse_) {
-    if (const Reflector* diffuse =
-            diffuse_->Evaluate(texture_coordinates, spectral_allocator);
-        diffuse != nullptr) {
-      if (reflectance != nullptr) {
-        lambertian_brdf = &bxdf_allocator.Allocate<LambertianBrdf>(
-            *spectral_allocator.Scale(reflectance, diffuse));
-      }
-
-      if (transmittance != nullptr) {
-        lambertian_btdf = &bxdf_allocator.Allocate<LambertianBtdf>(
-            *spectral_allocator.Scale(transmittance, diffuse));
-      }
-    }
+    const Reflector* diffuse =
+        diffuse_->Evaluate(texture_coordinates, spectral_allocator);
+    lambertian_brdf = MakeLambertianBrdf(
+        bxdf_allocator, spectral_allocator.Scale(reflectance, diffuse));
+    lambertian_btdf = MakeLambertianBtdf(
+        bxdf_allocator, spectral_allocator.Scale(transmittance, diffuse));
   }
 
   const Bxdf* microfacet_brdf = nullptr;

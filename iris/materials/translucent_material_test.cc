@@ -2,7 +2,6 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/composite_bxdf.h"
-#include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/reflectors/mock_reflector.h"
@@ -15,8 +14,6 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::LambertianBrdf;
-using ::iris::bxdfs::LambertianBtdf;
 using ::iris::bxdfs::MicrofacetBrdf;
 using ::iris::bxdfs::MicrofacetBtdf;
 using ::iris::bxdfs::internal::CompositeBxdf;
@@ -176,7 +173,6 @@ TEST(TranslucentMaterialTest, DiffuseReflection) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const LambertianBrdf*>(result));
 }
 
 TEST(TranslucentMaterialTest, DiffuseTransmission) {
@@ -211,7 +207,6 @@ TEST(TranslucentMaterialTest, DiffuseTransmission) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const LambertianBtdf*>(result));
 }
 
 TEST(TranslucentMaterialTest, SpecularReflection) {

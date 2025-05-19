@@ -57,8 +57,6 @@ cc_test(
     srcs = ["matte_material_test.cc"],
     deps = [
         ":matte_material",
-        "//iris/bxdfs:lambertian_bxdf",
-        "//iris/bxdfs:oren_nayar_bxdf",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -276,7 +274,6 @@ cc_test(
     deps = [
         ":translucent_material",
         "//iris/bxdfs:composite_bxdf",
-        "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
@@ -314,7 +311,6 @@ cc_test(
     srcs = ["uber_material_test.cc"],
     deps = [
         ":uber_material",
-        "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/bxdfs:specular_bxdf",
         "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",

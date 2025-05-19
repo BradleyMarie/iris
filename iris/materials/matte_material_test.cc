@@ -1,8 +1,6 @@
 #include "iris/materials/matte_material.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/lambertian_bxdf.h"
-#include "iris/bxdfs/oren_nayar_bxdf.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -12,8 +10,6 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::LambertianBrdf;
-using ::iris::bxdfs::OrenNayarBrdf;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
@@ -57,7 +53,6 @@ TEST(MatteMaterialTest, EvaluateLambertian) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const LambertianBrdf*>(result));
 }
 
 TEST(MatteMaterialTest, EvaluateOrenNayar) {
@@ -75,7 +70,6 @@ TEST(MatteMaterialTest, EvaluateOrenNayar) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const OrenNayarBrdf*>(result));
 }
 
 }  // namespace
