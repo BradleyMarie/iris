@@ -184,19 +184,15 @@ const Bxdf* MakeSpecularBxdf(BxdfAllocator& bxdf_allocator,
                              const Reflector* transmittance,
                              const geometric_t eta_incident,
                              const geometric_t eta_transmitted) {
-  if (!reflectance && !transmittance) {
-    return nullptr;
-  }
-
   if (!reflectance) {
-    return &bxdf_allocator.Allocate<SpecularBtdf<FresnelDielectric>>(
-        *transmittance, eta_incident, eta_transmitted,
-        FresnelDielectric(eta_incident, eta_transmitted));
+    return MakeSpecularBtdf(bxdf_allocator, transmittance, eta_incident,
+                            eta_transmitted,
+                            FresnelDielectric(eta_incident, eta_transmitted));
   }
 
   if (!transmittance) {
-    return &bxdf_allocator.Allocate<SpecularBrdf<FresnelDielectric>>(
-        *reflectance, FresnelDielectric(eta_incident, eta_transmitted));
+    return MakeSpecularBrdf(bxdf_allocator, reflectance,
+                            FresnelDielectric(eta_incident, eta_transmitted));
   }
 
   return &bxdf_allocator.Allocate<SpecularBxdf>(*reflectance, *transmittance,

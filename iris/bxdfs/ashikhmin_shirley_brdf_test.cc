@@ -37,12 +37,6 @@ class TestMicrofacetDistribution final : public MicrofacetDistribution {
   Vector vector_;
 };
 
-TEST(AshikhminShirleyBrdf, Null) {
-  TestMicrofacetDistribution distribution;
-  EXPECT_FALSE(MakeAshikhminShirleyBrdf(GetBxdfAllocator(), nullptr, nullptr,
-                                        distribution));
-}
-
 TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.49));

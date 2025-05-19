@@ -59,47 +59,68 @@ class SpecularBtdf final : public helpers::SpecularBxdf {
 
 template <typename F>
   requires std::derived_from<F, Fresnel>
-class SpecularBrdf final : public helpers::SpecularBxdf {
- public:
-  SpecularBrdf(const Reflector& reflectance, const F& fresnel) noexcept
-      : fresnel_(fresnel), impl_(reflectance, fresnel_) {}
+const Bxdf* MakeSpecularBrdf(BxdfAllocator& bxdf_allocator,
+                             const Reflector* reflectance, const F& fresnel) {
+  class SpecularBrdf final : public helpers::SpecularBxdf {
+   public:
+    SpecularBrdf(const Reflector& reflectance, const F& fresnel) noexcept
+        : fresnel_(fresnel), impl_(reflectance, fresnel_) {}
 
-  std::optional<Bxdf::SpecularSample> SampleSpecular(
-      const Vector& incoming,
-      const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler,
-      SpectralAllocator& allocator) const override {
-    return impl_.SampleSpecular(incoming, differentials, surface_normal,
-                                sampler, allocator);
+    std::optional<Bxdf::SpecularSample> SampleSpecular(
+        const Vector& incoming,
+        const std::optional<Bxdf::Differentials>& differentials,
+        const Vector& surface_normal, Sampler& sampler,
+        SpectralAllocator& allocator) const override {
+      return impl_.SampleSpecular(incoming, differentials, surface_normal,
+                                  sampler, allocator);
+    }
+
+   private:
+    const F fresnel_;
+    const internal::SpecularBrdf impl_;
+  };
+
+  if (!reflectance) {
+    return nullptr;
   }
 
- private:
-  const F fresnel_;
-  const internal::SpecularBrdf impl_;
-};
+  return &bxdf_allocator.Allocate<SpecularBrdf>(*reflectance, fresnel);
+}
 
 template <typename F>
   requires std::derived_from<F, Fresnel>
-class SpecularBtdf final : public helpers::SpecularBxdf {
- public:
-  SpecularBtdf(const Reflector& transmittance, const geometric_t eta_incident,
-               const geometric_t eta_transmitted, const F& fresnel) noexcept
-      : fresnel_(fresnel),
-        impl_(transmittance, eta_incident, eta_transmitted, fresnel_) {}
+const Bxdf* MakeSpecularBtdf(BxdfAllocator& bxdf_allocator,
+                             const Reflector* transmittance,
+                             geometric_t eta_incident,
+                             geometric_t eta_transmitted, const F& fresnel) {
+  class SpecularBtdf final : public helpers::SpecularBxdf {
+   public:
+    SpecularBtdf(const Reflector& transmittance, geometric_t eta_incident,
+                 geometric_t eta_transmitted, const F& fresnel) noexcept
+        : fresnel_(fresnel),
+          impl_(transmittance, eta_incident, eta_transmitted, fresnel_) {}
 
-  std::optional<Bxdf::SpecularSample> SampleSpecular(
-      const Vector& incoming,
-      const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler,
-      SpectralAllocator& allocator) const override {
-    return impl_.SampleSpecular(incoming, differentials, surface_normal,
-                                sampler, allocator);
+    std::optional<Bxdf::SpecularSample> SampleSpecular(
+        const Vector& incoming,
+        const std::optional<Bxdf::Differentials>& differentials,
+        const Vector& surface_normal, Sampler& sampler,
+        SpectralAllocator& allocator) const override {
+      return impl_.SampleSpecular(incoming, differentials, surface_normal,
+                                  sampler, allocator);
+    }
+
+   private:
+    const F fresnel_;
+    const internal::SpecularBtdf impl_;
+  };
+
+  if (!transmittance) {
+    return nullptr;
   }
 
- private:
-  const F fresnel_;
-  const internal::SpecularBtdf impl_;
-};
+  return &bxdf_allocator.Allocate<SpecularBtdf>(*transmittance, eta_incident,
+                                                eta_transmitted, fresnel);
+}
 
 const Bxdf* MakeSpecularBxdf(BxdfAllocator& bxdf_allocator,
                              const Reflector* reflectance,

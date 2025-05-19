@@ -62,10 +62,6 @@ const Bxdf* SubstrateMaterial::Evaluate(
     specular = specular_->Evaluate(texture_coordinates, spectral_allocator);
   }
 
-  if (diffuse == nullptr && specular == nullptr) {
-    return nullptr;
-  }
-
   visual roughness_u = static_cast<visual>(0.0);
   if (roughness_u_) {
     roughness_u_->Evaluate(texture_coordinates);

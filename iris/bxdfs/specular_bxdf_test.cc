@@ -20,21 +20,27 @@ using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::Return;
 
+TEST(SpecularBrdfTest, Null) {
+  MockReflector reflector;
+  EXPECT_FALSE(MakeSpecularBrdf(GetBxdfAllocator(), nullptr, FresnelNoOp()));
+}
+
 TEST(SpecularBrdfTest, Sample) {
   MockReflector reflector;
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  SpecularBrdf bxdf(reflector, FresnelNoOp());
-  std::optional<Bxdf::SpecularSample> result = bxdf.SampleSpecular(
-      Vector(1.0, 1.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler,
-      GetSpectralAllocator());
-  EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BRDF);
-  EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result->direction);
-  EXPECT_EQ(result->reflectance, &reflector);
-  EXPECT_FALSE(result->differentials);
-  EXPECT_EQ(result->pdf, 1.0);
+  const Bxdf* bxdf =
+      MakeSpecularBrdf(GetBxdfAllocator(), &reflector, FresnelNoOp());
+  auto result = std::get<Bxdf::SpecularSample>(
+      bxdf->Sample(Vector(1.0, 1.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
+                   sampler, GetSpectralAllocator()));
+  EXPECT_EQ(result.hemisphere, Bxdf::Hemisphere::BRDF);
+  EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result.direction);
+  EXPECT_EQ(result.reflectance, &reflector);
+  EXPECT_FALSE(result.differentials);
+  EXPECT_EQ(result.pdf, 1.0);
 }
 
 TEST(SpecularBrdfTest, SampleWithDerivatives) {
@@ -43,17 +49,24 @@ TEST(SpecularBrdfTest, SampleWithDerivatives) {
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  SpecularBrdf bxdf(reflector, FresnelNoOp());
-  std::optional<Bxdf::SpecularSample> result = bxdf.SampleSpecular(
+  const Bxdf* bxdf =
+      MakeSpecularBrdf(GetBxdfAllocator(), &reflector, FresnelNoOp());
+  auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(
       Vector(1.0, 1.0, 1.0), {{Vector(1.0, 0.5, 1.0), Vector(0.5, 1.0, 1.0)}},
-      Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
-  EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BRDF);
-  EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result->direction);
-  EXPECT_EQ(result->reflectance, &reflector);
-  ASSERT_TRUE(result->differentials);
-  EXPECT_EQ(Vector(-1.0, -0.5, 1.0), result->differentials->dx);
-  EXPECT_EQ(Vector(-0.5, -1.0, 1.0), result->differentials->dy);
-  EXPECT_EQ(result->pdf, 1.0);
+      Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
+  EXPECT_EQ(result.hemisphere, Bxdf::Hemisphere::BRDF);
+  EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result.direction);
+  EXPECT_EQ(result.reflectance, &reflector);
+  ASSERT_TRUE(result.differentials);
+  EXPECT_EQ(Vector(-1.0, -0.5, 1.0), result.differentials->dx);
+  EXPECT_EQ(Vector(-0.5, -1.0, 1.0), result.differentials->dy);
+  EXPECT_EQ(result.pdf, 1.0);
+}
+
+TEST(SpecularBtdfTest, Null) {
+  MockReflector reflector;
+  EXPECT_FALSE(
+      MakeSpecularBtdf(GetBxdfAllocator(), nullptr, 1.0, 1.0, FresnelNoOp()));
 }
 
 TEST(SpecularBtdfTest, SampleFront) {
@@ -62,15 +75,16 @@ TEST(SpecularBtdfTest, SampleFront) {
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  SpecularBtdf bxdf(reflector, 1.0, 1.0, FresnelNoOp());
-  std::optional<Bxdf::SpecularSample> result = bxdf.SampleSpecular(
-      Vector(1.0, 1.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler,
-      GetSpectralAllocator());
-  EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
-  EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result->direction);
-  EXPECT_EQ(result->reflectance, &reflector);
-  EXPECT_FALSE(result->differentials);
-  EXPECT_EQ(result->pdf, 1.0);
+  const Bxdf* bxdf =
+      MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0, FresnelNoOp());
+  auto result = std::get<Bxdf::SpecularSample>(
+      bxdf->Sample(Vector(1.0, 1.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
+                   sampler, GetSpectralAllocator()));
+  EXPECT_EQ(result.hemisphere, Bxdf::Hemisphere::BTDF);
+  EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result.direction);
+  EXPECT_EQ(result.reflectance, &reflector);
+  EXPECT_FALSE(result.differentials);
+  EXPECT_EQ(result.pdf, 1.0);
 }
 
 TEST(SpecularBtdfTest, SampleBack) {
@@ -79,15 +93,16 @@ TEST(SpecularBtdfTest, SampleBack) {
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  SpecularBtdf bxdf(reflector, 1.0, 1.0, FresnelNoOp());
-  std::optional<Bxdf::SpecularSample> result = bxdf.SampleSpecular(
-      Vector(1.0, 1.0, -1.0), std::nullopt, Vector(0.0, 0.0, 1.0), sampler,
-      GetSpectralAllocator());
-  EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
-  EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result->direction);
-  EXPECT_EQ(result->reflectance, &reflector);
-  EXPECT_FALSE(result->differentials);
-  EXPECT_EQ(result->pdf, 1.0);
+  const Bxdf* bxdf =
+      MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0, FresnelNoOp());
+  auto result = std::get<Bxdf::SpecularSample>(
+      bxdf->Sample(Vector(1.0, 1.0, -1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
+                   sampler, GetSpectralAllocator()));
+  EXPECT_EQ(result.hemisphere, Bxdf::Hemisphere::BTDF);
+  EXPECT_EQ(Vector(-1.0, -1.0, 1.0), result.direction);
+  EXPECT_EQ(result.reflectance, &reflector);
+  EXPECT_FALSE(result.differentials);
+  EXPECT_EQ(result.pdf, 1.0);
 }
 
 TEST(SpecularBtdfTest, SampleWithDerivatives) {
@@ -96,20 +111,28 @@ TEST(SpecularBtdfTest, SampleWithDerivatives) {
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  SpecularBtdf bxdf(reflector, 1.0, 1.0, FresnelNoOp());
-  std::optional<Bxdf::SpecularSample> result = bxdf.SampleSpecular(
+  const Bxdf* bxdf =
+      MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0, FresnelNoOp());
+  auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(
       Vector(1.0, 1.0, 1.0), {{Vector(1.0, 0.5, 1.0), Vector(0.5, 1.0, 1.0)}},
-      Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator());
-  EXPECT_EQ(result->hemisphere, Bxdf::Hemisphere::BTDF);
-  EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result->direction);
-  EXPECT_EQ(result->reflectance, &reflector);
-  ASSERT_TRUE(result->differentials);
-  EXPECT_EQ(Vector(-1.0, -0.5, -1.0), result->differentials->dx);
-  EXPECT_EQ(Vector(-0.5, -1.0, -1.0), result->differentials->dy);
-  EXPECT_EQ(result->pdf, 1.0);
+      Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
+  EXPECT_EQ(result.hemisphere, Bxdf::Hemisphere::BTDF);
+  EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result.direction);
+  EXPECT_EQ(result.reflectance, &reflector);
+  ASSERT_TRUE(result.differentials);
+  EXPECT_EQ(Vector(-1.0, -0.5, -1.0), result.differentials->dx);
+  EXPECT_EQ(Vector(-0.5, -1.0, -1.0), result.differentials->dy);
+  EXPECT_EQ(result.pdf, 1.0);
 }
 
 TEST(SpecularBxdfTest, Null) {
+  MockReflector reflector;
+  EXPECT_TRUE(
+      MakeSpecularBxdf(GetBxdfAllocator(), &reflector, &reflector, 1.0, 1.0));
+  EXPECT_TRUE(
+      MakeSpecularBxdf(GetBxdfAllocator(), nullptr, &reflector, 1.0, 1.0));
+  EXPECT_TRUE(
+      MakeSpecularBxdf(GetBxdfAllocator(), &reflector, nullptr, 1.0, 1.0));
   EXPECT_FALSE(
       MakeSpecularBxdf(GetBxdfAllocator(), nullptr, nullptr, 1.0, 1.0));
 }

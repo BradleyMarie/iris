@@ -3,7 +3,6 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
-#include "iris/bxdfs/specular_bxdf.h"
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -16,8 +15,6 @@ namespace {
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::FresnelNoOp;
 using ::iris::bxdfs::MicrofacetBrdf;
-using ::iris::bxdfs::SpecularBrdf;
-using ::iris::bxdfs::SpecularBtdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
 using ::iris::testing::GetBxdfAllocator;
@@ -87,7 +84,7 @@ TEST(UberMaterialTest, TransparencyOnly) {
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(dynamic_cast<const SpecularBtdf<FresnelNoOp>*>(result));
+  ASSERT_TRUE(result);
 }
 
 TEST(UberMaterialTest, OpaqueOnlyAllTermsEmpty) {
@@ -120,7 +117,7 @@ TEST(UberMaterialTest, SpecularReflectionOnly) {
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(dynamic_cast<const SpecularBrdf<FresnelDielectric>*>(result));
+  ASSERT_TRUE(result);
 }
 
 TEST(UberMaterialTest, SpecularTransmissionOnly) {
@@ -131,7 +128,7 @@ TEST(UberMaterialTest, SpecularTransmissionOnly) {
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
-  ASSERT_TRUE(dynamic_cast<const SpecularBtdf<FresnelDielectric>*>(result));
+  ASSERT_TRUE(result);
 }
 
 TEST(UberMaterialTest, MicrofacetOnly) {

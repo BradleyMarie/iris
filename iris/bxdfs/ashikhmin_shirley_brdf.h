@@ -49,11 +49,10 @@ const Bxdf* MakeAshikhminShirleyBrdf(BxdfAllocator& bxdf_allocator,
                                      const Reflector* diffuse,
                                      const Reflector* specular,
                                      const M& distribution) {
-  class AshikhminShirleyBrdfWrapper final : public helpers::DiffuseBxdf {
+  class AshikhminShirleyBrdf final : public helpers::DiffuseBxdf {
    public:
-    AshikhminShirleyBrdfWrapper(const Reflector* diffuse,
-                                const Reflector* specular,
-                                const M& distribution) noexcept
+    AshikhminShirleyBrdf(const Reflector* diffuse, const Reflector* specular,
+                         const M& distribution) noexcept
         : distribution_(distribution),
           impl_(diffuse, specular, distribution_) {}
 
@@ -85,8 +84,8 @@ const Bxdf* MakeAshikhminShirleyBrdf(BxdfAllocator& bxdf_allocator,
     return nullptr;
   }
 
-  return &bxdf_allocator.Allocate<AshikhminShirleyBrdfWrapper>(
-      diffuse, specular, distribution);
+  return &bxdf_allocator.Allocate<AshikhminShirleyBrdf>(diffuse, specular,
+                                                        distribution);
 }
 
 }  // namespace bxdfs

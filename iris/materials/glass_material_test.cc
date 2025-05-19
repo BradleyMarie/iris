@@ -12,8 +12,6 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::SpecularBrdf;
-using ::iris::bxdfs::SpecularBtdf;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
@@ -92,7 +90,6 @@ TEST(GlassMaterialTest, EvaluateBrdf) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const SpecularBrdf<FresnelDielectric>*>(result));
 }
 
 TEST(GlassMaterialTest, EvaluateBtdf) {
@@ -119,7 +116,6 @@ TEST(GlassMaterialTest, EvaluateBtdf) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const SpecularBtdf<FresnelDielectric>*>(result));
 }
 
 TEST(GlassMaterialTest, Evaluate) {
