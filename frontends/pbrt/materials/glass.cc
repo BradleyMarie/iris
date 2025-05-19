@@ -26,26 +26,7 @@ MaterialResult MakeGlass(const Material::Glass& glass,
                          TextureManager& texture_manager) {
   Material::Glass with_defaults = Defaults().materials().glass();
   with_defaults.MergeFrom(glass);
-
-  if (overrides.bumpmap().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_bumpmap()->MergeFrom(overrides.bumpmap());
-  }
-
-  if (overrides.kr().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_kr()->MergeFrom(overrides.kr());
-  }
-
-  if (overrides.kt().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_kt()->MergeFrom(overrides.kt());
-  }
-
-  if (overrides.eta().as_float_texture().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_eta()->MergeFrom(overrides.eta().as_float_texture());
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   FloatTextureParameter eta_front;
   eta_front.set_float_value(kDefaultEtaFront);

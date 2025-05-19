@@ -68,52 +68,7 @@ MaterialResult MakeMetal(const Material::Metal& metal,
                          SpectrumManager& spectrum_manager) {
   Material::Metal with_defaults = Defaults().materials().metal();
   with_defaults.MergeFrom(metal);
-
-  if (overrides.bumpmap().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_bumpmap()->MergeFrom(overrides.bumpmap());
-  }
-
-  if (overrides.eta()
-          .as_spectrum_texture()
-          .spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_eta()->MergeFrom(overrides.eta().as_float_texture());
-  }
-
-  if (overrides.k().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_k()->MergeFrom(overrides.k());
-  }
-
-  if (overrides.roughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_roughness()->MergeFrom(overrides.roughness());
-  }
-
-  if (overrides.uroughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_uroughness()->MergeFrom(overrides.uroughness());
-  }
-
-  if (overrides.vroughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_vroughness()->MergeFrom(overrides.vroughness());
-  }
-
-  if (overrides.has_remaproughness()) {
-    with_defaults.set_remaproughness(overrides.remaproughness());
-  }
-
-  if (with_defaults.uroughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    *with_defaults.mutable_uroughness() = with_defaults.roughness();
-  }
-
-  if (with_defaults.vroughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    *with_defaults.mutable_vroughness() = with_defaults.roughness();
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   Spectrum eta_front;
   eta_front.set_uniform_spectrum(kDefaultEtaFront);

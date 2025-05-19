@@ -36,35 +36,14 @@ MaterialResult MakePlastic(const Material::Plastic& plastic,
                            TextureManager& texture_manager) {
   Material::Plastic with_defaults = Defaults().materials().plastic();
   with_defaults.MergeFrom(plastic);
-
-  if (overrides.bumpmap().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_bumpmap()->MergeFrom(overrides.bumpmap());
-  }
-
-  if (overrides.kd().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_kd()->MergeFrom(overrides.kd());
-  }
-
-  if (overrides.ks().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_ks()->MergeFrom(overrides.ks());
-  }
-
-  if (overrides.roughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_roughness()->MergeFrom(overrides.roughness());
-  }
-
-  if (overrides.has_remaproughness()) {
-    with_defaults.set_remaproughness(overrides.remaproughness());
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   FloatTextureParameter eta_front;
   eta_front.set_float_value(kDefaultEtaFront);
+
   FloatTextureParameter eta_back;
   eta_back.set_float_value(kDefaultEtaBack);
+
   if (absl::GetFlag(FLAGS_reverse_plastic_eta)) {
     std::swap(eta_front, eta_back);
   }

@@ -25,19 +25,7 @@ MaterialResult MakeMix(
     const MaterialManager& material_manager, TextureManager& texture_manager) {
   Material::Mix with_defaults = Defaults().materials().mix();
   with_defaults.MergeFrom(mix);
-
-  if (overrides.amount().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_amount()->MergeFrom(overrides.amount());
-  }
-
-  if (overrides.has_namedmaterial1()) {
-    with_defaults.set_namedmaterial1(overrides.namedmaterial1());
-  }
-
-  if (overrides.has_namedmaterial2()) {
-    with_defaults.set_namedmaterial2(overrides.namedmaterial2());
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
       MakeReferenceCounted<MixMaterial>(

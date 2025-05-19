@@ -27,40 +27,7 @@ MaterialResult MakeTranslucent(const Material::Translucent& translucent,
                                TextureManager& texture_manager) {
   Material::Translucent with_defaults = Defaults().materials().translucent();
   with_defaults.MergeFrom(translucent);
-
-  if (overrides.bumpmap().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_bumpmap()->MergeFrom(overrides.bumpmap());
-  }
-
-  if (overrides.kd().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_kd()->MergeFrom(overrides.kd());
-  }
-
-  if (overrides.ks().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_ks()->MergeFrom(overrides.ks());
-  }
-
-  if (overrides.reflect().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_reflect()->MergeFrom(overrides.reflect());
-  }
-
-  if (overrides.transmit().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_transmit()->MergeFrom(overrides.transmit());
-  }
-
-  if (overrides.roughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_roughness()->MergeFrom(overrides.roughness());
-  }
-
-  if (overrides.has_remaproughness()) {
-    with_defaults.set_remaproughness(overrides.remaproughness());
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
       MakeTranslucentMaterial(

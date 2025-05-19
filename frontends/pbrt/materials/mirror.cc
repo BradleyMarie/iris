@@ -24,16 +24,7 @@ MaterialResult MakeMirror(const Material::Mirror& mirror,
                           TextureManager& texture_manager) {
   Material::Mirror with_defaults = Defaults().materials().mirror();
   with_defaults.MergeFrom(mirror);
-
-  if (overrides.bumpmap().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_bumpmap()->MergeFrom(overrides.bumpmap());
-  }
-
-  if (overrides.kr().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_kr()->MergeFrom(overrides.kr());
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
       MakeMirrorMaterial(

@@ -24,35 +24,7 @@ MaterialResult MakeSubstrate(const Material::Substrate& substrate,
                              TextureManager& texture_manager) {
   Material::Substrate with_defaults = Defaults().materials().substrate();
   with_defaults.MergeFrom(substrate);
-
-  if (overrides.bumpmap().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_bumpmap()->MergeFrom(overrides.bumpmap());
-  }
-
-  if (overrides.kd().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_kd()->MergeFrom(overrides.kd());
-  }
-
-  if (overrides.ks().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_ks()->MergeFrom(overrides.ks());
-  }
-
-  if (overrides.uroughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_uroughness()->MergeFrom(overrides.uroughness());
-  }
-
-  if (overrides.vroughness().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_vroughness()->MergeFrom(overrides.vroughness());
-  }
-
-  if (overrides.has_remaproughness()) {
-    with_defaults.set_remaproughness(overrides.remaproughness());
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
       MakeSubstrateMaterial(

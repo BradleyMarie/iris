@@ -25,21 +25,7 @@ MaterialResult MakeMatte(const Material::Matte& matte,
                          TextureManager& texture_manager) {
   Material::Matte with_defaults = Defaults().materials().matte();
   with_defaults.MergeFrom(matte);
-
-  if (overrides.bumpmap().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_bumpmap()->MergeFrom(overrides.bumpmap());
-  }
-
-  if (overrides.kd().spectrum_texture_parameter_type_case() !=
-      SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_kd()->MergeFrom(overrides.kd());
-  }
-
-  if (overrides.sigma().float_texture_parameter_type_case() !=
-      FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
-    with_defaults.mutable_sigma()->MergeFrom(overrides.sigma());
-  }
+  with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
       MakeMatteMaterial(
