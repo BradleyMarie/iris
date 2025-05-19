@@ -17,9 +17,7 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::SpecularBrdf;
-using ::iris::bxdfs::SpecularBtdf;
-using ::iris::bxdfs::SpecularBxdf;
+using ::iris::bxdfs::MakeSpecularBxdf;
 
 class GlassMaterial final : public Material {
  public:
@@ -66,10 +64,6 @@ const Bxdf* GlassMaterial::Evaluate(
         transmittance_->Evaluate(texture_coordinates, spectral_allocator);
   }
 
-  if (reflector == nullptr && transmittance == nullptr) {
-    return nullptr;
-  }
-
   // Consider clamping these values
   visual eta_incident = static_cast<visual>(0.0);
   if (eta_incident_) {
@@ -81,19 +75,8 @@ const Bxdf* GlassMaterial::Evaluate(
     eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
   }
 
-  if (transmittance == nullptr) {
-    return &bxdf_allocator.Allocate<SpecularBrdf<FresnelDielectric>>(
-        *reflector, FresnelDielectric(eta_incident, eta_transmitted));
-  }
-
-  if (reflector == nullptr) {
-    return &bxdf_allocator.Allocate<SpecularBtdf<FresnelDielectric>>(
-        *transmittance, eta_incident, eta_transmitted,
-        FresnelDielectric(eta_incident, eta_transmitted));
-  }
-
-  return &bxdf_allocator.Allocate<SpecularBxdf>(*reflector, *transmittance,
-                                                eta_incident, eta_transmitted);
+  return MakeSpecularBxdf(bxdf_allocator, reflector, transmittance,
+                          eta_incident, eta_transmitted);
 }
 
 }  // namespace

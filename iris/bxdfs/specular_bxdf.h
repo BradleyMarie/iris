@@ -4,6 +4,7 @@
 #include <concepts>
 
 #include "iris/bxdf.h"
+#include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/fresnel.h"
 #include "iris/bxdfs/helpers/specular_bxdf.h"
 #include "iris/float.h"
@@ -100,29 +101,11 @@ class SpecularBtdf final : public helpers::SpecularBxdf {
   const internal::SpecularBtdf impl_;
 };
 
-class SpecularBxdf final : public helpers::SpecularBxdf {
- public:
-  SpecularBxdf(const Reflector& reflectance, const Reflector& transmittance,
-               const geometric_t eta_incident,
-               const geometric_t eta_transmitted) noexcept
-      : reflectance_(reflectance),
-        transmittance_(transmittance),
-        refractive_indices_{eta_incident, eta_transmitted},
-        relative_refractive_index_{eta_incident / eta_transmitted,
-                                   eta_transmitted / eta_incident} {}
-
-  std::optional<Bxdf::SpecularSample> SampleSpecular(
-      const Vector& incoming,
-      const std::optional<Bxdf::Differentials>& differentials,
-      const Vector& surface_normal, Sampler& sampler,
-      SpectralAllocator& allocator) const override;
-
- private:
-  const Reflector& reflectance_;
-  const Reflector& transmittance_;
-  const geometric_t refractive_indices_[2];
-  const geometric_t relative_refractive_index_[2];
-};
+const Bxdf* MakeSpecularBxdf(BxdfAllocator& bxdf_allocator,
+                             const Reflector* reflectance,
+                             const Reflector* transmittance,
+                             const geometric_t eta_incident,
+                             const geometric_t eta_transmitted);
 
 }  // namespace bxdfs
 }  // namespace iris

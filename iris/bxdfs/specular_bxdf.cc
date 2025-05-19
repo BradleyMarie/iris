@@ -8,6 +8,30 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
+class SpecularBxdf final : public helpers::SpecularBxdf {
+ public:
+  SpecularBxdf(const Reflector& reflectance, const Reflector& transmittance,
+               const geometric_t eta_incident,
+               const geometric_t eta_transmitted) noexcept
+      : reflectance_(reflectance),
+        transmittance_(transmittance),
+        refractive_indices_{eta_incident, eta_transmitted},
+        relative_refractive_index_{eta_incident / eta_transmitted,
+                                   eta_transmitted / eta_incident} {}
+
+  std::optional<Bxdf::SpecularSample> SampleSpecular(
+      const Vector& incoming,
+      const std::optional<Bxdf::Differentials>& differentials,
+      const Vector& surface_normal, Sampler& sampler,
+      SpectralAllocator& allocator) const override;
+
+ private:
+  const Reflector& reflectance_;
+  const Reflector& transmittance_;
+  const geometric_t refractive_indices_[2];
+  const geometric_t relative_refractive_index_[2];
+};
+
 constexpr Vector kShadingNormal(static_cast<geometric>(0.0),
                                 static_cast<geometric>(0.0),
                                 static_cast<geometric>(1.0));
@@ -91,6 +115,36 @@ std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
       pdf};
 }
 
+std::optional<Bxdf::SpecularSample> SpecularBxdf::SampleSpecular(
+    const Vector& incoming,
+    const std::optional<Bxdf::Differentials>& differentials,
+    const Vector& surface_normal, Sampler& sampler,
+    SpectralAllocator& allocator) const {
+  visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
+      internal::CosTheta(incoming),
+      refractive_indices_[std::signbit(incoming.z)],
+      refractive_indices_[!std::signbit(incoming.z)]);
+
+  if (visual_t sample = sampler.Next(); fresnel_reflectance < sample) {
+    visual_t fresnel_transmittance =
+        static_cast<visual_t>(1.0) - fresnel_reflectance;
+
+    std::optional<Bxdf::SpecularSample> result = SampleSpecularTransmission(
+        incoming, differentials,
+        allocator.Scale(&transmittance_, fresnel_transmittance),
+        relative_refractive_index_[std::signbit(incoming.z)],
+        fresnel_transmittance, allocator);
+
+    return result;
+  }
+
+  std::optional<Bxdf::SpecularSample> result = SampleSpecularReflection(
+      incoming, differentials,
+      allocator.Scale(&reflectance_, fresnel_reflectance), fresnel_reflectance);
+
+  return result;
+}
+
 }  // namespace
 
 namespace internal {
@@ -125,34 +179,28 @@ std::optional<Bxdf::SpecularSample> SpecularBtdf::SampleSpecular(
 
 }  // namespace internal
 
-std::optional<Bxdf::SpecularSample> SpecularBxdf::SampleSpecular(
-    const Vector& incoming,
-    const std::optional<Bxdf::Differentials>& differentials,
-    const Vector& surface_normal, Sampler& sampler,
-    SpectralAllocator& allocator) const {
-  visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
-      internal::CosTheta(incoming),
-      refractive_indices_[std::signbit(incoming.z)],
-      refractive_indices_[!std::signbit(incoming.z)]);
-
-  if (visual_t sample = sampler.Next(); fresnel_reflectance < sample) {
-    visual_t fresnel_transmittance =
-        static_cast<visual_t>(1.0) - fresnel_reflectance;
-
-    std::optional<Bxdf::SpecularSample> result = SampleSpecularTransmission(
-        incoming, differentials,
-        allocator.Scale(&transmittance_, fresnel_transmittance),
-        relative_refractive_index_[std::signbit(incoming.z)],
-        fresnel_transmittance, allocator);
-
-    return result;
+const Bxdf* MakeSpecularBxdf(BxdfAllocator& bxdf_allocator,
+                             const Reflector* reflectance,
+                             const Reflector* transmittance,
+                             const geometric_t eta_incident,
+                             const geometric_t eta_transmitted) {
+  if (!reflectance && !transmittance) {
+    return nullptr;
   }
 
-  std::optional<Bxdf::SpecularSample> result = SampleSpecularReflection(
-      incoming, differentials,
-      allocator.Scale(&reflectance_, fresnel_reflectance), fresnel_reflectance);
+  if (!reflectance) {
+    return &bxdf_allocator.Allocate<SpecularBtdf<FresnelDielectric>>(
+        *transmittance, eta_incident, eta_transmitted,
+        FresnelDielectric(eta_incident, eta_transmitted));
+  }
 
-  return result;
+  if (!transmittance) {
+    return &bxdf_allocator.Allocate<SpecularBrdf<FresnelDielectric>>(
+        *reflectance, FresnelDielectric(eta_incident, eta_transmitted));
+  }
+
+  return &bxdf_allocator.Allocate<SpecularBxdf>(*reflectance, *transmittance,
+                                                eta_incident, eta_transmitted);
 }
 
 }  // namespace bxdfs

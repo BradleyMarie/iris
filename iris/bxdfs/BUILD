@@ -245,6 +245,7 @@ cc_library(
     deps = [
         ":fresnel",
         "//iris:bxdf",
+        "//iris:bxdf_allocator",
         "//iris:float",
         "//iris:reflector",
         "//iris:sampler",
@@ -262,6 +263,7 @@ cc_test(
         ":specular_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
     ],
