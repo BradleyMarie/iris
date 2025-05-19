@@ -272,7 +272,6 @@ cc_test(
     srcs = ["translucent_material_test.cc"],
     deps = [
         ":translucent_material",
-        "//iris/bxdfs:composite_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",

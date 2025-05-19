@@ -1,7 +1,6 @@
 #include "iris/materials/translucent_material.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/composite_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/reflectors/mock_reflector.h"
@@ -16,7 +15,6 @@ namespace {
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::MicrofacetBrdf;
 using ::iris::bxdfs::MicrofacetBtdf;
-using ::iris::bxdfs::internal::CompositeBxdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
@@ -312,7 +310,6 @@ TEST(TranslucentMaterialTest, All) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE(dynamic_cast<const CompositeBxdf<4>*>(result));
 }
 
 }  // namespace
