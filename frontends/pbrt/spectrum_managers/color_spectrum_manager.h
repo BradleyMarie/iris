@@ -55,7 +55,7 @@ class ColorSpectrumManager final : public SpectrumManager {
       visual_t* luma = nullptr) override;
 
  private:
-  const std::filesystem::path& search_root_;
+  const std::filesystem::path search_root_;
   bool all_sampled_spectra_are_reflective_;
 };
 

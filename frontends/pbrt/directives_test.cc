@@ -24,13 +24,12 @@ std::string RawRunfilePath(const std::string& path) {
 
 TEST(Directive, IncludeCyclic) {
   Directives directives;
-  directives.Include(PbrtProto(), std::filesystem::current_path(),
+  directives.Include(PbrtProto(),
                      std::filesystem::path(RawRunfilePath("cornell_box.pbrt")));
-  EXPECT_EXIT(directives.Include(
-                  PbrtProto(), std::filesystem::current_path(),
-                  std::filesystem::path(RawRunfilePath("cornell_box.pbrt"))),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Detected cyclic Include of file:");
+  EXPECT_EXIT(
+      directives.Include(PbrtProto(), std::filesystem::path(
+                                          RawRunfilePath("cornell_box.pbrt"))),
+      ExitedWithCode(EXIT_FAILURE), "ERROR: Detected cyclic Include of file:");
 }
 
 TEST(Directive, Next) {
@@ -44,19 +43,16 @@ TEST(Directive, Next) {
   directives.Include(second, "second");
   directives.Include(first, "first");
 
-  std::filesystem::path path;
-  const Directive* first_directive = directives.Next(path);
+  const Directive* first_directive = directives.Next();
   ASSERT_TRUE(first_directive);
   EXPECT_EQ(first.directives(0).DebugString(), first_directive->DebugString());
-  EXPECT_EQ(path, "first");
 
-  const Directive* second_directive = directives.Next(path);
+  const Directive* second_directive = directives.Next();
   ASSERT_TRUE(second_directive);
   EXPECT_EQ(second.directives(0).DebugString(),
             second_directive->DebugString());
-  EXPECT_EQ(path, "second");
 
-  EXPECT_FALSE(directives.Next(path));
+  EXPECT_FALSE(directives.Next());
 }
 
 }  // namespace

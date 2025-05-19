@@ -28,17 +28,19 @@ MaterialResult MakeUber(const Material::Uber& uber,
   with_defaults.MergeFrom(uber);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
+  auto eta = texture_manager.AllocateFloatTexture(with_defaults.eta());
+
   return MaterialResult{
       MakeUberMaterial(
           texture_manager.AllocateReflectorTexture(with_defaults.kr()),
           texture_manager.AllocateReflectorTexture(with_defaults.kt()),
           texture_manager.AllocateReflectorTexture(with_defaults.kd()),
           texture_manager.AllocateReflectorTexture(with_defaults.ks()),
+          texture_manager.AllocateFloatTexture(with_defaults.opacity()),
           texture_manager.AllocateFloatTexture(kDefaultEtaIncident),
           texture_manager.AllocateFloatTexture(with_defaults.eta()),
           texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
           texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
-          texture_manager.AllocateFloatTexture(with_defaults.opacity()),
           with_defaults.remaproughness()),
       MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }

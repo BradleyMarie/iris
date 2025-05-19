@@ -81,9 +81,9 @@ const Reflector* OrenNayarBrdf::ReflectanceDiffuse(
     tan_beta = sin_theta_outgoing / abs_cos_theta_incoming;
   }
 
-  return allocator.Scale(&reflector_,
-                         std::numbers::inv_pi_v<visual_t> *
-                             (a_ + b_ * cosine * sin_alpha * tan_beta));
+  return allocator.UnboundedScale(
+      &reflector_, std::numbers::inv_pi_v<visual_t> *
+                       (a_ + b_ * cosine * sin_alpha * tan_beta));
 }
 
 }  // namespace bxdfs

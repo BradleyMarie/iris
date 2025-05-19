@@ -36,16 +36,16 @@ TEST(GlassMaterialTest, NullMaterial) {
   EXPECT_FALSE(MakeGlassMaterial(
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      std::move(eta_front), std::move(eta_back)));
+      eta_front, eta_back));
 
   EXPECT_TRUE(MakeGlassMaterial(
       reflectance,
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      std::move(eta_front), std::move(eta_back)));
+      eta_front, eta_back));
 
   EXPECT_TRUE(MakeGlassMaterial(
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      reflectance, std::move(eta_front), std::move(eta_back)));
+      reflectance, eta_front, eta_back));
 }
 
 TEST(GlassMaterialTest, EvaluateEmpty) {

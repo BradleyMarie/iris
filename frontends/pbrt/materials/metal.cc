@@ -18,7 +18,7 @@ namespace pbrt_frontend {
 namespace materials {
 namespace {
 
-using ::iris::materials::MetalMaterial;
+using ::iris::materials::MakeMetalMaterial;
 using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
@@ -74,7 +74,7 @@ MaterialResult MakeMetal(const Material::Metal& metal,
   eta_front.set_uniform_spectrum(kDefaultEtaFront);
 
   return MaterialResult{
-      MakeReferenceCounted<MetalMaterial>(
+      MakeMetalMaterial(
           spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.k())),
           spectrum_manager.AllocateSpectrum(eta_front),
           spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.eta())),

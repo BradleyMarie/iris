@@ -88,19 +88,21 @@ std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
   Vector dp_dx = world_differentials->dx - world_hit_point;
   Vector dp_dy = world_differentials->dy - world_hit_point;
 
-  geometric_t cos_theta =
-      ClampedDotProduct(world_surface_normal, world_shading_normal);
-  if (cos_theta >= static_cast<geometric_t>(1.0)) {
+  Vector perpendicular =
+      CrossProduct(world_surface_normal, world_shading_normal);
+  if (perpendicular.x == static_cast<geometric_t>(0.0) &&
+      perpendicular.y == static_cast<geometric_t>(0.0) &&
+      perpendicular.z == static_cast<geometric_t>(0.0)) {
     return {world_shading_normal,
             {{NormalMap::Differentials::DX_DY, {dp_dx, dp_dy}}}};
   }
 
+  geometric_t cos_theta =
+      ClampedDotProduct(world_surface_normal, world_shading_normal);
   geometric_t sin_theta =
       std::sqrt(static_cast<geometric_t>(1.0) - cos_theta * cos_theta);
   geometric_t one_minus_cos_theta = static_cast<geometric_t>(1.0) - cos_theta;
-
-  Vector axis =
-      Normalize(CrossProduct(world_surface_normal, world_shading_normal));
+  Vector axis = Normalize(perpendicular);
 
   Vector rx(cos_theta + axis.x * axis.x * one_minus_cos_theta,
             axis.x * axis.y * one_minus_cos_theta - axis.z * sin_theta,

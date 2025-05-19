@@ -95,7 +95,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
 
   ReferenceCounted<ValueTexture2D<bool>> alpha_mask;
   if (with_defaults.has_alpha() && with_defaults.alpha().float_value() <= 1.0) {
-    alpha_mask = MakeReferenceCounted<AlphaAdapter>(
+    alpha_mask = MakeAlphaAdapter(
         texture_manager.AllocateFloatTexture(with_defaults.alpha()));
   }
 

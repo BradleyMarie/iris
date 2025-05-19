@@ -425,25 +425,28 @@ uint32_t ToKey(stbi_uc r, stbi_uc g, stbi_uc b) {
 }  // namespace
 
 std::shared_ptr<iris::textures::Image2D<visual>>
-ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
+ImageManager::LoadFloatImageFromSDR(const std::string& filename,
                                     bool gamma_correct) {
-  auto& result = gamma_correct
-                     ? gamma_corrected_float_images_[filename.native()]
-                     : float_images_[filename.native()];
+  std::filesystem::path path = filename;
+  if (path.is_relative()) {
+    path = search_root_ / path;
+  }
+
+  auto& result = gamma_correct ? gamma_corrected_float_images_[path.native()]
+                               : float_images_[path.native()];
   if (result) {
     return result;
   }
 
   int nx, ny;
   std::vector<visual> float_values;
-  if (stbi_is_16_bit(filename.native().c_str())) {
+  if (stbi_is_16_bit(path.native().c_str())) {
     int num_channels;
     stbi_us* values =
-        stbi_load_16(filename.native().c_str(), &nx, &ny, &num_channels,
+        stbi_load_16(path.native().c_str(), &nx, &ny, &num_channels,
                      /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Failed to load image: " << filename.native()
-                << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename << std::endl;
       exit(EXIT_FAILURE);
     }
 
@@ -490,12 +493,10 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
     stbi_image_free(values);
   } else {
     int num_channels;
-    stbi_uc* values =
-        stbi_load(filename.native().c_str(), &nx, &ny, &num_channels,
-                  /*desired_channels=*/0);
+    stbi_uc* values = stbi_load(path.native().c_str(), &nx, &ny, &num_channels,
+                                /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Failed to load image: " << filename.native()
-                << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename << std::endl;
       exit(EXIT_FAILURE);
     }
 
@@ -534,25 +535,29 @@ ImageManager::LoadFloatImageFromSDR(const std::filesystem::path& filename,
 }
 
 std::shared_ptr<iris::textures::Image2D<ReferenceCounted<Reflector>>>
-ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
+ImageManager::LoadReflectorImageFromSDR(const std::string& filename,
                                         bool gamma_correct) {
+  std::filesystem::path path = filename;
+  if (path.is_relative()) {
+    path = search_root_ / path;
+  }
+
   auto& result = gamma_correct
-                     ? gamma_corrected_reflector_images_[filename.native()]
-                     : reflector_images_[filename.native()];
+                     ? gamma_corrected_reflector_images_[path.native()]
+                     : reflector_images_[path.native()];
   if (result) {
     return result;
   }
 
   int nx, ny;
   std::vector<ReferenceCounted<Reflector>> reflector_values;
-  if (stbi_is_16_bit(filename.native().c_str())) {
+  if (stbi_is_16_bit(path.native().c_str())) {
     int num_channels;
     stbi_us* values =
-        stbi_load_16(filename.native().c_str(), &nx, &ny, &num_channels,
+        stbi_load_16(path.native().c_str(), &nx, &ny, &num_channels,
                      /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Failed to load image: " << filename.native()
-                << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename << std::endl;
       exit(EXIT_FAILURE);
     }
 
@@ -598,12 +603,10 @@ ImageManager::LoadReflectorImageFromSDR(const std::filesystem::path& filename,
     stbi_image_free(values);
   } else {
     int num_channels;
-    stbi_uc* values =
-        stbi_load(filename.native().c_str(), &nx, &ny, &num_channels,
-                  /*desired_channels=*/0);
+    stbi_uc* values = stbi_load(path.native().c_str(), &nx, &ny, &num_channels,
+                                /*desired_channels=*/0);
     if (!values) {
-      std::cerr << "ERROR: Failed to load image: " << filename.native()
-                << std::endl;
+      std::cerr << "ERROR: Failed to load image: " << filename << std::endl;
       exit(EXIT_FAILURE);
     }
 

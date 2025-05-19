@@ -14,7 +14,6 @@ using ::pbrt_proto::v3::Directive;
 using ::pbrt_proto::v3::PbrtProto;
 
 void Directives::Include(PbrtProto directives,
-                         std::filesystem::path search_root,
                          std::optional<std::filesystem::path> included_file) {
   if (included_file.has_value()) {
     *included_file = std::filesystem::weakly_canonical(*included_file);
@@ -27,14 +26,13 @@ void Directives::Include(PbrtProto directives,
 
   State state;
   state.directives = std::make_unique<PbrtProto>(std::move(directives));
-  state.search_root = std::move(search_root);
   state.file = std::move(included_file);
   state.cur = state.directives->mutable_directives()->begin();
   state.end = state.directives->mutable_directives()->end();
   state_.push(std::move(state));
 }
 
-const Directive* Directives::Next(std::filesystem::path& search_root) {
+const Directive* Directives::Next() {
   for (;;) {
     if (state_.empty()) {
       return nullptr;
@@ -51,7 +49,6 @@ const Directive* Directives::Next(std::filesystem::path& search_root) {
     state_.pop();
   }
 
-  search_root = state_.top().search_root;
   next_ = *state_.top().cur++;
 
   return &next_;

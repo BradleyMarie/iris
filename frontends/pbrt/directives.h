@@ -1,7 +1,6 @@
 #ifndef _FRONTENDS_PBRT_DIRECTIVES_
 #define _FRONTENDS_PBRT_DIRECTIVES_
 
-#include <filesystem>
 #include <memory>
 #include <optional>
 #include <set>
@@ -16,14 +15,13 @@ namespace pbrt_frontend {
 class Directives {
  public:
   void Include(
-      pbrt_proto::v3::PbrtProto directives, std::filesystem::path search_root,
+      pbrt_proto::v3::PbrtProto directives,
       std::optional<std::filesystem::path> included_file = std::nullopt);
-  const pbrt_proto::v3::Directive* Next(std::filesystem::path& search_root);
+  const pbrt_proto::v3::Directive* Next();
 
  private:
   struct State {
     std::unique_ptr<pbrt_proto::v3::PbrtProto> directives;
-    std::filesystem::path search_root;
     std::optional<std::filesystem::path> file;
     google::protobuf::RepeatedPtrField<pbrt_proto::v3::Directive>::iterator cur;
     google::protobuf::RepeatedPtrField<pbrt_proto::v3::Directive>::iterator end;

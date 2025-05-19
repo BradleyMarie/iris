@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 #include "frontends/pbrt/spectrum_manager.h"
@@ -16,17 +17,18 @@ namespace pbrt_frontend {
 
 class ImageManager {
  public:
-  ImageManager(TextureManager& texture_manager,
+  ImageManager(const std::filesystem::path& search_root,
+               TextureManager& texture_manager,
                SpectrumManager& spectrum_manager)
-      : texture_manager_(texture_manager),
+      : search_root_(search_root),
+        texture_manager_(texture_manager),
         spectrum_manager_(spectrum_manager) {}
 
   std::shared_ptr<textures::Image2D<visual>> LoadFloatImageFromSDR(
-      const std::filesystem::path& filename, bool gamma_correct);
+      const std::string& filename, bool gamma_correct);
 
   std::shared_ptr<textures::Image2D<ReferenceCounted<Reflector>>>
-  LoadReflectorImageFromSDR(const std::filesystem::path& filename,
-                            bool gamma_correct);
+  LoadReflectorImageFromSDR(const std::string& filename, bool gamma_correct);
 
  private:
   std::unordered_map<std::string, std::shared_ptr<textures::Image2D<visual>>>
@@ -47,6 +49,7 @@ class ImageManager {
   std::unordered_map<uint32_t, ReferenceCounted<Reflector>>
       gamma_corrected_reflectors_;
 
+  std::filesystem::path search_root_;
   TextureManager& texture_manager_;
   SpectrumManager& spectrum_manager_;
 };

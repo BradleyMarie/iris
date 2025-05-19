@@ -28,11 +28,12 @@ TEST(ParseScene, Empty) {
   PbrtProto proto;
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_FALSE(ParseScene(directives, options).has_value());
+  EXPECT_FALSE(ParseScene(directives, options, std::filesystem::current_path())
+                   .has_value());
 }
 
 TEST(ParseScene, NoEnd) {
@@ -40,11 +41,12 @@ TEST(ParseScene, NoEnd) {
   proto.add_directives()->mutable_world_begin();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Final directive should be WorldEnd");
 }
 
@@ -53,11 +55,12 @@ TEST(AreaLightSource, BeforeWorldEnd) {
   proto.add_directives()->mutable_area_light_source();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "AreaLightSource");
 }
@@ -67,11 +70,12 @@ TEST(AttributeBegin, BeforeWorldEnd) {
   proto.add_directives()->mutable_attribute_begin();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "AttributeBegin");
 }
@@ -83,11 +87,12 @@ TEST(AttributeBegin, Mismatched) {
   proto.add_directives()->mutable_transform_end();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched AttributeBegin and AttributeEnd directives");
 }
 
@@ -96,11 +101,12 @@ TEST(AttributeEnd, BeforeWorldEnd) {
   proto.add_directives()->mutable_attribute_end();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "AttributeEnd");
 }
@@ -111,11 +117,12 @@ TEST(AttributeEnd, Mismatched) {
   proto.add_directives()->mutable_attribute_end();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched AttributeBegin and AttributeEnd directives");
 }
 
@@ -125,11 +132,12 @@ TEST(Camera, AfterWorldBegin) {
   proto.add_directives()->mutable_camera();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Camera");
 }
@@ -140,26 +148,29 @@ TEST(Film, AfterWorldBegin) {
   proto.add_directives()->mutable_film();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Film");
 }
 
 TEST(Include, Circular) {
+  std::filesystem::path path = RunfilePath("include_circular_first.pbrt");
+
   PbrtProto proto;
-  proto.add_directives()->mutable_include()->set_path(
-      RunfilePath("include_circular_first.pbrt"));
+  proto.add_directives()->mutable_include()->set_path(path.native());
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, path.parent_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Detected cyclic Include of file:");
 }
 
@@ -169,11 +180,12 @@ TEST(Integrator, AfterWorldBegin) {
   proto.add_directives()->mutable_integrator();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Integrator");
 }
@@ -183,12 +195,13 @@ TEST(LightSource, BeforeWorldBegin) {
   proto.add_directives()->mutable_light_source();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
   EXPECT_EXIT(
-      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options, std::filesystem::current_path()),
+      ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: LightSource");
 }
 
@@ -197,11 +210,12 @@ TEST(MakeNamedMaterial, BeforeWorldBegin) {
   proto.add_directives()->mutable_make_named_material();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "MakeNamedMaterial");
 }
@@ -211,12 +225,13 @@ TEST(Material, BeforeWorldBegin) {
   proto.add_directives()->mutable_material();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
   EXPECT_EXIT(
-      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options, std::filesystem::current_path()),
+      ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: Material");
 }
 
@@ -225,12 +240,13 @@ TEST(NamedMaterial, BeforeWorldBegin) {
   proto.add_directives()->mutable_named_material();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
   EXPECT_EXIT(
-      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options, std::filesystem::current_path()),
+      ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: NamedMaterial");
 }
 
@@ -239,12 +255,13 @@ TEST(ObjectBegin, BeforeWorldBegin) {
   proto.add_directives()->mutable_object_begin();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
   EXPECT_EXIT(
-      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options, std::filesystem::current_path()),
+      ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: ObjectBegin");
 }
 
@@ -255,11 +272,12 @@ TEST(ObjectBegin, Mismatched) {
   proto.add_directives()->mutable_object_begin();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
 }
 
@@ -268,12 +286,13 @@ TEST(ObjectEnd, BeforeWorldBegin) {
   proto.add_directives()->mutable_object_end();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
   EXPECT_EXIT(
-      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options, std::filesystem::current_path()),
+      ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: ObjectEnd");
 }
 
@@ -283,11 +302,12 @@ TEST(ObjectEnd, Mismatched) {
   proto.add_directives()->mutable_object_end();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Mismatched ObjectBegin and ObjectEnd directives");
 }
 
@@ -296,12 +316,13 @@ TEST(ObjectInstance, BeforeWorldBegin) {
   proto.add_directives()->mutable_object_instance();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
   EXPECT_EXIT(
-      ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+      ParseScene(directives, options, std::filesystem::current_path()),
+      ExitedWithCode(EXIT_FAILURE),
       "ERROR: Directive cannot be specified before WorldBegin: ObjectInstance");
 }
 
@@ -312,11 +333,12 @@ TEST(ObjectInstance, InsideObject) {
   proto.add_directives()->mutable_object_instance();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance cannot be specified between ObjectBegin "
               "and ObjectEnd");
 }
@@ -327,11 +349,12 @@ TEST(ObjectInstance, MissingObject) {
   proto.add_directives()->mutable_object_instance()->set_name("1");
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: ObjectInstance referred to an unknown object: 1");
 }
 
@@ -341,11 +364,12 @@ TEST(PixelFilter, AfterWorldBegin) {
   proto.add_directives()->mutable_pixel_filter();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: PixelFilter");
 }
@@ -355,11 +379,12 @@ TEST(ReverseOrientation, BeforeWorldBegin) {
   proto.add_directives()->mutable_reverse_orientation();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "ReverseOrientation");
 }
@@ -370,11 +395,12 @@ TEST(Sampler, AfterWorldBegin) {
   proto.add_directives()->mutable_sampler();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified between WorldBegin and "
               "WorldEnd: Sampler");
 }
@@ -384,11 +410,12 @@ TEST(Shape, BeforeWorldBegin) {
   proto.add_directives()->mutable_shape();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "Shape");
 }
@@ -398,11 +425,12 @@ TEST(Texture, FloatTextureBeforeWorldBegin) {
   proto.add_directives()->mutable_float_texture();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "Texture");
 }
@@ -412,11 +440,12 @@ TEST(Texture, SpectrumTextureBeforeWorldBegin) {
   proto.add_directives()->mutable_spectrum_texture();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Directive cannot be specified before WorldBegin: "
               "Texture");
 }
@@ -427,11 +456,12 @@ TEST(WorldBegin, Mismatched) {
   proto.add_directives()->mutable_world_begin();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldBegin directive");
 }
 
@@ -440,11 +470,12 @@ TEST(WorldEnd, Mismatched) {
   proto.add_directives()->mutable_world_end();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  EXPECT_EXIT(ParseScene(directives, options), ExitedWithCode(EXIT_FAILURE),
+  EXPECT_EXIT(ParseScene(directives, options, std::filesystem::current_path()),
+              ExitedWithCode(EXIT_FAILURE),
               "ERROR: Invalid WorldEnd directive");
 }
 
@@ -454,11 +485,12 @@ TEST(Render, EmptyScene) {
   proto.add_directives()->mutable_world_end();
 
   Directives directives;
-  directives.Include(proto, std::filesystem::current_path());
+  directives.Include(proto);
 
   Options options;
 
-  std::optional<ParsingResult> result = ParseScene(directives, options);
+  std::optional<ParsingResult> result =
+      ParseScene(directives, options, std::filesystem::current_path());
   ASSERT_TRUE(result.has_value());
 
   EXPECT_FALSE(result->skip_pixel_callback({0, 0}, {720, 1280}));

@@ -74,14 +74,14 @@ ReferenceCounted<ValueTexture2D<visual>> MakeImageMap(
     exit(EXIT_FAILURE);
   }
 
-  std::filesystem::path path = with_defaults.filename();
-  if (!std::filesystem::is_regular_file(path)) {
+  if (with_defaults.filename().empty()) {
     std::cerr << "ERROR: Missing required image parameter: filename"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (path.extension() == ".png" || path.extension() == ".tga") {
+  if (with_defaults.filename().ends_with(".png") ||
+      with_defaults.filename().ends_with(".tga")) {
     if (!with_defaults.has_gamma()) {
       with_defaults.set_gamma(true);
     }
@@ -90,14 +90,16 @@ ReferenceCounted<ValueTexture2D<visual>> MakeImageMap(
       with_defaults.set_gamma(false);
     }
 
+    std::filesystem::path parsed(with_defaults.filename());
+
     std::stringstream stream;
-    if (path.extension().empty()) {
-      stream << path.filename();
+    if (parsed.extension().empty()) {
+      stream << parsed.filename();
       std::string filename = stream.str();
       std::cerr << "ERROR: Unsupported image file (no extension): "
                 << filename.substr(1, filename.size() - 2) << std::endl;
     } else {
-      stream << path.extension();
+      stream << parsed.extension();
       std::string ext = stream.str();
       std::cerr << "ERROR: Unsupported image file type: "
                 << ext.substr(1, ext.size() - 2) << std::endl;
@@ -107,7 +109,7 @@ ReferenceCounted<ValueTexture2D<visual>> MakeImageMap(
   }
 
   auto image = image_manager.LoadFloatImageFromSDR(
-      path, static_cast<visual>(with_defaults.gamma()));
+      with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
 
   ReferenceCounted<ValueTexture2D<visual>> texture;
   switch (with_defaults.wrap()) {
@@ -184,14 +186,14 @@ ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeImageMap(
     exit(EXIT_FAILURE);
   }
 
-  std::filesystem::path path = with_defaults.filename();
-  if (!std::filesystem::is_regular_file(path)) {
+  if (with_defaults.filename().empty()) {
     std::cerr << "ERROR: Missing required image parameter: filename"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (path.extension() == ".png" || path.extension() == ".tga") {
+  if (with_defaults.filename().ends_with(".png") ||
+      with_defaults.filename().ends_with(".tga")) {
     if (!with_defaults.has_gamma()) {
       with_defaults.set_gamma(true);
     }
@@ -200,14 +202,16 @@ ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeImageMap(
       with_defaults.set_gamma(false);
     }
 
+    std::filesystem::path parsed(with_defaults.filename());
+
     std::stringstream stream;
-    if (path.extension().empty()) {
-      stream << path.filename();
+    if (parsed.extension().empty()) {
+      stream << parsed.filename();
       std::string filename = stream.str();
       std::cerr << "ERROR: Unsupported image file (no extension): "
                 << filename.substr(1, filename.size() - 2) << std::endl;
     } else {
-      stream << path.extension();
+      stream << parsed.extension();
       std::string ext = stream.str();
       std::cerr << "ERROR: Unsupported image file type: "
                 << ext.substr(1, ext.size() - 2) << std::endl;
@@ -217,7 +221,7 @@ ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeImageMap(
   }
 
   auto image = image_manager.LoadReflectorImageFromSDR(
-      path, static_cast<visual>(with_defaults.gamma()));
+      with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
 
   ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> texture;
   switch (with_defaults.wrap()) {

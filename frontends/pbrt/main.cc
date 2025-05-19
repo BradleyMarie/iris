@@ -163,14 +163,14 @@ int main(int argc, char** argv) {
   }
 
   Directives directives;
-  directives.Include(std::move(proto), std::move(search_root),
-                     std::move(file_path));
+  directives.Include(std::move(proto), std::move(file_path));
 
   Options options;
   options.always_reflective = absl::GetFlag(FLAGS_all_spectra_are_reflective);
 
   for (size_t render_index = 0;; render_index += 1) {
-    std::optional<ParsingResult> result = ParseScene(directives, options);
+    std::optional<ParsingResult> result =
+        ParseScene(directives, options, search_root);
     if (!result) {
       if (render_index == 0) {
         std::cerr << "ERROR: Render input was empty." << std::endl;

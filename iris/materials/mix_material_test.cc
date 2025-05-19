@@ -58,12 +58,13 @@ TEST(MixMaterialTest, Evaluate) {
       MakeReferenceCounted<MockMaterial>();
   EXPECT_CALL(*mock_material1, Evaluate(_, _, _)).WillOnce(Return(&mock_bxdf1));
 
-  MixMaterial mix_material(std::move(mock_material0), std::move(mock_material1),
-                           std::move(attenuation));
+  ReferenceCounted<Material> mix_material =
+      MakeMixMaterial(std::move(mock_material0), std::move(mock_material1),
+                      std::move(attenuation));
 
   const Bxdf* bxdf =
-      mix_material.Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                            GetSpectralAllocator(), GetBxdfAllocator());
+      mix_material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                             GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(bxdf);
 
   const Reflector* reflector =

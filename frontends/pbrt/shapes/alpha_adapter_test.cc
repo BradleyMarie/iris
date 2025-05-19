@@ -25,14 +25,18 @@ class AlphaMisses : public ValueTexture2D<visual> {
   }
 };
 
+TEST(AlphaAdapter, Nullptr) {
+  EXPECT_FALSE(MakeAlphaAdapter(ReferenceCounted<ValueTexture2D<visual>>()));
+}
+
 TEST(AlphaAdapter, Hits) {
-  AlphaAdapter alpha(MakeReferenceCounted<AlphaHits>());
-  EXPECT_TRUE(alpha.Evaluate({0.0, 0.0}));
+  EXPECT_TRUE(MakeAlphaAdapter(MakeReferenceCounted<AlphaHits>())
+                  ->Evaluate({0.0, 0.0}));
 }
 
 TEST(AlphaAdapter, Misses) {
-  AlphaAdapter alpha(MakeReferenceCounted<AlphaMisses>());
-  EXPECT_FALSE(alpha.Evaluate({0.0, 0.0}));
+  EXPECT_FALSE(MakeAlphaAdapter(MakeReferenceCounted<AlphaMisses>())
+                   ->Evaluate({0.0, 0.0}));
 }
 
 }  // namespace

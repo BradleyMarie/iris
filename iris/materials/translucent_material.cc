@@ -1,12 +1,23 @@
 #include "iris/materials/translucent_material.h"
 
+#include <cassert>
+
+#include "iris/bxdf.h"
+#include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/composite_bxdf.h"
 #include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
+#include "iris/float.h"
+#include "iris/material.h"
+#include "iris/reference_counted.h"
+#include "iris/spectral_allocator.h"
+#include "iris/texture_coordinates.h"
+#include "iris/textures/texture2d.h"
 
 namespace iris {
 namespace materials {
+namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::LambertianBrdf;
@@ -15,6 +26,52 @@ using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MicrofacetBrdf;
 using ::iris::bxdfs::MicrofacetBtdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
+
+class TranslucentMaterial final : public Material {
+ public:
+  TranslucentMaterial(
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+          reflectance,
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+          transmittance,
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+          diffuse,
+      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+          specular,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
+      ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+      ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
+      bool remap_roughness)
+      : reflectance_(std::move(reflectance)),
+        transmittance_(std::move(transmittance)),
+        diffuse_(std::move(diffuse)),
+        specular_(std::move(specular)),
+        eta_incident_(std::move(eta_incident)),
+        eta_transmitted_(std::move(eta_transmitted)),
+        roughness_(std::move(roughness)),
+        remap_roughness_(remap_roughness) {
+    assert(eta_incident_);
+    assert(eta_transmitted_);
+  }
+
+  const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
+                       SpectralAllocator& spectral_allocator,
+                       BxdfAllocator& bxdf_allocator) const override;
+
+ private:
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      reflectance_;
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      transmittance_;
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      diffuse_;
+  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      specular_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
+  bool remap_roughness_;
+};
 
 const Bxdf* TranslucentMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
@@ -100,6 +157,8 @@ const Bxdf* TranslucentMaterial::Evaluate(
   return MakeCompositeBxdf(bxdf_allocator, lambertian_brdf, lambertian_btdf,
                            microfacet_brdf, microfacet_btdf);
 }
+
+}  // namespace
 
 ReferenceCounted<Material> MakeTranslucentMaterial(
     ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>

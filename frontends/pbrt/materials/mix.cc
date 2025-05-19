@@ -13,7 +13,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace materials {
 
-using ::iris::materials::MixMaterial;
+using ::iris::materials::MakeMixMaterial;
 using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
@@ -28,7 +28,7 @@ MaterialResult MakeMix(
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
-      MakeReferenceCounted<MixMaterial>(
+      MakeMixMaterial(
           material_manager.Get(with_defaults.namedmaterial1()).second.material,
           material_manager.Get(with_defaults.namedmaterial2()).second.material,
           texture_manager.AllocateFloatTexture(with_defaults.amount())),

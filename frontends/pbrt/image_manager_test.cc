@@ -32,7 +32,8 @@ TEST(ImageManager, MissingFile) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(texture_manager, spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   EXPECT_EXIT(image_manager.LoadFloatImageFromSDR("notarealfile", true),
               ExitedWithCode(EXIT_FAILURE),
@@ -46,7 +47,8 @@ TEST(ImageManager, FloatImageSizesCorrect) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(texture_manager, spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
@@ -125,7 +127,8 @@ TEST(ImageManager, ReflectorImageSizesCorrect) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(texture_manager, spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
   EXPECT_TRUE(images
@@ -204,7 +207,8 @@ TEST(ImageManager, ReusesFloatImages) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(texture_manager, spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
@@ -341,7 +345,8 @@ TEST(ImageManager, ReusesReflectorImages) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(texture_manager, spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
   EXPECT_TRUE(images
@@ -478,7 +483,8 @@ TEST(ImageManager, LinearFloatValues) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(texture_manager, spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   auto g8 =
       image_manager.LoadFloatImageFromSDR(RawRunfilePath("g8.png"), false);
@@ -517,7 +523,8 @@ TEST(ImageManager, LinearReflectorValues) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(texture_manager, spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   auto g8 =
       image_manager.LoadReflectorImageFromSDR(RawRunfilePath("g8.png"), false);

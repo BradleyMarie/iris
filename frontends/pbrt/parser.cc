@@ -68,11 +68,11 @@ struct GraphicsState {
 };
 
 struct State {
-  State(Directives& directives, std::filesystem::path& search_root,
+  State(Directives& directives, const std::filesystem::path& search_root,
         bool always_reflective)
       : spectrum_manager(search_root, always_reflective),
         texture_manager(spectrum_manager),
-        image_manager(texture_manager, spectrum_manager),
+        image_manager(search_root, texture_manager, spectrum_manager),
         directives_(directives) {
     graphics.emplace();
     graphics.top().material.first = Defaults().default_material();
@@ -122,9 +122,7 @@ struct State {
 void State::Include(const std::filesystem::path& search_root,
                     const std::string& path) {
   auto [proto, file_path] = LoadFile(search_root, path);
-  std::filesystem::path parent_path = file_path.parent_path();
-  directives_.Include(std::move(proto), std::move(parent_path),
-                      std::move(file_path));
+  directives_.Include(std::move(proto), std::move(file_path));
 }
 
 void State::LightSource(const pbrt_proto::v3::LightSource& light_source,
@@ -607,16 +605,16 @@ std::optional<ParsingResult> ParseDirective(
 
 }  // namespace
 
-std::optional<ParsingResult> ParseScene(Directives& directives,
-                                        const Options& options) {
-  std::filesystem::path search_root = std::filesystem::current_path();
+std::optional<ParsingResult> ParseScene(
+    Directives& directives, const Options& options,
+    const std::filesystem::path& search_root) {
   State state(directives, search_root, options.always_reflective);
 
   directives.Include(Defaults().global_defaults(),
                      std::filesystem::current_path());
 
-  for (const Directive* next = directives.Next(search_root); next != nullptr;
-       next = directives.Next(search_root)) {
+  for (const Directive* next = directives.Next(); next != nullptr;
+       next = directives.Next()) {
     if (std::optional<ParsingResult> result =
             ParseDirective(state, *next, search_root);
         result) {

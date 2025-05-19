@@ -1,6 +1,7 @@
 #ifndef _FRONTENDS_PBRT_PARSER_
 #define _FRONTENDS_PBRT_PARSER_
 
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <optional>
@@ -25,8 +26,9 @@ struct Options {
   bool always_reflective = false;
 };
 
-std::optional<ParsingResult> ParseScene(Directives& directives,
-                                        const Options& options);
+std::optional<ParsingResult> ParseScene(
+    Directives& directives, const Options& options,
+    const std::filesystem::path& search_root);
 
 }  // namespace pbrt_frontend
 }  // namespace iris
