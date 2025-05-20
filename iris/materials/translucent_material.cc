@@ -120,9 +120,10 @@ const Bxdf* TranslucentMaterial::Evaluate(
     visual roughness = static_cast<visual>(0.0);
     if (roughness_) {
       roughness = roughness_->Evaluate(texture_coordinates);
-      if (remap_roughness_) {
-        roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
-      }
+    }
+
+    if (remap_roughness_) {
+      roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
     }
 
     microfacet_brdf = MakeMicrofacetBrdf(
