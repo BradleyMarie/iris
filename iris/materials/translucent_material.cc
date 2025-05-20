@@ -23,8 +23,8 @@ using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MakeLambertianBtdf;
-using ::iris::bxdfs::MicrofacetBrdf;
-using ::iris::bxdfs::MicrofacetBtdf;
+using ::iris::bxdfs::MakeMicrofacetBrdf;
+using ::iris::bxdfs::MakeMicrofacetBtdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 
 class TranslucentMaterial final : public Material {
@@ -103,44 +103,38 @@ const Bxdf* TranslucentMaterial::Evaluate(
   const Bxdf* microfacet_brdf = nullptr;
   const Bxdf* microfacet_btdf = nullptr;
   if (specular_) {
-    if (const Reflector* specular =
-            specular_->Evaluate(texture_coordinates, spectral_allocator);
-        specular != nullptr) {
-      // Consider clamping these values
-      visual eta_incident = static_cast<visual>(0.0);
-      if (eta_incident_) {
-        eta_incident = eta_incident_->Evaluate(texture_coordinates);
-      }
+    const Reflector* specular =
+        specular_->Evaluate(texture_coordinates, spectral_allocator);
 
-      visual eta_transmitted = static_cast<visual>(0.0);
-      if (eta_transmitted_) {
-        eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
-      }
+    // Consider clamping these values
+    visual eta_incident = static_cast<visual>(0.0);
+    if (eta_incident_) {
+      eta_incident = eta_incident_->Evaluate(texture_coordinates);
+    }
 
-      visual roughness = static_cast<visual>(0.0);
-      if (roughness_) {
-        roughness = roughness_->Evaluate(texture_coordinates);
-        if (remap_roughness_) {
-          roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
-        }
-      }
+    visual eta_transmitted = static_cast<visual>(0.0);
+    if (eta_transmitted_) {
+      eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
+    }
 
-      if (reflectance != nullptr) {
-        microfacet_brdf = &bxdf_allocator.Allocate<
-            MicrofacetBrdf<TrowbridgeReitzDistribution, FresnelDielectric>>(
-            *spectral_allocator.Scale(reflectance, specular),
-            TrowbridgeReitzDistribution(roughness, roughness),
-            FresnelDielectric(eta_incident, eta_transmitted));
-      }
-
-      if (transmittance != nullptr) {
-        microfacet_btdf = &bxdf_allocator.Allocate<
-            MicrofacetBtdf<TrowbridgeReitzDistribution, FresnelDielectric>>(
-            *spectral_allocator.Scale(transmittance, specular), eta_incident,
-            eta_transmitted, TrowbridgeReitzDistribution(roughness, roughness),
-            FresnelDielectric(eta_incident, eta_transmitted));
+    visual roughness = static_cast<visual>(0.0);
+    if (roughness_) {
+      roughness = roughness_->Evaluate(texture_coordinates);
+      if (remap_roughness_) {
+        roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
       }
     }
+
+    microfacet_brdf = MakeMicrofacetBrdf(
+        bxdf_allocator, spectral_allocator.Scale(reflectance, specular),
+        TrowbridgeReitzDistribution(roughness, roughness),
+        FresnelDielectric(eta_incident, eta_transmitted));
+
+    microfacet_btdf = MakeMicrofacetBtdf(
+        bxdf_allocator, spectral_allocator.Scale(transmittance, specular),
+        eta_incident, eta_transmitted,
+        TrowbridgeReitzDistribution(roughness, roughness),
+        FresnelDielectric(eta_incident, eta_transmitted));
   }
 
   return MakeCompositeBxdf(bxdf_allocator, lambertian_brdf, lambertian_btdf,

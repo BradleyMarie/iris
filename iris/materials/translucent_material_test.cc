@@ -1,8 +1,6 @@
 #include "iris/materials/translucent_material.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/microfacet_bxdf.h"
-#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -12,10 +10,6 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::MicrofacetBrdf;
-using ::iris::bxdfs::MicrofacetBtdf;
-using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
@@ -240,8 +234,6 @@ TEST(TranslucentMaterialTest, SpecularReflection) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE((dynamic_cast<const MicrofacetBrdf<TrowbridgeReitzDistribution,
-                                                 FresnelDielectric>*>(result)));
 }
 
 TEST(TranslucentMaterialTest, SpecularTransmission) {
@@ -276,8 +268,6 @@ TEST(TranslucentMaterialTest, SpecularTransmission) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE((dynamic_cast<const MicrofacetBtdf<TrowbridgeReitzDistribution,
-                                                 FresnelDielectric>*>(result)));
 }
 
 TEST(TranslucentMaterialTest, All) {

@@ -19,7 +19,7 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::FresnelConductor;
-using ::iris::bxdfs::MicrofacetBrdf;
+using ::iris::bxdfs::MakeMicrofacetBrdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
 
@@ -79,9 +79,9 @@ const Bxdf* MetalMaterial::Evaluate(
     }
   }
 
-  return &bxdf_allocator.Allocate<
-      MicrofacetBrdf<TrowbridgeReitzDistribution, FresnelConductor>>(
-      *kWhite, TrowbridgeReitzDistribution(roughness_u, roughness_v),
+  return MakeMicrofacetBrdf(
+      bxdf_allocator, kWhite.Get(),
+      TrowbridgeReitzDistribution(roughness_u, roughness_v),
       FresnelConductor(eta_incident_.Get(), eta_transmitted_.Get(), k_.Get()));
 }
 

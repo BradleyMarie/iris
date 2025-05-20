@@ -1,8 +1,6 @@
 #include "iris/materials/metal_material.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/microfacet_bxdf.h"
-#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -12,9 +10,6 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::FresnelConductor;
-using ::iris::bxdfs::MicrofacetBrdf;
-using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
@@ -45,8 +40,6 @@ TEST(MetalMaterialTest, Evaluate) {
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                          GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
-  EXPECT_TRUE((dynamic_cast<const MicrofacetBrdf<TrowbridgeReitzDistribution,
-                                                 FresnelConductor>*>(result)));
 }
 
 }  // namespace

@@ -90,8 +90,6 @@ cc_test(
     srcs = ["metal_material_test.cc"],
     deps = [
         ":metal_material",
-        "//iris/bxdfs:microfacet_bxdf",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -272,7 +270,6 @@ cc_test(
     srcs = ["translucent_material_test.cc"],
     deps = [
         ":translucent_material",
-        "//iris/bxdfs:microfacet_bxdf",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -309,8 +306,6 @@ cc_test(
     srcs = ["uber_material_test.cc"],
     deps = [
         ":uber_material",
-        "//iris/bxdfs:microfacet_bxdf",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/reflectors:uniform_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",

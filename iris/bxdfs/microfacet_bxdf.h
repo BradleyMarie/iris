@@ -4,6 +4,7 @@
 #include <concepts>
 
 #include "iris/bxdf.h"
+#include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/fresnel.h"
 #include "iris/bxdfs/helpers/diffuse_bxdf.h"
 #include "iris/bxdfs/microfacet_distribution.h"
@@ -46,8 +47,8 @@ class MicrofacetBrdf final : public helpers::DiffuseBxdf {
 
 class MicrofacetBtdf final : public helpers::DiffuseBxdf {
  public:
-  MicrofacetBtdf(const Reflector& transmittance, const geometric_t eta_incident,
-                 const geometric_t eta_transmitted,
+  MicrofacetBtdf(const Reflector& transmittance, geometric_t eta_incident,
+                 geometric_t eta_transmitted,
                  const MicrofacetDistribution& distribution,
                  const Fresnel& fresnel) noexcept
       : transmittance_(transmittance),
@@ -84,74 +85,100 @@ class MicrofacetBtdf final : public helpers::DiffuseBxdf {
 template <typename M, typename F>
   requires std::derived_from<M, MicrofacetDistribution> &&
            std::derived_from<F, Fresnel>
-class MicrofacetBrdf final : public helpers::DiffuseBxdf {
- public:
-  MicrofacetBrdf(const Reflector& reflectance, const M& distribution,
-                 const F& fresnel) noexcept
-      : distribution_(distribution),
-        fresnel_(fresnel),
-        impl_(reflectance, distribution_, fresnel_) {}
+const Bxdf* MakeMicrofacetBrdf(BxdfAllocator& bxdf_allocator,
+                               const Reflector* reflectance,
+                               const M& distribution, const F& fresnel) {
+  class MicrofacetBrdf final : public helpers::DiffuseBxdf {
+   public:
+    MicrofacetBrdf(const Reflector& reflectance, const M& distribution,
+                   const F& fresnel) noexcept
+        : distribution_(distribution),
+          fresnel_(fresnel),
+          impl_(reflectance, distribution_, fresnel_) {}
 
-  std::optional<Vector> SampleDiffuse(const Vector& incoming,
-                                      const Vector& surface_normal,
-                                      Sampler& sampler) const override {
-    return impl_.SampleDiffuse(incoming, surface_normal, sampler);
+    std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                        const Vector& surface_normal,
+                                        Sampler& sampler) const override {
+      return impl_.SampleDiffuse(incoming, surface_normal, sampler);
+    }
+
+    visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                        const Vector& surface_normal,
+                        Hemisphere hemisphere) const override {
+      return impl_.PdfDiffuse(incoming, outgoing, surface_normal, hemisphere);
+    }
+
+    const Reflector* ReflectanceDiffuse(
+        const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+        SpectralAllocator& allocator) const override {
+      return impl_.ReflectanceDiffuse(incoming, outgoing, hemisphere,
+                                      allocator);
+    }
+
+   private:
+    const M distribution_;
+    const F fresnel_;
+    const internal::MicrofacetBrdf impl_;
+  };
+
+  if (!reflectance) {
+    return nullptr;
   }
 
-  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
-                      const Vector& surface_normal,
-                      Hemisphere hemisphere) const override {
-    return impl_.PdfDiffuse(incoming, outgoing, surface_normal, hemisphere);
-  }
-
-  const Reflector* ReflectanceDiffuse(
-      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
-      SpectralAllocator& allocator) const override {
-    return impl_.ReflectanceDiffuse(incoming, outgoing, hemisphere, allocator);
-  }
-
- private:
-  const M distribution_;
-  const F fresnel_;
-  const internal::MicrofacetBrdf impl_;
-};
+  return &bxdf_allocator.Allocate<MicrofacetBrdf>(*reflectance, distribution,
+                                                  fresnel);
+}
 
 template <typename M, typename F>
   requires std::derived_from<M, MicrofacetDistribution> &&
            std::derived_from<F, Fresnel>
-class MicrofacetBtdf final : public helpers::DiffuseBxdf {
- public:
-  MicrofacetBtdf(const Reflector& transmittance, const geometric_t eta_incident,
-                 const geometric_t eta_transmitted, const M& distribution,
-                 const F& fresnel) noexcept
-      : distribution_(distribution),
-        fresnel_(fresnel),
-        impl_(transmittance, eta_incident, eta_transmitted, distribution_,
-              fresnel_) {}
+const Bxdf* MakeMicrofacetBtdf(BxdfAllocator& bxdf_allocator,
+                               const Reflector* transmittance,
+                               geometric_t eta_incident,
+                               geometric_t eta_transmitted,
+                               const M& distribution, const F& fresnel) {
+  class MicrofacetBtdf final : public helpers::DiffuseBxdf {
+   public:
+    MicrofacetBtdf(const Reflector& transmittance, geometric_t eta_incident,
+                   geometric_t eta_transmitted, const M& distribution,
+                   const F& fresnel) noexcept
+        : distribution_(distribution),
+          fresnel_(fresnel),
+          impl_(transmittance, eta_incident, eta_transmitted, distribution_,
+                fresnel_) {}
 
-  std::optional<Vector> SampleDiffuse(const Vector& incoming,
-                                      const Vector& surface_normal,
-                                      Sampler& sampler) const override {
-    return impl_.SampleDiffuse(incoming, surface_normal, sampler);
+    std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                        const Vector& surface_normal,
+                                        Sampler& sampler) const override {
+      return impl_.SampleDiffuse(incoming, surface_normal, sampler);
+    }
+
+    visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                        const Vector& surface_normal,
+                        Hemisphere hemisphere) const override {
+      return impl_.PdfDiffuse(incoming, outgoing, surface_normal, hemisphere);
+    }
+
+    const Reflector* ReflectanceDiffuse(
+        const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+        SpectralAllocator& allocator) const override {
+      return impl_.ReflectanceDiffuse(incoming, outgoing, hemisphere,
+                                      allocator);
+    }
+
+   private:
+    const M distribution_;
+    const F fresnel_;
+    const internal::MicrofacetBtdf impl_;
+  };
+
+  if (!transmittance) {
+    return nullptr;
   }
 
-  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
-                      const Vector& surface_normal,
-                      Hemisphere hemisphere) const override {
-    return impl_.PdfDiffuse(incoming, outgoing, surface_normal, hemisphere);
-  }
-
-  const Reflector* ReflectanceDiffuse(
-      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
-      SpectralAllocator& allocator) const override {
-    return impl_.ReflectanceDiffuse(incoming, outgoing, hemisphere, allocator);
-  }
-
- private:
-  const M distribution_;
-  const F fresnel_;
-  const internal::MicrofacetBtdf impl_;
-};
+  return &bxdf_allocator.Allocate<MicrofacetBtdf>(
+      *transmittance, eta_incident, eta_transmitted, distribution, fresnel);
+}
 
 }  // namespace bxdfs
 }  // namespace iris

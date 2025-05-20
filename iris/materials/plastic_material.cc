@@ -22,7 +22,7 @@ namespace {
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MakeLambertianBrdf;
-using ::iris::bxdfs::MicrofacetBrdf;
+using ::iris::bxdfs::MakeMicrofacetBrdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 
 class PlasticMaterial final : public Material {
@@ -74,25 +74,22 @@ const Bxdf* PlasticMaterial::Evaluate(
 
   const Bxdf* microfacet_brdf = nullptr;
   if (specular_) {
-    if (const Reflector* specular =
-            specular_->Evaluate(texture_coordinates, spectral_allocator);
-        specular != nullptr) {
-      visual roughness = static_cast<visual>(0.0);
-      if (roughness_) {
-        roughness = roughness_->Evaluate(texture_coordinates);
-        if (remap_roughness_) {
-          roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
-        }
+    visual roughness = static_cast<visual>(0.0);
+    if (roughness_) {
+      roughness = roughness_->Evaluate(texture_coordinates);
+      if (remap_roughness_) {
+        roughness = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness);
       }
-
-      visual eta_incident = eta_incident_->Evaluate(texture_coordinates);
-      visual eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
-
-      microfacet_brdf = &bxdf_allocator.Allocate<
-          MicrofacetBrdf<TrowbridgeReitzDistribution, FresnelDielectric>>(
-          *specular, TrowbridgeReitzDistribution(roughness, roughness),
-          FresnelDielectric(eta_incident, eta_transmitted));
     }
+
+    visual eta_incident = eta_incident_->Evaluate(texture_coordinates);
+    visual eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
+
+    microfacet_brdf = MakeMicrofacetBrdf(
+        bxdf_allocator,
+        specular_->Evaluate(texture_coordinates, spectral_allocator),
+        TrowbridgeReitzDistribution(roughness, roughness),
+        FresnelDielectric(eta_incident, eta_transmitted));
   }
 
   return MakeCompositeBxdf(bxdf_allocator, lambertian_brdf, microfacet_brdf);
