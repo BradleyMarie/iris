@@ -37,11 +37,14 @@ TEST(MaterialManager, Get) {
   MaterialManager material_manager;
 
   std::pair<pbrt_proto::v3::Material, MaterialResult> entry;
-  entry.second.material = MakeReferenceCounted<MockMaterial>();
+  entry.second.materials[0] = MakeReferenceCounted<MockMaterial>();
+  entry.second.materials[1] = MakeReferenceCounted<MockMaterial>();
 
   material_manager.Put("test", entry);
-  EXPECT_EQ(entry.second.material.Get(),
-            material_manager.Get("test").second.material.Get());
+  EXPECT_EQ(entry.second.materials[0].Get(),
+            material_manager.Get("test").second.materials[0].Get());
+  EXPECT_EQ(entry.second.materials[1].Get(),
+            material_manager.Get("test").second.materials[1].Get());
 }
 
 }  // namespace

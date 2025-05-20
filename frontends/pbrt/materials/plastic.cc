@@ -45,13 +45,20 @@ MaterialResult MakePlastic(const Material::Plastic& plastic,
   }
 
   return MaterialResult{
-      MakePlasticMaterial(
-          texture_manager.AllocateReflectorTexture(with_defaults.kd()),
-          texture_manager.AllocateReflectorTexture(with_defaults.ks()),
-          texture_manager.AllocateFloatTexture(eta_front),
-          texture_manager.AllocateFloatTexture(eta_back),
-          texture_manager.AllocateFloatTexture(with_defaults.roughness()),
-          with_defaults.remaproughness()),
+      {MakePlasticMaterial(
+           texture_manager.AllocateReflectorTexture(with_defaults.kd()),
+           texture_manager.AllocateReflectorTexture(with_defaults.ks()),
+           texture_manager.AllocateFloatTexture(eta_front),
+           texture_manager.AllocateFloatTexture(eta_back),
+           texture_manager.AllocateFloatTexture(with_defaults.roughness()),
+           with_defaults.remaproughness()),
+       MakePlasticMaterial(
+           texture_manager.AllocateReflectorTexture(with_defaults.kd()),
+           texture_manager.AllocateReflectorTexture(with_defaults.ks()),
+           texture_manager.AllocateFloatTexture(eta_back),
+           texture_manager.AllocateFloatTexture(eta_front),
+           texture_manager.AllocateFloatTexture(with_defaults.roughness()),
+           with_defaults.remaproughness())},
       MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 

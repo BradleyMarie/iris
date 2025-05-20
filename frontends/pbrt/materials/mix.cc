@@ -28,10 +28,18 @@ MaterialResult MakeMix(
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
-      MakeMixMaterial(
-          material_manager.Get(with_defaults.namedmaterial1()).second.material,
-          material_manager.Get(with_defaults.namedmaterial2()).second.material,
-          texture_manager.AllocateFloatTexture(with_defaults.amount())),
+      {MakeMixMaterial(
+           material_manager.Get(with_defaults.namedmaterial1())
+               .second.materials[0],
+           material_manager.Get(with_defaults.namedmaterial2())
+               .second.materials[0],
+           texture_manager.AllocateFloatTexture(with_defaults.amount())),
+       MakeMixMaterial(
+           material_manager.Get(with_defaults.namedmaterial1())
+               .second.materials[1],
+           material_manager.Get(with_defaults.namedmaterial2())
+               .second.materials[1],
+           texture_manager.AllocateFloatTexture(with_defaults.amount()))},
       {}};
 }
 

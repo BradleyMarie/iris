@@ -27,11 +27,12 @@ MaterialResult MakeMatte(const Material::Matte& matte,
   with_defaults.MergeFrom(matte);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  return MaterialResult{
-      MakeMatteMaterial(
-          texture_manager.AllocateReflectorTexture(with_defaults.kd()),
-          texture_manager.AllocateFloatTexture(with_defaults.sigma())),
-      MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
+  ReferenceCounted<iris::Material> material = MakeMatteMaterial(
+      texture_manager.AllocateReflectorTexture(with_defaults.kd()),
+      texture_manager.AllocateFloatTexture(with_defaults.sigma()));
+
+  return MaterialResult{{material, material},
+                        MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 
 }  // namespace materials

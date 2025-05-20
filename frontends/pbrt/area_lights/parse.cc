@@ -1,6 +1,6 @@
 #include "frontends/pbrt/area_lights/parse.h"
 
-#include <utility>
+#include <array>
 
 #include "frontends/pbrt/area_lights/diffuse.h"
 #include "frontends/pbrt/spectrum_manager.h"
@@ -13,13 +13,10 @@ namespace pbrt_frontend {
 
 using ::pbrt_proto::v3::AreaLightSource;
 
-std::pair<ReferenceCounted<EmissiveMaterial>,
-          ReferenceCounted<EmissiveMaterial>>
-ParseAreaLightSource(const pbrt_proto::v3::AreaLightSource& area_light_source,
-                     SpectrumManager& spectrum_manager) {
-  std::pair<ReferenceCounted<EmissiveMaterial>,
-            ReferenceCounted<EmissiveMaterial>>
-      result;
+std::array<ReferenceCounted<EmissiveMaterial>, 2> ParseAreaLightSource(
+    const pbrt_proto::v3::AreaLightSource& area_light_source,
+    SpectrumManager& spectrum_manager) {
+  std::array<ReferenceCounted<EmissiveMaterial>, 2> result;
   switch (area_light_source.area_light_source_type_case()) {
     case AreaLightSource::kDiffuse:
       result = area_lights::MakeDiffuse(area_light_source.diffuse(),

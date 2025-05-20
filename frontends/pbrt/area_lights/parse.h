@@ -1,7 +1,7 @@
 #ifndef _FRONTENDS_PBRT_AREA_LIGHTS_PARSE_
 #define _FRONTENDS_PBRT_AREA_LIGHTS_PARSE_
 
-#include <utility>
+#include <array>
 
 #include "frontends/pbrt/spectrum_manager.h"
 #include "iris/emissive_material.h"
@@ -11,10 +11,9 @@
 namespace iris {
 namespace pbrt_frontend {
 
-std::pair<ReferenceCounted<EmissiveMaterial>,
-          ReferenceCounted<EmissiveMaterial>>
-ParseAreaLightSource(const pbrt_proto::v3::AreaLightSource& area_light_source,
-                     SpectrumManager& spectrum_manager);
+std::array<ReferenceCounted<EmissiveMaterial>, 2> ParseAreaLightSource(
+    const pbrt_proto::v3::AreaLightSource& area_light_source,
+    SpectrumManager& spectrum_manager);
 
 }  // namespace pbrt_frontend
 }  // namespace iris

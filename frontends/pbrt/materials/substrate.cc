@@ -26,14 +26,15 @@ MaterialResult MakeSubstrate(const Material::Substrate& substrate,
   with_defaults.MergeFrom(substrate);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  return MaterialResult{
-      MakeSubstrateMaterial(
-          texture_manager.AllocateReflectorTexture(with_defaults.kd()),
-          texture_manager.AllocateReflectorTexture(with_defaults.ks()),
-          texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
-          texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
-          with_defaults.remaproughness()),
-      MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
+  ReferenceCounted<iris::Material> material = MakeSubstrateMaterial(
+      texture_manager.AllocateReflectorTexture(with_defaults.kd()),
+      texture_manager.AllocateReflectorTexture(with_defaults.ks()),
+      texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
+      texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
+      with_defaults.remaproughness());
+
+  return MaterialResult{{material, material},
+                        MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 
 }  // namespace materials

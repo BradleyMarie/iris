@@ -30,15 +30,24 @@ MaterialResult MakeTranslucent(const Material::Translucent& translucent,
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
   return MaterialResult{
-      MakeTranslucentMaterial(
-          texture_manager.AllocateReflectorTexture(with_defaults.reflect()),
-          texture_manager.AllocateReflectorTexture(with_defaults.transmit()),
-          texture_manager.AllocateReflectorTexture(with_defaults.kd()),
-          texture_manager.AllocateReflectorTexture(with_defaults.ks()),
-          texture_manager.AllocateFloatTexture(kDefaultEtaIncident),
-          texture_manager.AllocateFloatTexture(kDefaultEtaTransmitted),
-          texture_manager.AllocateFloatTexture(with_defaults.roughness()),
-          with_defaults.remaproughness()),
+      {MakeTranslucentMaterial(
+           texture_manager.AllocateReflectorTexture(with_defaults.reflect()),
+           texture_manager.AllocateReflectorTexture(with_defaults.transmit()),
+           texture_manager.AllocateReflectorTexture(with_defaults.kd()),
+           texture_manager.AllocateReflectorTexture(with_defaults.ks()),
+           texture_manager.AllocateFloatTexture(kDefaultEtaIncident),
+           texture_manager.AllocateFloatTexture(kDefaultEtaTransmitted),
+           texture_manager.AllocateFloatTexture(with_defaults.roughness()),
+           with_defaults.remaproughness()),
+       MakeTranslucentMaterial(
+           texture_manager.AllocateReflectorTexture(with_defaults.reflect()),
+           texture_manager.AllocateReflectorTexture(with_defaults.transmit()),
+           texture_manager.AllocateReflectorTexture(with_defaults.kd()),
+           texture_manager.AllocateReflectorTexture(with_defaults.ks()),
+           texture_manager.AllocateFloatTexture(kDefaultEtaTransmitted),
+           texture_manager.AllocateFloatTexture(kDefaultEtaIncident),
+           texture_manager.AllocateFloatTexture(with_defaults.roughness()),
+           with_defaults.remaproughness())},
       MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 

@@ -1,5 +1,6 @@
 #include "frontends/pbrt/area_lights/diffuse.h"
 
+#include <array>
 #include <cstdlib>
 #include <iostream>
 #include <utility>
@@ -18,10 +19,9 @@ namespace area_lights {
 using ::iris::emissive_materials::ConstantEmissiveMaterial;
 using ::pbrt_proto::v3::AreaLightSource;
 
-std::pair<ReferenceCounted<EmissiveMaterial>,
-          ReferenceCounted<EmissiveMaterial>>
-MakeDiffuse(const AreaLightSource::Diffuse& diffuse,
-            SpectrumManager& spectrum_manager) {
+std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
+    const AreaLightSource::Diffuse& diffuse,
+    SpectrumManager& spectrum_manager) {
   AreaLightSource::Diffuse with_defaults =
       Defaults().area_light_sources().diffuse();
   with_defaults.MergeFrom(diffuse);
@@ -42,7 +42,7 @@ MakeDiffuse(const AreaLightSource::Diffuse& diffuse,
     back_material = front_material;
   }
 
-  return std::make_pair(std::move(front_material), std::move(back_material));
+  return {std::move(front_material), std::move(back_material)};
 }
 
 }  // namespace area_lights

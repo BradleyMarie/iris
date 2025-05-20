@@ -73,15 +73,16 @@ MaterialResult MakeMetal(const Material::Metal& metal,
   Spectrum eta_front;
   eta_front.set_uniform_spectrum(kDefaultEtaFront);
 
-  return MaterialResult{
-      MakeMetalMaterial(
-          spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.k())),
-          spectrum_manager.AllocateSpectrum(eta_front),
-          spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.eta())),
-          texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
-          texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
-          with_defaults.remaproughness()),
-      MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
+  ReferenceCounted<iris::Material> material = MakeMetalMaterial(
+      spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.k())),
+      spectrum_manager.AllocateSpectrum(eta_front),
+      spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.eta())),
+      texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
+      texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
+      with_defaults.remaproughness());
+
+  return MaterialResult{{material, material},
+                        MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 
 }  // namespace materials

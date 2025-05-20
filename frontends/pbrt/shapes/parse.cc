@@ -1,5 +1,7 @@
 #include "frontends/pbrt/shapes/parse.h"
 
+#include <algorithm>
+#include <array>
 #include <filesystem>
 #include <utility>
 #include <vector>
@@ -27,8 +29,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
     const pbrt_proto::v3::Shape& shape, const Matrix& model_to_world,
     bool reverse_orientation,
     const std::pair<pbrt_proto::v3::Material, MaterialResult>& material,
-    const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
-    const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
+    const std::array<ReferenceCounted<EmissiveMaterial>, 2>& emissive_materials,
     const std::filesystem::path& search_root,
     const MaterialManager& material_manager, TextureManager& texture_manager,
     SpectrumManager& spectrum_manager) {
@@ -39,18 +40,14 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
                       texture_manager, spectrum_manager);
   }
 
-  const ReferenceCounted<Material>& front_material = actual_material.material;
-  const ReferenceCounted<Material>& back_material = actual_material.material;
-  const ReferenceCounted<EmissiveMaterial>& actual_front_emissive_material =
-      reverse_orientation ? back_emissive_material : front_emissive_material;
-  const ReferenceCounted<EmissiveMaterial>& actual_back_emissive_material =
-      reverse_orientation ? front_emissive_material : back_emissive_material;
-  const ReferenceCounted<NormalMap>& front_normal_map =
-      reverse_orientation ? actual_material.bumpmaps[1]
-                          : actual_material.bumpmaps[0];
-  const ReferenceCounted<NormalMap>& back_normal_map =
-      reverse_orientation ? actual_material.bumpmaps[0]
-                          : actual_material.bumpmaps[1];
+  std::array<ReferenceCounted<EmissiveMaterial>, 2> actual_emissive_materials =
+      emissive_materials;
+
+  if (reverse_orientation) {
+    std::swap(actual_material.materials[0], actual_material.materials[1]);
+    std::swap(actual_material.bumpmaps[0], actual_material.bumpmaps[1]);
+    std::swap(actual_emissive_materials[0], actual_emissive_materials[1]);
+  }
 
   std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> result(
       {}, model_to_world);
@@ -75,19 +72,22 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
       break;
     case Shape::kPlymesh:
       return shapes::MakePlyMesh(
-          shape.plymesh(), model_to_world, front_material, back_material,
-          actual_front_emissive_material, actual_back_emissive_material,
-          front_normal_map, back_normal_map, search_root, texture_manager);
+          shape.plymesh(), model_to_world, actual_material.materials[0],
+          actual_material.materials[1], actual_emissive_materials[0],
+          actual_emissive_materials[1], actual_material.bumpmaps[0],
+          actual_material.bumpmaps[1], search_root, texture_manager);
     case Shape::kSphere:
-      return shapes::MakeSphere(shape.sphere(), model_to_world, front_material,
-                                back_material, actual_front_emissive_material,
-                                actual_back_emissive_material, front_normal_map,
-                                back_normal_map);
+      return shapes::MakeSphere(
+          shape.sphere(), model_to_world, actual_material.materials[0],
+          actual_material.materials[1], actual_emissive_materials[0],
+          actual_emissive_materials[1], actual_material.bumpmaps[0],
+          actual_material.bumpmaps[1]);
     case Shape::kTrianglemesh:
       return shapes::MakeTriangleMesh(
-          shape.trianglemesh(), model_to_world, front_material, back_material,
-          actual_front_emissive_material, actual_back_emissive_material,
-          front_normal_map, back_normal_map, texture_manager);
+          shape.trianglemesh(), model_to_world, actual_material.materials[0],
+          actual_material.materials[1], actual_emissive_materials[0],
+          actual_emissive_materials[1], actual_material.bumpmaps[0],
+          actual_material.bumpmaps[1], texture_manager);
       break;
     case Shape::SHAPE_TYPE_NOT_SET:
       break;

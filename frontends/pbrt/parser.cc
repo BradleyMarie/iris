@@ -60,9 +60,7 @@ using ::pbrt_proto::v3::Directive;
 using ::pbrt_proto::v3::Shape;
 
 struct GraphicsState {
-  std::pair<ReferenceCounted<EmissiveMaterial>,
-            ReferenceCounted<EmissiveMaterial>>
-      emissive_materials;
+  std::array<ReferenceCounted<EmissiveMaterial>, 2> emissive_materials;
   std::pair<pbrt_proto::v3::Material, MaterialResult> material;
   bool reverse_orientation = false;
 };
@@ -143,10 +141,8 @@ void State::Shape(const pbrt_proto::v3::Shape& shape,
   auto [shapes, model_to_world] = ParseShape(
       shape, matrix_manager.Get().start, graphics.top().reverse_orientation,
       graphics.top().material,
-      (build_instance) ? ReferenceCounted<EmissiveMaterial>()
-                       : graphics.top().emissive_materials.first,
-      (build_instance) ? ReferenceCounted<EmissiveMaterial>()
-                       : graphics.top().emissive_materials.second,
+      (build_instance) ? std::array<ReferenceCounted<EmissiveMaterial>, 2>()
+                       : graphics.top().emissive_materials,
       search_root, material_manager, texture_manager, spectrum_manager);
 
   if (build_instance) {

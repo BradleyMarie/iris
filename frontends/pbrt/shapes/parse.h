@@ -1,6 +1,7 @@
 #ifndef _FRONTENDS_PBRT_SHAPES_PARSE_
 #define _FRONTENDS_PBRT_SHAPES_PARSE_
 
+#include <array>
 #include <filesystem>
 #include <utility>
 #include <vector>
@@ -22,8 +23,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
     const pbrt_proto::v3::Shape& shape, const Matrix& model_to_world,
     bool reverse_orientation,
     const std::pair<pbrt_proto::v3::Material, MaterialResult>& material,
-    const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
-    const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
+    const std::array<ReferenceCounted<EmissiveMaterial>, 2>& emissive_materials,
     const std::filesystem::path& search_root,
     const MaterialManager& material_manager, TextureManager& texture_manager,
     SpectrumManager& spectrum_manager);

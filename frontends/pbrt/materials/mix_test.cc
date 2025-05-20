@@ -24,7 +24,8 @@ TEST(MakeMix, Empty) {
   MaterialManager material_manager;
 
   MaterialResult a;
-  a.material = MakeReferenceCounted<MockMaterial>();
+  a.materials[0] = MakeReferenceCounted<MockMaterial>();
+  a.materials[1] = MakeReferenceCounted<MockMaterial>();
   material_manager.Put("a", {Material::default_instance(), a});
 
   Material::Mix mix;
@@ -34,7 +35,8 @@ TEST(MakeMix, Empty) {
   MaterialResult result =
       MakeMix(mix, Shape::MaterialOverrides::default_instance(),
               material_manager, texture_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }

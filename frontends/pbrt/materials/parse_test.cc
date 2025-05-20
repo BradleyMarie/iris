@@ -27,7 +27,8 @@ TEST(ParseMaterial, Empty) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.material);
+  EXPECT_FALSE(result.materials[0]);
+  EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -43,7 +44,8 @@ TEST(ParseMaterial, Disney) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.material);
+  EXPECT_FALSE(result.materials[0]);
+  EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -59,7 +61,8 @@ TEST(ParseMaterial, Fourier) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.material);
+  EXPECT_FALSE(result.materials[0]);
+  EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -75,7 +78,8 @@ TEST(ParseMaterial, Glass) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -91,7 +95,8 @@ TEST(ParseMaterial, Hair) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.material);
+  EXPECT_FALSE(result.materials[0]);
+  EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -107,7 +112,8 @@ TEST(ParseMaterial, KdSubsurface) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.material);
+  EXPECT_FALSE(result.materials[0]);
+  EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -123,7 +129,8 @@ TEST(ParseMaterial, Matte) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -139,7 +146,8 @@ TEST(ParseMaterial, Metal) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -155,7 +163,8 @@ TEST(ParseMaterial, Mirror) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -166,7 +175,8 @@ TEST(ParseMaterial, Mix) {
   MaterialManager material_manager;
 
   MaterialResult a;
-  a.material = MakeReferenceCounted<MockMaterial>();
+  a.materials[0] = MakeReferenceCounted<MockMaterial>();
+  a.materials[1] = MakeReferenceCounted<MockMaterial>();
   material_manager.Put("a", {Material::default_instance(), a});
 
   Material material;
@@ -176,7 +186,8 @@ TEST(ParseMaterial, Mix) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -192,7 +203,8 @@ TEST(ParseMaterial, Plastic) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -208,7 +220,8 @@ TEST(ParseMaterial, Substrate) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -224,7 +237,8 @@ TEST(ParseMaterial, Subsurface) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.material);
+  EXPECT_FALSE(result.materials[0]);
+  EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -240,7 +254,8 @@ TEST(ParseMaterial, Translucent) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }
@@ -256,7 +271,8 @@ TEST(ParseMaterial, Uber) {
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     material_manager, texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
   EXPECT_FALSE(result.bumpmaps[1]);
 }

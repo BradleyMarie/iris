@@ -53,9 +53,10 @@ const Bxdf* GlassMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  const Reflector* reflector = nullptr;
+  const Reflector* reflectance = nullptr;
   if (reflectance_) {
-    reflector = reflectance_->Evaluate(texture_coordinates, spectral_allocator);
+    reflectance =
+        reflectance_->Evaluate(texture_coordinates, spectral_allocator);
   }
 
   const Reflector* transmittance = nullptr;
@@ -75,7 +76,7 @@ const Bxdf* GlassMaterial::Evaluate(
     eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
   }
 
-  return MakeSpecularBxdf(bxdf_allocator, reflector, transmittance,
+  return MakeSpecularBxdf(bxdf_allocator, reflectance, transmittance,
                           eta_incident, eta_transmitted);
 }
 

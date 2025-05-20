@@ -26,10 +26,11 @@ MaterialResult MakeMirror(const Material::Mirror& mirror,
   with_defaults.MergeFrom(mirror);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  return MaterialResult{
-      MakeMirrorMaterial(
-          texture_manager.AllocateReflectorTexture(with_defaults.kr())),
-      MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
+  ReferenceCounted<iris::Material> material = MakeMirrorMaterial(
+      texture_manager.AllocateReflectorTexture(with_defaults.kr()));
+
+  return MaterialResult{{material, material},
+                        MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 
 }  // namespace materials

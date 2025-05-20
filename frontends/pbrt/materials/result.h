@@ -11,7 +11,7 @@ namespace iris {
 namespace pbrt_frontend {
 
 struct MaterialResult {
-  ReferenceCounted<Material> material;
+  std::array<ReferenceCounted<Material>, 2> materials;
   std::array<ReferenceCounted<NormalMap>, 2> bumpmaps;
 };
 

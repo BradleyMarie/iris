@@ -29,7 +29,8 @@ TEST(MakeTranslucent, Empty) {
   MaterialResult result =
       MakeTranslucent(translucent, Shape::MaterialOverrides::default_instance(),
                       texture_manager);
-  EXPECT_TRUE(result.material);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
   EXPECT_TRUE(result.bumpmaps[0]);
   EXPECT_TRUE(result.bumpmaps[1]);
 }

@@ -1,7 +1,7 @@
 #ifndef _FRONTENDS_PBRT_AREA_LIGHTS_DIFFUSE_
 #define _FRONTENDS_PBRT_AREA_LIGHTS_DIFFUSE_
 
-#include <utility>
+#include <array>
 
 #include "frontends/pbrt/spectrum_manager.h"
 #include "iris/emissive_material.h"
@@ -12,10 +12,9 @@ namespace iris {
 namespace pbrt_frontend {
 namespace area_lights {
 
-std::pair<ReferenceCounted<EmissiveMaterial>,
-          ReferenceCounted<EmissiveMaterial>>
-MakeDiffuse(const pbrt_proto::v3::AreaLightSource::Diffuse& diffuse,
-            SpectrumManager& spectrum_manager);
+std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
+    const pbrt_proto::v3::AreaLightSource::Diffuse& diffuse,
+    SpectrumManager& spectrum_manager);
 
 }  // namespace area_lights
 }  // namespace pbrt_frontend
