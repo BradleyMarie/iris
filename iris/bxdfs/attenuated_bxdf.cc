@@ -68,8 +68,8 @@ class AttenuatedBxdf final : public Bxdf {
 
 }  // namespace
 
-const Bxdf* CreateAttenuatedBxdf(BxdfAllocator& allocator, const Bxdf* bxdf,
-                                 visual_t attenuation) {
+const Bxdf* MakeAttenuatedBxdf(BxdfAllocator& allocator, const Bxdf* bxdf,
+                               visual_t attenuation) {
   if (bxdf == nullptr || attenuation <= static_cast<visual_t>(0.0)) {
     return nullptr;
   }

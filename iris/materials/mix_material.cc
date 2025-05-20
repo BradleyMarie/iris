@@ -15,7 +15,7 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::CreateAttenuatedBxdf;
+using ::iris::bxdfs::MakeAttenuatedBxdf;
 using ::iris::bxdfs::MakeCompositeBxdf;
 
 class MixMaterial final : public Material {
@@ -49,15 +49,15 @@ const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
   if (material0_) {
     bxdf0 = material0_->Evaluate(texture_coordinates, spectral_allocator,
                                  bxdf_allocator);
-    bxdf0 = CreateAttenuatedBxdf(bxdf_allocator, bxdf0, attenuation);
+    bxdf0 = MakeAttenuatedBxdf(bxdf_allocator, bxdf0, attenuation);
   }
 
   const Bxdf* bxdf1 = nullptr;
   if (material1_) {
     bxdf1 = material1_->Evaluate(texture_coordinates, spectral_allocator,
                                  bxdf_allocator);
-    bxdf1 = CreateAttenuatedBxdf(bxdf_allocator, bxdf1,
-                                 static_cast<visual_t>(1.0) - attenuation);
+    bxdf1 = MakeAttenuatedBxdf(bxdf_allocator, bxdf1,
+                               static_cast<visual_t>(1.0) - attenuation);
   }
 
   return MakeCompositeBxdf(bxdf_allocator, bxdf0, bxdf1);

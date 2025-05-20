@@ -7,8 +7,8 @@
 namespace iris {
 namespace bxdfs {
 
-const Bxdf* CreateAttenuatedBxdf(BxdfAllocator& allocator, const Bxdf* bxdf,
-                                 visual_t attenuation);
+const Bxdf* MakeAttenuatedBxdf(BxdfAllocator& allocator, const Bxdf* bxdf,
+                               visual_t attenuation);
 
 }  // namespace bxdfs
 }  // namespace iris

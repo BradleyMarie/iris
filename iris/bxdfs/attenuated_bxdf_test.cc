@@ -26,24 +26,24 @@ using ::testing::Ref;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
-TEST(AttenuatedBrdfTest, CreateAttenuatedBxdfNone) {
+TEST(AttenuatedBrdfTest, MakeAttenuatedBxdfNone) {
   MockBxdf mock_bxdf;
-  EXPECT_EQ(nullptr, CreateAttenuatedBxdf(testing::GetBxdfAllocator(),
-                                          &mock_bxdf, -1.0));
   EXPECT_EQ(nullptr,
-            CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.0));
+            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, -1.0));
   EXPECT_EQ(nullptr,
-            CreateAttenuatedBxdf(testing::GetBxdfAllocator(), nullptr, 1.0));
+            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.0));
   EXPECT_EQ(nullptr,
-            CreateAttenuatedBxdf(testing::GetBxdfAllocator(), nullptr, 0.0));
+            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), nullptr, 1.0));
+  EXPECT_EQ(nullptr,
+            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), nullptr, 0.0));
 }
 
-TEST(AttenuatedBrdfTest, CreateAttenuatedBxdfOne) {
+TEST(AttenuatedBrdfTest, MakeAttenuatedBxdfOne) {
   MockBxdf mock_bxdf;
   EXPECT_EQ(&mock_bxdf,
-            CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 1.0));
+            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 1.0));
   EXPECT_EQ(&mock_bxdf,
-            CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 2.0));
+            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 2.0));
 }
 
 TEST(AttenuatedBrdfTest, IsDiffuse) {
@@ -53,7 +53,7 @@ TEST(AttenuatedBrdfTest, IsDiffuse) {
   EXPECT_CALL(mock_bxdf, IsDiffuse(IsNull())).WillOnce(Return(false));
 
   const Bxdf* bxdf =
-      CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.25);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.25);
 
   visual_t pdf;
   EXPECT_TRUE(bxdf->IsDiffuse(&pdf));
@@ -73,7 +73,7 @@ TEST(AttenuatedBrdfTest, SampleDiffuse) {
       .WillOnce(Return(Vector(1.0, 2.0, 3.0)));
 
   const Bxdf* bxdf =
-      CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
@@ -91,7 +91,7 @@ TEST(AttenuatedBrdfTest, Sample) {
       .WillOnce(Return(Bxdf::DiffuseSample{Vector(1.0, 2.0, 3.0)}));
 
   const Bxdf* bxdf =
-      CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
   auto result =
       bxdf->Sample(Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
                    sampler, GetSpectralAllocator());
@@ -115,7 +115,7 @@ TEST(AttenuatedBrdfTest, SampleSpecular) {
                                             std::nullopt, 1.0}));
 
   const Bxdf* bxdf =
-      CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
   auto result =
       bxdf->Sample(Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
                    sampler, GetSpectralAllocator());
@@ -139,7 +139,7 @@ TEST(AttenuatedBrdfTest, PdfDiffuse) {
       .WillOnce(Return(0.5));
 
   const Bxdf* bxdf =
-      CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
   EXPECT_EQ(0.5,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
@@ -156,7 +156,7 @@ TEST(AttenuatedBrdfTest, ReflectanceDiffuse) {
       .WillOnce(Return(&reflector));
 
   const Bxdf* bxdf =
-      CreateAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
   auto* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
       testing::GetSpectralAllocator());
