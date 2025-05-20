@@ -97,10 +97,9 @@ const Bxdf* UberMaterial::Evaluate(
                          static_cast<visual>(0.0), static_cast<visual>(1.0));
   }
 
-  visual transparency = static_cast<visual>(1.0) - opacity;
-
   const Bxdf* transparent_btdf = nullptr;
-  if (transparency > static_cast<visual>(0.0)) {
+  if (visual transparency = static_cast<visual>(1.0) - opacity;
+      transparency > static_cast<visual>(0.0)) {
     transparent_btdf = MakeSpecularBtdf(
         bxdf_allocator, spectral_allocator.Scale(kWhite.Get(), transparency),
         static_cast<geometric_t>(1.0), static_cast<geometric_t>(1.0),
@@ -198,14 +197,6 @@ ReferenceCounted<Material> MakeUberMaterial(
     ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
     ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
     bool remap_roughness) {
-  if (!reflectance && !transmittance) {
-    return ReferenceCounted<Material>();
-  }
-
-  if (!diffuse && !specular) {
-    return ReferenceCounted<Material>();
-  }
-
   return MakeReferenceCounted<UberMaterial>(
       std::move(reflectance), std::move(transmittance), std::move(diffuse),
       std::move(specular), std::move(opacity), std::move(eta_incident),

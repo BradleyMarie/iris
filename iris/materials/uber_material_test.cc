@@ -39,37 +39,6 @@ static const ReferenceCounted<ValueTexture2D<visual>> kTranslucent =
 static const ReferenceCounted<ValueTexture2D<visual>> kOpaque =
     MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
 
-TEST(UberMaterialTest, NullMaterial) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> empty;
-  EXPECT_FALSE(MakeUberMaterial(empty, empty, empty, empty, kTransparent,
-                                kEtaIncident, kEtaTransmitted, kRoughness,
-                                kRoughness, false));
-  EXPECT_FALSE(MakeUberMaterial(kWhite, empty, empty, empty, kTransparent,
-                                kEtaIncident, kEtaTransmitted, kRoughness,
-                                kRoughness, false));
-  EXPECT_FALSE(MakeUberMaterial(empty, kWhite, empty, empty, kTransparent,
-                                kEtaIncident, kEtaTransmitted, kRoughness,
-                                kRoughness, false));
-  EXPECT_FALSE(MakeUberMaterial(empty, empty, kWhite, empty, kTransparent,
-                                kEtaIncident, kEtaTransmitted, kRoughness,
-                                kRoughness, false));
-  EXPECT_FALSE(MakeUberMaterial(empty, empty, empty, kWhite, kTransparent,
-                                kEtaIncident, kEtaTransmitted, kRoughness,
-                                kRoughness, false));
-  EXPECT_FALSE(MakeUberMaterial(kWhite, kWhite, empty, empty, kTransparent,
-                                kEtaIncident, kEtaTransmitted, kRoughness,
-                                kRoughness, false));
-  EXPECT_FALSE(MakeUberMaterial(empty, empty, kWhite, kWhite, kTransparent,
-                                kEtaIncident, kEtaTransmitted, kRoughness,
-                                kRoughness, false));
-  EXPECT_TRUE(MakeUberMaterial(kWhite, empty, kWhite, empty, kTransparent,
-                               kEtaIncident, kEtaTransmitted, kRoughness,
-                               kRoughness, false));
-  EXPECT_TRUE(MakeUberMaterial(empty, kWhite, empty, kWhite, kTransparent,
-                               kEtaIncident, kEtaTransmitted, kRoughness,
-                               kRoughness, false));
-}
-
 TEST(UberMaterialTest, TransparencyOnly) {
   ReferenceCounted<Material> material = MakeUberMaterial(
       kWhite, kWhite, kWhite, kWhite, kTransparent, kEtaIncident,
