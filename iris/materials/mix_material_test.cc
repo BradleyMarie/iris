@@ -26,6 +26,14 @@ using ::testing::NotNull;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
+TEST(MixMaterialTest, Null) {
+  ReferenceCounted<ConstantValueTexture2D<visual>> attenuation =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.25);
+  EXPECT_FALSE(MakeMixMaterial(ReferenceCounted<Material>(),
+                               ReferenceCounted<Material>(),
+                               std::move(attenuation)));
+}
+
 TEST(MixMaterialTest, Evaluate) {
   ReferenceCounted<ConstantValueTexture2D<visual>> attenuation =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.25);

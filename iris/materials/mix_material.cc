@@ -68,6 +68,10 @@ const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
 ReferenceCounted<Material> MakeMixMaterial(
     ReferenceCounted<Material> material0, ReferenceCounted<Material> material1,
     ReferenceCounted<textures::ValueTexture2D<visual>> interpolation) {
+  if (!material0 && !material1) {
+    return ReferenceCounted<Material>();
+  }
+
   return MakeReferenceCounted<MixMaterial>(
       std::move(material0), std::move(material1), std::move(interpolation));
 }
