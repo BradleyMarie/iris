@@ -75,7 +75,7 @@ MaterialResult MakeMetal(const Material::Metal& metal,
     *with_defaults.mutable_uroughness() = with_defaults.roughness();
   }
 
-  if (!with_defaults.vroughness().float_texture_parameter_type_case() ==
+  if (with_defaults.vroughness().float_texture_parameter_type_case() ==
       FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
     *with_defaults.mutable_vroughness() = with_defaults.roughness();
   }
