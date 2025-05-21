@@ -27,20 +27,22 @@ MaterialResult MakeMix(
   with_defaults.MergeFrom(mix);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
+  const MaterialResult& material1 =
+      material_manager.Get(with_defaults.namedmaterial1()).second;
+  const MaterialResult& material2 =
+      material_manager.Get(with_defaults.namedmaterial2()).second;
+
   return MaterialResult{
       {MakeMixMaterial(
-           material_manager.Get(with_defaults.namedmaterial1())
-               .second.materials[0],
-           material_manager.Get(with_defaults.namedmaterial2())
-               .second.materials[0],
+           material1.materials[0], material2.materials[0],
            texture_manager.AllocateFloatTexture(with_defaults.amount())),
        MakeMixMaterial(
-           material_manager.Get(with_defaults.namedmaterial1())
-               .second.materials[1],
-           material_manager.Get(with_defaults.namedmaterial2())
-               .second.materials[1],
+           material1.materials[1], material2.materials[1],
            texture_manager.AllocateFloatTexture(with_defaults.amount()))},
-      {}};
+      {
+          material1.bumpmaps[0] ? material1.bumpmaps[0] : material2.bumpmaps[0],
+          material1.bumpmaps[1] ? material1.bumpmaps[1] : material2.bumpmaps[1],
+      }};
 }
 
 }  // namespace materials
