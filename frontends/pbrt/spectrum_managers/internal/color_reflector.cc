@@ -32,7 +32,7 @@ ReferenceCounted<Reflector> MakeColorReflector(visual v0, visual v1, visual v2,
 
 ReferenceCounted<Reflector> MakeColorReflector(const Color& color) {
   Color rgb = color.ConvertTo(Color::LINEAR_SRGB);
-  if (rgb.r <= static_cast<visual>(0.0) && rgb.b <= static_cast<visual>(0.0) &&
+  if (rgb.r <= static_cast<visual>(0.0) && rgb.g <= static_cast<visual>(0.0) &&
       rgb.b <= static_cast<visual>(0.0)) {
     return ReferenceCounted<Reflector>();
   }

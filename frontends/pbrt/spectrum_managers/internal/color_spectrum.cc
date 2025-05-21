@@ -31,7 +31,7 @@ ReferenceCounted<Spectrum> MakeColorSpectrum(visual v0, visual v1, visual v2,
 ReferenceCounted<Spectrum> MakeColorSpectrum(const Color& color) {
   Color rgb = color.ConvertTo(Color::LINEAR_SRGB);
   if (rgb.r <= static_cast<visual>(0.0) && rgb.b <= static_cast<visual>(0.0) &&
-      rgb.b <= static_cast<visual>(0.0)) {
+      rgb.g <= static_cast<visual>(0.0)) {
     return ReferenceCounted<Spectrum>();
   }
 

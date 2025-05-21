@@ -14,6 +14,9 @@ namespace {
 
 TEST(ColorReflector, Null) {
   EXPECT_FALSE(MakeColorReflector(0.0, 0.0, 0.0, Color::LINEAR_SRGB));
+  EXPECT_TRUE(MakeColorReflector(1.0, 0.0, 0.0, Color::LINEAR_SRGB));
+  EXPECT_TRUE(MakeColorReflector(0.0, 1.0, 0.0, Color::LINEAR_SRGB));
+  EXPECT_TRUE(MakeColorReflector(0.0, 0.0, 1.0, Color::LINEAR_SRGB));
 }
 
 TEST(ColorReflector, FromRgb) {

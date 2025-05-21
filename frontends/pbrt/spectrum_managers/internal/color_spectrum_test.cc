@@ -14,6 +14,9 @@ namespace {
 
 TEST(ColorSpectrum, Null) {
   EXPECT_FALSE(MakeColorSpectrum(0.0, 0.0, 0.0, Color::LINEAR_SRGB));
+  EXPECT_TRUE(MakeColorSpectrum(1.0, 0.0, 0.0, Color::LINEAR_SRGB));
+  EXPECT_TRUE(MakeColorSpectrum(0.0, 1.0, 0.0, Color::LINEAR_SRGB));
+  EXPECT_TRUE(MakeColorSpectrum(0.0, 0.0, 1.0, Color::LINEAR_SRGB));
 }
 
 TEST(ColorSpectrum, FromRgb) {
