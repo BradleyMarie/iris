@@ -24,6 +24,7 @@ namespace shapes {
 
 using ::iris::geometry::AllocateTriangleMesh;
 using ::iris::textures::ValueTexture2D;
+using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Shape;
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
@@ -94,7 +95,13 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
   }
 
   ReferenceCounted<ValueTexture2D<bool>> alpha_mask;
-  if (with_defaults.has_alpha() && with_defaults.alpha().float_value() <= 1.0) {
+  if (with_defaults.alpha().float_texture_parameter_type_case() ==
+      FloatTextureParameter::kFloatValue) {
+    if (with_defaults.alpha().float_value() <= 0.0) {
+      return std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>(
+          {}, model_to_world);
+    }
+  } else {
     alpha_mask = MakeAlphaAdapter(
         texture_manager.AllocateFloatTexture(with_defaults.alpha()));
   }
