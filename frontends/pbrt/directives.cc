@@ -1,7 +1,6 @@
 #include "frontends/pbrt/directives.h"
 
 #include <filesystem>
-#include <memory>
 #include <optional>
 #include <utility>
 
@@ -25,11 +24,10 @@ void Directives::Include(PbrtProto directives,
   }
 
   State state;
-  state.directives = std::make_unique<PbrtProto>(std::move(directives));
+  state.directives = std::move(directives);
   state.file = std::move(included_file);
-  state.cur = state.directives->mutable_directives()->begin();
-  state.end = state.directives->mutable_directives()->end();
-  state_.push(std::move(state));
+  state.current = -1;
+  state_.push_back(std::move(state));
 }
 
 const Directive* Directives::Next() {
@@ -38,20 +36,20 @@ const Directive* Directives::Next() {
       return nullptr;
     }
 
-    if (state_.top().cur != state_.top().end) {
+    state_.back().current += 1;
+
+    if (state_.back().current != state_.back().directives.directives_size()) {
       break;
     }
 
-    if (state_.top().file.has_value()) {
-      files_.erase(*state_.top().file);
+    if (state_.back().file.has_value()) {
+      files_.erase(*state_.back().file);
     }
 
-    state_.pop();
+    state_.pop_back();
   }
 
-  next_ = *state_.top().cur++;
-
-  return &next_;
+  return &state_.back().directives.directives(state_.back().current);
 }
 
 }  // namespace pbrt_frontend

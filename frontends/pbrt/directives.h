@@ -1,12 +1,10 @@
 #ifndef _FRONTENDS_PBRT_DIRECTIVES_
 #define _FRONTENDS_PBRT_DIRECTIVES_
 
-#include <memory>
+#include <deque>
 #include <optional>
 #include <set>
-#include <stack>
 
-#include "google/protobuf/repeated_ptr_field.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
@@ -21,15 +19,13 @@ class Directives {
 
  private:
   struct State {
-    std::unique_ptr<pbrt_proto::v3::PbrtProto> directives;
+    pbrt_proto::v3::PbrtProto directives;
     std::optional<std::filesystem::path> file;
-    google::protobuf::RepeatedPtrField<pbrt_proto::v3::Directive>::iterator cur;
-    google::protobuf::RepeatedPtrField<pbrt_proto::v3::Directive>::iterator end;
+    int current;
   };
 
-  std::stack<State> state_;
+  std::deque<State> state_;
   std::set<std::filesystem::path> files_;
-  pbrt_proto::v3::Directive next_;
 };
 
 }  // namespace pbrt_frontend
