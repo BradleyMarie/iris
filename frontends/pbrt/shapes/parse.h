@@ -21,9 +21,9 @@ namespace pbrt_frontend {
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
     const pbrt_proto::v3::Shape& shape, const Matrix& model_to_world,
-    bool reverse_orientation,
-    const std::pair<pbrt_proto::v3::Material, MaterialResult>& material,
-    const std::array<ReferenceCounted<EmissiveMaterial>, 2>& emissive_materials,
+    bool reverse_orientation, const pbrt_proto::v3::Material& material_proto,
+    MaterialResult material,
+    std::array<ReferenceCounted<EmissiveMaterial>, 2> emissive_materials,
     const std::filesystem::path& search_root,
     const MaterialManager& material_manager, TextureManager& texture_manager,
     SpectrumManager& spectrum_manager);

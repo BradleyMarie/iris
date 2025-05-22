@@ -140,9 +140,9 @@ void State::Shape(const pbrt_proto::v3::Shape& shape,
                   const std::filesystem::path& search_root) {
   auto [shapes, model_to_world] = ParseShape(
       shape, matrix_manager.Get().start, graphics.top().reverse_orientation,
-      graphics.top().material,
-      (build_instance) ? std::array<ReferenceCounted<EmissiveMaterial>, 2>()
-                       : graphics.top().emissive_materials,
+      graphics.top().material.first, graphics.top().material.second,
+      build_instance ? std::array<ReferenceCounted<EmissiveMaterial>, 2>()
+                     : graphics.top().emissive_materials,
       search_root, material_manager, texture_manager, spectrum_manager);
 
   if (build_instance) {

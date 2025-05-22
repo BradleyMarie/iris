@@ -27,26 +27,22 @@ using ::pbrt_proto::v3::Shape;
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
     const pbrt_proto::v3::Shape& shape, const Matrix& model_to_world,
-    bool reverse_orientation,
-    const std::pair<pbrt_proto::v3::Material, MaterialResult>& material,
-    const std::array<ReferenceCounted<EmissiveMaterial>, 2>& emissive_materials,
+    bool reverse_orientation, const pbrt_proto::v3::Material& material_proto,
+    MaterialResult material,
+    std::array<ReferenceCounted<EmissiveMaterial>, 2> emissive_materials,
     const std::filesystem::path& search_root,
     const MaterialManager& material_manager, TextureManager& texture_manager,
     SpectrumManager& spectrum_manager) {
-  MaterialResult actual_material = material.second;
   if (shape.has_overrides()) {
-    actual_material =
-        ParseMaterial(material.first, shape.overrides(), material_manager,
+    material =
+        ParseMaterial(material_proto, shape.overrides(), material_manager,
                       texture_manager, spectrum_manager);
   }
 
-  std::array<ReferenceCounted<EmissiveMaterial>, 2> actual_emissive_materials =
-      emissive_materials;
-
   if (reverse_orientation) {
-    std::swap(actual_material.materials[0], actual_material.materials[1]);
-    std::swap(actual_material.bumpmaps[0], actual_material.bumpmaps[1]);
-    std::swap(actual_emissive_materials[0], actual_emissive_materials[1]);
+    std::swap(material.materials[0], material.materials[1]);
+    std::swap(material.bumpmaps[0], material.bumpmaps[1]);
+    std::swap(emissive_materials[0], emissive_materials[1]);
   }
 
   std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> result(
@@ -71,23 +67,21 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
     case Shape::kParaboloid:
       break;
     case Shape::kPlymesh:
-      return shapes::MakePlyMesh(
-          shape.plymesh(), model_to_world, actual_material.materials[0],
-          actual_material.materials[1], actual_emissive_materials[0],
-          actual_emissive_materials[1], actual_material.bumpmaps[0],
-          actual_material.bumpmaps[1], search_root, texture_manager);
+      return shapes::MakePlyMesh(shape.plymesh(), model_to_world,
+                                 material.materials[0], material.materials[1],
+                                 emissive_materials[0], emissive_materials[1],
+                                 material.bumpmaps[0], material.bumpmaps[1],
+                                 search_root, texture_manager);
     case Shape::kSphere:
-      return shapes::MakeSphere(
-          shape.sphere(), model_to_world, actual_material.materials[0],
-          actual_material.materials[1], actual_emissive_materials[0],
-          actual_emissive_materials[1], actual_material.bumpmaps[0],
-          actual_material.bumpmaps[1]);
+      return shapes::MakeSphere(shape.sphere(), model_to_world,
+                                material.materials[0], material.materials[1],
+                                emissive_materials[0], emissive_materials[1],
+                                material.bumpmaps[0], material.bumpmaps[1]);
     case Shape::kTrianglemesh:
       return shapes::MakeTriangleMesh(
-          shape.trianglemesh(), model_to_world, actual_material.materials[0],
-          actual_material.materials[1], actual_emissive_materials[0],
-          actual_emissive_materials[1], actual_material.bumpmaps[0],
-          actual_material.bumpmaps[1], texture_manager);
+          shape.trianglemesh(), model_to_world, material.materials[0],
+          material.materials[1], emissive_materials[0], emissive_materials[1],
+          material.bumpmaps[0], material.bumpmaps[1], texture_manager);
       break;
     case Shape::SHAPE_TYPE_NOT_SET:
       break;
