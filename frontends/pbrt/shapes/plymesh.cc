@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "frontends/pbrt/defaults.h"
-#include "frontends/pbrt/shapes/alpha_adapter.h"
+#include "frontends/pbrt/shapes/alpha_mask.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/emissive_material.h"
 #include "iris/geometry.h"
@@ -118,15 +118,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
   }
 
   ReferenceCounted<ValueTexture2D<bool>> alpha_mask;
-  if (with_defaults.alpha().float_texture_parameter_type_case() ==
-      FloatTextureParameter::kFloatValue) {
-    if (with_defaults.alpha().float_value() <= 0.0) {
-      return std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>(
-          {}, model_to_world);
-    }
-  } else {
-    alpha_mask = MakeAlphaAdapter(
-        texture_manager.AllocateFloatTexture(with_defaults.alpha()));
+  if (!MakeAlphaMask(texture_manager, with_defaults.alpha(), alpha_mask)) {
+    return std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>(
+        {}, model_to_world);
   }
 
   std::vector<ReferenceCounted<Geometry>> triangles;
