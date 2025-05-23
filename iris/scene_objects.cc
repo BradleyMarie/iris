@@ -9,11 +9,10 @@ namespace iris {
 namespace {
 
 template <typename T>
-std::vector<T> MoveToVector(std::set<T> values) {
-  std::vector<T> result;
-  result.reserve(values.size());
-  while (!values.empty()) {
-    result.push_back(std::move(values.extract(values.begin()).value()));
+std::vector<T> ToVector(std::map<T, size_t> values) {
+  std::vector<T> result(values.size());
+  for (auto& [value, index] : values) {
+    result[index] = std::move(value);
   }
   return result;
 }
@@ -64,7 +63,8 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
     model_to_world = &*matrices_.insert(matrix).first;
   }
 
-  geometry_.emplace(std::move(geometry), std::move(model_to_world));
+  ordered_geometry_.try_emplace({std::move(geometry), model_to_world},
+                                ordered_geometry_.size());
 }
 
 void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
@@ -72,7 +72,7 @@ void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
     return;
   }
 
-  lights_.insert(std::move(light));
+  ordered_lights_.try_emplace(std::move(light), ordered_lights_.size());
 }
 
 void SceneObjects::Builder::Set(
@@ -81,27 +81,32 @@ void SceneObjects::Builder::Set(
 }
 
 SceneObjects SceneObjects::Builder::Build() {
-  for (auto& entry : geometry_) {
+  for (auto& [entry, _] : ordered_geometry_) {
     for (face_t face : entry.first->GetFaces()) {
       if (!entry.first->GetEmissiveMaterial(face)) {
         continue;
       }
 
-      lights_.insert(iris::MakeReferenceCounted<internal::AreaLight>(
-          std::cref(*entry.first), entry.second, face));
+      ordered_lights_.try_emplace(
+          MakeReferenceCounted<internal::AreaLight>(std::cref(*entry.first),
+                                                    entry.second, face),
+          ordered_lights_.size());
     }
   }
 
   if (environmental_light_) {
-    lights_.insert(iris::MakeReferenceCounted<internal::EnvironmentalLight>(
-        std::cref(*environmental_light_)));
+    ordered_lights_.try_emplace(
+        MakeReferenceCounted<internal::EnvironmentalLight>(
+            std::cref(*environmental_light_)),
+        ordered_lights_.size());
   }
 
-  SceneObjects result(MoveToVector(std::move(geometry_)),
-                      MoveToVector(std::move(lights_)), std::move(matrices_),
-                      std::move(environmental_light_), bounds_builder_);
-  geometry_.clear();
-  lights_.clear();
+  SceneObjects result(ToVector(std::move(ordered_geometry_)),
+                      ToVector(std::move(ordered_lights_)),
+                      std::move(matrices_), std::move(environmental_light_),
+                      bounds_builder_);
+  ordered_geometry_.clear();
+  ordered_lights_.clear();
   matrices_.clear();
   environmental_light_.Reset();
   bounds_builder_.Reset();

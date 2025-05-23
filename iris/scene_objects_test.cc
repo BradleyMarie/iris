@@ -6,21 +6,22 @@
 #include "iris/geometry/mock_geometry.h"
 #include "iris/lights/mock_light.h"
 
-const static iris::BoundingBox kBounds(iris::Point(0.0, 0.0, 0.0),
-                                       iris::Point(0.0, 1.0, 2.0));
+namespace iris {
+namespace {
 
-iris::ReferenceCounted<iris::Geometry> MakeZeroBoundsGeometry() {
-  auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+const static BoundingBox kBounds(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0));
+
+ReferenceCounted<Geometry> MakeZeroBoundsGeometry() {
+  auto result = MakeReferenceCounted<geometry::MockGeometry>();
   EXPECT_CALL(*result, ComputeBounds(nullptr))
-      .WillRepeatedly(
-          testing::Return(iris::BoundingBox(iris::Point(0.0, 0.0, 0.0))));
+      .WillRepeatedly(testing::Return(BoundingBox(Point(0.0, 0.0, 0.0))));
   return result;
 }
 
-iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
-  static const std::vector<iris::face_t> faces = {1};
-  static const iris::emissive_materials::MockEmissiveMaterial emissive_material;
-  auto result = iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
+ReferenceCounted<Geometry> MakeGeometry(bool emissive) {
+  static const std::vector<face_t> faces = {1};
+  static const emissive_materials::MockEmissiveMaterial emissive_material;
+  auto result = MakeReferenceCounted<geometry::MockGeometry>();
   if (emissive) {
     EXPECT_CALL(*result, GetEmissiveMaterial(testing::_))
         .WillRepeatedly(testing::Return(&emissive_material));
@@ -34,8 +35,8 @@ iris::ReferenceCounted<iris::Geometry> MakeGeometry(bool emissive) {
   return result;
 }
 
-std::set<const iris::Light*> GetLights(const iris::SceneObjects& objects) {
-  std::set<const iris::Light*> result;
+std::set<const Light*> GetLights(const SceneObjects& objects) {
+  std::set<const Light*> result;
   for (size_t i = 0; i < objects.NumLights(); i++) {
     result.emplace(&objects.GetLight(i));
   }
@@ -43,7 +44,7 @@ std::set<const iris::Light*> GetLights(const iris::SceneObjects& objects) {
 }
 
 TEST(SceneObjects, Build) {
-  std::set<iris::ReferenceCounted<iris::Geometry>> geometry;
+  std::set<ReferenceCounted<Geometry>> geometry;
   geometry.insert(MakeGeometry(false));
   geometry.insert(MakeGeometry(false));
   geometry.insert(MakeGeometry(false));
@@ -51,30 +52,30 @@ TEST(SceneObjects, Build) {
   geometry.insert(MakeZeroBoundsGeometry());
 
   auto geometry_iter = geometry.begin();
-  iris::ReferenceCounted<iris::Geometry> geom0 = *geometry_iter++;
-  iris::ReferenceCounted<iris::Geometry> geom1 = *geometry_iter++;
-  iris::ReferenceCounted<iris::Geometry> geom2 = *geometry_iter++;
-  iris::ReferenceCounted<iris::Geometry> geom3 = *geometry_iter++;
-  iris::ReferenceCounted<iris::Geometry> geom4 = *geometry_iter++;
+  ReferenceCounted<Geometry> geom0 = *geometry_iter++;
+  ReferenceCounted<Geometry> geom1 = *geometry_iter++;
+  ReferenceCounted<Geometry> geom2 = *geometry_iter++;
+  ReferenceCounted<Geometry> geom3 = *geometry_iter++;
+  ReferenceCounted<Geometry> geom4 = *geometry_iter++;
 
-  std::set<iris::ReferenceCounted<iris::Light>> lights;
-  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
-  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
+  std::set<ReferenceCounted<Light>> lights;
+  lights.insert(MakeReferenceCounted<lights::MockLight>());
+  lights.insert(MakeReferenceCounted<lights::MockLight>());
 
   auto light_iter = lights.begin();
-  iris::ReferenceCounted<iris::Light> light0 = *light_iter++;
-  iris::ReferenceCounted<iris::Light> light1 = *light_iter++;
+  ReferenceCounted<Light> light0 = *light_iter++;
+  ReferenceCounted<Light> light1 = *light_iter++;
 
-  auto environmental_light = iris::MakeReferenceCounted<
-      iris::environmental_lights::MockEnvironmentalLight>();
-  auto matrix0 = iris::Matrix::Identity();
-  auto matrix1 = iris::Matrix::Translation(1.0, 2.0, 3.0).value();
-  auto matrix2 = iris::Matrix::Scalar(1.0, 2.0, 3.0).value();
+  auto environmental_light =
+      MakeReferenceCounted<environmental_lights::MockEnvironmentalLight>();
+  auto matrix0 = Matrix::Identity();
+  auto matrix1 = Matrix::Translation(1.0, 2.0, 3.0).value();
+  auto matrix2 = Matrix::Scalar(1.0, 2.0, 3.0).value();
 
-  iris::SceneObjects::Builder builder;
+  SceneObjects::Builder builder;
 
-  builder.Add(iris::ReferenceCounted<iris::lights::MockLight>());
-  builder.Add(iris::ReferenceCounted<iris::Geometry>(), matrix0);
+  builder.Add(ReferenceCounted<lights::MockLight>());
+  builder.Add(ReferenceCounted<Geometry>(), matrix0);
 
   builder.Add(light0);
   builder.Add(light0);
@@ -133,8 +134,8 @@ TEST(SceneObjects, Build) {
   geom3 = *geometry_iter++;
 
   lights.clear();
-  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
-  lights.insert(iris::MakeReferenceCounted<iris::lights::MockLight>());
+  lights.insert(MakeReferenceCounted<lights::MockLight>());
+  lights.insert(MakeReferenceCounted<lights::MockLight>());
 
   light_iter = lights.begin();
   light0 = *light_iter++;
@@ -176,8 +177,8 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(nullptr, scene_objects.GetEnvironmentalLight());
   EXPECT_EQ(kBounds, scene_objects.GetBounds());
 
-  const iris::Light& light0_old = scene_objects.GetLight(0);
-  const iris::Light& light1_old = scene_objects.GetLight(1);
+  const Light& light0_old = scene_objects.GetLight(0);
+  const Light& light1_old = scene_objects.GetLight(1);
 
   // Reorder
   scene_objects.Reorder({{4, 3, 2, 1}}, {{1, 0}});
@@ -192,3 +193,6 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(&light0_old, &scene_objects.GetLight(1));
   EXPECT_EQ(&light1_old, &scene_objects.GetLight(0));
 }
+
+}  // namespace
+}  // namespace iris

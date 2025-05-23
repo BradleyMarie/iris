@@ -2,6 +2,7 @@
 #define _IRIS_SCENE_OBJECTS_
 
 #include <cassert>
+#include <map>
 #include <memory>
 #include <set>
 #include <utility>
@@ -40,8 +41,9 @@ class SceneObjects final {
     SceneObjects Build();
 
    private:
-    std::set<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
-    std::set<ReferenceCounted<Light>> lights_;
+    std::map<std::pair<ReferenceCounted<Geometry>, const Matrix*>, size_t>
+        ordered_geometry_;
+    std::map<ReferenceCounted<Light>, size_t> ordered_lights_;
     std::set<Matrix> matrices_;
     ReferenceCounted<EnvironmentalLight> environmental_light_;
     BoundingBox::Builder bounds_builder_;
