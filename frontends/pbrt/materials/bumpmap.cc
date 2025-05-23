@@ -6,6 +6,7 @@
 #include "iris/normal_map.h"
 #include "iris/normal_maps/bump_normal_map.h"
 #include "iris/reference_counted.h"
+#include "iris/texture_coordinates.h"
 #include "iris/textures/texture2d.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
@@ -68,6 +69,10 @@ class PbrtBackBumpMap final : public NormalMap {
 
 std::array<ReferenceCounted<NormalMap>, 2> MakeBumpMap(
     const FloatTextureParameter& bumpmap, TextureManager& texture_manager) {
+  if (bumpmap.has_float_value()) {
+    return std::array<ReferenceCounted<NormalMap>, 2>();
+  }
+
   ReferenceCounted<ValueTexture2D<visual>> texture =
       texture_manager.AllocateFloatTexture(bumpmap);
   if (!texture) {
