@@ -81,7 +81,10 @@ void SceneObjects::Builder::Set(
 }
 
 SceneObjects SceneObjects::Builder::Build() {
-  for (auto& [entry, _] : ordered_geometry_) {
+  std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>
+      sorted_geometry = ToVector(std::move(ordered_geometry_));
+
+  for (const auto& entry : sorted_geometry) {
     for (face_t face : entry.first->GetFaces()) {
       if (!entry.first->GetEmissiveMaterial(face)) {
         continue;
@@ -101,10 +104,9 @@ SceneObjects SceneObjects::Builder::Build() {
         ordered_lights_.size());
   }
 
-  SceneObjects result(ToVector(std::move(ordered_geometry_)),
-                      ToVector(std::move(ordered_lights_)),
-                      std::move(matrices_), std::move(environmental_light_),
-                      bounds_builder_);
+  SceneObjects result(
+      std::move(sorted_geometry), ToVector(std::move(ordered_lights_)),
+      std::move(matrices_), std::move(environmental_light_), bounds_builder_);
   ordered_geometry_.clear();
   ordered_lights_.clear();
   matrices_.clear();
