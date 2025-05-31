@@ -121,29 +121,6 @@ cc_test(
 )
 
 cc_library(
-    name = "fresnel",
-    srcs = ["fresnel.cc"],
-    hdrs = ["fresnel.h"],
-    deps = [
-        "//iris:float",
-        "//iris:spectral_allocator",
-        "//iris/bxdfs/internal:math",
-    ],
-)
-
-cc_test(
-    name = "fresnel_test",
-    srcs = ["fresnel_test.cc"],
-    deps = [
-        ":fresnel",
-        "//iris/reflectors:mock_reflector",
-        "//iris/spectra:mock_spectrum",
-        "//iris/testing:spectral_allocator",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "lambertian_bxdf",
     srcs = ["lambertian_bxdf.cc"],
     hdrs = ["lambertian_bxdf.h"],
@@ -178,7 +155,6 @@ cc_library(
     srcs = ["microfacet_bxdf.cc"],
     hdrs = ["microfacet_bxdf.h"],
     deps = [
-        ":fresnel",
         ":microfacet_distribution",
         "//iris:bxdf",
         "//iris:bxdf_allocator",
@@ -199,6 +175,7 @@ cc_test(
         ":microfacet_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/spectra:mock_spectrum",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
