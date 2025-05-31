@@ -1,5 +1,7 @@
 #include "iris/materials/mix_material.h"
 
+#include <utility>
+
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/attenuated_bxdf.h"
@@ -17,12 +19,13 @@ namespace {
 
 using ::iris::bxdfs::MakeAttenuatedBxdf;
 using ::iris::bxdfs::MakeCompositeBxdf;
+using ::iris::textures::ValueTexture2D;
 
 class MixMaterial final : public Material {
  public:
   MixMaterial(ReferenceCounted<Material> material0,
               ReferenceCounted<Material> material1,
-              ReferenceCounted<textures::ValueTexture2D<visual>> interpolation)
+              ReferenceCounted<ValueTexture2D<visual>> interpolation)
       : material0_(std::move(material0)),
         material1_(std::move(material1)),
         interpolation_(std::move(interpolation)) {}
@@ -34,7 +37,7 @@ class MixMaterial final : public Material {
  private:
   ReferenceCounted<Material> material0_;
   ReferenceCounted<Material> material1_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> interpolation_;
+  ReferenceCounted<ValueTexture2D<visual>> interpolation_;
 };
 
 const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
@@ -67,7 +70,7 @@ const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
 
 ReferenceCounted<Material> MakeMixMaterial(
     ReferenceCounted<Material> material0, ReferenceCounted<Material> material1,
-    ReferenceCounted<textures::ValueTexture2D<visual>> interpolation) {
+    ReferenceCounted<ValueTexture2D<visual>> interpolation) {
   if (!material0 && !material1) {
     return ReferenceCounted<Material>();
   }

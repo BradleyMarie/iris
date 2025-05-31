@@ -19,11 +19,17 @@ using ::testing::_;
 using ::testing::Return;
 
 TEST(MetalMaterialTest, NullMaterial) {
-  ReferenceCounted<Spectrum> spectrum;
+  ReferenceCounted<Spectrum> spectrum = MakeReferenceCounted<MockSpectrum>();
   ReferenceCounted<ValueTexture2D<visual>> float_texture =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.0);
-  EXPECT_FALSE(MakeMetalMaterial(spectrum, spectrum, spectrum, float_texture,
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  EXPECT_TRUE(MakeMetalMaterial(float_texture, spectrum, spectrum,
+                                float_texture, float_texture, false));
+  EXPECT_FALSE(MakeMetalMaterial(ReferenceCounted<ValueTexture2D<visual>>(),
+                                 spectrum, spectrum, float_texture,
                                  float_texture, false));
+  EXPECT_FALSE(MakeMetalMaterial(float_texture, ReferenceCounted<Spectrum>(),
+                                 spectrum, float_texture, float_texture,
+                                 false));
 }
 
 TEST(MetalMaterialTest, Evaluate) {
@@ -32,9 +38,9 @@ TEST(MetalMaterialTest, Evaluate) {
   EXPECT_CALL(*uniform_spectrum, Intensity(_)).WillRepeatedly(Return(1.0));
   ReferenceCounted<ValueTexture2D<visual>> float_texture =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.0);
-  ReferenceCounted<Material> material =
-      MakeMetalMaterial(uniform_spectrum, uniform_spectrum, uniform_spectrum,
-                        float_texture, float_texture, false);
+  ReferenceCounted<Material> material = MakeMetalMaterial(
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0),
+      uniform_spectrum, uniform_spectrum, float_texture, float_texture, false);
 
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},

@@ -1,6 +1,7 @@
 #ifndef _IRIS_BXDFS_MICROFACET_BXDF_
 #define _IRIS_BXDFS_MICROFACET_BXDF_
 
+#include <cmath>
 #include <concepts>
 
 #include "iris/bxdf.h"
@@ -125,6 +126,10 @@ const Bxdf* MakeMicrofacetBrdf(BxdfAllocator& bxdf_allocator,
     return nullptr;
   }
 
+  if (!fresnel.IsValid()) {
+    return nullptr;
+  }
+
   return &bxdf_allocator.Allocate<MicrofacetBrdf>(*reflectance, distribution,
                                                   fresnel);
 }
@@ -173,6 +178,13 @@ const Bxdf* MakeMicrofacetBtdf(BxdfAllocator& bxdf_allocator,
   };
 
   if (!transmittance) {
+    return nullptr;
+  }
+
+  if (!fresnel.IsValid() || !std::isfinite(eta_incident) ||
+      eta_incident < static_cast<geometric_t>(1.0) ||
+      !std::isfinite(eta_transmitted) ||
+      eta_transmitted < static_cast<geometric_t>(1.0)) {
     return nullptr;
   }
 

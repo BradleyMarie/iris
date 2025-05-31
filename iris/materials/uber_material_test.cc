@@ -39,6 +39,31 @@ static const ReferenceCounted<ValueTexture2D<visual>> kTranslucent =
 static const ReferenceCounted<ValueTexture2D<visual>> kOpaque =
     MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
 
+TEST(UberMaterialTest, NoEtaIncident) {
+  ReferenceCounted<Material> material =
+      MakeUberMaterial(kWhite, kWhite, kWhite, kWhite, kOpaque,
+                       ReferenceCounted<ValueTexture2D<visual>>(),
+                       kEtaTransmitted, kRoughness, kRoughness, true);
+
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
+  ASSERT_TRUE(result);
+  EXPECT_TRUE(result->IsDiffuse());
+}
+
+TEST(UberMaterialTest, NoEtaTransmitted) {
+  ReferenceCounted<Material> material = MakeUberMaterial(
+      kWhite, kWhite, kWhite, kWhite, kOpaque, kEtaIncident,
+      ReferenceCounted<ValueTexture2D<visual>>(), kRoughness, kRoughness, true);
+
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                         GetSpectralAllocator(), GetBxdfAllocator());
+  ASSERT_TRUE(result);
+  EXPECT_TRUE(result->IsDiffuse());
+}
+
 TEST(UberMaterialTest, TransparencyOnly) {
   ReferenceCounted<Material> material = MakeUberMaterial(
       kWhite, kWhite, kWhite, kWhite, kTransparent, kEtaIncident,

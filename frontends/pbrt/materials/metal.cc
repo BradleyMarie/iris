@@ -25,7 +25,7 @@ using ::pbrt_proto::v3::Shape;
 using ::pbrt_proto::v3::Spectrum;
 using ::pbrt_proto::v3::SpectrumTextureParameter;
 
-constexpr visual kDefaultEtaFront = 1.0;
+constexpr visual kDefaultEtaConductor = 1.0;
 
 Spectrum ToSpectrum(const SpectrumTextureParameter& parameter) {
   Spectrum result;
@@ -80,13 +80,10 @@ MaterialResult MakeMetal(const Material::Metal& metal,
     *with_defaults.mutable_vroughness() = with_defaults.roughness();
   }
 
-  Spectrum eta_front;
-  eta_front.set_uniform_spectrum(kDefaultEtaFront);
-
   ReferenceCounted<iris::Material> material = MakeMetalMaterial(
-      spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.k())),
-      spectrum_manager.AllocateSpectrum(eta_front),
+      texture_manager.AllocateFloatTexture(kDefaultEtaConductor),
       spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.eta())),
+      spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.k())),
       texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
       texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
       with_defaults.remaproughness());

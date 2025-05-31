@@ -787,7 +787,10 @@ cc_test(
     name = "spectral_allocator_test",
     srcs = ["spectral_allocator_test.cc"],
     deps = [
+        ":float",
+        ":reflector",
         ":spectral_allocator",
+        ":spectrum",
         "//iris/internal:arena",
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",

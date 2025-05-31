@@ -1,6 +1,5 @@
 #include "iris/materials/mirror_material.h"
 
-#include <cassert>
 #include <utility>
 
 #include "iris/bxdf.h"
@@ -19,23 +18,21 @@ namespace {
 
 using ::iris::bxdfs::FresnelNoOp;
 using ::iris::bxdfs::MakeSpecularBrdf;
+using ::iris::textures::PointerTexture2D;
 
 class MirrorMaterial final : public Material {
  public:
   MirrorMaterial(
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
           reflectance)
-      : reflectance_(std::move(reflectance)) {
-    assert(reflectance_);
-  }
+      : reflectance_(std::move(reflectance)) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      reflectance_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
 };
 
 const Bxdf* MirrorMaterial::Evaluate(
@@ -51,7 +48,7 @@ const Bxdf* MirrorMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeMirrorMaterial(
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
         reflectance) {
   if (!reflectance) {
     return ReferenceCounted<Material>();

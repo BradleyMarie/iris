@@ -50,6 +50,8 @@ class TestReflectionFresnel final : public Fresnel {
       SpectralAllocator& allocator) const override {
     return nullptr;
   }
+
+  bool IsValid() const override { return true; }
 };
 
 class TestTransmissionFresnel final : public Fresnel {
@@ -65,7 +67,22 @@ class TestTransmissionFresnel final : public Fresnel {
       SpectralAllocator& allocator) const override {
     return &transmittance;
   }
+
+  bool IsValid() const override { return true; }
 };
+
+TEST(MicrofacetBrdf, Nullptr) {
+  MockReflector reflector;
+  TestMicrofacetDistribution distribution;
+  TestReflectionFresnel good_fresnel;
+  FresnelDielectric bad_fresnel(-1.0, -1.0);
+  EXPECT_TRUE(MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution,
+                                 good_fresnel));
+  EXPECT_FALSE(MakeMicrofacetBrdf(GetBxdfAllocator(), nullptr, distribution,
+                                  good_fresnel));
+  EXPECT_FALSE(MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution,
+                                  bad_fresnel));
+}
 
 TEST(MicrofacetBrdf, SampleDiffuseZero) {
   MockRandom rng;
@@ -239,6 +256,23 @@ TEST(MicrofacetBrdf, Reflectance) {
       testing::GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
   EXPECT_NEAR(0.0416667, reflectance->Reflectance(1.0), 0.001);
+}
+
+TEST(MicrofacetBtdf, Nullptr) {
+  MockReflector reflector;
+  TestMicrofacetDistribution distribution;
+  TestReflectionFresnel good_fresnel;
+  FresnelDielectric bad_fresnel(-1.0, -1.0);
+  EXPECT_TRUE(MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0, 2.0,
+                                 distribution, good_fresnel));
+  EXPECT_FALSE(MakeMicrofacetBtdf(GetBxdfAllocator(), nullptr, 1.0, 2.0,
+                                  distribution, good_fresnel));
+  EXPECT_FALSE(MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector, 0.0, 2.0,
+                                  distribution, good_fresnel));
+  EXPECT_FALSE(MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0, 0.0,
+                                  distribution, good_fresnel));
+  EXPECT_FALSE(MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0, 2.0,
+                                  distribution, bad_fresnel));
 }
 
 TEST(MicrofacetBtdf, SampleDiffuseZero) {

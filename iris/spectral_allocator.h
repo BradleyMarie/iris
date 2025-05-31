@@ -29,13 +29,11 @@ class SpectralAllocator {
   const Reflector* UnboundedScale(const Reflector* reflector,
                                   visual_t attenuation);
 
-  // Special case for Fresnel conductors interfaces as an optimization.
-  // Passing `nullptr` for `eta_incident` as well as Intensity values returned
-  // from it less than 1.0 will be be clamped to 1.0.
-  const Reflector* FresnelConductor(visual_t cos_theta_incident,
-                                    const Spectrum* eta_incident,
-                                    const Spectrum* eta_transmitted,
-                                    const Spectrum* k_transmitted);
+  // Optmization for Fresnel dielectric-conductor interfaces.
+  const Reflector* FresnelConductor(visual_t eta_dielectric,
+                                    const Spectrum* eta_conductor,
+                                    const Spectrum* k_conductor,
+                                    visual_t cos_theta_incident);
 
  private:
   SpectralAllocator(const SpectralAllocator&) = delete;

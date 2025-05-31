@@ -30,4 +30,4 @@ ReferenceCounted<Material> MakeUberMaterial(
 }  // namespace materials
 }  // namespace iris
 
-#endif  // _IRIS_MATERIALS_TRANSLUCENT_MATERIAL_
+#endif  // _IRIS_MATERIALS_UBER_MATERIAL_

@@ -79,6 +79,16 @@ TEST(TranslucentMaterialTest, NullMaterial) {
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       eta_incident, eta_transmitted, sigma, false));
   EXPECT_FALSE(MakeTranslucentMaterial(
+      diffuse, diffuse,
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      diffuse, ReferenceCounted<ValueTexture2D<visual>>(), eta_transmitted,
+      sigma, false));
+  EXPECT_FALSE(MakeTranslucentMaterial(
+      diffuse, diffuse,
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      diffuse, eta_incident, ReferenceCounted<ValueTexture2D<visual>>(), sigma,
+      false));
+  EXPECT_FALSE(MakeTranslucentMaterial(
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       diffuse, diffuse, eta_incident, eta_transmitted, sigma, false));
@@ -86,6 +96,13 @@ TEST(TranslucentMaterialTest, NullMaterial) {
       diffuse, diffuse, diffuse,
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       eta_incident, eta_transmitted, sigma, false));
+  EXPECT_TRUE(
+      MakeTranslucentMaterial(diffuse, diffuse, diffuse, diffuse,
+                              ReferenceCounted<ValueTexture2D<visual>>(),
+                              eta_transmitted, sigma, false));
+  EXPECT_TRUE(MakeTranslucentMaterial(
+      diffuse, diffuse, diffuse, diffuse, eta_incident,
+      ReferenceCounted<ValueTexture2D<visual>>(), sigma, false));
   EXPECT_TRUE(MakeTranslucentMaterial(
       diffuse, diffuse,
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),

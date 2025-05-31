@@ -65,8 +65,14 @@ TEST(SpecularBrdfTest, SampleWithDerivatives) {
 
 TEST(SpecularBtdfTest, Null) {
   MockReflector reflector;
+  EXPECT_TRUE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0,
+                               FresnelNoOp()));
   EXPECT_FALSE(
       MakeSpecularBtdf(GetBxdfAllocator(), nullptr, 1.0, 1.0, FresnelNoOp()));
+  EXPECT_FALSE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 0.0, 1.0,
+                                FresnelNoOp()));
+  EXPECT_FALSE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 0.0,
+                                FresnelNoOp()));
 }
 
 TEST(SpecularBtdfTest, SampleFront) {
@@ -135,6 +141,12 @@ TEST(SpecularBxdfTest, Null) {
       MakeSpecularBxdf(GetBxdfAllocator(), &reflector, nullptr, 1.0, 1.0));
   EXPECT_FALSE(
       MakeSpecularBxdf(GetBxdfAllocator(), nullptr, nullptr, 1.0, 1.0));
+  EXPECT_FALSE(
+      MakeSpecularBxdf(GetBxdfAllocator(), nullptr, nullptr, 1.0, 1.0));
+  EXPECT_FALSE(
+      MakeSpecularBxdf(GetBxdfAllocator(), nullptr, &reflector, 0.0, 1.0));
+  EXPECT_FALSE(
+      MakeSpecularBxdf(GetBxdfAllocator(), nullptr, &reflector, 1.0, 0.0));
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceFront) {

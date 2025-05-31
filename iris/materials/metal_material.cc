@@ -1,6 +1,6 @@
 #include "iris/materials/metal_material.h"
 
-#include <cassert>
+#include <utility>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -22,26 +22,27 @@ using ::iris::bxdfs::FresnelConductor;
 using ::iris::bxdfs::MakeMicrofacetBrdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
+using ::iris::textures::ValueTexture2D;
 
 static const ReferenceCounted<Reflector> kWhite =
     CreateUniformReflector(static_cast<visual>(1.0));
 
 class MetalMaterial final : public Material {
  public:
-  MetalMaterial(ReferenceCounted<Spectrum> k,
-                ReferenceCounted<Spectrum> eta_incident,
-                ReferenceCounted<Spectrum> eta_transmitted,
-                ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
-                ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
+  MetalMaterial(ReferenceCounted<ValueTexture2D<visual>> eta_dielectric,
+                ReferenceCounted<Spectrum> eta_conductor,
+                ReferenceCounted<Spectrum> k_conductor,
+                ReferenceCounted<ValueTexture2D<visual>> roughness_u,
+                ReferenceCounted<ValueTexture2D<visual>> roughness_v,
                 bool remap_roughness)
-      : k_(std::move(k)),
-        eta_incident_(std::move(eta_incident)),
-        eta_transmitted_(std::move(eta_transmitted)),
+      : eta_dielectric_(std::move(eta_dielectric)),
+        eta_conductor_(std::move(eta_conductor)),
+        k_conductor_(std::move(k_conductor)),
         roughness_u_(std::move(roughness_u)),
         roughness_v_(std::move(roughness_v)),
         remap_roughness_(remap_roughness) {
-    assert(eta_incident_);
-    assert(eta_transmitted_);
+    assert(eta_dielectric_);
+    assert(eta_conductor_);
   }
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
@@ -49,11 +50,11 @@ class MetalMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<Spectrum> k_;
-  ReferenceCounted<Spectrum> eta_incident_;
-  ReferenceCounted<Spectrum> eta_transmitted_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_dielectric_;
+  ReferenceCounted<Spectrum> eta_conductor_;
+  ReferenceCounted<Spectrum> k_conductor_;
+  ReferenceCounted<ValueTexture2D<visual>> roughness_u_;
+  ReferenceCounted<ValueTexture2D<visual>> roughness_v_;
   bool remap_roughness_;
 };
 
@@ -76,27 +77,35 @@ const Bxdf* MetalMaterial::Evaluate(
     roughness_v = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_v);
   }
 
+  visual eta_dielectric = static_cast<visual>(0.0);
+  if (eta_dielectric_) {
+    eta_dielectric = eta_dielectric_->Evaluate(texture_coordinates);
+  }
+
   return MakeMicrofacetBrdf(
       bxdf_allocator, kWhite.Get(),
       TrowbridgeReitzDistribution(roughness_u, roughness_v),
-      FresnelConductor(eta_incident_.Get(), eta_transmitted_.Get(), k_.Get()));
+      FresnelConductor(eta_dielectric, eta_conductor_.Get(),
+                       k_conductor_.Get()));
 }
 
 }  // namespace
 
 ReferenceCounted<Material> MakeMetalMaterial(
-    ReferenceCounted<Spectrum> k, ReferenceCounted<Spectrum> eta_incident,
-    ReferenceCounted<Spectrum> eta_transmitted,
-    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
-    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
+    ReferenceCounted<ValueTexture2D<visual>> eta_dielectric,
+    ReferenceCounted<Spectrum> eta_conductor,
+    ReferenceCounted<Spectrum> k_conductor,
+    ReferenceCounted<ValueTexture2D<visual>> roughness_u,
+    ReferenceCounted<ValueTexture2D<visual>> roughness_v,
     bool remap_roughness) {
-  if (!k) {
+  if (!eta_dielectric || !eta_conductor) {
     return ReferenceCounted<Material>();
   }
 
   return MakeReferenceCounted<MetalMaterial>(
-      std::move(k), std::move(eta_incident), std::move(eta_transmitted),
-      std::move(roughness_u), std::move(roughness_v), remap_roughness);
+      std::move(eta_dielectric), std::move(eta_conductor),
+      std::move(k_conductor), std::move(roughness_u), std::move(roughness_v),
+      remap_roughness);
 }
 
 }  // namespace materials

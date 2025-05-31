@@ -1,6 +1,6 @@
 #include "iris/materials/glass_material.h"
 
-#include <cassert>
+#include <utility>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -18,35 +18,32 @@ namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::MakeSpecularBxdf;
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
 
 class GlassMaterial final : public Material {
  public:
-  GlassMaterial(
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          reflectance,
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          transmittance,
-      ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-      ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted)
+  GlassMaterial(ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+                    reflectance,
+                ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+                    transmittance,
+                ReferenceCounted<ValueTexture2D<visual>> eta_incident,
+                ReferenceCounted<ValueTexture2D<visual>> eta_transmitted)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
         eta_incident_(std::move(eta_incident)),
-        eta_transmitted_(std::move(eta_transmitted)) {
-    assert(eta_incident_);
-    assert(eta_transmitted_);
-  }
+        eta_transmitted_(std::move(eta_transmitted)) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      reflectance_;
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
       transmittance_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted_;
 };
 
 const Bxdf* GlassMaterial::Evaluate(
@@ -65,7 +62,6 @@ const Bxdf* GlassMaterial::Evaluate(
         transmittance_->Evaluate(texture_coordinates, spectral_allocator);
   }
 
-  // Consider clamping these values
   visual eta_incident = static_cast<visual>(0.0);
   if (eta_incident_) {
     eta_incident = eta_incident_->Evaluate(texture_coordinates);
@@ -83,12 +79,18 @@ const Bxdf* GlassMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeGlassMaterial(
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
         reflectance,
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
         transmittance,
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted) {
+    ReferenceCounted<ValueTexture2D<visual>> eta_incident,
+    ReferenceCounted<ValueTexture2D<visual>> eta_transmitted) {
+  if (!eta_incident || !eta_transmitted) {
+    eta_incident.Reset();
+    eta_transmitted.Reset();
+    transmittance.Reset();
+  }
+
   if (!reflectance && !transmittance) {
     return ReferenceCounted<Material>();
   }

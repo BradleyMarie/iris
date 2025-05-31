@@ -1,6 +1,6 @@
 #include "iris/materials/translucent_material.h"
 
-#include <cassert>
+#include <utility>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -26,22 +26,21 @@ using ::iris::bxdfs::MakeLambertianBtdf;
 using ::iris::bxdfs::MakeMicrofacetBrdf;
 using ::iris::bxdfs::MakeMicrofacetBtdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
 
 class TranslucentMaterial final : public Material {
  public:
   TranslucentMaterial(
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
           reflectance,
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
           transmittance,
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          diffuse,
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          specular,
-      ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-      ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
-      ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
-      bool remap_roughness)
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
+      ReferenceCounted<ValueTexture2D<visual>> eta_incident,
+      ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
+      ReferenceCounted<ValueTexture2D<visual>> roughness, bool remap_roughness)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
         diffuse_(std::move(diffuse)),
@@ -49,27 +48,21 @@ class TranslucentMaterial final : public Material {
         eta_incident_(std::move(eta_incident)),
         eta_transmitted_(std::move(eta_transmitted)),
         roughness_(std::move(roughness)),
-        remap_roughness_(remap_roughness) {
-    assert(eta_incident_);
-    assert(eta_transmitted_);
-  }
+        remap_roughness_(remap_roughness) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      reflectance_;
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
       transmittance_;
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      diffuse_;
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      specular_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> roughness_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_incident_;
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<ValueTexture2D<visual>> roughness_;
   bool remap_roughness_;
 };
 
@@ -106,7 +99,6 @@ const Bxdf* TranslucentMaterial::Evaluate(
     const Reflector* specular =
         specular_->Evaluate(texture_coordinates, spectral_allocator);
 
-    // Consider clamping these values
     visual eta_incident = static_cast<visual>(0.0);
     if (eta_incident_) {
       eta_incident = eta_incident_->Evaluate(texture_coordinates);
@@ -145,20 +137,23 @@ const Bxdf* TranslucentMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeTranslucentMaterial(
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
         reflectance,
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
         transmittance,
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        diffuse,
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        specular,
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
-    ReferenceCounted<textures::ValueTexture2D<visual>> roughness,
-    bool remap_roughness) {
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
+    ReferenceCounted<ValueTexture2D<visual>> eta_incident,
+    ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
+    ReferenceCounted<ValueTexture2D<visual>> roughness, bool remap_roughness) {
   if (!reflectance && !transmittance) {
     return ReferenceCounted<Material>();
+  }
+
+  if (!eta_incident || !eta_transmitted) {
+    eta_incident.Reset();
+    eta_transmitted.Reset();
+    specular.Reset();
   }
 
   if (!diffuse && !specular) {

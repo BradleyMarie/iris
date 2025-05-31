@@ -1,5 +1,6 @@
 #include "iris/bxdfs/specular_bxdf.h"
 
+#include <cassert>
 #include <cmath>
 
 #include "iris/bxdfs/internal/math.h"
@@ -17,7 +18,10 @@ class SpecularBxdf final : public helpers::SpecularBxdf {
         transmittance_(transmittance),
         refractive_indices_{eta_incident, eta_transmitted},
         relative_refractive_index_{eta_incident / eta_transmitted,
-                                   eta_transmitted / eta_incident} {}
+                                   eta_transmitted / eta_incident} {
+    assert(std::isfinite(eta_incident) && eta_incident >= 1.0);
+    assert(std::isfinite(eta_transmitted) && eta_transmitted >= 1.0);
+  }
 
   std::optional<Bxdf::SpecularSample> SampleSpecular(
       const Vector& incoming,
@@ -182,15 +186,18 @@ std::optional<Bxdf::SpecularSample> SpecularBtdf::SampleSpecular(
 const Bxdf* MakeSpecularBxdf(BxdfAllocator& bxdf_allocator,
                              const Reflector* reflectance,
                              const Reflector* transmittance,
-                             const geometric_t eta_incident,
-                             const geometric_t eta_transmitted) {
+                             geometric_t eta_incident,
+                             geometric_t eta_transmitted) {
   if (!reflectance) {
     return MakeSpecularBtdf(bxdf_allocator, transmittance, eta_incident,
                             eta_transmitted,
                             FresnelDielectric(eta_incident, eta_transmitted));
   }
 
-  if (!transmittance) {
+  if (!transmittance || !std::isfinite(eta_incident) ||
+      eta_incident < static_cast<visual>(1.0) ||
+      !std::isfinite(eta_transmitted) ||
+      eta_transmitted < static_cast<visual>(1.0)) {
     return MakeSpecularBrdf(bxdf_allocator, reflectance,
                             FresnelDielectric(eta_incident, eta_transmitted));
   }

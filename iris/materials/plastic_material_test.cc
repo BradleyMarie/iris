@@ -29,9 +29,9 @@ TEST(PlasticMaterialTest, NullMaterial) {
           ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
           ReferenceCounted<Reflector>());
   ReferenceCounted<ValueTexture2D<visual>> eta_incident =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
+      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
   ReferenceCounted<ValueTexture2D<visual>> sigma =
       MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
 
@@ -39,10 +39,24 @@ TEST(PlasticMaterialTest, NullMaterial) {
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       eta_incident, eta_transmitted, std::move(sigma), false));
+  EXPECT_FALSE(MakePlasticMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      reflectance, ReferenceCounted<ValueTexture2D<visual>>(), eta_transmitted,
+      std::move(sigma), false));
+  EXPECT_FALSE(MakePlasticMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      reflectance, eta_incident, ReferenceCounted<ValueTexture2D<visual>>(),
+      std::move(sigma), false));
   EXPECT_TRUE(MakePlasticMaterial(
       reflectance,
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       eta_incident, eta_transmitted, std::move(sigma), false));
+  EXPECT_TRUE(MakePlasticMaterial(reflectance, reflectance,
+                                  ReferenceCounted<ValueTexture2D<visual>>(),
+                                  eta_transmitted, std::move(sigma), false));
+  EXPECT_TRUE(MakePlasticMaterial(reflectance, reflectance, eta_incident,
+                                  ReferenceCounted<ValueTexture2D<visual>>(),
+                                  std::move(sigma), false));
   EXPECT_TRUE(MakePlasticMaterial(
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       reflectance, eta_incident, eta_transmitted, std::move(sigma), false));

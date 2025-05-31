@@ -12,8 +12,9 @@ namespace iris {
 namespace materials {
 
 ReferenceCounted<Material> MakeMetalMaterial(
-    ReferenceCounted<Spectrum> k, ReferenceCounted<Spectrum> eta_incident,
-    ReferenceCounted<Spectrum> eta_transmitted,
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_dielectric,
+    ReferenceCounted<Spectrum> eta_conductor,
+    ReferenceCounted<Spectrum> k_conductor,
     ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
     ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
     bool remap_roughness);

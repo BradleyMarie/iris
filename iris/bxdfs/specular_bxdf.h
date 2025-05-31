@@ -1,6 +1,7 @@
 #ifndef _IRIS_BXDFS_SPECULAR_BXDF_
 #define _IRIS_BXDFS_SPECULAR_BXDF_
 
+#include <cmath>
 #include <concepts>
 
 #include "iris/bxdf.h"
@@ -84,6 +85,10 @@ const Bxdf* MakeSpecularBrdf(BxdfAllocator& bxdf_allocator,
     return nullptr;
   }
 
+  if (!fresnel.IsValid()) {
+    return nullptr;
+  }
+
   return &bxdf_allocator.Allocate<SpecularBrdf>(*reflectance, fresnel);
 }
 
@@ -114,7 +119,14 @@ const Bxdf* MakeSpecularBtdf(BxdfAllocator& bxdf_allocator,
     const internal::SpecularBtdf impl_;
   };
 
-  if (!transmittance) {
+  if (!transmittance || !std::isfinite(eta_incident) ||
+      eta_incident < static_cast<visual>(1.0) ||
+      !std::isfinite(eta_transmitted) ||
+      eta_transmitted < static_cast<visual>(1.0)) {
+    return nullptr;
+  }
+
+  if (!fresnel.IsValid()) {
     return nullptr;
   }
 
@@ -125,8 +137,8 @@ const Bxdf* MakeSpecularBtdf(BxdfAllocator& bxdf_allocator,
 const Bxdf* MakeSpecularBxdf(BxdfAllocator& bxdf_allocator,
                              const Reflector* reflectance,
                              const Reflector* transmittance,
-                             const geometric_t eta_incident,
-                             const geometric_t eta_transmitted);
+                             geometric_t eta_incident,
+                             geometric_t eta_transmitted);
 
 }  // namespace bxdfs
 }  // namespace iris

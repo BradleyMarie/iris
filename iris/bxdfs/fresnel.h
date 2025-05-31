@@ -15,6 +15,7 @@ class Fresnel {
   virtual const Reflector* AttenuateTransmittance(
       const Reflector& transmittance, visual_t cos_theta_incident,
       SpectralAllocator& allocator) const = 0;
+  virtual bool IsValid() const = 0;
 };
 
 class FresnelNoOp final : public Fresnel {
@@ -30,6 +31,8 @@ class FresnelNoOp final : public Fresnel {
       SpectralAllocator& allocator) const override {
     return &transmittance;
   }
+
+  bool IsValid() const override { return true; }
 };
 
 class FresnelDielectric final : public Fresnel {
@@ -43,6 +46,7 @@ class FresnelDielectric final : public Fresnel {
   const Reflector* AttenuateTransmittance(
       const Reflector& transmittance, visual_t cos_theta_incident,
       SpectralAllocator& allocator) const override;
+  bool IsValid() const override;
 
  private:
   visual_t eta_front_;
@@ -51,9 +55,11 @@ class FresnelDielectric final : public Fresnel {
 
 class FresnelConductor final : public Fresnel {
  public:
-  FresnelConductor(const Spectrum* eta_front, const Spectrum* eta_back,
-                   const Spectrum* k)
-      : eta_front_(eta_front), eta_back_(eta_back), k_(k) {}
+  FresnelConductor(visual_t eta_dielectric, const Spectrum* eta_conductor,
+                   const Spectrum* k_conductor)
+      : eta_dielectric_(eta_dielectric),
+        eta_conductor_(eta_conductor),
+        k_conductor_(k_conductor) {}
 
   const Reflector* AttenuateReflectance(
       const Reflector& reflectance, visual_t cos_theta_incident,
@@ -61,11 +67,12 @@ class FresnelConductor final : public Fresnel {
   const Reflector* AttenuateTransmittance(
       const Reflector& transmittance, visual_t cos_theta_incident,
       SpectralAllocator& allocator) const override;
+  bool IsValid() const override;
 
  private:
-  const Spectrum* eta_front_;
-  const Spectrum* eta_back_;
-  const Spectrum* k_;
+  const visual_t eta_dielectric_;
+  const Spectrum* eta_conductor_;
+  const Spectrum* k_conductor_;
 };
 
 }  // namespace bxdfs

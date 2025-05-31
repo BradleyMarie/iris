@@ -1,6 +1,6 @@
 #include "iris/materials/matte_material.h"
 
-#include <cassert>
+#include <utility>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -19,33 +19,34 @@ namespace {
 
 using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MakeOrenNayarBrdf;
+using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ValueTexture2D;
 
 class MatteMaterial final : public Material {
  public:
-  MatteMaterial(
-      ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-          reflectance,
-      ReferenceCounted<textures::ValueTexture2D<visual>> sigma)
-      : reflectance_(std::move(reflectance)), sigma_(std::move(sigma)) {
-    assert(reflectance_);
-  }
+  MatteMaterial(ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
+                    reflectance,
+                ReferenceCounted<ValueTexture2D<visual>> sigma)
+      : reflectance_(std::move(reflectance)), sigma_(std::move(sigma)) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-      reflectance_;
-  ReferenceCounted<textures::ValueTexture2D<visual>> sigma_;
+  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
+  ReferenceCounted<ValueTexture2D<visual>> sigma_;
 };
 
 const Bxdf* MatteMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  const Reflector* reflectance =
-      reflectance_->Evaluate(texture_coordinates, spectral_allocator);
+  const Reflector* reflectance = nullptr;
+  if (reflectance_) {
+    reflectance =
+        reflectance_->Evaluate(texture_coordinates, spectral_allocator);
+  }
 
   visual sigma = static_cast<visual>(0.0);
   if (sigma_) {
@@ -60,9 +61,9 @@ const Bxdf* MatteMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeMatteMaterial(
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
+    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
         reflectance,
-    ReferenceCounted<textures::ValueTexture2D<visual>> sigma) {
+    ReferenceCounted<ValueTexture2D<visual>> sigma) {
   if (!reflectance) {
     return ReferenceCounted<Material>();
   }

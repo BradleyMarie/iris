@@ -35,6 +35,14 @@ TEST(GlassMaterialTest, NullMaterial) {
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
       eta_front, eta_back));
 
+  EXPECT_FALSE(MakeGlassMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      reflectance, ReferenceCounted<ValueTexture2D<visual>>(), eta_back));
+
+  EXPECT_FALSE(MakeGlassMaterial(
+      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
+      reflectance, eta_front, ReferenceCounted<ValueTexture2D<visual>>()));
+
   EXPECT_TRUE(MakeGlassMaterial(
       reflectance,
       ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
