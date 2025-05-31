@@ -1,8 +1,6 @@
 #ifndef _IRIS_BXDFS_COMPOSITE_BXDF_
 #define _IRIS_BXDFS_COMPOSITE_BXDF_
 
-#include <algorithm>
-#include <array>
 #include <concepts>
 #include <optional>
 #include <variant>
@@ -20,12 +18,12 @@ namespace bxdfs {
 
 const Bxdf* MakeCompositeBxdf(BxdfAllocator& allocator,
                               std::convertible_to<const Bxdf*> auto... args) {
-  auto storage = std::to_array<const Bxdf*>({args...});
+  const Bxdf* storage[sizeof...(args)] = {args...};
 
   size_t num_bxdfs = 0;
-  for (size_t i = 0; i < storage.size(); i++) {
-    if (storage[i] != nullptr) {
-      std::swap(storage[i], storage[num_bxdfs++]);
+  for (const Bxdf* bxdf : storage) {
+    if (bxdf != nullptr) {
+      storage[num_bxdfs++] = bxdf;
     }
   }
 
@@ -34,7 +32,7 @@ const Bxdf* MakeCompositeBxdf(BxdfAllocator& allocator,
   }
 
   if (num_bxdfs == 1) {
-    return storage.front();
+    return storage[0];
   }
 
   class CompositeBxdf final : public Bxdf {
@@ -47,8 +45,13 @@ const Bxdf* MakeCompositeBxdf(BxdfAllocator& allocator,
       for (size_t i = 0; i < num_bxdfs; i++) {
         visual_t pdf;
         if (bxdfs[i]->IsDiffuse(&pdf)) {
-          diffuse_pdf_ += std::clamp(pdf, static_cast<visual_t>(0.0),
-                                     static_cast<visual_t>(1.0));
+          if (pdf >= static_cast<visual_t>(1.0)) {
+            diffuse_pdf_ += 1.0;
+          } else if (pdf > static_cast<visual_t>(0.0) &&
+                     pdf < static_cast<visual_t>(1.0)) {
+            diffuse_pdf_ += pdf;
+          }
+
           bxdfs_[num_diffuse_bxdfs_++] = bxdfs[i];
         } else {
           bxdfs_[specular_location--] = bxdfs[i];
@@ -108,7 +111,9 @@ const Bxdf* MakeCompositeBxdf(BxdfAllocator& allocator,
       for (size_t i = 0; i < num_diffuse_bxdfs_; i++) {
         visual_t pdf = bxdfs_[i]->PdfDiffuse(incoming, outgoing, surface_normal,
                                              hemisphere);
-        total_pdf += std::max(static_cast<visual_t>(0.0), pdf);
+        if (pdf > static_cast<visual_t>(0.0)) {
+          total_pdf += pdf;
+        }
       }
 
       return total_pdf / static_cast<visual_t>(num_diffuse_bxdfs_);
@@ -127,13 +132,13 @@ const Bxdf* MakeCompositeBxdf(BxdfAllocator& allocator,
     }
 
    private:
-    std::array<const Bxdf*, storage.size()> bxdfs_;
+    const Bxdf* bxdfs_[sizeof...(args)];
     size_t num_bxdfs_;
     size_t num_diffuse_bxdfs_;
     visual_t diffuse_pdf_;
   };
 
-  return &allocator.Allocate<CompositeBxdf>(storage.data(), num_bxdfs);
+  return &allocator.Allocate<CompositeBxdf>(storage, num_bxdfs);
 }
 
 }  // namespace bxdfs
