@@ -1,7 +1,6 @@
 #include "iris/materials/glass_material.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/specular_bxdf.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -11,7 +10,6 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::FresnelDielectric;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;

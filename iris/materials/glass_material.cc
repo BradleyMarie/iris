@@ -4,7 +4,7 @@
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
-#include "iris/bxdfs/specular_bxdf.h"
+#include "iris/bxdfs/fresnel_dielectric_bxdf.h"
 #include "iris/float.h"
 #include "iris/material.h"
 #include "iris/reference_counted.h"
@@ -16,8 +16,7 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::MakeSpecularBxdf;
+using ::iris::bxdfs::MakeFresnelDielectricBxdf;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
 
@@ -72,8 +71,8 @@ const Bxdf* GlassMaterial::Evaluate(
     eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
   }
 
-  return MakeSpecularBxdf(bxdf_allocator, reflectance, transmittance,
-                          eta_incident, eta_transmitted);
+  return MakeFresnelDielectricBxdf(bxdf_allocator, reflectance, transmittance,
+                                   eta_incident, eta_transmitted);
 }
 
 }  // namespace

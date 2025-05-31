@@ -6,10 +6,10 @@
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/composite_bxdf.h"
+#include "iris/bxdfs/fresnel_dielectric_bxdf.h"
 #include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
-#include "iris/bxdfs/specular_bxdf.h"
 #include "iris/bxdfs/transparent_btdf.h"
 #include "iris/float.h"
 #include "iris/material.h"
@@ -25,10 +25,9 @@ namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::MakeCompositeBxdf;
+using ::iris::bxdfs::MakeFresnelDielectricBxdf;
 using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MakeMicrofacetBrdf;
-using ::iris::bxdfs::MakeSpecularBrdf;
-using ::iris::bxdfs::MakeSpecularBtdf;
 using ::iris::bxdfs::MakeTransparentBtdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
@@ -144,28 +143,29 @@ const Bxdf* UberMaterial::Evaluate(
         FresnelDielectric(eta_incident, eta_transmitted));
   }
 
-  const Bxdf* specular_brdf = nullptr;
-  if (reflectance_) {
-    specular_brdf = MakeSpecularBrdf(
-        bxdf_allocator,
-        spectral_allocator.Scale(
-            reflectance_->Evaluate(texture_coordinates, spectral_allocator),
-            opacity),
-        FresnelDielectric(eta_incident, eta_transmitted));
-  }
+  const Bxdf* fresnel_bxdf = nullptr;
+  if (reflectance_ || transmittance_) {
+    const Reflector* reflectance = nullptr;
+    if (reflectance_) {
+      reflectance = spectral_allocator.Scale(
+          reflectance_->Evaluate(texture_coordinates, spectral_allocator),
+          opacity);
+    }
 
-  const Bxdf* specular_btdf = nullptr;
-  if (transmittance_) {
-    specular_btdf = MakeSpecularBtdf(
-        bxdf_allocator,
-        spectral_allocator.Scale(
-            transmittance_->Evaluate(texture_coordinates, spectral_allocator),
-            opacity),
-        eta_incident, eta_transmitted);
+    const Reflector* transmittance = nullptr;
+    if (transmittance_) {
+      transmittance = spectral_allocator.Scale(
+          transmittance_->Evaluate(texture_coordinates, spectral_allocator),
+          opacity);
+    }
+
+    fresnel_bxdf =
+        MakeFresnelDielectricBxdf(bxdf_allocator, reflectance, transmittance,
+                                  eta_incident, eta_transmitted);
   }
 
   return MakeCompositeBxdf(bxdf_allocator, transparent_btdf, lambertian_brdf,
-                           microfacet_brdf, specular_brdf, specular_btdf);
+                           microfacet_brdf, fresnel_bxdf);
 }
 
 }  // namespace

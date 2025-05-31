@@ -91,6 +91,36 @@ cc_test(
 )
 
 cc_library(
+    name = "fresnel_dielectric_bxdf",
+    srcs = ["fresnel_dielectric_bxdf.cc"],
+    hdrs = ["fresnel_dielectric_bxdf.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+        "//iris/bxdfs/helpers:specular_bxdf",
+        "//iris/bxdfs/internal:math",
+    ],
+)
+
+cc_test(
+    name = "fresnel_dielectric_bxdf_test",
+    srcs = ["fresnel_dielectric_bxdf_test.cc"],
+    deps = [
+        ":fresnel_dielectric_bxdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "fresnel",
     srcs = ["fresnel.cc"],
     hdrs = ["fresnel.h"],
@@ -261,37 +291,6 @@ cc_test(
     srcs = ["oren_nayar_bxdf_test.cc"],
     deps = [
         ":oren_nayar_bxdf",
-        "//iris/random:mock_random",
-        "//iris/reflectors:mock_reflector",
-        "//iris/testing:bxdf_allocator",
-        "//iris/testing:spectral_allocator",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "specular_bxdf",
-    srcs = ["specular_bxdf.cc"],
-    hdrs = ["specular_bxdf.h"],
-    deps = [
-        ":fresnel",
-        "//iris:bxdf",
-        "//iris:bxdf_allocator",
-        "//iris:float",
-        "//iris:reflector",
-        "//iris:sampler",
-        "//iris:spectral_allocator",
-        "//iris:vector",
-        "//iris/bxdfs/helpers:specular_bxdf",
-        "//iris/bxdfs/internal:math",
-    ],
-)
-
-cc_test(
-    name = "specular_bxdf_test",
-    srcs = ["specular_bxdf_test.cc"],
-    deps = [
-        ":specular_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",

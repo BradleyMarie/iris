@@ -18,23 +18,6 @@ class Fresnel {
   virtual bool IsValid() const = 0;
 };
 
-class FresnelNoOp final : public Fresnel {
- public:
-  const Reflector* AttenuateReflectance(
-      const Reflector& reflectance, visual_t cos_theta_incident,
-      SpectralAllocator& allocator) const override {
-    return &reflectance;
-  }
-
-  const Reflector* AttenuateTransmittance(
-      const Reflector& transmittance, visual_t cos_theta_incident,
-      SpectralAllocator& allocator) const override {
-    return &transmittance;
-  }
-
-  bool IsValid() const override { return true; }
-};
-
 class FresnelDielectric final : public Fresnel {
  public:
   FresnelDielectric(visual_t eta_front, visual_t eta_back)

@@ -14,16 +14,6 @@ using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetSpectralAllocator;
 using ::testing::Return;
 
-TEST(FresnelNoOp, NoOp) {
-  MockReflector reflector;
-  FresnelNoOp fresnel;
-  EXPECT_TRUE(fresnel.IsValid());
-  EXPECT_EQ(&reflector, fresnel.AttenuateReflectance(reflector, 1.0,
-                                                     GetSpectralAllocator()));
-  EXPECT_EQ(&reflector, fresnel.AttenuateTransmittance(reflector, 1.0,
-                                                       GetSpectralAllocator()));
-}
-
 TEST(FresnelDielectric, IsValid) {
   EXPECT_TRUE(FresnelDielectric(1.0, 2.0).IsValid());
   EXPECT_FALSE(FresnelDielectric(-1.0, 2.0).IsValid());

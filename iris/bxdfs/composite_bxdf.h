@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <concepts>
 #include <optional>
 #include <variant>
