@@ -4,7 +4,7 @@
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
-#include "iris/bxdfs/specular_bxdf.h"
+#include "iris/bxdfs/mirror_brdf.h"
 #include "iris/float.h"
 #include "iris/material.h"
 #include "iris/reference_counted.h"
@@ -16,8 +16,7 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::FresnelNoOp;
-using ::iris::bxdfs::MakeSpecularBrdf;
+using ::iris::bxdfs::MakeMirrorBrdf;
 using ::iris::textures::PointerTexture2D;
 
 class MirrorMaterial final : public Material {
@@ -39,10 +38,9 @@ const Bxdf* MirrorMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  return MakeSpecularBrdf(
+  return MakeMirrorBrdf(
       bxdf_allocator,
-      reflectance_->Evaluate(texture_coordinates, spectral_allocator),
-      FresnelNoOp());
+      reflectance_->Evaluate(texture_coordinates, spectral_allocator));
 }
 
 }  // namespace

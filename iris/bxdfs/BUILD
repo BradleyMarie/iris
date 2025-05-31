@@ -197,6 +197,35 @@ cc_test(
 )
 
 cc_library(
+    name = "mirror_brdf",
+    srcs = ["mirror_brdf.cc"],
+    hdrs = ["mirror_brdf.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+        "//iris/bxdfs/helpers:specular_bxdf",
+    ],
+)
+
+cc_test(
+    name = "mirror_brdf_test",
+    srcs = ["mirror_brdf_test.cc"],
+    deps = [
+        ":mirror_brdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "mock_bxdf",
     hdrs = ["mock_bxdf.h"],
     deps = [

@@ -9,7 +9,7 @@ namespace iris {
 namespace bxdfs {
 
 const Bxdf* MakeTransparentBtdf(BxdfAllocator& bxdf_allocator,
-                                const Reflector* attenuation);
+                                const Reflector* transmittance);
 
 }  // namespace bxdfs
 }  // namespace iris

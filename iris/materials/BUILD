@@ -111,8 +111,7 @@ cc_library(
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
-        "//iris/bxdfs:fresnel",
-        "//iris/bxdfs:specular_bxdf",
+        "//iris/bxdfs:mirror_brdf",
         "//iris/textures:texture2d",
     ],
 )

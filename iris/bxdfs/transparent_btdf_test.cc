@@ -1,6 +1,5 @@
 #include "iris/bxdfs/transparent_btdf.h"
 
-#include <cmath>
 #include <variant>
 
 #include "googletest/include/gtest/gtest.h"
