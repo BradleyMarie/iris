@@ -125,9 +125,8 @@ const Bxdf* TranslucentMaterial::Evaluate(
 
     microfacet_btdf = MakeMicrofacetBtdf(
         bxdf_allocator, spectral_allocator.Scale(transmittance, specular),
-        eta_incident, eta_transmitted,
-        TrowbridgeReitzDistribution(roughness, roughness),
-        FresnelDielectric(eta_incident, eta_transmitted));
+        TrowbridgeReitzDistribution(roughness, roughness), eta_incident,
+        eta_transmitted);
   }
 
   return MakeCompositeBxdf(bxdf_allocator, lambertian_brdf, lambertian_btdf,

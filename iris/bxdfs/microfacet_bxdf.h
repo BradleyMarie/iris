@@ -48,15 +48,14 @@ class MicrofacetBrdf final : public helpers::DiffuseBxdf {
 
 class MicrofacetBtdf final : public helpers::DiffuseBxdf {
  public:
-  MicrofacetBtdf(const Reflector& transmittance, geometric_t eta_incident,
-                 geometric_t eta_transmitted,
+  MicrofacetBtdf(const Reflector& transmittance,
                  const MicrofacetDistribution& distribution,
-                 const Fresnel& fresnel) noexcept
+                 geometric_t eta_incident, geometric_t eta_transmitted) noexcept
       : transmittance_(transmittance),
         eta_incident_over_transmitted_(eta_incident / eta_transmitted),
         eta_transmitted_over_incident_(eta_transmitted / eta_incident),
         distribution_(distribution),
-        fresnel_(fresnel) {}
+        fresnel_(eta_incident, eta_transmitted) {}
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -78,7 +77,7 @@ class MicrofacetBtdf final : public helpers::DiffuseBxdf {
   const geometric_t eta_incident_over_transmitted_;
   const geometric_t eta_transmitted_over_incident_;
   const MicrofacetDistribution& distribution_;
-  const Fresnel& fresnel_;
+  const FresnelDielectric fresnel_;
 };
 
 }  // namespace internal
@@ -134,23 +133,19 @@ const Bxdf* MakeMicrofacetBrdf(BxdfAllocator& bxdf_allocator,
                                                   fresnel);
 }
 
-template <typename M, typename F>
-  requires std::derived_from<M, MicrofacetDistribution> &&
-           std::derived_from<F, Fresnel>
+template <typename M>
+  requires std::derived_from<M, MicrofacetDistribution>
 const Bxdf* MakeMicrofacetBtdf(BxdfAllocator& bxdf_allocator,
                                const Reflector* transmittance,
-                               geometric_t eta_incident,
-                               geometric_t eta_transmitted,
-                               const M& distribution, const F& fresnel) {
+                               const M& distribution, geometric_t eta_incident,
+                               geometric_t eta_transmitted) {
   class MicrofacetBtdf final : public helpers::DiffuseBxdf {
    public:
-    MicrofacetBtdf(const Reflector& transmittance, geometric_t eta_incident,
-                   geometric_t eta_transmitted, const M& distribution,
-                   const F& fresnel) noexcept
+    MicrofacetBtdf(const Reflector& transmittance, const M& distribution,
+                   geometric_t eta_incident,
+                   geometric_t eta_transmitted) noexcept
         : distribution_(distribution),
-          fresnel_(fresnel),
-          impl_(transmittance, eta_incident, eta_transmitted, distribution_,
-                fresnel_) {}
+          impl_(transmittance, distribution_, eta_incident, eta_transmitted) {}
 
     std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                         const Vector& surface_normal,
@@ -173,23 +168,16 @@ const Bxdf* MakeMicrofacetBtdf(BxdfAllocator& bxdf_allocator,
 
    private:
     const M distribution_;
-    const F fresnel_;
     const internal::MicrofacetBtdf impl_;
   };
 
-  if (!transmittance) {
-    return nullptr;
-  }
-
-  if (!fresnel.IsValid() || !std::isfinite(eta_incident) ||
-      eta_incident < static_cast<geometric_t>(1.0) ||
-      !std::isfinite(eta_transmitted) ||
-      eta_transmitted < static_cast<geometric_t>(1.0)) {
+  if (!transmittance ||
+      !FresnelDielectric(eta_incident, eta_transmitted).IsValid()) {
     return nullptr;
   }
 
   return &bxdf_allocator.Allocate<MicrofacetBtdf>(
-      *transmittance, eta_incident, eta_transmitted, distribution, fresnel);
+      *transmittance, distribution, eta_incident, eta_transmitted);
 }
 
 }  // namespace bxdfs

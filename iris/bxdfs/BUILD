@@ -270,3 +270,32 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "transparent_btdf",
+    srcs = ["transparent_btdf.cc"],
+    hdrs = ["transparent_btdf.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+        "//iris/bxdfs/helpers:specular_bxdf",
+    ],
+)
+
+cc_test(
+    name = "transparent_btdf_test",
+    srcs = ["transparent_btdf_test.cc"],
+    deps = [
+        ":transparent_btdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest_main",
+    ],
+)

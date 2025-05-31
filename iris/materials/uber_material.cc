@@ -10,6 +10,7 @@
 #include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/bxdfs/specular_bxdf.h"
+#include "iris/bxdfs/transparent_btdf.h"
 #include "iris/float.h"
 #include "iris/material.h"
 #include "iris/reference_counted.h"
@@ -23,12 +24,12 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::FresnelDielectric;
-using ::iris::bxdfs::FresnelNoOp;
 using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MakeMicrofacetBrdf;
 using ::iris::bxdfs::MakeSpecularBrdf;
 using ::iris::bxdfs::MakeSpecularBtdf;
+using ::iris::bxdfs::MakeTransparentBtdf;
 using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
 using ::iris::textures::PointerTexture2D;
@@ -94,10 +95,8 @@ const Bxdf* UberMaterial::Evaluate(
   const Bxdf* transparent_btdf = nullptr;
   if (visual transparency = static_cast<visual>(1.0) - opacity;
       transparency > static_cast<visual>(0.0)) {
-    transparent_btdf = MakeSpecularBtdf(
-        bxdf_allocator, spectral_allocator.Scale(kWhite.Get(), transparency),
-        static_cast<geometric_t>(1.0), static_cast<geometric_t>(1.0),
-        FresnelNoOp());
+    transparent_btdf = MakeTransparentBtdf(
+        bxdf_allocator, spectral_allocator.Scale(kWhite.Get(), transparency));
   }
 
   const Bxdf* lambertian_brdf = nullptr;
@@ -162,8 +161,7 @@ const Bxdf* UberMaterial::Evaluate(
         spectral_allocator.Scale(
             transmittance_->Evaluate(texture_coordinates, spectral_allocator),
             opacity),
-        eta_incident, eta_transmitted,
-        FresnelDielectric(eta_incident, eta_transmitted));
+        eta_incident, eta_transmitted);
   }
 
   return MakeCompositeBxdf(bxdf_allocator, transparent_btdf, lambertian_brdf,

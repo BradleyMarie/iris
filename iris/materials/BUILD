@@ -295,6 +295,7 @@ cc_library(
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/bxdfs:specular_bxdf",
+        "//iris/bxdfs:transparent_btdf",
         "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/reflectors:uniform_reflector",
         "//iris/textures:texture2d",

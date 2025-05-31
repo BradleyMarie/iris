@@ -65,14 +65,10 @@ TEST(SpecularBrdfTest, SampleWithDerivatives) {
 
 TEST(SpecularBtdfTest, Null) {
   MockReflector reflector;
-  EXPECT_TRUE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0,
-                               FresnelNoOp()));
-  EXPECT_FALSE(
-      MakeSpecularBtdf(GetBxdfAllocator(), nullptr, 1.0, 1.0, FresnelNoOp()));
-  EXPECT_FALSE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 0.0, 1.0,
-                                FresnelNoOp()));
-  EXPECT_FALSE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 0.0,
-                                FresnelNoOp()));
+  EXPECT_TRUE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0));
+  EXPECT_FALSE(MakeSpecularBtdf(GetBxdfAllocator(), nullptr, 1.0, 1.0));
+  EXPECT_FALSE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 0.0, 1.0));
+  EXPECT_FALSE(MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 0.0));
 }
 
 TEST(SpecularBtdfTest, SampleFront) {
@@ -81,8 +77,7 @@ TEST(SpecularBtdfTest, SampleFront) {
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf =
-      MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0, FresnelNoOp());
+  const Bxdf* bxdf = MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Vector(1.0, 1.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
                    sampler, GetSpectralAllocator()));
@@ -99,8 +94,7 @@ TEST(SpecularBtdfTest, SampleBack) {
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf =
-      MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0, FresnelNoOp());
+  const Bxdf* bxdf = MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Vector(1.0, 1.0, -1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
                    sampler, GetSpectralAllocator()));
@@ -117,8 +111,7 @@ TEST(SpecularBtdfTest, SampleWithDerivatives) {
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf =
-      MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0, FresnelNoOp());
+  const Bxdf* bxdf = MakeSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.0);
   auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(
       Vector(1.0, 1.0, 1.0), {{Vector(1.0, 0.5, 1.0), Vector(0.5, 1.0, 1.0)}},
       Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
