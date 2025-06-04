@@ -2,6 +2,8 @@
 #define _IRIS_BXDF_ALLOCATOR_
 
 #include <concepts>
+#include <initializer_list>
+#include <span>
 #include <type_traits>
 
 #include "iris/bxdf.h"
@@ -22,6 +24,8 @@ class BxdfAllocator final {
     auto* result = new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
     return *result;
   }
+
+  std::span<const Bxdf*> AllocateList(std::initializer_list<const Bxdf*> bxdfs);
 
  private:
   BxdfAllocator(const BxdfAllocator&) = delete;

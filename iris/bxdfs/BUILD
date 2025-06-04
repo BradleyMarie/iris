@@ -64,6 +64,7 @@ cc_test(
 
 cc_library(
     name = "composite_bxdf",
+    srcs = ["composite_bxdf.cc"],
     hdrs = ["composite_bxdf.h"],
     deps = [
         "//iris:bxdf",

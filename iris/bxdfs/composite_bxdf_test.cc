@@ -145,7 +145,7 @@ TEST(CompositeBxdfTest, SampleAllDifuse) {
               FieldsAre(Vector(1.0, 0.0, 0.0)));
 }
 
-TEST(CompositeBxdfTest, SampleSpecular) {
+TEST(CompositeBxdfTest, SampleAllSpecular) {
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
   EXPECT_CALL(rng, DiscardGeometric(1));
@@ -158,16 +158,16 @@ TEST(CompositeBxdfTest, SampleSpecular) {
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf0, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
 
-  EXPECT_CALL(bxdf0,
-              Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _, _))
-      .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
-                                            Vector(1.0, 0.0, 0.0), &reflector,
-                                            std::nullopt, 1.0}));
-
   MockBxdf bxdf1;
   EXPECT_CALL(bxdf1, IsDiffuse(NotNull()))
       .WillRepeatedly(DoAll(SetArgPointee<0>(0.0), Return(false)));
   EXPECT_CALL(bxdf1, IsDiffuse(IsNull())).WillRepeatedly(Return(false));
+
+  EXPECT_CALL(bxdf1,
+              Sample(Vector(1.0, 0.0, 0.0), _, Vector(0.0, 0.0, 1.0), _, _))
+      .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
+                                            Vector(1.0, 0.0, 0.0), &reflector,
+                                            std::nullopt, 1.0}));
 
   const Bxdf* composite = MakeCompositeBxdf(GetBxdfAllocator(), &bxdf0, &bxdf1);
   auto result =

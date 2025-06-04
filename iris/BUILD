@@ -79,6 +79,7 @@ cc_test(
     deps = [
         ":bxdf_allocator",
         "//iris/bxdfs:lambertian_bxdf",
+        "//iris/bxdfs:mock_bxdf",
         "//iris/reflectors:mock_reflector",
         "@googletest//:gtest_main",
     ],
