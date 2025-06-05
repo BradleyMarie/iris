@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <utility>
 
 #include "frontends/pbrt/defaults.h"
@@ -16,7 +17,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace area_lights {
 
-using ::iris::emissive_materials::ConstantEmissiveMaterial;
+using ::iris::emissive_materials::MakeConstantEmissiveMaterial;
 using ::pbrt_proto::v3::AreaLightSource;
 
 std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
@@ -33,16 +34,16 @@ std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
     exit(EXIT_FAILURE);
   }
 
-  ReferenceCounted<EmissiveMaterial> front_material =
-      MakeReferenceCounted<ConstantEmissiveMaterial>(
-          spectrum_manager.AllocateSpectrum(with_defaults.l()));
+  std::array<ReferenceCounted<EmissiveMaterial>, 2> result = {
+      MakeConstantEmissiveMaterial(
+          spectrum_manager.AllocateSpectrum(with_defaults.l())),
+  };
 
-  ReferenceCounted<EmissiveMaterial> back_material;
   if (with_defaults.twosided()) {
-    back_material = front_material;
+    result[1] = result[0];
   }
 
-  return {std::move(front_material), std::move(back_material)};
+  return result;
 }
 
 }  // namespace area_lights

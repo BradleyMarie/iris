@@ -11,6 +11,7 @@ cc_library(
         "//iris:power_matcher",
         "//iris:reference_counted",
         "//iris:spectral_allocator",
+        "//iris:spectrum",
         "//iris:texture_coordinates",
     ],
 )

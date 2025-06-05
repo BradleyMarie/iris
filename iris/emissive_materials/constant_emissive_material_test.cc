@@ -6,21 +6,40 @@
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/spectral_allocator.h"
 
+namespace iris {
+namespace emissive_materials {
+namespace {
+
+using ::iris::power_matchers::MockPowerMatcher;
+using ::iris::spectra::MockSpectrum;
+using ::iris::testing::GetSpectralAllocator;
+using ::testing::Ref;
+using ::testing::Return;
+
+TEST(ConstantEmissiveMaterialTest, Null) {
+  EXPECT_FALSE(MakeConstantEmissiveMaterial(ReferenceCounted<Spectrum>()));
+}
+
 TEST(ConstantEmissiveMaterialTest, Evaluate) {
-  auto spectrum = iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
-  iris::emissive_materials::ConstantEmissiveMaterial material(spectrum);
-  EXPECT_EQ(
-      spectrum.Get(),
-      material.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                        iris::testing::GetSpectralAllocator()));
+  ReferenceCounted<MockSpectrum> spectrum =
+      MakeReferenceCounted<MockSpectrum>();
+  ReferenceCounted<EmissiveMaterial> material =
+      MakeConstantEmissiveMaterial(spectrum);
+  EXPECT_EQ(spectrum.Get(),
+            material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                               GetSpectralAllocator()));
 }
 
 TEST(ConstantEmissiveMaterialTest, UnitPower) {
-  auto spectrum = iris::MakeReferenceCounted<iris::spectra::MockSpectrum>();
-  iris::emissive_materials::ConstantEmissiveMaterial material(spectrum);
-
-  iris::power_matchers::MockPowerMatcher power_matcher;
-  EXPECT_CALL(power_matcher, Match(testing::Ref(*spectrum)))
-      .WillOnce(testing::Return(1.0));
-  EXPECT_EQ(1.0, material.UnitPower(power_matcher));
+  ReferenceCounted<MockSpectrum> spectrum =
+      MakeReferenceCounted<MockSpectrum>();
+  ReferenceCounted<EmissiveMaterial> material =
+      MakeConstantEmissiveMaterial(spectrum);
+  MockPowerMatcher power_matcher;
+  EXPECT_CALL(power_matcher, Match(Ref(*spectrum))).WillOnce(Return(1.0));
+  EXPECT_EQ(1.0, material->UnitPower(power_matcher));
 }
+
+}  // namespace
+}  // namespace emissive_materials
+}  // namespace iris
