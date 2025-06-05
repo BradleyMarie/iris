@@ -10,6 +10,7 @@ namespace bxdfs {
 
 const Bxdf* MakeLambertianBrdf(BxdfAllocator& bxdf_allocator,
                                const Reflector* reflector);
+
 const Bxdf* MakeLambertianBtdf(BxdfAllocator& bxdf_allocator,
                                const Reflector* reflector);
 
