@@ -1,4 +1,4 @@
-#include "iris/bxdfs/helpers/diffuse_bxdf.h"
+#include "iris/bxdfs/internal/diffuse_bxdf.h"
 
 #include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
@@ -7,7 +7,7 @@
 
 namespace iris {
 namespace bxdfs {
-namespace helpers {
+namespace internal {
 namespace {
 
 using ::iris::random::MockRandom;
@@ -70,6 +70,6 @@ TEST(DiffuseBxdfTest, SampleFails) {
 }
 
 }  // namespace
-}  // namespace helpers
+}  // namespace internal
 }  // namespace bxdfs
 }  // namespace iris

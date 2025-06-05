@@ -2,7 +2,7 @@
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
-#include "iris/bxdfs/helpers/specular_bxdf.h"
+#include "iris/bxdfs/internal/specular_bxdf.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
 #include "iris/sampler.h"
@@ -13,7 +13,7 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
-class TransparentBtdf final : public helpers::SpecularBxdf {
+class TransparentBtdf final : public internal::SpecularBxdf {
  public:
   TransparentBtdf(const Reflector& transmittance) noexcept
       : transmittance_(transmittance) {}

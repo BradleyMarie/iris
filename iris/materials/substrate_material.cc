@@ -1,12 +1,10 @@
 #include "iris/materials/substrate_material.h"
 
-#include <iostream>
 #include <utility>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/ashikhmin_shirley_brdf.h"
-#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/float.h"
 #include "iris/material.h"
 #include "iris/reference_counted.h"
@@ -19,7 +17,6 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::MakeAshikhminShirleyBrdf;
-using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
 
@@ -73,14 +70,8 @@ const Bxdf* SubstrateMaterial::Evaluate(
     roughness_v = roughness_v_->Evaluate(texture_coordinates);
   }
 
-  if (remap_roughness_) {
-    roughness_u = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_u);
-    roughness_v = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_v);
-  }
-
-  return MakeAshikhminShirleyBrdf(
-      bxdf_allocator, diffuse, specular,
-      TrowbridgeReitzDistribution(roughness_u, roughness_v));
+  return MakeAshikhminShirleyBrdf(bxdf_allocator, diffuse, specular,
+                                  roughness_u, roughness_v, remap_roughness_);
 }
 
 }  // namespace

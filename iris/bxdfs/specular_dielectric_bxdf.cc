@@ -1,12 +1,12 @@
-#include "iris/bxdfs/fresnel_dielectric_bxdf.h"
+#include "iris/bxdfs/specular_dielectric_bxdf.h"
 
 #include <algorithm>
 #include <cmath>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
-#include "iris/bxdfs/helpers/specular_bxdf.h"
 #include "iris/bxdfs/internal/math.h"
+#include "iris/bxdfs/internal/specular_bxdf.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
 #include "iris/sampler.h"
@@ -17,12 +17,12 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
-class FresnelDielectricBxdf final : public helpers::SpecularBxdf {
+class SpecularDielectricBxdf final : public internal::SpecularBxdf {
  public:
-  FresnelDielectricBxdf(const Reflector* reflectance,
-                        const Reflector* transmittance,
-                        const geometric_t eta_incident,
-                        const geometric_t eta_transmitted) noexcept
+  SpecularDielectricBxdf(const Reflector* reflectance,
+                         const Reflector* transmittance,
+                         const geometric_t eta_incident,
+                         const geometric_t eta_transmitted) noexcept
       : reflectance_(reflectance),
         transmittance_(transmittance),
         eta_incident_(eta_incident),
@@ -127,7 +127,7 @@ std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
       pdf};
 }
 
-std::optional<Bxdf::SpecularSample> FresnelDielectricBxdf::SampleSpecular(
+std::optional<Bxdf::SpecularSample> SpecularDielectricBxdf::SampleSpecular(
     const Vector& incoming,
     const std::optional<Bxdf::Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler,
@@ -170,11 +170,11 @@ std::optional<Bxdf::SpecularSample> FresnelDielectricBxdf::SampleSpecular(
 
 }  // namespace
 
-const Bxdf* MakeFresnelDielectricBxdf(BxdfAllocator& bxdf_allocator,
-                                      const Reflector* reflectance,
-                                      const Reflector* transmittance,
-                                      geometric_t eta_incident,
-                                      geometric_t eta_transmitted) {
+const Bxdf* MakeSpecularDielectricBxdf(BxdfAllocator& bxdf_allocator,
+                                       const Reflector* reflectance,
+                                       const Reflector* transmittance,
+                                       geometric_t eta_incident,
+                                       geometric_t eta_transmitted) {
   if (!std::isfinite(eta_incident) ||
       eta_incident < static_cast<visual_t>(1.0) ||
       !std::isfinite(eta_transmitted) ||
@@ -186,7 +186,7 @@ const Bxdf* MakeFresnelDielectricBxdf(BxdfAllocator& bxdf_allocator,
     return nullptr;
   }
 
-  return &bxdf_allocator.Allocate<FresnelDielectricBxdf>(
+  return &bxdf_allocator.Allocate<SpecularDielectricBxdf>(
       reflectance, transmittance, eta_incident, eta_transmitted);
 }
 

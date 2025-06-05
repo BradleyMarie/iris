@@ -6,7 +6,7 @@
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
-#include "iris/bxdfs/helpers/diffuse_bxdf.h"
+#include "iris/bxdfs/internal/diffuse_bxdf.h"
 #include "iris/bxdfs/internal/math.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
@@ -18,7 +18,7 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
-class OrenNayarBrdf final : public helpers::DiffuseBxdf {
+class OrenNayarBrdf final : public internal::DiffuseBxdf {
  public:
   OrenNayarBrdf(const Reflector& reflector, visual_t sigma);
 

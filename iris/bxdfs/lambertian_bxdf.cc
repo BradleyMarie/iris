@@ -4,7 +4,7 @@
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
-#include "iris/bxdfs/helpers/diffuse_bxdf.h"
+#include "iris/bxdfs/internal/diffuse_bxdf.h"
 #include "iris/bxdfs/internal/math.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
@@ -16,7 +16,7 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
-class LambertianBrdf final : public helpers::DiffuseBxdf {
+class LambertianBrdf final : public internal::DiffuseBxdf {
  public:
   LambertianBrdf(const Reflector& reflector) noexcept : reflector_(reflector) {}
 
@@ -36,7 +36,7 @@ class LambertianBrdf final : public helpers::DiffuseBxdf {
   const Reflector& reflector_;
 };
 
-class LambertianBtdf final : public helpers::DiffuseBxdf {
+class LambertianBtdf final : public internal::DiffuseBxdf {
  public:
   LambertianBtdf(const Reflector& transmittance) noexcept
       : transmittance_(transmittance) {}

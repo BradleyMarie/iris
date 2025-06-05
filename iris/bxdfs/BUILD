@@ -7,7 +7,6 @@ cc_library(
     srcs = ["ashikhmin_shirley_brdf.cc"],
     hdrs = ["ashikhmin_shirley_brdf.h"],
     deps = [
-        ":microfacet_distribution",
         "//iris:bxdf",
         "//iris:bxdf_allocator",
         "//iris:float",
@@ -15,8 +14,9 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
-        "//iris/bxdfs/helpers:diffuse_bxdf",
+        "//iris/bxdfs/internal:diffuse_bxdf",
         "//iris/bxdfs/internal:math",
+        "//iris/bxdfs/internal:microfacet",
     ],
 )
 
@@ -92,36 +92,6 @@ cc_test(
 )
 
 cc_library(
-    name = "fresnel_dielectric_bxdf",
-    srcs = ["fresnel_dielectric_bxdf.cc"],
-    hdrs = ["fresnel_dielectric_bxdf.h"],
-    deps = [
-        "//iris:bxdf",
-        "//iris:bxdf_allocator",
-        "//iris:float",
-        "//iris:reflector",
-        "//iris:sampler",
-        "//iris:spectral_allocator",
-        "//iris:vector",
-        "//iris/bxdfs/helpers:specular_bxdf",
-        "//iris/bxdfs/internal:math",
-    ],
-)
-
-cc_test(
-    name = "fresnel_dielectric_bxdf_test",
-    srcs = ["fresnel_dielectric_bxdf_test.cc"],
-    deps = [
-        ":fresnel_dielectric_bxdf",
-        "//iris/random:mock_random",
-        "//iris/reflectors:mock_reflector",
-        "//iris/testing:bxdf_allocator",
-        "//iris/testing:spectral_allocator",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "lambertian_bxdf",
     srcs = ["lambertian_bxdf.cc"],
     hdrs = ["lambertian_bxdf.h"],
@@ -133,7 +103,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
-        "//iris/bxdfs/helpers:diffuse_bxdf",
+        "//iris/bxdfs/internal:diffuse_bxdf",
         "//iris/bxdfs/internal:math",
     ],
 )
@@ -156,7 +126,6 @@ cc_library(
     srcs = ["microfacet_bxdf.cc"],
     hdrs = ["microfacet_bxdf.h"],
     deps = [
-        ":microfacet_distribution",
         "//iris:bxdf",
         "//iris:bxdf_allocator",
         "//iris:float",
@@ -164,8 +133,9 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
-        "//iris/bxdfs/helpers:diffuse_bxdf",
+        "//iris/bxdfs/internal:diffuse_bxdf",
         "//iris/bxdfs/internal:math",
+        "//iris/bxdfs/internal:microfacet",
     ],
 )
 
@@ -184,27 +154,6 @@ cc_test(
 )
 
 cc_library(
-    name = "microfacet_distribution",
-    srcs = ["microfacet_distribution.cc"],
-    hdrs = ["microfacet_distribution.h"],
-    visibility = ["//iris/bxdfs:__subpackages__"],
-    deps = [
-        "//iris:float",
-        "//iris:vector",
-        "//iris/bxdfs/internal:math",
-    ],
-)
-
-cc_test(
-    name = "microfacet_distribution_test",
-    srcs = ["microfacet_distribution_test.cc"],
-    deps = [
-        ":microfacet_distribution",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "mirror_brdf",
     srcs = ["mirror_brdf.cc"],
     hdrs = ["mirror_brdf.h"],
@@ -216,7 +165,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
-        "//iris/bxdfs/helpers:specular_bxdf",
+        "//iris/bxdfs/internal:specular_bxdf",
     ],
 )
 
@@ -259,7 +208,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
-        "//iris/bxdfs/helpers:diffuse_bxdf",
+        "//iris/bxdfs/internal:diffuse_bxdf",
         "//iris/bxdfs/internal:math",
     ],
 )
@@ -269,6 +218,36 @@ cc_test(
     srcs = ["oren_nayar_bxdf_test.cc"],
     deps = [
         ":oren_nayar_bxdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "specular_dielectric_bxdf",
+    srcs = ["specular_dielectric_bxdf.cc"],
+    hdrs = ["specular_dielectric_bxdf.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+        "//iris/bxdfs/internal:math",
+        "//iris/bxdfs/internal:specular_bxdf",
+    ],
+)
+
+cc_test(
+    name = "specular_dielectric_bxdf_test",
+    srcs = ["specular_dielectric_bxdf_test.cc"],
+    deps = [
+        ":specular_dielectric_bxdf",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
@@ -289,7 +268,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
-        "//iris/bxdfs/helpers:specular_bxdf",
+        "//iris/bxdfs/internal:specular_bxdf",
     ],
 )
 

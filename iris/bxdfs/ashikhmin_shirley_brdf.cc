@@ -1,14 +1,52 @@
 #include "iris/bxdfs/ashikhmin_shirley_brdf.h"
 
-#include <iostream>
+#include <cmath>
 #include <numbers>
 
+#include "iris/bxdf.h"
+#include "iris/bxdf_allocator.h"
+#include "iris/bxdfs/internal/diffuse_bxdf.h"
 #include "iris/bxdfs/internal/math.h"
+#include "iris/bxdfs/internal/microfacet.h"
+#include "iris/float.h"
+#include "iris/reflector.h"
+#include "iris/sampler.h"
+#include "iris/spectral_allocator.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace bxdfs {
-namespace internal {
 namespace {
+
+using ::iris::bxdfs::internal::AbsCosTheta;
+using ::iris::bxdfs::internal::CosineSampleHemisphere;
+using ::iris::bxdfs::internal::HalfAngle;
+using ::iris::bxdfs::internal::Reflect;
+using ::iris::bxdfs::internal::TrowbridgeReitzDistribution;
+
+class AshikhminShirleyBrdf final : public internal::DiffuseBxdf {
+ public:
+  AshikhminShirleyBrdf(const Reflector* diffuse, const Reflector* specular,
+                       const TrowbridgeReitzDistribution& distribution) noexcept
+      : diffuse_(diffuse), specular_(specular), distribution_(distribution) {}
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override;
+
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override;
+
+  const Reflector* ReflectanceDiffuse(
+      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+      SpectralAllocator& allocator) const override;
+
+ private:
+  const Reflector* diffuse_;
+  const Reflector* specular_;
+  TrowbridgeReitzDistribution distribution_;
+};
 
 visual_t Pow5(visual_t value) { return value * value * value * value * value; }
 
@@ -21,19 +59,17 @@ const Reflector* SchlickFresnel(const Reflector* specular,
   return allocator.Add(specular, inverted_specular);
 }
 
-}  // namespace
-
 std::optional<Vector> AshikhminShirleyBrdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
     Sampler& sampler) const {
   if (sampler.NextIndex(2u)) {
-    Vector outgoing = internal::CosineSampleHemisphere(incoming.z, sampler);
+    Vector outgoing = CosineSampleHemisphere(incoming.z, sampler);
     return outgoing.AlignWith(surface_normal);
   }
 
   Vector half_angle =
       distribution_.Sample(incoming, sampler.Next(), sampler.Next());
-  return internal::Reflect(incoming, half_angle);
+  return Reflect(incoming, half_angle);
 }
 
 visual_t AshikhminShirleyBrdf::PdfDiffuse(const Vector& incoming,
@@ -45,7 +81,7 @@ visual_t AshikhminShirleyBrdf::PdfDiffuse(const Vector& incoming,
   }
 
   visual_t diffuse_pdf =
-      static_cast<visual_t>(0.5 * M_1_PI) * internal::AbsCosTheta(outgoing);
+      static_cast<visual_t>(0.5 * std::numbers::inv_pi) * AbsCosTheta(outgoing);
 
   if (incoming.z == static_cast<geometric>(0.0) ||
       outgoing.z == static_cast<geometric>(0.0) ||
@@ -53,7 +89,7 @@ visual_t AshikhminShirleyBrdf::PdfDiffuse(const Vector& incoming,
     return diffuse_pdf;
   }
 
-  Vector half_angle = *internal::HalfAngle(incoming, outgoing);
+  Vector half_angle = *HalfAngle(incoming, outgoing);
   visual_t specular_pdf =
       distribution_.Pdf(incoming, half_angle) /
       (static_cast<visual_t>(8.0) * ClampedDotProduct(incoming, half_angle));
@@ -92,7 +128,7 @@ const Reflector* AshikhminShirleyBrdf::ReflectanceDiffuse(
     return diffuse;
   }
 
-  Vector half_angle = *internal::HalfAngle(incoming, outgoing);
+  Vector half_angle = *HalfAngle(incoming, outgoing);
   visual_t cos_theta_half_angle = ClampedDotProduct(outgoing, half_angle);
 
   visual_t specular_attenuation =
@@ -107,6 +143,23 @@ const Reflector* AshikhminShirleyBrdf::ReflectanceDiffuse(
   return allocator.UnboundedAdd(diffuse, specular);
 }
 
-}  // namespace internal
+}  // namespace
+
+const Bxdf* MakeAshikhminShirleyBrdf(BxdfAllocator& bxdf_allocator,
+                                     const Reflector* diffuse,
+                                     const Reflector* specular,
+                                     geometric_t roughness_x,
+                                     geometric_t roughness_y,
+                                     bool remap_roughness_to_alpha) {
+  if (diffuse == nullptr && specular == nullptr) {
+    return nullptr;
+  }
+
+  return &bxdf_allocator.Allocate<AshikhminShirleyBrdf>(
+      diffuse, specular,
+      TrowbridgeReitzDistribution(roughness_x, roughness_y,
+                                  remap_roughness_to_alpha));
+}
+
 }  // namespace bxdfs
 }  // namespace iris

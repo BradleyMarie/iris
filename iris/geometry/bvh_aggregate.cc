@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 
 #include "iris/scenes/internal/bvh_builder.h"
 #include "iris/scenes/internal/bvh_traversal.h"

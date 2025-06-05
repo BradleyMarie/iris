@@ -3,7 +3,6 @@
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/bxdfs/helpers/diffuse_bxdf.h"
 #include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectra/mock_spectrum.h"
@@ -22,512 +21,543 @@ using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::Return;
 
-class TestMicrofacetDistribution final : public MicrofacetDistribution {
- public:
-  TestMicrofacetDistribution(Vector vector = Vector(0.0, 0.0, 1.0))
-      : vector_(vector) {}
-
-  visual_t D(const Vector& vector) const override { return 1.0; }
-
-  visual_t Lambda(const Vector& vector) const override { return 1.0; }
-
-  Vector Sample(const Vector& incoming, geometric_t u,
-                geometric_t v) const override {
-    return vector_;
-  }
-
- private:
-  Vector vector_;
-};
-
-class TestReflectionFresnel final : public Fresnel {
- public:
-  const Reflector* AttenuateReflectance(
-      const Reflector& reflectance, visual_t cos_theta_incident,
-      SpectralAllocator& allocator) const override {
-    return &reflectance;
-  }
-
-  const Reflector* AttenuateTransmittance(
-      const Reflector& transmittance, visual_t cos_theta_incident,
-      SpectralAllocator& allocator) const override {
-    return nullptr;
-  }
-
-  bool IsValid() const override { return true; }
-};
-
-TEST(FresnelDielectric, IsValid) {
-  EXPECT_TRUE(FresnelDielectric(1.0, 2.0).IsValid());
-  EXPECT_FALSE(FresnelDielectric(-1.0, 2.0).IsValid());
-  EXPECT_FALSE(FresnelDielectric(1.0, -2.0).IsValid());
-}
-
-TEST(FresnelDielectric, ReflectancePositiveCosTheta) {
+TEST(MicrofacetDielectricBrdf, Nullptr) {
   MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  FresnelDielectric fresnel(1.0, 2.0);
-  const Reflector* attenuated =
-      fresnel.AttenuateReflectance(reflector, 1.0, GetSpectralAllocator());
-  EXPECT_NEAR(0.111111, attenuated->Reflectance(1.0), 0.001);
+  EXPECT_TRUE(MakeMicrofacetDielectricBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                           1.5, 1.0, 1.0, true));
+  EXPECT_FALSE(MakeMicrofacetDielectricBrdf(GetBxdfAllocator(), nullptr, 1.0,
+                                            1.5, 1.0, 1.0, true));
+  EXPECT_FALSE(MakeMicrofacetDielectricBrdf(GetBxdfAllocator(), &reflector,
+                                            -1.0, 1.5, 1.0, 1.0, true));
+  EXPECT_FALSE(MakeMicrofacetDielectricBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                            -1.0, 1.0, 1.0, true));
 }
 
-TEST(FresnelDielectric, ReflectanceNegativeCosTheta) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  FresnelDielectric fresnel(1.0, 2.0);
-  const Reflector* attenuated =
-      fresnel.AttenuateReflectance(reflector, -1.0, GetSpectralAllocator());
-  EXPECT_NEAR(0.111111, attenuated->Reflectance(1.0), 0.001);
-}
-
-TEST(FresnelDielectric, ReflectanceTotalInternalReflection) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  FresnelDielectric fresnel(1.0, 2.0);
-  const Reflector* attenuated =
-      fresnel.AttenuateReflectance(reflector, -0.5, GetSpectralAllocator());
-  EXPECT_EQ(1.0, attenuated->Reflectance(1.0));
-}
-
-TEST(FresnelDielectric, TransmittancePositiveCosTheta) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  FresnelDielectric fresnel(1.0, 2.0);
-  const Reflector* attenuated =
-      fresnel.AttenuateTransmittance(reflector, 1.0, GetSpectralAllocator());
-  EXPECT_NEAR(0.88888, attenuated->Reflectance(1.0), 0.001);
-}
-
-TEST(FresnelDielectric, TransmittanceNegativeCosTheta) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  FresnelDielectric fresnel(1.0, 2.0);
-  const Reflector* attenuated =
-      fresnel.AttenuateTransmittance(reflector, 1.0, GetSpectralAllocator());
-  EXPECT_NEAR(0.88888, attenuated->Reflectance(1.0), 0.001);
-}
-
-TEST(FresnelDieFresnelConductorlectric, IsValid) {
-  MockSpectrum spectrum;
-  EXPECT_TRUE(FresnelConductor(1.0, &spectrum, &spectrum).IsValid());
-  EXPECT_TRUE(FresnelConductor(1.0, &spectrum, nullptr).IsValid());
-  EXPECT_FALSE(FresnelConductor(0.0, &spectrum, &spectrum).IsValid());
-  EXPECT_FALSE(FresnelConductor(1.0, nullptr, &spectrum).IsValid());
-}
-
-TEST(FresnelConductor, ReflectancePositiveCosTheta) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(1.0)).WillRepeatedly(Return(1.0));
-  FresnelConductor fresnel(1.0, &spectrum, &spectrum);
-  const Reflector* attenuated =
-      fresnel.AttenuateReflectance(reflector, 1.0, GetSpectralAllocator());
-  EXPECT_NEAR(0.200000, attenuated->Reflectance(1.0), 0.001);
-}
-
-TEST(FresnelConductor, ReflectanceNegativeCosTheta) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillOnce(Return(1.0));
-  MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(1.0)).WillRepeatedly(Return(1.0));
-  FresnelConductor fresnel(1.0, &spectrum, &spectrum);
-  const Reflector* attenuated =
-      fresnel.AttenuateReflectance(reflector, -1.0, GetSpectralAllocator());
-  EXPECT_NEAR(0.200000, attenuated->Reflectance(1.0), 0.001);
-}
-
-TEST(FresnelConductor, Transmittance) {
-  MockReflector reflector;
-  MockSpectrum spectrum;
-  FresnelConductor fresnel(1.0, &spectrum, &spectrum);
-  EXPECT_FALSE(
-      fresnel.AttenuateTransmittance(reflector, 1.0, GetSpectralAllocator()));
-}
-
-TEST(MicrofacetBrdf, Nullptr) {
-  MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel good_fresnel;
-  FresnelDielectric bad_fresnel(-1.0, -1.0);
-  EXPECT_TRUE(MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution,
-                                 good_fresnel));
-  EXPECT_FALSE(MakeMicrofacetBrdf(GetBxdfAllocator(), nullptr, distribution,
-                                  good_fresnel));
-  EXPECT_FALSE(MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution,
-                                  bad_fresnel));
-}
-
-TEST(MicrofacetBrdf, SampleDiffuseZero) {
+TEST(MicrofacetDielectricBrdf, SampleDiffuseZero) {
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
   EXPECT_FALSE(bxdf->SampleDiffuse(Vector(1.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0),
                                    sampler));
 }
 
-TEST(MicrofacetBrdf, SampleDiffuseOppositeBxdfHemispheres) {
+TEST(MicrofacetDielectricBrdf, SampleDiffuseOppositeBxdfHemispheres) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(1.0));
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution(Vector(1.0, 0.0, -1.0));
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
   EXPECT_FALSE(bxdf->SampleDiffuse(Vector(1.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                                    sampler));
 }
 
-TEST(MicrofacetBrdf, SampleDiffuse) {
+TEST(MicrofacetDielectricBrdf, SampleDiffuse) {
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 0.1, 0.1, true);
 
   std::optional<Vector> sample = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
-  EXPECT_EQ(Vector(0.0, 0.0, 1.0), *sample);
+  EXPECT_NEAR(sample->x, 0.0, 0.001);
+  EXPECT_NEAR(sample->y, 0.97555, 0.001);
+  EXPECT_NEAR(sample->z, 0.21975, 0.001);
 }
 
-TEST(MicrofacetBrdf, PdfBTDF) {
+TEST(MicrofacetDielectricBrdf, PdfBTDF) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
-TEST(MicrofacetBrdf, PdfNoIncomingZ) {
+TEST(MicrofacetDielectricBrdf, PdfNoIncomingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, -1.0),
                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
 }
 
-TEST(MicrofacetBrdf, PdfNoOutgoingZ) {
+TEST(MicrofacetDielectricBrdf, PdfNoOutgoingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 0.0),
                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
 }
 
-TEST(MicrofacetBrdf, PdfDifferentBxdfHemispheres) {
+TEST(MicrofacetDielectricBrdf, PdfDifferentBxdfHemispheres) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0, bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
                                   Normalize(Vector(0.0, 1.0, 0.0)),
                                   Bxdf::Hemisphere::BRDF));
 }
 
-TEST(MicrofacetBrdf, Pdf) {
+TEST(MicrofacetDielectricBrdf, Pdf) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
-  EXPECT_EQ(0.125,
-            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
-                             Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
+  EXPECT_NEAR(0.03026,
+              bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              0.0001);
 }
 
-TEST(MicrofacetBrdf, ReflectanceWrongHemishphere) {
+TEST(MicrofacetDielectricBrdf, ReflectanceWrongHemishphere) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
-                                              Vector(0.0, 0.0, 1.0),
-                                              Bxdf::Hemisphere::BTDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                         Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBrdf, ReflectanceNoZIncoming) {
+TEST(MicrofacetDielectricBrdf, ReflectanceNoZIncoming) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 1.0, 0.0),
-                                              Vector(0.0, 0.0, -1.0),
-                                              Bxdf::Hemisphere::BRDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, -1.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBrdf, ReflectanceNoZOutgoing) {
+TEST(MicrofacetDielectricBrdf, ReflectanceNoZOutgoing) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
-                                              Vector(0.0, 1.0, 0.0),
-                                              Bxdf::Hemisphere::BRDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBrdf, ReflectanceOppositeBxdfHemispheres) {
+TEST(MicrofacetDielectricBrdf, ReflectanceOppositeBxdfHemispheres) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
-                                              Vector(0.0, 0.0, -1.0),
-                                              Bxdf::Hemisphere::BRDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBrdf, Reflectance) {
+TEST(MicrofacetDielectricBrdf, Reflectance) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillOnce(Return(0.5));
-  TestMicrofacetDistribution distribution;
-  TestReflectionFresnel fresnel;
-  const Bxdf* bxdf =
-      MakeMicrofacetBrdf(GetBxdfAllocator(), &reflector, distribution, fresnel);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.5, 1.0, 1.0, true);
 
-  const Reflector* reflectance = bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF,
-      testing::GetSpectralAllocator());
+  const Reflector* reflectance =
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
-  EXPECT_NEAR(0.0416667, reflectance->Reflectance(1.0), 0.001);
+  EXPECT_NEAR(0.000605, reflectance->Reflectance(1.0), 0.00001);
 }
 
-TEST(MicrofacetBtdf, Nullptr) {
+TEST(MicrofacetConductorBrdf, Nullptr) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  EXPECT_TRUE(MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector, distribution,
-                                 1.0, 2.0));
-  EXPECT_FALSE(
-      MakeMicrofacetBtdf(GetBxdfAllocator(), nullptr, distribution, 1.0, 2.0));
-  EXPECT_FALSE(MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector, distribution,
-                                  0.0, 2.0));
-  EXPECT_FALSE(MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector, distribution,
-                                  1.0, 0.0));
+  MockSpectrum conductor;
+  EXPECT_TRUE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                          &conductor, &conductor, 1.0, 1.0,
+                                          true));
+  EXPECT_FALSE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 0.0,
+                                           &conductor, &conductor, 1.0, 1.0,
+                                           true));
+  EXPECT_FALSE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                           nullptr, &conductor, 1.0, 1.0,
+                                           true));
+  EXPECT_TRUE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                          &conductor, nullptr, 1.0, 1.0, true));
 }
-
-TEST(MicrofacetBtdf, SampleDiffuseZero) {
+TEST(MicrofacetConductorBrdf, SampleDiffuseZero) {
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
 
   EXPECT_FALSE(bxdf->SampleDiffuse(Vector(1.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0),
                                    sampler));
 }
 
-TEST(MicrofacetBtdf, SampleDiffuseSameBxdfHemispheres) {
+TEST(MicrofacetConductorBrdf, SampleDiffuseOppositeBxdfHemispheres) {
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution(Vector(1.0, 0.0, -1.0));
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
 
   EXPECT_FALSE(bxdf->SampleDiffuse(Vector(1.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                                    sampler));
 }
 
-TEST(MicrofacetBtdf, SampleDiffuse) {
+TEST(MicrofacetConductorBrdf, SampleDiffuse) {
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.1, 0.1, true);
 
   std::optional<Vector> sample = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
-  EXPECT_EQ(Vector(0.0, 0.0, -1.0), *sample);
+  EXPECT_NEAR(sample->x, 0.0, 0.001);
+  EXPECT_NEAR(sample->y, 0.97555, 0.001);
+  EXPECT_NEAR(sample->z, 0.21975, 0.001);
 }
 
-TEST(MicrofacetBtdf, PdfBTDF) {
+TEST(MicrofacetConductorBrdf, PdfBTDF) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(0.0,
+            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                             Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+}
+
+TEST(MicrofacetConductorBrdf, PdfNoIncomingZ) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(0.0,
+            bxdf->PdfDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, -1.0),
+                             Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
+}
+
+TEST(MicrofacetConductorBrdf, PdfNoOutgoingZ) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(0.0,
+            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 0.0),
+                             Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF));
+}
+
+TEST(MicrofacetConductorBrdf, PdfDifferentBxdfHemispheres) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(0.0, bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                                  Normalize(Vector(0.0, 1.0, 0.0)),
+                                  Bxdf::Hemisphere::BRDF));
+}
+
+TEST(MicrofacetConductorBrdf, Pdf) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_NEAR(0.06222,
+              bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
+              0.0001);
+}
+
+TEST(MicrofacetConductorBrdf, ReflectanceWrongHemishphere) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                         Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
+}
+
+TEST(MicrofacetConductorBrdf, ReflectanceNoZIncoming) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, -1.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
+}
+
+TEST(MicrofacetConductorBrdf, ReflectanceNoZOutgoing) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
+}
+
+TEST(MicrofacetConductorBrdf, ReflectanceOppositeBxdfHemispheres) {
+  MockReflector reflector;
+  MockSpectrum conductor_eta;
+  MockSpectrum conductor_k;
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, &conductor_k, 0.5, 0.5, true);
+
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
+}
+
+TEST(MicrofacetConductorBrdf, Reflectance) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillOnce(Return(0.5));
+  MockSpectrum conductor_eta;
+  EXPECT_CALL(conductor_eta, Intensity(_)).WillOnce(Return(0.5));
+  const Bxdf* bxdf =
+      MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                  &conductor_eta, nullptr, 0.5, 0.5, true);
+
+  const Reflector* reflectance =
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
+  ASSERT_TRUE(reflectance);
+  EXPECT_NEAR(0.003457, reflectance->Reflectance(1.0), 0.001);
+}
+
+TEST(MicrofacetDielectricBtdf, Nullptr) {
+  MockReflector reflector;
+  EXPECT_TRUE(MakeMicrofacetDielectricBtdf(GetBxdfAllocator(), &reflector, 1.0,
+                                           2.0, 1.0, 1.0, true));
+  EXPECT_FALSE(MakeMicrofacetDielectricBtdf(GetBxdfAllocator(), nullptr, 1.0,
+                                            2.0, 1.0, 1.0, true));
+  EXPECT_FALSE(MakeMicrofacetDielectricBtdf(GetBxdfAllocator(), &reflector, 0.0,
+                                            2.0, 1.0, 1.0, true));
+  EXPECT_FALSE(MakeMicrofacetDielectricBtdf(GetBxdfAllocator(), &reflector, 1.0,
+                                            0.0, 1.0, 1.0, true));
+}
+
+TEST(MicrofacetDielectricBtdf, SampleDiffuseZero) {
+  MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler(rng);
+
+  MockReflector reflector;
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
+
+  EXPECT_FALSE(bxdf->SampleDiffuse(Vector(1.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0),
+                                   sampler));
+}
+
+TEST(MicrofacetDielectricBtdf, SampleDiffuseSameBxdfHemispheres) {
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(1.0));
+  Sampler sampler(rng);
+
+  MockReflector reflector;
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.0, 1.0, 1.0, true);
+
+  EXPECT_FALSE(bxdf->SampleDiffuse(Vector(1.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                                   sampler));
+}
+
+TEST(MicrofacetDielectricBtdf, SampleDiffuse) {
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
+  Sampler sampler(rng);
+
+  MockReflector reflector;
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
+
+  std::optional<Vector> sample = bxdf->SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(sample);
+  EXPECT_NEAR(sample->x, 0.0, 0.001);
+  EXPECT_NEAR(sample->y, -0.673002, 0.001);
+  EXPECT_NEAR(sample->z, -0.739640, 0.001);
+}
+
+TEST(MicrofacetDielectricBtdf, PdfBTDF) {
+  MockReflector reflector;
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                              Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF));
 }
 
-TEST(MicrofacetBtdf, PdfNoIncomingZ) {
+TEST(MicrofacetDielectricBtdf, PdfNoIncomingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
                              Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF));
 }
 
-TEST(MicrofacetBtdf, PdfNoOutgoingZ) {
+TEST(MicrofacetDielectricBtdf, PdfNoOutgoingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 0.0),
                              Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF));
 }
 
-TEST(MicrofacetBtdf, PdfSameBxdfHemispheres) {
+TEST(MicrofacetDielectricBtdf, PdfSameBxdfHemispheres) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0, bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                                   Normalize(Vector(0.0, 1.0, 0.0)),
                                   Bxdf::Hemisphere::BTDF));
 }
 
-TEST(MicrofacetBtdf, PdfNoHalfAngle) {
+TEST(MicrofacetDielectricBtdf, PdfNoHalfAngle) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 1.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.0, 1.0, 1.0, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
 }
 
-TEST(MicrofacetBtdf, Pdf) {
+TEST(MicrofacetDielectricBtdf, Pdf) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
-  EXPECT_EQ(2.0,
-            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
-                             Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+  EXPECT_NEAR(0.48430,
+              bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF),
+              0.0001);
 }
 
-TEST(MicrofacetBtdf, ReflectanceWrongHemishphere) {
+TEST(MicrofacetDielectricBtdf, ReflectanceWrongHemishphere) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
-                                              Vector(0.0, 0.0, -1.0),
-                                              Bxdf::Hemisphere::BRDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                         Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBtdf, ReflectanceNoZIncoming) {
+TEST(MicrofacetDielectricBtdf, ReflectanceNoZIncoming) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 1.0, 0.0),
-                                              Vector(0.0, 0.0, 1.0),
-                                              Bxdf::Hemisphere::BTDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
+                         Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBtdf, ReflectanceNoZOutgoing) {
+TEST(MicrofacetDielectricBtdf, ReflectanceNoZOutgoing) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
-                                              Vector(0.0, 1.0, 0.0),
-                                              Bxdf::Hemisphere::BTDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
+                         Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBtdf, ReflectanceSameBxdfHemispheres) {
+TEST(MicrofacetDielectricBtdf, ReflectanceSameBxdfHemispheres) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
-                                              Vector(0.0, 0.0, 1.0),
-                                              Bxdf::Hemisphere::BTDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                         Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBtdf, ReflectanceNoHalfAngle) {
+TEST(MicrofacetDielectricBtdf, ReflectanceNoHalfAngle) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 1.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 1.0, 1.0, 1.0, true);
 
-  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0),
-                                              Vector(0.0, 0.0, -1.0),
-                                              Bxdf::Hemisphere::BTDF,
-                                              testing::GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
+                         Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                         Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
-TEST(MicrofacetBtdf, Reflectance) {
+TEST(MicrofacetDielectricBtdf, Reflectance) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillOnce(Return(0.5));
-  TestMicrofacetDistribution distribution;
-  const Bxdf* bxdf = MakeMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                        distribution, 1.0, 2.0);
+  const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
+      GetBxdfAllocator(), &reflector, 1.0, 2.0, 1.0, 1.0, true);
 
-  const Reflector* reflectance = bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator());
+  const Reflector* reflectance =
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
-  EXPECT_NEAR(0.1481481, reflectance->Reflectance(1.0), 0.001);
+  EXPECT_NEAR(0.05381, reflectance->Reflectance(1.0), 0.001);
 }
 
 }  // namespace

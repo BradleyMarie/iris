@@ -1,5 +1,5 @@
-#ifndef _IRIS_BXDFS_HELPERS_SPECULAR_BXDF_
-#define _IRIS_BXDFS_HELPERS_SPECULAR_BXDF_
+#ifndef _IRIS_BXDFS_INTERNAL_SPECULAR_BXDF_
+#define _IRIS_BXDFS_INTERNAL_SPECULAR_BXDF_
 
 #include "iris/bxdf.h"
 #include "iris/float.h"
@@ -10,7 +10,7 @@
 
 namespace iris {
 namespace bxdfs {
-namespace helpers {
+namespace internal {
 
 class SpecularBxdf : public Bxdf {
  public:
@@ -62,8 +62,8 @@ class SpecularBxdf : public Bxdf {
   ~SpecularBxdf() = default;
 };
 
-}  // namespace helpers
+}  // namespace internal
 }  // namespace bxdfs
 }  // namespace iris
 
-#endif  // _IRIS_BXDFS_HELPERS_SPECULAR_BXDF_
+#endif  // _IRIS_BXDFS_INTERNAL_SPECULAR_BXDF_

@@ -5,7 +5,6 @@
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
-#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
 #include "iris/float.h"
 #include "iris/material.h"
 #include "iris/reference_counted.h"
@@ -18,9 +17,7 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::FresnelConductor;
-using ::iris::bxdfs::MakeMicrofacetBrdf;
-using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
+using ::iris::bxdfs::MakeMicrofacetConductorBrdf;
 using ::iris::reflectors::CreateUniformReflector;
 using ::iris::textures::ValueTexture2D;
 
@@ -72,21 +69,14 @@ const Bxdf* MetalMaterial::Evaluate(
     roughness_v = roughness_v_->Evaluate(texture_coordinates);
   }
 
-  if (remap_roughness_) {
-    roughness_u = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_u);
-    roughness_v = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_v);
-  }
-
   visual eta_dielectric = static_cast<visual>(0.0);
   if (eta_dielectric_) {
     eta_dielectric = eta_dielectric_->Evaluate(texture_coordinates);
   }
 
-  return MakeMicrofacetBrdf(
-      bxdf_allocator, kWhite.Get(),
-      TrowbridgeReitzDistribution(roughness_u, roughness_v),
-      FresnelConductor(eta_dielectric, eta_conductor_.Get(),
-                       k_conductor_.Get()));
+  return MakeMicrofacetConductorBrdf(
+      bxdf_allocator, kWhite.Get(), eta_dielectric, eta_conductor_.Get(),
+      k_conductor_.Get(), roughness_u, roughness_v, remap_roughness_);
 }
 
 }  // namespace

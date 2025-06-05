@@ -19,40 +19,21 @@ using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::Return;
 
-class TestMicrofacetDistribution final : public MicrofacetDistribution {
- public:
-  TestMicrofacetDistribution(Vector vector = Vector(0.0, 0.0, 1.0))
-      : vector_(vector) {}
-
-  visual_t D(const Vector& vector) const override { return 1.0; }
-
-  visual_t Lambda(const Vector& vector) const override { return 1.0; }
-
-  Vector Sample(const Vector& incoming, geometric_t u,
-                geometric_t v) const override {
-    return vector_;
-  }
-
- private:
-  Vector vector_;
-};
-
 TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.49));
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.25));
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   std::optional<Vector> sample = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
-  EXPECT_NEAR(sample->x, 0.0, 0.001);
+  EXPECT_NEAR(sample->x, -0.91552, 0.001);
   EXPECT_NEAR(sample->y, 0.0, 0.001);
-  EXPECT_NEAR(sample->z, 1.0, 0.001);
+  EXPECT_NEAR(sample->z, 0.40227, 0.001);
 }
 
 TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {
@@ -61,9 +42,8 @@ TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {
   Sampler sampler(rng);
 
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   std::optional<Vector> sample = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
@@ -75,9 +55,8 @@ TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {
 
 TEST(AshikhminShirleyBrdf, PdfBTDF) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
@@ -86,9 +65,8 @@ TEST(AshikhminShirleyBrdf, PdfBTDF) {
 
 TEST(AshikhminShirleyBrdf, PdfNoIncomingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   EXPECT_NEAR(0.159154,
               bxdf->PdfDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
@@ -98,9 +76,8 @@ TEST(AshikhminShirleyBrdf, PdfNoIncomingZ) {
 
 TEST(AshikhminShirleyBrdf, PdfNoOutgoingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   EXPECT_EQ(0.0,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
@@ -109,9 +86,8 @@ TEST(AshikhminShirleyBrdf, PdfNoOutgoingZ) {
 
 TEST(AshikhminShirleyBrdf, PdfOppositeHemispheres) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   EXPECT_NEAR(0.159154,
               bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
@@ -121,11 +97,10 @@ TEST(AshikhminShirleyBrdf, PdfOppositeHemispheres) {
 
 TEST(AshikhminShirleyBrdf, Pdf) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
-  EXPECT_NEAR(0.22165,
+  EXPECT_NEAR(0.190269,
               bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                                Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BRDF),
               0.001);
@@ -133,9 +108,8 @@ TEST(AshikhminShirleyBrdf, Pdf) {
 
 TEST(AshikhminShirleyBrdf, ReflectanceWrongHemishphere) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
                          Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
@@ -144,9 +118,8 @@ TEST(AshikhminShirleyBrdf, ReflectanceWrongHemishphere) {
 
 TEST(AshikhminShirleyBrdf, ReflectanceNoIncomingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
                          Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
@@ -155,9 +128,8 @@ TEST(AshikhminShirleyBrdf, ReflectanceNoIncomingZ) {
 
 TEST(AshikhminShirleyBrdf, ReflectanceNoOutgoingZ) {
   MockReflector reflector;
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, distribution);
+                                              &reflector, 0.5, 0.5, true);
 
   EXPECT_EQ(nullptr, bxdf->ReflectanceDiffuse(
                          Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0),
@@ -169,9 +141,8 @@ TEST(AshikhminShirleyBrdf, ReflectanceOppositeHemispheres) {
   EXPECT_CALL(diffuse, Reflectance(_)).WillRepeatedly(Return(0.1));
   MockReflector specular;
   EXPECT_CALL(specular, Reflectance(_)).WillRepeatedly(Return(0.2));
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &diffuse,
-                                              &specular, distribution);
+                                              &specular, 0.5, 0.5, true);
 
   const Reflector* reflectance =
       bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
@@ -185,15 +156,14 @@ TEST(AshikhminShirleyBrdf, Reflectance) {
   EXPECT_CALL(diffuse, Reflectance(_)).WillRepeatedly(Return(0.1));
   MockReflector specular;
   EXPECT_CALL(specular, Reflectance(_)).WillRepeatedly(Return(0.2));
-  TestMicrofacetDistribution distribution;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &diffuse,
-                                              &specular, distribution);
+                                              &specular, 0.5, 0.5, true);
 
   const Reflector* reflectance =
       bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
                                Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(reflectance);
-  EXPECT_NEAR(0.0790, reflectance->Reflectance(0.5), 0.001);
+  EXPECT_NEAR(0.041539, reflectance->Reflectance(0.5), 0.001);
 }
 
 }  // namespace

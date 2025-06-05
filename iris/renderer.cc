@@ -4,7 +4,6 @@
 #include <array>
 #include <atomic>
 #include <cmath>
-#include <iostream>
 #include <thread>
 #include <vector>
 

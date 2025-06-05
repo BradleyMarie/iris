@@ -15,7 +15,7 @@ cc_library(
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
-        "//iris/bxdfs:fresnel_dielectric_bxdf",
+        "//iris/bxdfs:specular_dielectric_bxdf",
         "//iris/textures:texture2d",
     ],
 )
@@ -79,7 +79,6 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:microfacet_bxdf",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/reflectors:uniform_reflector",
         "//iris/textures:texture2d",
     ],
@@ -193,7 +192,6 @@ cc_library(
         "//iris/bxdfs:composite_bxdf",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/textures:texture2d",
     ],
 )
@@ -225,7 +223,6 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:ashikhmin_shirley_brdf",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/textures:texture2d",
     ],
 )
@@ -259,7 +256,6 @@ cc_library(
         "//iris/bxdfs:composite_bxdf",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/textures:texture2d",
     ],
 )
@@ -291,11 +287,10 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:composite_bxdf",
-        "//iris/bxdfs:fresnel_dielectric_bxdf",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
+        "//iris/bxdfs:specular_dielectric_bxdf",
         "//iris/bxdfs:transparent_btdf",
-        "//iris/bxdfs/microfacet_distributions:trowbridge_reitz_distribution",
         "//iris/reflectors:uniform_reflector",
         "//iris/textures:texture2d",
     ],

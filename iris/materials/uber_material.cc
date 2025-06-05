@@ -6,10 +6,9 @@
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/composite_bxdf.h"
-#include "iris/bxdfs/fresnel_dielectric_bxdf.h"
 #include "iris/bxdfs/lambertian_bxdf.h"
 #include "iris/bxdfs/microfacet_bxdf.h"
-#include "iris/bxdfs/microfacet_distributions/trowbridge_reitz_distribution.h"
+#include "iris/bxdfs/specular_dielectric_bxdf.h"
 #include "iris/bxdfs/transparent_btdf.h"
 #include "iris/float.h"
 #include "iris/material.h"
@@ -23,13 +22,11 @@ namespace iris {
 namespace materials {
 namespace {
 
-using ::iris::bxdfs::FresnelDielectric;
 using ::iris::bxdfs::MakeCompositeBxdf;
-using ::iris::bxdfs::MakeFresnelDielectricBxdf;
 using ::iris::bxdfs::MakeLambertianBrdf;
-using ::iris::bxdfs::MakeMicrofacetBrdf;
+using ::iris::bxdfs::MakeMicrofacetDielectricBrdf;
+using ::iris::bxdfs::MakeSpecularDielectricBxdf;
 using ::iris::bxdfs::MakeTransparentBtdf;
-using ::iris::bxdfs::microfacet_distributions::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
@@ -129,21 +126,16 @@ const Bxdf* UberMaterial::Evaluate(
       roughness_v = roughness_v_->Evaluate(texture_coordinates);
     }
 
-    if (remap_roughness_) {
-      roughness_u = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_u);
-      roughness_v = TrowbridgeReitzDistribution::RoughnessToAlpha(roughness_v);
-    }
-
-    microfacet_brdf = MakeMicrofacetBrdf(
+    microfacet_brdf = MakeMicrofacetDielectricBrdf(
         bxdf_allocator,
         spectral_allocator.Scale(
             specular_->Evaluate(texture_coordinates, spectral_allocator),
             opacity),
-        TrowbridgeReitzDistribution(roughness_u, roughness_v),
-        FresnelDielectric(eta_incident, eta_transmitted));
+        eta_incident, eta_transmitted, roughness_u, roughness_v,
+        remap_roughness_);
   }
 
-  const Bxdf* fresnel_bxdf = nullptr;
+  const Bxdf* specular_bxdf = nullptr;
   if (reflectance_ || transmittance_) {
     const Reflector* reflectance = nullptr;
     if (reflectance_) {
@@ -159,13 +151,13 @@ const Bxdf* UberMaterial::Evaluate(
           opacity);
     }
 
-    fresnel_bxdf =
-        MakeFresnelDielectricBxdf(bxdf_allocator, reflectance, transmittance,
-                                  eta_incident, eta_transmitted);
+    specular_bxdf =
+        MakeSpecularDielectricBxdf(bxdf_allocator, reflectance, transmittance,
+                                   eta_incident, eta_transmitted);
   }
 
   return MakeCompositeBxdf(bxdf_allocator, transparent_btdf, lambertian_brdf,
-                           microfacet_brdf, fresnel_bxdf);
+                           microfacet_brdf, specular_bxdf);
 }
 
 }  // namespace

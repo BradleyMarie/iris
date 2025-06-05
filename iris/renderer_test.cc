@@ -1,6 +1,5 @@
 #include "iris/renderer.h"
 
-#include <iostream>
 #include <thread>
 
 #include "googletest/include/gtest/gtest.h"

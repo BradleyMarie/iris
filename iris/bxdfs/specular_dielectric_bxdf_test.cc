@@ -1,4 +1,4 @@
-#include "iris/bxdfs/fresnel_dielectric_bxdf.h"
+#include "iris/bxdfs/specular_dielectric_bxdf.h"
 
 #include <cmath>
 #include <variant>
@@ -20,33 +20,33 @@ using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::Return;
 
-TEST(FresnelBxdfTest, Null) {
+TEST(SpecularBxdfTest, Null) {
   MockReflector reflector;
-  EXPECT_TRUE(MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector,
-                                        &reflector, 1.0, 1.0));
-  EXPECT_TRUE(MakeFresnelDielectricBxdf(GetBxdfAllocator(), nullptr, &reflector,
-                                        1.0, 1.0));
-  EXPECT_TRUE(MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector, nullptr,
-                                        1.0, 1.0));
-  EXPECT_FALSE(MakeFresnelDielectricBxdf(GetBxdfAllocator(), nullptr, nullptr,
-                                         1.0, 1.0));
-  EXPECT_FALSE(MakeFresnelDielectricBxdf(GetBxdfAllocator(), nullptr, nullptr,
-                                         1.0, 1.0));
-  EXPECT_FALSE(MakeFresnelDielectricBxdf(GetBxdfAllocator(), nullptr,
-                                         &reflector, 0.0, 1.0));
-  EXPECT_FALSE(MakeFresnelDielectricBxdf(GetBxdfAllocator(), nullptr,
-                                         &reflector, 1.0, 0.0));
+  EXPECT_TRUE(MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                         &reflector, 1.0, 1.0));
+  EXPECT_TRUE(MakeSpecularDielectricBxdf(GetBxdfAllocator(), nullptr,
+                                         &reflector, 1.0, 1.0));
+  EXPECT_TRUE(MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                         nullptr, 1.0, 1.0));
+  EXPECT_FALSE(MakeSpecularDielectricBxdf(GetBxdfAllocator(), nullptr, nullptr,
+                                          1.0, 1.0));
+  EXPECT_FALSE(MakeSpecularDielectricBxdf(GetBxdfAllocator(), nullptr, nullptr,
+                                          1.0, 1.0));
+  EXPECT_FALSE(MakeSpecularDielectricBxdf(GetBxdfAllocator(), nullptr,
+                                          &reflector, 0.0, 1.0));
+  EXPECT_FALSE(MakeSpecularDielectricBxdf(GetBxdfAllocator(), nullptr,
+                                          &reflector, 1.0, 0.0));
 }
 
-TEST(FresnelBxdfTest, SampleTransmittanceNoReflectance) {
+TEST(SpecularBxdfTest, SampleTransmittanceNoReflectance) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf = MakeFresnelDielectricBxdf(GetBxdfAllocator(), nullptr,
-                                               &transmitter, 1.0, 1.5);
+  const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), nullptr,
+                                                &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Normalize(Vector(1.0, 1.0, 1.0)), std::nullopt,
                    Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
@@ -59,7 +59,7 @@ TEST(FresnelBxdfTest, SampleTransmittanceNoReflectance) {
   EXPECT_EQ(result.pdf, 1.0);
 }
 
-TEST(FresnelBxdfTest, SampleTransmittanceFront) {
+TEST(SpecularBxdfTest, SampleTransmittanceFront) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
@@ -67,8 +67,8 @@ TEST(FresnelBxdfTest, SampleTransmittanceFront) {
   EXPECT_CALL(rng, DiscardGeometric(1));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf = MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector,
-                                               &transmitter, 1.0, 1.5);
+  const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                                &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Normalize(Vector(1.0, 1.0, 1.0)), std::nullopt,
                    Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
@@ -81,7 +81,7 @@ TEST(FresnelBxdfTest, SampleTransmittanceFront) {
   EXPECT_NEAR(result.pdf, 0.9310, 0.001);
 }
 
-TEST(FresnelBxdfTest, SampleTransmittanceBack) {
+TEST(SpecularBxdfTest, SampleTransmittanceBack) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
@@ -89,8 +89,8 @@ TEST(FresnelBxdfTest, SampleTransmittanceBack) {
   EXPECT_CALL(rng, DiscardGeometric(1));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf = MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector,
-                                               &transmitter, 1.5, 1.0);
+  const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                                &transmitter, 1.5, 1.0);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Normalize(Vector(1.0, 1.0, -1.0)), std::nullopt,
                    Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
@@ -103,7 +103,7 @@ TEST(FresnelBxdfTest, SampleTransmittanceBack) {
   EXPECT_NEAR(result.pdf, 0.9310, 0.001);
 }
 
-TEST(FresnelBxdfTest, SampleTransmittanceWithDerivatives) {
+TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
@@ -111,8 +111,8 @@ TEST(FresnelBxdfTest, SampleTransmittanceWithDerivatives) {
   EXPECT_CALL(rng, DiscardGeometric(1));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf = MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector,
-                                               &transmitter, 1.0, 1.5);
+  const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                                &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(
       Normalize(Vector(1.0, 1.0, 1.0)),
       {{Normalize(Vector(1.0, 0.5, 1.0)), Normalize(Vector(0.5, 1.0, 1.0))}},
@@ -132,15 +132,15 @@ TEST(FresnelBxdfTest, SampleTransmittanceWithDerivatives) {
   EXPECT_NEAR(result.pdf, 0.9310, 0.001);
 }
 
-TEST(FresnelBxdfTest, SampleReflectanceNoTransmittance) {
+TEST(SpecularBxdfTest, SampleReflectanceNoTransmittance) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf = MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector,
-                                               nullptr, 1.0, 1.5);
+  const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                                nullptr, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Normalize(Vector(1.0, 1.0, 1.0)), std::nullopt,
                    Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
@@ -152,7 +152,7 @@ TEST(FresnelBxdfTest, SampleReflectanceNoTransmittance) {
   EXPECT_EQ(result.pdf, 1.0);
 }
 
-TEST(FresnelBxdfTest, SampleReflectance) {
+TEST(SpecularBxdfTest, SampleReflectance) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
@@ -160,8 +160,8 @@ TEST(FresnelBxdfTest, SampleReflectance) {
   EXPECT_CALL(rng, DiscardGeometric(1));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf = MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector,
-                                               &transmitter, 1.0, 1.5);
+  const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                                &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Normalize(Vector(1.0, 1.0, 1.0)), std::nullopt,
                    Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
@@ -173,7 +173,7 @@ TEST(FresnelBxdfTest, SampleReflectance) {
   EXPECT_NEAR(result.pdf, 0.0689, 0.001);
 }
 
-TEST(FresnelBxdfTest, SampleReflectanceWithDerivatives) {
+TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
@@ -181,8 +181,8 @@ TEST(FresnelBxdfTest, SampleReflectanceWithDerivatives) {
   EXPECT_CALL(rng, DiscardGeometric(1));
   Sampler sampler(rng);
 
-  const Bxdf* bxdf = MakeFresnelDielectricBxdf(GetBxdfAllocator(), &reflector,
-                                               &transmitter, 1.0, 1.5);
+  const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
+                                                &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(
       Normalize(Vector(1.0, 1.0, 1.0)),
       {{Normalize(Vector(1.0, 0.5, 1.0)), Normalize(Vector(0.5, 1.0, 1.0))}},
