@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <thread>
 #include <tuple>
@@ -64,13 +65,14 @@ ABSL_FLAG(bool, spectral, false, "If true, spectral rendering is performed.");
 namespace {
 
 using ::iris::Framebuffer;
+using ::iris::Random;
 using ::iris::Renderer;
 using ::iris::pbrt_frontend::Directives;
 using ::iris::pbrt_frontend::LoadFile;
 using ::iris::pbrt_frontend::Options;
 using ::iris::pbrt_frontend::ParseScene;
 using ::iris::pbrt_frontend::ParsingResult;
-using ::iris::random::MersenneTwisterRandom;
+using ::iris::random::MakeMersenneTwisterRandom;
 using ::pbrt_proto::v3::Convert;
 using ::pbrt_proto::v3::Directive;
 using ::pbrt_proto::v3::PbrtProto;
@@ -266,8 +268,8 @@ int main(int argc, char** argv) {
       options.maximum_sample_luminance = result->max_sample_luminance;
     }
 
-    MersenneTwisterRandom rng;  // TODO: Support other RNG
-    Framebuffer framebuffer = result->renderable.Render(rng, options);
+    std::unique_ptr<Random> rng = MakeMersenneTwisterRandom();
+    Framebuffer framebuffer = result->renderable.Render(*rng, options);
 
     result->output_write_function(framebuffer, output);
   }

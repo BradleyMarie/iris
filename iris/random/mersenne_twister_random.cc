@@ -2,9 +2,31 @@
 
 #include <cassert>
 #include <limits>
+#include <memory>
+#include <random>
+
+#include "iris/float.h"
+#include "iris/random.h"
 
 namespace iris {
 namespace random {
+namespace {
+
+class MersenneTwisterRandom final : public Random {
+ public:
+  MersenneTwisterRandom(
+      std::mt19937::result_type default_seed = std::mt19937::default_seed)
+      : rng_(default_seed) {}
+
+  size_t NextIndex(size_t size) override;
+  geometric NextGeometric() override;
+  visual NextVisual() override;
+
+  std::unique_ptr<Random> Replicate() override;
+
+ private:
+  std::mt19937 rng_;
+};
 
 size_t MersenneTwisterRandom::NextIndex(size_t size) {
   assert(size != 0 && size <= std::numeric_limits<uint32_t>::max());
@@ -24,6 +46,12 @@ visual MersenneTwisterRandom::NextVisual() {
 
 std::unique_ptr<Random> MersenneTwisterRandom::Replicate() {
   return std::make_unique<MersenneTwisterRandom>(rng_());
+}
+
+}  // namespace
+
+std::unique_ptr<Random> MakeMersenneTwisterRandom() {
+  return std::make_unique<MersenneTwisterRandom>();
 }
 
 }  // namespace random

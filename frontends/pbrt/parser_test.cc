@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
+#include <memory>
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random/mersenne_twister_random.h"
@@ -14,7 +15,7 @@ namespace pbrt_frontend {
 namespace {
 
 using ::bazel::tools::cpp::runfiles::Runfiles;
-using ::iris::random::MersenneTwisterRandom;
+using ::iris::random::MakeMersenneTwisterRandom;
 using ::pbrt_proto::v3::PbrtProto;
 using ::testing::ExitedWithCode;
 
@@ -500,9 +501,9 @@ TEST(Render, EmptyScene) {
   EXPECT_GT(result->max_sample_luminance, 0.0);
   EXPECT_EQ("pbrt.exr", result->output_filename);
 
-  MersenneTwisterRandom rng;
+  std::unique_ptr<Random> rng = MakeMersenneTwisterRandom();
 
-  Framebuffer framebuffer = result->renderable.Render(rng);
+  Framebuffer framebuffer = result->renderable.Render(*rng);
   std::pair<size_t, size_t> dimensions = framebuffer.Size();
   EXPECT_EQ(720u, dimensions.first);
   EXPECT_EQ(1280u, dimensions.second);

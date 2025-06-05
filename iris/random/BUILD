@@ -28,6 +28,8 @@ cc_test(
     srcs = ["mersenne_twister_random_test.cc"],
     deps = [
         ":mersenne_twister_random",
+        "//iris:float",
+        "//iris:random",
         "@googletest//:gtest_main",
     ],
 )

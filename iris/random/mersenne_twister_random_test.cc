@@ -1,33 +1,43 @@
 #include "iris/random/mersenne_twister_random.h"
 
-#include <limits>
-#include <set>
+#include <memory>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
+#include "iris/random.h"
+
+namespace iris {
+namespace random {
+namespace {
 
 TEST(MersenneTwisterRandomTest, NextIndex) {
-  iris::random::MersenneTwisterRandom rng;
-  auto next = rng.NextIndex(10u);
+  std::unique_ptr<Random> rng = MakeMersenneTwisterRandom();
+  size_t next = rng->NextIndex(10u);
   EXPECT_GE(next, 0u);
   EXPECT_LT(next, 10u);
 }
 
 TEST(MersenneTwisterRandomTest, NextGeometric) {
-  iris::random::MersenneTwisterRandom rng;
-  auto next = rng.NextGeometric();
+  std::unique_ptr<Random> rng = MakeMersenneTwisterRandom();
+  geometric_t next = rng->NextGeometric();
   EXPECT_GE(next, 0.0);
   EXPECT_LT(next, 1.0);
 }
 
 TEST(MersenneTwisterRandomTest, NextVisual) {
-  iris::random::MersenneTwisterRandom rng;
-  auto next = rng.NextVisual();
+  std::unique_ptr<Random> rng = MakeMersenneTwisterRandom();
+  visual_t next = rng->NextVisual();
   EXPECT_GE(next, 0.0);
   EXPECT_LT(next, 1.0);
 }
 
 TEST(MersenneTwisterRandomTest, Replicate) {
-  iris::random::MersenneTwisterRandom rng0;
-  auto rng1 = rng0.Replicate();
-  EXPECT_NE(rng0.NextGeometric(), rng1->NextGeometric());
+  std::unique_ptr<Random> rng0 = MakeMersenneTwisterRandom();
+  std::unique_ptr<Random> rng1 = rng0->Replicate();
+  EXPECT_NE(rng0.get(), rng1.get());
+  EXPECT_NE(rng0->NextGeometric(), rng1->NextGeometric());
 }
+
+}  // namespace
+}  // namespace random
+}  // namespace iris
