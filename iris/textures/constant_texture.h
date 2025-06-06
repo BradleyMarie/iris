@@ -12,7 +12,7 @@ template <typename Return, typename... Args>
 class ConstantPointerTexture2D final
     : public PointerTexture2D<Return, Args...> {
  public:
-  ConstantPointerTexture2D(iris::ReferenceCounted<Return> value)
+  ConstantPointerTexture2D(ReferenceCounted<Return> value)
       : value_(std::move(value)) {}
 
   const Return* Evaluate(const TextureCoordinates& coordinates,
@@ -21,7 +21,7 @@ class ConstantPointerTexture2D final
   }
 
  private:
-  const iris::ReferenceCounted<Return> value_;
+  const ReferenceCounted<Return> value_;
 };
 
 template <typename T>

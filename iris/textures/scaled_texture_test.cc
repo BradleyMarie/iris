@@ -1,8 +1,12 @@
 #include "iris/textures/scaled_texture.h"
 
+#include <optional>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
+#include "iris/texture_coordinates.h"
 #include "iris/textures/constant_texture.h"
 
 namespace iris {

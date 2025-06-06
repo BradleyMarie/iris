@@ -4,8 +4,10 @@
 #include <cassert>
 #include <cmath>
 #include <memory>
+#include <utility>
 #include <vector>
 
+#include "iris/float.h"
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
@@ -42,7 +44,10 @@ class Image2D final {
   }
 
   const T& GetBordered(geometric_t u, geometric_t v, const T& border) {
-    if (u < 0.0 || u > 1.0 || v < 0.0 || v > 1.0) {
+    if (u < static_cast<geometric_t>(0.0) ||
+        u > static_cast<geometric_t>(1.0) ||
+        v < static_cast<geometric_t>(0.0) ||
+        v > static_cast<geometric_t>(1.0)) {
       return border;
     }
 
@@ -94,9 +99,9 @@ class Image2D final {
   }
 
  private:
-  const std::vector<T> image_;
-  const std::pair<size_t, size_t> size_;
-  const std::pair<geometric_t, geometric_t> texel_size_;
+  std::vector<T> image_;
+  std::pair<size_t, size_t> size_;
+  std::pair<geometric_t, geometric_t> texel_size_;
 };
 
 template <typename T>
@@ -108,8 +113,8 @@ class BorderedSpectralImageTexture2D final
     : public UVPointerTexture2D<Return, Args...> {
  public:
   BorderedSpectralImageTexture2D(
-      std::shared_ptr<Image2D<iris::ReferenceCounted<Return>>> image,
-      iris::ReferenceCounted<Return> border, std::optional<geometric> u_scale,
+      std::shared_ptr<Image2D<ReferenceCounted<Return>>> image,
+      ReferenceCounted<Return> border, std::optional<geometric> u_scale,
       std::optional<geometric> v_scale, std::optional<geometric> u_offset,
       std::optional<geometric> v_offset)
       : UVPointerTexture2D<Return, Args...>(u_scale, v_scale, u_offset,
@@ -125,8 +130,8 @@ class BorderedSpectralImageTexture2D final
   }
 
  private:
-  const std::shared_ptr<Image2D<iris::ReferenceCounted<Return>>> image_;
-  const iris::ReferenceCounted<Return> border_;
+  std::shared_ptr<Image2D<ReferenceCounted<Return>>> image_;
+  ReferenceCounted<Return> border_;
 };
 
 template <typename Return, typename... Args>
@@ -134,7 +139,7 @@ class ClampedSpectralImageTexture2D final
     : public UVPointerTexture2D<Return, Args...> {
  public:
   ClampedSpectralImageTexture2D(
-      std::shared_ptr<Image2D<iris::ReferenceCounted<Return>>> image,
+      std::shared_ptr<Image2D<ReferenceCounted<Return>>> image,
       std::optional<geometric> u_scale, std::optional<geometric> v_scale,
       std::optional<geometric> u_offset, std::optional<geometric> v_offset)
       : UVPointerTexture2D<Return, Args...>(u_scale, v_scale, u_offset,
@@ -148,7 +153,7 @@ class ClampedSpectralImageTexture2D final
   }
 
  private:
-  const std::shared_ptr<Image2D<iris::ReferenceCounted<Return>>> image_;
+  std::shared_ptr<Image2D<ReferenceCounted<Return>>> image_;
 };
 
 template <typename Return, typename... Args>
@@ -156,7 +161,7 @@ class RepeatedSpectralImageTexture2D final
     : public UVPointerTexture2D<Return, Args...> {
  public:
   RepeatedSpectralImageTexture2D(
-      std::shared_ptr<Image2D<iris::ReferenceCounted<Return>>> image,
+      std::shared_ptr<Image2D<ReferenceCounted<Return>>> image,
       std::optional<geometric> u_scale, std::optional<geometric> v_scale,
       std::optional<geometric> u_offset, std::optional<geometric> v_offset)
       : UVPointerTexture2D<Return, Args...>(u_scale, v_scale, u_offset,
@@ -170,7 +175,7 @@ class RepeatedSpectralImageTexture2D final
   }
 
  private:
-  const std::shared_ptr<Image2D<iris::ReferenceCounted<Return>>> image_;
+  std::shared_ptr<Image2D<ReferenceCounted<Return>>> image_;
 };
 
 template <typename T>
@@ -187,27 +192,27 @@ class BorderedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    auto coords =
+    Image2D<T>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
-    const auto& bottom_left = image_->GetBordered(
+    const T& bottom_left = image_->GetBordered(
         coords.low_coordinates[0][0], coords.low_coordinates[0][1], border_);
-    const auto& bottom_right = image_->GetBordered(
+    const T& bottom_right = image_->GetBordered(
         coords.low_coordinates[1][0], coords.low_coordinates[1][1], border_);
-    const auto& top_left = image_->GetBordered(
+    const T& top_left = image_->GetBordered(
         coords.high_coordinates[0][0], coords.high_coordinates[0][1], border_);
-    const auto& top_right = image_->GetBordered(
+    const T& top_right = image_->GetBordered(
         coords.high_coordinates[1][0], coords.high_coordinates[1][1], border_);
 
-    auto bottom =
+    T bottom =
         std::lerp(bottom_left, bottom_right, coords.left_right_interpolation);
-    auto top = std::lerp(top_left, top_right, coords.left_right_interpolation);
+    T top = std::lerp(top_left, top_right, coords.left_right_interpolation);
     return std::lerp(bottom, top, coords.low_high_interpolation);
   }
 
  private:
-  const std::shared_ptr<Image2D<T>> image_;
-  const T border_;
+  std::shared_ptr<Image2D<T>> image_;
+  T border_;
 };
 
 template <typename T>
@@ -223,26 +228,26 @@ class ClampedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    auto coords =
+    Image2D<T>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
-    const auto& bottom_left = image_->GetClamped(coords.low_coordinates[0][0],
-                                                 coords.low_coordinates[0][1]);
-    const auto& bottom_right = image_->GetClamped(coords.low_coordinates[1][0],
-                                                  coords.low_coordinates[1][1]);
-    const auto& top_left = image_->GetClamped(coords.high_coordinates[0][0],
-                                              coords.high_coordinates[0][1]);
-    const auto& top_right = image_->GetClamped(coords.high_coordinates[1][0],
-                                               coords.high_coordinates[1][1]);
+    const T& bottom_left = image_->GetClamped(coords.low_coordinates[0][0],
+                                              coords.low_coordinates[0][1]);
+    const T& bottom_right = image_->GetClamped(coords.low_coordinates[1][0],
+                                               coords.low_coordinates[1][1]);
+    const T& top_left = image_->GetClamped(coords.high_coordinates[0][0],
+                                           coords.high_coordinates[0][1]);
+    const T& top_right = image_->GetClamped(coords.high_coordinates[1][0],
+                                            coords.high_coordinates[1][1]);
 
-    auto bottom =
+    T bottom =
         std::lerp(bottom_left, bottom_right, coords.left_right_interpolation);
-    auto top = std::lerp(top_left, top_right, coords.left_right_interpolation);
+    T top = std::lerp(top_left, top_right, coords.left_right_interpolation);
     return std::lerp(bottom, top, coords.low_high_interpolation);
   }
 
  private:
-  const std::shared_ptr<Image2D<T>> image_;
+  std::shared_ptr<Image2D<T>> image_;
 };
 
 template <typename T>
@@ -258,26 +263,26 @@ class RepeatedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    auto coords =
+    Image2D<T>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
-    const auto& bottom_left = image_->GetRepeated(coords.low_coordinates[0][0],
-                                                  coords.low_coordinates[0][1]);
-    const auto& bottom_right = image_->GetRepeated(
-        coords.low_coordinates[1][0], coords.low_coordinates[1][1]);
-    const auto& top_left = image_->GetRepeated(coords.high_coordinates[0][0],
-                                               coords.high_coordinates[0][1]);
-    const auto& top_right = image_->GetRepeated(coords.high_coordinates[1][0],
-                                                coords.high_coordinates[1][1]);
+    const T& bottom_left = image_->GetRepeated(coords.low_coordinates[0][0],
+                                               coords.low_coordinates[0][1]);
+    const T& bottom_right = image_->GetRepeated(coords.low_coordinates[1][0],
+                                                coords.low_coordinates[1][1]);
+    const T& top_left = image_->GetRepeated(coords.high_coordinates[0][0],
+                                            coords.high_coordinates[0][1]);
+    const T& top_right = image_->GetRepeated(coords.high_coordinates[1][0],
+                                             coords.high_coordinates[1][1]);
 
-    auto bottom =
+    T bottom =
         std::lerp(bottom_left, bottom_right, coords.left_right_interpolation);
-    auto top = std::lerp(top_left, top_right, coords.left_right_interpolation);
+    T top = std::lerp(top_left, top_right, coords.left_right_interpolation);
     return std::lerp(bottom, top, coords.low_high_interpolation);
   }
 
  private:
-  const std::shared_ptr<Image2D<T>> image_;
+  std::shared_ptr<Image2D<T>> image_;
 };
 
 }  // namespace textures

@@ -17,6 +17,8 @@ cc_test(
     srcs = ["constant_texture_test.cc"],
     deps = [
         ":constant_texture",
+        "//iris:reference_counted",
+        "//iris:texture_coordinates",
         "//iris/spectra:mock_spectrum",
         "@googletest//:gtest_main",
     ],
@@ -38,6 +40,9 @@ cc_test(
     srcs = ["image_texture_test.cc"],
     deps = [
         ":image_texture",
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "@googletest//:gtest_main",
     ],
@@ -60,6 +65,8 @@ cc_test(
     deps = [
         ":constant_texture",
         ":scaled_texture",
+        "//iris:float",
+        "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
@@ -80,6 +87,7 @@ cc_library(
     hdrs = ["uv_texture.h"],
     deps = [
         ":texture2d",
+        "//iris:float",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
     ],
@@ -90,6 +98,8 @@ cc_test(
     srcs = ["uv_texture_test.cc"],
     deps = [
         ":uv_texture",
+        "//iris:float",
+        "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "@googletest//:gtest_main",
     ],

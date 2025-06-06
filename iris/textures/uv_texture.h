@@ -4,6 +4,7 @@
 #include <cassert>
 #include <optional>
 
+#include "iris/float.h"
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
 #include "iris/textures/texture2d.h"
