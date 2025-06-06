@@ -9,7 +9,6 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:normal_map",
-        "//iris:reference_countable",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris:vector",
@@ -22,8 +21,13 @@ cc_test(
     srcs = ["bump_normal_map_test.cc"],
     deps = [
         ":bump_normal_map",
+        "//iris:float",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris:texture_coordinates",
         "//iris/textures:constant_texture",
         "//iris/textures:image_texture",
+        "//iris/textures:texture2d",
         "@googletest//:gtest_main",
     ],
 )
@@ -33,9 +37,7 @@ cc_library(
     testonly = True,
     hdrs = ["mock_normal_map.h"],
     deps = [
-        "//iris:float",
         "//iris:normal_map",
-        "//iris:reference_countable",
         "//iris:texture_coordinates",
         "//iris:vector",
         "@googletest//:gtest",

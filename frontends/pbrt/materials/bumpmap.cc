@@ -14,7 +14,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace materials {
 
-using ::iris::normals::BumpNormalMap;
+using ::iris::normal_maps::MakeBumpNormalMap;
 using ::iris::textures::ValueTexture2D;
 using ::pbrt_proto::v3::FloatTextureParameter;
 
@@ -79,10 +79,8 @@ std::array<ReferenceCounted<NormalMap>, 2> MakeBumpMap(
     return std::array<ReferenceCounted<NormalMap>, 2>();
   }
 
-  ReferenceCounted<NormalMap> bump_map =
-      MakeReferenceCounted<BumpNormalMap>(texture);
   ReferenceCounted<NormalMap> front_bump_map =
-      MakeReferenceCounted<PbrtFrontBumpMap>(std::move(bump_map));
+      MakeReferenceCounted<PbrtFrontBumpMap>(MakeBumpNormalMap(texture));
   ReferenceCounted<NormalMap> back_bump_map =
       MakeReferenceCounted<PbrtBackBumpMap>(front_bump_map);
   return {std::move(front_bump_map), std::move(back_bump_map)};

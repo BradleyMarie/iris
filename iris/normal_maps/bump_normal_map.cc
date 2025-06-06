@@ -1,11 +1,24 @@
 #include "iris/normal_maps/bump_normal_map.h"
 
+#include <cmath>
+#include <optional>
+#include <utility>
+
+#include "iris/float.h"
+#include "iris/normal_map.h"
+#include "iris/reference_counted.h"
+#include "iris/texture_coordinates.h"
+#include "iris/textures/texture2d.h"
+#include "iris/vector.h"
+
 namespace iris {
-namespace normals {
+namespace normal_maps {
 namespace {
 
+using ::iris::textures::ValueTexture2D;
+
 std::pair<geometric_t, geometric_t> ComputeNormal(
-    const iris::ReferenceCounted<textures::ValueTexture2D<visual>>& bumps,
+    const ReferenceCounted<ValueTexture2D<visual>>& bumps,
     const TextureCoordinates& texture_coordinates,
     const NormalMap::Differentials& differentials) {
   visual_t displacement = bumps->Evaluate(texture_coordinates);
@@ -73,12 +86,27 @@ std::pair<geometric_t, geometric_t> ComputeNormal(
   return {displacement0, displacement1};
 }
 
-}  // namespace
+class BumpNormalMap final : public NormalMap {
+ public:
+  BumpNormalMap(ReferenceCounted<ValueTexture2D<visual>> bumps)
+      : bumps_(std::move(bumps)) {}
+
+  Vector Evaluate(const TextureCoordinates& texture_coordinates,
+                  const std::optional<Differentials>& Differentials,
+                  const Vector& surface_normal) const override;
+
+ private:
+  ReferenceCounted<ValueTexture2D<visual>> bumps_;
+};
 
 Vector BumpNormalMap::Evaluate(
     const TextureCoordinates& texture_coordinates,
     const std::optional<Differentials>& differentials,
     const Vector& surface_normal) const {
+  if (!bumps_) {
+    return surface_normal;
+  }
+
   // If we instead had guaranteed values for dp_du and dp_dv we could instead
   // convert the bump map into a normal map during construction so that we could
   // always return a value from this function without falling back on the
@@ -87,13 +115,25 @@ Vector BumpNormalMap::Evaluate(
     return surface_normal;
   }
 
-  auto result = ComputeNormal(bumps_, texture_coordinates, *differentials);
-  Vector dn_dx = differentials->dp.first + surface_normal * result.first;
-  Vector dn_dy = differentials->dp.second + surface_normal * result.second;
+  auto [displacement0, displacement1] =
+      ComputeNormal(bumps_, texture_coordinates, *differentials);
+  Vector dn_dx = differentials->dp.first + surface_normal * displacement0;
+  Vector dn_dy = differentials->dp.second + surface_normal * displacement1;
   Vector shading_normal = CrossProduct(dn_dy, dn_dx);
 
   return shading_normal.AlignWith(surface_normal);
 }
 
-}  // namespace normals
+}  // namespace
+
+ReferenceCounted<NormalMap> MakeBumpNormalMap(
+    ReferenceCounted<ValueTexture2D<visual>> bumps) {
+  if (!bumps) {
+    return ReferenceCounted<NormalMap>();
+  }
+
+  return MakeReferenceCounted<BumpNormalMap>(std::move(bumps));
+}
+
+}  // namespace normal_maps
 }  // namespace iris

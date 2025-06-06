@@ -4,9 +4,7 @@
 #include <optional>
 
 #include "googlemock/include/gmock/gmock.h"
-#include "iris/float.h"
 #include "iris/normal_map.h"
-#include "iris/reference_countable.h"
 #include "iris/texture_coordinates.h"
 #include "iris/vector.h"
 

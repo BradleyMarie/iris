@@ -1,88 +1,103 @@
 #include "iris/normal_maps/bump_normal_map.h"
 
+#include <optional>
+#include <utility>
+
 #include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
+#include "iris/normal_map.h"
+#include "iris/reference_counted.h"
+#include "iris/texture_coordinates.h"
 #include "iris/textures/constant_texture.h"
 #include "iris/textures/image_texture.h"
+#include "iris/textures/texture2d.h"
+
+namespace iris {
+namespace normal_maps {
+namespace {
+
+using ::iris::textures::ClampedImageTexture2D;
+using ::iris::textures::ConstantValueTexture2D;
+using ::iris::textures::Image2D;
+using ::iris::textures::ValueTexture2D;
+
+TEST(BumpNormalMap, Null) {
+  EXPECT_FALSE(MakeBumpNormalMap(ReferenceCounted<ValueTexture2D<visual>>()));
+}
 
 TEST(BumpNormalMap, EvaluateNoDifferentials) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result =
-      normal_map.Evaluate(iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                          std::nullopt, iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result =
+      normal_map->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                           std::nullopt, Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateNoNormalMapDifferentials) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
-      std::nullopt, iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}}, std::nullopt,
+      Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateNoTextureCoordinateDifferentials) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, std::nullopt},
-      {{iris::NormalMap::Differentials::DX_DY,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result =
+      normal_map->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
+                           {{NormalMap::Differentials::DX_DY,
+                             {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+                           Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateNoDUVTextureCoordinateDifferentials) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{0.0, 0.0, 0.0, 0.0}}},
-      {{iris::NormalMap::Differentials::DX_DY,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{0.0, 0.0, 0.0, 0.0}}},
+      {{NormalMap::Differentials::DX_DY,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateConstantValueXY) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
-      {{iris::NormalMap::Differentials::DX_DY,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
+      {{NormalMap::Differentials::DX_DY,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateConstantValueUV) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
-      {{iris::NormalMap::Differentials::DU_DV,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
+      {{NormalMap::Differentials::DU_DV,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateXY) {
@@ -91,50 +106,47 @@ TEST(BumpNormalMap, EvaluateXY) {
   values.push_back(1.0);
   values.push_back(1.0);
   values.push_back(2.0);
-  auto image = std::make_shared<iris::textures::Image2D<float>>(
-      values, std::pair<size_t, size_t>(2, 2));
+  std::shared_ptr<Image2D<float>> image =
+      std::make_shared<Image2D<float>>(values, std::pair<size_t, size_t>(2, 2));
 
-  auto bump =
-      iris::MakeReferenceCounted<iris::textures::ClampedImageTexture2D<float>>(
-          image, std::nullopt, std::nullopt, std::nullopt, std::nullopt);
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ClampedImageTexture2D<float>>(
+          image, std::nullopt, std::nullopt, std::nullopt, std::nullopt));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
-      {{iris::NormalMap::Differentials::DX_DY,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
+      {{NormalMap::Differentials::DX_DY,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
   EXPECT_NEAR(-1.0, result.x, 0.001);
   EXPECT_NEAR(-1.0, result.y, 0.001);
   EXPECT_NEAR(+1.0, result.z, 0.001);
 }
 
 TEST(BumpNormalMap, EvaluateNoDUTextureCoordinateDifferentials) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{0.0, 1.0, 0.0, 1.0}}},
-      {{iris::NormalMap::Differentials::DU_DV,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{0.0, 1.0, 0.0, 1.0}}},
+      {{NormalMap::Differentials::DU_DV,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateNoDVTextureCoordinateDifferentials) {
-  auto bump = iris::MakeReferenceCounted<
-      iris::textures::ConstantValueTexture2D<iris::visual>>(
-      static_cast<iris::visual>(0.0));
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
+          static_cast<visual>(0.0)));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 1.0, 0.0}}},
-      {{iris::NormalMap::Differentials::DU_DV,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 1.0), result);
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 1.0, 0.0}}},
+      {{NormalMap::Differentials::DU_DV,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
+  EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateUV) {
@@ -143,20 +155,23 @@ TEST(BumpNormalMap, EvaluateUV) {
   values.push_back(1.0);
   values.push_back(1.0);
   values.push_back(2.0);
-  auto image = std::make_shared<iris::textures::Image2D<float>>(
-      values, std::pair<size_t, size_t>(2, 2));
+  std::shared_ptr<Image2D<float>> image =
+      std::make_shared<Image2D<float>>(values, std::pair<size_t, size_t>(2, 2));
 
-  auto bump =
-      iris::MakeReferenceCounted<iris::textures::ClampedImageTexture2D<float>>(
-          image, std::nullopt, std::nullopt, std::nullopt, std::nullopt);
-  iris::normals::BumpNormalMap normal_map(std::move(bump));
+  ReferenceCounted<NormalMap> normal_map =
+      MakeBumpNormalMap(MakeReferenceCounted<ClampedImageTexture2D<float>>(
+          image, std::nullopt, std::nullopt, std::nullopt, std::nullopt));
 
-  auto result = normal_map.Evaluate(
-      iris::TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
-      {{iris::NormalMap::Differentials::DU_DV,
-        {iris::Vector(1.0, 0.0, 0.0), iris::Vector(0.0, 1.0, 0.0)}}},
-      iris::Vector(0.0, 0.0, 1.0));
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
+      {{NormalMap::Differentials::DU_DV,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
   EXPECT_NEAR(-1.0, result.x, 0.001);
   EXPECT_NEAR(-1.0, result.y, 0.001);
   EXPECT_NEAR(+1.0, result.z, 0.001);
 }
+
+}  // namespace
+}  // namespace normal_maps
+}  // namespace iris
