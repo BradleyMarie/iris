@@ -3,22 +3,32 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <map>
+#include <vector>
 
-namespace iris::spectra {
+#include "iris/float.h"
+#include "iris/reference_counted.h"
+#include "iris/spectrum.h"
 
-SampledSpectrum::SampledSpectrum(const std::map<visual, visual>& samples) {
-  assert(!samples.empty());
+namespace iris {
+namespace spectra {
+namespace {
 
-  for (const auto& entry : samples) {
-    assert(std::isfinite(entry.first));
-    assert(entry.first >= 0.0);
-    assert(std::isfinite(entry.second));
-    assert(entry.second >= 0.0);
-
-    wavelengths_.push_back(entry.first);
-    intensitites_.push_back(std::max(static_cast<visual>(0.0), entry.second));
+class SampledSpectrum final : public Spectrum {
+ public:
+  SampledSpectrum(std::vector<visual> wavelengths,
+                  std::vector<visual> intensitites)
+      : wavelengths_(wavelengths), intensitites_(intensitites) {
+    assert(!wavelengths.empty() && !intensitites.empty());
+    assert(wavelengths.size() == intensitites.size());
   }
-}
+
+  visual_t Intensity(visual_t wavelength) const override;
+
+ private:
+  std::vector<visual> wavelengths_;
+  std::vector<visual> intensitites_;
+};
 
 visual_t SampledSpectrum::Intensity(visual_t wavelength) const {
   if (wavelength <= wavelengths_.front()) {
@@ -47,4 +57,28 @@ visual_t SampledSpectrum::Intensity(visual_t wavelength) const {
   return std::max(static_cast<visual_t>(0.0), result);
 }
 
-}  // namespace iris::spectra
+}  // namespace
+
+ReferenceCounted<Spectrum> MakeSampledSpectrum(
+    const std::map<visual, visual>& samples) {
+  std::vector<visual> wavelengths;
+  std::vector<visual> intensitites;
+  for (const auto& [wavelength, intensity] : samples) {
+    if (!std::isfinite(wavelength) || !std::isfinite(intensity)) {
+      continue;
+    }
+
+    wavelengths.push_back(wavelength);
+    intensitites.push_back(std::max(static_cast<visual>(0.0), intensity));
+  }
+
+  if (wavelengths.empty()) {
+    return ReferenceCounted<Spectrum>();
+  }
+
+  return MakeReferenceCounted<SampledSpectrum>(std::move(wavelengths),
+                                               std::move(intensitites));
+}
+
+}  // namespace spectra
+}  // namespace iris

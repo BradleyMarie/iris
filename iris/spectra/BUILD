@@ -19,6 +19,7 @@ cc_library(
     hdrs = ["sampled_spectrum.h"],
     deps = [
         "//iris:float",
+        "//iris:reference_counted",
         "//iris:spectrum",
     ],
 )
@@ -28,6 +29,9 @@ cc_test(
     srcs = ["sampled_spectrum_test.cc"],
     deps = [
         ":sampled_spectrum",
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:spectrum",
         "@googletest//:gtest_main",
     ],
 )
