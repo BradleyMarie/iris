@@ -15,7 +15,7 @@ class ColorReflector final : public Reflector {
   visual_t Reflectance(visual_t wavelength) const override;
 
  private:
-  const std::array<visual_t, 3> values_;
+  std::array<visual_t, 3> values_;
 };
 
 visual_t ColorReflector::Reflectance(visual_t wavelength) const {

@@ -78,8 +78,12 @@ std::map<visual, visual> ToMap(const SampledSpectrum& sampled) {
   return result;
 }
 
-Color ToReflectorColor(const std::map<visual, visual>& samples) {
+Color ToReflectorColor(std::map<visual, visual> samples) {
   std::unique_ptr<ColorMatcher> color_matcher = MakeCieColorMatcher();
+
+  for (auto& [_, intensity] : samples) {
+    intensity = std::min(static_cast<visual>(1.0), intensity);
+  }
 
   std::array<visual, 3> colors = {static_cast<visual>(0.0),
                                   static_cast<visual>(0.0),
@@ -96,8 +100,7 @@ Color ToReflectorColor(const std::map<visual, visual>& samples) {
   return result.ConvertTo(Color::LINEAR_SRGB);
 }
 
-Color ToSpectrumColor(const std::map<visual, visual>& samples,
-                      bool normalize_luma) {
+Color ToSpectrumColor(std::map<visual, visual> samples, bool normalize_luma) {
   std::unique_ptr<ColorMatcher> color_matcher = MakeCieColorMatcher();
 
   std::array<visual, 3> colors = {static_cast<visual>(0.0),

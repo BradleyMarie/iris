@@ -13,7 +13,7 @@ class ColorSpectrum final : public Spectrum {
   visual_t Intensity(visual_t wavelength) const override;
 
  private:
-  const std::array<visual, 3> values_;
+  std::array<visual, 3> values_;
 };
 
 visual_t ColorSpectrum::Intensity(visual_t wavelength) const {
