@@ -28,7 +28,7 @@ visual_t UniformReflector::Reflectance(visual_t wavelength) const {
 }  // namespace
 
 ReferenceCounted<Reflector> CreateUniformReflector(visual reflectance) {
-  if (reflectance <= static_cast<visual>(0.0) || !std::isfinite(reflectance)) {
+  if (reflectance <= static_cast<visual>(0.0) || std::isnan(reflectance)) {
     return ReferenceCounted<Reflector>();
   }
 

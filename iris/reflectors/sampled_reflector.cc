@@ -68,7 +68,7 @@ ReferenceCounted<Reflector> CreateSampledReflector(
   std::vector<visual> intensitites;
   bool is_black = true;
   for (const auto& [wavelength, intensity] : samples) {
-    if (!std::isfinite(wavelength) || !std::isfinite(intensity)) {
+    if (!std::isfinite(wavelength) || std::isnan(intensity)) {
       continue;
     }
 
