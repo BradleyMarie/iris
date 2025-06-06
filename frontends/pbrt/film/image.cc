@@ -96,7 +96,11 @@ std::unique_ptr<FilmResult> MakeImage(const Film::Image& image) {
   } else if (filename.extension() == ".pfm") {
     write_to_file_function = [](Framebuffer& framebuffer,
                                 std::ofstream& output) {
-      WritePfm(framebuffer, Color::LINEAR_SRGB, output);
+      bool success = WritePfm(framebuffer, Color::LINEAR_SRGB, output);
+      if (!success) {
+        std::cerr << "ERROR: Failed to write output file" << std::endl;
+        exit(EXIT_FAILURE);
+      }
     };
   } else {
     std::cerr << "ERROR: Unsupported file extension for parameter: filename"

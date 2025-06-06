@@ -3,12 +3,13 @@
 
 #include <ostream>
 
+#include "iris/color.h"
 #include "iris/framebuffer.h"
 
 namespace iris {
 namespace file {
 
-void WritePfm(const Framebuffer& framebuffer, Color::Space color_space,
+bool WritePfm(const Framebuffer& framebuffer, Color::Space color_space,
               std::ostream& output);
 
 }  // namespace file

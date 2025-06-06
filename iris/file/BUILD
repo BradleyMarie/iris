@@ -7,6 +7,7 @@ cc_library(
     srcs = ["exr_writer.cc"],
     hdrs = ["exr_writer.h"],
     deps = [
+        "//iris:color",
         "//iris:framebuffer",
         "//third_party/tinyexr",
     ],
@@ -21,6 +22,8 @@ cc_test(
     ],
     deps = [
         ":exr_writer",
+        "//iris:color",
+        "//iris:framebuffer",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
     ],
@@ -31,6 +34,7 @@ cc_library(
     srcs = ["pfm_writer.cc"],
     hdrs = ["pfm_writer.h"],
     deps = [
+        "//iris:color",
         "//iris:framebuffer",
     ],
 )
@@ -44,6 +48,8 @@ cc_test(
     ],
     deps = [
         ":pfm_writer",
+        "//iris:color",
+        "//iris:framebuffer",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
     ],
