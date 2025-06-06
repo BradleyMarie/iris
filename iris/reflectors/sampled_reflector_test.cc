@@ -1,8 +1,12 @@
 #include "iris/reflectors/sampled_reflector.h"
 
 #include <limits>
+#include <map>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
+#include "iris/reference_counted.h"
+#include "iris/reflector.h"
 
 namespace iris {
 namespace reflectors {

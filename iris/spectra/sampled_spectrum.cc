@@ -19,8 +19,9 @@ class SampledSpectrum final : public Spectrum {
   SampledSpectrum(std::vector<visual> wavelengths,
                   std::vector<visual> intensitites)
       : wavelengths_(wavelengths), intensitites_(intensitites) {
-    assert(!wavelengths.empty() && !intensitites.empty());
-    assert(wavelengths.size() == intensitites.size());
+    assert(!wavelengths_.empty() && !intensitites_.empty());
+    assert(wavelengths_.size() == intensitites_.size());
+    assert(std::is_sorted(wavelengths_.begin(), wavelengths_.end()));
   }
 
   visual_t Intensity(visual_t wavelength) const override;
@@ -63,16 +64,21 @@ ReferenceCounted<Spectrum> MakeSampledSpectrum(
     const std::map<visual, visual>& samples) {
   std::vector<visual> wavelengths;
   std::vector<visual> intensitites;
-  for (const auto& [wavelength, intensity] : samples) {
+  bool is_black = true;
+  for (auto [wavelength, intensity] : samples) {
     if (!std::isfinite(wavelength) || !std::isfinite(intensity)) {
       continue;
+    }
+
+    if (intensity > static_cast<visual>(0.0)) {
+      is_black = false;
     }
 
     wavelengths.push_back(wavelength);
     intensitites.push_back(std::max(static_cast<visual>(0.0), intensity));
   }
 
-  if (wavelengths.empty()) {
+  if (wavelengths.empty() || is_black) {
     return ReferenceCounted<Spectrum>();
   }
 

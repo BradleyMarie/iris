@@ -11,7 +11,10 @@ namespace iris {
 namespace spectra {
 namespace {
 
-TEST(SampledSpectrum, Null) { EXPECT_FALSE(MakeSampledSpectrum({})); }
+TEST(SampledSpectrum, Null) {
+  EXPECT_FALSE(MakeSampledSpectrum({}));
+  EXPECT_FALSE(MakeSampledSpectrum({{1.0, 0.0}}));
+}
 
 TEST(SampledSpectrum, SingleSample) {
   std::map<visual, visual> samples = {

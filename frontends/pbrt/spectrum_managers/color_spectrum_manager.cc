@@ -90,7 +90,9 @@ std::map<visual, visual> ToMap(const SampledSpectrum& sampled) {
 Color ToReflectorColor(const std::map<visual, visual>& samples) {
   CieColorMatcher color_matcher;
 
-  std::array<visual, 3> colors = {0.0, 0.0, 0.0};
+  std::array<visual, 3> colors = {static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0)};
   if (ReferenceCounted<Reflector> reflector = CreateSampledReflector(samples);
       reflector) {
     colors = color_matcher.Match(*reflector);
@@ -102,19 +104,24 @@ Color ToReflectorColor(const std::map<visual, visual>& samples) {
 
 Color ToSpectrumColor(const std::map<visual, visual>& samples,
                       bool normalize_luma) {
-  ReferenceCounted<iris::Spectrum> spectrum = MakeSampledSpectrum(samples);
-
   CieColorMatcher color_matcher;
-  std::array<visual, 3> colors = color_matcher.Match(*spectrum);
-  if (normalize_luma) {
-    static const visual_t kWhiteSpectrumLuma = WhiteSpectrumLuma();
-    colors[0] /= kWhiteSpectrumLuma;
-    colors[1] /= kWhiteSpectrumLuma;
-    colors[2] /= kWhiteSpectrumLuma;
+
+  std::array<visual, 3> colors = {static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0)};
+  if (ReferenceCounted<iris::Spectrum> spectrum = MakeSampledSpectrum(samples);
+      spectrum) {
+    colors = color_matcher.Match(*spectrum);
+
+    if (normalize_luma) {
+      static const visual_t kWhiteSpectrumLuma = WhiteSpectrumLuma();
+      colors[0] /= kWhiteSpectrumLuma;
+      colors[1] /= kWhiteSpectrumLuma;
+      colors[2] /= kWhiteSpectrumLuma;
+    }
   }
 
   Color result(colors[0], colors[1], colors[2], color_matcher.ColorSpace());
-
   return result.ConvertTo(Color::LINEAR_SRGB);
 }
 
