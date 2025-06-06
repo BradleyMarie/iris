@@ -1,23 +1,17 @@
 #ifndef _IRIS_COLOR_MATCHERS_CIE_COLOR_MATCHER_
 #define _IRIS_COLOR_MATCHERS_CIE_COLOR_MATCHER_
 
-#include <array>
+#include <memory>
 
-#include "iris/color.h"
 #include "iris/color_matcher.h"
 #include "iris/float.h"
-#include "iris/reflector.h"
-#include "iris/spectrum.h"
 
 namespace iris {
 namespace color_matchers {
 
-class CieColorMatcher final : public ColorMatcher {
- public:
-  std::array<visual_t, 3> Match(const Spectrum& spectrum) const override;
-  std::array<visual_t, 3> Match(const Reflector& reflector) const;
-  Color::Space ColorSpace() const override;
-};
+std::unique_ptr<ColorMatcher> MakeCieColorMatcher();
+
+extern const visual kCieYIntegral;
 
 }  // namespace color_matchers
 }  // namespace iris

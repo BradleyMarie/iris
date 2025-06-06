@@ -2,6 +2,7 @@
 #define _IRIS_COLOR_MATCHERS_MOCK_COLOR_MATCHER_
 
 #include "googlemock/include/gmock/gmock.h"
+#include "iris/color.h"
 #include "iris/color_matcher.h"
 #include "iris/float.h"
 #include "iris/spectrum.h"

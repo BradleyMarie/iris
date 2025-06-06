@@ -10,7 +10,6 @@ cc_library(
         "//iris:color",
         "//iris:color_matcher",
         "//iris:float",
-        "//iris:reflector",
         "//iris:spectrum",
     ],
 )
@@ -20,7 +19,7 @@ cc_test(
     srcs = ["cie_color_matcher_test.cc"],
     deps = [
         ":cie_color_matcher",
-        "//iris/reflectors:mock_reflector",
+        "//iris:color_matcher",
         "//iris/spectra:mock_spectrum",
         "@googletest//:gtest_main",
     ],
@@ -31,6 +30,7 @@ cc_library(
     testonly = True,
     hdrs = ["mock_color_matcher.h"],
     deps = [
+        "//iris:color",
         "//iris:color_matcher",
         "//iris:float",
         "//iris:spectrum",

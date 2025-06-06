@@ -1,5 +1,13 @@
 #include "iris/color_matchers/cie_color_matcher.h"
 
+#include <array>
+#include <memory>
+
+#include "iris/color.h"
+#include "iris/color_matcher.h"
+#include "iris/float.h"
+#include "iris/spectrum.h"
+
 namespace iris {
 namespace color_matchers {
 namespace {
@@ -486,40 +494,33 @@ static const Weights g_weights[] = {
     {830.0, 0.000001251141, 0.0000004518100, 0.000000000000},
 };
 
-const static visual g_integral = 106.8569149167;
-
-}  // namespace
+class CieColorMatcher final : public ColorMatcher {
+ public:
+  std::array<visual_t, 3> Match(const Spectrum& spectrum) const override;
+  Color::Space ColorSpace() const override;
+};
 
 std::array<visual_t, 3> CieColorMatcher::Match(const Spectrum& spectrum) const {
   std::array<visual_t, 3> result = {0.0, 0.0, 0.0};
-  for (const auto& weights : g_weights) {
-    auto intensity = spectrum.Intensity(weights.wavelength);
+  for (const Weights& weights : g_weights) {
+    visual_t intensity = spectrum.Intensity(weights.wavelength);
     result[0] += intensity * weights.x;
     result[1] += intensity * weights.y;
     result[2] += intensity * weights.z;
   }
-
-  return result;
-}
-
-std::array<visual_t, 3> CieColorMatcher::Match(
-    const Reflector& reflector) const {
-  std::array<visual_t, 3> result = {0.0, 0.0, 0.0};
-  for (const auto& weights : g_weights) {
-    auto intensity = reflector.Reflectance(weights.wavelength);
-    result[0] += intensity * weights.x;
-    result[1] += intensity * weights.y;
-    result[2] += intensity * weights.z;
-  }
-
-  result[0] /= g_integral;
-  result[1] /= g_integral;
-  result[2] /= g_integral;
 
   return result;
 }
 
 Color::Space CieColorMatcher::ColorSpace() const { return Color::CIE_XYZ; }
+
+}  // namespace
+
+std::unique_ptr<ColorMatcher> MakeCieColorMatcher() {
+  return std::make_unique<CieColorMatcher>();
+}
+
+const visual kCieYIntegral = 106.8569149167;
 
 }  // namespace color_matchers
 }  // namespace iris

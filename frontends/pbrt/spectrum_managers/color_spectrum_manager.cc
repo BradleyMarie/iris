@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
 
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/spectrum_managers/internal/color_reflector.h"
@@ -29,7 +30,8 @@ namespace pbrt_frontend {
 namespace spectrum_managers {
 namespace {
 
-using ::iris::color_matchers::CieColorMatcher;
+using ::iris::color_matchers::kCieYIntegral;
+using ::iris::color_matchers::MakeCieColorMatcher;
 using ::iris::pbrt_frontend::spectrum_managers::internal::MakeColorReflector;
 using ::iris::pbrt_frontend::spectrum_managers::internal::MakeColorSpectrum;
 using ::iris::reflectors::CreateSampledReflector;
@@ -38,17 +40,6 @@ using ::libspd::ReadEmissiveSpdFrom;
 using ::libspd::ReadReflectiveSpdFrom;
 using ::pbrt_proto::v3::SampledSpectrum;
 using ::pbrt_proto::v3::Spectrum;
-
-visual_t WhiteSpectrumLuma() {
-  static const ReferenceCounted<iris::Spectrum> white =
-      MakeSampledSpectrum(std::map<visual, visual>{{1.0, 1.0}});
-
-  CieColorMatcher color_matcher;
-  std::array<visual, 3> colors = color_matcher.Match(*white);
-  Color color(colors[0], colors[1], colors[2], color_matcher.ColorSpace());
-
-  return color.Luma();
-}
 
 std::map<visual, visual> FromFile(const std::filesystem::path& search_root,
                                   std::filesystem::path path, bool reflective) {
@@ -88,40 +79,41 @@ std::map<visual, visual> ToMap(const SampledSpectrum& sampled) {
 }
 
 Color ToReflectorColor(const std::map<visual, visual>& samples) {
-  CieColorMatcher color_matcher;
+  std::unique_ptr<ColorMatcher> color_matcher = MakeCieColorMatcher();
 
   std::array<visual, 3> colors = {static_cast<visual>(0.0),
                                   static_cast<visual>(0.0),
                                   static_cast<visual>(0.0)};
-  if (ReferenceCounted<Reflector> reflector = CreateSampledReflector(samples);
+  if (ReferenceCounted<iris::Spectrum> reflector = MakeSampledSpectrum(samples);
       reflector) {
-    colors = color_matcher.Match(*reflector);
+    colors = color_matcher->Match(*reflector);
+    colors[0] /= kCieYIntegral;
+    colors[1] /= kCieYIntegral;
+    colors[2] /= kCieYIntegral;
   }
 
-  Color result(colors[0], colors[1], colors[2], color_matcher.ColorSpace());
+  Color result(colors[0], colors[1], colors[2], color_matcher->ColorSpace());
   return result.ConvertTo(Color::LINEAR_SRGB);
 }
 
 Color ToSpectrumColor(const std::map<visual, visual>& samples,
                       bool normalize_luma) {
-  CieColorMatcher color_matcher;
+  std::unique_ptr<ColorMatcher> color_matcher = MakeCieColorMatcher();
 
   std::array<visual, 3> colors = {static_cast<visual>(0.0),
                                   static_cast<visual>(0.0),
                                   static_cast<visual>(0.0)};
   if (ReferenceCounted<iris::Spectrum> spectrum = MakeSampledSpectrum(samples);
       spectrum) {
-    colors = color_matcher.Match(*spectrum);
-
+    colors = color_matcher->Match(*spectrum);
     if (normalize_luma) {
-      static const visual_t kWhiteSpectrumLuma = WhiteSpectrumLuma();
-      colors[0] /= kWhiteSpectrumLuma;
-      colors[1] /= kWhiteSpectrumLuma;
-      colors[2] /= kWhiteSpectrumLuma;
+      colors[0] /= kCieYIntegral;
+      colors[1] /= kCieYIntegral;
+      colors[2] /= kCieYIntegral;
     }
   }
 
-  Color result(colors[0], colors[1], colors[2], color_matcher.ColorSpace());
+  Color result(colors[0], colors[1], colors[2], color_matcher->ColorSpace());
   return result.ConvertTo(Color::LINEAR_SRGB);
 }
 
