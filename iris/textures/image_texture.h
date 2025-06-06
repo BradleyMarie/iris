@@ -192,7 +192,7 @@ class BorderedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    Image2D<T>::SampleCoordinates coords =
+    typename Image2D<T>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
     const T& bottom_left = image_->GetBordered(
@@ -228,7 +228,7 @@ class ClampedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    Image2D<T>::SampleCoordinates coords =
+    typename Image2D<T>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
     const T& bottom_left = image_->GetClamped(coords.low_coordinates[0][0],
@@ -263,7 +263,7 @@ class RepeatedImageTexture2D final : public UVValueTexture2D<T> {
 
  protected:
   T NestedEvaluate(const TextureCoordinates& coordinates) const override {
-    Image2D<T>::SampleCoordinates coords =
+    typename Image2D<T>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
     const T& bottom_left = image_->GetRepeated(coords.low_coordinates[0][0],

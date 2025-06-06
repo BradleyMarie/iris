@@ -177,7 +177,7 @@ TEST(BorderedSpectralImageTexture2D, Test) {
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  std::shared_ptr<Image2D<float>> image =
+  std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image =
       std::make_shared<Image2D<ReferenceCounted<Reflector>>>(
           reflectors, std::pair<size_t, size_t>(2, 2));
 
@@ -195,7 +195,7 @@ TEST(ClampedSpectralImageTexture2D, Test) {
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  std::shared_ptr<Image2D<float>> image =
+  std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image =
       std::make_shared<Image2D<ReferenceCounted<Reflector>>>(
           reflectors, std::pair<size_t, size_t>(2, 2));
 
@@ -211,7 +211,7 @@ TEST(RepeatedSpectralImageTexture2D, Test) {
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
   reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  std::shared_ptr<Image2D<float>> image =
+  std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image =
       std::make_shared<Image2D<ReferenceCounted<Reflector>>>(
           reflectors, std::pair<size_t, size_t>(2, 2));
 
