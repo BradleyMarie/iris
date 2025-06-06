@@ -3,7 +3,11 @@
 #include <memory>
 #include <vector>
 
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
+#include "iris/internal/hit.h"
 #include "iris/internal/hit_arena.h"
+#include "iris/ray.h"
 
 namespace iris {
 namespace testing {
@@ -18,17 +22,17 @@ HitAllocator MakeHitAllocator(const Ray& ray) {
 }
 
 face_t FrontFace(const Hit& hit) {
-  auto internal_hit = static_cast<const internal::Hit&>(hit);
+  const internal::Hit& internal_hit = static_cast<const internal::Hit&>(hit);
   return internal_hit.front;
 }
 
 face_t BackFace(const Hit& hit) {
-  auto internal_hit = static_cast<const internal::Hit&>(hit);
+  const internal::Hit& internal_hit = static_cast<const internal::Hit&>(hit);
   return internal_hit.back;
 }
 
 const void* AdditionalData(const Hit& hit) {
-  auto internal_hit = static_cast<const internal::Hit&>(hit);
+  const internal::Hit& internal_hit = static_cast<const internal::Hit&>(hit);
   return internal_hit.additional_data;
 }
 

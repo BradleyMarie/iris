@@ -1,11 +1,25 @@
 #include "iris/testing/visibility_tester.h"
 
 #include <cmath>
+#include <functional>
+#include <span>
 
+#include "iris/bounding_box.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/ray_tracer.h"
 #include "iris/internal/visibility_tester.h"
+#include "iris/intersector.h"
+#include "iris/matrix.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/ray.h"
 #include "iris/scene.h"
+#include "iris/vector.h"
+#include "iris/visibility_tester.h"
 
 namespace iris {
 namespace testing {

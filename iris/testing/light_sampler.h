@@ -2,8 +2,11 @@
 #define _IRIS_TESTING_LIGHT_SAMPLER_
 
 #include <functional>
+#include <optional>
 #include <span>
 
+#include "iris/float.h"
+#include "iris/light.h"
 #include "iris/light_sampler.h"
 
 namespace iris {

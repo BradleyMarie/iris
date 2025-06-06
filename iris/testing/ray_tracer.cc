@@ -1,11 +1,32 @@
 #include "iris/testing/ray_tracer.h"
 
 #include <cmath>
+#include <functional>
 #include <memory>
+#include <span>
 
+#include "iris/bounding_box.h"
+#include "iris/bxdf.h"
+#include "iris/bxdf_allocator.h"
+#include "iris/environmental_light.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/ray_tracer.h"
+#include "iris/intersector.h"
+#include "iris/matrix.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/power_matcher.h"
+#include "iris/ray.h"
+#include "iris/ray_tracer.h"
 #include "iris/scene.h"
+#include "iris/spectral_allocator.h"
+#include "iris/spectrum.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace testing {

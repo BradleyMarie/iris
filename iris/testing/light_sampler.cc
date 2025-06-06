@@ -1,8 +1,19 @@
 #include "iris/testing/light_sampler.h"
 
+#include <functional>
+#include <optional>
+#include <span>
+
+#include "iris/float.h"
 #include "iris/internal/arena.h"
+#include "iris/light.h"
+#include "iris/light_sample.h"
 #include "iris/light_sample_allocator.h"
+#include "iris/light_sampler.h"
 #include "iris/light_scene.h"
+#include "iris/point.h"
+#include "iris/power_matcher.h"
+#include "iris/random.h"
 #include "iris/random/mock_random.h"
 
 namespace iris {

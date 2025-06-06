@@ -1,6 +1,8 @@
 #ifndef _IRIS_LIGHT_SCENE_
 #define _IRIS_LIGHT_SCENE_
 
+#include <memory>
+
 #include "iris/light_sample.h"
 #include "iris/light_sample_allocator.h"
 #include "iris/point.h"

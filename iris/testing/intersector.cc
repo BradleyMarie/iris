@@ -3,7 +3,11 @@
 #include <memory>
 #include <vector>
 
+#include "iris/float.h"
+#include "iris/hit.h"
 #include "iris/internal/hit_arena.h"
+#include "iris/intersector.h"
+#include "iris/ray.h"
 
 namespace iris {
 namespace testing {

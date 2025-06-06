@@ -1,9 +1,9 @@
 #ifndef _IRIS_TESTING_HIT_ALLOCATOR_
 #define _IRIS_TESTING_HIT_ALLOCATOR_
 
-#include <memory>
-
 #include "iris/hit_allocator.h"
+#include "iris/integer.h"
+#include "iris/ray.h"
 
 namespace iris {
 namespace testing {

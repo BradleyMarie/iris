@@ -1,6 +1,7 @@
 #include "iris/testing/light_sample_allocator.h"
 
 #include "iris/internal/arena.h"
+#include "iris/light_sample_allocator.h"
 
 namespace iris {
 namespace testing {

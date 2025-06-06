@@ -1,11 +1,14 @@
 #ifndef _IRIS_SCENE_
 #define _IRIS_SCENE_
 
+#include <memory>
+
 #include "iris/intersector.h"
 #include "iris/ray.h"
 
 namespace iris {
 
+// Forward Declaration
 class SceneObjects;
 
 class Scene {

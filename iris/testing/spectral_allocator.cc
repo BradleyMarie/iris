@@ -1,6 +1,7 @@
 #include "iris/spectral_allocator.h"
 
 #include "iris/internal/arena.h"
+#include "iris/spectral_allocator.h"
 
 namespace iris {
 namespace testing {

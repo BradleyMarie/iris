@@ -5,7 +5,10 @@
 #include <span>
 
 #include "iris/environmental_light.h"
+#include "iris/float.h"
 #include "iris/ray_tracer.h"
+#include "iris/spectrum.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace testing {

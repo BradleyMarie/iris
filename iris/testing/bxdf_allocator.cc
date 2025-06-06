@@ -1,5 +1,6 @@
 #include "iris/testing/bxdf_allocator.h"
 
+#include "iris/bxdf_allocator.h"
 #include "iris/internal/arena.h"
 
 namespace iris {
