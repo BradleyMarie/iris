@@ -21,7 +21,7 @@ TEST(CieColorMatcherTest, ColorSpace) {
 
 TEST(CieColorMatcherTest, MatchSpectrum) {
   MockSpectrum spectrum;
-  EXPECT_CALL(spectrum, Intensity(_)).WillRepeatedly(testing::Return(1.0));
+  EXPECT_CALL(spectrum, Intensity(_)).WillRepeatedly(Return(1.0));
 
   std::unique_ptr<ColorMatcher> matcher = MakeCieColorMatcher();
   std::array<visual_t, 3> actual = matcher->Match(spectrum);
