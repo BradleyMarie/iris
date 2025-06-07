@@ -18,7 +18,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace lights {
 
-using ::iris::environmental_lights::ImageEnvironmentalLight;
+using ::iris::environmental_lights::MakeImageEnvironmentalLight;
 using ::pbrt_proto::v3::LightSource;
 
 ReferenceCounted<EnvironmentalLight> MakeInfinite(
@@ -47,8 +47,7 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
     return ReferenceCounted<EnvironmentalLight>();
   }
 
-  std::vector<ReferenceCounted<Spectrum>> spectra;
-  std::vector<visual> luma;
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma;
   std::pair<size_t, size_t> size;
   if (with_defaults.has_mapname()) {
     std::filesystem::path filename = with_defaults.mapname();
@@ -80,8 +79,7 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
         exit(EXIT_FAILURE);
       }
 
-      spectra.reserve(height * width);
-      luma.reserve(height * width);
+      spectra_and_luma.reserve(height * width);
       for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
           visual r = static_cast<visual>(values[4 * (y * width + x) + 0]);
@@ -95,13 +93,13 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
             exit(EXIT_FAILURE);
           }
 
-          ReferenceCounted<Spectrum> pixel_spectrum =
-              spectrum_manager.AllocateSpectrum(r, g, b);
-
           visual_t luma_value;
-          spectra.push_back(spectrum_manager.AllocateSpectrum(
-              pixel_spectrum, scaled, &luma_value));
-          luma.push_back(luma_value);
+          ReferenceCounted<Spectrum> pixel_spectrum =
+              spectrum_manager.AllocateSpectrum(
+                  spectrum_manager.AllocateSpectrum(r, g, b), scaled,
+                  &luma_value);
+
+          spectra_and_luma.emplace_back(std::move(pixel_spectrum), luma_value);
         }
       }
 
@@ -126,14 +124,13 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
       exit(EXIT_FAILURE);
     }
   } else {
-    spectra.push_back(scaled);
-    luma.push_back(scaled_luma);
+    spectra_and_luma.emplace_back(scaled, scaled_luma);
     size.first = 1;
     size.second = 1;
   }
 
-  return MakeReferenceCounted<ImageEnvironmentalLight>(std::move(spectra), luma,
-                                                       size, model_to_world);
+  return MakeImageEnvironmentalLight(std::move(spectra_and_luma), size,
+                                     model_to_world);
 }
 
 }  // namespace lights

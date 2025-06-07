@@ -29,18 +29,21 @@ static const ReferenceCounted<Spectrum> kSpectrum1 = MakeUniformSpectrum(1.0);
 static const ReferenceCounted<Spectrum> kSpectrum2 = MakeUniformSpectrum(2.0);
 
 TEST(ImageEnvironmentalLight, SampleOne) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {0.0, 0.0, 1.0, 2.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 0.0},
+       {kSpectrum0, 0.0},
+       {kSpectrum1, 1.0},
+       {kSpectrum2, 2.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillRepeatedly(Return(0.25));
   Sampler sampler(rng);
 
   std::optional<EnvironmentalLight::SampleResult> result =
-      light.Sample(sampler, GetSpectralAllocator());
+      light->Sample(sampler, GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->emission.Intensity(1.0));
   EXPECT_NEAR(0.07311284, result->pdf, 0.001);
@@ -50,18 +53,21 @@ TEST(ImageEnvironmentalLight, SampleOne) {
 }
 
 TEST(ImageEnvironmentalLight, SampleTwo) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {0.0, 0.0, 1.0, 2.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 0.0},
+       {kSpectrum0, 0.0},
+       {kSpectrum1, 1.0},
+       {kSpectrum2, 2.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   random::MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).WillRepeatedly(Return(0.75));
   Sampler sampler(rng);
 
   std::optional<EnvironmentalLight::SampleResult> result =
-      light.Sample(sampler, GetSpectralAllocator());
+      light->Sample(sampler, GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(2.0, result->emission.Intensity(1.0));
   EXPECT_NEAR(0.35302019, result->pdf, 0.001);
@@ -71,88 +77,107 @@ TEST(ImageEnvironmentalLight, SampleTwo) {
 }
 
 TEST(ImageEnvironmentalLight, EmissionZero) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {0.0, 0.0, 1.0, 2.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 0.0},
+       {kSpectrum0, 0.0},
+       {kSpectrum1, 1.0},
+       {kSpectrum2, 2.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
-  const Spectrum* result = light.Emission(Normalize(Vector(1.0, 1.0, 1.0)),
-                                          GetSpectralAllocator(), nullptr);
+  const Spectrum* result = light->Emission(Normalize(Vector(1.0, 1.0, 1.0)),
+                                           GetSpectralAllocator(), nullptr);
   EXPECT_FALSE(result);
 }
 
 TEST(ImageEnvironmentalLight, EmissionOne) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {0.0, 0.0, 1.0, 2.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 0.0},
+       {kSpectrum0, 0.0},
+       {kSpectrum1, 1.0},
+       {kSpectrum2, 2.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   visual_t pdf;
-  const Spectrum* result = light.Emission(Normalize(Vector(1.0, 1.0, -1.0)),
-                                          GetSpectralAllocator(), &pdf);
+  const Spectrum* result = light->Emission(Normalize(Vector(1.0, 1.0, -1.0)),
+                                           GetSpectralAllocator(), &pdf);
   ASSERT_TRUE(result);
   EXPECT_EQ(1.0, result->Intensity(1.0));
   EXPECT_NEAR(0.08272840, pdf, 0.001);
 }
 
 TEST(ImageEnvironmentalLight, EmissionTwo) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {0.0, 0.0, 1.0, 2.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 0.0},
+       {kSpectrum0, 0.0},
+       {kSpectrum1, 1.0},
+       {kSpectrum2, 2.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   visual_t pdf;
-  const Spectrum* result = light.Emission(Normalize(Vector(-1.0, -1.0, -1.0)),
-                                          GetSpectralAllocator(), &pdf);
+  const Spectrum* result = light->Emission(Normalize(Vector(-1.0, -1.0, -1.0)),
+                                           GetSpectralAllocator(), &pdf);
   ASSERT_TRUE(result);
   EXPECT_EQ(2.0, result->Intensity(1.0));
   EXPECT_NEAR(0.16545681, pdf, 0.001);
 }
 
 TEST(ImageEnvironmentalLight, Power1x1) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0};
-  std::vector<visual> luma = {1.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum1, 1.0}};
   std::pair<size_t, size_t> size(1, 1);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(4.0 * std::numbers::pi, light.Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(4.0 * std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
 }
 
 TEST(ImageEnvironmentalLight, Power2x2) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {1.0, 1.0, 1.0, 1.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 1.0},
+       {kSpectrum0, 1.0},
+       {kSpectrum1, 1.0},
+       {kSpectrum2, 1.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(4.0 * std::numbers::pi, light.Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(4.0 * std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
 }
 
 TEST(ImageEnvironmentalLight, Power2x2Quarter) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {0.0, 0.0, 0.0, 1.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 0.0},
+       {kSpectrum0, 0.0},
+       {kSpectrum1, 0.0},
+       {kSpectrum2, 1.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(std::numbers::pi, light.Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
 }
 
 TEST(ImageEnvironmentalLight, Power2x2Half) {
-  std::vector<ReferenceCounted<Spectrum>> spectra = {kSpectrum0, kSpectrum0,
-                                                     kSpectrum1, kSpectrum2};
-  std::vector<visual> luma = {0.0, 0.0, 1.0, 2.0};
+  std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
+      {{kSpectrum0, 0.0},
+       {kSpectrum0, 0.0},
+       {kSpectrum1, 1.0},
+       {kSpectrum2, 2.0}};
   std::pair<size_t, size_t> size(2, 2);
-  ImageEnvironmentalLight light(spectra, luma, size, Matrix::Identity());
+  ReferenceCounted<EnvironmentalLight> light =
+      MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(3.0 * std::numbers::pi, light.Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(3.0 * std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
 }
 
 }  // namespace

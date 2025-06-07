@@ -33,6 +33,10 @@ ReferenceCounted<Reflector> TestSpectrumManager::AllocateReflector(
 ReferenceCounted<Spectrum> TestSpectrumManager::AllocateSpectrum(
     const ReferenceCounted<Spectrum>& spectrum0,
     const ReferenceCounted<Spectrum>& spectrum1, visual_t* luma) {
+  if (luma) {
+    *luma = 1.0;
+  }
+
   return MakeReferenceCounted<MockSpectrum>();
 }
 
