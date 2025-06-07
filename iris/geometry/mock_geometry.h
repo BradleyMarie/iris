@@ -1,8 +1,27 @@
 #ifndef _IRIS_GEOMETRY_MOCK_GEOMETRY_
 #define _IRIS_GEOMETRY_MOCK_GEOMETRY_
 
+#include <optional>
+#include <span>
+#include <variant>
+
 #include "googlemock/include/gmock/gmock.h"
+#include "iris/bounding_box.h"
+#include "iris/emissive_material.h"
+#include "iris/float.h"
 #include "iris/geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
+#include "iris/material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/ray.h"
+#include "iris/reference_countable.h"
+#include "iris/sampler.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace geometry {

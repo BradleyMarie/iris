@@ -1,334 +1,371 @@
 #include "iris/geometry/sphere.h"
 
+#include <array>
 #include <numbers>
+#include <optional>
+#include <span>
+#include <variant>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bounding_box.h"
+#include "iris/emissive_material.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
+#include "iris/material.h"
 #include "iris/materials/mock_material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
 #include "iris/normal_maps/mock_normal_map.h"
+#include "iris/point.h"
 #include "iris/random/mock_random.h"
+#include "iris/ray.h"
+#include "iris/reference_counted.h"
+#include "iris/sampler.h"
 #include "iris/testing/hit_allocator.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
-typedef std::array<iris::geometric_t, 3> AdditionalData;
-static const iris::face_t FRONT_FACE = 0u;
-static const iris::face_t BACK_FACE = 1u;
+namespace iris {
+namespace geometry {
+namespace {
 
-class Sphere : public ::testing::Test {
- protected:
-  iris::ReferenceCounted<iris::Material> front_material =
-      iris::MakeReferenceCounted<iris::materials::MockMaterial>();
-  iris::ReferenceCounted<iris::Material> back_material =
-      iris::MakeReferenceCounted<iris::materials::MockMaterial>();
-  iris::ReferenceCounted<iris::EmissiveMaterial> front_emissive_material =
-      iris::MakeReferenceCounted<
-          iris::emissive_materials::MockEmissiveMaterial>();
-  iris::ReferenceCounted<iris::EmissiveMaterial> back_emissive_material =
-      iris::MakeReferenceCounted<
-          iris::emissive_materials::MockEmissiveMaterial>();
-  iris::ReferenceCounted<iris::NormalMap> front_normal_map =
-      iris::MakeReferenceCounted<iris::normal_maps::MockNormalMap>();
-  iris::ReferenceCounted<iris::NormalMap> back_normal_map =
-      iris::MakeReferenceCounted<iris::normal_maps::MockNormalMap>();
+using ::iris::emissive_materials::MockEmissiveMaterial;
+using ::iris::materials::MockMaterial;
+using ::iris::normal_maps::MockNormalMap;
+using ::iris::random::MockRandom;
+using ::iris::testing::BackFace;
+using ::iris::testing::FrontFace;
+using ::iris::testing::MakeHitAllocator;
+using ::testing::InSequence;
+using ::testing::Return;
 
-  iris::ReferenceCounted<iris::Geometry> SimpleSphere() {
-    return iris::geometry::AllocateSphere(
-        iris::Point(0.0, 0.0, 3.0), 2.0, front_material, back_material,
-        front_emissive_material, back_emissive_material, front_normal_map,
-        back_normal_map);
-  }
-};
+typedef std::array<geometric_t, 3> AdditionalData;
+static const face_t FRONT_FACE = 0u;
+static const face_t BACK_FACE = 1u;
 
-TEST_F(Sphere, MissesCompletely) {
-  auto sphere = SimpleSphere();
+static const ReferenceCounted<Material> front_material =
+    MakeReferenceCounted<MockMaterial>();
+static const ReferenceCounted<Material> back_material =
+    MakeReferenceCounted<MockMaterial>();
+static const ReferenceCounted<EmissiveMaterial> front_emissive_material =
+    MakeReferenceCounted<MockEmissiveMaterial>();
+static const ReferenceCounted<EmissiveMaterial> back_emissive_material =
+    MakeReferenceCounted<MockEmissiveMaterial>();
+static const ReferenceCounted<NormalMap> front_normal_map =
+    MakeReferenceCounted<MockNormalMap>();
+static const ReferenceCounted<NormalMap> back_normal_map =
+    MakeReferenceCounted<MockNormalMap>();
 
-  iris::Point origin(0.0, 100.0, 100.0);
-  iris::Vector direction(0.0, 0.0, 1.0);
-  iris::Ray ray(origin, direction);
+ReferenceCounted<Geometry> MakeSimpleSphere() {
+  return AllocateSphere(Point(0.0, 0.0, 3.0), 2.0, front_material,
+                        back_material, front_emissive_material,
+                        back_emissive_material, front_normal_map,
+                        back_normal_map);
+}
 
-  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
-  auto* hit = sphere->Trace(hit_allocator);
+TEST(Sphere, MissesCompletely) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
+
+  Point origin(0.0, 100.0, 100.0);
+  Vector direction(0.0, 0.0, 1.0);
+  Ray ray(origin, direction);
+
+  HitAllocator hit_allocator = MakeHitAllocator(ray);
+  Hit* hit = sphere->Trace(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
-TEST_F(Sphere, MissesOnEdge) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, MissesOnEdge) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::Point origin(0.0, 2.0, 0.0);
-  iris::Vector direction(0.0, 0.0, 1.0);
-  iris::Ray ray(origin, direction);
+  Point origin(0.0, 2.0, 0.0);
+  Vector direction(0.0, 0.0, 1.0);
+  Ray ray(origin, direction);
 
-  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
-  auto* hit = sphere->Trace(hit_allocator);
+  HitAllocator hit_allocator = MakeHitAllocator(ray);
+  Hit* hit = sphere->Trace(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
-TEST_F(Sphere, Inside) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, Inside) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::Point origin(0.0, 0.0, 2.0);
-  iris::Vector direction(0.0, 0.0, 1.0);
-  iris::Ray ray(origin, direction);
+  Point origin(0.0, 0.0, 2.0);
+  Vector direction(0.0, 0.0, 1.0);
+  Ray ray(origin, direction);
 
-  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  auto* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->Trace(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(-1.0, hit->distance);
 
-  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit));
-  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit));
+  EXPECT_EQ(BACK_FACE, FrontFace(*hit));
+  EXPECT_EQ(FRONT_FACE, BackFace(*hit));
 
   ASSERT_NE(nullptr, hit->next);
   EXPECT_EQ(3.0, hit->next->distance);
 
-  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit->next));
-  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit->next));
+  EXPECT_EQ(BACK_FACE, FrontFace(*hit->next));
+  EXPECT_EQ(FRONT_FACE, BackFace(*hit->next));
 }
 
-TEST_F(Sphere, InFront) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, InFront) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::Point origin(0.0, 0.0, 0.0);
-  iris::Vector direction(0.0, 0.0, 1.0);
-  iris::Ray ray(origin, direction);
+  Point origin(0.0, 0.0, 0.0);
+  Vector direction(0.0, 0.0, 1.0);
+  Ray ray(origin, direction);
 
-  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  auto* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->Trace(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
 
-  EXPECT_EQ(FRONT_FACE, iris::testing::FrontFace(*hit));
-  EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit));
+  EXPECT_EQ(FRONT_FACE, FrontFace(*hit));
+  EXPECT_EQ(BACK_FACE, BackFace(*hit));
 
   ASSERT_NE(nullptr, hit->next);
   EXPECT_EQ(5.0, hit->next->distance);
 
-  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit->next));
-  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit->next));
+  EXPECT_EQ(BACK_FACE, FrontFace(*hit->next));
+  EXPECT_EQ(FRONT_FACE, BackFace(*hit->next));
 }
 
-TEST_F(Sphere, Behind) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, Behind) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::Point origin(0.0, 0.0, 6.0);
-  iris::Vector direction(0.0, 0.0, 1.0);
-  iris::Ray ray(origin, direction);
+  Point origin(0.0, 0.0, 6.0);
+  Vector direction(0.0, 0.0, 1.0);
+  Ray ray(origin, direction);
 
-  auto hit_allocator = iris::testing::MakeHitAllocator(ray);
+  HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  auto* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->Trace(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(-5.0, hit->distance);
 
-  EXPECT_EQ(BACK_FACE, iris::testing::FrontFace(*hit));
-  EXPECT_EQ(FRONT_FACE, iris::testing::BackFace(*hit));
+  EXPECT_EQ(BACK_FACE, FrontFace(*hit));
+  EXPECT_EQ(FRONT_FACE, BackFace(*hit));
 
   ASSERT_NE(nullptr, hit->next);
   EXPECT_EQ(-1.0, hit->next->distance);
 
-  EXPECT_EQ(FRONT_FACE, iris::testing::FrontFace(*hit->next));
-  EXPECT_EQ(BACK_FACE, iris::testing::BackFace(*hit->next));
+  EXPECT_EQ(FRONT_FACE, FrontFace(*hit->next));
+  EXPECT_EQ(BACK_FACE, BackFace(*hit->next));
 }
 
-TEST_F(Sphere, ComputeSurfaceNormal) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, ComputeSurfaceNormal) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  auto front_normal = sphere->ComputeSurfaceNormal(iris::Point(0.0, 0.0, 0.0),
-                                                   FRONT_FACE, nullptr);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, -3.0), front_normal);
+  Vector front_normal =
+      sphere->ComputeSurfaceNormal(Point(0.0, 0.0, 0.0), FRONT_FACE, nullptr);
+  EXPECT_EQ(Vector(0.0, 0.0, -3.0), front_normal);
 
-  auto back_normal = sphere->ComputeSurfaceNormal(iris::Point(0.0, 0.0, 0.0),
-                                                  BACK_FACE, nullptr);
-  EXPECT_EQ(iris::Vector(0.0, 0.0, 3.0), back_normal);
+  Vector back_normal =
+      sphere->ComputeSurfaceNormal(Point(0.0, 0.0, 0.0), BACK_FACE, nullptr);
+  EXPECT_EQ(Vector(0.0, 0.0, 3.0), back_normal);
 }
 
-TEST_F(Sphere, ComputeTextureCoordinatesNone) {
-  auto sphere = SimpleSphere();
-  auto texture_coordinates = sphere->ComputeTextureCoordinates(
-      iris::Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, nullptr);
+TEST(Sphere, ComputeTextureCoordinatesNone) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
+  std::optional<TextureCoordinates> texture_coordinates =
+      sphere->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
+                                        FRONT_FACE, nullptr);
   EXPECT_FALSE(texture_coordinates);
 }
 
-TEST_F(Sphere, ComputeShadingNormal) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, ComputeShadingNormal) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  auto front_normal = sphere->ComputeShadingNormal(FRONT_FACE, nullptr);
+  Geometry::ComputeShadingNormalResult front_normal =
+      sphere->ComputeShadingNormal(FRONT_FACE, nullptr);
   EXPECT_FALSE(front_normal.surface_normal);
   EXPECT_FALSE(front_normal.dp_duv);
   EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 
-  auto back_normal = sphere->ComputeShadingNormal(BACK_FACE, nullptr);
+  Geometry::ComputeShadingNormalResult back_normal =
+      sphere->ComputeShadingNormal(BACK_FACE, nullptr);
   EXPECT_FALSE(back_normal.surface_normal);
   EXPECT_FALSE(front_normal.dp_duv);
   EXPECT_EQ(back_normal_map.Get(), back_normal.normal_map);
 }
 
-TEST_F(Sphere, ComputeHitPoint) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, ComputeHitPoint) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::Point origin(0.0, 0.0, 3.0);
-  iris::Vector direction0(0.0, 1.0, 0.0);
-  iris::Ray ray0(origin, direction0);
+  Point origin(0.0, 0.0, 3.0);
+  Vector direction0(0.0, 1.0, 0.0);
+  Ray ray0(origin, direction0);
 
-  auto hit_point0 = sphere->ComputeHitPoint(ray0, 2.0, nullptr);
-  auto expected_hit_point0 = ray0.Endpoint(2.0);
+  Geometry::ComputeHitPointResult hit_point0 =
+      sphere->ComputeHitPoint(ray0, 2.0, nullptr);
+  Point expected_hit_point0 = ray0.Endpoint(2.0);
   EXPECT_NEAR(hit_point0.point.x, expected_hit_point0.x, 0.00001);
   EXPECT_NEAR(hit_point0.point.y, expected_hit_point0.y, 0.00001);
   EXPECT_NEAR(hit_point0.point.z, expected_hit_point0.z, 0.00001);
-  EXPECT_LE(std::abs(hit_point0.error.x), 8.8e-08 * iris::RoundingError(5));
-  EXPECT_LE(std::abs(hit_point0.error.y), 2.0 * iris::RoundingError(5));
-  EXPECT_LE(std::abs(hit_point0.error.z), 8.8e-08 * iris::RoundingError(3));
+  EXPECT_LE(std::abs(hit_point0.error.x), 8.8e-08 * RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.y), 2.0 * RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.z), 8.8e-08 * RoundingError(3));
 
-  iris::Vector direction1(0.0, -1.0, 0.0);
-  iris::Ray ray1(origin, direction1);
+  Vector direction1(0.0, -1.0, 0.0);
+  Ray ray1(origin, direction1);
 
-  auto hit_point1 = sphere->ComputeHitPoint(ray1, 2.0, nullptr);
-  auto expected_hit_point1 = ray1.Endpoint(2.0);
+  Geometry::ComputeHitPointResult hit_point1 =
+      sphere->ComputeHitPoint(ray1, 2.0, nullptr);
+  Point expected_hit_point1 = ray1.Endpoint(2.0);
   EXPECT_NEAR(hit_point1.point.x, expected_hit_point1.x, 0.00001);
   EXPECT_NEAR(hit_point1.point.y, expected_hit_point1.y, 0.00001);
   EXPECT_NEAR(hit_point1.point.z, expected_hit_point1.z, 0.00001);
-  EXPECT_LE(std::abs(hit_point0.error.x), 8.8e-08 * iris::RoundingError(5));
-  EXPECT_LE(std::abs(hit_point0.error.y), 2.0 * iris::RoundingError(5));
-  EXPECT_LE(std::abs(hit_point0.error.z), 8.8e-08 * iris::RoundingError(3));
+  EXPECT_LE(std::abs(hit_point0.error.x), 8.8e-08 * RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.y), 2.0 * RoundingError(5));
+  EXPECT_LE(std::abs(hit_point0.error.z), 8.8e-08 * RoundingError(3));
 }
 
-TEST_F(Sphere, ComputeHitPointOnXYOrigin) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, ComputeHitPointOnXYOrigin) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::Point origin(0.0, 0.0, 2.0);
-  iris::Vector direction0(0.0, 0.0, 1.0);
-  iris::Ray ray0(origin, direction0);
+  Point origin(0.0, 0.0, 2.0);
+  Vector direction0(0.0, 0.0, 1.0);
+  Ray ray0(origin, direction0);
 
-  auto hit_point0 = sphere->ComputeHitPoint(ray0, 3.0, nullptr);
+  Geometry::ComputeHitPointResult hit_point0 =
+      sphere->ComputeHitPoint(ray0, 3.0, nullptr);
   EXPECT_EQ(ray0.Endpoint(3.0), hit_point0.point);
   EXPECT_EQ(hit_point0.error.x, 0.0);
   EXPECT_EQ(hit_point0.error.y, 0.0);
-  EXPECT_EQ(hit_point0.error.z, 2.0 * iris::RoundingError(1));
+  EXPECT_EQ(hit_point0.error.z, 2.0 * RoundingError(1));
 
-  iris::Vector direction1(0.0, 0.0, -1.0);
-  iris::Ray ray1(origin, direction1);
+  Vector direction1(0.0, 0.0, -1.0);
+  Ray ray1(origin, direction1);
 
-  auto hit_point1 = sphere->ComputeHitPoint(ray1, 1.0, nullptr);
+  Geometry::ComputeHitPointResult hit_point1 =
+      sphere->ComputeHitPoint(ray1, 1.0, nullptr);
   EXPECT_EQ(ray1.Endpoint(1.0), hit_point1.point);
   EXPECT_EQ(hit_point1.error.x, 0.0);
   EXPECT_EQ(hit_point1.error.y, 0.0);
-  EXPECT_EQ(hit_point1.error.z, 2.0 * iris::RoundingError(1));
+  EXPECT_EQ(hit_point1.error.z, 2.0 * RoundingError(1));
 }
 
-TEST_F(Sphere, GetMaterial) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, GetMaterial) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  auto front = sphere->GetMaterial(FRONT_FACE);
+  const Material* front = sphere->GetMaterial(FRONT_FACE);
   EXPECT_EQ(front_material.Get(), front);
 
-  auto back = sphere->GetMaterial(BACK_FACE);
+  const Material* back = sphere->GetMaterial(BACK_FACE);
   EXPECT_EQ(back_material.Get(), back);
 }
 
-TEST_F(Sphere, GetEmissiveMaterial) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, GetEmissiveMaterial) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  auto front = sphere->GetEmissiveMaterial(FRONT_FACE);
+  const EmissiveMaterial* front = sphere->GetEmissiveMaterial(FRONT_FACE);
   EXPECT_EQ(front_emissive_material.Get(), front);
 
-  auto back = sphere->GetEmissiveMaterial(BACK_FACE);
+  const EmissiveMaterial* back = sphere->GetEmissiveMaterial(BACK_FACE);
   EXPECT_EQ(back_emissive_material.Get(), back);
 }
 
-TEST_F(Sphere, ComputeSurfaceArea) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, ComputeSurfaceArea) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::visual_t surface_area0 =
-      sphere->ComputeSurfaceArea(FRONT_FACE, nullptr);
+  visual_t surface_area0 = sphere->ComputeSurfaceArea(FRONT_FACE, nullptr);
   EXPECT_NEAR(16.0 * std::numbers::pi, surface_area0, 0.001);
 
-  iris::Matrix model_to_world = iris::Matrix::Scalar(2.0, 2.0, 2.0).value();
-  iris::visual_t surface_area1 =
+  Matrix model_to_world = Matrix::Scalar(2.0, 2.0, 2.0).value();
+  visual_t surface_area1 =
       sphere->ComputeSurfaceArea(FRONT_FACE, &model_to_world);
   EXPECT_NEAR(64.0 * std::numbers::pi, surface_area1, 0.001);
 }
 
-TEST_F(Sphere, SampleBySolidAngle) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, SampleBySolidAngle) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  iris::random::MockRandom rng0;
+  MockRandom rng0;
   EXPECT_CALL(rng0, DiscardGeometric(2));
-  iris::Sampler sampler0(rng0);
+  Sampler sampler0(rng0);
 
-  EXPECT_TRUE(std::holds_alternative<std::monostate>(sphere->SampleBySolidAngle(
-      iris::Point(0.0, 0.0, 3.0), FRONT_FACE, sampler0)));
+  EXPECT_TRUE(std::holds_alternative<std::monostate>(
+      sphere->SampleBySolidAngle(Point(0.0, 0.0, 3.0), FRONT_FACE, sampler0)));
 
-  iris::random::MockRandom rng1;
+  MockRandom rng1;
   EXPECT_CALL(rng1, DiscardGeometric(2));
-  iris::Sampler sampler1(rng1);
+  Sampler sampler1(rng1);
 
-  EXPECT_TRUE(std::holds_alternative<std::monostate>(sphere->SampleBySolidAngle(
-      iris::Point(0.0, 0.0, 0.0), BACK_FACE, sampler1)));
+  EXPECT_TRUE(std::holds_alternative<std::monostate>(
+      sphere->SampleBySolidAngle(Point(0.0, 0.0, 0.0), BACK_FACE, sampler1)));
 
-  iris::random::MockRandom rng2;
+  MockRandom rng2;
   {
-    testing::InSequence s;
-    EXPECT_CALL(rng2, NextGeometric()).WillOnce(testing::Return(0.5));
-    EXPECT_CALL(rng2, NextGeometric()).WillOnce(testing::Return(0.5));
+    InSequence s;
+    EXPECT_CALL(rng2, NextGeometric()).WillOnce(Return(0.5));
+    EXPECT_CALL(rng2, NextGeometric()).WillOnce(Return(0.5));
   }
 
-  iris::Sampler sampler2(rng2);
-  auto sample2 = sphere->SampleBySolidAngle(iris::Point(0.0, 0.0, 0.0),
-                                            FRONT_FACE, sampler2);
-  auto vector2 = std::get<iris::Vector>(sample2);
+  Sampler sampler2(rng2);
+  std::variant<std::monostate, Point, Vector> sample2 =
+      sphere->SampleBySolidAngle(Point(0.0, 0.0, 0.0), FRONT_FACE, sampler2);
+  Vector vector2 = std::get<Vector>(sample2);
   EXPECT_NEAR(vector2.x, 0.0, 0.001);
   EXPECT_NEAR(vector2.y, 0.488296, 0.001);
   EXPECT_NEAR(vector2.z, 0.872677, 0.001);
 
-  iris::random::MockRandom rng3;
+  MockRandom rng3;
   {
-    testing::InSequence s;
-    EXPECT_CALL(rng3, NextGeometric()).WillOnce(testing::Return(0.5));
-    EXPECT_CALL(rng3, NextGeometric()).WillOnce(testing::Return(0.5));
+    InSequence s;
+    EXPECT_CALL(rng3, NextGeometric()).WillOnce(Return(0.5));
+    EXPECT_CALL(rng3, NextGeometric()).WillOnce(Return(0.5));
   }
 
-  iris::Sampler sampler3(rng3);
-  auto sample3 = sphere->SampleBySolidAngle(iris::Point(0.0, 0.0, 3.0),
-                                            BACK_FACE, sampler3);
-  EXPECT_EQ(iris::Point(2.0, 0.0, 3.0), std::get<iris::Point>(sample3));
+  Sampler sampler3(rng3);
+  std::variant<std::monostate, Point, Vector> sample3 =
+      sphere->SampleBySolidAngle(Point(0.0, 0.0, 3.0), BACK_FACE, sampler3);
+  EXPECT_EQ(Point(2.0, 0.0, 3.0), std::get<Point>(sample3));
 }
 
-TEST_F(Sphere, ComputePdfBySolidAngle) {
-  auto sphere = SimpleSphere();
+TEST(Sphere, ComputePdfBySolidAngle) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  auto pdf0 =
-      sphere->ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 3.0), BACK_FACE,
-                                     nullptr, iris::Point(0.0, 0.0, 1.0));
+  std::optional<visual_t> pdf0 = sphere->ComputePdfBySolidAngle(
+      Point(0.0, 0.0, 3.0), BACK_FACE, nullptr, Point(0.0, 0.0, 1.0));
   ASSERT_TRUE(pdf0);
   EXPECT_NEAR(0.0795, *pdf0, 0.01);
 
-  auto pdf1 =
-      sphere->ComputePdfBySolidAngle(iris::Point(0.0, 0.0, 0.0), FRONT_FACE,
-                                     nullptr, iris::Point(0.0, 0.0, 1.0));
+  std::optional<visual_t> pdf1 = sphere->ComputePdfBySolidAngle(
+      Point(0.0, 0.0, 0.0), FRONT_FACE, nullptr, Point(0.0, 0.0, 1.0));
   ASSERT_TRUE(pdf1);
   EXPECT_NEAR(0.6250, *pdf1, 0.01);
 }
 
-TEST_F(Sphere, GetBounds) {
-  auto sphere = SimpleSphere();
-  auto bounds = sphere->ComputeBounds(nullptr);
-  EXPECT_EQ(iris::Point(-2.0, -2.0, 1.0), bounds.lower);
-  EXPECT_EQ(iris::Point(2.0, 2.0, 5.0), bounds.upper);
+TEST(Sphere, GetBounds) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
+  BoundingBox bounds = sphere->ComputeBounds(nullptr);
+  EXPECT_EQ(Point(-2.0, -2.0, 1.0), bounds.lower);
+  EXPECT_EQ(Point(2.0, 2.0, 5.0), bounds.upper);
 }
 
-TEST_F(Sphere, GetBoundsWithTransform) {
-  auto sphere = SimpleSphere();
-  auto transform = iris::Matrix::Scalar(2.0, 2.0, 1.0).value();
-  auto bounds = sphere->ComputeBounds(&transform);
-  EXPECT_EQ(iris::Point(-4.0, -4.0, 1.0), bounds.lower);
-  EXPECT_EQ(iris::Point(4.0, 4.0, 5.0), bounds.upper);
+TEST(Sphere, GetBoundsWithTransform) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
+  Matrix transform = Matrix::Scalar(2.0, 2.0, 1.0).value();
+  BoundingBox bounds = sphere->ComputeBounds(&transform);
+  EXPECT_EQ(Point(-4.0, -4.0, 1.0), bounds.lower);
+  EXPECT_EQ(Point(4.0, 4.0, 5.0), bounds.upper);
 }
 
-TEST_F(Sphere, GetFaces) {
-  auto sphere = SimpleSphere();
-  auto faces = sphere->GetFaces();
+TEST(Sphere, GetFaces) {
+  ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
+  std::span<const face_t> faces = sphere->GetFaces();
   ASSERT_EQ(2u, faces.size());
   EXPECT_EQ(FRONT_FACE, faces[0]);
   EXPECT_EQ(BACK_FACE, faces[1]);
 }
+
+}  // namespace
+}  // namespace geometry
+}  // namespace iris

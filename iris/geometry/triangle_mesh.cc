@@ -1,5 +1,34 @@
 #include "iris/geometry/triangle_mesh.h"
 
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <optional>
+#include <span>
+#include <tuple>
+#include <variant>
+#include <vector>
+
+#include "iris/bounding_box.h"
+#include "iris/emissive_material.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
+#include "iris/material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/ray.h"
+#include "iris/reference_counted.h"
+#include "iris/sampler.h"
+#include "iris/texture_coordinates.h"
+#include "iris/textures/texture2d.h"
+#include "iris/vector.h"
+
 namespace iris {
 namespace geometry {
 namespace {
@@ -108,8 +137,8 @@ class Triangle final : public Geometry {
       geometric_t b1, geometric_t b2) const;
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
-  const std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
-  const std::shared_ptr<const SharedData> shared_;
+  std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
+  std::shared_ptr<const SharedData> shared_;
 };
 
 std::tuple<Vector, face_t, face_t> Triangle::ComputeSurfaceNormalAndFaces(
@@ -179,11 +208,9 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
     return TextureCoordinates{{u, v}};
   }
 
-  auto uv_dx = UVCoordinates(differentials->dx);
-  auto uv_dy = UVCoordinates(differentials->dy);
-
-  return TextureCoordinates{
-      {u, v}, {{uv_dx[0] - u, uv_dy[0] - u, uv_dx[1] - v, uv_dy[1] - v}}};
+  auto [u_dx, v_dx] = UVCoordinates(differentials->dx);
+  auto [u_dy, v_dy] = UVCoordinates(differentials->dy);
+  return TextureCoordinates{{u, v}, {{u_dx - u, u_dy - u, v_dx - v, v_dy - v}}};
 }
 
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
@@ -203,10 +230,11 @@ std::optional<Vector> Triangle::MaybeComputeShadingNormal(
     return std::nullopt;
   }
 
-  const auto* additional = static_cast<const AdditionalData*>(additional_data);
-  auto b0 = additional->barycentric_coordinates[0];
-  auto b1 = additional->barycentric_coordinates[1];
-  auto b2 = additional->barycentric_coordinates[2];
+  const AdditionalData* additional =
+      static_cast<const AdditionalData*>(additional_data);
+  geometric_t b0 = additional->barycentric_coordinates[0];
+  geometric_t b1 = additional->barycentric_coordinates[1];
+  geometric_t b2 = additional->barycentric_coordinates[2];
 
   geometric_t x = std::get<0>(shared_->normals[std::get<0>(vertices_)]) * b0 +
                   std::get<0>(shared_->normals[std::get<1>(vertices_)]) * b1 +
@@ -266,7 +294,8 @@ Geometry::ComputeShadingNormalResult Triangle::ComputeShadingNormal(
 
 Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
     const Ray& ray, geometric_t distance, const void* additional_data) const {
-  const auto* additional = static_cast<const AdditionalData*>(additional_data);
+  const AdditionalData* additional =
+      static_cast<const AdditionalData*>(additional_data);
 
   geometric x = additional->barycentric_coordinates[0] *
                     shared_->points[std::get<0>(vertices_)].x +
@@ -334,9 +363,9 @@ std::variant<std::monostate, Point, Vector> Triangle::SampleBySolidAngle(
   geometric_t u = sampler.Next();
   geometric_t v = sampler.Next();
 
-  if (u + v > (geometric_t)1.0) {
-    u = (geometric_t)1.0 - u;
-    v = (geometric_t)1.0 - v;
+  if (u + v > static_cast<geometric_t>(1.0)) {
+    u = static_cast<geometric_t>(1.0) - u;
+    v = static_cast<geometric_t>(1.0) - v;
   }
 
   Vector v0_to_v1 = shared_->points[std::get<1>(vertices_)] -
@@ -353,7 +382,8 @@ std::optional<visual_t> Triangle::ComputePdfBySolidAngle(
   geometric_t distance_to_sample_squared;
   Vector to_sample = Normalize(on_face - origin, &distance_to_sample_squared);
 
-  const auto* additional = static_cast<const AdditionalData*>(additional_data);
+  const AdditionalData* additional =
+      static_cast<const AdditionalData*>(additional_data);
 
   geometric_t cos_theta =
       ClampedAbsDotProduct(to_sample, Normalize(additional->surface_normal));
@@ -382,11 +412,14 @@ std::span<const face_t> Triangle::GetFaces() const {
 }
 
 Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
-  auto v0 = Subtract(shared_->points[std::get<0>(vertices_)], ray.origin);
-  auto v1 = Subtract(shared_->points[std::get<1>(vertices_)], ray.origin);
-  auto v2 = Subtract(shared_->points[std::get<2>(vertices_)], ray.origin);
+  std::array<iris::geometric_t, 3> v0 =
+      Subtract(shared_->points[std::get<0>(vertices_)], ray.origin);
+  std::array<iris::geometric_t, 3> v1 =
+      Subtract(shared_->points[std::get<1>(vertices_)], ray.origin);
+  std::array<iris::geometric_t, 3> v2 =
+      Subtract(shared_->points[std::get<2>(vertices_)], ray.origin);
 
-  auto dominant_axis = ray.direction.DominantAxis();
+  Vector::Axis dominant_axis = ray.direction.DominantAxis();
 
   geometric_t shear_x, shear_y, direction_z;
   switch (dominant_axis) {
@@ -467,8 +500,9 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
       std::max(static_cast<geometric_t>(0.0), amount_remaining);
 
   if (shared_->alpha_mask) {
-    auto texture_coordinates = ComputeTextureCoordinates(
-        std::nullopt, barycentric0, barycentric1, barycentric2);
+    std::optional<TextureCoordinates> texture_coordinates =
+        ComputeTextureCoordinates(std::nullopt, barycentric0, barycentric1,
+                                  barycentric2);
     if (texture_coordinates &&
         !shared_->alpha_mask->Evaluate(*texture_coordinates)) {
       return nullptr;
@@ -509,36 +543,29 @@ Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
 }
 
 std::tuple<uint32_t, uint32_t, uint32_t> ComputeIndices(
-    std::span<const Point> points,
-    const std::tuple<uint32_t, uint32_t, uint32_t>& indices,
+    std::span<const Point> points, uint32_t v0, uint32_t v1, uint32_t v2,
     std::span<const std::tuple<geometric, geometric, geometric>> normals) {
-  if (normals.empty()) {
-    return indices;
+  if (!normals.empty()) {
+    Vector surface_normal =
+        DoComputeSurfaceNormal(points[v0], points[v1], points[v2]);
+
+    geometric_t cumulative_dp =
+        (std::get<0>(normals[v0]) + std::get<0>(normals[v1]) +
+         std::get<0>(normals[v2])) *
+            surface_normal.x +
+        (std::get<1>(normals[v0]) + std::get<1>(normals[v1]) +
+         std::get<1>(normals[v2])) *
+            surface_normal.y +
+        (std::get<2>(normals[v0]) + std::get<2>(normals[v1]) +
+         std::get<2>(normals[v2])) *
+            surface_normal.z;
+
+    if (cumulative_dp < static_cast<geometric_t>(0.0)) {
+      return std::make_tuple(v0, v2, v1);
+    }
   }
 
-  Vector surface_normal = DoComputeSurfaceNormal(points[std::get<0>(indices)],
-                                                 points[std::get<1>(indices)],
-                                                 points[std::get<2>(indices)]);
-
-  geometric_t cumulative_dp = (std::get<0>(normals[std::get<0>(indices)]) +
-                               std::get<0>(normals[std::get<1>(indices)]) +
-                               std::get<0>(normals[std::get<2>(indices)])) *
-                                  surface_normal.x +
-                              (std::get<1>(normals[std::get<0>(indices)]) +
-                               std::get<1>(normals[std::get<1>(indices)]) +
-                               std::get<1>(normals[std::get<2>(indices)])) *
-                                  surface_normal.y +
-                              (std::get<2>(normals[std::get<0>(indices)]) +
-                               std::get<2>(normals[std::get<1>(indices)]) +
-                               std::get<2>(normals[std::get<2>(indices)])) *
-                                  surface_normal.z;
-
-  if (cumulative_dp < static_cast<geometric_t>(0.0)) {
-    return std::make_tuple(std::get<0>(indices), std::get<2>(indices),
-                           std::get<1>(indices));
-  }
-
-  return indices;
+  return std::make_tuple(v0, v1, v2);
 }
 
 }  // namespace
@@ -555,7 +582,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     ReferenceCounted<EmissiveMaterial> back_emissive_material,
     ReferenceCounted<NormalMap> front_normal_map,
     ReferenceCounted<NormalMap> back_normal_map) {
-  auto shared_data =
+  std::shared_ptr<Triangle::SharedData> shared_data =
       std::make_shared<Triangle::SharedData>(Triangle::SharedData{
           std::vector<Point>(points.begin(), points.end()),
           std::vector<std::tuple<geometric, geometric, geometric>>(
@@ -568,31 +595,22 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
           {std::move(front_normal_map), std::move(back_normal_map)}});
 
   std::vector<ReferenceCounted<Geometry>> result;
-  for (const auto& entry : indices) {
-    assert(shared_data->normals.empty() ||
-           std::get<0>(entry) < shared_data->normals.size());
-    assert(shared_data->normals.empty() ||
-           std::get<1>(entry) < shared_data->normals.size());
-    assert(shared_data->normals.empty() ||
-           std::get<2>(entry) < shared_data->normals.size());
-    assert(shared_data->uv.empty() ||
-           std::get<0>(entry) < shared_data->uv.size());
-    assert(shared_data->uv.empty() ||
-           std::get<1>(entry) < shared_data->uv.size());
-    assert(shared_data->uv.empty() ||
-           std::get<2>(entry) < shared_data->uv.size());
+  for (const auto& [v0, v1, v2] : indices) {
+    assert(shared_data->normals.empty() || v0 < shared_data->normals.size());
+    assert(shared_data->normals.empty() || v1 < shared_data->normals.size());
+    assert(shared_data->normals.empty() || v2 < shared_data->normals.size());
+    assert(shared_data->uv.empty() || v0 < shared_data->uv.size());
+    assert(shared_data->uv.empty() || v1 < shared_data->uv.size());
+    assert(shared_data->uv.empty() || v2 < shared_data->uv.size());
 
-    if (shared_data->points.at(std::get<0>(entry)) ==
-            shared_data->points.at(std::get<1>(entry)) ||
-        shared_data->points.at(std::get<1>(entry)) ==
-            shared_data->points.at(std::get<2>(entry)) ||
-        shared_data->points.at(std::get<2>(entry)) ==
-            shared_data->points.at(std::get<0>(entry))) {
+    if (shared_data->points.at(v0) == shared_data->points.at(v1) ||
+        shared_data->points.at(v1) == shared_data->points.at(v2) ||
+        shared_data->points.at(v2) == shared_data->points.at(v0)) {
       continue;
     }
 
     result.push_back(MakeReferenceCounted<Triangle>(
-        ComputeIndices(points, entry, normals), shared_data));
+        ComputeIndices(points, v0, v1, v2, normals), shared_data));
   }
 
   return result;

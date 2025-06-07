@@ -1,80 +1,184 @@
 #include "iris/geometry/bvh_aggregate.h"
 
-#include <algorithm>
-#include <cassert>
+#include <optional>
+#include <span>
+#include <utility>
+#include <variant>
+#include <vector>
 
+#include "iris/bounding_box.h"
+#include "iris/emissive_material.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
+#include "iris/material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/ray.h"
+#include "iris/reference_countable.h"
+#include "iris/reference_counted.h"
+#include "iris/sampler.h"
 #include "iris/scenes/internal/bvh_builder.h"
 #include "iris/scenes/internal/bvh_traversal.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace geometry {
 namespace {
 
+using ::iris::scenes::internal::BuildBVH;
+using ::iris::scenes::internal::BuildBVHResult;
+using ::iris::scenes::internal::BVHNode;
+
 class BVHAggregate final : public Geometry {
  public:
-  BVHAggregate(std::vector<scenes::internal::BVHNode> bvh,
+  BVHAggregate(std::vector<BVHNode> bvh,
                std::vector<ReferenceCounted<Geometry>> geometry)
       : bvh_(std::move(bvh)), geometry_(std::move(geometry)) {}
 
   Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
-                              const void* additional_data) const override;
+                              const void* additional_data) const override {
+    std::unreachable();
+  }
 
   ComputeHitPointResult ComputeHitPoint(
       const Ray& ray, geometric_t distance,
-      const void* additional_data) const override;
+      const void* additional_data) const override {
+    std::unreachable();
+  }
 
   visual_t ComputeSurfaceArea(face_t face,
-                              const Matrix* model_to_world) const override;
+                              const Matrix* model_to_world) const override {
+    std::unreachable();
+  }
 
-  BoundingBox ComputeBounds(const Matrix* model_to_world) const override;
+  BoundingBox ComputeBounds(const Matrix* model_to_world) const override {
+    if (model_to_world == nullptr) {
+      return bvh_.front().Bounds();
+    }
 
-  std::span<const face_t> GetFaces() const override;
+    return model_to_world->Multiply(bvh_.front().Bounds());
+  }
+
+  std::span<const face_t> GetFaces() const override { return {}; }
 
  private:
-  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override;
+  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
+    return scenes::internal::Intersect(bvh_.front(), geometry_, ray,
+                                       hit_allocator);
+  }
 
-  std::vector<scenes::internal::BVHNode> bvh_;
+  std::vector<BVHNode> bvh_;
   std::vector<ReferenceCounted<Geometry>> geometry_;
 };
 
-Vector BVHAggregate::ComputeSurfaceNormal(const Point& hit_point, face_t face,
-                                          const void* additional_data) const {
-  assert(false);
-  return Vector(0.0, 0.0, 1.0);
-}
+class NoEmissiveSurfacesGeometry : public Geometry {
+ public:
+  NoEmissiveSurfacesGeometry(ReferenceCounted<Geometry> impl)
+      : impl_(std::move(impl)) {}
 
-Geometry::ComputeHitPointResult BVHAggregate::ComputeHitPoint(
-    const Ray& ray, geometric_t distance, const void* additional_data) const {
-  assert(false);
-  return ComputeHitPointResult{Point(0.0, 0.0, 0.0),
-                               PositionError(0.0, 0.0, 0.0)};
-}
-
-visual_t BVHAggregate::ComputeSurfaceArea(face_t face,
-                                          const Matrix* model_to_world) const {
-  assert(false);
-  return static_cast<visual_t>(0.0);
-}
-
-BoundingBox BVHAggregate::ComputeBounds(const Matrix* model_to_world) const {
-  if (model_to_world == nullptr) {
-    return bvh_.front().Bounds();
+  Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
+                              const void* additional_data) const override {
+    return impl_->ComputeSurfaceNormal(hit_point, face, additional_data);
   }
 
-  return model_to_world->Multiply(bvh_.front().Bounds());
-}
+  std::optional<TextureCoordinates> ComputeTextureCoordinates(
+      const Point& hit_point,
+      const std::optional<Geometry::Differentials>& differentials, face_t face,
+      const void* additional_data) const override {
+    return impl_->ComputeTextureCoordinates(hit_point, differentials, face,
+                                            additional_data);
+  }
 
-std::span<const face_t> BVHAggregate::GetFaces() const { return {}; }
+  ComputeShadingNormalResult ComputeShadingNormal(
+      face_t face, const void* additional_data) const override {
+    return impl_->ComputeShadingNormal(face, additional_data);
+  }
 
-Hit* BVHAggregate::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
-  return scenes::internal::Intersect(bvh_.front(), geometry_, ray,
-                                     hit_allocator);
+  ComputeHitPointResult ComputeHitPoint(
+      const Ray& ray, geometric_t distance,
+      const void* additional_data) const override {
+    return impl_->ComputeHitPoint(ray, distance, additional_data);
+  }
+
+  const Material* GetMaterial(face_t face) const override {
+    return impl_->GetMaterial(face);
+  }
+
+  const EmissiveMaterial* GetEmissiveMaterial(face_t face) const override {
+    return nullptr;
+  }
+
+  visual_t ComputeSurfaceArea(face_t face,
+                              const Matrix* model_to_world) const override {
+    return impl_->ComputeSurfaceArea(face, model_to_world);
+  }
+
+  std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
+      const Point& origin, face_t face, Sampler& sampler) const override {
+    return impl_->SampleBySolidAngle(origin, face, sampler);
+  }
+
+  std::optional<visual_t> ComputePdfBySolidAngle(
+      const Point& origin, face_t face, const void* additional_data,
+      const Point& on_face) const override {
+    return impl_->ComputePdfBySolidAngle(origin, face, additional_data,
+                                         on_face);
+  }
+
+  BoundingBox ComputeBounds(const Matrix* model_to_world) const override {
+    return impl_->ComputeBounds(model_to_world);
+  }
+
+  std::span<const face_t> GetFaces() const override {
+    return impl_->GetFaces();
+  }
+
+ private:
+  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
+    return impl_->Trace(hit_allocator);
+  }
+
+  ReferenceCounted<Geometry> impl_;
+};
+
+void PreprocessGeometry(std::vector<ReferenceCounted<Geometry>>& geometry) {
+  size_t insert_index = 0;
+  for (size_t i = 0; i < geometry.size(); i++) {
+    if (!geometry[i]) {
+      continue;
+    }
+
+    bool is_emissive = false;
+    for (face_t face : geometry[i]->GetFaces()) {
+      if (geometry[i]->GetEmissiveMaterial(face)) {
+        is_emissive = true;
+        break;
+      }
+    }
+
+    if (is_emissive) {
+      geometry[insert_index++] =
+          MakeReferenceCounted<NoEmissiveSurfacesGeometry>(
+              std::move(geometry[i]));
+    } else {
+      std::swap(geometry[insert_index++], geometry[i]);
+    }
+  }
+
+  geometry.resize(insert_index);
 }
 
 }  // namespace
 
 ReferenceCounted<Geometry> AllocateBVHAggregate(
     std::vector<ReferenceCounted<Geometry>> geometry) {
+  PreprocessGeometry(geometry);
+
   if (geometry.empty()) {
     return ReferenceCounted<Geometry>();
   }
@@ -86,7 +190,7 @@ ReferenceCounted<Geometry> AllocateBVHAggregate(
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
 
-  auto result = scenes::internal::BuildBVH(
+  BuildBVHResult result = BuildBVH(
       [&](size_t index) {
         return std::pair<const Geometry&, const Matrix*>(*geometry[index],
                                                          nullptr);
@@ -94,10 +198,6 @@ ReferenceCounted<Geometry> AllocateBVHAggregate(
       geometry.size());
 
   for (size_t index = 0; index < result.geometry_sort_order.size(); index++) {
-    assert(std::ranges::all_of(geometry[index]->GetFaces(), [&](face_t face) {
-      return !geometry[index]->GetEmissiveMaterial(face);
-    }));
-
     sorted_geometry[result.geometry_sort_order[index]] =
         std::move(geometry[index]);
   }

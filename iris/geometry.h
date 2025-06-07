@@ -7,6 +7,7 @@
 
 #include "iris/bounding_box.h"
 #include "iris/emissive_material.h"
+#include "iris/float.h"
 #include "iris/hit_allocator.h"
 #include "iris/integer.h"
 #include "iris/material.h"

@@ -2,7 +2,28 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <numbers>
+#include <optional>
+#include <span>
+#include <variant>
+
+#include "iris/bounding_box.h"
+#include "iris/emissive_material.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
+#include "iris/material.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/ray.h"
+#include "iris/reference_counted.h"
+#include "iris/sampler.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace geometry {
@@ -26,9 +47,7 @@ class Sphere final : public Geometry {
         materials_{std::move(front_material), std::move(back_material)},
         emissive_materials_{std::move(front_emissive_material),
                             std::move(back_emissive_material)},
-        normal_maps_{std::move(front_normal_map), std::move(back_normal_map)} {
-    assert(std::isfinite(radius) && radius > 0.0);
-  }
+        normal_maps_{std::move(front_normal_map), std::move(back_normal_map)} {}
 
   Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                               const void* additional_data) const override;
@@ -201,7 +220,7 @@ std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
   geometric_t x = r * std::cos(phi);
   geometric_t y = r * std::sin(phi);
 
-  return center_ + iris::Vector(x, y, z);
+  return center_ + Vector(x, y, z);
 }
 
 std::optional<visual_t> Sphere::ComputePdfBySolidAngle(
@@ -331,6 +350,10 @@ ReferenceCounted<Geometry> AllocateSphere(
     ReferenceCounted<EmissiveMaterial> back_emissive_material,
     ReferenceCounted<NormalMap> front_normal_map,
     ReferenceCounted<NormalMap> back_normal_map) {
+  if (!std::isfinite(radius) || radius <= static_cast<geometric>(0.0)) {
+    return ReferenceCounted<Geometry>();
+  }
+
   return MakeReferenceCounted<Sphere>(
       center, radius, front_material, back_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);

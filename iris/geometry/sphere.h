@@ -2,13 +2,12 @@
 #define _IRIS_GEOMETRY_SPHERE_
 
 #include "iris/emissive_material.h"
+#include "iris/float.h"
 #include "iris/geometry.h"
-#include "iris/integer.h"
 #include "iris/material.h"
 #include "iris/normal_map.h"
 #include "iris/point.h"
 #include "iris/reference_counted.h"
-#include "iris/vector.h"
 
 namespace iris {
 namespace geometry {
