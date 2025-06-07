@@ -2,7 +2,6 @@
 #define _IRIS_BSDF_
 
 #include <optional>
-#include <utility>
 
 #include "iris/bxdf.h"
 #include "iris/float.h"
@@ -48,14 +47,7 @@ class Bsdf final {
       SpectralAllocator& allocator) const;
 
  private:
-  Bsdf(const Bxdf& bxdf, const Vector vectors[4]) noexcept
-      : bxdf_(bxdf),
-        x_(vectors[0]),
-        y_(vectors[1]),
-        z_(vectors[2]),
-        surface_normal_(vectors[3]),
-        local_surface_normal_(ToLocal(surface_normal_)),
-        is_diffuse_(bxdf.IsDiffuse(&diffuse_pdf_)) {}
+  Bsdf(const Bxdf& bxdf, const Vector vectors[4]) noexcept;
 
   std::optional<Bxdf::Differentials> ToLocal(
       const std::optional<Differentials>& differentials) const;

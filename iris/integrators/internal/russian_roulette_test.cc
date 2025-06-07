@@ -1,6 +1,9 @@
 #include "iris/integrators/internal/russian_roulette.h"
 
+#include <optional>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
 #include "iris/random/mock_random.h"
 
 namespace iris {
@@ -26,7 +29,7 @@ TEST(RussianRoulette, AboveMaximumSuccess) {
   EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
 
   RussianRoulette roulette(0.75, 1.0);
-  auto result = roulette.Evaluate(rng, 0.99);
+  std::optional<visual_t> result = roulette.Evaluate(rng, 0.99);
   ASSERT_TRUE(result.has_value());
   EXPECT_NEAR(0.75, result.value(), 0.0001);
 }
@@ -36,7 +39,7 @@ TEST(RussianRoulette, AboveMaximumFails) {
   EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
 
   RussianRoulette roulette(0.75, 1.0);
-  auto result = roulette.Evaluate(rng, 0.99);
+  std::optional<visual_t> result = roulette.Evaluate(rng, 0.99);
   ASSERT_FALSE(result.has_value());
 }
 
@@ -45,7 +48,7 @@ TEST(RussianRoulette, BelowMaximumSuccess) {
   EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
 
   RussianRoulette roulette(0.75, 1.0);
-  auto result = roulette.Evaluate(rng, 0.5);
+  std::optional<visual_t> result = roulette.Evaluate(rng, 0.5);
   ASSERT_TRUE(result.has_value());
   EXPECT_NEAR(0.5, result.value(), 0.0001);
 }
@@ -55,7 +58,7 @@ TEST(RussianRoulette, BelowMaximumFails) {
   EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
 
   RussianRoulette roulette(0.75, 1.0);
-  auto result = roulette.Evaluate(rng, 0.5);
+  std::optional<visual_t> result = roulette.Evaluate(rng, 0.5);
   ASSERT_FALSE(result.has_value());
 }
 

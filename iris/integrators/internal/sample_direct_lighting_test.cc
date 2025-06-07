@@ -1,14 +1,25 @@
 #include "iris/integrators/internal/sample_direct_lighting.h"
 
+#include <optional>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bxdf.h"
 #include "iris/bxdfs/mock_bxdf.h"
+#include "iris/float.h"
+#include "iris/hit_point.h"
+#include "iris/light.h"
 #include "iris/lights/mock_light.h"
+#include "iris/position_error.h"
 #include "iris/random/mock_random.h"
+#include "iris/ray.h"
+#include "iris/ray_tracer.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/spectrum.h"
 #include "iris/testing/light_sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace integrators {
@@ -26,6 +37,7 @@ using ::iris::reflectors::MockReflector;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetAlwaysVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::LightSampleListEntry;
 using ::iris::testing::ScopedListLightSampler;
 using ::testing::_;
 using ::testing::DoAll;
@@ -472,7 +484,7 @@ TEST(SampleDirectLighting, OneZeroPdfSample) {
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  testing::LightSampleListEntry list[] = {
+  LightSampleListEntry list[] = {
       {&light, static_cast<visual_t>(0.0)},
   };
 
@@ -515,7 +527,7 @@ TEST(SampleDirectLighting, OneDeltaLight) {
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  testing::LightSampleListEntry list[] = {
+  LightSampleListEntry list[] = {
       {&light, std::nullopt},
   };
 
@@ -563,7 +575,7 @@ TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
 
-  testing::LightSampleListEntry list[] = {
+  LightSampleListEntry list[] = {
       {&light, static_cast<visual_t>(0.5)},
   };
 
@@ -611,7 +623,7 @@ TEST(SampleDirectLighting, TwoDeltaLights) {
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2)).Times(4);
 
-  testing::LightSampleListEntry list[] = {
+  LightSampleListEntry list[] = {
       {&light, std::nullopt},
       {&light, static_cast<visual_t>(0.5)},
   };

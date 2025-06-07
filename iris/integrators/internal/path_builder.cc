@@ -1,7 +1,13 @@
 #include "iris/integrators/internal/path_builder.h"
 
-#include <cassert>
+#include <algorithm>
 #include <cmath>
+#include <vector>
+
+#include "iris/float.h"
+#include "iris/reflector.h"
+#include "iris/spectral_allocator.h"
+#include "iris/spectrum.h"
 
 namespace iris {
 namespace integrators {
@@ -22,9 +28,6 @@ void PathBuilder::Add(const Spectrum* spectrum, SpectralAllocator& allocator) {
 }
 
 void PathBuilder::Bounce(const Reflector* reflector, visual_t attenuation) {
-  assert(reflector);
-  assert(std::isfinite(attenuation) && attenuation >= 0.0);
-
   spectra_.push_back(nullptr);
   reflectors_.push_back(reflector);
   attenuations_.push_back(attenuation);

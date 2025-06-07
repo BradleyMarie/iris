@@ -1,6 +1,8 @@
 #ifndef _IRIS_INTEGRATORS_INTERNAL_SAMPLE_DIRECT_LIGHTING_
 #define _IRIS_INTEGRATORS_INTERNAL_SAMPLE_DIRECT_LIGHTING_
 
+#include "iris/bsdf.h"
+#include "iris/float.h"
 #include "iris/light.h"
 #include "iris/light_sampler.h"
 #include "iris/random.h"

@@ -1,10 +1,23 @@
 #include "iris/integrators/internal/sample_indirect_lighting.h"
 
+#include <cmath>
+#include <optional>
+#include <variant>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bsdf.h"
+#include "iris/bxdf.h"
 #include "iris/bxdfs/mock_bxdf.h"
+#include "iris/hit_point.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
 #include "iris/random/mock_random.h"
+#include "iris/ray_differential.h"
+#include "iris/ray_tracer.h"
 #include "iris/reflectors/mock_reflector.h"
+#include "iris/sampler.h"
 #include "iris/testing/spectral_allocator.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace integrators {

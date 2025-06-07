@@ -7,6 +7,7 @@ cc_library(
     testonly = True,
     hdrs = ["mock_integrator.h"],
     deps = [
+        "//iris:albedo_matcher",
         "//iris:integrator",
         "//iris:light_sampler",
         "//iris:random",
@@ -24,6 +25,8 @@ cc_library(
     srcs = ["path_integrator.cc"],
     hdrs = ["path_integrator.h"],
     deps = [
+        "//iris:albedo_matcher",
+        "//iris:float",
         "//iris:integrator",
         "//iris:light_sampler",
         "//iris:random",
@@ -44,6 +47,14 @@ cc_test(
     srcs = ["path_integrator_test.cc"],
     deps = [
         ":path_integrator",
+        "//iris:bxdf",
+        "//iris:float",
+        "//iris:integrator",
+        "//iris:point",
+        "//iris:ray",
+        "//iris:ray_differential",
+        "//iris:spectrum",
+        "//iris:vector",
         "//iris/albedo_matchers:mock_albedo_matcher",
         "//iris/bxdfs:mock_bxdf",
         "//iris/environmental_lights:mock_environmental_light",

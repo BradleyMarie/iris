@@ -237,6 +237,8 @@ const Spectrum* SpectralAllocator::Add(const Spectrum* addend0,
 
 const Spectrum* SpectralAllocator::Scale(const Spectrum* spectrum,
                                          visual_t attenuation) {
+  assert(std::isfinite(attenuation));
+
   if (!spectrum) {
     return nullptr;
   }

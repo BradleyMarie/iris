@@ -1,17 +1,29 @@
 #include "iris/integrators/path_integrator.h"
 
+#include <memory>
+#include <optional>
+#include <variant>
+
 #include "googletest/include/gtest/gtest.h"
 #include "iris/albedo_matchers/mock_albedo_matcher.h"
+#include "iris/bxdf.h"
 #include "iris/bxdfs/mock_bxdf.h"
 #include "iris/environmental_lights/mock_environmental_light.h"
+#include "iris/float.h"
+#include "iris/integrator.h"
 #include "iris/lights/mock_light.h"
+#include "iris/point.h"
 #include "iris/random/mock_random.h"
+#include "iris/ray.h"
+#include "iris/ray_differential.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/spectrum.h"
 #include "iris/testing/light_sampler.h"
 #include "iris/testing/ray_tracer.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace integrators {
@@ -47,12 +59,12 @@ TEST(PathIntegratorTest, NoHits) {
   MockAlbedoMatcher albedo_matcher;
   MockRandom rng;
 
-  PathIntegrator integrator(1.0, 1.0, 1u, 8u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 1u, 8u);
   EXPECT_EQ(nullptr,
-            integrator.Integrate(kTraceRay, GetNoHitsRayTracer(),
-                                 GetEmptyLightSampler(),
-                                 GetAlwaysVisibleVisibilityTester(),
-                                 albedo_matcher, GetSpectralAllocator(), rng));
+            integrator->Integrate(kTraceRay, GetNoHitsRayTracer(),
+                                  GetEmptyLightSampler(),
+                                  GetAlwaysVisibleVisibilityTester(),
+                                  albedo_matcher, GetSpectralAllocator(), rng));
 }
 
 TEST(PathIntegratorTest, HitsEmissiveWithNoReflectance) {
@@ -65,9 +77,9 @@ TEST(PathIntegratorTest, HitsEmissiveWithNoReflectance) {
 
   MockRandom rng;
 
-  PathIntegrator integrator(1.0, 1.0, 1u, 8u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 1u, 8u);
   ScopedNoHitsRayTracer(environmental_light, [&](RayTracer& ray_tracer) {
-    EXPECT_EQ(&spectrum, integrator.Integrate(
+    EXPECT_EQ(&spectrum, integrator->Integrate(
                              kTraceRay, ray_tracer, GetEmptyLightSampler(),
                              GetAlwaysVisibleVisibilityTester(), albedo_matcher,
                              GetSpectralAllocator(), rng));
@@ -103,20 +115,22 @@ TEST(PathIntegratorTest, BounceLimit) {
       {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
        Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator0(1.0, 1.0, 0u, 0u);
+  std::unique_ptr<Integrator> integrator0 =
+      MakePathIntegrator(1.0, 1.0, 0u, 0u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
-    EXPECT_EQ(nullptr, integrator0.Integrate(
+    EXPECT_EQ(nullptr, integrator0->Integrate(
                            kTraceRay, ray_tracer, GetEmptyLightSampler(),
                            GetAlwaysVisibleVisibilityTester(), albedo_matcher,
                            GetSpectralAllocator(), rng));
   });
 
-  PathIntegrator integrator1(1.0, 1.0, 1u, 1u);
+  std::unique_ptr<Integrator> integrator1 =
+      MakePathIntegrator(1.0, 1.0, 1u, 1u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     const Spectrum* result =
-        integrator1.Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
-                              GetAlwaysVisibleVisibilityTester(),
-                              albedo_matcher, GetSpectralAllocator(), rng);
+        integrator1->Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
+                               GetAlwaysVisibleVisibilityTester(),
+                               albedo_matcher, GetSpectralAllocator(), rng);
     EXPECT_TRUE(result);
     EXPECT_EQ(0.5, result->Intensity(1.0));
   });
@@ -136,9 +150,9 @@ TEST(PathIntegratorTest, NoBsdf) {
       {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
        Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator(1.0, 1.0, 3u, 3u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 3u, 3u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
-    EXPECT_EQ(nullptr, integrator.Integrate(
+    EXPECT_EQ(nullptr, integrator->Integrate(
                            kTraceRay, ray_tracer, GetEmptyLightSampler(),
                            GetAlwaysVisibleVisibilityTester(), albedo_matcher,
                            GetSpectralAllocator(), rng));
@@ -172,9 +186,9 @@ TEST(PathIntegratorTest, BsdfSampleFails) {
       {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
        Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator0(1.0, 1.0, 3u, 3u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 3u, 3u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
-    EXPECT_EQ(nullptr, integrator0.Integrate(
+    EXPECT_EQ(nullptr, integrator->Integrate(
                            kTraceRay, ray_tracer, GetEmptyLightSampler(),
                            GetAlwaysVisibleVisibilityTester(), albedo_matcher,
                            GetSpectralAllocator(), rng));
@@ -218,12 +232,12 @@ TEST(PathIntegratorTest, TwoSpecularBouncesHitsEmissive) {
                               {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
                                Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator(1.0, 1.0, 4u, 8u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 4u, 8u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     const Spectrum* result =
-        integrator.Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
-                             GetAlwaysVisibleVisibilityTester(), albedo_matcher,
-                             GetSpectralAllocator(), rng);
+        integrator->Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
+                              GetAlwaysVisibleVisibilityTester(),
+                              albedo_matcher, GetSpectralAllocator(), rng);
     EXPECT_TRUE(result);
     EXPECT_EQ(0.25, result->Intensity(1.0));
   });
@@ -268,12 +282,12 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
       {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
        Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator(1.0, 1.0, 4u, 8u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 4u, 8u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     const Spectrum* result =
-        integrator.Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
-                             GetAlwaysVisibleVisibilityTester(), albedo_matcher,
-                             GetSpectralAllocator(), rng);
+        integrator->Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
+                              GetAlwaysVisibleVisibilityTester(),
+                              albedo_matcher, GetSpectralAllocator(), rng);
     EXPECT_TRUE(result);
     EXPECT_NEAR(0.35355339, result->Intensity(1.0), 0.0001);
   });
@@ -309,12 +323,12 @@ TEST(PathIntegratorTest, SpecularBounceRouletteFails) {
       {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
        Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator(1.0, 1.0, 0u, 1u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 0u, 1u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     const Spectrum* result =
-        integrator.Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
-                             GetAlwaysVisibleVisibilityTester(), albedo_matcher,
-                             GetSpectralAllocator(), rng);
+        integrator->Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
+                              GetAlwaysVisibleVisibilityTester(),
+                              albedo_matcher, GetSpectralAllocator(), rng);
     EXPECT_EQ(nullptr, result);
   });
 }
@@ -349,12 +363,12 @@ TEST(PathIntegratorTest, OneSpecularBounceRoulettePasses) {
       {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
        Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator(1.0, 1.0, 0u, 1u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 0u, 1u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     const Spectrum* result =
-        integrator.Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
-                             GetAlwaysVisibleVisibilityTester(), albedo_matcher,
-                             GetSpectralAllocator(), rng);
+        integrator->Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
+                              GetAlwaysVisibleVisibilityTester(),
+                              albedo_matcher, GetSpectralAllocator(), rng);
     ASSERT_TRUE(result);
     EXPECT_EQ(1.0, result->Intensity(1.0));
   });
@@ -404,12 +418,12 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
                               {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
                                Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator(0.2, 1.0, 0u, 3u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(0.2, 1.0, 0u, 3u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     const Spectrum* result =
-        integrator.Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
-                             GetAlwaysVisibleVisibilityTester(), albedo_matcher,
-                             GetSpectralAllocator(), rng);
+        integrator->Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),
+                              GetAlwaysVisibleVisibilityTester(),
+                              albedo_matcher, GetSpectralAllocator(), rng);
     ASSERT_TRUE(result);
     EXPECT_NEAR(1.0, result->Intensity(1.0), 0.001);
   });
@@ -449,7 +463,7 @@ TEST(PathIntegratorTest, DirectLighting) {
   RayTracerPathNode path[] = {
       {1.0, nullptr, &diffuse, Vector(0.0, 0.0, -1.0), Vector(0.0, 0.0, -1.0)}};
 
-  PathIntegrator integrator0(1.0, 1.0, 0u, 0u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 0u, 0u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     LightSampleListEntry list[] = {
         {&light, static_cast<visual_t>(0.25)},
@@ -457,7 +471,7 @@ TEST(PathIntegratorTest, DirectLighting) {
 
     ScopedListLightSampler(list, [&](LightSampler& light_sampler) {
       const Spectrum* result =
-          integrator0.Integrate(kTraceRay, ray_tracer, light_sampler,
+          integrator->Integrate(kTraceRay, ray_tracer, light_sampler,
                                 GetAlwaysVisibleVisibilityTester(),
                                 albedo_matcher, GetSpectralAllocator(), rng);
       EXPECT_TRUE(result);

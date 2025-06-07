@@ -13,7 +13,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace integrators {
 
-using ::iris::integrators::PathIntegrator;
+using ::iris::integrators::MakePathIntegrator;
 using ::iris::light_scenes::OneLightScene;
 using ::iris::light_scenes::PowerLightScene;
 using ::pbrt_proto::v3::Integrator;
@@ -71,9 +71,9 @@ std::unique_ptr<IntegratorResult> MakePath(const Integrator::Path& path) {
   }
 
   return std::make_unique<IntegratorResult>(IntegratorResult{
-      std::make_unique<PathIntegrator>(
-          kMaximumContinueProbability, static_cast<visual>(path.rrthreshold()),
-          kMinBounces, static_cast<uint8_t>(path.maxdepth())),
+      MakePathIntegrator(kMaximumContinueProbability,
+                         static_cast<visual>(path.rrthreshold()), kMinBounces,
+                         static_cast<uint8_t>(path.maxdepth())),
       std::move(light_scene_builder), pixel_bounds});
 }
 

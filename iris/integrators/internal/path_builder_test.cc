@@ -1,8 +1,13 @@
 #include "iris/integrators/internal/path_builder.h"
 
+#include <vector>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
+#include "iris/reflector.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/spectrum.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {

@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "googlemock/include/gmock/gmock.h"
+#include "iris/albedo_matcher.h"
 #include "iris/integrator.h"
 #include "iris/light_sampler.h"
 #include "iris/random.h"

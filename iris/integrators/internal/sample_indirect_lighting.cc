@@ -1,5 +1,15 @@
 #include "iris/integrators/internal/sample_indirect_lighting.h"
 
+#include <optional>
+#include <utility>
+
+#include "iris/bsdf.h"
+#include "iris/ray.h"
+#include "iris/ray_differential.h"
+#include "iris/ray_tracer.h"
+#include "iris/sampler.h"
+#include "iris/spectral_allocator.h"
+
 namespace iris {
 namespace integrators {
 namespace internal {

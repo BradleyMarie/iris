@@ -1,7 +1,8 @@
 #include "iris/bsdf.h"
 
 #include <array>
-#include <cassert>
+#include <cmath>
+#include <utility>
 
 namespace iris {
 namespace {
@@ -76,6 +77,22 @@ Bsdf::Bsdf(const Bxdf& bxdf, const Vector& surface_normal,
     : Bsdf(bxdf,
            ComputeState(surface_normal, shading_normal, normalize).data()) {}
 
+Bsdf::Bsdf(const Bxdf& bxdf, const Vector vectors[4]) noexcept
+    : bxdf_(bxdf),
+      x_(vectors[0]),
+      y_(vectors[1]),
+      z_(vectors[2]),
+      surface_normal_(vectors[3]),
+      local_surface_normal_(ToLocal(surface_normal_)),
+      is_diffuse_(bxdf.IsDiffuse(&diffuse_pdf_)) {
+  if (std::isnan(diffuse_pdf_)) {
+    diffuse_pdf_ = static_cast<visual_t>(1.0);
+  } else {
+    diffuse_pdf_ = std::clamp(diffuse_pdf_, static_cast<visual_t>(0.0),
+                              static_cast<visual_t>(1.0));
+  }
+}
+
 std::optional<Bxdf::Differentials> Bsdf::ToLocal(
     const std::optional<Bsdf::Differentials>& differentials) const {
   if (!differentials) {
@@ -95,8 +112,6 @@ std::optional<Bsdf::Differentials> Bsdf::ToWorld(
     const std::optional<Differentials>& incoming_differentials,
     const std::optional<Bxdf::Differentials>& outgoing_differentials) const {
   if (!incoming_differentials || !outgoing_differentials) {
-    assert(!outgoing_differentials ||
-           (!incoming_differentials && !outgoing_differentials));
     return std::nullopt;
   }
 
@@ -154,11 +169,9 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
         sample->second->pdf, false};
   }
 
-  assert(is_diffuse_ && diffuse_pdf_ >= static_cast<visual_t>(0.0));
-
   visual_t pdf = bxdf_.PdfDiffuse(local_incoming, sample->first,
                                   local_surface_normal_, type);
-  if (pdf <= static_cast<visual_t>(0.0)) {
+  if (!std::isfinite(pdf) || pdf <= static_cast<visual_t>(0.0)) {
     return std::nullopt;
   }
 
@@ -202,7 +215,7 @@ std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
   Vector local_outgoing = ToLocal(outgoing);
   visual_t pdf = bxdf_.PdfDiffuse(local_incoming, local_outgoing,
                                   local_surface_normal_, type);
-  if (pdf <= static_cast<visual_t>(0.0)) {
+  if (!std::isfinite(pdf) || pdf <= static_cast<visual_t>(0.0)) {
     return std::nullopt;
   }
 

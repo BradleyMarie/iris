@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "iris/float.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"

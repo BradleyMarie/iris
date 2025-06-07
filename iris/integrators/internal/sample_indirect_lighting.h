@@ -3,6 +3,7 @@
 
 #include <optional>
 
+#include "iris/bsdf.h"
 #include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
 #include "iris/sampler.h"
