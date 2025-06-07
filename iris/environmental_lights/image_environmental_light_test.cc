@@ -28,6 +28,17 @@ static const ReferenceCounted<Spectrum> kSpectrum0;
 static const ReferenceCounted<Spectrum> kSpectrum1 = MakeUniformSpectrum(1.0);
 static const ReferenceCounted<Spectrum> kSpectrum2 = MakeUniformSpectrum(2.0);
 
+TEST(ImageEnvironmentalLight, Null) {
+  EXPECT_TRUE(MakeImageEnvironmentalLight({{kSpectrum1, 1.0}}, {1, 1},
+                                          Matrix::Identity()));
+  EXPECT_FALSE(MakeImageEnvironmentalLight({{kSpectrum1, 0.0}}, {1, 1},
+                                           Matrix::Identity()));
+  EXPECT_FALSE(MakeImageEnvironmentalLight({{kSpectrum0, 1.0}}, {1, 1},
+                                           Matrix::Identity()));
+  EXPECT_FALSE(MakeImageEnvironmentalLight({{kSpectrum0, 0.0}}, {1, 1},
+                                           Matrix::Identity()));
+}
+
 TEST(ImageEnvironmentalLight, SampleOne) {
   std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma =
       {{kSpectrum0, 0.0},
