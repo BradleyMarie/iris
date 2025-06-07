@@ -2,7 +2,13 @@
 
 #include <algorithm>
 #include <cassert>
+#include <span>
+#include <utility>
 #include <vector>
+
+#include "iris/environmental_lights/internal/distribution_1d.h"
+#include "iris/float.h"
+#include "iris/sampler.h"
 
 namespace iris {
 namespace environmental_lights {

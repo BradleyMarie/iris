@@ -1,7 +1,12 @@
 #include "iris/environmental_lights/internal/distribution_1d.h"
 
+#include <span>
+#include <vector>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
 #include "iris/random/mock_random.h"
+#include "iris/sampler.h"
 
 namespace iris {
 namespace environmental_lights {
