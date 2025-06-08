@@ -23,8 +23,7 @@ void RunTestBody(
   iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
   iris::power_matchers::MockPowerMatcher power_matcher;
   auto scene_builder = iris::scenes::ListScene::Builder::Create();
-  auto light_scene_builder =
-      iris::light_scenes::AllLightScene::Builder::Create();
+  auto light_scene_builder = iris::light_scenes::MakeAllLightSceneBuilder();
   auto scene_objects = iris::SceneObjects::Builder().Build();
   iris::Renderer renderer(*scene_builder, *light_scene_builder,
                           std::move(scene_objects), power_matcher);

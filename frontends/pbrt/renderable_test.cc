@@ -27,7 +27,7 @@ using ::iris::cameras::MockCamera;
 using ::iris::color_matchers::MockColorMatcher;
 using ::iris::image_samplers::MockImageSampler;
 using ::iris::integrators::MockIntegrator;
-using ::iris::light_scenes::AllLightScene;
+using ::iris::light_scenes::MakeAllLightSceneBuilder;
 using ::iris::power_matchers::MockPowerMatcher;
 using ::iris::random::MockRandom;
 using ::iris::scenes::ListScene;
@@ -44,7 +44,7 @@ void RunTestBody(
   MockPowerMatcher power_matcher;
   std::unique_ptr<Scene::Builder> scene_builder = ListScene::Builder::Create();
   std::unique_ptr<LightScene::Builder> light_scene_builder =
-      AllLightScene::Builder::Create();
+      MakeAllLightSceneBuilder();
   SceneObjects scene_objects = SceneObjects::Builder().Build();
   Renderer renderer(*scene_builder, *light_scene_builder,
                     std::move(scene_objects), power_matcher);

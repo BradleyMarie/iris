@@ -2,12 +2,20 @@
 
 #include <limits>
 #include <memory>
+#include <span>
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/integer.h"
+#include "iris/light.h"
+#include "iris/light_sample.h"
+#include "iris/light_scene.h"
 #include "iris/lights/mock_light.h"
+#include "iris/point.h"
 #include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mock_random.h"
+#include "iris/reference_counted.h"
+#include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/testing/light_sample_allocator.h"
 
@@ -40,10 +48,10 @@ ReferenceCounted<Geometry> RadiusSqrtTwoGeometry() {
 }
 
 TEST(PowerLightSceneTest, NoLights) {
-  random::MockRandom rng;
+  MockRandom rng;
   SceneObjects scene_objects = SceneObjects::Builder().Build();
-  auto light_scene =
-      PowerLightScene::Builder::Create()->Build(scene_objects, kPowerMatcher);
+  std::unique_ptr<LightScene> light_scene =
+      MakePowerLightSceneBuilder()->Build(scene_objects, kPowerMatcher);
   EXPECT_EQ(nullptr, light_scene->Sample(Point(0.0, 0.0, 0.0), rng,
                                          GetLightSampleAllocator()));
 }
@@ -59,7 +67,7 @@ TEST(PowerLightSceneTest, OneLight) {
   SceneObjects objects = scene_builder.Build();
 
   std::unique_ptr<LightScene> light_scene =
-      PowerLightScene::Builder::Create()->Build(objects, kPowerMatcher);
+      MakePowerLightSceneBuilder()->Build(objects, kPowerMatcher);
 
   const LightSample* light_sample =
       light_scene->Sample(Point(0.0, 0.0, 0.0), rng, GetLightSampleAllocator());
@@ -86,7 +94,7 @@ TEST(PowerLightSceneTest, TwoLights) {
   SceneObjects objects = scene_builder.Build();
 
   std::unique_ptr<LightScene> light_scene =
-      PowerLightScene::Builder::Create()->Build(objects, kPowerMatcher);
+      MakePowerLightSceneBuilder()->Build(objects, kPowerMatcher);
 
   EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.5));
 

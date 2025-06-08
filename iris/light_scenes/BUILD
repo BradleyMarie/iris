@@ -22,6 +22,12 @@ cc_test(
     srcs = ["all_light_scene_test.cc"],
     deps = [
         ":all_light_scene",
+        "//iris:light",
+        "//iris:light_sample",
+        "//iris:light_scene",
+        "//iris:point",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
         "//iris/lights:mock_light",
         "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mock_random",
@@ -36,7 +42,11 @@ cc_library(
     testonly = True,
     hdrs = ["mock_light_scene.h"],
     deps = [
+        "//iris:light_sample",
+        "//iris:light_sample_allocator",
         "//iris:light_scene",
+        "//iris:point",
+        "//iris:random",
         "@googletest//:gtest",
     ],
 )
@@ -46,6 +56,7 @@ cc_library(
     srcs = ["one_light_scene.cc"],
     hdrs = ["one_light_scene.h"],
     deps = [
+        "//iris:float",
         "//iris:light_sample",
         "//iris:light_sample_allocator",
         "//iris:light_scene",
@@ -61,6 +72,12 @@ cc_test(
     srcs = ["one_light_scene_test.cc"],
     deps = [
         ":one_light_scene",
+        "//iris:light",
+        "//iris:light_sample",
+        "//iris:light_scene",
+        "//iris:point",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
         "//iris/lights:mock_light",
         "//iris/power_matchers:mock_power_matcher",
         "//iris/random:mock_random",
@@ -75,6 +92,7 @@ cc_library(
     srcs = ["power_light_scene.cc"],
     hdrs = ["power_light_scene.h"],
     deps = [
+        "//iris:float",
         "//iris:light_sample",
         "//iris:light_sample_allocator",
         "//iris:light_scene",
@@ -90,6 +108,13 @@ cc_test(
     srcs = ["power_light_scene_test.cc"],
     deps = [
         ":power_light_scene",
+        "//iris:integer",
+        "//iris:light",
+        "//iris:light_sample",
+        "//iris:light_scene",
+        "//iris:point",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
         "//iris/geometry:mock_geometry",
         "//iris/lights:mock_light",
         "//iris/power_matchers:mock_power_matcher",

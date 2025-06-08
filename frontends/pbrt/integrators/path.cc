@@ -14,8 +14,8 @@ namespace pbrt_frontend {
 namespace integrators {
 
 using ::iris::integrators::MakePathIntegrator;
-using ::iris::light_scenes::OneLightScene;
-using ::iris::light_scenes::PowerLightScene;
+using ::iris::light_scenes::MakeOneLightSceneBuilder;
+using ::iris::light_scenes::MakePowerLightSceneBuilder;
 using ::pbrt_proto::v3::Integrator;
 
 constexpr visual kMaximumContinueProbability = 0.95;
@@ -63,10 +63,10 @@ std::unique_ptr<IntegratorResult> MakePath(const Integrator::Path& path) {
     case Integrator::SPATIAL:
       // TODO: Implement
     case Integrator::POWER:
-      light_scene_builder = std::make_unique<PowerLightScene::Builder>();
+      light_scene_builder = MakePowerLightSceneBuilder();
       break;
     case Integrator::UNIFORM:
-      light_scene_builder = std::make_unique<OneLightScene::Builder>();
+      light_scene_builder = MakeOneLightSceneBuilder();
       break;
   }
 

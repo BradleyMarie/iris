@@ -1,20 +1,47 @@
 #include "iris/light_scenes/power_light_scene.h"
 
 #include <algorithm>
+#include <memory>
+#include <optional>
+#include <vector>
+
+#include "iris/float.h"
+#include "iris/light_sample.h"
+#include "iris/light_sample_allocator.h"
+#include "iris/light_scene.h"
+#include "iris/point.h"
+#include "iris/power_matcher.h"
+#include "iris/random.h"
+#include "iris/scene_objects.h"
 
 namespace iris {
 namespace light_scenes {
 namespace {
 
+class PowerLightScene final : public LightScene {
+ public:
+  class Builder final : public LightScene::Builder {
+   public:
+    std::unique_ptr<LightScene> Build(
+        const SceneObjects& scene_objects,
+        const PowerMatcher& power_matcher) const override;
+  };
+
+  PowerLightScene(const SceneObjects& scene_objects,
+                  const PowerMatcher& power_matcher) noexcept;
+
+  LightSample* Sample(const Point& hit_point, Random& rng,
+                      LightSampleAllocator& allocator) const override;
+
+ private:
+  const SceneObjects& scene_objects_;
+  std::vector<visual_t> cdf_;
+  std::vector<visual_t> pdf_;
+};
+
 visual_t ComputeWorldRadiusSquared(const BoundingBox& bounds) {
   Vector radius = static_cast<geometric_t>(0.5) * (bounds.upper - bounds.lower);
   return DotProduct(radius, radius);
-}
-
-}  // namespace
-
-std::unique_ptr<LightScene::Builder> PowerLightScene::Builder::Create() {
-  return std::make_unique<PowerLightScene::Builder>();
 }
 
 std::unique_ptr<LightScene> PowerLightScene::Builder::Build(
@@ -65,6 +92,12 @@ LightSample* PowerLightScene::Sample(const Point& hit_point, Random& rng,
   size_t index = iter - cdf_.begin();
 
   return &allocator.Allocate(scene_objects_.GetLight(index), pdf_[index]);
+}
+
+}  // namespace
+
+std::unique_ptr<LightScene::Builder> MakePowerLightSceneBuilder() {
+  return std::make_unique<PowerLightScene::Builder>();
 }
 
 }  // namespace light_scenes

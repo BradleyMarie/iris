@@ -1,11 +1,39 @@
 #include "iris/light_scenes/one_light_scene.h"
 
+#include <memory>
+#include <optional>
+
+#include "iris/float.h"
+#include "iris/light_sample.h"
+#include "iris/light_sample_allocator.h"
+#include "iris/light_scene.h"
+#include "iris/point.h"
+#include "iris/power_matcher.h"
+#include "iris/random.h"
+#include "iris/scene_objects.h"
+
 namespace iris {
 namespace light_scenes {
+namespace {
 
-std::unique_ptr<LightScene::Builder> OneLightScene::Builder::Create() {
-  return std::make_unique<OneLightScene::Builder>();
-}
+class OneLightScene final : public LightScene {
+ public:
+  class Builder final : public LightScene::Builder {
+   public:
+    std::unique_ptr<LightScene> Build(
+        const SceneObjects& scene_objects,
+        const PowerMatcher& power_matcher) const override;
+  };
+
+  OneLightScene(const SceneObjects& scene_objects) noexcept;
+
+  LightSample* Sample(const Point& hit_point, Random& rng,
+                      LightSampleAllocator& allocator) const override;
+
+ private:
+  const SceneObjects& scene_objects_;
+  std::optional<visual_t> pdf_;
+};
 
 std::unique_ptr<LightScene> OneLightScene::Builder::Build(
     const SceneObjects& scene_objects,
@@ -33,6 +61,12 @@ LightSample* OneLightScene::Sample(const Point& hit_point, Random& rng,
   }
 
   return &allocator.Allocate(scene_objects_.GetLight(index), pdf_);
+}
+
+}  // namespace
+
+std::unique_ptr<LightScene::Builder> MakeOneLightSceneBuilder() {
+  return std::make_unique<OneLightScene::Builder>();
 }
 
 }  // namespace light_scenes
