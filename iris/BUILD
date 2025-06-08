@@ -607,6 +607,8 @@ cc_test(
     srcs = ["ray_tracer_test.cc"],
     deps = [
         ":ray_tracer",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
         "//iris/bxdfs:mock_bxdf",
         "//iris/emissive_materials:mock_emissive_material",
         "//iris/environmental_lights:mock_environmental_light",
@@ -853,6 +855,8 @@ cc_test(
     name = "visibility_tester_test",
     srcs = ["visibility_tester_test.cc"],
     deps = [
+        ":reference_counted",
+        ":scene_objects",
         ":visibility_tester",
         "//iris/geometry:mock_geometry",
         "//iris/internal:arena",

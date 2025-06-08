@@ -10,7 +10,7 @@ namespace internal {
 namespace {
 
 using ::iris::geometry::MockBasicGeometry;
-using ::iris::scenes::ListScene;
+using ::iris::scenes::MakeListSceneBuilder;
 using ::testing::_;
 using ::testing::Invoke;
 using ::testing::Return;
@@ -18,8 +18,7 @@ using ::testing::Return;
 TEST(TraceClosestHit, NoGeometry) {
   RayTracer ray_tracer;
   SceneObjects scene_objects = SceneObjects::Builder().Build();
-  std::unique_ptr<Scene> scene =
-      ListScene::Builder::Create()->Build(scene_objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(scene_objects);
   EXPECT_EQ(nullptr, ray_tracer.TraceClosestHit(
                          Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0)), 0.0,
                          1.0, *scene));
@@ -42,7 +41,7 @@ TEST(TraceClosestHit, WithGeometry) {
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder().Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   const Hit* hit = ray_tracer.TraceClosestHit(ray, 0.0, 2.0, *scene);
@@ -60,8 +59,7 @@ TEST(TraceClosestHit, WithGeometry) {
 TEST(TraceAnyHit, NoGeometry) {
   RayTracer ray_tracer;
   SceneObjects scene_objects = SceneObjects::Builder().Build();
-  std::unique_ptr<Scene> scene =
-      ListScene::Builder::Create()->Build(scene_objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(scene_objects);
   EXPECT_EQ(nullptr, ray_tracer.TraceAnyHit(
                          Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0)), 0.0,
                          1.0, *scene));
@@ -84,7 +82,7 @@ TEST(TraceAnyHit, WithGeometry) {
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder().Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   const Hit* hit = ray_tracer.TraceAnyHit(ray, 0.0, 2.0, *scene);
@@ -117,7 +115,7 @@ TEST(TraceBoth, WithGeometry) {
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder().Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   const Hit* hit0 = ray_tracer.TraceClosestHit(ray, 0.0, 2.0, *scene);

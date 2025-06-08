@@ -41,6 +41,7 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/renderer.h"
+#include "iris/scene.h"
 #include "iris/scene_objects.h"
 #include "iris/scenes/bvh_scene.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
@@ -54,7 +55,7 @@ using ::iris::pbrt_frontend::spectrum_managers::ColorAlbedoMatcher;
 using ::iris::pbrt_frontend::spectrum_managers::ColorColorMatcher;
 using ::iris::pbrt_frontend::spectrum_managers::ColorPowerMatcher;
 using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
-using ::iris::scenes::BVHScene;
+using ::iris::scenes::MakeBVHSceneBuilder;
 using ::pbrt_proto::v3::ActiveTransform;
 using ::pbrt_proto::v3::Directive;
 using ::pbrt_proto::v3::Shape;
@@ -156,7 +157,8 @@ void State::Shape(const pbrt_proto::v3::Shape& shape,
 }
 
 ParsingResult State::WorldEnd() {
-  Renderer renderer(BVHScene::Builder(), *integrator->light_scene_builder,
+  std::unique_ptr<Scene::Builder> scene_builder = MakeBVHSceneBuilder();
+  Renderer renderer(*scene_builder, *integrator->light_scene_builder,
                     objects.Build(), ColorPowerMatcher());
 
   Renderable renderable(

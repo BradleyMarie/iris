@@ -30,7 +30,7 @@ using ::iris::integrators::MockIntegrator;
 using ::iris::light_scenes::MakeAllLightSceneBuilder;
 using ::iris::power_matchers::MockPowerMatcher;
 using ::iris::random::MockRandom;
-using ::iris::scenes::ListScene;
+using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
 using ::testing::InSequence;
@@ -42,7 +42,7 @@ void RunTestBody(
     std::function<bool(std::pair<size_t, size_t>, std::pair<size_t, size_t>)>
         skip_pixel_callback) {
   MockPowerMatcher power_matcher;
-  std::unique_ptr<Scene::Builder> scene_builder = ListScene::Builder::Create();
+  std::unique_ptr<Scene::Builder> scene_builder = MakeListSceneBuilder();
   std::unique_ptr<LightScene::Builder> light_scene_builder =
       MakeAllLightSceneBuilder();
   SceneObjects scene_objects = SceneObjects::Builder().Build();

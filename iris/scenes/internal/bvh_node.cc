@@ -1,6 +1,15 @@
 #undef NDEBUG  // Enable assertions at runtime
 #include "iris/scenes/internal/bvh_node.h"
 
+#include <cassert>
+#include <cstdint>
+#include <limits>
+#include <utility>
+
+#include "iris/bounding_box.h"
+#include "iris/ray.h"
+#include "iris/vector.h"
+
 namespace iris {
 namespace scenes {
 namespace internal {

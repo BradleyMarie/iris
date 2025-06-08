@@ -2,12 +2,30 @@
 
 #include <memory>
 
+#include "iris/intersector.h"
+#include "iris/ray.h"
+#include "iris/scene.h"
+#include "iris/scene_objects.h"
+
 namespace iris {
 namespace scenes {
+namespace {
 
-std::unique_ptr<Scene::Builder> ListScene::Builder::Create() {
-  return std::make_unique<Builder>();
-}
+class ListScene final : public Scene {
+ public:
+  class Builder final : public Scene::Builder {
+   public:
+    std::unique_ptr<Scene> Build(SceneObjects& scene_objects) const override;
+  };
+
+  ListScene(const SceneObjects& scene_objects) noexcept
+      : scene_objects_(scene_objects) {}
+
+  void Trace(const Ray& ray, Intersector& intersector) const override;
+
+ private:
+  const SceneObjects& scene_objects_;
+};
 
 std::unique_ptr<Scene> ListScene::Builder::Build(
     SceneObjects& scene_objects) const {
@@ -21,6 +39,12 @@ void ListScene::Trace(const Ray& ray, Intersector& intersector) const {
       break;
     }
   }
+}
+
+}  // namespace
+
+std::unique_ptr<Scene::Builder> MakeListSceneBuilder() {
+  return std::make_unique<ListScene::Builder>();
 }
 
 }  // namespace scenes

@@ -9,6 +9,8 @@
 #include "iris/internal/ray_tracer.h"
 #include "iris/materials/mock_material.h"
 #include "iris/normal_maps/mock_normal_map.h"
+#include "iris/reference_counted.h"
+#include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
 
@@ -19,7 +21,7 @@ using ::iris::environmental_lights::MockEnvironmentalLight;
 using ::iris::geometry::MockBasicGeometry;
 using ::iris::geometry::MockGeometry;
 using ::iris::normal_maps::MockNormalMap;
-using ::iris::scenes::ListScene;
+using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
 using ::testing::Invoke;
@@ -93,7 +95,7 @@ TEST(RayTracerTest, NoGeometry) {
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   auto objects = SceneObjects::Builder().Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
   auto result = ray_tracer.Trace(
@@ -111,7 +113,7 @@ TEST(RayTracerTest, WithEnvironmentalLight) {
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   auto objects = SceneObjects::Builder().Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
   RayTracer ray_tracer(*scene, &environmental_light, 0.0, internal_ray_tracer,
                        arena);
 
@@ -133,7 +135,7 @@ TEST(RayTracerTest, NoBsdf) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -178,7 +180,7 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -219,7 +221,7 @@ TEST(RayTracerTest, Minimal) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -267,7 +269,7 @@ TEST(RayTracerTest, WithTextureCoordinates) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -315,7 +317,7 @@ TEST(RayTracerTest, WithMaterial) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -363,7 +365,7 @@ TEST(RayTracerTest, WithIdentityNormal) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -411,7 +413,7 @@ TEST(RayTracerTest, WithNormal) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -471,7 +473,7 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -531,7 +533,7 @@ TEST(RayTracerTest, WithNormalMap) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -593,7 +595,7 @@ TEST(RayTracerTest, WithXYDifferentials) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -663,7 +665,7 @@ TEST(RayTracerTest, WithUVDifferentials) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -735,7 +737,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -808,7 +810,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
   builder.Add(std::move(geometry));
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -892,7 +894,7 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
   builder.Add(std::move(geometry), model_to_world);
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
@@ -961,7 +963,7 @@ TEST(RayTracerTest, WithTransform) {
   builder.Add(std::move(geometry), model_to_world);
 
   auto objects = builder.Build();
-  auto scene = ListScene::Builder::Create()->Build(objects);
+  auto scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;

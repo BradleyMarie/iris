@@ -167,6 +167,8 @@ cc_test(
     deps = [
         ":arena",
         ":visibility_tester",
+        "//iris:reference_counted",
+        "//iris:scene_objects",
         "//iris/emissive_materials:mock_emissive_material",
         "//iris/geometry:mock_geometry",
         "//iris/scenes:list_scene",

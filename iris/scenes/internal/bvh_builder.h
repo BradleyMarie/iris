@@ -7,9 +7,13 @@
 #include <span>
 #include <vector>
 
+#include "iris/bounding_box.h"
+#include "iris/float.h"
 #include "iris/geometry.h"
+#include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "iris/scenes/internal/bvh_node.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace scenes {

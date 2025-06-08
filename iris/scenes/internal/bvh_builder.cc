@@ -1,5 +1,22 @@
 #include "iris/scenes/internal/bvh_builder.h"
 
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <functional>
+#include <optional>
+#include <span>
+#include <utility>
+#include <vector>
+
+#include "iris/bounding_box.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/matrix.h"
+#include "iris/reference_counted.h"
+#include "iris/scenes/internal/bvh_node.h"
+#include "iris/vector.h"
+
 namespace iris {
 namespace scenes {
 namespace internal {
@@ -25,7 +42,7 @@ void ComputeCosts(InputIterator begin, InputIterator end,
 BoundingBox ComputeBounds(const std::vector<BoundingBox>& geometry_bounds,
                           std::span<const size_t> indices) {
   BoundingBox::Builder builder;
-  for (const auto& index : indices) {
+  for (size_t index : indices) {
     builder.Add(geometry_bounds.at(index));
   }
   return builder.Build();
@@ -35,7 +52,7 @@ BoundingBox ComputeCentroidBounds(
     const std::vector<BoundingBox>& geometry_bounds,
     std::span<const size_t> indices) {
   BoundingBox::Builder builder;
-  for (const auto& index : indices) {
+  for (size_t index : indices) {
     builder.Add(geometry_bounds.at(index).Center());
   }
   return builder.Build();
@@ -92,10 +109,12 @@ std::optional<geometric_t> FindBestSplitOnAxis(
   assert(centroid_bounds.lower[split_axis] !=
          centroid_bounds.upper[split_axis]);
 
-  auto splits =
+  std::array<BVHSplit, kNumSplitsToEvaluate> splits =
       ComputeSplits(geometry_bounds, indices, centroid_bounds, split_axis);
-  auto below_costs = ComputeBelowCosts(splits);
-  auto above_costs = ComputeAboveCosts(splits);
+  std::array<geometric_t, kNumSplitsToEvaluate - 1> below_costs =
+      ComputeBelowCosts(splits);
+  std::array<geometric_t, kNumSplitsToEvaluate - 1> above_costs =
+      ComputeAboveCosts(splits);
   geometric_t node_surface_area = node_bounds.SurfaceArea();
 
   std::array<geometric_t, kNumSplitsToEvaluate - 1> costs;
@@ -176,15 +195,16 @@ size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
                 std::span<size_t> geometry_sort_order) {
   assert(!indices.empty());
 
-  auto node_bounds = ComputeBounds(geometry_bounds, indices);
+  BoundingBox node_bounds = ComputeBounds(geometry_bounds, indices);
   if (indices.size() == 1 || depth_remaining == 0) {
     return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
                        geometry_sort_order);
   }
 
-  auto centroid_bounds = ComputeCentroidBounds(geometry_bounds, indices);
-  auto centroid_bounds_diagonal = centroid_bounds.upper - centroid_bounds.lower;
-  auto split_axis = centroid_bounds_diagonal.DominantAxis();
+  BoundingBox centroid_bounds = ComputeCentroidBounds(geometry_bounds, indices);
+  Vector centroid_bounds_diagonal =
+      centroid_bounds.upper - centroid_bounds.lower;
+  Vector::Axis split_axis = centroid_bounds_diagonal.DominantAxis();
 
   if (centroid_bounds.lower[split_axis] == centroid_bounds.upper[split_axis]) {
     return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
@@ -204,14 +224,15 @@ size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
       above_indices = indices.subspan(0, 1);
     }
   } else {
-    auto split = FindBestSplitOnAxis(geometry_bounds, indices, node_bounds,
-                                     centroid_bounds, split_axis);
+    std::optional<geometric_t> split = FindBestSplitOnAxis(
+        geometry_bounds, indices, node_bounds, centroid_bounds, split_axis);
     if (!split.has_value()) {
       return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
                          geometry_sort_order);
     }
 
-    auto result = Partition(geometry_bounds, split_axis, *split, indices);
+    PartitionResult result =
+        Partition(geometry_bounds, split_axis, *split, indices);
     if (result.above.empty() || result.below.empty()) {
       // It's unclear how to write a unit test to exercise this branch; however,
       // since FindBestSplitOnAxis has been observed returning splits that do

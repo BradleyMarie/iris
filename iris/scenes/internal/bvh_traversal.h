@@ -3,8 +3,10 @@
 
 #include <vector>
 
+#include "iris/hit.h"
 #include "iris/hit_allocator.h"
 #include "iris/intersector.h"
+#include "iris/ray.h"
 #include "iris/scene_objects.h"
 #include "iris/scenes/internal/bvh_node.h"
 

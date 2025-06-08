@@ -22,7 +22,7 @@ void RunTestBody(
     std::optional<iris::visual_t> max_sample_luminance) {
   iris::albedo_matchers::MockAlbedoMatcher albedo_matcher;
   iris::power_matchers::MockPowerMatcher power_matcher;
-  auto scene_builder = iris::scenes::ListScene::Builder::Create();
+  auto scene_builder = iris::scenes::MakeListSceneBuilder();
   auto light_scene_builder = iris::light_scenes::MakeAllLightSceneBuilder();
   auto scene_objects = iris::SceneObjects::Builder().Build();
   iris::Renderer renderer(*scene_builder, *light_scene_builder,

@@ -8,6 +8,8 @@
 #include "iris/geometry/mock_geometry.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/ray_tracer.h"
+#include "iris/reference_counted.h"
+#include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
 
@@ -18,7 +20,7 @@ namespace {
 using ::iris::emissive_materials::MockEmissiveMaterial;
 using ::iris::geometry::MockBasicGeometry;
 using ::iris::geometry::MockGeometry;
-using ::iris::scenes::ListScene;
+using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
 using ::testing::Invoke;
@@ -55,7 +57,7 @@ TEST(VisibilityTesterTest, MissesGeometry) {
   SceneObjects::Builder builder;
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -78,7 +80,7 @@ TEST(VisibilityTesterTest, WrongFace) {
   SceneObjects::Builder builder;
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -116,7 +118,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
   builder.Add(std::move(scene_geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -154,7 +156,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   builder.Add(std::move(geometry), Matrix::Translation(1.0, 0.0, 0.0).value());
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -193,7 +195,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -235,7 +237,7 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -281,7 +283,7 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -331,7 +333,7 @@ TEST(VisibilityTesterTest, NoPdf) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -381,7 +383,7 @@ TEST(VisibilityTesterTest, NegativePdf) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -422,7 +424,7 @@ TEST(VisibilityTesterTest, Succeeds) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects objects = SceneObjects::Builder().Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -476,7 +478,7 @@ TEST(VisibilityTesterTest, SceneTraceMissSucceeds) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -530,7 +532,7 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -586,7 +588,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
 
   SceneObjects objects = builder.Build();
   const Matrix* matrix = objects.GetGeometry(0).second;
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;
@@ -641,7 +643,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   builder.Add(std::move(geometry));
 
   SceneObjects objects = builder.Build();
-  std::unique_ptr<Scene> scene = ListScene::Builder::Create()->Build(objects);
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   RayTracer ray_tracer;
   Arena arena;

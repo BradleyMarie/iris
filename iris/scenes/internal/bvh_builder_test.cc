@@ -1,277 +1,263 @@
 #include "iris/scenes/internal/bvh_builder.h"
 
+#include <array>
+#include <optional>
+#include <utility>
+#include <vector>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bounding_box.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/matrix.h"
+#include "iris/point.h"
 #include "iris/reference_counted.h"
+#include "iris/scenes/internal/bvh_node.h"
+
+namespace iris {
+namespace scenes {
+namespace internal {
+
+using ::iris::geometry::MockGeometry;
+using ::testing::ElementsAre;
 
 TEST(ComputeBounds, Compute) {
-  iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
-                            iris::Point(1.0, 1.0, 1.0));
-  iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 2.0),
-                            iris::Point(3.0, 3.0, 3.0));
-  auto actual_bounds = iris::scenes::internal::internal::ComputeBounds(
-      {bounds0, bounds1}, {{1, 0}});
+  BoundingBox bounds0(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
+  BoundingBox bounds1(Point(2.0, 2.0, 2.0), Point(3.0, 3.0, 3.0));
+  BoundingBox actual_bounds =
+      internal::ComputeBounds({bounds0, bounds1}, {{1, 0}});
   EXPECT_EQ(bounds0.lower, actual_bounds.lower);
   EXPECT_EQ(bounds1.upper, actual_bounds.upper);
 }
 
 TEST(ComputeCentroidBounds, Compute) {
-  iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
-                            iris::Point(1.0, 1.0, 1.0));
-  iris::BoundingBox bounds1(iris::Point(2.0, 2.0, 2.0),
-                            iris::Point(3.0, 3.0, 3.0));
-  auto actual_bounds = iris::scenes::internal::internal::ComputeCentroidBounds(
-      {bounds0, bounds1}, {{1, 0}});
-  EXPECT_EQ(iris::Point(0.5, 0.5, 0.5), actual_bounds.lower);
-  EXPECT_EQ(iris::Point(2.5, 2.5, 2.5), actual_bounds.upper);
+  BoundingBox bounds0(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
+  BoundingBox bounds1(Point(2.0, 2.0, 2.0), Point(3.0, 3.0, 3.0));
+  BoundingBox actual_bounds =
+      internal::ComputeCentroidBounds({bounds0, bounds1}, {{1, 0}});
+  EXPECT_EQ(Point(0.5, 0.5, 0.5), actual_bounds.lower);
+  EXPECT_EQ(Point(2.5, 2.5, 2.5), actual_bounds.upper);
 }
 
 TEST(ComputeSplits, Compute) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    iris::BoundingBox bounds0(iris::Point(0.0, i, 0.0),
-                              iris::Point(1.0, i + 1, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    BoundingBox bounds0(Point(0.0, i, 0.0), Point(1.0, i + 1, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  auto splits = iris::scenes::internal::internal::ComputeSplits(
-      geometry_bounds, indices,
-      iris::scenes::internal::internal::ComputeCentroidBounds(geometry_bounds,
-                                                              indices),
-      iris::Vector::Y_AXIS);
+  std::array<internal::BVHSplit, internal::kNumSplitsToEvaluate> splits =
+      internal::ComputeSplits(
+          geometry_bounds, indices,
+          internal::ComputeCentroidBounds(geometry_bounds, indices),
+          Vector::Y_AXIS);
 
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    EXPECT_EQ(iris::Point(0.0, i, 0.0), splits.at(i).bounds.Build().lower);
-    EXPECT_EQ(iris::Point(1.0, i + 1, 1.0), splits.at(i).bounds.Build().upper);
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    EXPECT_EQ(Point(0.0, i, 0.0), splits.at(i).bounds.Build().lower);
+    EXPECT_EQ(Point(1.0, i + 1, 1.0), splits.at(i).bounds.Build().upper);
     EXPECT_EQ(1u, splits.at(i).num_shapes);
   }
 }
 
 TEST(ComputeAboveCosts, Compute) {
-  std::array<iris::scenes::internal::internal::BVHSplit,
-             iris::scenes::internal::internal::kNumSplitsToEvaluate>
-      splits;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    size_t index =
-        iris::scenes::internal::internal::kNumSplitsToEvaluate - i - 1;
-    splits.at(index).bounds.Add(iris::Point(index, index, index));
-    splits.at(index).bounds.Add(
-        iris::Point(iris::scenes::internal::internal::kNumSplitsToEvaluate,
-                    iris::scenes::internal::internal::kNumSplitsToEvaluate,
-                    iris::scenes::internal::internal::kNumSplitsToEvaluate));
+  std::array<internal::BVHSplit, internal::kNumSplitsToEvaluate> splits;
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    size_t index = internal::kNumSplitsToEvaluate - i - 1;
+    splits.at(index).bounds.Add(Point(index, index, index));
+    splits.at(index).bounds.Add(Point(internal::kNumSplitsToEvaluate,
+                                      internal::kNumSplitsToEvaluate,
+                                      internal::kNumSplitsToEvaluate));
     splits.at(index).num_shapes = i + 1;
   }
 
-  auto costs = iris::scenes::internal::internal::ComputeAboveCosts(splits);
-  iris::geometric_t cumulative_num_shapes = 0.0;
-  for (size_t i = 0;
-       i < iris::scenes::internal::internal::kNumSplitsToEvaluate - 1; i++) {
-    size_t index =
-        iris::scenes::internal::internal::kNumSplitsToEvaluate - i - 2;
-    cumulative_num_shapes += static_cast<iris::geometric_t>(i + 1);
-    auto surface_area = static_cast<iris::geometric_t>((i + 1) * (i + 1) * 6);
+  std::array<geometric_t, internal::kNumSplitsToEvaluate - 1> costs =
+      internal::ComputeAboveCosts(splits);
+  geometric_t cumulative_num_shapes = 0.0;
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate - 1; i++) {
+    size_t index = internal::kNumSplitsToEvaluate - i - 2;
+    cumulative_num_shapes += static_cast<geometric_t>(i + 1);
+    geometric_t surface_area = static_cast<geometric_t>((i + 1) * (i + 1) * 6);
     EXPECT_EQ(cumulative_num_shapes * surface_area, costs.at(index));
   }
 }
 
 TEST(ComputeBelowCosts, Compute) {
-  std::array<iris::scenes::internal::internal::BVHSplit,
-             iris::scenes::internal::internal::kNumSplitsToEvaluate>
-      splits;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    splits.at(i).bounds.Add(iris::Point(i, i, i));
-    splits.at(i).bounds.Add(iris::Point(i + 1, i + 1, i + 1));
+  std::array<internal::BVHSplit, internal::kNumSplitsToEvaluate> splits;
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    splits.at(i).bounds.Add(Point(i, i, i));
+    splits.at(i).bounds.Add(Point(i + 1, i + 1, i + 1));
     splits.at(i).num_shapes = i + 1;
   }
 
-  auto costs = iris::scenes::internal::internal::ComputeBelowCosts(splits);
-  iris::geometric_t cumulative_num_shapes = 0.0;
-  for (size_t i = 0;
-       i < iris::scenes::internal::internal::kNumSplitsToEvaluate - 1; i++) {
-    cumulative_num_shapes += static_cast<iris::geometric_t>(i + 1);
-    auto surface_area = static_cast<iris::geometric_t>((i + 1) * (i + 1) * 6);
+  std::array<geometric_t, internal::kNumSplitsToEvaluate - 1> costs =
+      internal::ComputeBelowCosts(splits);
+  geometric_t cumulative_num_shapes = 0.0;
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate - 1; i++) {
+    cumulative_num_shapes += static_cast<geometric_t>(i + 1);
+    geometric_t surface_area = static_cast<geometric_t>((i + 1) * (i + 1) * 6);
     EXPECT_EQ(cumulative_num_shapes * surface_area, costs.at(i));
   }
 }
 
 TEST(FindBestSplitOnAxis, Compute) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    iris::BoundingBox bounds0(iris::Point(0.0, i, 0.0),
-                              iris::Point(1.0, i + 1, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    BoundingBox bounds0(Point(0.0, i, 0.0), Point(1.0, i + 1, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
+  std::optional<geometric_t> best_split = internal::FindBestSplitOnAxis(
       geometry_bounds, indices,
-      iris::scenes::internal::internal::ComputeBounds(geometry_bounds, indices),
-      iris::scenes::internal::internal::ComputeCentroidBounds(geometry_bounds,
-                                                              indices),
-      iris::Vector::Y_AXIS);
+      internal::ComputeBounds(geometry_bounds, indices),
+      internal::ComputeCentroidBounds(geometry_bounds, indices),
+      Vector::Y_AXIS);
   ASSERT_TRUE(best_split.has_value());
   EXPECT_EQ(6.0, *best_split);
 }
 
 TEST(FindBestSplitOnAxis, TooMuchOverlap) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumShapesPerNode;
-       i++) {
-    iris::BoundingBox bounds0(iris::Point(0.0, 0.0 + 0.01 * i, 0.0),
-                              iris::Point(1.0, 1.0 + 0.01 * i, 1.0));
+  for (size_t i = 0; i < internal::kNumShapesPerNode; i++) {
+    BoundingBox bounds0(Point(0.0, 0.0 + 0.01 * i, 0.0),
+                        Point(1.0, 1.0 + 0.01 * i, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
+  std::optional<geometric_t> best_split = internal::FindBestSplitOnAxis(
       geometry_bounds, indices,
-      iris::scenes::internal::internal::ComputeBounds(geometry_bounds, indices),
-      iris::scenes::internal::internal::ComputeCentroidBounds(geometry_bounds,
-                                                              indices),
-      iris::Vector::Y_AXIS);
+      internal::ComputeBounds(geometry_bounds, indices),
+      internal::ComputeCentroidBounds(geometry_bounds, indices),
+      Vector::Y_AXIS);
   ASSERT_FALSE(best_split.has_value());
 }
 
 TEST(FindBestSplitOnAxis, LotsOfOverlappedGeometry) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    auto bound_offset =
-        1.0 / static_cast<iris::geometric_t>(
-                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
-    iris::BoundingBox bounds0(
-        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
-        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    geometric_t bound_offset =
+        static_cast<geometric_t>(1.0) /
+        static_cast<geometric_t>(internal::kNumSplitsToEvaluate);
+    BoundingBox bounds0(
+        Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
+  std::optional<geometric_t> best_split = internal::FindBestSplitOnAxis(
       geometry_bounds, indices,
-      iris::scenes::internal::internal::ComputeBounds(geometry_bounds, indices),
-      iris::scenes::internal::internal::ComputeCentroidBounds(geometry_bounds,
-                                                              indices),
-      iris::Vector::Y_AXIS);
+      internal::ComputeBounds(geometry_bounds, indices),
+      internal::ComputeCentroidBounds(geometry_bounds, indices),
+      Vector::Y_AXIS);
   ASSERT_TRUE(best_split.has_value());
   EXPECT_NEAR(1.0, *best_split, 0.0000001);
 }
 
 TEST(FindBestSplitOnAxis, AllOverlappedGeometry) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    auto bound_offset =
-        1.0 / static_cast<iris::geometric_t>(
-                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
-    iris::BoundingBox bounds0(
-        iris::Point(0.0, -0.5 + bound_offset * i + 0.5 * bound_offset, 0.0),
-        iris::Point(1.0, 99.5 + bound_offset * i + 0.5 * bound_offset, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    geometric_t bound_offset =
+        static_cast<geometric_t>(1.0) /
+        static_cast<geometric_t>(internal::kNumSplitsToEvaluate);
+    BoundingBox bounds0(
+        Point(0.0, -0.5 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        Point(1.0, 99.5 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  auto best_split = iris::scenes::internal::internal::FindBestSplitOnAxis(
+  std::optional<geometric_t> best_split = internal::FindBestSplitOnAxis(
       geometry_bounds, indices,
-      iris::scenes::internal::internal::ComputeBounds(geometry_bounds, indices),
-      iris::scenes::internal::internal::ComputeCentroidBounds(geometry_bounds,
-                                                              indices),
-      iris::Vector::Y_AXIS);
+      internal::ComputeBounds(geometry_bounds, indices),
+      internal::ComputeCentroidBounds(geometry_bounds, indices),
+      Vector::Y_AXIS);
   ASSERT_TRUE(best_split.has_value());
   EXPECT_NEAR(50.0, *best_split, 0.0000001);
 }
 
 TEST(Partition, LotsOfOverlappedGeometry) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    auto bound_offset =
-        1.0 / static_cast<iris::geometric_t>(
-                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
-    iris::BoundingBox bounds0(
-        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
-        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    geometric_t bound_offset =
+        static_cast<geometric_t>(1.0) /
+        static_cast<geometric_t>(internal::kNumSplitsToEvaluate);
+    BoundingBox bounds0(
+        Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  auto result = iris::scenes::internal::internal::Partition(
-      geometry_bounds, iris::Vector::Y_AXIS, 1.0, indices);
+  internal::PartitionResult result =
+      internal::Partition(geometry_bounds, Vector::Y_AXIS, 1.0, indices);
   EXPECT_THAT(std::vector<size_t>(result.below.begin(), result.below.end()),
-              testing::ElementsAre(0u, 1u, 2u, 3u, 4u, 5u));
+              ElementsAre(0u, 1u, 2u, 3u, 4u, 5u));
   EXPECT_THAT(std::vector<size_t>(result.above.begin(), result.above.end()),
-              testing::ElementsAre(6u, 7u, 8u, 9u, 10u, 11u));
+              ElementsAre(6u, 7u, 8u, 9u, 10u, 11u));
 }
 
 TEST(AddLeafNode, Add) {
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumShapesPerNode;
-       i++) {
+  for (size_t i = 0; i < internal::kNumShapesPerNode; i++) {
     indices.push_back(i);
   }
 
-  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
-                           iris::Point(1.0, 1.0, 1.0));
+  BoundingBox bounds(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::AddLeafNode(
-      indices, bounds, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::AddLeafNode(indices, bounds, bvh, geometry_offset,
+                                        geometry_sort_order);
   EXPECT_EQ(0u, result);
-  EXPECT_EQ(iris::scenes::internal::internal::kNumShapesPerNode,
-            geometry_offset);
+  EXPECT_EQ(internal::kNumShapesPerNode, geometry_offset);
   EXPECT_EQ(indices, geometry_sort_order);
   EXPECT_EQ(1u, bvh.size());
 
   EXPECT_FALSE(bvh.front().HasChildren());
   EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(iris::scenes::internal::internal::kNumShapesPerNode,
-            bvh.front().Shapes().second);
+  EXPECT_EQ(internal::kNumShapesPerNode, bvh.front().Shapes().second);
 }
 
 TEST(AddInteriorNode, Add) {
-  iris::BoundingBox bounds(iris::Point(0.0, 0.0, 0.0),
-                           iris::Point(1.0, 1.0, 1.0));
-  std::vector<iris::scenes::internal::BVHNode> bvh;
-  size_t result = iris::scenes::internal::internal::AddInteriorNode(
-      bounds, iris::Vector::Y_AXIS, bvh);
+  BoundingBox bounds(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
+  std::vector<BVHNode> bvh;
+  size_t result = internal::AddInteriorNode(bounds, Vector::Y_AXIS, bvh);
   EXPECT_EQ(0u, result);
   EXPECT_EQ(1u, bvh.size());
   EXPECT_TRUE(bvh.front().HasChildren());
-  EXPECT_EQ(iris::Vector::Y_AXIS, bvh.front().Axis());
+  EXPECT_EQ(Vector::Y_AXIS, bvh.front().Axis());
 }
 
 TEST(BuildBVH, OneGeometry) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < 1; i++) {
-    auto bound_offset =
-        1.0 / static_cast<iris::geometric_t>(
-                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
-    iris::BoundingBox bounds0(
-        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
-        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+    geometric_t bound_offset =
+        static_cast<geometric_t>(1.0) /
+        static_cast<geometric_t>(internal::kNumSplitsToEvaluate);
+    BoundingBox bounds0(
+        Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::BuildBVH(
-      geometry_bounds, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
+                                     geometry_offset, geometry_sort_order);
   EXPECT_EQ(0u, result);
 
   EXPECT_EQ(1u, bvh.size());
@@ -281,109 +267,101 @@ TEST(BuildBVH, OneGeometry) {
 }
 
 TEST(BuildBVH, DepthLimit) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    auto bound_offset =
-        1.0 / static_cast<iris::geometric_t>(
-                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
-    iris::BoundingBox bounds0(
-        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
-        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    geometric_t bound_offset =
+        static_cast<geometric_t>(1.0) /
+        static_cast<geometric_t>(internal::kNumSplitsToEvaluate);
+    BoundingBox bounds0(
+        Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::BuildBVH(
-      geometry_bounds, 0u, indices, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::BuildBVH(geometry_bounds, 0u, indices, bvh,
+                                     geometry_offset, geometry_sort_order);
   EXPECT_EQ(0u, result);
 
   EXPECT_EQ(1u, bvh.size());
   EXPECT_FALSE(bvh.front().HasChildren());
   EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate,
-            bvh.front().Shapes().second);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate, bvh.front().Shapes().second);
 }
 
 TEST(BuildBVH, TooMuchOverlap) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumShapesPerNode;
-       i++) {
-    iris::BoundingBox bounds0(iris::Point(0.0, 0.0 + 0.01 * i, 0.0),
-                              iris::Point(1.0, 1.0 + 0.01 * i, 1.0));
+  for (size_t i = 0; i < internal::kNumShapesPerNode; i++) {
+    BoundingBox bounds0(Point(0.0, 0.0 + 0.01 * i, 0.0),
+                        Point(1.0, 1.0 + 0.01 * i, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::BuildBVH(
-      geometry_bounds, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
+                                     geometry_offset, geometry_sort_order);
   EXPECT_EQ(0u, result);
 
   EXPECT_EQ(1u, bvh.size());
   EXPECT_FALSE(bvh.front().HasChildren());
   EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(iris::scenes::internal::internal::kNumShapesPerNode,
-            bvh.front().Shapes().second);
+  EXPECT_EQ(internal::kNumShapesPerNode, bvh.front().Shapes().second);
 }
 
 TEST(BuildBVH, EmptyCentroidBounds) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    iris::BoundingBox bounds0(iris::Point(0.0, 0.0, 0.0),
-                              iris::Point(1.0, 1.0, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    BoundingBox bounds0(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::BuildBVH(
-      geometry_bounds, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
+                                     geometry_offset, geometry_sort_order);
   EXPECT_EQ(0u, result);
 
   EXPECT_EQ(1u, bvh.size());
   EXPECT_FALSE(bvh.front().HasChildren());
   EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate,
-            bvh.front().Shapes().second);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate, bvh.front().Shapes().second);
 }
 
 TEST(BuildBVH, TwoGeometry) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < 2; i++) {
-    iris::BoundingBox bounds0(iris::Point(0.0, i * 2, 0.0),
-                              iris::Point(1.0, i * 2 + 1, 1.0));
+    BoundingBox bounds0(Point(0.0, i * 2, 0.0), Point(1.0, i * 2 + 1, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::BuildBVH(
-      geometry_bounds, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
+                                     geometry_offset, geometry_sort_order);
   EXPECT_EQ(0u, result);
 
   EXPECT_EQ(3u, bvh.size());
   EXPECT_TRUE(bvh.at(0).HasChildren());
-  EXPECT_EQ(iris::Vector::Y_AXIS, bvh.at(0).Axis());
-  auto& left_child = bvh.at(0).LeftChild();
+  EXPECT_EQ(Vector::Y_AXIS, bvh.at(0).Axis());
+  const BVHNode& left_child = bvh.at(0).LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
   EXPECT_EQ(0u, left_child.Shapes().first);
   EXPECT_EQ(1u, left_child.Shapes().second);
-  auto& right_child = bvh.at(0).RightChild();
+  const BVHNode& right_child = bvh.at(0).RightChild();
   EXPECT_FALSE(right_child.HasChildren());
   EXPECT_EQ(1u, right_child.Shapes().first);
   EXPECT_EQ(1u, right_child.Shapes().second);
@@ -393,30 +371,30 @@ TEST(BuildBVH, TwoGeometry) {
 }
 
 TEST(BuildBVH, TwoGeometryReversed) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < 2; i++) {
-    iris::BoundingBox bounds0(iris::Point(0.0, (2 - i) * 2, 0.0),
-                              iris::Point(1.0, (2 - i) * 2 + 1, 1.0));
+    BoundingBox bounds0(Point(0.0, (2 - i) * 2, 0.0),
+                        Point(1.0, (2 - i) * 2 + 1, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::BuildBVH(
-      geometry_bounds, 32u, indices, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
+                                     geometry_offset, geometry_sort_order);
   EXPECT_EQ(0u, result);
 
   EXPECT_EQ(3u, bvh.size());
   EXPECT_TRUE(bvh.at(0).HasChildren());
-  EXPECT_EQ(iris::Vector::Y_AXIS, bvh.at(0).Axis());
-  auto& left_child = bvh.at(0).LeftChild();
+  EXPECT_EQ(Vector::Y_AXIS, bvh.at(0).Axis());
+  const BVHNode& left_child = bvh.at(0).LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
   EXPECT_EQ(0u, left_child.Shapes().first);
   EXPECT_EQ(1u, left_child.Shapes().second);
-  auto& right_child = bvh.at(0).RightChild();
+  const BVHNode& right_child = bvh.at(0).RightChild();
   EXPECT_FALSE(right_child.HasChildren());
   EXPECT_EQ(1u, right_child.Shapes().first);
   EXPECT_EQ(1u, right_child.Shapes().second);
@@ -426,57 +404,52 @@ TEST(BuildBVH, TwoGeometryReversed) {
 }
 
 TEST(BuildBVH, HitsDepthLimit) {
-  std::vector<iris::BoundingBox> geometry_bounds;
+  std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
-    auto bound_offset =
-        1.0 / static_cast<iris::geometric_t>(
-                  iris::scenes::internal::internal::kNumSplitsToEvaluate);
-    iris::BoundingBox bounds0(
-        iris::Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
-        iris::Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
+    geometric_t bound_offset =
+        static_cast<geometric_t>(1.0) /
+        static_cast<geometric_t>(internal::kNumSplitsToEvaluate);
+    BoundingBox bounds0(
+        Point(0.0, 0.0 + bound_offset * i + 0.5 * bound_offset, 0.0),
+        Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
   }
 
-  std::vector<iris::scenes::internal::BVHNode> bvh;
+  std::vector<BVHNode> bvh;
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = iris::scenes::internal::internal::BuildBVH(
-      geometry_bounds, 1u, indices, bvh, geometry_offset, geometry_sort_order);
+  size_t result = internal::BuildBVH(geometry_bounds, 1u, indices, bvh,
+                                     geometry_offset, geometry_sort_order);
   EXPECT_EQ(0u, result);
 
   EXPECT_EQ(3u, bvh.size());
   EXPECT_TRUE(bvh.at(0).HasChildren());
-  EXPECT_EQ(iris::Vector::Y_AXIS, bvh.at(0).Axis());
-  auto& left_child = bvh.at(0).LeftChild();
+  EXPECT_EQ(Vector::Y_AXIS, bvh.at(0).Axis());
+  const BVHNode& left_child = bvh.at(0).LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
   EXPECT_EQ(0u, left_child.Shapes().first);
-  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate / 2,
-            left_child.Shapes().second);
-  auto& right_child = bvh.at(0).RightChild();
+  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, left_child.Shapes().second);
+  const BVHNode& right_child = bvh.at(0).RightChild();
   EXPECT_FALSE(right_child.HasChildren());
-  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate / 2,
-            right_child.Shapes().first);
-  EXPECT_EQ(iris::scenes::internal::internal::kNumSplitsToEvaluate / 2,
-            right_child.Shapes().second);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, right_child.Shapes().first);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, right_child.Shapes().second);
 
-  for (size_t i = 0; i < iris::scenes::internal::internal::kNumSplitsToEvaluate;
-       i++) {
+  for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
     EXPECT_EQ(i, geometry_sort_order.at(i));
   }
 }
 
 TEST(BuildBVH, NoGeometry) {
-  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
-                        const iris::Matrix*>>
+  std::vector<std::pair<const ReferenceCounted<Geometry>, const Matrix*>>
       geometry;
-  auto result = iris::scenes::internal::BuildBVH(
+  BuildBVHResult result = BuildBVH(
       [geometry](size_t index) {
-        const auto& entry = geometry.at(index);
-        return std::pair<const iris::Geometry&, const iris::Matrix*>(
-            *entry.first, entry.second);
+        const std::pair<const ReferenceCounted<Geometry>, const Matrix*>&
+            entry = geometry.at(index);
+        return std::pair<const Geometry&, const Matrix*>(*entry.first,
+                                                         entry.second);
       },
       geometry.size());
   EXPECT_TRUE(result.bvh.empty());
@@ -484,37 +457,37 @@ TEST(BuildBVH, NoGeometry) {
 }
 
 TEST(BuildBVH, FullTwoGeometry) {
-  std::vector<std::pair<const iris::ReferenceCounted<iris::Geometry>,
-                        const iris::Matrix*>>
+  std::vector<std::pair<const ReferenceCounted<Geometry>, const Matrix*>>
       geometry;
   std::vector<size_t> indices;
   for (size_t i = 0; i < 2; i++) {
-    auto mock_geometry =
-        iris::MakeReferenceCounted<iris::geometry::MockGeometry>();
-    iris::BoundingBox bounds0(iris::Point(0.0, (2 - i) * 2, 0.0),
-                              iris::Point(1.0, (2 - i) * 2 + 1, 1.0));
+    ReferenceCounted<MockGeometry> mock_geometry =
+        MakeReferenceCounted<MockGeometry>();
+    BoundingBox bounds0(Point(0.0, (2 - i) * 2, 0.0),
+                        Point(1.0, (2 - i) * 2 + 1, 1.0));
     EXPECT_CALL(*mock_geometry, ComputeBounds(nullptr))
         .WillRepeatedly(testing::Return(bounds0));
     geometry.emplace_back(mock_geometry, nullptr);
     indices.push_back(i);
   }
 
-  auto result = iris::scenes::internal::BuildBVH(
+  BuildBVHResult result = BuildBVH(
       [geometry](size_t index) {
-        const auto& entry = geometry.at(index);
-        return std::pair<const iris::Geometry&, const iris::Matrix*>(
-            *entry.first, entry.second);
+        const std::pair<const ReferenceCounted<Geometry>, const Matrix*>&
+            entry = geometry.at(index);
+        return std::pair<const Geometry&, const Matrix*>(*entry.first,
+                                                         entry.second);
       },
       geometry.size());
 
   ASSERT_FALSE(result.bvh.empty());
   EXPECT_TRUE(result.bvh[0].HasChildren());
-  EXPECT_EQ(iris::Vector::Y_AXIS, result.bvh[0].Axis());
-  auto& left_child = result.bvh[0].LeftChild();
+  EXPECT_EQ(Vector::Y_AXIS, result.bvh[0].Axis());
+  const BVHNode& left_child = result.bvh[0].LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
   EXPECT_EQ(0u, left_child.Shapes().first);
   EXPECT_EQ(1u, left_child.Shapes().second);
-  auto& right_child = result.bvh[0].RightChild();
+  const BVHNode& right_child = result.bvh[0].RightChild();
   EXPECT_FALSE(right_child.HasChildren());
   EXPECT_EQ(1u, right_child.Shapes().first);
   EXPECT_EQ(1u, right_child.Shapes().second);
@@ -522,3 +495,7 @@ TEST(BuildBVH, FullTwoGeometry) {
   EXPECT_EQ(1u, result.geometry_sort_order.at(0));
   EXPECT_EQ(0u, result.geometry_sort_order.at(1));
 }
+
+}  // namespace internal
+}  // namespace scenes
+}  // namespace iris

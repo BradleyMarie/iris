@@ -1,11 +1,14 @@
 #ifndef _IRIS_SCENES_INTERNAL_BVH_NODE_
 #define _IRIS_SCENES_INTERNAL_BVH_NODE_
 
+#include <cassert>
 #include <cstdint>
 #include <utility>
 
 #include "iris/bounding_box.h"
+#include "iris/float.h"
 #include "iris/ray.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace scenes {

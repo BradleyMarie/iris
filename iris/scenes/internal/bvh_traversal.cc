@@ -1,8 +1,18 @@
 #include "iris/scenes/internal/bvh_traversal.h"
 
 #include <limits>
+#include <vector>
 
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit.h"
+#include "iris/hit_allocator.h"
+#include "iris/intersector.h"
+#include "iris/ray.h"
+#include "iris/reference_counted.h"
+#include "iris/scene_objects.h"
 #include "iris/scenes/internal/bvh_builder.h"
+#include "iris/scenes/internal/bvh_node.h"
 
 namespace iris {
 namespace scenes {

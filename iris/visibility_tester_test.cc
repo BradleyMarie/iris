@@ -3,13 +3,15 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/geometry/mock_geometry.h"
 #include "iris/internal/ray_tracer.h"
+#include "iris/reference_counted.h"
+#include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 
 TEST(VisibilityTesterTest, NoGeometry) {
   iris::internal::RayTracer ray_tracer;
   iris::internal::Arena arena;
   auto objects = iris::SceneObjects::Builder().Build();
-  auto scene = iris::scenes::ListScene::Builder::Create()->Build(objects);
+  auto scene = iris::scenes::MakeListSceneBuilder()->Build(objects);
   iris::VisibilityTester visibility_tester(*scene, 0.0, ray_tracer, arena);
 
   EXPECT_TRUE(visibility_tester.Visible(
@@ -35,7 +37,7 @@ TEST(VisibilityTesterTest, WithGeometry) {
   auto builder = iris::SceneObjects::Builder();
   builder.Add(std::move(geometry));
   auto objects = builder.Build();
-  auto scene = iris::scenes::ListScene::Builder::Create()->Build(objects);
+  auto scene = iris::scenes::MakeListSceneBuilder()->Build(objects);
 
   iris::internal::RayTracer ray_tracer;
   iris::internal::Arena arena;
