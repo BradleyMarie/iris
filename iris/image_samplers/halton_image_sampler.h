@@ -1,6 +1,7 @@
 #ifndef _IRIS_IMAGE_SAMPLERS_HALTON_IMAGE_SAMPLER_
 #define _IRIS_IMAGE_SAMPLERS_HALTON_IMAGE_SAMPLER_
 
+#include <cstdint>
 #include <memory>
 
 #include "iris/image_sampler.h"

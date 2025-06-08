@@ -1,31 +1,42 @@
 #include "iris/image_samplers/stratified_image_sampler.h"
 
-#include <limits>
+#include <optional>
+#include <utility>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/image_sampler.h"
 #include "iris/random/mock_random.h"
 
+namespace iris {
+namespace image_samplers {
+namespace {
+
+using ::iris::random::MockRandom;
+
 TEST(StraifiedImageSamplerTest, Duplicate) {
-  iris::image_samplers::StratifiedImageSampler sampler(5, 3, false);
-  EXPECT_TRUE(sampler.Replicate());
+  std::unique_ptr<ImageSampler> sampler =
+      MakeStratifiedImageSampler(5, 3, false);
+  EXPECT_TRUE(sampler->Replicate());
 }
 
 TEST(StraifiedImageSamplerTest, NoSamples) {
-  iris::image_samplers::StratifiedImageSampler sampler(0, 0, false);
+  std::unique_ptr<ImageSampler> sampler =
+      MakeStratifiedImageSampler(0, 0, false);
 
-  sampler.StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
 
-  iris::random::MockRandom rng;
-  EXPECT_FALSE(sampler.NextSample(false, rng).has_value());
+  MockRandom rng;
+  EXPECT_FALSE(sampler->NextSample(false, rng).has_value());
 }
 
 TEST(StraifiedImageSamplerTest, SampleNoLens) {
-  iris::image_samplers::StratifiedImageSampler sampler(2, 2, false);
+  std::unique_ptr<ImageSampler> sampler =
+      MakeStratifiedImageSampler(2, 2, false);
 
-  sampler.StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
 
-  iris::random::MockRandom rng;
-  auto sample = sampler.NextSample(false, rng);
+  MockRandom rng;
+  std::optional<ImageSampler::Sample> sample = sampler->NextSample(false, rng);
   EXPECT_EQ(sample->image_uv[0], 0.625);
   EXPECT_EQ(sample->image_uv[1], 0.125);
   EXPECT_NEAR(sample->image_uv[0] + 0.25, sample->image_uv_dxdy[0], 0.01);
@@ -36,16 +47,17 @@ TEST(StraifiedImageSamplerTest, SampleNoLens) {
 }
 
 TEST(StraifiedImageSamplerTest, SampleWithLens) {
-  iris::image_samplers::StratifiedImageSampler sampler(2, 2, false);
+  std::unique_ptr<ImageSampler> sampler =
+      MakeStratifiedImageSampler(2, 2, false);
 
-  sampler.StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
       .Times(2)
       .WillRepeatedly(testing::Return(0.1));
 
-  auto sample = sampler.NextSample(true, rng);
+  std::optional<ImageSampler::Sample> sample = sampler->NextSample(true, rng);
   EXPECT_EQ(sample->image_uv[0], 0.625);
   EXPECT_EQ(sample->image_uv[1], 0.125);
   ASSERT_TRUE(sample->lens_uv);
@@ -60,16 +72,17 @@ TEST(StraifiedImageSamplerTest, SampleWithLens) {
 }
 
 TEST(StraifiedImageSamplerTest, SampleWithJitter) {
-  iris::image_samplers::StratifiedImageSampler sampler(2, 2, true);
+  std::unique_ptr<ImageSampler> sampler =
+      MakeStratifiedImageSampler(2, 2, true);
 
-  sampler.StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
 
-  iris::random::MockRandom rng;
+  MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
       .Times(2)
       .WillRepeatedly(testing::Return(0.1));
 
-  auto sample = sampler.NextSample(false, rng);
+  std::optional<ImageSampler::Sample> sample = sampler->NextSample(false, rng);
   EXPECT_TRUE(sample->image_uv[0] >= 0.5);
   EXPECT_TRUE(sample->image_uv[0] < 0.75);
   EXPECT_TRUE(sample->image_uv[1] >= 0.0);
@@ -80,3 +93,7 @@ TEST(StraifiedImageSamplerTest, SampleWithJitter) {
   EXPECT_EQ(sample->weight, 0.25);
   EXPECT_EQ(&rng, &sample->rng);
 }
+
+}  // namespace
+}  // namespace image_samplers
+}  // namespace iris

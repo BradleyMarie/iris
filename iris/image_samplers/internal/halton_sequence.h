@@ -1,9 +1,12 @@
 #ifndef _IRIS_IMAGE_SAMPLERS_INTERNAL_HALTON_SEQUENCE_
 #define _IRIS_IMAGE_SAMPLERS_INTERNAL_HALTON_SEQUENCE_
 
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <utility>
 
+#include "iris/float.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
 #include "third_party/gruenschloss/halton/halton_enum.h"
 #include "third_party/gruenschloss/halton/halton_sampler.h"

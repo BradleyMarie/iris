@@ -1,26 +1,33 @@
 #include "iris/image_samplers/random_image_sampler.h"
 
-#include <limits>
+#include <optional>
+#include <utility>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/image_sampler.h"
 #include "iris/random/mock_random.h"
 
+namespace iris {
+namespace image_samplers {
+namespace {
+
+using ::iris::random::MockRandom;
+using ::testing::Return;
+
 TEST(RandomImageSamplerTest, Replicate) {
-  iris::image_samplers::RandomImageSampler sampler(5);
-  EXPECT_TRUE(sampler.Replicate());
+  std::unique_ptr<ImageSampler> sampler = MakeRandomImageSampler(5);
+  EXPECT_TRUE(sampler->Replicate());
 }
 
 TEST(RandomImageSamplerTest, SampleNoLens) {
-  iris::image_samplers::RandomImageSampler sampler(1);
+  std::unique_ptr<ImageSampler> sampler = MakeRandomImageSampler(1);
 
-  sampler.StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
 
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.1));
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.1));
 
-  auto sample = sampler.NextSample(false, rng);
+  std::optional<ImageSampler::Sample> sample = sampler->NextSample(false, rng);
   ASSERT_TRUE(sample.has_value());
   EXPECT_TRUE(sample->image_uv[0] >= 0.5);
   EXPECT_TRUE(sample->image_uv[0] < 1.0);
@@ -32,20 +39,18 @@ TEST(RandomImageSamplerTest, SampleNoLens) {
   EXPECT_EQ(sample->weight, 1.0);
   EXPECT_EQ(&rng, &sample->rng);
 
-  EXPECT_FALSE(sampler.NextSample(false, rng).has_value());
+  EXPECT_FALSE(sampler->NextSample(false, rng).has_value());
 }
 
 TEST(RandomImageSamplerTest, SampleWithLens) {
-  iris::image_samplers::RandomImageSampler sampler(1);
+  std::unique_ptr<ImageSampler> sampler = MakeRandomImageSampler(1);
 
-  sampler.StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
 
-  iris::random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(4)
-      .WillRepeatedly(testing::Return(0.1));
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(4).WillRepeatedly(Return(0.1));
 
-  auto sample = sampler.NextSample(true, rng);
+  std::optional<ImageSampler::Sample> sample = sampler->NextSample(true, rng);
   ASSERT_TRUE(sample.has_value());
   EXPECT_TRUE(sample->image_uv[0] >= 0.5);
   EXPECT_TRUE(sample->image_uv[0] < 1.0);
@@ -61,5 +66,9 @@ TEST(RandomImageSamplerTest, SampleWithLens) {
   EXPECT_EQ(sample->weight, 1.0);
   EXPECT_EQ(&rng, &sample->rng);
 
-  EXPECT_FALSE(sampler.NextSample(true, rng).has_value());
+  EXPECT_FALSE(sampler->NextSample(true, rng).has_value());
 }
+
+}  // namespace
+}  // namespace image_samplers
+}  // namespace iris

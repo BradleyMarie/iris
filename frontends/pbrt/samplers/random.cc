@@ -13,7 +13,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace samplers {
 
-using ::iris::image_samplers::RandomImageSampler;
+using ::iris::image_samplers::MakeRandomImageSampler;
 using ::pbrt_proto::v3::Sampler;
 
 std::unique_ptr<ImageSampler> MakeRandom(const Sampler::Random& random) {
@@ -23,8 +23,7 @@ std::unique_ptr<ImageSampler> MakeRandom(const Sampler::Random& random) {
     exit(EXIT_FAILURE);
   }
 
-  return std::make_unique<RandomImageSampler>(
-      static_cast<uint32_t>(random.pixelsamples()));
+  return MakeRandomImageSampler(static_cast<uint32_t>(random.pixelsamples()));
 }
 
 }  // namespace samplers

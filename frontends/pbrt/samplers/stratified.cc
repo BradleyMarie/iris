@@ -14,7 +14,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace samplers {
 
-using ::iris::image_samplers::StratifiedImageSampler;
+using ::iris::image_samplers::MakeStratifiedImageSampler;
 using ::pbrt_proto::v3::Sampler;
 
 std::unique_ptr<ImageSampler> MakeStratified(
@@ -33,7 +33,7 @@ std::unique_ptr<ImageSampler> MakeStratified(
     exit(EXIT_FAILURE);
   }
 
-  return std::make_unique<StratifiedImageSampler>(
+  return MakeStratifiedImageSampler(
       static_cast<uint16_t>(stratified.xsamples()),
       static_cast<uint16_t>(stratified.ysamples()), stratified.jitter());
 }

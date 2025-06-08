@@ -27,7 +27,6 @@ cc_library(
     testonly = True,
     hdrs = ["mock_image_sampler.h"],
     deps = [
-        "//iris:float",
         "//iris:image_sampler",
         "//iris:random",
         "@googletest//:gtest",
@@ -50,6 +49,7 @@ cc_test(
     srcs = ["random_image_sampler_test.cc"],
     deps = [
         ":random_image_sampler",
+        "//iris:image_sampler",
         "//iris/random:mock_random",
         "@googletest//:gtest_main",
     ],
@@ -91,6 +91,7 @@ cc_test(
     srcs = ["stratified_image_sampler_test.cc"],
     deps = [
         ":stratified_image_sampler",
+        "//iris:image_sampler",
         "//iris/random:mock_random",
         "@googletest//:gtest_main",
     ],

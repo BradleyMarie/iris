@@ -1,7 +1,12 @@
 #ifndef _IRIS_IMAGE_SAMPLERS_INTERNAL_MOCK_LOW_DISCREPANCY_SEQUENCE_
 #define _IRIS_IMAGE_SAMPLERS_INTERNAL_MOCK_LOW_DISCREPANCY_SEQUENCE_
 
+#include <memory>
+#include <optional>
+#include <utility>
+
 #include "googlemock/include/gmock/gmock.h"
+#include "iris/float.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
 
 namespace iris {

@@ -1,6 +1,7 @@
 #ifndef _IRIS_IMAGE_SAMPLERS_INTERNAL_LOW_DISCREPANCY_SEQUENCE_
 #define _IRIS_IMAGE_SAMPLERS_INTERNAL_LOW_DISCREPANCY_SEQUENCE_
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <utility>

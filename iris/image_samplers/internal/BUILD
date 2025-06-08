@@ -8,6 +8,7 @@ cc_library(
     hdrs = ["halton_sequence.h"],
     deps = [
         ":low_discrepancy_sequence",
+        "//iris:float",
         "//third_party/gruenschloss/halton",
     ],
 )
@@ -17,6 +18,7 @@ cc_test(
     srcs = ["halton_sequence_test.cc"],
     deps = [
         ":halton_sequence",
+        "//iris:float",
         "@googletest//:gtest_main",
     ],
 )
@@ -27,7 +29,9 @@ cc_library(
     hdrs = ["low_discrepancy_image_sampler.h"],
     deps = [
         ":low_discrepancy_sequence",
+        "//iris:float",
         "//iris:image_sampler",
+        "//iris:random",
     ],
 )
 
@@ -68,6 +72,7 @@ cc_library(
     hdrs = ["mock_low_discrepancy_sequence.h"],
     deps = [
         ":low_discrepancy_sequence",
+        "//iris:float",
         "@googletest//:gtest",
     ],
 )
@@ -78,6 +83,7 @@ cc_library(
     hdrs = ["sobol_sequence.h"],
     deps = [
         ":low_discrepancy_sequence",
+        "//iris:float",
         "//third_party/gruenschloss/double:sobol",
         "//third_party/gruenschloss/single:sobol",
         "//third_party/pbrt:sobolmatrices",

@@ -1,9 +1,40 @@
 #include "iris/image_samplers/random_image_sampler.h"
 
-#include <cassert>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
+
+#include "iris/float.h"
+#include "iris/image_sampler.h"
+#include "iris/random.h"
 
 namespace iris {
 namespace image_samplers {
+namespace {
+
+class RandomImageSampler final : public ImageSampler {
+ public:
+  RandomImageSampler(uint32_t samples_per_pixel) noexcept;
+
+  void StartPixel(std::pair<size_t, size_t> image_dimensions,
+                  std::pair<size_t, size_t> pixel) override;
+  std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
+
+  std::unique_ptr<ImageSampler> Replicate() const override;
+
+ private:
+  const uint32_t samples_per_pixel_;
+  const visual_t sample_weight_;
+  double num_pixels_x_;
+  double num_pixels_y_;
+  double pixel_x_;
+  double pixel_y_;
+  double subpixel_size_;
+  uint32_t sample_index_;
+};
 
 RandomImageSampler::RandomImageSampler(uint32_t samples_per_pixel) noexcept
     : samples_per_pixel_(samples_per_pixel),
@@ -17,9 +48,6 @@ RandomImageSampler::RandomImageSampler(uint32_t samples_per_pixel) noexcept
 
 void RandomImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
                                     std::pair<size_t, size_t> pixel) {
-  assert(image_dimensions.first < std::numeric_limits<uint32_t>::max());
-  assert(image_dimensions.second < std::numeric_limits<uint32_t>::max());
-
   num_pixels_x_ = image_dimensions.second;
   num_pixels_y_ = image_dimensions.first;
   pixel_x_ = pixel.second;
@@ -60,6 +88,13 @@ std::optional<ImageSampler::Sample> RandomImageSampler::NextSample(
 
 std::unique_ptr<ImageSampler> RandomImageSampler::Replicate() const {
   return std::make_unique<RandomImageSampler>(samples_per_pixel_);
+}
+
+}  // namespace
+
+std::unique_ptr<ImageSampler> MakeRandomImageSampler(
+    uint32_t samples_per_pixel) {
+  return std::make_unique<RandomImageSampler>(samples_per_pixel);
 }
 
 }  // namespace image_samplers

@@ -1,14 +1,15 @@
 #ifndef _IRIS_IMAGE_SAMPLERS_INTERNAL_LOW_DISCREPANCY_IMAGE_SAMPLER_
 #define _IRIS_IMAGE_SAMPLERS_INTERNAL_LOW_DISCREPANCY_IMAGE_SAMPLER_
 
-#include <array>
-#include <cmath>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <utility>
 
+#include "iris/float.h"
 #include "iris/image_sampler.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
+#include "iris/random.h"
 
 namespace iris {
 namespace image_samplers {

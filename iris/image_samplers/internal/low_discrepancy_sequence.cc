@@ -1,6 +1,13 @@
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
 
-#include <cmath>
+#include <algorithm>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
+
+#include "iris/float.h"
+#include "iris/random.h"
 
 namespace iris {
 namespace image_samplers {

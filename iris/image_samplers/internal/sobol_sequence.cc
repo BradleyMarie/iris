@@ -2,10 +2,14 @@
 
 #include <algorithm>
 #include <bit>
-#include <cassert>
 #include <cmath>
-#include <limits>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
 
+#include "iris/float.h"
+#include "iris/image_samplers/internal/low_discrepancy_sequence.h"
 #include "third_party/gruenschloss/double/sobol.h"
 #include "third_party/gruenschloss/single/sobol.h"
 #include "third_party/pbrt/sobolmatrices.h"
@@ -76,9 +80,6 @@ std::optional<size_t> SobolSequenceIndex(uint64_t log2_resolution,
 bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
                           std::pair<size_t, size_t> pixel,
                           unsigned sample_index) {
-  assert(pixel.first < image_dimensions.first);
-  assert(pixel.second < image_dimensions.second);
-
   size_t longest_dimension =
       std::max(image_dimensions.first, image_dimensions.second);
   size_t logical_resolution = std::bit_ceil(longest_dimension);

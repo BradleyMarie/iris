@@ -1,10 +1,42 @@
 #include "iris/image_samplers/stratified_image_sampler.h"
 
-#include <cassert>
+#include <array>
 #include <cmath>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
+
+#include "iris/float.h"
+#include "iris/image_sampler.h"
+#include "iris/random.h"
 
 namespace iris {
 namespace image_samplers {
+namespace {
+
+class StratifiedImageSampler final : public ImageSampler {
+ public:
+  StratifiedImageSampler(uint16_t x_samples, uint16_t y_samples,
+                         bool jittered) noexcept;
+
+  void StartPixel(std::pair<size_t, size_t> image_dimensions,
+                  std::pair<size_t, size_t> pixel) override;
+  std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
+
+  std::unique_ptr<ImageSampler> Replicate() const override;
+
+ private:
+  const uint16_t x_samples_;
+  const uint16_t y_samples_;
+  const bool jittered_;
+  const visual_t sample_weight_;
+  uint64_t num_subpixels_x_;
+  uint64_t num_subpixels_y_;
+  uint64_t subpixel_x_;
+  uint64_t subpixel_y_;
+  uint32_t sample_index_;
+};
 
 StratifiedImageSampler::StratifiedImageSampler(uint16_t x_samples,
                                                uint16_t y_samples,
@@ -22,9 +54,6 @@ StratifiedImageSampler::StratifiedImageSampler(uint16_t x_samples,
 void StratifiedImageSampler::StartPixel(
     std::pair<size_t, size_t> image_dimensions,
     std::pair<size_t, size_t> pixel) {
-  assert(image_dimensions.first < std::numeric_limits<uint32_t>::max());
-  assert(image_dimensions.second < std::numeric_limits<uint32_t>::max());
-
   num_subpixels_x_ = image_dimensions.second * x_samples_;
   num_subpixels_y_ = image_dimensions.first * y_samples_;
   subpixel_x_ = pixel.second * x_samples_;
@@ -78,6 +107,15 @@ std::optional<ImageSampler::Sample> StratifiedImageSampler::NextSample(
 std::unique_ptr<ImageSampler> StratifiedImageSampler::Replicate() const {
   return std::make_unique<StratifiedImageSampler>(x_samples_, y_samples_,
                                                   jittered_);
+}
+
+}  // namespace
+
+std::unique_ptr<ImageSampler> MakeStratifiedImageSampler(uint16_t x_samples,
+                                                         uint16_t y_samples,
+                                                         bool jittered) {
+  return std::make_unique<StratifiedImageSampler>(x_samples, y_samples,
+                                                  jittered);
 }
 
 }  // namespace image_samplers

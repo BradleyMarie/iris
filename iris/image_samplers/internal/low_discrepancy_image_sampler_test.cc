@@ -6,58 +6,57 @@
 #include "iris/image_samplers/internal/mock_low_discrepancy_sequence.h"
 #include "iris/random/mock_random.h"
 
-TEST(LowDiscrepancyImageSamplerTest, NextSampleDesiredReached) {
-  auto sequence = std::make_unique<
-      iris::image_samplers::internal::MockLowDiscrepancySequence>();
+namespace iris {
+namespace image_samplers {
+namespace internal {
+namespace {
 
-  iris::image_samplers::internal::LowDiscrepancyImageSampler sampler(
-      std::move(sequence), 0);
+TEST(LowDiscrepancyImageSamplerTest, NextSampleDesiredReached) {
+  auto sequence = std::make_unique<MockLowDiscrepancySequence>();
+
+  LowDiscrepancyImageSampler sampler(std::move(sequence), 0);
 
   sampler.StartPixel({0, 0}, {0, 0});
 
-  iris::random::MockRandom rng;
+  random::MockRandom rng;
   EXPECT_FALSE(sampler.NextSample(false, rng));
 }
 
 TEST(LowDiscrepancyImageSamplerTest, NextSampleNone) {
-  auto sequence = std::make_unique<
-      iris::image_samplers::internal::MockLowDiscrepancySequence>();
+  auto sequence = std::make_unique<MockLowDiscrepancySequence>();
 
   EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
       .WillOnce(testing::Return(false));
 
-  iris::image_samplers::internal::LowDiscrepancyImageSampler sampler(
-      std::move(sequence), 1);
+  LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
   sampler.StartPixel({0, 0}, {0, 0});
 
-  iris::random::MockRandom rng;
+  random::MockRandom rng;
   EXPECT_FALSE(sampler.NextSample(false, rng));
 }
 
 TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
-  auto sequence = std::make_unique<
-      iris::image_samplers::internal::MockLowDiscrepancySequence>();
+  auto sequence = std::make_unique<MockLowDiscrepancySequence>();
   auto sequence_ptr = sequence.get();
 
   {
     testing::InSequence s;
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.25)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.75)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.75)));
   }
 
   EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
       .WillOnce(testing::Return(true));
 
   EXPECT_CALL(*sequence, SampleWeight(1))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+      .WillOnce(testing::Return(static_cast<visual_t>(1.0)));
 
-  iris::image_samplers::internal::LowDiscrepancyImageSampler sampler(
-      std::move(sequence), 1);
+  LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
   sampler.StartPixel({1, 1}, {0, 0});
 
-  iris::random::MockRandom rng;
+  random::MockRandom rng;
   auto sample = sampler.NextSample(false, rng);
   ASSERT_TRUE(sample);
   EXPECT_EQ(0.25, sample->image_uv[0]);
@@ -70,33 +69,31 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
 }
 
 TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
-  auto sequence = std::make_unique<
-      iris::image_samplers::internal::MockLowDiscrepancySequence>();
+  auto sequence = std::make_unique<MockLowDiscrepancySequence>();
   auto sequence_ptr = sequence.get();
 
   {
     testing::InSequence s;
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.25)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.75)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.75)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.125)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.125)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.375)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.375)));
   }
 
   EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
       .WillOnce(testing::Return(true));
 
   EXPECT_CALL(*sequence, SampleWeight(1))
-      .WillOnce(testing::Return(static_cast<iris::visual_t>(1.0)));
+      .WillOnce(testing::Return(static_cast<visual_t>(1.0)));
 
-  iris::image_samplers::internal::LowDiscrepancyImageSampler sampler(
-      std::move(sequence), 1);
+  LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
   sampler.StartPixel({1, 1}, {0, 0});
 
-  iris::random::MockRandom rng;
+  random::MockRandom rng;
   auto sample = sampler.NextSample(true, rng);
   ASSERT_TRUE(sample);
   EXPECT_EQ(0.25, sample->image_uv[0]);
@@ -111,19 +108,18 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
 }
 
 TEST(LowDiscrepancyImageSamplerTest, TwoSamples) {
-  auto sequence = std::make_unique<
-      iris::image_samplers::internal::MockLowDiscrepancySequence>();
+  auto sequence = std::make_unique<MockLowDiscrepancySequence>();
 
   {
     testing::InSequence s;
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.25)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.25)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.75)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.75)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.125)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.125)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<iris::visual_t>(0.375)));
+        .WillOnce(testing::Return(static_cast<visual_t>(0.375)));
   }
 
   EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
@@ -132,26 +128,27 @@ TEST(LowDiscrepancyImageSamplerTest, TwoSamples) {
       .WillOnce(testing::Return(true));
 
   EXPECT_CALL(*sequence, SampleWeight(2))
-      .WillRepeatedly(testing::Return(static_cast<iris::visual_t>(0.5)));
+      .WillRepeatedly(testing::Return(static_cast<visual_t>(0.5)));
 
-  iris::image_samplers::internal::LowDiscrepancyImageSampler sampler(
-      std::move(sequence), 2);
+  LowDiscrepancyImageSampler sampler(std::move(sequence), 2);
   sampler.StartPixel({0, 0}, {0, 0});
 
-  iris::random::MockRandom rng;
+  random::MockRandom rng;
   EXPECT_TRUE(sampler.NextSample(false, rng));
   EXPECT_TRUE(sampler.NextSample(false, rng));
   EXPECT_FALSE(sampler.NextSample(false, rng));
 }
 
 TEST(LowDiscrepancyImageSamplerTest, Replicate) {
-  auto sequence = std::make_unique<
-      iris::image_samplers::internal::MockLowDiscrepancySequence>();
+  auto sequence = std::make_unique<MockLowDiscrepancySequence>();
   EXPECT_CALL(*sequence, Duplicate()).WillOnce(testing::Invoke([]() {
-    return std::make_unique<
-        iris::image_samplers::internal::MockLowDiscrepancySequence>();
+    return std::make_unique<MockLowDiscrepancySequence>();
   }));
-  iris::image_samplers::internal::LowDiscrepancyImageSampler sampler(
-      std::move(sequence), 2);
+  LowDiscrepancyImageSampler sampler(std::move(sequence), 2);
   EXPECT_TRUE(sampler.Replicate());
 }
+
+}  // namespace
+}  // namespace internal
+}  // namespace image_samplers
+}  // namespace iris
