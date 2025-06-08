@@ -42,6 +42,7 @@ using ::iris::testing::BackFace;
 using ::iris::testing::FrontFace;
 using ::iris::testing::MakeHitAllocator;
 using ::testing::InSequence;
+using ::testing::IsEmpty;
 using ::testing::Return;
 
 struct AdditionalDataContents {
@@ -91,6 +92,20 @@ ReferenceCounted<Geometry> MakeSimpleTriangle() {
       front_normal_map, back_normal_map);
   EXPECT_EQ(triangles.size(), 1u);
   return triangles.front();
+}
+
+TEST(Triangle, Empty) {
+  EXPECT_THAT(
+      AllocateTriangleMesh(
+          {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
+          {{{0, 1, 1}}}, {},
+          {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
+            {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
+            {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
+          ReferenceCounted<textures::ValueTexture2D<bool>>(), front_material,
+          back_material, front_emissive_material, back_emissive_material,
+          front_normal_map, back_normal_map),
+      IsEmpty());
 }
 
 TEST(Triangle, MissesOnEdge) {

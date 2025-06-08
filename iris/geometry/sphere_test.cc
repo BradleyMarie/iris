@@ -67,6 +67,13 @@ ReferenceCounted<Geometry> MakeSimpleSphere() {
                         back_normal_map);
 }
 
+TEST(Sphere, Null) {
+  EXPECT_FALSE(AllocateSphere(Point(0.0, 0.0, 3.0), 0.0, front_material,
+                              back_material, front_emissive_material,
+                              back_emissive_material, front_normal_map,
+                              back_normal_map));
+}
+
 TEST(Sphere, MissesCompletely) {
   ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
