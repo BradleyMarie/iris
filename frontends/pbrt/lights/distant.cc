@@ -15,7 +15,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace lights {
 
-using ::iris::lights::DirectionalLight;
+using ::iris::lights::MakeDirectionalLight;
 using ::pbrt_proto::v3::LightSource;
 
 ReferenceCounted<Light> MakeDistant(const LightSource::Distant& distant,
@@ -57,8 +57,7 @@ ReferenceCounted<Light> MakeDistant(const LightSource::Distant& distant,
   Point world_to = model_to_world.Multiply(model_to);
   Vector world_direction = world_from - world_to;
 
-  return MakeReferenceCounted<DirectionalLight>(world_direction,
-                                                std::move(scaled));
+  return MakeDirectionalLight(world_direction, std::move(scaled));
 }
 
 }  // namespace lights
