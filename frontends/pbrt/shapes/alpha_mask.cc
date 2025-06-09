@@ -15,7 +15,6 @@ namespace {
 
 using ::iris::textures::ValueTexture2D;
 using ::pbrt_proto::v3::FloatTextureParameter;
-using ::pbrt_proto::v3::FloatTextureParameter;
 
 class AlphaMask : public ValueTexture2D<bool> {
  public:

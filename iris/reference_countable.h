@@ -20,7 +20,7 @@ class ReferenceCountable {
   std::atomic<reference_count_t> reference_count_;
 
   template <typename T>
-  requires std::derived_from<T, ReferenceCountable>
+    requires std::derived_from<T, ReferenceCountable>
   friend class ReferenceCounted;
 };
 

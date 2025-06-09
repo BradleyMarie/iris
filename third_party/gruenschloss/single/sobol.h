@@ -57,4 +57,3 @@ inline float sample(
 } // namespace sobol
 
 #endif
-

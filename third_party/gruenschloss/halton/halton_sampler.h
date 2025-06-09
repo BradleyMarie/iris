@@ -3286,4 +3286,3 @@ inline float Halton_sampler::halton1619(const unsigned index) const
 }
 
 #endif // HALTON_SAMPLER_H
-

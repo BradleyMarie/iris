@@ -5,8 +5,8 @@
 #include <string>
 
 #include "googletest/include/gtest/gtest.h"
-#include "tools/cpp/runfiles/runfiles.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
+#include "tools/cpp/runfiles/runfiles.h"
 
 namespace iris {
 namespace pbrt_frontend {

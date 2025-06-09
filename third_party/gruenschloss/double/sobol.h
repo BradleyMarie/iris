@@ -58,4 +58,3 @@ inline double sample(
 } // namespace sobol
 
 #endif
-

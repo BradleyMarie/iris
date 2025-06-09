@@ -151,4 +151,3 @@ inline unsigned Halton_enum::halton3_inverse(unsigned index, const unsigned digi
 }
 
 #endif // HALTON_ENUM_H
-

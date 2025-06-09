@@ -7,13 +7,17 @@ TEST(Sampler, MoveConstruct) {
   iris::random::MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
   iris::Sampler sampler(random);
-  { iris::Sampler sampler2(std::move(sampler)); }
+  {
+    iris::Sampler sampler2(std::move(sampler));
+  }
 }
 
 TEST(Sampler, NoSamples) {
   iris::random::MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
-  { iris::Sampler sampler(random); }
+  {
+    iris::Sampler sampler(random);
+  }
 }
 
 TEST(Sampler, OneSample) {
