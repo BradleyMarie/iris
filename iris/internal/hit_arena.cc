@@ -2,7 +2,12 @@
 
 #include <cstring>
 
-namespace iris::internal {
+#include "iris/float.h"
+#include "iris/integer.h"
+#include "iris/internal/hit.h"
+
+namespace iris {
+namespace internal {
 
 Hit& HitArena::Allocate(iris::Hit* next, geometric distance,
                         geometric_t distance_error, face_t front, face_t back,
@@ -17,4 +22,5 @@ Hit& HitArena::Allocate(iris::Hit* next, geometric distance,
 
 void HitArena::Clear() { arena_.Clear(); }
 
-}  // namespace iris::internal
+}  // namespace internal
+}  // namespace iris

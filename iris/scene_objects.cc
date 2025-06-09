@@ -8,6 +8,9 @@
 namespace iris {
 namespace {
 
+using ::iris::internal::MakeAreaLight;
+using ::iris::internal::MakeEnvironmentalLight;
+
 template <typename T>
 std::vector<T> ToVector(std::map<T, size_t> values) {
   std::vector<T> result(values.size());
@@ -91,16 +94,14 @@ SceneObjects SceneObjects::Builder::Build() {
       }
 
       ordered_lights_.try_emplace(
-          MakeReferenceCounted<internal::AreaLight>(std::cref(*entry.first),
-                                                    entry.second, face),
+          MakeAreaLight(std::cref(*entry.first), entry.second, face),
           ordered_lights_.size());
     }
   }
 
   if (environmental_light_) {
     ordered_lights_.try_emplace(
-        MakeReferenceCounted<internal::EnvironmentalLight>(
-            std::cref(*environmental_light_)),
+        MakeEnvironmentalLight(std::cref(*environmental_light_)),
         ordered_lights_.size());
   }
 

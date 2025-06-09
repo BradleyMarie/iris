@@ -1,9 +1,19 @@
 #include "iris/internal/ray_tracer.h"
 
+#include <memory>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bounding_box.h"
+#include "iris/geometry.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/internal/hit.h"
+#include "iris/point.h"
+#include "iris/ray.h"
+#include "iris/scene.h"
 #include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace internal {
@@ -39,7 +49,7 @@ TEST(TraceClosestHit, WithGeometry) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
@@ -80,7 +90,7 @@ TEST(TraceAnyHit, WithGeometry) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
@@ -113,7 +123,7 @@ TEST(TraceBoth, WithGeometry) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 

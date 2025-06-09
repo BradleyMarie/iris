@@ -1,6 +1,9 @@
 #include "iris/internal/hit_arena.h"
 
+#include <cstdint>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/internal/hit.h"
 
 namespace iris {
 namespace internal {

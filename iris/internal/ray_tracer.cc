@@ -1,5 +1,12 @@
 #include "iris/internal/ray_tracer.h"
 
+#include "iris/float.h"
+#include "iris/internal/hit.h"
+#include "iris/internal/hit_arena.h"
+#include "iris/intersector.h"
+#include "iris/ray.h"
+#include "iris/scene.h"
+
 namespace iris {
 namespace internal {
 

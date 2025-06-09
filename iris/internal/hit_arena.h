@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "iris/float.h"
+#include "iris/integer.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/hit.h"
 

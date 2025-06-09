@@ -1,17 +1,34 @@
 #include "iris/internal/visibility_tester.h"
 
+#include <array>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bounding_box.h"
+#include "iris/emissive_material.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/ray_tracer.h"
+#include "iris/matrix.h"
+#include "iris/point.h"
+#include "iris/ray.h"
 #include "iris/reference_counted.h"
+#include "iris/scene.h"
 #include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/spectral_allocator.h"
+#include "iris/spectrum.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace internal {
@@ -23,8 +40,10 @@ using ::iris::geometry::MockGeometry;
 using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
+using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::IsFalse;
+using ::testing::NotNull;
 using ::testing::Return;
 
 static const uint32_t g_data = 0xDEADBEEF;
@@ -132,7 +151,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
-  EXPECT_CALL(*geometry, ComputeBounds(testing::NotNull()))
+  EXPECT_CALL(*geometry, ComputeBounds(NotNull()))
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
@@ -140,7 +159,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   EXPECT_CALL(*geometry, GetEmissiveMaterial(_))
       .WillRepeatedly(Return(nullptr));
   {
-    testing::InSequence sequence;
+    InSequence sequence;
     EXPECT_CALL(*geometry, Trace(_, _))
         .WillOnce(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
           return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, g_data);
@@ -153,7 +172,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry), Matrix::Translation(1.0, 0.0, 0.0).value());
+  builder.Add(geometry, Matrix::Translation(1.0, 0.0, 0.0).value());
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -179,7 +198,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
   EXPECT_CALL(*geometry, GetEmissiveMaterial(_))
       .WillRepeatedly(Return(nullptr));
   {
-    testing::InSequence sequence;
+    InSequence sequence;
     EXPECT_CALL(*geometry, Trace(model_ray, _))
         .WillOnce(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
           return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, g_data);
@@ -192,7 +211,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -234,7 +253,7 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -280,7 +299,7 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -330,7 +349,7 @@ TEST(VisibilityTesterTest, NoPdf) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -380,7 +399,7 @@ TEST(VisibilityTesterTest, NegativePdf) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -391,6 +410,7 @@ TEST(VisibilityTesterTest, NegativePdf) {
 
   EXPECT_FALSE(visibility_tester.Visible(world_ray, *geometry_ptr, nullptr, 1));
 }
+
 TEST(VisibilityTesterTest, Succeeds) {
   Ray world_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
   Ray model_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
@@ -475,7 +495,7 @@ TEST(VisibilityTesterTest, SceneTraceMissSucceeds) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -529,7 +549,7 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
@@ -556,7 +576,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
-  EXPECT_CALL(*geometry, ComputeBounds(testing::NotNull()))
+  EXPECT_CALL(*geometry, ComputeBounds(NotNull()))
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, GetFaces())
@@ -584,7 +604,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry), Matrix::Scalar(2.0, 1.0, 1.0).value());
+  builder.Add(geometry, Matrix::Scalar(2.0, 1.0, 1.0).value());
 
   SceneObjects objects = builder.Build();
   const Matrix* matrix = objects.GetGeometry(0).second;
@@ -640,7 +660,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
-  builder.Add(std::move(geometry));
+  builder.Add(geometry);
 
   SceneObjects objects = builder.Build();
   std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);

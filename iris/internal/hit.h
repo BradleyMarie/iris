@@ -4,6 +4,7 @@
 #include <cmath>
 #include <optional>
 
+#include "iris/float.h"
 #include "iris/hit.h"
 #include "iris/integer.h"
 #include "iris/ray.h"
@@ -25,8 +26,8 @@ struct Hit final : public iris::Hit {
         additional_data(additional_data) {}
 
   geometric_t distance_error;
-  const iris::Geometry* geometry;
-  const iris::Matrix* model_to_world;
+  const Geometry* geometry;
+  const Matrix* model_to_world;
   face_t front;
   face_t back;
   const void* additional_data;

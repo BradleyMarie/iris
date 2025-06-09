@@ -6,7 +6,12 @@
 #include "iris/float.h"
 #include "iris/geometry.h"
 #include "iris/integer.h"
+#include "iris/internal/arena.h"
+#include "iris/internal/ray_tracer.h"
 #include "iris/matrix.h"
+#include "iris/point.h"
+#include "iris/ray.h"
+#include "iris/scene.h"
 #include "iris/spectrum.h"
 #include "iris/visibility_tester.h"
 
