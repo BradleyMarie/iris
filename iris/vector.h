@@ -30,6 +30,8 @@ struct Vector final {
            y == static_cast<geometric>(0.0) && z == static_cast<geometric>(0.0);
   }
 
+  geometric_t Length() const;
+
 #ifdef NDEBUG
   const geometric& operator[](size_t index) const {
     const geometric* as_array = &x;
@@ -39,10 +41,7 @@ struct Vector final {
   const geometric& operator[](size_t index) const;
 #endif  // NDEBUG
 
-  Axis DiminishedAxis() const;
   Axis DominantAxis() const;
-
-  geometric_t Length() const;
 
   Vector AlignAgainst(const Vector& vector) const;
   Vector AlignWith(const Vector& vector) const;
@@ -89,6 +88,13 @@ static inline Vector operator/(const Vector& dividend, T divisor)
                 dividend.z / divisor);
 }
 
+static inline Vector CrossProduct(const Vector& operand0,
+                                  const Vector& operand1) {
+  return Vector(operand0.y * operand1.z - operand0.z * operand1.y,
+                operand0.z * operand1.x - operand0.x * operand1.z,
+                operand0.x * operand1.y - operand0.y * operand1.x);
+}
+
 static inline geometric_t DotProduct(const Vector& operand0,
                                      const Vector& operand1) {
   return operand0.x * operand1.x + operand0.y * operand1.y +
@@ -102,20 +108,13 @@ static inline geometric_t ClampedDotProduct(const Vector& operand0,
     return static_cast<visual_t>(-1.0);
   }
 
-  return (dp > static_cast<visual_t>(1.0)) ? static_cast<visual_t>(1.0) : dp;
+  return (dp < static_cast<visual_t>(1.0)) ? dp : static_cast<visual_t>(1.0);
 }
 
 static inline geometric_t ClampedAbsDotProduct(const Vector& operand0,
                                                const Vector& operand1) {
   geometric_t dp = std::abs(DotProduct(operand0, operand1));
-  return (dp > static_cast<visual_t>(1.0)) ? static_cast<visual_t>(1.0) : dp;
-}
-
-static inline Vector CrossProduct(const Vector& operand0,
-                                  const Vector& operand1) {
-  return Vector(operand0.y * operand1.z - operand0.z * operand1.y,
-                operand0.z * operand1.x - operand0.x * operand1.z,
-                operand0.x * operand1.y - operand0.y * operand1.x);
+  return (dp < static_cast<visual_t>(1.0)) ? dp : static_cast<visual_t>(1.0);
 }
 
 static inline Vector Normalize(const Vector& vector,
@@ -135,12 +134,21 @@ static inline Vector Normalize(const Vector& vector,
 }
 
 inline Vector::Axis Vector::DominantAxis() const {
-  Axis largest_axis = (std::abs(x) >= std::abs(y)) ? X_AXIS : Y_AXIS;
-  return std::abs((*this)[largest_axis]) >= std::abs(z) ? largest_axis : Z_AXIS;
-}
+  geometric max = std::abs(x);
+  Vector::Axis max_axis = X_AXIS;
 
-inline geometric_t Vector::Length() const {
-  return std::sqrt(DotProduct(*this, *this));
+  geometric abs_y = std::abs(y);
+  if (max < abs_y) {
+    max = abs_y;
+    max_axis = Y_AXIS;
+  }
+
+  geometric abs_z = std::abs(z);
+  if (max < abs_z) {
+    max_axis = Z_AXIS;
+  }
+
+  return max_axis;
 }
 
 inline Vector Vector::AlignAgainst(const Vector& vector) const {

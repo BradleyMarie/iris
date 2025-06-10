@@ -24,6 +24,10 @@ const geometric& Vector::operator[](size_t index) const {
 
 #endif  // NDEBUG
 
+geometric_t Vector::Length() const {
+  return std::sqrt(DotProduct(*this, *this));
+}
+
 std::pair<Vector, Vector> CoordinateSystem(const Vector& vector) {
   assert(!vector.IsZero());
 
