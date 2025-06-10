@@ -80,8 +80,8 @@ MakePerspective(const Camera::Perspective& perspective,
           transformation](const std::pair<size_t, size_t>& image_dimensions)
              -> std::unique_ptr<iris::Camera> {
     geometric_t actual_aspect_ratio = aspect_ratio.value_or(
-        static_cast<intermediate_t>(image_dimensions.second) /
-        static_cast<intermediate_t>(image_dimensions.first));
+        static_cast<geometric_t>(image_dimensions.second) /
+        static_cast<geometric_t>(image_dimensions.first));
 
     std::array<geometric_t, 2> half_frame_size;
     if (actual_aspect_ratio > 1.0) {

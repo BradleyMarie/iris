@@ -15,10 +15,10 @@ namespace {
 
 std::optional<std::array<std::array<geometric, 4>, 4>> Invert(
     const std::array<std::array<geometric, 4>, 4>& m) {
-  std::array<std::array<intermediate_t, 4>, 4> inverse;
+  std::array<std::array<geometric_t, 4>, 4> inverse;
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < 4; j++) {
-      inverse[i][j] = static_cast<intermediate_t>(m[i][j]);
+      inverse[i][j] = static_cast<geometric_t>(m[i][j]);
     }
   }
 
@@ -27,7 +27,7 @@ std::optional<std::array<std::array<geometric, 4>, 4>> Invert(
   size_t pivot[] = {0, 0, 0, 0};
 
   for (size_t i = 0; i < 4; i++) {
-    intermediate_t best_candidate = 0.0;
+    geometric_t best_candidate = 0.0;
     size_t best_column = 0;
     size_t best_row = 0;
 
@@ -45,7 +45,7 @@ std::optional<std::array<std::array<geometric, 4>, 4>> Invert(
           return std::nullopt;
         }
 
-        intermediate_t new_candidate = std::abs(inverse[j][k]);
+        geometric_t new_candidate = std::abs(inverse[j][k]);
         if (new_candidate >= best_candidate) {
           best_candidate = new_candidate;
           best_row = j;
@@ -58,7 +58,7 @@ std::optional<std::array<std::array<geometric, 4>, 4>> Invert(
 
     if (best_row != best_column) {
       for (size_t k = 0; k < 4; k++) {
-        intermediate_t tmp = inverse[best_row][k];
+        geometric_t tmp = inverse[best_row][k];
         inverse[best_row][k] = inverse[best_column][k];
         inverse[best_column][k] = tmp;
       }
@@ -71,7 +71,7 @@ std::optional<std::array<std::array<geometric, 4>, 4>> Invert(
     column_index[i] = best_column;
     row_index[i] = best_row;
 
-    intermediate_t divisor = inverse[best_column][best_column];
+    geometric_t divisor = inverse[best_column][best_column];
     inverse[best_column][best_column] = (float_t)1.0;
     for (size_t j = 0; j < 4; j++) {
       inverse[best_column][j] /= divisor;
@@ -82,7 +82,7 @@ std::optional<std::array<std::array<geometric, 4>, 4>> Invert(
         continue;
       }
 
-      intermediate_t scalar = -inverse[j][best_column];
+      geometric_t scalar = -inverse[j][best_column];
       inverse[j][best_column] = 0.0;
       for (size_t k = 0; k < 4; k++) {
         inverse[j][k] += scalar * inverse[best_column][k];
@@ -97,7 +97,7 @@ std::optional<std::array<std::array<geometric, 4>, 4>> Invert(
     }
 
     for (size_t k = 0; k < 4; k++) {
-      intermediate_t tmp = inverse[k][row_index[j]];
+      geometric_t tmp = inverse[k][row_index[j]];
       inverse[k][row_index[j]] = inverse[k][column_index[j]];
       inverse[k][column_index[j]] = tmp;
     }
@@ -119,15 +119,14 @@ std::array<std::array<geometric, 4>, 4> Multiply4x4(
   std::array<std::array<geometric, 4>, 4> result;
   for (size_t i = 0; i < 4; i++) {
     for (size_t j = 0; j < 4; j++) {
-      intermediate_t intermediate =
-          static_cast<intermediate_t>(left[i][0]) *
-              static_cast<intermediate_t>(right[0][j]) +
-          static_cast<intermediate_t>(left[i][1]) *
-              static_cast<intermediate_t>(right[1][j]) +
-          static_cast<intermediate_t>(left[i][2]) *
-              static_cast<intermediate_t>(right[2][j]) +
-          static_cast<intermediate_t>(left[i][3]) *
-              static_cast<intermediate_t>(right[3][j]);
+      geometric_t intermediate = static_cast<geometric_t>(left[i][0]) *
+                                     static_cast<geometric_t>(right[0][j]) +
+                                 static_cast<geometric_t>(left[i][1]) *
+                                     static_cast<geometric_t>(right[1][j]) +
+                                 static_cast<geometric_t>(left[i][2]) *
+                                     static_cast<geometric_t>(right[2][j]) +
+                                 static_cast<geometric_t>(left[i][3]) *
+                                     static_cast<geometric_t>(right[3][j]);
       result[i][j] = static_cast<geometric>(intermediate);
     }
   }
@@ -299,19 +298,19 @@ std::expected<Matrix, const char*> Matrix::Rotation(geometric theta,
     return std::unexpected("One of x, y, or z must be non-zero");
   }
 
-  intermediate_t theta_intermediate = static_cast<intermediate_t>(theta);
-  intermediate_t x_intermediate = static_cast<intermediate_t>(x);
-  intermediate_t y_intermediate = static_cast<intermediate_t>(y);
-  intermediate_t z_intermediate = static_cast<intermediate_t>(z);
+  geometric_t theta_intermediate = static_cast<geometric_t>(theta);
+  geometric_t x_intermediate = static_cast<geometric_t>(x);
+  geometric_t y_intermediate = static_cast<geometric_t>(y);
+  geometric_t z_intermediate = static_cast<geometric_t>(z);
 
-  intermediate_t magnitude = std::sqrt(x * x + y * y + z * z);
+  geometric_t magnitude = std::sqrt(x * x + y * y + z * z);
   x_intermediate /= magnitude;
   y_intermediate /= magnitude;
   z_intermediate /= magnitude;
 
-  intermediate_t sin_theta = std::sin(theta_intermediate);
-  intermediate_t cos_theta = std::cos(theta_intermediate);
-  intermediate_t ic = static_cast<intermediate_t>(1.0) - cos_theta;
+  geometric_t sin_theta = std::sin(theta_intermediate);
+  geometric_t cos_theta = std::cos(theta_intermediate);
+  geometric_t ic = static_cast<geometric_t>(1.0) - cos_theta;
 
   geometric m00 =
       static_cast<geometric>(x_intermediate * x_intermediate * ic + cos_theta);
@@ -394,23 +393,23 @@ std::expected<Matrix, const char*> Matrix::LookAt(
     return std::unexpected("One of up_x, up_y, or up_z must be non-zero");
   }
 
-  intermediate_t intermediate_eye_x = eye_x;
-  intermediate_t intermediate_eye_y = eye_y;
-  intermediate_t intermediate_eye_z = eye_z;
+  geometric_t intermediate_eye_x = eye_x;
+  geometric_t intermediate_eye_y = eye_y;
+  geometric_t intermediate_eye_z = eye_z;
 
-  intermediate_t intermediate_look_at_x = look_at_x;
-  intermediate_t intermediate_look_at_y = look_at_y;
-  intermediate_t intermediate_look_at_z = look_at_z;
+  geometric_t intermediate_look_at_x = look_at_x;
+  geometric_t intermediate_look_at_y = look_at_y;
+  geometric_t intermediate_look_at_z = look_at_z;
 
-  intermediate_t intermediate_up_x = up_x;
-  intermediate_t intermediate_up_y = up_y;
-  intermediate_t intermediate_up_z = up_z;
+  geometric_t intermediate_up_x = up_x;
+  geometric_t intermediate_up_y = up_y;
+  geometric_t intermediate_up_z = up_z;
 
-  intermediate_t look_direction_x = intermediate_look_at_x - intermediate_eye_x;
-  intermediate_t look_direction_y = intermediate_look_at_y - intermediate_eye_y;
-  intermediate_t look_direction_z = intermediate_look_at_z - intermediate_eye_z;
+  geometric_t look_direction_x = intermediate_look_at_x - intermediate_eye_x;
+  geometric_t look_direction_y = intermediate_look_at_y - intermediate_eye_y;
+  geometric_t look_direction_z = intermediate_look_at_z - intermediate_eye_z;
 
-  intermediate_t look_direction_magnitude =
+  geometric_t look_direction_magnitude =
       std::sqrt(look_direction_x * look_direction_x +
                 look_direction_y * look_direction_y +
                 look_direction_z * look_direction_z);
@@ -418,17 +417,17 @@ std::expected<Matrix, const char*> Matrix::LookAt(
   look_direction_y /= look_direction_magnitude;
   look_direction_z /= look_direction_magnitude;
 
-  intermediate_t right_x = intermediate_up_y * look_direction_z -
-                           intermediate_up_z * look_direction_y;
-  intermediate_t right_y = intermediate_up_z * look_direction_x -
-                           intermediate_up_x * look_direction_z;
-  intermediate_t right_z = intermediate_up_x * look_direction_y -
-                           intermediate_up_y * look_direction_x;
+  geometric_t right_x = intermediate_up_y * look_direction_z -
+                        intermediate_up_z * look_direction_y;
+  geometric_t right_y = intermediate_up_z * look_direction_x -
+                        intermediate_up_x * look_direction_z;
+  geometric_t right_z = intermediate_up_x * look_direction_y -
+                        intermediate_up_y * look_direction_x;
   if (right_x == 0.0 && right_y == 0.0 && right_z == 0.0) {
     return std::unexpected("up and look_at must be perpendicular");
   }
 
-  intermediate_t right_magnitude =
+  geometric_t right_magnitude =
       std::sqrt(right_x * right_x + right_y * right_y + right_z * right_z);
   right_x /= right_magnitude;
   right_y /= right_magnitude;
@@ -492,12 +491,12 @@ std::expected<Matrix, const char*> Matrix::Orthographic(
     return std::unexpected("near must not equal far");
   }
 
-  intermediate_t left_intermediate = left;
-  intermediate_t right_intermediate = right;
-  intermediate_t bottom_intermediate = bottom;
-  intermediate_t top_intermediate = top;
-  intermediate_t near_intermediate = near;
-  intermediate_t far_intermediate = far;
+  geometric_t left_intermediate = left;
+  geometric_t right_intermediate = right;
+  geometric_t bottom_intermediate = bottom;
+  geometric_t top_intermediate = top;
+  geometric_t near_intermediate = near;
+  geometric_t far_intermediate = far;
 
   geometric tx =
       -static_cast<geometric>((right_intermediate + left_intermediate) /
@@ -509,13 +508,11 @@ std::expected<Matrix, const char*> Matrix::Orthographic(
       -static_cast<geometric>((far_intermediate + near_intermediate) /
                               (far_intermediate - near_intermediate));
 
-  geometric sx =
-      static_cast<geometric>(static_cast<intermediate_t>(2.0) /
-                             (right_intermediate - left_intermediate));
-  geometric sy =
-      static_cast<geometric>(static_cast<intermediate_t>(2.0) /
-                             (top_intermediate - bottom_intermediate));
-  geometric sz = static_cast<geometric>(static_cast<intermediate_t>(-2.0) /
+  geometric sx = static_cast<geometric>(
+      static_cast<geometric_t>(2.0) / (right_intermediate - left_intermediate));
+  geometric sy = static_cast<geometric>(
+      static_cast<geometric_t>(2.0) / (top_intermediate - bottom_intermediate));
+  geometric sz = static_cast<geometric>(static_cast<geometric_t>(-2.0) /
                                         (far_intermediate - near_intermediate));
 
   std::array<std::array<geometric, 4>, 4> matrix = {{{sx, 0.0, 0.0, tx},
