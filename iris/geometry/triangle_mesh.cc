@@ -246,13 +246,12 @@ std::optional<Vector> Triangle::MaybeComputeShadingNormal(
                   std::get<2>(shared_->normals[std::get<1>(vertices_)]) * b1 +
                   std::get<2>(shared_->normals[std::get<2>(vertices_)]) * b2;
 
-  if (x == static_cast<geometric_t>(0.0) &&
-      y == static_cast<geometric_t>(0.0) &&
-      z == static_cast<geometric_t>(0.0)) {
+  Vector shading_normal(x, y, z);
+  if (shading_normal.IsZero()) {
     return std::nullopt;
   }
 
-  return Vector(x, y, z).AlignWith(additional->surface_normal);
+  return shading_normal.AlignWith(additional->surface_normal);
 }
 
 std::optional<std::pair<Vector, Vector>> Triangle::MaybeComputeNormalTangents()

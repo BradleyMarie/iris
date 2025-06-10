@@ -11,7 +11,6 @@ namespace iris {
 
 Vector::Vector(geometric x, geometric y, geometric z) noexcept
     : x(x), y(y), z(z) {
-  // TODO: Assert Vector has length and/or add assertions for CoordinateSystem
   assert(std::isfinite(x));
   assert(std::isfinite(y));
   assert(std::isfinite(z));
@@ -24,5 +23,27 @@ const geometric& Vector::operator[](size_t index) const {
 }
 
 #endif  // NDEBUG
+
+std::pair<Vector, Vector> CoordinateSystem(const Vector& vector) {
+  assert(!vector.IsZero());
+
+  geometric nx, ny, nz;
+  if (std::abs(vector.x) > std::abs(vector.y)) {
+    geometric_t length = std::sqrt(vector.x * vector.x + vector.z * vector.z);
+    nx = -vector.z / length;
+    ny = 0.0;
+    nz = vector.x / length;
+  } else {
+    geometric_t length = std::sqrt(vector.y * vector.y + vector.z * vector.z);
+    nx = 0.0;
+    ny = vector.z / length;
+    nz = -vector.y / length;
+  }
+
+  Vector v1(nx, ny, nz);
+  Vector v2 = CrossProduct(vector, v1);
+
+  return {v1, v2};
+}
 
 }  // namespace iris

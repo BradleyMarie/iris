@@ -105,9 +105,7 @@ std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
 
   Vector perpendicular =
       CrossProduct(world_surface_normal, world_shading_normal);
-  if (perpendicular.x == static_cast<geometric_t>(0.0) &&
-      perpendicular.y == static_cast<geometric_t>(0.0) &&
-      perpendicular.z == static_cast<geometric_t>(0.0)) {
+  if (perpendicular.IsZero()) {
     return {world_shading_normal,
             {{NormalMap::Differentials::DX_DY, {dp_dx, dp_dy}}}};
   }

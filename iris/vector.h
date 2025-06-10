@@ -23,8 +23,12 @@ struct Vector final {
 #endif  // NDEBUG
 
   Vector(const Vector&) noexcept = default;
-
   bool operator==(const Vector&) const = default;
+
+  bool IsZero() const {
+    return x == static_cast<geometric>(0.0) &&
+           y == static_cast<geometric>(0.0) && z == static_cast<geometric>(0.0);
+  }
 
 #ifdef NDEBUG
   const geometric& operator[](size_t index) const {
@@ -130,32 +134,6 @@ static inline Vector Normalize(const Vector& vector,
   return vector / old_length;
 }
 
-static inline std::pair<Vector, Vector> CoordinateSystem(const Vector& vector) {
-  geometric nx, ny, nz;
-  if (std::abs(vector.x) > std::abs(vector.y)) {
-    geometric_t length = std::sqrt(vector.x * vector.x + vector.z * vector.z);
-    nx = -vector.z / length;
-    ny = 0.0;
-    nz = vector.x / length;
-  } else {
-    geometric_t length = std::sqrt(vector.y * vector.y + vector.z * vector.z);
-    nx = 0.0;
-    ny = vector.z / length;
-    nz = -vector.y / length;
-  }
-
-  Vector v1(nx, ny, nz);
-  Vector v2 = CrossProduct(vector, v1);
-
-  return {v1, v2};
-}
-
-inline Vector::Axis Vector::DiminishedAxis() const {
-  Axis smallest_axis = (std::abs(x) <= std::abs(y)) ? X_AXIS : Y_AXIS;
-  return std::abs((*this)[smallest_axis]) <= std::abs(z) ? smallest_axis
-                                                         : Z_AXIS;
-}
-
 inline Vector::Axis Vector::DominantAxis() const {
   Axis largest_axis = (std::abs(x) >= std::abs(y)) ? X_AXIS : Y_AXIS;
   return std::abs((*this)[largest_axis]) >= std::abs(z) ? largest_axis : Z_AXIS;
@@ -180,6 +158,8 @@ inline Vector Vector::AlignWith(const Vector& vector) const {
 
   return -*this;
 }
+
+std::pair<Vector, Vector> CoordinateSystem(const Vector& vector);
 
 }  // namespace iris
 

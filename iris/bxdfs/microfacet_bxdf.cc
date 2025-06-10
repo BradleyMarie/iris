@@ -34,13 +34,12 @@ std::optional<Vector> WeightedHalfAngle(const Vector& incoming,
   geometric_t y = incoming.y + outgoing.y * refractive_ratio;
   geometric_t z = incoming.z + outgoing.z * refractive_ratio;
 
-  if (x == static_cast<geometric_t>(0.0) &&
-      y == static_cast<geometric_t>(0.0) &&
-      z == static_cast<geometric_t>(0.0)) {
+  Vector weighted_half_angle(x, y, z);
+  if (weighted_half_angle.IsZero()) {
     return std::nullopt;
   }
 
-  return Normalize(Vector(x, y, z));
+  return Normalize(weighted_half_angle);
 }
 
 class Fresnel {

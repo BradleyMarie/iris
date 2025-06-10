@@ -14,11 +14,11 @@ TEST(VectorTest, Create) {
   EXPECT_EQ(3.0, vector.z);
 }
 
-TEST(VectorTest, Subscript) {
-  Vector vector(1.0, 2.0, 3.0);
-  EXPECT_EQ(1.0, vector[0]);
-  EXPECT_EQ(2.0, vector[1]);
-  EXPECT_EQ(3.0, vector[2]);
+TEST(VectorTest, IsZero) {
+  EXPECT_FALSE(Vector(1.0, 0.0, 0.0).IsZero());
+  EXPECT_FALSE(Vector(0.0, 1.0, 0.0).IsZero());
+  EXPECT_FALSE(Vector(0.0, 0.0, 1.0).IsZero());
+  EXPECT_TRUE(Vector(0.0, 0.0, 0.0).IsZero());
 }
 
 TEST(VectorTest, Length) {
@@ -30,6 +30,13 @@ TEST(VectorTest, Length) {
 
   Vector vector2(0.0, 0.0, 2.0);
   EXPECT_EQ(2.0, vector2.Length());
+}
+
+TEST(VectorTest, Subscript) {
+  Vector vector(1.0, 2.0, 3.0);
+  EXPECT_EQ(1.0, vector[0]);
+  EXPECT_EQ(2.0, vector[1]);
+  EXPECT_EQ(3.0, vector[2]);
 }
 
 TEST(VectorTest, Negate) {
@@ -111,12 +118,6 @@ TEST(VectorTest, CoordinateSystem) {
   std::pair<Vector, Vector> sys2 = CoordinateSystem(Vector(0.0, 0.0, 1.0));
   EXPECT_EQ(Vector(0.0, 1.0, 0.0), sys2.first);
   EXPECT_EQ(Vector(-1.0, 0.0, 0.0), sys2.second);
-}
-
-TEST(VectorTest, DiminishedAxis) {
-  EXPECT_EQ(Vector::X_AXIS, Vector(1.0, -2.0, 3.0).DiminishedAxis());
-  EXPECT_EQ(Vector::Y_AXIS, Vector(-2.0, 1.0, 3.0).DiminishedAxis());
-  EXPECT_EQ(Vector::Z_AXIS, Vector(3.0, -2.0, 1.0).DiminishedAxis());
 }
 
 TEST(VectorTest, DominantAxis) {
