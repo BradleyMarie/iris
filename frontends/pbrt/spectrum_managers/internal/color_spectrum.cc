@@ -1,5 +1,12 @@
 #include "frontends/pbrt/spectrum_managers/internal/color_spectrum.h"
 
+#include <array>
+
+#include "iris/color.h"
+#include "iris/float.h"
+#include "iris/reference_counted.h"
+#include "iris/spectrum.h"
+
 namespace iris {
 namespace pbrt_frontend {
 namespace spectrum_managers {

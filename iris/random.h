@@ -1,8 +1,6 @@
 #ifndef _IRIS_RANDOM_
 #define _IRIS_RANDOM_
 
-#include <cstdint>
-#include <limits>
 #include <memory>
 
 #include "iris/float.h"

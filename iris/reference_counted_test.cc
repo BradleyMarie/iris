@@ -2,9 +2,12 @@
 
 #include "googletest/include/gtest/gtest.h"
 
+namespace iris {
+namespace {
+
 const int kValue = 1337;
 
-class Sharable : public iris::ReferenceCountable {
+class Sharable : public ReferenceCountable {
  public:
   Sharable(const bool* allow_deletion, bool* deleted)
       : allow_deletion_(allow_deletion), deleted_(deleted) {
@@ -23,10 +26,10 @@ class Sharable : public iris::ReferenceCountable {
   bool* deleted_;
 };
 
-std::unique_ptr<iris::ReferenceCounted<Sharable>> MakeSharable(
+std::unique_ptr<ReferenceCounted<Sharable>> MakeSharable(
     const bool* allow_deletion, bool* deleted) {
-  return std::make_unique<iris::ReferenceCounted<Sharable>>(
-      std::make_unique<Sharable>(allow_deletion, deleted));
+  return std::make_unique<ReferenceCounted<Sharable>>(
+      MakeReferenceCounted<Sharable>(allow_deletion, deleted));
 }
 
 class Derived : public Sharable {
@@ -35,20 +38,21 @@ class Derived : public Sharable {
       : Sharable(allow_deletion, deleted) {}
 };
 
-std::unique_ptr<iris::ReferenceCounted<Derived>> MakeDerived(
+std::unique_ptr<ReferenceCounted<Derived>> MakeDerived(
     const bool* allow_deletion, bool* deleted) {
-  return std::make_unique<iris::ReferenceCounted<Derived>>(
-      std::make_unique<Derived>(allow_deletion, deleted));
+  return std::make_unique<ReferenceCounted<Derived>>(
+      MakeReferenceCounted<Derived>(allow_deletion, deleted));
 }
 
 TEST(ReferenceCountedTest, Empty) {
-  iris::ReferenceCounted<Sharable> ptr;
+  ReferenceCounted<Sharable> ptr;
   EXPECT_EQ(nullptr, ptr.Get());
 }
 
 TEST(ReferenceCountedTest, Construct) {
   bool allow_deletion = false, deleted = false;
-  auto ptr = MakeSharable(&allow_deletion, &deleted);
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr =
+      MakeSharable(&allow_deletion, &deleted);
   EXPECT_FALSE(deleted);
   allow_deletion = true;
   ptr.reset();
@@ -57,9 +61,11 @@ TEST(ReferenceCountedTest, Construct) {
 
 TEST(ReferenceCountedTest, CopyConstruct) {
   bool allow_deletion = false, deleted = false;
-  auto ptr = MakeSharable(&allow_deletion, &deleted);
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr =
+      MakeSharable(&allow_deletion, &deleted);
   EXPECT_FALSE(deleted);
-  auto ptr2 = std::make_unique<iris::ReferenceCounted<Sharable>>(*ptr);
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr2 =
+      std::make_unique<ReferenceCounted<Sharable>>(*ptr);
   ptr.reset();
   EXPECT_FALSE(deleted);
   allow_deletion = true;
@@ -69,10 +75,11 @@ TEST(ReferenceCountedTest, CopyConstruct) {
 
 TEST(ReferenceCountedTest, MoveConstruct) {
   bool allow_deletion = false, deleted = false;
-  auto ptr = MakeSharable(&allow_deletion, &deleted);
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr =
+      MakeSharable(&allow_deletion, &deleted);
   EXPECT_FALSE(deleted);
-  auto ptr2 =
-      std::make_unique<iris::ReferenceCounted<Sharable>>(std::move(*ptr));
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr2 =
+      std::make_unique<ReferenceCounted<Sharable>>(std::move(*ptr));
   allow_deletion = true;
   ptr2.reset();
   EXPECT_TRUE(deleted);
@@ -80,9 +87,9 @@ TEST(ReferenceCountedTest, MoveConstruct) {
 }
 
 TEST(ReferenceCountedTest, DoesNotIncrementEmpty) {
-  iris::ReferenceCounted<Sharable> empty;
-  iris::ReferenceCounted<Sharable> empty_copy(empty);
-  iris::ReferenceCounted<Sharable> moved(std::move(empty));
+  ReferenceCounted<Sharable> empty;
+  ReferenceCounted<Sharable> empty_copy(empty);
+  ReferenceCounted<Sharable> moved(std::move(empty));
   empty = empty_copy;
   empty_copy = std::move(moved);
   EXPECT_EQ(nullptr, empty.Get());
@@ -91,9 +98,11 @@ TEST(ReferenceCountedTest, DoesNotIncrementEmpty) {
 
 TEST(ReferenceCountedTest, CopyUpcast) {
   bool allow_deletion = false, deleted = false;
-  auto ptr = MakeDerived(&allow_deletion, &deleted);
+  std::unique_ptr<ReferenceCounted<Derived>> ptr =
+      MakeDerived(&allow_deletion, &deleted);
   EXPECT_FALSE(deleted);
-  auto ptr2 = std::make_unique<iris::ReferenceCounted<Sharable>>(*ptr);
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr2 =
+      std::make_unique<ReferenceCounted<Sharable>>(*ptr);
   ptr.reset();
   EXPECT_FALSE(deleted);
   allow_deletion = true;
@@ -103,10 +112,11 @@ TEST(ReferenceCountedTest, CopyUpcast) {
 
 TEST(ReferenceCountedTest, MoveUpcast) {
   bool allow_deletion = false, deleted = false;
-  auto ptr = MakeDerived(&allow_deletion, &deleted);
+  std::unique_ptr<ReferenceCounted<Derived>> ptr =
+      MakeDerived(&allow_deletion, &deleted);
   EXPECT_FALSE(deleted);
-  auto ptr2 =
-      std::make_unique<iris::ReferenceCounted<Sharable>>(std::move(*ptr));
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr2 =
+      std::make_unique<ReferenceCounted<Sharable>>(std::move(*ptr));
   allow_deletion = true;
   ptr2.reset();
   EXPECT_TRUE(deleted);
@@ -115,9 +125,11 @@ TEST(ReferenceCountedTest, MoveUpcast) {
 
 TEST(ReferenceCountedTest, CopyAssign) {
   bool allow_deletion = false, deleted = false;
-  auto ptr = MakeSharable(&allow_deletion, &deleted);
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr =
+      MakeSharable(&allow_deletion, &deleted);
   EXPECT_FALSE(deleted);
-  auto ptr2 = std::make_unique<iris::ReferenceCounted<Sharable>>();
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr2 =
+      std::make_unique<ReferenceCounted<Sharable>>();
   *ptr2 = *ptr;
   ptr.reset();
   EXPECT_FALSE(deleted);
@@ -128,9 +140,11 @@ TEST(ReferenceCountedTest, CopyAssign) {
 
 TEST(ReferenceCountedTest, MoveAssign) {
   bool allow_deletion = false, deleted = false;
-  auto ptr = MakeSharable(&allow_deletion, &deleted);
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr =
+      MakeSharable(&allow_deletion, &deleted);
   EXPECT_FALSE(deleted);
-  auto ptr2 = std::make_unique<iris::ReferenceCounted<Sharable>>();
+  std::unique_ptr<ReferenceCounted<Sharable>> ptr2 =
+      std::make_unique<ReferenceCounted<Sharable>>();
   *ptr2 = std::move(*ptr);
   allow_deletion = true;
   ptr2.reset();
@@ -139,44 +153,39 @@ TEST(ReferenceCountedTest, MoveAssign) {
 }
 
 TEST(ReferenceCountedTest, OperatorBool) {
-  iris::ReferenceCounted<Sharable> empty;
+  ReferenceCounted<Sharable> empty;
   EXPECT_FALSE(empty);
 
   bool allow_deletion = true, deleted = false;
-  auto ptr = iris::MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  ReferenceCounted<Sharable> ptr =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
   EXPECT_TRUE(ptr);
 }
 
 TEST(ReferenceCountedTest, OperatorArrow) {
   bool allow_deletion = true, deleted = false;
-  auto ptr = iris::MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  ReferenceCounted<Sharable> ptr =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
   EXPECT_TRUE(ptr);
   EXPECT_EQ(kValue, ptr->GetValue());
 }
 
 TEST(ReferenceCountedTest, OperatorDereference) {
   bool allow_deletion = true, deleted = false;
-  auto ptr = iris::MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  ReferenceCounted<Sharable> ptr =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
   EXPECT_TRUE(ptr);
   EXPECT_EQ(kValue, (*ptr).GetValue());
 }
 
-TEST(ReferenceCountedTest, Get) {
-  bool allow_deletion = true, deleted = false;
-  auto unique = std::make_unique<Sharable>(&allow_deletion, &deleted);
-  auto raw = unique.get();
-  iris::ReferenceCounted<Sharable> ptr(std::move(unique));
-  EXPECT_EQ(raw, ptr.Get());
-}
-
 TEST(ReferenceCountedTest, Swap) {
   bool allow_deletion = true, deleted = false;
-  auto unique0 = std::make_unique<Sharable>(&allow_deletion, &deleted);
-  auto raw0 = unique0.get();
-  iris::ReferenceCounted<Sharable> ptr0(std::move(unique0));
-  auto unique1 = std::make_unique<Sharable>(&allow_deletion, &deleted);
-  auto raw1 = unique1.get();
-  iris::ReferenceCounted<Sharable> ptr1(std::move(unique1));
+  ReferenceCounted<Sharable> ptr0 =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  const Sharable* raw0 = ptr0.Get();
+  ReferenceCounted<Sharable> ptr1 =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  const Sharable* raw1 = ptr1.Get();
   std::swap(ptr0, ptr1);
   EXPECT_EQ(raw0, ptr1.Get());
   EXPECT_EQ(raw1, ptr0.Get());
@@ -184,8 +193,9 @@ TEST(ReferenceCountedTest, Swap) {
 
 TEST(ReferenceCountedTest, Reset) {
   bool allow_deletion = true, deleted = false;
-  auto unique = std::make_unique<Sharable>(&allow_deletion, &deleted);
-  iris::ReferenceCounted<Sharable> ptr(std::move(unique));
+  ReferenceCounted<Sharable> ptr =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  EXPECT_NE(nullptr, ptr.Get());
   ptr.Reset();
   EXPECT_EQ(nullptr, ptr.Get());
   EXPECT_TRUE(deleted);
@@ -193,15 +203,17 @@ TEST(ReferenceCountedTest, Reset) {
 
 TEST(ReferenceCountedTest, Compare) {
   bool allow_deletion = true, deleted = false;
-  auto ptr0 = iris::MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
-  auto ptr1 = ptr0;
+  ReferenceCounted<Sharable> ptr0 =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  ReferenceCounted<Sharable> ptr1 = ptr0;
   EXPECT_EQ(ptr0, ptr1);
   EXPECT_LE(ptr0, ptr1);
   EXPECT_GE(ptr0, ptr1);
   EXPECT_FALSE(ptr0 < ptr1);
   EXPECT_FALSE(ptr0 > ptr1);
 
-  auto ptr2 = iris::MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  ReferenceCounted<Sharable> ptr2 =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
   EXPECT_NE(ptr0, ptr2);
   EXPECT_TRUE(ptr0 < ptr2 || ptr1 > ptr2);
   EXPECT_FALSE(ptr0 < ptr2 && ptr1 > ptr2);
@@ -210,13 +222,17 @@ TEST(ReferenceCountedTest, Compare) {
 }
 
 TEST(ReferenceCountedTest, Hash) {
-  std::hash<iris::ReferenceCounted<Sharable>> hasher;
+  std::hash<ReferenceCounted<Sharable>> hasher;
 
   bool allow_deletion = true, deleted = false;
-  auto ptr0 = iris::MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
-  iris::ReferenceCounted<Sharable> empty;
+  ReferenceCounted<Sharable> ptr0 =
+      MakeReferenceCounted<Sharable>(&allow_deletion, &deleted);
+  ReferenceCounted<Sharable> empty;
   EXPECT_NE(hasher(empty), hasher(ptr0));
 
-  auto ptr1 = ptr0;
+  ReferenceCounted<Sharable> ptr1 = ptr0;
   EXPECT_EQ(hasher(ptr0), hasher(ptr1));
 }
+
+}  // namespace
+}  // namespace iris

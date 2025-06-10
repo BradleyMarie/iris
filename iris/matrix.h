@@ -3,7 +3,6 @@
 
 #include <array>
 #include <expected>
-#include <string_view>
 #include <utility>
 
 #include "iris/bounding_box.h"
@@ -16,6 +15,7 @@
 namespace iris {
 
 struct Matrix final {
+ public:
   Matrix(const Matrix& matrix) noexcept = default;
 
   static const Matrix& Identity();
@@ -80,6 +80,9 @@ struct Matrix final {
  public:
   const std::array<std::array<geometric, 4>, 4> m;
   const std::array<std::array<geometric, 4>, 4> i;
+
+ private:
+  static const geometric_t rounding_error_[4];
 };
 
 bool operator==(const Matrix& left, const Matrix& right);
@@ -137,17 +140,17 @@ inline std::pair<Point, PositionError> Matrix::MultiplyWithError(
   geometric_t err_x = std::abs(m[0][0] * point.x) +
                       std::abs(m[0][1] * point.y) +
                       std::abs(m[0][2] * point.z) + std::abs(m[0][3]);
-  err_x *= RoundingError(3);
+  err_x *= rounding_error_[3];
 
   geometric_t err_y = std::abs(m[1][0] * point.x) +
                       std::abs(m[1][1] * point.y) +
                       std::abs(m[1][2] * point.z) + std::abs(m[1][3]);
-  err_y *= RoundingError(3);
+  err_y *= rounding_error_[3];
 
   geometric_t err_z = std::abs(m[2][0] * point.x) +
                       std::abs(m[2][1] * point.y) +
                       std::abs(m[2][2] * point.z) + std::abs(m[2][3]);
-  err_z *= RoundingError(3);
+  err_z *= rounding_error_[3];
 
   geometric_t err_w = 0.0;
   if (w != static_cast<geometric_t>(1.0)) {
@@ -157,7 +160,7 @@ inline std::pair<Point, PositionError> Matrix::MultiplyWithError(
 
     err_w = std::abs(m[3][0] * point.x) + std::abs(m[3][1] * point.y) +
             std::abs(m[3][2] * point.z) + std::abs(m[3][3]);
-    err_w *= RoundingError(3);
+    err_w *= rounding_error_[3];
 
     geometric_t safe_err_x = static_cast<iris::geometric>(0.0);
     if (x != static_cast<iris::geometric>(0.0)) {
@@ -175,11 +178,11 @@ inline std::pair<Point, PositionError> Matrix::MultiplyWithError(
     }
 
     err_x = std::abs(new_x) * (safe_err_x + std::abs(err_w / w)) +
-            std::abs(new_x) * RoundingError(1);
+            std::abs(new_x) * rounding_error_[1];
     err_y = std::abs(new_y) * (safe_err_y + std::abs(err_w / w)) +
-            std::abs(new_y) * RoundingError(1);
+            std::abs(new_y) * rounding_error_[1];
     err_z = std::abs(new_z) * (safe_err_z + std::abs(err_w / w)) +
-            std::abs(new_z) * RoundingError(1);
+            std::abs(new_z) * rounding_error_[1];
 
     x = new_x;
     y = new_y;
@@ -188,7 +191,7 @@ inline std::pair<Point, PositionError> Matrix::MultiplyWithError(
 
   if (existing_error) {
     geometric_t relative_error =
-        static_cast<geometric_t>(1.0) + RoundingError(3);
+        static_cast<geometric_t>(1.0) + rounding_error_[3];
 
     geometric_t existing_err_x = std::abs(m[0][0] * existing_error->x) +
                                  std::abs(m[0][1] * existing_error->y) +
@@ -207,7 +210,7 @@ inline std::pair<Point, PositionError> Matrix::MultiplyWithError(
 
     if (w != static_cast<geometric_t>(1.0)) {
       relative_error = (static_cast<geometric_t>(1.0) + err_w / w) *
-                       (static_cast<geometric_t>(1.0) + RoundingError(1));
+                       (static_cast<geometric_t>(1.0) + rounding_error_[1]);
 
       existing_err_x = std::abs(existing_err_x / w);
       existing_err_x *= relative_error;
@@ -241,17 +244,17 @@ inline std::pair<Point, PositionError> Matrix::InverseMultiplyWithError(
   geometric_t err_x = std::abs(i[0][0] * point.x) +
                       std::abs(i[0][1] * point.y) +
                       std::abs(i[0][2] * point.z) + std::abs(i[0][3]);
-  err_x *= RoundingError(3);
+  err_x *= rounding_error_[3];
 
   geometric_t err_y = std::abs(i[1][0] * point.x) +
                       std::abs(i[1][1] * point.y) +
                       std::abs(i[1][2] * point.z) + std::abs(i[1][3]);
-  err_y *= RoundingError(3);
+  err_y *= rounding_error_[3];
 
   geometric_t err_z = std::abs(i[2][0] * point.x) +
                       std::abs(i[2][1] * point.y) +
                       std::abs(i[2][2] * point.z) + std::abs(i[2][3]);
-  err_z *= RoundingError(3);
+  err_z *= rounding_error_[3];
 
   geometric_t err_w = 0.0;
   if (w != static_cast<geometric_t>(1.0)) {
@@ -261,7 +264,7 @@ inline std::pair<Point, PositionError> Matrix::InverseMultiplyWithError(
 
     err_w = std::abs(i[3][0] * point.x) + std::abs(i[3][1] * point.y) +
             std::abs(i[3][2] * point.z) + std::abs(i[3][3]);
-    err_w *= RoundingError(3);
+    err_w *= rounding_error_[3];
 
     geometric_t safe_err_x = static_cast<iris::geometric>(0.0);
     if (x != static_cast<iris::geometric>(0.0)) {
@@ -279,11 +282,11 @@ inline std::pair<Point, PositionError> Matrix::InverseMultiplyWithError(
     }
 
     err_x = std::abs(new_x) * (safe_err_x + std::abs(err_w / w)) +
-            std::abs(new_x) * RoundingError(1);
+            std::abs(new_x) * rounding_error_[1];
     err_y = std::abs(new_y) * (safe_err_y + std::abs(err_w / w)) +
-            std::abs(new_y) * RoundingError(1);
+            std::abs(new_y) * rounding_error_[1];
     err_z = std::abs(new_z) * (safe_err_z + std::abs(err_w / w)) +
-            std::abs(new_z) * RoundingError(1);
+            std::abs(new_z) * rounding_error_[1];
 
     x = new_x;
     y = new_y;
@@ -292,7 +295,7 @@ inline std::pair<Point, PositionError> Matrix::InverseMultiplyWithError(
 
   if (existing_error) {
     geometric_t relative_error =
-        static_cast<geometric_t>(1.0) + RoundingError(3);
+        static_cast<geometric_t>(1.0) + rounding_error_[3];
 
     geometric_t existing_err_x = std::abs(i[0][0] * existing_error->x) +
                                  std::abs(i[0][1] * existing_error->y) +
@@ -311,7 +314,7 @@ inline std::pair<Point, PositionError> Matrix::InverseMultiplyWithError(
 
     if (w != static_cast<geometric_t>(1.0)) {
       relative_error = (static_cast<geometric_t>(1.0) + err_w / w) *
-                       (static_cast<geometric_t>(1.0) + RoundingError(1));
+                       (static_cast<geometric_t>(1.0) + rounding_error_[1]);
 
       existing_err_x = std::abs(existing_err_x / w);
       existing_err_x *= relative_error;

@@ -1,5 +1,6 @@
 #include "iris/testing/ray_tracer.h"
 
+#include <cassert>
 #include <cmath>
 #include <functional>
 #include <memory>

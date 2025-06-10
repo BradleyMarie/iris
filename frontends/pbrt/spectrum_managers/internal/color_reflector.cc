@@ -1,6 +1,12 @@
 #include "frontends/pbrt/spectrum_managers/internal/color_reflector.h"
 
 #include <algorithm>
+#include <array>
+
+#include "iris/color.h"
+#include "iris/float.h"
+#include "iris/reference_counted.h"
+#include "iris/reflector.h"
 
 namespace iris {
 namespace pbrt_frontend {

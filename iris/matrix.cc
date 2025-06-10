@@ -1,9 +1,14 @@
 #include "iris/matrix.h"
 
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstring>
+#include <expected>
 #include <optional>
+
+#include "iris/bounding_box.h"
+#include "iris/float.h"
 
 namespace iris {
 namespace {
@@ -582,5 +587,8 @@ BoundingBox Matrix::Multiply(const BoundingBox& bounding_box) const {
                      Multiply(bottom3), Multiply(upper0), Multiply(upper1),
                      Multiply(upper2), Multiply(upper3));
 }
+
+const geometric_t Matrix::rounding_error_[4] = {
+    RoundingError(0), RoundingError(1), RoundingError(2), RoundingError(3)};
 
 }  // namespace iris

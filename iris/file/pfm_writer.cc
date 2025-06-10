@@ -29,12 +29,16 @@ bool WritePfm(const Framebuffer& framebuffer, Color::Space color_space,
 
   for (size_t y = 0; y < size_y; y++) {
     for (size_t x = 0; x < size_x; x++) {
-      auto color = framebuffer.Get(y, x).ConvertTo(color_space);
-      for (size_t index = 0; index < 3; index++) {
-        float component = static_cast<float>(color[index]);
-        output.write(reinterpret_cast<char*>(&component), 4);
-        static_assert(sizeof(float) == 4);
-      }
+      Color color = framebuffer.Get(y, x).ConvertTo(color_space);
+
+      output.write(reinterpret_cast<const char*>(&color.c0), 4);
+      static_assert(sizeof(float) == 4);
+
+      output.write(reinterpret_cast<const char*>(&color.c1), 4);
+      static_assert(sizeof(float) == 4);
+
+      output.write(reinterpret_cast<const char*>(&color.c2), 4);
+      static_assert(sizeof(float) == 4);
     }
   }
 

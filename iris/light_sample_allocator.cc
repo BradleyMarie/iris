@@ -1,6 +1,11 @@
 #include "iris/light_sample_allocator.h"
 
+#include <optional>
+
+#include "iris/float.h"
 #include "iris/internal/arena.h"
+#include "iris/light.h"
+#include "iris/light_sample.h"
 
 namespace iris {
 

@@ -1,11 +1,18 @@
 #include "iris/bsdf.h"
 
+#include <optional>
+#include <variant>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bxdf.h"
 #include "iris/bxdfs/mock_bxdf.h"
+#include "iris/float.h"
 #include "iris/internal/arena.h"
 #include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
+#include "iris/sampler.h"
 #include "iris/testing/spectral_allocator.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace {

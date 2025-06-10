@@ -1,31 +1,29 @@
 #ifndef _IRIS_POINT_
 #define _IRIS_POINT_
 
-#include <cassert>
-#include <cmath>
-
 #include "iris/float.h"
 #include "iris/vector.h"
 
 namespace iris {
 
 struct Point final {
-  constexpr explicit Point(geometric x, geometric y, geometric z) noexcept
-      : x(x), y(y), z(z) {
-    assert(std::isfinite(x));
-    assert(std::isfinite(y));
-    assert(std::isfinite(z));
-  }
+#ifdef NDEBUG
+  Point(geometric x, geometric y, geometric z) noexcept : x(x), y(y), z(z) {}
+#else
+  Point(geometric x, geometric y, geometric z) noexcept;
+#endif  // NDEBUG
 
   Point(const Point&) noexcept = default;
-
   bool operator==(const Point&) const = default;
 
+#ifdef NDEBUG
   const geometric& operator[](size_t index) const {
-    assert(index < 3);
     const geometric* as_array = &x;
     return as_array[index];
   }
+#else
+  const geometric& operator[](size_t index) const;
+#endif  // NDEBUG
 
   const geometric x;
   const geometric y;

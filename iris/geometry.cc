@@ -1,14 +1,27 @@
 #include "iris/geometry.h"
 
+#include <optional>
+#include <variant>
+
+#include "iris/emissive_material.h"
+#include "iris/float.h"
+#include "iris/hit.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
 #include "iris/internal/hit.h"
+#include "iris/material.h"
+#include "iris/point.h"
+#include "iris/sampler.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 
 Hit* Geometry::Trace(HitAllocator& hit_allocator) const {
-  auto* result = Trace(hit_allocator.ray_, hit_allocator);
+  Hit* result = Trace(hit_allocator.ray_, hit_allocator);
 
-  for (auto* hit_list = result; hit_list; hit_list = hit_list->next) {
-    auto* full_hit = static_cast<internal::Hit*>(hit_list);
+  for (Hit* hit_list = result; hit_list; hit_list = hit_list->next) {
+    internal::Hit* full_hit = static_cast<internal::Hit*>(hit_list);
     if (!full_hit->geometry) {
       full_hit->geometry = this;
     }

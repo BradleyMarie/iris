@@ -1,6 +1,7 @@
 #ifndef _IRIS_HIT_POINT_
 #define _IRIS_HIT_POINT_
 
+#include "iris/float.h"
 #include "iris/point.h"
 #include "iris/position_error.h"
 #include "iris/ray.h"

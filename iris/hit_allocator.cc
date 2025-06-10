@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+#include "iris/float.h"
+#include "iris/hit.h"
+#include "iris/integer.h"
 #include "iris/internal/hit_arena.h"
 
 namespace iris {

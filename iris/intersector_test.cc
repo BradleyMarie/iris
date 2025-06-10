@@ -4,31 +4,44 @@
 #include <memory>
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/hit.h"
+#include "iris/hit_allocator.h"
 #include "iris/internal/hit_arena.h"
+#include "iris/matrix.h"
+#include "iris/point.h"
+#include "iris/ray.h"
+#include "iris/vector.h"
 
-static const iris::Ray ray(iris::Point(0.0, 0.0, 0.0),
-                           iris::Vector(1.0, 1.0, 1.0));
+namespace iris {
+namespace {
 
-std::unique_ptr<iris::geometry::MockBasicGeometry> MakeMockGeometry(
-    iris::geometric_t distance, iris::geometric_t error = 0.0,
-    const iris::Ray& transformed_ray = ray) {
-  auto result = std::make_unique<iris::geometry::MockBasicGeometry>();
-  EXPECT_CALL(*result, Trace(transformed_ray, testing::_))
-      .WillRepeatedly(
-          testing::Invoke([distance, error](const iris::Ray& trace_ray,
-                                            iris::HitAllocator& hit_allocator) {
+using ::iris::geometry::MockBasicGeometry;
+using ::testing::_;
+using ::testing::Invoke;
+
+static const Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
+
+std::unique_ptr<MockBasicGeometry> MakeMockGeometry(
+    geometric_t distance, geometric_t error = 0.0,
+    const Ray& transformed_ray = ray) {
+  std::unique_ptr<MockBasicGeometry> result =
+      std::make_unique<MockBasicGeometry>();
+  EXPECT_CALL(*result, Trace(transformed_ray, _))
+      .WillRepeatedly(Invoke(
+          [distance, error](const Ray& trace_ray, HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, distance, error, 2, 3);
           }));
   return result;
 }
 
 TEST(InspectorTest, Initialize) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
@@ -36,13 +49,13 @@ TEST(InspectorTest, Initialize) {
 }
 
 TEST(IntersectorTest, TooClose) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(0.0);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.0);
   EXPECT_FALSE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -51,13 +64,13 @@ TEST(IntersectorTest, TooClose) {
 }
 
 TEST(IntersectorTest, TooCloseAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(0.5, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -66,13 +79,13 @@ TEST(IntersectorTest, TooCloseAfterError) {
 }
 
 TEST(IntersectorTest, TooFar) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(3.0);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(3.0);
   EXPECT_FALSE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -81,13 +94,13 @@ TEST(IntersectorTest, TooFar) {
 }
 
 TEST(IntersectorTest, TooFarAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(1.5, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -96,19 +109,19 @@ TEST(IntersectorTest, TooFarAfterError) {
 }
 
 TEST(IntersectorTest, Hits) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(1.0, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -120,19 +133,19 @@ TEST(IntersectorTest, Hits) {
 }
 
 TEST(IntersectorTest, HitsAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry = MakeMockGeometry(1.0, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_TRUE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -144,22 +157,22 @@ TEST(IntersectorTest, HitsAny) {
 }
 
 TEST(IntersectorTest, HitsIgnoreFarther) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 = MakeMockGeometry(1.0);
+  std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(1.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0));
 
-  auto geometry1 = MakeMockGeometry(2.0);
+  std::unique_ptr<MockBasicGeometry> geometry1 = MakeMockGeometry(2.0);
   EXPECT_FALSE(intersector.Intersect(*geometry1));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -171,25 +184,25 @@ TEST(IntersectorTest, HitsIgnoreFarther) {
 }
 
 TEST(IntersectorTest, KeepsCloser) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 = MakeMockGeometry(2.0);
+  std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 = MakeMockGeometry(1.0);
+  std::unique_ptr<MockBasicGeometry> geometry1 = MakeMockGeometry(1.0);
   EXPECT_FALSE(intersector.Intersect(*geometry1));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -201,25 +214,25 @@ TEST(IntersectorTest, KeepsCloser) {
 }
 
 TEST(IntersectorTest, KeepsCloserAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry0 = MakeMockGeometry(2.0);
+  std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_TRUE(intersector.Intersect(*geometry0));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 = MakeMockGeometry(1.0);
+  std::unique_ptr<MockBasicGeometry> geometry1 = MakeMockGeometry(1.0);
   EXPECT_TRUE(intersector.Intersect(*geometry1));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -230,17 +243,16 @@ TEST(IntersectorTest, KeepsCloserAny) {
   EXPECT_EQ(ray, full_hit->model_ray.value());
 }
 
-const static iris::Matrix model_to_world =
-    iris::Matrix::Translation(1.0, 1.0, 1.0).value();
+const static Matrix model_to_world = Matrix::Translation(1.0, 1.0, 1.0).value();
 
 TEST(IntersectorTest, TransformedTooClose) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, model_to_world));
 
@@ -250,13 +262,13 @@ TEST(IntersectorTest, TransformedTooClose) {
 }
 
 TEST(IntersectorTest, TransformedTooCloseAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, model_to_world));
 
@@ -266,13 +278,13 @@ TEST(IntersectorTest, TransformedTooCloseAfterError) {
 }
 
 TEST(IntersectorTest, TransformedTooFar) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(3.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, model_to_world));
 
@@ -282,13 +294,13 @@ TEST(IntersectorTest, TransformedTooFar) {
 }
 
 TEST(IntersectorTest, TransformedTooFarAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, model_to_world));
 
@@ -298,20 +310,20 @@ TEST(IntersectorTest, TransformedTooFarAfterError) {
 }
 
 TEST(IntersectorTest, TransformedHits) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -324,20 +336,20 @@ TEST(IntersectorTest, TransformedHits) {
 }
 
 TEST(IntersectorTest, TransformedHitsAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_TRUE(intersector.Intersect(*geometry, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -350,24 +362,24 @@ TEST(IntersectorTest, TransformedHitsAny) {
 }
 
 TEST(IntersectorTest, TransformedHitsIgnoreFarther) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 =
+  std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry0, model_to_world));
 
-  auto geometry1 =
+  std::unique_ptr<MockBasicGeometry> geometry1 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry1, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -380,27 +392,27 @@ TEST(IntersectorTest, TransformedHitsIgnoreFarther) {
 }
 
 TEST(IntersectorTest, TransformedKeepsCloser) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 =
+  std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry0, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 =
+  std::unique_ptr<MockBasicGeometry> geometry1 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry1, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -413,27 +425,27 @@ TEST(IntersectorTest, TransformedKeepsCloser) {
 }
 
 TEST(IntersectorTest, TransformedKeepsCloserAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry0 =
+  std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_TRUE(intersector.Intersect(*geometry0, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 =
+  std::unique_ptr<MockBasicGeometry> geometry1 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_TRUE(intersector.Intersect(*geometry1, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -446,13 +458,13 @@ TEST(IntersectorTest, TransformedKeepsCloserAny) {
 }
 
 TEST(IntersectorTest, MatrixPointerTooClose) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(0.0);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.0);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -461,13 +473,13 @@ TEST(IntersectorTest, MatrixPointerTooClose) {
 }
 
 TEST(IntersectorTest, MatrixPointerTooCloseAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(0.5, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -476,13 +488,13 @@ TEST(IntersectorTest, MatrixPointerTooCloseAfterError) {
 }
 
 TEST(IntersectorTest, MatrixPointerTooFar) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(3.0);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(3.0);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -491,13 +503,13 @@ TEST(IntersectorTest, MatrixPointerTooFar) {
 }
 
 TEST(IntersectorTest, MatrixPointerTooFarAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(1.5, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(nullptr, closest_hit);
@@ -506,19 +518,19 @@ TEST(IntersectorTest, MatrixPointerTooFarAfterError) {
 }
 
 TEST(IntersectorTest, MatrixPointerHits) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry = MakeMockGeometry(1.0, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -530,19 +542,19 @@ TEST(IntersectorTest, MatrixPointerHits) {
 }
 
 TEST(IntersectorTest, MatrixPointerHitsAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry = MakeMockGeometry(1.0, 0.5);
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_TRUE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -554,22 +566,22 @@ TEST(IntersectorTest, MatrixPointerHitsAny) {
 }
 
 TEST(IntersectorTest, MatrixPointerHitsIgnoreFarther) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 = MakeMockGeometry(1.0);
+  std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(1.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0, nullptr));
 
-  auto geometry1 = MakeMockGeometry(2.0);
+  std::unique_ptr<MockBasicGeometry> geometry1 = MakeMockGeometry(2.0);
   EXPECT_FALSE(intersector.Intersect(*geometry1, nullptr));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -581,25 +593,25 @@ TEST(IntersectorTest, MatrixPointerHitsIgnoreFarther) {
 }
 
 TEST(IntersectorTest, MatrixPointerKeepsCloser) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 = MakeMockGeometry(2.0);
+  std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 = MakeMockGeometry(1.0);
+  std::unique_ptr<MockBasicGeometry> geometry1 = MakeMockGeometry(1.0);
   EXPECT_FALSE(intersector.Intersect(*geometry1, nullptr));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -611,25 +623,25 @@ TEST(IntersectorTest, MatrixPointerKeepsCloser) {
 }
 
 TEST(IntersectorTest, MatrixPointerKeepsCloserAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry0 = MakeMockGeometry(2.0);
+  std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_TRUE(intersector.Intersect(*geometry0));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 = MakeMockGeometry(1.0);
+  std::unique_ptr<MockBasicGeometry> geometry1 = MakeMockGeometry(1.0);
   EXPECT_TRUE(intersector.Intersect(*geometry1, nullptr));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -641,13 +653,13 @@ TEST(IntersectorTest, MatrixPointerKeepsCloserAny) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedTooClose) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, &model_to_world));
 
@@ -657,13 +669,13 @@ TEST(IntersectorTest, MatrixPointerTransformedTooClose) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedTooCloseAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, &model_to_world));
 
@@ -673,13 +685,13 @@ TEST(IntersectorTest, MatrixPointerTransformedTooCloseAfterError) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedTooFar) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(3.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, &model_to_world));
 
@@ -689,13 +701,13 @@ TEST(IntersectorTest, MatrixPointerTransformedTooFar) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedTooFarAfterError) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, &model_to_world));
 
@@ -705,20 +717,20 @@ TEST(IntersectorTest, MatrixPointerTransformedTooFarAfterError) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedHits) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -731,20 +743,20 @@ TEST(IntersectorTest, MatrixPointerTransformedHits) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedHitsAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry =
+  std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_TRUE(intersector.Intersect(*geometry, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.5, full_hit->distance_error);
@@ -757,24 +769,24 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsAny) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedHitsIgnoreFarther) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 =
+  std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry0, &model_to_world));
 
-  auto geometry1 =
+  std::unique_ptr<MockBasicGeometry> geometry1 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry1, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -787,27 +799,27 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsIgnoreFarther) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedKeepsCloser) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/false);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/false);
 
-  auto geometry0 =
+  std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry0, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 =
+  std::unique_ptr<MockBasicGeometry> geometry1 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_FALSE(intersector.Intersect(*geometry1, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -820,27 +832,27 @@ TEST(IntersectorTest, MatrixPointerTransformedKeepsCloser) {
 }
 
 TEST(IntersectorTest, MatrixPointerTransformedKeepsCloserAny) {
-  auto arena = iris::internal::HitArena();
+  internal::HitArena arena;
 
-  iris::Hit* closest_hit = nullptr;
-  iris::Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                                /*find_any_hit=*/true);
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
+                          /*find_any_hit=*/true);
 
-  auto geometry0 =
+  std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_TRUE(intersector.Intersect(*geometry0, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(2.0, intersector.MaximumDistance());
 
-  auto geometry1 =
+  std::unique_ptr<MockBasicGeometry> geometry1 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
   EXPECT_TRUE(intersector.Intersect(*geometry1, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
   EXPECT_EQ(1.0, intersector.MaximumDistance());
 
-  auto* full_hit = static_cast<iris::internal::Hit*>(closest_hit);
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
   EXPECT_EQ(0.0, full_hit->distance_error);
@@ -851,3 +863,6 @@ TEST(IntersectorTest, MatrixPointerTransformedKeepsCloserAny) {
   EXPECT_EQ(model_to_world.InverseMultiplyWithError(ray),
             full_hit->model_ray.value());
 }
+
+}  // namespace
+}  // namespace iris

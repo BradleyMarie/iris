@@ -1,5 +1,8 @@
 #include "iris/light_sampler.h"
 
+#include "iris/light_sample.h"
+#include "iris/point.h"
+
 namespace iris {
 
 LightSample* LightSampler::Sample(const Point& hit_point) {

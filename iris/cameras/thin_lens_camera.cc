@@ -1,5 +1,6 @@
 #include "iris/cameras/thin_lens_camera.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <numbers>

@@ -8,10 +8,9 @@
 namespace iris {
 
 struct RayDifferential final : public Ray {
-  constexpr explicit RayDifferential(const Ray& base) noexcept : Ray(base) {}
+  explicit RayDifferential(const Ray& base) noexcept : Ray(base) {}
 
-  constexpr explicit RayDifferential(const Ray& base, const Ray& dx,
-                                     const Ray& dy) noexcept
+  RayDifferential(const Ray& base, const Ray& dx, const Ray& dy) noexcept
       : Ray(base), differentials(Differentials{dx, dy}) {}
 
   RayDifferential(const RayDifferential&) noexcept = default;
@@ -29,7 +28,7 @@ struct RayDifferential final : public Ray {
 };
 
 static inline RayDifferential Normalize(const RayDifferential& ray) {
-  auto base = Normalize(static_cast<const Ray&>(ray));
+  Ray base = Normalize(static_cast<const Ray&>(ray));
   if (!ray.differentials.has_value()) {
     return RayDifferential(base);
   }

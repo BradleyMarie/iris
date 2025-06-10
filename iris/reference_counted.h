@@ -1,10 +1,7 @@
 #ifndef _IRIS_REFERENCE_COUNTED_
 #define _IRIS_REFERENCE_COUNTED_
 
-#include <algorithm>
 #include <concepts>
-#include <functional>
-#include <memory>
 #include <type_traits>
 
 #include "iris/reference_countable.h"
@@ -15,8 +12,6 @@ template <typename T>
   requires std::derived_from<T, ReferenceCountable>
 class ReferenceCounted final {
  public:
-  ReferenceCounted(std::unique_ptr<T> value) noexcept : ptr_(value.release()) {}
-
   ReferenceCounted() noexcept : ptr_(nullptr) {}
 
   ReferenceCounted(const ReferenceCounted& value) noexcept : ptr_(value.ptr_) {
@@ -61,7 +56,12 @@ class ReferenceCounted final {
   const T* operator->() const noexcept { return ptr_; }
   const T& operator*() const noexcept { return *ptr_; }
 
-  void Swap(ReferenceCounted& other) noexcept { std::swap(ptr_, other.ptr_); }
+  void Swap(ReferenceCounted& other) noexcept {
+    T* temp = ptr_;
+    ptr_ = other.ptr_;
+    other.ptr_ = temp;
+  }
+
   const T* Get() const noexcept { return ptr_; }
 
   void Reset() {
@@ -70,6 +70,8 @@ class ReferenceCounted final {
   }
 
  private:
+  ReferenceCounted(T* value) noexcept : ptr_(value) {}
+
   void MaybeIncrement() {
     if (ptr_) {
       ptr_->Increment();
@@ -84,17 +86,23 @@ class ReferenceCounted final {
 
   T* ptr_;
 
-  template <class U>
+  template <typename U>
     requires std::derived_from<U, ReferenceCountable>
   friend class ReferenceCounted;
+
+  template <typename U, typename... Args>
+    requires std::derived_from<U, ReferenceCountable>
+  friend ReferenceCounted<U> MakeReferenceCounted(Args&&... args);
 };
 
 template <typename T, typename... Args>
+  requires std::derived_from<T, ReferenceCountable>
 ReferenceCounted<T> MakeReferenceCounted(Args&&... args) {
-  return ReferenceCounted<T>(std::make_unique<T>(std::forward<Args>(args)...));
+  return ReferenceCounted<T>(new T(std::forward<Args>(args)...));
 }
 
 template <typename T>
+  requires std::derived_from<T, ReferenceCountable>
 void swap(ReferenceCounted<T>& lhs, ReferenceCounted<T>& rhs) noexcept {
   lhs.Swap(rhs);
 }
@@ -104,12 +112,14 @@ void swap(ReferenceCounted<T>& lhs, ReferenceCounted<T>& rhs) noexcept {
 namespace std {
 
 template <typename T>
+  requires std::derived_from<T, iris::ReferenceCountable>
 void swap(iris::ReferenceCounted<T>& lhs,
           iris::ReferenceCounted<T>& rhs) noexcept {
   lhs.Swap(rhs);
 }
 
 template <typename T>
+  requires std::derived_from<T, iris::ReferenceCountable>
 struct hash<iris::ReferenceCounted<T>> {
   std::size_t operator()(
       const iris::ReferenceCounted<T>& value) const noexcept {

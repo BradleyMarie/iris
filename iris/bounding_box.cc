@@ -1,5 +1,9 @@
 #include "iris/bounding_box.h"
 
+#include <span>
+
+#include "iris/point.h"
+
 namespace iris {
 
 BoundingBox::Builder::Builder()
@@ -49,7 +53,7 @@ Point BoundingBox::Min(std::span<const Point> points) {
   geometric min_x = std::numeric_limits<geometric>::infinity();
   geometric min_y = std::numeric_limits<geometric>::infinity();
   geometric min_z = std::numeric_limits<geometric>::infinity();
-  for (const auto& point : points) {
+  for (const Point& point : points) {
     min_x = std::min(min_x, point.x);
     min_y = std::min(min_y, point.y);
     min_z = std::min(min_z, point.z);
@@ -66,7 +70,7 @@ Point BoundingBox::Max(std::span<const Point> points) {
   geometric max_x = -std::numeric_limits<geometric>::infinity();
   geometric max_y = -std::numeric_limits<geometric>::infinity();
   geometric max_z = -std::numeric_limits<geometric>::infinity();
-  for (const auto& point : points) {
+  for (const Point& point : points) {
     max_x = std::max(max_x, point.x);
     max_y = std::max(max_y, point.y);
     max_z = std::max(max_z, point.z);

@@ -3,7 +3,6 @@
 
 #include <atomic>
 #include <concepts>
-#include <cstdint>
 
 namespace iris {
 
@@ -12,7 +11,7 @@ class ReferenceCountable {
   ReferenceCountable() noexcept : reference_count_(1) {}
 
  private:
-  typedef uint32_t reference_count_t;
+  typedef unsigned reference_count_t;
 
   void Increment() noexcept;
   bool Decrement() noexcept;

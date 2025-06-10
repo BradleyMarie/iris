@@ -37,10 +37,7 @@ class MetalMaterial final : public Material {
         k_conductor_(std::move(k_conductor)),
         roughness_u_(std::move(roughness_u)),
         roughness_v_(std::move(roughness_v)),
-        remap_roughness_(remap_roughness) {
-    assert(eta_dielectric_);
-    assert(eta_conductor_);
-  }
+        remap_roughness_(remap_roughness) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,

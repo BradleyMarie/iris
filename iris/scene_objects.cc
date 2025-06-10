@@ -1,9 +1,20 @@
 #include "iris/scene_objects.h"
 
+#include <algorithm>
+#include <cassert>
+#include <map>
 #include <ranges>
+#include <utility>
+#include <vector>
 
+#include "iris/bounding_box.h"
+#include "iris/environmental_light.h"
+#include "iris/geometry.h"
 #include "iris/internal/area_light.h"
 #include "iris/internal/environmental_light.h"
+#include "iris/light.h"
+#include "iris/matrix.h"
+#include "iris/reference_counted.h"
 
 namespace iris {
 namespace {
@@ -115,6 +126,22 @@ SceneObjects SceneObjects::Builder::Build() {
   bounds_builder_.Reset();
   return result;
 }
+
+#ifndef NDEBUG
+
+std::pair<const Geometry&, const Matrix*> SceneObjects::GetGeometry(
+    size_t index) const noexcept {
+  assert(index < geometry_.size());
+  return std::pair<const Geometry&, const Matrix*>(*geometry_[index].first,
+                                                   geometry_[index].second);
+}
+
+const Light& SceneObjects::GetLight(size_t index) const noexcept {
+  assert(index < lights_.size());
+  return *lights_[index];
+}
+
+#endif  // NDEBUG
 
 void SceneObjects::Reorder(std::vector<size_t> new_geometry_positions,
                            std::vector<size_t> new_light_positions) noexcept {

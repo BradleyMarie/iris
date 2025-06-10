@@ -2,52 +2,55 @@
 
 #include "googletest/include/gtest/gtest.h"
 
+namespace iris {
+namespace {
+
 TEST(BoundingBoxBuilderTest, Empty) {
-  iris::BoundingBox::Builder builder;
+  BoundingBox::Builder builder;
   EXPECT_TRUE(builder.Build().Empty());
 }
 
 TEST(BoundingBoxBuilderTest, OnePoint) {
-  iris::Point point(0.0, 1.0, 2.0);
-  iris::BoundingBox::Builder builder;
+  Point point(0.0, 1.0, 2.0);
+  BoundingBox::Builder builder;
   builder.Add(point);
   EXPECT_TRUE(builder.Build().Empty());
 }
 
 TEST(BoundingBoxBuilderTest, TwoPoints) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(1.0, 2.0, 3.0);
-  iris::BoundingBox::Builder builder;
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(1.0, 2.0, 3.0);
+  BoundingBox::Builder builder;
   builder.Add(point0);
   builder.Add(point1);
-  auto bounds = builder.Build();
+  BoundingBox bounds = builder.Build();
   EXPECT_EQ(point0, bounds.lower);
   EXPECT_EQ(point1, bounds.upper);
 }
 
 TEST(BoundingBoxBuilderTest, AddEmptyBounds) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(1.0, 2.0, 3.0);
-  iris::BoundingBox::Builder builder;
-  builder.Add(iris::BoundingBox(point0, point0));
-  builder.Add(iris::BoundingBox(point1, point1));
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(1.0, 2.0, 3.0);
+  BoundingBox::Builder builder;
+  builder.Add(BoundingBox(point0, point0));
+  builder.Add(BoundingBox(point1, point1));
   EXPECT_TRUE(builder.Build().Empty());
 }
 
 TEST(BoundingBoxBuilderTest, AddBounds) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(1.0, 2.0, 3.0);
-  iris::BoundingBox::Builder builder;
-  builder.Add(iris::BoundingBox(point0, point1));
-  auto bounds = builder.Build();
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(1.0, 2.0, 3.0);
+  BoundingBox::Builder builder;
+  builder.Add(BoundingBox(point0, point1));
+  BoundingBox bounds = builder.Build();
   EXPECT_EQ(point0, bounds.lower);
   EXPECT_EQ(point1, bounds.upper);
 }
 
 TEST(BoundingBoxBuilderTest, Reset) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(1.0, 2.0, 3.0);
-  iris::BoundingBox::Builder builder;
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(1.0, 2.0, 3.0);
+  BoundingBox::Builder builder;
   builder.Add(point0);
   builder.Add(point1);
   builder.Reset();
@@ -55,99 +58,92 @@ TEST(BoundingBoxBuilderTest, Reset) {
 }
 
 TEST(BoundingBoxTest, CreateOne) {
-  iris::Point point(0.0, 1.0, 2.0);
-  iris::BoundingBox bounding_box(point);
+  Point point(0.0, 1.0, 2.0);
+  BoundingBox bounding_box(point);
   EXPECT_EQ(point, bounding_box.upper);
   EXPECT_EQ(point, bounding_box.lower);
 }
 
 TEST(BoundingBoxTest, CreateTwo) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(3.0, 4.0, 5.0);
-  iris::BoundingBox bounding_box0(point0, point1);
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(3.0, 4.0, 5.0);
+  BoundingBox bounding_box0(point0, point1);
   EXPECT_EQ(point0, bounding_box0.lower);
   EXPECT_EQ(point1, bounding_box0.upper);
 
-  iris::BoundingBox bounding_box1(point1, point0);
+  BoundingBox bounding_box1(point1, point0);
   EXPECT_EQ(point0, bounding_box1.lower);
   EXPECT_EQ(point1, bounding_box1.upper);
 }
 
 TEST(BoundingBoxTest, CreateThree) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(2.0, 0.0, 1.0);
-  iris::Point point2(1.0, 2.0, 0.0);
-  iris::BoundingBox bounding_box(point0, point1, point2);
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(2.0, 0.0, 1.0);
+  Point point2(1.0, 2.0, 0.0);
+  BoundingBox bounding_box(point0, point1, point2);
 
-  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), bounding_box.lower);
-  EXPECT_EQ(iris::Point(2.0, 2.0, 2.0), bounding_box.upper);
+  EXPECT_EQ(Point(0.0, 0.0, 0.0), bounding_box.lower);
+  EXPECT_EQ(Point(2.0, 2.0, 2.0), bounding_box.upper);
 }
 
 TEST(BoundingBoxTest, CreateOneArray) {
-  iris::Point point(0.0, 1.0, 2.0);
-  iris::BoundingBox bounding_box({{point}});
+  Point point(0.0, 1.0, 2.0);
+  BoundingBox bounding_box({{point}});
   EXPECT_EQ(point, bounding_box.upper);
   EXPECT_EQ(point, bounding_box.lower);
 }
 
 TEST(BoundingBoxTest, CreateTwoArray) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(3.0, 4.0, 5.0);
-  iris::BoundingBox bounding_box0({{point0, point1}});
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(3.0, 4.0, 5.0);
+  BoundingBox bounding_box0({{point0, point1}});
   EXPECT_EQ(point0, bounding_box0.lower);
   EXPECT_EQ(point1, bounding_box0.upper);
 
-  iris::BoundingBox bounding_box1({{point1, point0}});
+  BoundingBox bounding_box1({{point1, point0}});
   EXPECT_EQ(point0, bounding_box1.lower);
   EXPECT_EQ(point1, bounding_box1.upper);
 }
 
 TEST(BoundingBoxTest, CreateThreeArray) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(2.0, 0.0, 1.0);
-  iris::Point point2(1.0, 2.0, 0.0);
-  iris::BoundingBox bounding_box({{point0, point1, point2}});
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(2.0, 0.0, 1.0);
+  Point point2(1.0, 2.0, 0.0);
+  BoundingBox bounding_box({{point0, point1, point2}});
 
-  EXPECT_EQ(iris::Point(0.0, 0.0, 0.0), bounding_box.lower);
-  EXPECT_EQ(iris::Point(2.0, 2.0, 2.0), bounding_box.upper);
+  EXPECT_EQ(Point(0.0, 0.0, 0.0), bounding_box.lower);
+  EXPECT_EQ(Point(2.0, 2.0, 2.0), bounding_box.upper);
 }
 
 TEST(BoundingBoxTest, Empty) {
-  EXPECT_TRUE(
-      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(0.0, 1.0, 2.0))
-          .Empty());
-  EXPECT_TRUE(
-      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(0.0, 1.0, 3.0))
-          .Empty());
-  EXPECT_FALSE(
-      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(0.0, 2.0, 3.0))
-          .Empty());
-  EXPECT_FALSE(
-      iris::BoundingBox(iris::Point(0.0, 1.0, 2.0), iris::Point(1.0, 2.0, 3.0))
-          .Empty());
+  EXPECT_TRUE(BoundingBox(Point(0.0, 1.0, 2.0), Point(0.0, 1.0, 2.0)).Empty());
+  EXPECT_TRUE(BoundingBox(Point(0.0, 1.0, 2.0), Point(0.0, 1.0, 3.0)).Empty());
+  EXPECT_FALSE(BoundingBox(Point(0.0, 1.0, 2.0), Point(0.0, 2.0, 3.0)).Empty());
+  EXPECT_FALSE(BoundingBox(Point(0.0, 1.0, 2.0), Point(1.0, 2.0, 3.0)).Empty());
 }
 
 TEST(BoundingBoxTest, Center) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(2.0, 3.0, 4.0);
-  iris::BoundingBox bounding_box(point0, point1);
-  EXPECT_EQ(iris::Point(1.0, 2.0, 3.0), bounding_box.Center());
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(2.0, 3.0, 4.0);
+  BoundingBox bounding_box(point0, point1);
+  EXPECT_EQ(Point(1.0, 2.0, 3.0), bounding_box.Center());
 }
 
 TEST(BoundingBoxTest, SurfaceArea) {
-  iris::Point point0(0.0, 1.0, 2.0);
-  iris::Point point1(3.0, 4.0, 5.0);
-  iris::BoundingBox bounding_box(point0, point1);
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(3.0, 4.0, 5.0);
+  BoundingBox bounding_box(point0, point1);
   EXPECT_EQ(54.0, bounding_box.SurfaceArea());
 }
 
 TEST(BoundingBoxTest, ProbablyIntersectInFront) {
-  iris::Point point0(-1.0, -1.0, -1.0);
-  iris::Point point1(1.0, 1.0, 1.0);
-  iris::BoundingBox bounding_box(point0, point1);
+  Point point0(-1.0, -1.0, -1.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box(point0, point1);
 
-  iris::Ray ray(iris::Point(0.0, 0.0, -2.0), iris::Vector(0.0, 0.0, 1.0));
-  auto intersection = bounding_box.Intersect(ray);
+  Ray ray(Point(0.0, 0.0, -2.0), Vector(0.0, 0.0, 1.0));
+  std::optional<BoundingBox::Intersection> intersection =
+      bounding_box.Intersect(ray);
   ASSERT_TRUE(intersection);
   EXPECT_TRUE(std::isinf(intersection->inverse_direction[0]));
   EXPECT_TRUE(std::isinf(intersection->inverse_direction[1]));
@@ -157,19 +153,20 @@ TEST(BoundingBoxTest, ProbablyIntersectInFront) {
 }
 
 TEST(BoundingBoxTest, IntersectEmpty) {
-  iris::Point point0(-1.0, -1.0, -1.0);
-  iris::BoundingBox bounding_box(point0);
-  iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
+  Point point0(-1.0, -1.0, -1.0);
+  BoundingBox bounding_box(point0);
+  Ray ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
   EXPECT_FALSE(bounding_box.Intersect(ray).has_value());
 }
 
 TEST(BoundingBoxTest, IntersectInside) {
-  iris::Point point0(-1.0, -1.0, -1.0);
-  iris::Point point1(1.0, 1.0, 1.0);
-  iris::BoundingBox bounding_box(point0, point1);
+  Point point0(-1.0, -1.0, -1.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box(point0, point1);
 
-  iris::Ray ray(iris::Point(0.0, 0.0, 0.0), iris::Vector(0.0, 0.0, 1.0));
-  auto intersection = bounding_box.Intersect(ray);
+  Ray ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+  std::optional<BoundingBox::Intersection> intersection =
+      bounding_box.Intersect(ray);
   ASSERT_TRUE(intersection);
   EXPECT_TRUE(std::isinf(intersection->inverse_direction[0]));
   EXPECT_TRUE(std::isinf(intersection->inverse_direction[1]));
@@ -179,12 +176,13 @@ TEST(BoundingBoxTest, IntersectInside) {
 }
 
 TEST(BoundingBoxTest, IntersectThin) {
-  iris::Point point0(-1.0, -1.0, 0.0);
-  iris::Point point1(1.0, 1.0, 0.0);
-  iris::BoundingBox bounding_box(point0, point1);
+  Point point0(-1.0, -1.0, 0.0);
+  Point point1(1.0, 1.0, 0.0);
+  BoundingBox bounding_box(point0, point1);
 
-  iris::Ray ray(iris::Point(0.0, 0.0, -1.0), iris::Vector(0.0, 0.0, 1.0));
-  auto intersection = bounding_box.Intersect(ray);
+  Ray ray(Point(0.0, 0.0, -1.0), Vector(0.0, 0.0, 1.0));
+  std::optional<BoundingBox::Intersection> intersection =
+      bounding_box.Intersect(ray);
   EXPECT_TRUE(std::isinf(intersection->inverse_direction[0]));
   EXPECT_TRUE(std::isinf(intersection->inverse_direction[1]));
   EXPECT_EQ(1.0, intersection->inverse_direction[2]);
@@ -193,77 +191,81 @@ TEST(BoundingBoxTest, IntersectThin) {
 }
 
 TEST(BoundingBoxTest, IntersectBehind) {
-  iris::Point point0(-1.0, -1.0, -1.0);
-  iris::Point point1(1.0, 1.0, 1.0);
-  iris::BoundingBox bounding_box(point0, point1);
+  Point point0(-1.0, -1.0, -1.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box(point0, point1);
 
-  iris::Ray ray(iris::Point(0.0, 0.0, 2.0), iris::Vector(0.0, 0.0, 1.0));
-  auto intersection = bounding_box.Intersect(ray);
+  Ray ray(Point(0.0, 0.0, 2.0), Vector(0.0, 0.0, 1.0));
+  std::optional<BoundingBox::Intersection> intersection =
+      bounding_box.Intersect(ray);
   ASSERT_FALSE(intersection);
 }
 
 TEST(BoundingBoxTest, NoIntersection) {
-  iris::Point point0(0.0, 0.0, 0.0);
-  iris::Point point1(1.0, 1.0, 1.0);
-  iris::BoundingBox bounding_box0(point0, point1);
+  Point point0(0.0, 0.0, 0.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box0(point0, point1);
 
-  iris::Point point2(2.0, 2.0, 2.0);
-  iris::Point point3(3.0, 3.0, 3.0);
-  iris::BoundingBox bounding_box1(point2, point3);
+  Point point2(2.0, 2.0, 2.0);
+  Point point3(3.0, 3.0, 3.0);
+  BoundingBox bounding_box1(point2, point3);
 
-  EXPECT_TRUE(iris::Intersect(bounding_box0, bounding_box1).Empty());
+  EXPECT_TRUE(Intersect(bounding_box0, bounding_box1).Empty());
 }
 
 TEST(BoundingBoxTest, Intersect) {
-  iris::Point point0(0.0, 0.0, 0.0);
-  iris::Point point2(2.0, 2.0, 2.0);
-  iris::BoundingBox bounding_box0(point0, point2);
+  Point point0(0.0, 0.0, 0.0);
+  Point point2(2.0, 2.0, 2.0);
+  BoundingBox bounding_box0(point0, point2);
 
-  iris::Point point1(1.0, 1.0, 1.0);
-  iris::Point point3(3.0, 3.0, 3.0);
-  iris::BoundingBox bounding_box1(point1, point3);
+  Point point1(1.0, 1.0, 1.0);
+  Point point3(3.0, 3.0, 3.0);
+  BoundingBox bounding_box1(point1, point3);
 
-  auto intersection = iris::Intersect(bounding_box0, bounding_box1);
+  BoundingBox intersection = Intersect(bounding_box0, bounding_box1);
   EXPECT_EQ(point1, intersection.lower);
   EXPECT_EQ(point2, intersection.upper);
 }
 
 TEST(BoundingBoxTest, JoinLeftEmpty) {
-  iris::Point point0(0.0, 0.0, 0.0);
-  iris::BoundingBox bounding_box0(point0, point0);
+  Point point0(0.0, 0.0, 0.0);
+  BoundingBox bounding_box0(point0, point0);
 
-  iris::Point point2(2.0, 2.0, 2.0);
-  iris::Point point3(3.0, 3.0, 3.0);
-  iris::BoundingBox bounding_box1(point2, point3);
+  Point point2(2.0, 2.0, 2.0);
+  Point point3(3.0, 3.0, 3.0);
+  BoundingBox bounding_box1(point2, point3);
 
-  iris::BoundingBox bounding_box2 = iris::Join(bounding_box0, bounding_box1);
+  BoundingBox bounding_box2 = Join(bounding_box0, bounding_box1);
   EXPECT_EQ(point2, bounding_box2.lower);
   EXPECT_EQ(point3, bounding_box2.upper);
 }
 
 TEST(BoundingBoxTest, JoinRightEmpty) {
-  iris::Point point0(0.0, 0.0, 0.0);
-  iris::Point point2(2.0, 2.0, 2.0);
-  iris::BoundingBox bounding_box0(point0, point2);
+  Point point0(0.0, 0.0, 0.0);
+  Point point2(2.0, 2.0, 2.0);
+  BoundingBox bounding_box0(point0, point2);
 
-  iris::Point point3(3.0, 3.0, 3.0);
-  iris::BoundingBox bounding_box1(point3, point3);
+  Point point3(3.0, 3.0, 3.0);
+  BoundingBox bounding_box1(point3, point3);
 
-  iris::BoundingBox bounding_box2 = iris::Join(bounding_box0, bounding_box1);
+  BoundingBox bounding_box2 = Join(bounding_box0, bounding_box1);
   EXPECT_EQ(point0, bounding_box2.lower);
   EXPECT_EQ(point2, bounding_box2.upper);
 }
 
 TEST(BoundingBoxTest, Join) {
-  iris::Point point0(0.0, 0.0, 0.0);
-  iris::Point point1(1.0, 1.0, 1.0);
-  iris::BoundingBox bounding_box0(point0, point1);
+  Point point0(0.0, 0.0, 0.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box0(point0, point1);
 
-  iris::Point point2(2.0, 2.0, 2.0);
-  iris::Point point3(3.0, 3.0, 3.0);
-  iris::BoundingBox bounding_box1(point2, point3);
+  Point point2(2.0, 2.0, 2.0);
+  Point point3(3.0, 3.0, 3.0);
+  BoundingBox bounding_box1(point2, point3);
 
-  iris::BoundingBox bounding_box2 = iris::Join(bounding_box0, bounding_box1);
+  BoundingBox bounding_box2 = Join(bounding_box0, bounding_box1);
   EXPECT_EQ(point0, bounding_box2.lower);
   EXPECT_EQ(point3, bounding_box2.upper);
 }
+
+}  // namespace
+}  // namespace iris

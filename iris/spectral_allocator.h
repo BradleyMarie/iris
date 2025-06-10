@@ -1,6 +1,7 @@
 #ifndef _IRIS_SPECTRAL_ALLOCATOR_
 #define _IRIS_SPECTRAL_ALLOCATOR_
 
+#include "iris/float.h"
 #include "iris/reflector.h"
 #include "iris/spectrum.h"
 

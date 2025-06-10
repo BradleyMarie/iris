@@ -1,30 +1,24 @@
 #ifndef _IRIS_POSITION_ERROR_
 #define _IRIS_POSITION_ERROR_
 
-#include <cassert>
-#include <cmath>
-#include <cstdint>
-
 #include "iris/float.h"
 
 namespace iris {
 
 struct PositionError final {
-  constexpr explicit PositionError(geometric_t x, geometric_t y,
-                                   geometric_t z) noexcept
-      : x(x), y(y), z(z) {
-    assert(std::isfinite(x));
-    assert(std::isfinite(y));
-    assert(std::isfinite(z));
-  }
+#ifdef NDEBUG
+  PositionError(geometric_t x, geometric_t y, geometric_t z) noexcept
+      : x(x), y(y), z(z) {}
+#else
+  PositionError(geometric_t x, geometric_t y, geometric_t z) noexcept;
+#endif  // NDEBUG
 
   PositionError(const PositionError&) noexcept = default;
-
   bool operator==(const PositionError&) const = default;
 
-  const geometric_t x;
-  const geometric_t y;
-  const geometric_t z;
+  const geometric_t x;  // May be negative
+  const geometric_t y;  // May be negative
+  const geometric_t z;  // May be negative
 };
 
 static inline PositionError operator+(const PositionError& error0,
@@ -38,14 +32,7 @@ static inline PositionError operator*(const PositionError& error,
   return PositionError(error.x * scalar, error.y * scalar, error.z * scalar);
 }
 
-static constexpr geometric_t RoundingError(uint8_t number_of_rounds) {
-  static constexpr geometric_t machine_epsilon =
-      std::numeric_limits<geometric_t>::epsilon() *
-      static_cast<geometric_t>(0.5);
-  const geometric_t rounding_error =
-      static_cast<geometric_t>(number_of_rounds) * machine_epsilon;
-  return rounding_error / (static_cast<geometric_t>(1.0) - rounding_error);
-}
+geometric_t RoundingError(unsigned number_of_rounds);
 
 }  // namespace iris
 

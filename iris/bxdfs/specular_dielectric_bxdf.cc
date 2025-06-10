@@ -41,9 +41,9 @@ class SpecularDielectricBxdf final : public internal::SpecularBxdf {
   const geometric_t eta_transmitted_;
 };
 
-constexpr Vector kShadingNormal(static_cast<geometric>(0.0),
-                                static_cast<geometric>(0.0),
-                                static_cast<geometric>(1.0));
+static const Vector kShadingNormal(static_cast<geometric>(0.0),
+                                   static_cast<geometric>(0.0),
+                                   static_cast<geometric>(1.0));
 
 Vector GetReflectedVector(const Vector& incoming) {
   return Vector(-incoming.x, -incoming.y, incoming.z);

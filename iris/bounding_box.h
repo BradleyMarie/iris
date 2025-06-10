@@ -1,8 +1,6 @@
 #ifndef _IRIS_BOUNDING_BOX_
 #define _IRIS_BOUNDING_BOX_
 
-#include <algorithm>
-#include <limits>
 #include <optional>
 #include <span>
 
@@ -72,23 +70,20 @@ struct BoundingBox final {
     geometric_t inverse_direction_z =
         static_cast<geometric_t>(1.0) / ray.direction.z;
 
-    geometric_t min = 0.0;
-    geometric_t max = std::numeric_limits<geometric_t>::infinity();
-
     geometric_t tx0 = (lower.x - ray.origin.x) * inverse_direction_x;
     geometric_t tx1 = (upper.x - ray.origin.x) * inverse_direction_x;
-    min = std::max(min, std::min(tx0, tx1));
-    max = std::min(max, std::max(tx0, tx1));
+    geometric_t min = Max(static_cast<geometric_t>(0.0), Min(tx0, tx1));
+    geometric_t max = Max(tx0, tx1);
 
     geometric_t ty0 = (lower.y - ray.origin.y) * inverse_direction_y;
     geometric_t ty1 = (upper.y - ray.origin.y) * inverse_direction_y;
-    min = std::max(min, std::min(ty0, ty1));
-    max = std::min(max, std::max(ty0, ty1));
+    min = Max(min, Min(ty0, ty1));
+    max = Min(max, Max(ty0, ty1));
 
     geometric_t tz0 = (lower.z - ray.origin.z) * inverse_direction_z;
     geometric_t tz1 = (upper.z - ray.origin.z) * inverse_direction_z;
-    min = std::max(min, std::min(tz0, tz1));
-    max = std::min(max, std::max(tz0, tz1));
+    min = Max(min, Min(tz0, tz1));
+    max = Min(max, Max(tz0, tz1));
 
     if (max < min) {
       return std::nullopt;
@@ -106,11 +101,18 @@ struct BoundingBox final {
   const Point upper;
 
  private:
+  static geometric_t Min(geometric_t v0, geometric_t v1) {
+    return (v0 < v1) ? v0 : v1;
+  }
+
+  static geometric_t Max(geometric_t v0, geometric_t v1) {
+    return (v0 > v1) ? v0 : v1;
+  }
+
   static Point Min(const Point& point) { return point; }
 
   static Point Min(const Point& p0, const Point& p1) {
-    return Point(std::min(p0.x, p1.x), std::min(p0.y, p1.y),
-                 std::min(p0.z, p1.z));
+    return Point(Min(p0.x, p1.x), Min(p0.y, p1.y), Min(p0.z, p1.z));
   }
 
   template <typename T, typename... Rest>
@@ -123,8 +125,7 @@ struct BoundingBox final {
   static Point Max(const Point& point) { return point; }
 
   static Point Max(const Point& p0, const Point& p1) {
-    return Point(std::max(p0.x, p1.x), std::max(p0.y, p1.y),
-                 std::max(p0.z, p1.z));
+    return Point(Max(p0.x, p1.x), Max(p0.y, p1.y), Max(p0.z, p1.z));
   }
 
   template <typename T, typename... Rest>

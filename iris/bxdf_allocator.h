@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <span>
 #include <type_traits>
+#include <utility>
 
 #include "iris/bxdf.h"
 
@@ -21,7 +22,7 @@ class BxdfAllocator final {
     requires(std::is_trivially_destructible<T>::value &&
              std::derived_from<T, Bxdf>)
   const Bxdf& Allocate(Args&&... args) {
-    auto* result = new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
+    T* result = new (Allocate(sizeof(T))) T(std::forward<Args>(args)...);
     return *result;
   }
 

@@ -11,6 +11,7 @@
 
 namespace iris {
 
+// Forward Declaration
 class SceneObjects;
 
 class LightScene {

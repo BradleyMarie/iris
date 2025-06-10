@@ -4,7 +4,6 @@
 #include <optional>
 #include <utility>
 
-#include "iris/float.h"
 #include "iris/reference_countable.h"
 #include "iris/texture_coordinates.h"
 #include "iris/vector.h"

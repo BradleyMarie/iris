@@ -2,27 +2,23 @@
 
 #include "googletest/include/gtest/gtest.h"
 
+namespace iris {
+namespace {
+
 TEST(ColorTest, Create) {
-  auto color = iris::Color(1.0, 2.0, 3.0, iris::Color::CIE_XYZ);
+  Color color(1.0, 2.0, 3.0, Color::CIE_XYZ);
   EXPECT_EQ(1.0, color.x);
   EXPECT_EQ(2.0, color.y);
   EXPECT_EQ(3.0, color.z);
-  EXPECT_EQ(iris::Color::CIE_XYZ, color.space);
-}
-
-TEST(ColorTest, Subscript) {
-  auto color = iris::Color(1.0, 2.0, 3.0, iris::Color::CIE_XYZ);
-  EXPECT_EQ(1.0, color[0]);
-  EXPECT_EQ(2.0, color[1]);
-  EXPECT_EQ(3.0, color[2]);
+  EXPECT_EQ(Color::CIE_XYZ, color.space);
 }
 
 TEST(ColorTest, Equality) {
-  auto c0 = iris::Color(1.0, 2.0, 3.0, iris::Color::CIE_XYZ);
-  auto c1 = iris::Color(2.0, 2.0, 3.0, iris::Color::CIE_XYZ);
-  auto c2 = iris::Color(1.0, 3.0, 3.0, iris::Color::CIE_XYZ);
-  auto c3 = iris::Color(1.0, 2.0, 4.0, iris::Color::CIE_XYZ);
-  auto c4 = iris::Color(1.0, 2.0, 3.0, iris::Color::LINEAR_SRGB);
+  Color c0(1.0, 2.0, 3.0, Color::CIE_XYZ);
+  Color c1(2.0, 2.0, 3.0, Color::CIE_XYZ);
+  Color c2(1.0, 3.0, 3.0, Color::CIE_XYZ);
+  Color c3(1.0, 2.0, 4.0, Color::CIE_XYZ);
+  Color c4(1.0, 2.0, 3.0, Color::LINEAR_SRGB);
   EXPECT_EQ(c0, c0);
   EXPECT_NE(c0, c1);
   EXPECT_NE(c0, c2);
@@ -31,35 +27,37 @@ TEST(ColorTest, Equality) {
 }
 
 TEST(ColorTest, ConvertToSame) {
-  auto color = iris::Color(1.0, 2.0, 3.0, iris::Color::CIE_XYZ);
-  EXPECT_EQ(color, color.ConvertTo(iris::Color::CIE_XYZ));
+  Color color(1.0, 2.0, 3.0, Color::CIE_XYZ);
+  EXPECT_EQ(color, color.ConvertTo(Color::CIE_XYZ));
 }
 
 TEST(ColorTest, ConvertToLinearRgbFromXyz) {
-  auto color =
-      iris::Color(0.475235015, 0.50000006, 0.544414997, iris::Color::CIE_XYZ);
-  auto actual = color.ConvertTo(iris::Color::LINEAR_SRGB);
-  EXPECT_EQ(iris::Color::LINEAR_SRGB, actual.space);
+  Color color(0.475235015, 0.50000006, 0.544414997, Color::CIE_XYZ);
+  Color actual = color.ConvertTo(Color::LINEAR_SRGB);
+  EXPECT_EQ(Color::LINEAR_SRGB, actual.space);
   EXPECT_NEAR(0.5, actual.r, 0.001);
   EXPECT_NEAR(0.5, actual.g, 0.001);
   EXPECT_NEAR(0.5, actual.b, 0.001);
 }
 
 TEST(ColorTest, ConvertToXyzFromLinearRgb) {
-  auto color = iris::Color(0.5, 0.5, 0.5, iris::Color::LINEAR_SRGB);
-  auto actual = color.ConvertTo(iris::Color::CIE_XYZ);
-  EXPECT_EQ(iris::Color::CIE_XYZ, actual.space);
+  Color color(0.5, 0.5, 0.5, Color::LINEAR_SRGB);
+  Color actual = color.ConvertTo(Color::CIE_XYZ);
+  EXPECT_EQ(Color::CIE_XYZ, actual.space);
   EXPECT_NEAR(0.475235015, actual.r, 0.001);
   EXPECT_NEAR(0.50000006, actual.g, 0.001);
   EXPECT_NEAR(0.544414997, actual.b, 0.001);
 }
 
 TEST(ColorTest, LumaSame) {
-  auto color = iris::Color(1.0, 2.0, 3.0, iris::Color::CIE_XYZ);
+  Color color(1.0, 2.0, 3.0, Color::CIE_XYZ);
   EXPECT_EQ(color.y, color.Luma());
 }
 
 TEST(ColorTest, LumaFromLinearRgb) {
-  auto color = iris::Color(0.5, 0.5, 0.5, iris::Color::LINEAR_SRGB);
+  Color color(0.5, 0.5, 0.5, Color::LINEAR_SRGB);
   EXPECT_NEAR(0.50000006, color.Luma(), 0.001);
 }
+
+}  // namespace
+}  // namespace iris

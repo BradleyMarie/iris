@@ -52,8 +52,8 @@ using ::testing::Ref;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
-constexpr RayDifferential kTraceRay(Ray(Point(0.0, 0.0, 1.0),
-                                        Vector(0.0, 0.0, 1.0)));
+static const RayDifferential kTraceRay(Ray(Point(0.0, 0.0, 1.0),
+                                           Vector(0.0, 0.0, 1.0)));
 
 TEST(PathIntegratorTest, NoHits) {
   MockAlbedoMatcher albedo_matcher;

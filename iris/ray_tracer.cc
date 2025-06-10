@@ -1,11 +1,26 @@
 #include "iris/ray_tracer.h"
 
+#include <cassert>
 #include <cmath>
 #include <limits>
+#include <optional>
 
+#include "iris/bsdf.h"
 #include "iris/bxdf_allocator.h"
+#include "iris/environmental_light.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit_point.h"
 #include "iris/internal/ray_tracer.h"
+#include "iris/matrix.h"
+#include "iris/normal_map.h"
+#include "iris/point.h"
+#include "iris/ray.h"
+#include "iris/ray_differential.h"
 #include "iris/spectral_allocator.h"
+#include "iris/spectrum.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace {
@@ -59,7 +74,7 @@ std::pair<Vector, std::optional<NormalMap::Differentials>> TransformNormals(
     const Matrix* model_to_world,
     const std::optional<Geometry::Differentials> world_differentials,
     const Geometry::ComputeShadingNormalResult& shading_normals) {
-  auto world_shading_normal =
+  Vector world_shading_normal =
       MaybeTransformNormal(model_to_world, shading_normals.surface_normal)
           .value_or(world_surface_normal);
 
@@ -131,30 +146,31 @@ std::optional<RayTracer::SurfaceIntersection> MakeSurfaceIntersection(
     const Geometry::ComputeHitPointResult& world_hit_point,
     const Vector& world_surface_normal, const Vector& model_surface_normal,
     SpectralAllocator& spectral_allocator, BxdfAllocator& bxdf_allocator) {
-  auto* material = hit.geometry->GetMaterial(hit.front);
+  const Material* material = hit.geometry->GetMaterial(hit.front);
   if (!material) {
     return std::nullopt;
   }
 
-  auto* bxdf = material->Evaluate(texture_coordinates, spectral_allocator,
-                                  bxdf_allocator);
+  const Bxdf* bxdf = material->Evaluate(texture_coordinates, spectral_allocator,
+                                        bxdf_allocator);
   if (!bxdf) {
     return std::nullopt;
   }
 
-  auto shading_normals =
+  Geometry::ComputeShadingNormalResult shading_normals =
       hit.geometry->ComputeShadingNormal(hit.front, hit.additional_data);
 
-  auto world_shading_normals = TransformNormals(
-      world_hit_point.point, world_surface_normal, hit.model_to_world,
-      world_differentials, shading_normals);
+  auto [geometry_world_shading_normal, world_shading_differentials] =
+      TransformNormals(world_hit_point.point, world_surface_normal,
+                       hit.model_to_world, world_differentials,
+                       shading_normals);
 
   Vector world_shading_normal =
       shading_normals.normal_map
           ? Normalize(shading_normals.normal_map->Evaluate(
-                texture_coordinates, world_shading_normals.second,
-                world_shading_normals.first))
-          : world_shading_normals.first;
+                texture_coordinates, world_shading_differentials,
+                geometry_world_shading_normal))
+          : geometry_world_shading_normal;
 
   // This ideally wouldn't be required, but it is possible that the shading
   // normal we compute ends up out of alignment with the surface normal. Since
@@ -229,16 +245,17 @@ std::optional<Geometry::Differentials> MaybeTransformDifferentials(
 RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
   SpectralAllocator spectral_allocator(arena_);
 
-  auto* hit = ray_tracer_.TraceClosestHit(
+  const internal::Hit* hit = ray_tracer_.TraceClosestHit(
       ray, minimum_distance_, std::numeric_limits<geometric_t>::infinity(),
       scene_);
   if (!hit) {
     return HandleMiss(ray, environmental_light_, spectral_allocator);
   }
 
-  auto model_hit_point = hit->geometry->ComputeHitPoint(
-      *hit->model_ray, hit->distance, hit->additional_data);
-  auto world_hit_point =
+  Geometry::ComputeHitPointResult model_hit_point =
+      hit->geometry->ComputeHitPoint(*hit->model_ray, hit->distance,
+                                     hit->additional_data);
+  Geometry::ComputeHitPointResult world_hit_point =
       MaybeTransformHitPoint(model_hit_point, hit->model_to_world);
 
   Vector model_surface_normal = hit->geometry->ComputeSurfaceNormal(
@@ -247,9 +264,10 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
       MaybeTransformNormal(hit->model_to_world, model_surface_normal);
   assert(DotProduct(world_surface_normal, ray.direction) < 0.001);
 
-  auto model_differentials = ComputeGeometryDifferentials(
-      ray, hit->model_to_world, model_hit_point.point, model_surface_normal);
-  auto world_differentials =
+  std::optional<Geometry::Differentials> model_differentials =
+      ComputeGeometryDifferentials(ray, hit->model_to_world,
+                                   model_hit_point.point, model_surface_normal);
+  std::optional<Geometry::Differentials> world_differentials =
       MaybeTransformDifferentials(model_differentials, hit->model_to_world);
 
   TextureCoordinates texture_coordinates =
@@ -260,17 +278,18 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
           .value_or(TextureCoordinates{0.0, 0.0});
 
   const Spectrum* spectrum = nullptr;
-  if (auto* emissive_material =
+  if (const EmissiveMaterial* emissive_material =
           hit->geometry->GetEmissiveMaterial(hit->front)) {
     spectrum =
         emissive_material->Evaluate(texture_coordinates, spectral_allocator);
   }
 
   BxdfAllocator bxdf_allocator(arena_);
-  auto surface_intersection = MakeSurfaceIntersection(
-      *hit, world_differentials, texture_coordinates, world_hit_point,
-      world_surface_normal, model_surface_normal, spectral_allocator,
-      bxdf_allocator);
+  std::optional<RayTracer::SurfaceIntersection> surface_intersection =
+      MakeSurfaceIntersection(*hit, world_differentials, texture_coordinates,
+                              world_hit_point, world_surface_normal,
+                              model_surface_normal, spectral_allocator,
+                              bxdf_allocator);
 
   return RayTracer::TraceResult{spectrum, surface_intersection};
 }

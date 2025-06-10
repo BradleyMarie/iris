@@ -1,25 +1,50 @@
 #include "iris/ray_tracer.h"
 
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bounding_box.h"
+#include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/mock_bxdf.h"
+#include "iris/emissive_material.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
 #include "iris/environmental_lights/mock_environmental_light.h"
+#include "iris/float.h"
+#include "iris/geometry.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/hit_allocator.h"
+#include "iris/integer.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/ray_tracer.h"
+#include "iris/material.h"
 #include "iris/materials/mock_material.h"
+#include "iris/normal_map.h"
 #include "iris/normal_maps/mock_normal_map.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/ray.h"
+#include "iris/ray_differential.h"
 #include "iris/reference_counted.h"
 #include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/spectral_allocator.h"
+#include "iris/texture_coordinates.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace {
 
+using ::iris::bxdfs::MockBxdf;
+using ::iris::emissive_materials::MockEmissiveMaterial;
 using ::iris::environmental_lights::MockEnvironmentalLight;
 using ::iris::geometry::MockBasicGeometry;
 using ::iris::geometry::MockGeometry;
+using ::iris::materials::MockMaterial;
 using ::iris::normal_maps::MockNormalMap;
 using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
@@ -55,7 +80,8 @@ void MakeBasicGeometryImpl(ReferenceCounted<MockBasicGeometry> geometry,
 
 ReferenceCounted<MockBasicGeometry> MakeBasicGeometry(
     const Ray& expected_ray, const Point& expected_hit_point) {
-  auto geometry = MakeReferenceCounted<MockBasicGeometry>();
+  ReferenceCounted<MockBasicGeometry> geometry =
+      MakeReferenceCounted<MockBasicGeometry>();
   MakeBasicGeometryImpl(geometry, expected_ray, expected_hit_point);
   return geometry;
 }
@@ -63,7 +89,8 @@ ReferenceCounted<MockBasicGeometry> MakeBasicGeometry(
 ReferenceCounted<MockGeometry> MakeGeometry(
     const Ray& expected_ray, const Point& expected_hit_point,
     const Material* material, const EmissiveMaterial* emissive_material) {
-  auto geometry = MakeReferenceCounted<MockGeometry>();
+  ReferenceCounted<MockGeometry> geometry =
+      MakeReferenceCounted<MockGeometry>();
   MakeBasicGeometryImpl(geometry, expected_ray, expected_hit_point);
   EXPECT_CALL(*geometry, GetMaterial(2u)).WillOnce(Return(material));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u)).WillOnce(Return(nullptr));
@@ -74,8 +101,8 @@ ReferenceCounted<MockGeometry> MakeGeometry(
 
 std::unique_ptr<Material> MakeMaterial(std::array<geometric_t, 2> expected,
                                        bool has_differentials = false) {
-  auto material = std::make_unique<materials::MockMaterial>();
-  auto bxdf = std::make_unique<bxdfs::MockBxdf>();
+  std::unique_ptr<MockMaterial> material = std::make_unique<MockMaterial>();
+  std::unique_ptr<MockBxdf> bxdf = std::make_unique<MockBxdf>();
 
   EXPECT_CALL(*material, Evaluate(_, _, _))
       .WillOnce(Invoke([expected, has_differentials, bxdf = std::move(bxdf)](
@@ -94,11 +121,11 @@ std::unique_ptr<Material> MakeMaterial(std::array<geometric_t, 2> expected,
 TEST(RayTracerTest, NoGeometry) {
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
-  auto objects = SceneObjects::Builder().Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = SceneObjects::Builder().Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   EXPECT_FALSE(result.surface_intersection);
@@ -112,12 +139,12 @@ TEST(RayTracerTest, WithEnvironmentalLight) {
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
-  auto objects = SceneObjects::Builder().Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = SceneObjects::Builder().Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
   RayTracer ray_tracer(*scene, &environmental_light, 0.0, internal_ray_tracer,
                        arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_EQ(&spectrum, result.emission);
   EXPECT_FALSE(result.surface_intersection);
@@ -126,22 +153,23 @@ TEST(RayTracerTest, WithEnvironmentalLight) {
 TEST(RayTracerTest, NoBsdf) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
 
-  auto geometry = MakeBasicGeometry(ray, Point(1.0, 1.0, 1.0));
+  ReferenceCounted<MockBasicGeometry> geometry =
+      MakeBasicGeometry(ray, Point(1.0, 1.0, 1.0));
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   EXPECT_FALSE(result.surface_intersection);
@@ -150,8 +178,8 @@ TEST(RayTracerTest, NoBsdf) {
 TEST(RayTracerTest, WithEmissiveMaterial) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
 
-  auto spectrum = std::make_unique<spectra::MockSpectrum>();
-  emissive_materials::MockEmissiveMaterial emissive_material;
+  std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
+  MockEmissiveMaterial emissive_material;
   EXPECT_CALL(emissive_material, Evaluate(_, _))
       .WillOnce(Invoke([&](const TextureCoordinates& texture_coordinates,
                            SpectralAllocator& spectral_allocator) {
@@ -161,7 +189,7 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
         return spectrum.get();
       }));
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), nullptr, &emissive_material);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -176,17 +204,17 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
             return std::nullopt;
           }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_EQ(spectrum.get(), result.emission);
   EXPECT_FALSE(result.surface_intersection);
@@ -194,9 +222,9 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
 
 TEST(RayTracerTest, Minimal) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -217,17 +245,17 @@ TEST(RayTracerTest, Minimal) {
                                                     nullptr};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
@@ -242,9 +270,9 @@ TEST(RayTracerTest, Minimal) {
 
 TEST(RayTracerTest, WithTextureCoordinates) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({1.0, 1.0});
+  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0});
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -265,17 +293,17 @@ TEST(RayTracerTest, WithTextureCoordinates) {
                                                     nullptr};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
@@ -290,9 +318,9 @@ TEST(RayTracerTest, WithTextureCoordinates) {
 
 TEST(RayTracerTest, WithMaterial) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -313,17 +341,17 @@ TEST(RayTracerTest, WithMaterial) {
                                                     nullptr};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
@@ -338,9 +366,9 @@ TEST(RayTracerTest, WithMaterial) {
 
 TEST(RayTracerTest, WithIdentityNormal) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -361,17 +389,17 @@ TEST(RayTracerTest, WithIdentityNormal) {
                                                     std::nullopt, nullptr};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
@@ -386,9 +414,9 @@ TEST(RayTracerTest, WithIdentityNormal) {
 
 TEST(RayTracerTest, WithNormal) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -409,17 +437,17 @@ TEST(RayTracerTest, WithNormal) {
                                                     std::nullopt, nullptr};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
@@ -434,7 +462,7 @@ TEST(RayTracerTest, WithNormal) {
 
 TEST(RayTracerTest, WithIdentityNormalMap) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsFalse(), Vector(-1.0, 0.0, 0.0)))
@@ -448,7 +476,7 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
             return surface_normal;
           }));
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -469,17 +497,17 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
                                                     &normal_map};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
@@ -494,7 +522,7 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
 
 TEST(RayTracerTest, WithNormalMap) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  auto material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsFalse(), Vector(-1.0, 0.0, 0.0)))
@@ -508,7 +536,7 @@ TEST(RayTracerTest, WithNormalMap) {
             return Vector(-1.0, -1.0, 0.0);
           }));
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -529,17 +557,17 @@ TEST(RayTracerTest, WithNormalMap) {
                                                     &normal_map};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
@@ -554,7 +582,7 @@ TEST(RayTracerTest, WithNormalMap) {
 
 TEST(RayTracerTest, WithXYDifferentials) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  auto material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -570,7 +598,7 @@ TEST(RayTracerTest, WithXYDifferentials) {
             return Vector(-1.0, 0.0, 0.0);
           }));
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -591,17 +619,17 @@ TEST(RayTracerTest, WithXYDifferentials) {
                                                     &normal_map};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 0.0, 1.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 1.0, 0.0), Vector(1.0, 0.0, 0.0))));
@@ -622,7 +650,7 @@ TEST(RayTracerTest, WithXYDifferentials) {
 
 TEST(RayTracerTest, WithUVDifferentials) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  auto material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -638,7 +666,7 @@ TEST(RayTracerTest, WithUVDifferentials) {
             return Vector(-1.0, 0.0, 0.0);
           }));
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -661,17 +689,17 @@ TEST(RayTracerTest, WithUVDifferentials) {
             &normal_map};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 0.0, 1.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 1.0, 0.0), Vector(1.0, 0.0, 0.0))));
@@ -692,7 +720,7 @@ TEST(RayTracerTest, WithUVDifferentials) {
 
 TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  auto material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -712,7 +740,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
             return Vector(-1.0, 0.0, 0.0);
           }));
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -733,17 +761,17 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
                                                     std::nullopt, &normal_map};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 0.0, 1.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 1.0, 0.0), Vector(1.0, 0.0, 0.0))));
@@ -764,7 +792,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
 
 TEST(RayTracerTest, WithNormalAndXYDifferentials) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  auto material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map,
@@ -785,7 +813,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
             return Vector(-1.0, 0.0, 0.0);
           }));
 
-  auto geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
@@ -806,17 +834,17 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
                                                     std::nullopt, &normal_map};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(
+  RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 0.0, 1.0), Vector(1.0, 0.0, 0.0)),
                       Ray(Point(1.0, 1.0, 0.0), Vector(1.0, 0.0, 0.0))));
@@ -851,7 +879,7 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
   Point expected_world_dy_hit_point =
       model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
 
-  auto material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -867,8 +895,8 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
             return Vector(-1.0, 0.0, 0.0);
           }));
 
-  auto geometry = MakeGeometry(model_ray, expected_model_hit_point,
-                               material.get(), nullptr);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(
+      model_ray, expected_model_hit_point, material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(&model_to_world))
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
@@ -890,17 +918,17 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
             &normal_map};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry), model_to_world);
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(trace_ray);
+  RayTracer::TraceResult result = ray_tracer.Trace(trace_ray);
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
   EXPECT_EQ(model_to_world.MultiplyWithError(expected_model_hit_point).first,
@@ -934,10 +962,10 @@ TEST(RayTracerTest, WithTransform) {
   Point expected_world_dy_hit_point =
       model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
 
-  auto material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
 
-  auto geometry = MakeGeometry(model_ray, expected_model_hit_point,
-                               material.get(), nullptr);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(
+      model_ray, expected_model_hit_point, material.get(), nullptr);
   EXPECT_CALL(*geometry, ComputeBounds(&model_to_world))
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
@@ -959,17 +987,17 @@ TEST(RayTracerTest, WithTransform) {
                                                     nullptr};
       }));
 
-  auto builder = SceneObjects::Builder();
+  SceneObjects::Builder builder;
   builder.Add(std::move(geometry), model_to_world);
 
-  auto objects = builder.Build();
-  auto scene = MakeListSceneBuilder()->Build(objects);
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
 
   internal::RayTracer internal_ray_tracer;
   internal::Arena arena;
   RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
 
-  auto result = ray_tracer.Trace(trace_ray);
+  RayTracer::TraceResult result = ray_tracer.Trace(trace_ray);
   EXPECT_FALSE(result.emission);
   ASSERT_TRUE(result.surface_intersection);
   EXPECT_EQ(model_to_world.MultiplyWithError(expected_model_hit_point).first,

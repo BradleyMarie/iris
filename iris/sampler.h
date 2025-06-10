@@ -1,7 +1,6 @@
 #ifndef _IRIS_SAMPLER_
 #define _IRIS_SAMPLER_
 
-#include <cstdint>
 #include <optional>
 
 #include "iris/float.h"
@@ -14,7 +13,7 @@ class Sampler {
   Sampler(Random& rng) noexcept : rng_(rng), samples_(2) {}
 
   Sampler(Sampler&& from)
-      : rng_(from.rng_), samples_(from.samples_), next_(from.next_) {
+      : rng_(from.rng_), next_(from.next_), samples_(from.samples_) {
     from.samples_ = 0;
     from.next_.reset();
   }
@@ -36,8 +35,8 @@ class Sampler {
   std::optional<geometric_t> NextImpl();
 
   Random& rng_;
-  uint_fast8_t samples_;
   std::optional<geometric_t> next_;
+  unsigned samples_;
 };
 
 }  // namespace iris

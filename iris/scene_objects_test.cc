@@ -1,37 +1,55 @@
 #include "iris/scene_objects.h"
 
+#include <set>
+#include <vector>
+
 #include "googletest/include/gtest/gtest.h"
+#include "iris/bounding_box.h"
 #include "iris/emissive_materials/mock_emissive_material.h"
 #include "iris/environmental_lights/mock_environmental_light.h"
+#include "iris/geometry.h"
 #include "iris/geometry/mock_geometry.h"
+#include "iris/integer.h"
+#include "iris/light.h"
 #include "iris/lights/mock_light.h"
+#include "iris/matrix.h"
+#include "iris/point.h"
+#include "iris/ray.h"
+#include "iris/reference_counted.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace {
 
+using ::iris::emissive_materials::MockEmissiveMaterial;
+using ::iris::environmental_lights::MockEnvironmentalLight;
+using ::iris::geometry::MockGeometry;
+using ::iris::lights::MockLight;
+using ::testing::_;
+using ::testing::Return;
+
 const static BoundingBox kBounds(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0));
 
 ReferenceCounted<Geometry> MakeZeroBoundsGeometry() {
-  auto result = MakeReferenceCounted<geometry::MockGeometry>();
+  ReferenceCounted<MockGeometry> result = MakeReferenceCounted<MockGeometry>();
   EXPECT_CALL(*result, ComputeBounds(nullptr))
-      .WillRepeatedly(testing::Return(BoundingBox(Point(0.0, 0.0, 0.0))));
+      .WillRepeatedly(Return(BoundingBox(Point(0.0, 0.0, 0.0))));
   return result;
 }
 
 ReferenceCounted<Geometry> MakeGeometry(bool emissive) {
   static const std::vector<face_t> faces = {1};
-  static const emissive_materials::MockEmissiveMaterial emissive_material;
-  auto result = MakeReferenceCounted<geometry::MockGeometry>();
+  static const MockEmissiveMaterial emissive_material;
+  ReferenceCounted<MockGeometry> result = MakeReferenceCounted<MockGeometry>();
   if (emissive) {
-    EXPECT_CALL(*result, GetEmissiveMaterial(testing::_))
-        .WillRepeatedly(testing::Return(&emissive_material));
+    EXPECT_CALL(*result, GetEmissiveMaterial(_))
+        .WillRepeatedly(Return(&emissive_material));
   } else {
-    EXPECT_CALL(*result, GetEmissiveMaterial(testing::_))
-        .WillRepeatedly(testing::Return(nullptr));
+    EXPECT_CALL(*result, GetEmissiveMaterial(_))
+        .WillRepeatedly(Return(nullptr));
   }
-  EXPECT_CALL(*result, GetFaces()).WillRepeatedly(testing::Return(faces));
-  EXPECT_CALL(*result, ComputeBounds(testing::_))
-      .WillRepeatedly(testing::Return(kBounds));
+  EXPECT_CALL(*result, GetFaces()).WillRepeatedly(Return(faces));
+  EXPECT_CALL(*result, ComputeBounds(_)).WillRepeatedly(Return(kBounds));
   return result;
 }
 
@@ -59,22 +77,22 @@ TEST(SceneObjects, Build) {
   ReferenceCounted<Geometry> geom4 = *geometry_iter++;
 
   std::set<ReferenceCounted<Light>> lights;
-  lights.insert(MakeReferenceCounted<lights::MockLight>());
-  lights.insert(MakeReferenceCounted<lights::MockLight>());
+  lights.insert(MakeReferenceCounted<MockLight>());
+  lights.insert(MakeReferenceCounted<MockLight>());
 
   auto light_iter = lights.begin();
   ReferenceCounted<Light> light0 = *light_iter++;
   ReferenceCounted<Light> light1 = *light_iter++;
 
-  auto environmental_light =
-      MakeReferenceCounted<environmental_lights::MockEnvironmentalLight>();
-  auto matrix0 = Matrix::Identity();
-  auto matrix1 = Matrix::Translation(1.0, 2.0, 3.0).value();
-  auto matrix2 = Matrix::Scalar(1.0, 2.0, 3.0).value();
+  ReferenceCounted<MockEnvironmentalLight> environmental_light =
+      MakeReferenceCounted<MockEnvironmentalLight>();
+  Matrix matrix0 = Matrix::Identity();
+  Matrix matrix1 = Matrix::Translation(1.0, 2.0, 3.0).value();
+  Matrix matrix2 = Matrix::Scalar(1.0, 2.0, 3.0).value();
 
   SceneObjects::Builder builder;
 
-  builder.Add(ReferenceCounted<lights::MockLight>());
+  builder.Add(ReferenceCounted<MockLight>());
   builder.Add(ReferenceCounted<Geometry>(), matrix0);
 
   builder.Add(light0);
@@ -96,7 +114,7 @@ TEST(SceneObjects, Build) {
 
   builder.Set(environmental_light);
 
-  auto scene_objects = builder.Build();
+  SceneObjects scene_objects = builder.Build();
   ASSERT_EQ(4u, scene_objects.NumGeometry());
   EXPECT_EQ(geom0.Get(), &scene_objects.GetGeometry(0).first);
   EXPECT_EQ(matrix1, *scene_objects.GetGeometry(0).second);
@@ -108,7 +126,7 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(nullptr, scene_objects.GetGeometry(3).second);
   EXPECT_EQ(*scene_objects.GetGeometry(1).second,
             *scene_objects.GetGeometry(2).second);
-  auto built_lights = GetLights(scene_objects);
+  std::set<const Light*> built_lights = GetLights(scene_objects);
   ASSERT_EQ(4u, built_lights.size());
   built_lights.erase(light0.Get());
   built_lights.erase(light1.Get());
@@ -134,8 +152,8 @@ TEST(SceneObjects, Build) {
   geom3 = *geometry_iter++;
 
   lights.clear();
-  lights.insert(MakeReferenceCounted<lights::MockLight>());
-  lights.insert(MakeReferenceCounted<lights::MockLight>());
+  lights.insert(MakeReferenceCounted<MockLight>());
+  lights.insert(MakeReferenceCounted<MockLight>());
 
   light_iter = lights.begin();
   light0 = *light_iter++;

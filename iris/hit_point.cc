@@ -3,6 +3,12 @@
 #include <cmath>
 #include <limits>
 
+#include "iris/float.h"
+#include "iris/point.h"
+#include "iris/position_error.h"
+#include "iris/ray.h"
+#include "iris/vector.h"
+
 namespace iris {
 namespace {
 

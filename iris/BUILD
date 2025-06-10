@@ -53,6 +53,8 @@ cc_test(
     srcs = ["bsdf_test.cc"],
     deps = [
         ":bsdf",
+        ":bxdf",
+        ":vector",
         "//iris/bxdfs:mock_bxdf",
         "//iris/internal:arena",
         "//iris/random:mock_random",
@@ -114,6 +116,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":color",
+        ":float",
         ":spectrum",
     ],
 )
@@ -173,6 +176,7 @@ cc_library(
 
 cc_library(
     name = "framebuffer",
+    srcs = ["framebuffer.cc"],
     hdrs = ["framebuffer.h"],
     visibility = ["//visibility:public"],
     deps = [
@@ -185,6 +189,7 @@ cc_test(
     name = "framebuffer_test",
     srcs = ["framebuffer_test.cc"],
     deps = [
+        ":color",
         ":framebuffer",
         "@googletest//:gtest_main",
     ],
@@ -199,6 +204,7 @@ cc_library(
         ":bounding_box",
         ":emissive_material",
         ":float",
+        ":hit",
         ":hit_allocator",
         ":integer",
         ":material",
@@ -218,7 +224,14 @@ cc_test(
     name = "geometry_test",
     srcs = ["geometry_test.cc"],
     deps = [
+        ":float",
         ":geometry",
+        ":hit",
+        ":hit_allocator",
+        ":point",
+        ":ray",
+        ":sampler",
+        ":vector",
         "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
         "//iris/random:mock_random",
@@ -264,7 +277,11 @@ cc_test(
     srcs = ["hit_allocator_test.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        ":hit",
         ":hit_allocator",
+        ":point",
+        ":ray",
+        ":vector",
         "//iris/internal:hit_arena",
         "@googletest//:gtest_main",
     ],
@@ -277,6 +294,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
+        ":point",
         ":position_error",
         ":ray",
         ":vector",
@@ -288,7 +306,12 @@ cc_test(
     srcs = ["hit_point_test.cc"],
     visibility = ["//visibility:public"],
     deps = [
+        ":float",
         ":hit_point",
+        ":point",
+        ":position_error",
+        ":ray",
+        ":vector",
         "@googletest//:gtest_main",
     ],
 )
@@ -321,7 +344,9 @@ cc_library(
     hdrs = ["intersector.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":float",
         ":geometry",
+        ":hit",
         ":hit_allocator",
         ":matrix",
         "//iris/internal:hit",
@@ -332,7 +357,14 @@ cc_test(
     name = "intersector_test",
     srcs = ["intersector_test.cc"],
     deps = [
+        ":float",
+        ":hit",
+        ":hit_allocator",
         ":intersector",
+        ":matrix",
+        ":point",
+        ":ray",
+        ":vector",
         "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
         "@googletest//:gtest_main",
@@ -374,6 +406,8 @@ cc_test(
     name = "light_sample_allocator_test",
     srcs = ["light_sample_allocator_test.cc"],
     deps = [
+        ":float",
+        ":light_sample",
         ":light_sample_allocator",
         "//iris/internal:arena",
         "//iris/lights:mock_light",
@@ -400,6 +434,7 @@ cc_library(
         ":light_sample",
         ":light_sample_allocator",
         ":light_scene",
+        ":point",
         ":random",
     ],
 )
@@ -408,7 +443,12 @@ cc_test(
     name = "light_sampler_test",
     srcs = ["light_sampler_test.cc"],
     deps = [
+        ":float",
+        ":light_sample",
+        ":light_sample_allocator",
         ":light_sampler",
+        ":point",
+        ":random",
         "//iris/internal:arena",
         "//iris/light_scenes:mock_light_scene",
         "//iris/lights:mock_light",
@@ -471,7 +511,6 @@ cc_library(
     hdrs = ["normal_map.h"],
     visibility = ["//visibility:public"],
     deps = [
-        ":float",
         ":reference_countable",
         ":texture_coordinates",
         ":vector",
@@ -480,6 +519,7 @@ cc_library(
 
 cc_library(
     name = "point",
+    srcs = ["point.cc"],
     hdrs = ["point.h"],
     visibility = ["//visibility:public"],
     deps = [
@@ -493,12 +533,14 @@ cc_test(
     srcs = ["point_test.cc"],
     deps = [
         ":point",
+        ":vector",
         "@googletest//:gtest_main",
     ],
 )
 
 cc_library(
     name = "position_error",
+    srcs = ["position_error.cc"],
     hdrs = ["position_error.h"],
     visibility = ["//visibility:public"],
     deps = [
@@ -558,6 +600,7 @@ cc_test(
     name = "ray_differential_test",
     srcs = ["ray_differential_test.cc"],
     deps = [
+        ":ray",
         ":ray_differential",
         "@googletest//:gtest_main",
     ],
@@ -568,7 +611,6 @@ cc_library(
     hdrs = ["ray.h"],
     visibility = ["//visibility:public"],
     deps = [
-        ":float",
         ":point",
         ":vector",
     ],
@@ -578,7 +620,9 @@ cc_test(
     name = "ray_test",
     srcs = ["ray_test.cc"],
     deps = [
+        ":point",
         ":ray",
+        ":vector",
         "@googletest//:gtest_main",
     ],
 )
@@ -593,11 +637,18 @@ cc_library(
         ":bxdf_allocator",
         ":environmental_light",
         ":float",
+        ":geometry",
         ":hit_point",
+        ":matrix",
+        ":normal_map",
+        ":point",
+        ":ray",
         ":ray_differential",
         ":scene",
         ":spectral_allocator",
         ":spectrum",
+        ":texture_coordinates",
+        ":vector",
         "//iris/internal:ray_tracer",
     ],
 )
@@ -606,9 +657,25 @@ cc_test(
     name = "ray_tracer_test",
     srcs = ["ray_tracer_test.cc"],
     deps = [
+        ":bounding_box",
+        ":bxdf_allocator",
+        ":emissive_material",
+        ":float",
+        ":geometry",
+        ":hit_allocator",
+        ":integer",
+        ":material",
+        ":normal_map",
+        ":point",
+        ":position_error",
+        ":ray",
+        ":ray_differential",
         ":ray_tracer",
-        "//iris:reference_counted",
-        "//iris:scene_objects",
+        ":reference_counted",
+        ":scene_objects",
+        ":spectral_allocator",
+        ":texture_coordinates",
+        ":vector",
         "//iris/bxdfs:mock_bxdf",
         "//iris/emissive_materials:mock_emissive_material",
         "//iris/environmental_lights:mock_environmental_light",
@@ -667,6 +734,7 @@ cc_library(
         ":camera",
         ":color",
         ":color_matcher",
+        ":environmental_light",
         ":float",
         ":framebuffer",
         ":image_sampler",
@@ -675,10 +743,13 @@ cc_library(
         ":light_sampler",
         ":light_scene",
         ":power_matcher",
+        ":random",
+        ":ray_differential",
         ":ray_tracer",
         ":scene",
         ":scene_objects",
         ":spectral_allocator",
+        ":spectrum",
         "//iris/internal:arena",
         "//iris/internal:ray_tracer",
         "//iris/internal:visibility_tester",
@@ -689,7 +760,15 @@ cc_test(
     name = "renderer_test",
     srcs = ["renderer_test.cc"],
     deps = [
+        ":color",
+        ":float",
+        ":framebuffer",
+        ":image_sampler",
+        ":light_scene",
+        ":ray_differential",
         ":renderer",
+        ":scene",
+        ":scene_objects",
         "//iris/albedo_matchers:mock_albedo_matcher",
         "//iris/cameras:mock_camera",
         "//iris/color_matchers:mock_color_matcher",
@@ -780,6 +859,7 @@ cc_library(
     hdrs = ["spectral_allocator.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":float",
         ":reflector",
         ":spectrum",
         "//iris/internal:arena",
@@ -790,10 +870,19 @@ cc_test(
     name = "spectral_allocator_test",
     srcs = ["spectral_allocator_test.cc"],
     deps = [
+        ":bounding_box",
         ":float",
+        ":geometry",
+        ":integer",
+        ":light",
+        ":matrix",
+        ":point",
+        ":ray",
+        ":reference_counted",
         ":reflector",
         ":spectral_allocator",
         ":spectrum",
+        ":vector",
         "//iris/internal:arena",
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
@@ -803,6 +892,7 @@ cc_test(
 
 cc_library(
     name = "texture_coordinates",
+    srcs = ["texture_coordinates.cc"],
     hdrs = ["texture_coordinates.h"],
     visibility = ["//visibility:public"],
     deps = [
@@ -822,6 +912,7 @@ cc_test(
 
 cc_library(
     name = "vector",
+    srcs = ["vector.cc"],
     hdrs = ["vector.h"],
     visibility = ["//visibility:public"],
     deps = [
@@ -855,8 +946,15 @@ cc_test(
     name = "visibility_tester_test",
     srcs = ["visibility_tester_test.cc"],
     deps = [
+        ":bounding_box",
+        ":float",
+        ":hit_allocator",
+        ":point",
+        ":ray",
         ":reference_counted",
+        ":scene",
         ":scene_objects",
+        ":vector",
         ":visibility_tester",
         "//iris/geometry:mock_geometry",
         "//iris/internal:arena",

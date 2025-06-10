@@ -1,7 +1,6 @@
 #ifndef _IRIS_HIT_ALLOCATOR_
 #define _IRIS_HIT_ALLOCATOR_
 
-#include <cstddef>
 #include <type_traits>
 
 #include "iris/float.h"

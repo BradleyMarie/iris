@@ -2,19 +2,24 @@
 
 #include <cassert>
 
+#include "iris/float.h"
+#include "iris/geometry.h"
+#include "iris/hit.h"
 #include "iris/hit_allocator.h"
 #include "iris/internal/hit.h"
+#include "iris/matrix.h"
+#include "iris/ray.h"
 
 namespace iris {
 
 bool Intersector::Intersect(const Geometry& geometry) {
   HitAllocator allocator(ray_, hit_arena_);
 
-  for (auto* hit_list = geometry.Trace(allocator); hit_list;
+  for (Hit* hit_list = geometry.Trace(allocator); hit_list;
        hit_list = hit_list->next) {
     assert(!hit_list->next || hit_list->distance < hit_list->next->distance);
 
-    auto* full_hit = static_cast<internal::Hit*>(hit_list);
+    internal::Hit* full_hit = static_cast<internal::Hit*>(hit_list);
     if (full_hit->distance - full_hit->distance_error > minimum_distance_ &&
         full_hit->distance < closest_hit_distance_ &&
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
@@ -38,11 +43,11 @@ bool Intersector::Intersect(const Geometry& geometry,
       model_to_world ? model_to_world->InverseMultiplyWithError(ray_) : ray_;
   HitAllocator allocator(trace_ray, hit_arena_);
 
-  for (auto* hit_list = geometry.Trace(allocator); hit_list;
+  for (Hit* hit_list = geometry.Trace(allocator); hit_list;
        hit_list = hit_list->next) {
     assert(!hit_list->next || hit_list->distance < hit_list->next->distance);
 
-    auto* full_hit = static_cast<internal::Hit*>(hit_list);
+    internal::Hit* full_hit = static_cast<internal::Hit*>(hit_list);
     if (full_hit->distance - full_hit->distance_error > minimum_distance_ &&
         full_hit->distance < closest_hit_distance_ &&
         full_hit->distance + full_hit->distance_error < maximum_distance_) {
@@ -66,11 +71,11 @@ bool Intersector::Intersect(const Geometry& geometry,
   Ray trace_ray = model_to_world.InverseMultiplyWithError(ray_);
   HitAllocator allocator(trace_ray, hit_arena_);
 
-  for (auto* hit_list = geometry.Trace(allocator); hit_list;
+  for (Hit* hit_list = geometry.Trace(allocator); hit_list;
        hit_list = hit_list->next) {
     assert(!hit_list->next || hit_list->distance < hit_list->next->distance);
 
-    auto* full_hit = static_cast<internal::Hit*>(hit_list);
+    internal::Hit* full_hit = static_cast<internal::Hit*>(hit_list);
     if (full_hit->distance - full_hit->distance_error > minimum_distance_ &&
         full_hit->distance < closest_hit_distance_ &&
         full_hit->distance + full_hit->distance_error < maximum_distance_) {

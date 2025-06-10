@@ -3,19 +3,38 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <cmath>
+#include <functional>
+#include <memory>
+#include <optional>
 #include <thread>
+#include <utility>
 #include <vector>
 
+#include "iris/albedo_matcher.h"
+#include "iris/camera.h"
 #include "iris/color.h"
+#include "iris/color_matcher.h"
+#include "iris/environmental_light.h"
 #include "iris/float.h"
+#include "iris/framebuffer.h"
+#include "iris/image_sampler.h"
+#include "iris/integrator.h"
 #include "iris/internal/arena.h"
 #include "iris/internal/ray_tracer.h"
 #include "iris/internal/visibility_tester.h"
 #include "iris/light_sample_allocator.h"
 #include "iris/light_sampler.h"
+#include "iris/light_scene.h"
+#include "iris/power_matcher.h"
+#include "iris/random.h"
+#include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
+#include "iris/scene.h"
+#include "iris/scene_objects.h"
 #include "iris/spectral_allocator.h"
+#include "iris/spectrum.h"
 
 namespace iris {
 namespace {
@@ -102,31 +121,44 @@ void RenderChunk(
           if (spectrum) {
             std::array<visual_t, 3UL> sample_components =
                 color_matcher.Match(*spectrum);
+            assert(std::isfinite(sample_components[0]) &&
+                   sample_components[0] >= static_cast<visual_t>(0.0));
+            assert(std::isfinite(sample_components[1]) &&
+                   sample_components[0] >= static_cast<visual_t>(0.0));
+            assert(std::isfinite(sample_components[2]) &&
+                   sample_components[0] >= static_cast<visual_t>(0.0));
 
-            sample_components[0] =
-                std::max(static_cast<visual_t>(0.0), sample_components[0]);
-            sample_components[1] =
-                std::max(static_cast<visual_t>(0.0), sample_components[1]);
-            sample_components[2] =
-                std::max(static_cast<visual_t>(0.0), sample_components[2]);
+            if (std::isfinite(sample_components[0]) &&
+                std::isfinite(sample_components[0]) &&
+                std::isfinite(sample_components[0])) {
+              sample_components[0] =
+                  std::max(static_cast<visual_t>(0.0), sample_components[0]);
+              sample_components[1] =
+                  std::max(static_cast<visual_t>(0.0), sample_components[1]);
+              sample_components[2] =
+                  std::max(static_cast<visual_t>(0.0), sample_components[2]);
 
-            if (maximum_sample_luminance.has_value()) {
-              Color color(sample_components[0], sample_components[1],
-                          sample_components[2], color_space);
+              if (maximum_sample_luminance.has_value()) {
+                Color color(sample_components[0], sample_components[1],
+                            sample_components[2], color_space);
 
-              if (Color xyz = color.ConvertTo(Color::CIE_XYZ);
-                  xyz.y > static_cast<visual_t>(0.0) &&
-                  xyz.y > *maximum_sample_luminance) {
-                visual_t scale = *maximum_sample_luminance / xyz.y;
-                sample_components[0] *= scale;
-                sample_components[1] *= scale;
-                sample_components[2] *= scale;
+                if (Color xyz = color.ConvertTo(Color::CIE_XYZ);
+                    xyz.y > static_cast<visual_t>(0.0) &&
+                    xyz.y > *maximum_sample_luminance) {
+                  visual_t scale = *maximum_sample_luminance / xyz.y;
+                  sample_components[0] *= scale;
+                  sample_components[1] *= scale;
+                  sample_components[2] *= scale;
+                }
               }
-            }
 
-            pixel_components[0] += sample_components[0] * image_sample->weight;
-            pixel_components[1] += sample_components[1] * image_sample->weight;
-            pixel_components[2] += sample_components[2] * image_sample->weight;
+              pixel_components[0] +=
+                  sample_components[0] * image_sample->weight;
+              pixel_components[1] +=
+                  sample_components[1] * image_sample->weight;
+              pixel_components[2] +=
+                  sample_components[2] * image_sample->weight;
+            }
           }
 
           arena.Clear();
@@ -145,6 +177,14 @@ void RenderChunk(
 }
 
 }  // namespace
+
+Renderer::Renderer(const Scene::Builder& scene_builder,
+                   const LightScene::Builder& light_scene_builder,
+                   SceneObjects scene_objects,
+                   const PowerMatcher& power_matcher)
+    : scene_objects_(std::make_unique<SceneObjects>(std::move(scene_objects))),
+      scene_(scene_builder.Build(*scene_objects_)),
+      light_scene_(light_scene_builder.Build(*scene_objects_, power_matcher)) {}
 
 Framebuffer Renderer::Render(const Camera& camera,
                              const ImageSampler& image_sampler,

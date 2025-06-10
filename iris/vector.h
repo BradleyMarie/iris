@@ -1,8 +1,6 @@
 #ifndef _IRIS_VECTOR_
 #define _IRIS_VECTOR_
 
-#include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <type_traits>
 #include <utility>
@@ -18,22 +16,24 @@ struct Vector final {
     Z_AXIS = 2,
   };
 
-  constexpr explicit Vector(geometric x, geometric y, geometric z) noexcept
-      : x(x), y(y), z(z) {
-    assert(std::isfinite(x));
-    assert(std::isfinite(y));
-    assert(std::isfinite(z));
-  }
+#ifdef NDEBUG
+  Vector(geometric x, geometric y, geometric z) noexcept : x(x), y(y), z(z) {}
+#else
+  Vector(geometric x, geometric y, geometric z) noexcept;
+#endif  // NDEBUG
 
   Vector(const Vector&) noexcept = default;
 
   bool operator==(const Vector&) const = default;
 
+#ifdef NDEBUG
   const geometric& operator[](size_t index) const {
-    assert(index < 3);
     const geometric* as_array = &x;
     return as_array[index];
   }
+#else
+  const geometric& operator[](size_t index) const;
+#endif  // NDEBUG
 
   Axis DiminishedAxis() const;
   Axis DominantAxis() const;
@@ -67,7 +67,6 @@ template <typename T>
 static inline Vector operator*(const Vector& vector, T scalar)
   requires std::is_floating_point<T>::value
 {
-  assert(std::isfinite(scalar));
   return Vector(vector.x * scalar, vector.y * scalar, vector.z * scalar);
 }
 
@@ -75,7 +74,6 @@ template <typename T>
 static inline Vector operator*(T scalar, const Vector& vector)
   requires std::is_floating_point<T>::value
 {
-  assert(std::isfinite(scalar));
   return vector * scalar;
 }
 
@@ -83,7 +81,6 @@ template <typename T>
 static inline Vector operator/(const Vector& dividend, T divisor)
   requires std::is_floating_point<T>::value
 {
-  assert(!std::isnan(divisor) && divisor != 0.0);
   return Vector(dividend.x / divisor, dividend.y / divisor,
                 dividend.z / divisor);
 }
@@ -96,14 +93,18 @@ static inline geometric_t DotProduct(const Vector& operand0,
 
 static inline geometric_t ClampedDotProduct(const Vector& operand0,
                                             const Vector& operand1) {
-  return std::clamp(DotProduct(operand0, operand1), static_cast<visual_t>(-1.0),
-                    static_cast<visual_t>(1.0));
+  geometric_t dp = DotProduct(operand0, operand1);
+  if (dp < static_cast<visual_t>(-1.0)) {
+    return static_cast<visual_t>(-1.0);
+  }
+
+  return (dp > static_cast<visual_t>(1.0)) ? static_cast<visual_t>(1.0) : dp;
 }
 
 static inline geometric_t ClampedAbsDotProduct(const Vector& operand0,
                                                const Vector& operand1) {
-  return std::min(static_cast<visual_t>(1.0),
-                  std::abs(DotProduct(operand0, operand1)));
+  geometric_t dp = std::abs(DotProduct(operand0, operand1));
+  return (dp > static_cast<visual_t>(1.0)) ? static_cast<visual_t>(1.0) : dp;
 }
 
 static inline Vector CrossProduct(const Vector& operand0,
@@ -130,8 +131,6 @@ static inline Vector Normalize(const Vector& vector,
 }
 
 static inline std::pair<Vector, Vector> CoordinateSystem(const Vector& vector) {
-  assert(std::abs(DotProduct(vector, vector) - 1.0) < 0.01);
-
   geometric nx, ny, nz;
   if (std::abs(vector.x) > std::abs(vector.y)) {
     geometric_t length = std::sqrt(vector.x * vector.x + vector.z * vector.z);

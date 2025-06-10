@@ -36,10 +36,10 @@ using ::testing::NotNull;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
-constexpr PositionError kError = PositionError(0.0, 0.0, 0.0);
-constexpr Point kOrigin = Point(0.0, 0.0, 0.0);
-constexpr Point kDxOrigin = Point(1.0, 0.0, 0.0);
-constexpr Point kDyOrigin = Point(0.0, 1.0, 0.0);
+static const PositionError kError = PositionError(0.0, 0.0, 0.0);
+static const Point kOrigin = Point(0.0, 0.0, 0.0);
+static const Point kDxOrigin = Point(1.0, 0.0, 0.0);
+static const Point kDyOrigin = Point(0.0, 1.0, 0.0);
 
 static const Vector kDirection = Normalize(Vector(0.0, 0.0, 1.0));
 static const Vector kOutgoing = Normalize(Vector(0.0, 0.0, -1.0));

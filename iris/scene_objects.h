@@ -1,9 +1,7 @@
 #ifndef _IRIS_SCENE_OBJECTS_
 #define _IRIS_SCENE_OBJECTS_
 
-#include <cassert>
 #include <map>
-#include <memory>
 #include <set>
 #include <utility>
 #include <vector>
@@ -55,19 +53,24 @@ class SceneObjects final {
 
   size_t NumGeometry() const noexcept { return geometry_.size(); }
 
+#ifdef NDEBUG
   std::pair<const Geometry&, const Matrix*> GetGeometry(
       size_t index) const noexcept {
-    assert(index < geometry_.size());
-    return std::make_pair(std::cref(*geometry_[index].first),
-                          geometry_[index].second);
+    return std::pair<const Geometry&, const Matrix*>(*geometry_[index].first,
+                                                     geometry_[index].second);
   }
+#else
+  std::pair<const Geometry&, const Matrix*> GetGeometry(
+      size_t index) const noexcept;
+#endif  // NDEBUG
 
   size_t NumLights() const noexcept { return lights_.size(); }
 
-  const Light& GetLight(size_t index) const noexcept {
-    assert(index < lights_.size());
-    return *lights_[index];
-  }
+#ifdef NDEBUG
+  const Light& GetLight(size_t index) const noexcept { return *lights_[index]; }
+#else
+  const Light& GetLight(size_t index) const noexcept;
+#endif  // NDEBUG
 
   const EnvironmentalLight* GetEnvironmentalLight() const noexcept {
     return environmental_light_.Get();

@@ -1,8 +1,17 @@
 #include "iris/bsdf.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <optional>
 #include <utility>
+
+#include "iris/bxdf.h"
+#include "iris/float.h"
+#include "iris/reflector.h"
+#include "iris/sampler.h"
+#include "iris/spectral_allocator.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace {

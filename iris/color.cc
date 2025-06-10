@@ -1,6 +1,8 @@
 #include "iris/color.h"
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 
 namespace iris {
 namespace {
@@ -15,6 +17,19 @@ static const visual xyz_to_linear_srgb[3][3] = {
     {0.0556434, -0.2040259, 1.0572252}};
 
 }  // namespace
+
+#ifndef NDEBUG
+
+Color::Color(visual_t c0, visual_t c1, visual_t c2, Space space) noexcept
+    : x(c0), y(c1), z(c2), space(space) {
+  assert(std::isfinite(x) && x >= 0.0);
+  assert(std::isfinite(y) && y >= 0.0);
+  assert(std::isfinite(z) && z >= 0.0);
+  assert(space >= CIE_XYZ);
+  assert(space <= LINEAR_SRGB);
+}
+
+#endif  // NDEBUG
 
 Color Color::ConvertTo(Space target) const {
   assert(target >= CIE_XYZ);

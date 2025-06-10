@@ -1,29 +1,22 @@
 #ifndef _IRIS_RAY_
 #define _IRIS_RAY_
 
-#include <cassert>
-#include <cmath>
-#include <type_traits>
+#include <concepts>
 
-#include "iris/float.h"
 #include "iris/point.h"
 #include "iris/vector.h"
 
 namespace iris {
 
 struct Ray {
-  constexpr explicit Ray(const Point& origin, const Vector& direction) noexcept
+  Ray(const Point& origin, const Vector& direction) noexcept
       : origin(origin), direction(direction) {}
 
   Ray(const Ray&) noexcept = default;
 
   bool operator==(const Ray&) const = default;
 
-  template <typename T>
-  Point Endpoint(T distance) const
-    requires std::is_floating_point<T>::value
-  {
-    assert(std::isfinite(distance));
+  Point Endpoint(std::floating_point auto distance) const {
     return origin + direction * distance;
   }
 

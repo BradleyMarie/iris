@@ -7,9 +7,11 @@
 #include "iris/environmental_light.h"
 #include "iris/float.h"
 #include "iris/hit_point.h"
+#include "iris/point.h"
 #include "iris/ray_differential.h"
 #include "iris/scene.h"
 #include "iris/spectrum.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace internal {

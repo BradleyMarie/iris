@@ -1,7 +1,9 @@
 #ifndef _IRIS_INTERSECTOR_
 #define _IRIS_INTERSECTOR_
 
+#include "iris/float.h"
 #include "iris/geometry.h"
+#include "iris/hit.h"
 #include "iris/matrix.h"
 #include "iris/ray.h"
 

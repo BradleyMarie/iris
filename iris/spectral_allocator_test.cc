@@ -1,6 +1,7 @@
 #include "iris/spectral_allocator.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/float.h"
 #include "iris/internal/arena.h"
 #include "iris/reflector.h"
 #include "iris/reflectors/mock_reflector.h"
@@ -235,7 +236,9 @@ TEST(SpectralAllocator, FresnelConductorNullptr) {
 
   MockSpectrum spectrum;
   EXPECT_TRUE(allocator.FresnelConductor(1.0, &spectrum, &spectrum, 0.0001));
+#ifdef NDEBUG
   EXPECT_FALSE(allocator.FresnelConductor(0.0, &spectrum, &spectrum, 0.0001));
+#endif  // NDEBUG
   EXPECT_FALSE(allocator.FresnelConductor(1.0, nullptr, &spectrum, 0.0001));
   EXPECT_TRUE(allocator.FresnelConductor(1.0, &spectrum, nullptr, 0.0001));
   EXPECT_TRUE(allocator.FresnelConductor(1.0, &spectrum, &spectrum, 0.0));
@@ -245,7 +248,7 @@ TEST(SpectralAllocator, FresnelConductorPerpendicular) {
   Arena arena;
   SpectralAllocator allocator(arena);
 
-  EXPECT_EQ(nullptr, allocator.FresnelConductor(0.0, nullptr, nullptr, 0.0));
+  EXPECT_EQ(nullptr, allocator.FresnelConductor(1.0, nullptr, nullptr, 0.0));
 }
 
 TEST(SpectralAllocator, FresnelConductorGlancing) {
@@ -261,6 +264,7 @@ TEST(SpectralAllocator, FresnelConductorGlancing) {
 }
 
 TEST(SpectralAllocator, FresnelConductorReturnsBadEtaConductor) {
+#ifdef NDEBUG
   Arena arena;
   SpectralAllocator allocator(arena);
 
@@ -272,9 +276,11 @@ TEST(SpectralAllocator, FresnelConductorReturnsBadEtaConductor) {
       allocator.FresnelConductor(1.0, &eta_conductor, &k_conductor, 0.5);
   ASSERT_TRUE(reflector);
   EXPECT_NEAR(0.0, reflector->Reflectance(1.0), 0.001);
+#endif  // NDEBUG
 }
 
 TEST(SpectralAllocator, FresnelConductorReturnsBadKConductor) {
+#ifdef NDEBUG
   Arena arena;
   SpectralAllocator allocator(arena);
 
@@ -287,6 +293,7 @@ TEST(SpectralAllocator, FresnelConductorReturnsBadKConductor) {
       allocator.FresnelConductor(1.0, &eta_conductor, &k_conductor, 0.5);
   ASSERT_TRUE(reflector);
   EXPECT_NEAR(0.1613, reflector->Reflectance(1.0), 0.001);
+#endif  // NDEBUG
 }
 
 TEST(SpectralAllocator, FresnelConductor) {

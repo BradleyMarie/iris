@@ -4,6 +4,7 @@
 #include <array>
 
 #include "iris/color.h"
+#include "iris/float.h"
 #include "iris/spectrum.h"
 
 namespace iris {

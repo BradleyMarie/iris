@@ -9,11 +9,13 @@
 #include "iris/albedo_matcher.h"
 #include "iris/camera.h"
 #include "iris/color_matcher.h"
+#include "iris/float.h"
 #include "iris/framebuffer.h"
 #include "iris/image_sampler.h"
 #include "iris/integrator.h"
 #include "iris/light_scene.h"
 #include "iris/power_matcher.h"
+#include "iris/random.h"
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
 
@@ -23,12 +25,7 @@ class Renderer final {
  public:
   Renderer(const Scene::Builder& scene_builder,
            const LightScene::Builder& light_scene_builder,
-           SceneObjects scene_objects, const PowerMatcher& power_matcher)
-      : scene_objects_(
-            std::make_unique<SceneObjects>(std::move(scene_objects))),
-        scene_(scene_builder.Build(*scene_objects_)),
-        light_scene_(
-            light_scene_builder.Build(*scene_objects_, power_matcher)) {}
+           SceneObjects scene_objects, const PowerMatcher& power_matcher);
 
   typedef std::function<bool(std::pair<size_t, size_t>,
                              std::pair<size_t, size_t>)>
