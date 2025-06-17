@@ -1,5 +1,6 @@
 #include "iris/framebuffer.h"
 
+#undef NDEBUG  // Enable assertions at runtime
 #include <array>
 #include <cassert>
 #include <utility>
@@ -13,10 +14,7 @@ namespace iris {
 Framebuffer::Framebuffer(std::pair<size_t, size_t> dimensions)
     : pixels_(dimensions.first,
               std::vector<std::pair<std::array<visual_t, 3>, Color::Space>>(
-                  dimensions.second, {{0.0, 0.0, 0.0}, Color::CIE_XYZ})) {
-  assert(dimensions.first != 0);
-  assert(dimensions.second != 0);
-}
+                  dimensions.second, {{0.0, 0.0, 0.0}, Color::CIE_XYZ})) {}
 
 Color Framebuffer::Get(size_t y, size_t x) const {
   assert(y < pixels_.size());
