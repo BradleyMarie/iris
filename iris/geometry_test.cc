@@ -41,13 +41,13 @@ TEST(GeometryTest, Trace) {
       .WillOnce(([&](const Ray& trace_ray, HitAllocator& hit_allocator) {
         EXPECT_EQ(ray, trace_ray);
         const Geometry* base_geom = &nested_geom;
-        Hit* nested_hit = base_geom->Trace(hit_allocator);
+        Hit* nested_hit = base_geom->TraceAllHits(hit_allocator);
         return &hit_allocator.Allocate(nested_hit, 1.0,
                                        static_cast<geometric_t>(0.0), 2, 3);
       }));
 
   Geometry* base_geom = &geom;
-  Hit* hit = base_geom->Trace(allocator);
+  Hit* hit = base_geom->TraceAllHits(allocator);
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(hit);
   EXPECT_EQ(1.0, hit->distance);

@@ -116,7 +116,7 @@ TEST(Triangle, MissesOnEdge) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = triangle->Trace(hit_allocator);
+  Hit* hit = triangle->TraceAllHits(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -128,7 +128,7 @@ TEST(Triangle, MissesBelow) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = triangle->Trace(hit_allocator);
+  Hit* hit = triangle->TraceAllHits(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -140,7 +140,7 @@ TEST(Triangle, MissesAbove) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = triangle->Trace(hit_allocator);
+  Hit* hit = triangle->TraceAllHits(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -152,7 +152,7 @@ TEST(Triangle, MissesLeft) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = triangle->Trace(hit_allocator);
+  Hit* hit = triangle->TraceAllHits(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -164,7 +164,7 @@ TEST(Triangle, MissesRight) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = triangle->Trace(hit_allocator);
+  Hit* hit = triangle->TraceAllHits(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -181,7 +181,7 @@ TEST(Triangle, HitsXDominantFront) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangles.front()->Trace(hit_allocator);
+  Hit* hit = triangles.front()->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
   EXPECT_EQ(nullptr, hit->next);
@@ -213,7 +213,7 @@ TEST(Triangle, HitsXDominantBack) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangles.front()->Trace(hit_allocator);
+  Hit* hit = triangles.front()->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
   EXPECT_EQ(nullptr, hit->next);
@@ -245,7 +245,7 @@ TEST(Triangle, HitsYDominantFront) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangles.front()->Trace(hit_allocator);
+  Hit* hit = triangles.front()->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
   EXPECT_EQ(nullptr, hit->next);
@@ -277,7 +277,7 @@ TEST(Triangle, HitsYDominantBack) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangles.front()->Trace(hit_allocator);
+  Hit* hit = triangles.front()->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
   EXPECT_EQ(nullptr, hit->next);
@@ -305,7 +305,7 @@ TEST(Triangle, HitsZDominantFront) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangle->Trace(hit_allocator);
+  Hit* hit = triangle->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
   EXPECT_EQ(nullptr, hit->next);
@@ -333,7 +333,7 @@ TEST(Triangle, HitsZDominantBack) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangle->Trace(hit_allocator);
+  Hit* hit = triangle->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
   EXPECT_EQ(nullptr, hit->next);
@@ -366,7 +366,7 @@ TEST(Triangle, VertexNormalsLeaves) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangles.front()->Trace(hit_allocator);
+  Hit* hit = triangles.front()->TraceAllHits(hit_allocator);
   EXPECT_EQ(BACK_FACE, FrontFace(*hit));
   EXPECT_EQ(FRONT_FACE, BackFace(*hit));
 }
@@ -385,7 +385,7 @@ TEST(Triangle, VertexNormalsReverses) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = triangles.front()->Trace(hit_allocator);
+  Hit* hit = triangles.front()->TraceAllHits(hit_allocator);
   EXPECT_EQ(FRONT_FACE, FrontFace(*hit));
   EXPECT_EQ(BACK_FACE, BackFace(*hit));
 }
@@ -407,7 +407,7 @@ TEST(Triangle, AlphaHits) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  EXPECT_TRUE(triangles.front()->Trace(hit_allocator));
+  EXPECT_TRUE(triangles.front()->TraceAllHits(hit_allocator));
 }
 
 TEST(Triangle, AlphaMisses) {
@@ -427,7 +427,7 @@ TEST(Triangle, AlphaMisses) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  EXPECT_FALSE(triangles.front()->Trace(hit_allocator));
+  EXPECT_FALSE(triangles.front()->TraceAllHits(hit_allocator));
 }
 
 TEST(Triangle, AlphaNoUVHits) {
@@ -443,7 +443,7 @@ TEST(Triangle, AlphaNoUVHits) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  EXPECT_TRUE(triangles.front()->Trace(hit_allocator));
+  EXPECT_TRUE(triangles.front()->TraceAllHits(hit_allocator));
 }
 
 TEST(Triangle, ComputeSurfaceNormal) {

@@ -140,7 +140,7 @@ class NoEmissiveSurfacesGeometry : public Geometry {
 
  private:
   Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
-    return impl_->Trace(hit_allocator);
+    return impl_->TraceAllHits(hit_allocator);
   }
 
   ReferenceCounted<Geometry> impl_;

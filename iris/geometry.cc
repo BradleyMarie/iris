@@ -17,7 +17,7 @@
 
 namespace iris {
 
-Hit* Geometry::Trace(HitAllocator& hit_allocator) const {
+Hit* Geometry::TraceAllHits(HitAllocator& hit_allocator) const {
   const Geometry* old = hit_allocator.arena_.GetGeometry();
 
   hit_allocator.arena_.SetGeometry(this);

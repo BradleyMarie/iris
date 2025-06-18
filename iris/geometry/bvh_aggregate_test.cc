@@ -99,7 +99,7 @@ TEST(BVHAggregate, FirstSphere) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = aggregate->Trace(hit_allocator);
+  Hit* hit = aggregate->TraceAllHits(hit_allocator);
   EXPECT_EQ(hit->distance, 0.5);
 }
 
@@ -113,7 +113,7 @@ TEST(BVHAggregate, SecondSphere) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = aggregate->Trace(hit_allocator);
+  Hit* hit = aggregate->TraceAllHits(hit_allocator);
   EXPECT_EQ(hit->distance, 0.5);
 }
 

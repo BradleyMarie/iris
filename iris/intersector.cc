@@ -15,7 +15,7 @@ namespace iris {
 bool Intersector::Intersect(const Geometry& geometry) {
   HitAllocator allocator(ray_, hit_arena_);
 
-  for (Hit* hit_list = geometry.Trace(allocator); hit_list;
+  for (Hit* hit_list = geometry.TraceAllHits(allocator); hit_list;
        hit_list = hit_list->next) {
     assert(!hit_list->next || hit_list->distance < hit_list->next->distance);
 
@@ -43,7 +43,7 @@ bool Intersector::Intersect(const Geometry& geometry,
       model_to_world ? model_to_world->InverseMultiplyWithError(ray_) : ray_;
   HitAllocator allocator(trace_ray, hit_arena_);
 
-  for (Hit* hit_list = geometry.Trace(allocator); hit_list;
+  for (Hit* hit_list = geometry.TraceAllHits(allocator); hit_list;
        hit_list = hit_list->next) {
     assert(!hit_list->next || hit_list->distance < hit_list->next->distance);
 
@@ -71,7 +71,7 @@ bool Intersector::Intersect(const Geometry& geometry,
   Ray trace_ray = model_to_world.InverseMultiplyWithError(ray_);
   HitAllocator allocator(trace_ray, hit_arena_);
 
-  for (Hit* hit_list = geometry.Trace(allocator); hit_list;
+  for (Hit* hit_list = geometry.TraceAllHits(allocator); hit_list;
        hit_list = hit_list->next) {
     assert(!hit_list->next || hit_list->distance < hit_list->next->distance);
 

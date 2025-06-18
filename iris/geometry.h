@@ -27,7 +27,7 @@ namespace iris {
 
 class Geometry : public ReferenceCountable {
  public:
-  Hit* Trace(HitAllocator& hit_allocator) const;
+  Hit* TraceAllHits(HitAllocator& hit_allocator) const;
 
   virtual Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                       const void* additional_data) const = 0;

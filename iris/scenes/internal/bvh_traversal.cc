@@ -73,7 +73,8 @@ class NestedGeometryIntersector : public Intersector {
   bool Intersect(const BVHNode& bvh_node) override {
     auto [start_index, num_shapes] = bvh_node.Shapes();
     for (size_t i = 0; i < num_shapes; i++) {
-      for (Hit* hit_list = geometry_[start_index + i]->Trace(hit_allocator_);
+      for (Hit* hit_list =
+               geometry_[start_index + i]->TraceAllHits(hit_allocator_);
            hit_list; hit_list = hit_list->next) {
         if (hit_list->distance > minimum_distance &&
             hit_list->distance < maximum_distance) {

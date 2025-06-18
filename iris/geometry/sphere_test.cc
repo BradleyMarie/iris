@@ -82,7 +82,7 @@ TEST(Sphere, MissesCompletely) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->TraceAllHits(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -94,7 +94,7 @@ TEST(Sphere, MissesOnEdge) {
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->TraceAllHits(hit_allocator);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -107,7 +107,7 @@ TEST(Sphere, Inside) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(-1.0, hit->distance);
 
@@ -130,7 +130,7 @@ TEST(Sphere, InFront) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
 
@@ -153,7 +153,7 @@ TEST(Sphere, Behind) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit* hit = sphere->Trace(hit_allocator);
+  Hit* hit = sphere->TraceAllHits(hit_allocator);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(-5.0, hit->distance);
 
