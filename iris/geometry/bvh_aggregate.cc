@@ -67,7 +67,9 @@ class BVHAggregate final : public Geometry {
   std::span<const face_t> GetFaces() const override { return {}; }
 
  private:
-  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
+  Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+             geometric_t maximum_distance, TraceMode trace_mode,
+             HitAllocator& hit_allocator) const override {
     return scenes::internal::Intersect(bvh_.front(), geometry_, ray,
                                        hit_allocator);
   }
@@ -139,7 +141,9 @@ class NoEmissiveSurfacesGeometry : public Geometry {
   }
 
  private:
-  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
+  Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+             geometric_t maximum_distance, TraceMode trace_mode,
+             HitAllocator& hit_allocator) const override {
     return impl_->TraceAllHits(hit_allocator);
   }
 

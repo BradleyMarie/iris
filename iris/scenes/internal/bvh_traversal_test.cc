@@ -64,8 +64,10 @@ TEST(SceneIntersect, FirstNegative) {
                scene_objects.NumGeometry());
   scene_objects.Reorder(result.geometry_sort_order);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
 
   Ray ray(Point(0.25, 0.25, 5.5), Vector(0.0, 0.0, -1.0));
   Hit* closest_hit = nullptr;
@@ -102,8 +104,10 @@ TEST(SceneIntersect, FirstPositive) {
                scene_objects.NumGeometry());
   scene_objects.Reorder(result.geometry_sort_order);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
 
   Ray ray(Point(0.25, 0.25, -5.5), Vector(0.0, 0.0, 1.0));
   Hit* closest_hit = nullptr;
@@ -140,8 +144,10 @@ TEST(SceneIntersect, SecondNegative) {
                scene_objects.NumGeometry());
   scene_objects.Reorder(result.geometry_sort_order);
 
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
 
   Ray ray(Point(2.25, 2.25, 5.5), Vector(0.0, 0.0, -1.0));
   Hit* closest_hit = nullptr;
@@ -178,8 +184,10 @@ TEST(SceneIntersect, SecondPositive) {
                scene_objects.NumGeometry());
   scene_objects.Reorder(result.geometry_sort_order);
 
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
 
   Ray ray(Point(2.25, 2.25, -5.5), Vector(0.0, 0.0, 1.0));
   Hit* closest_hit = nullptr;
@@ -216,8 +224,12 @@ TEST(SceneIntersect, Overlapped) {
                scene_objects.NumGeometry());
   scene_objects.Reorder(result.geometry_sort_order);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
 
   Ray ray(Point(2.25, 2.25, -5.5), Vector(0.0, 0.0, 1.0));
   Hit* closest_hit = nullptr;
@@ -259,8 +271,10 @@ TEST(NestedIntersect, NoHit) {
   Ray ray(Point(0.25, 0.25, 5.5), Vector(0.0, 0.0, -1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
 
   Hit* hit = Intersect(result.bvh[0], sorted_geometry, ray, hit_allocator);
   EXPECT_EQ(nullptr, hit);
@@ -301,10 +315,10 @@ TEST(NestedIntersect, FirstNegative) {
 
   Hit& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _))
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)
       .WillOnce(Return(&expected_hit));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
 
   Hit* actual_hit =
       Intersect(result.bvh[0], sorted_geometry, ray, hit_allocator);
@@ -346,10 +360,10 @@ TEST(NestedIntersect, FirstPositive) {
 
   Hit& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _))
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)
       .WillOnce(Return(&expected_hit));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
 
   Hit* actual_hit =
       Intersect(result.bvh[0], sorted_geometry, ray, hit_allocator);
@@ -391,8 +405,8 @@ TEST(NestedIntersect, SecondNegative) {
 
   Hit& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u);
 
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
-  EXPECT_CALL(*mock_geometry1, Trace(_, _))
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
       .Times(1)
       .WillOnce(Return(&expected_hit));
 
@@ -436,8 +450,8 @@ TEST(NestedIntersect, SecondPositive) {
 
   Hit& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
 
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
-  EXPECT_CALL(*mock_geometry1, Trace(_, _))
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
       .Times(1)
       .WillOnce(Return(&expected_hit));
 
@@ -482,10 +496,10 @@ TEST(NestedIntersect, Overlapped) {
   Hit& first_hit = hit_allocator.Allocate(nullptr, 2.0, 0.0, 0u, 0u);
   Hit& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _))
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)
       .WillOnce(Return(&first_hit));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _))
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
       .Times(1)
       .WillOnce(Return(&expected_hit));
 

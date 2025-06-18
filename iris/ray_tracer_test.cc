@@ -60,8 +60,11 @@ void MakeBasicGeometryImpl(ReferenceCounted<MockBasicGeometry> geometry,
                            const Ray& expected_ray,
                            const Point& expected_hit_point) {
   EXPECT_CALL(*geometry, GetFaces()).WillOnce(Return(std::vector<face_t>({1})));
-  EXPECT_CALL(*geometry, Trace(expected_ray, _))
-      .WillOnce(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
+  EXPECT_CALL(*geometry, Trace(expected_ray, _, _, _, _))
+      .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
+                          geometric_t maximum_distance,
+                          Geometry::TraceMode trace_mode,
+                          HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2u, 3u, g_data);
       }));
   EXPECT_CALL(*geometry, ComputeHitPoint(expected_ray, 1.0, _))

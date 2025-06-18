@@ -82,7 +82,9 @@ class Sphere final : public Geometry {
   std::span<const face_t> GetFaces() const override;
 
  private:
-  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override;
+  Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+             geometric_t maximum_distance, TraceMode trace_mode,
+             HitAllocator& hit_allocator) const override;
 
   const Point center_;
   const geometric radius_;
@@ -281,7 +283,9 @@ std::span<const face_t> Sphere::GetFaces() const {
   return faces;
 }
 
-Hit* Sphere::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
+Hit* Sphere::Trace(const Ray& ray, geometric_t minimum_distance,
+                   geometric_t maximum_distance, TraceMode trace_mode,
+                   HitAllocator& hit_allocator) const {
   Vector to_center = center_ - ray.origin;
 
   geometric_t distance_to_chord_midpoint = DotProduct(to_center, ray.direction);

@@ -47,8 +47,11 @@ std::unique_ptr<MockGeometry> MakeGeometry(
   std::unique_ptr<MockGeometry> geometry = std::make_unique<MockGeometry>();
   EXPECT_CALL(*geometry, GetFaces())
       .WillRepeatedly(Return(std::vector<face_t>({1u, 2u})));
-  EXPECT_CALL(*geometry, Trace(_, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, HitAllocator& hit_allocator) {
+  EXPECT_CALL(*geometry, Trace(_, _, _, _, _))
+      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
+                                geometric_t maximum_distance,
+                                Geometry::TraceMode trace_mode,
+                                HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1u, 2u);
       }));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(_, _, _, _))

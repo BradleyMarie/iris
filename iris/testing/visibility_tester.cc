@@ -29,7 +29,9 @@ class NeverVisibleScene final : public Scene {
  private:
   class AlwaysHitsGeometry : public Geometry {
    public:
-    Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
+    Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+               geometric_t maximum_distance, TraceMode trace_mode,
+               HitAllocator& hit_allocator) const override {
       return &hit_allocator.Allocate(nullptr,
                                      std::nextafter(static_cast<visual_t>(0.0),
                                                     static_cast<visual_t>(1.0)),

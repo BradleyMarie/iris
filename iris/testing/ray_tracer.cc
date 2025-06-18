@@ -78,7 +78,9 @@ class AlwaysHitsGeometry : public Geometry {
     assert(std::isfinite(distance) && distance > 0.0);
   }
 
-  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override {
+  Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+             geometric_t maximum_distance, TraceMode trace_mode,
+             HitAllocator& hit_allocator) const override {
     return &hit_allocator.Allocate(nullptr, distance_,
                                    static_cast<geometric_t>(0.0), 1, 1);
   }

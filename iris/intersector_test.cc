@@ -28,11 +28,14 @@ std::unique_ptr<MockBasicGeometry> MakeMockGeometry(
     const Ray& transformed_ray = ray) {
   std::unique_ptr<MockBasicGeometry> result =
       std::make_unique<MockBasicGeometry>();
-  EXPECT_CALL(*result, Trace(transformed_ray, _))
-      .WillRepeatedly(Invoke(
-          [distance, error](const Ray& trace_ray, HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, distance, error, 2, 3);
-          }));
+  EXPECT_CALL(*result, Trace(transformed_ray, _, _, _, _))
+      .WillRepeatedly(Invoke([distance, error](const Ray& trace_ray,
+                                               geometric_t minimum_distance,
+                                               geometric_t maximum_distance,
+                                               Geometry::TraceMode trace_mode,
+                                               HitAllocator& hit_allocator) {
+        return &hit_allocator.Allocate(nullptr, distance, error, 2, 3);
+      }));
   return result;
 }
 

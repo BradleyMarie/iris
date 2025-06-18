@@ -63,8 +63,12 @@ TEST(ListScene, TestsAll) {
   scene_objects_builder.Add(mock_geometry1);
   SceneObjects scene_objects = scene_objects_builder.Build();
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
 
   Ray ray(Point(0.25, 0.25, -5.5), Vector(0.0, 0.0, -1.0));
   Hit* closest_hit = nullptr;

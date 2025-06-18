@@ -42,7 +42,9 @@ static inline bool operator==(
 
 class MockBasicGeometry : public Geometry {
  public:
-  MOCK_METHOD(Hit*, Trace, (const Ray&, HitAllocator&), (const override));
+  MOCK_METHOD(Hit*, Trace,
+              (const Ray&, geometric_t, geometric_t, TraceMode, HitAllocator&),
+              (const override));
   MOCK_METHOD(ComputeHitPointResult, ComputeHitPoint,
               (const Ray&, geometric_t, const void*), (const override));
   MOCK_METHOD(visual_t, ComputeSurfaceArea, (face_t, const Matrix*),

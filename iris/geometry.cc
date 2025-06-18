@@ -1,5 +1,6 @@
 #include "iris/geometry.h"
 
+#include <limits>
 #include <optional>
 #include <variant>
 
@@ -21,7 +22,9 @@ Hit* Geometry::TraceAllHits(HitAllocator& hit_allocator) const {
   const Geometry* old = hit_allocator.arena_.GetGeometry();
 
   hit_allocator.arena_.SetGeometry(this);
-  Hit* result = Trace(hit_allocator.ray_, hit_allocator);
+  Hit* result = Trace(
+      hit_allocator.ray_, -std::numeric_limits<geometric_t>::infinity(),
+      std::numeric_limits<geometric_t>::infinity(), ALL_HITS, hit_allocator);
   hit_allocator.arena_.SetGeometry(old);
 
   return result;
@@ -34,7 +37,9 @@ Hit* Geometry::TraceOneHit(HitAllocator& hit_allocator,
   const Geometry* old = hit_allocator.arena_.GetGeometry();
 
   hit_allocator.arena_.SetGeometry(this);
-  Hit* hit_list = Trace(hit_allocator.ray_, hit_allocator);
+  Hit* hit_list =
+      Trace(hit_allocator.ray_, minimum_distance, maximum_distance,
+            find_closest_hit ? CLOSEST_HIT : ANY_HIT, hit_allocator);
   hit_allocator.arena_.SetGeometry(old);
 
   Hit* closest = nullptr;

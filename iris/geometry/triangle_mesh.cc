@@ -122,7 +122,9 @@ class Triangle final : public Geometry {
   std::span<const face_t> GetFaces() const override;
 
  private:
-  Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const override;
+  Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+             geometric_t maximum_distance, TraceMode trace_mode,
+             HitAllocator& hit_allocator) const override;
 
   std::tuple<Vector, face_t, face_t> ComputeSurfaceNormalAndFaces(
       const Ray& ray) const;
@@ -410,7 +412,9 @@ std::span<const face_t> Triangle::GetFaces() const {
   return faces;
 }
 
-Hit* Triangle::Trace(const Ray& ray, HitAllocator& hit_allocator) const {
+Hit* Triangle::Trace(const Ray& ray, geometric_t minimum_distance,
+                     geometric_t maximum_distance, TraceMode trace_mode,
+                     HitAllocator& hit_allocator) const {
   std::array<iris::geometric_t, 3> v0 =
       Subtract(shared_->points[std::get<0>(vertices_)], ray.origin);
   std::array<iris::geometric_t, 3> v1 =

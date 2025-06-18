@@ -72,8 +72,10 @@ TEST(BVHScene, TestsAll) {
                scene_objects.NumGeometry());
   scene_objects.Reorder(result.geometry_sort_order);
 
-  EXPECT_CALL(*mock_geometry0, Trace(_, _)).Times(1).WillOnce(Return(nullptr));
-  EXPECT_CALL(*mock_geometry1, Trace(_, _)).Times(0);
+  EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
+      .Times(1)
+      .WillOnce(Return(nullptr));
+  EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
 
   Ray ray(Point(0.25, 0.25, 5.5), Vector(0.0, 0.0, -1.0));
   Hit* closest_hit = nullptr;

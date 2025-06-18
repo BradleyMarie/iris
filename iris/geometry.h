@@ -27,6 +27,12 @@ namespace iris {
 
 class Geometry : public ReferenceCountable {
  public:
+  enum TraceMode {
+    ANY_HIT = 0,
+    CLOSEST_HIT = 1,
+    ALL_HITS = 2,
+  };
+
   Hit* TraceAllHits(HitAllocator& hit_allocator) const;
 
   Hit* TraceOneHit(HitAllocator& hit_allocator, geometric_t minimum_distance,
@@ -83,7 +89,9 @@ class Geometry : public ReferenceCountable {
   virtual ~Geometry() = default;
 
  private:
-  virtual Hit* Trace(const Ray& ray, HitAllocator& hit_allocator) const = 0;
+  virtual Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+                     geometric_t maximum_distance, TraceMode trace_mode,
+                     HitAllocator& hit_allocator) const = 0;
 };
 
 }  // namespace iris

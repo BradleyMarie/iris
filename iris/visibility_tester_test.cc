@@ -1,5 +1,6 @@
 #include "iris/visibility_tester.h"
 
+#include <limits>
 #include <memory>
 
 #include "googletest/include/gtest/gtest.h"
@@ -44,9 +45,14 @@ TEST(VisibilityTesterTest, WithGeometry) {
   EXPECT_CALL(*geometry, ComputeBounds(nullptr))
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
-  EXPECT_CALL(*geometry, Trace(ray, _))
-      .WillRepeatedly(
-          Invoke([&](const Ray& trace_ray, HitAllocator& hit_allocator) {
+  EXPECT_CALL(*geometry,
+              Trace(ray, -std::numeric_limits<geometric_t>::infinity(),
+                    std::numeric_limits<geometric_t>::infinity(),
+                    Geometry::ALL_HITS, _))
+      .WillRepeatedly(Invoke(
+          [&](const Ray& trace_ray, geometric_t minimum_distance,
+              geometric_t maximum_distance, Geometry::TraceMode trace_mode,
+              HitAllocator& hit_allocator) {
             return &hit_allocator.Allocate(nullptr, 1.0,
                                            static_cast<geometric_t>(0.0), 2, 3);
           }));
