@@ -10,6 +10,7 @@
 #include "iris/internal/hit.h"
 
 namespace iris {
+class Geometry;
 namespace internal {
 
 class HitArena final {
@@ -21,11 +22,15 @@ class HitArena final {
                 size_t additional_data_size);
   void Clear();
 
+  const Geometry* GetGeometry() const { return geometry_; }
+  void SetGeometry(const Geometry* geometry) { geometry_ = geometry; }
+
  private:
   HitArena(const HitArena&) = delete;
   HitArena& operator=(const HitArena&) = delete;
 
   Arena arena_;
+  const Geometry* geometry_ = nullptr;
 };
 
 }  // namespace internal

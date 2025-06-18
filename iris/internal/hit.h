@@ -16,10 +16,11 @@ namespace internal {
 
 struct Hit final : public iris::Hit {
   Hit(iris::Hit* next, geometric_t distance, geometric_t distance_error,
-      face_t front, face_t back, const void* additional_data) noexcept
+      const Geometry* geometry, face_t front, face_t back,
+      const void* additional_data) noexcept
       : iris::Hit{next, distance},
         distance_error(std::abs(distance_error)),
-        geometry(nullptr),
+        geometry(geometry),
         model_to_world(nullptr),
         front(front),
         back(back),

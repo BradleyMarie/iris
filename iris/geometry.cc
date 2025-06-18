@@ -8,7 +8,7 @@
 #include "iris/hit.h"
 #include "iris/hit_allocator.h"
 #include "iris/integer.h"
-#include "iris/internal/hit.h"
+#include "iris/internal/hit_arena.h"
 #include "iris/material.h"
 #include "iris/point.h"
 #include "iris/sampler.h"
@@ -18,14 +18,11 @@
 namespace iris {
 
 Hit* Geometry::Trace(HitAllocator& hit_allocator) const {
-  Hit* result = Trace(hit_allocator.ray_, hit_allocator);
+  const Geometry* old = hit_allocator.arena_.GetGeometry();
 
-  for (Hit* hit_list = result; hit_list; hit_list = hit_list->next) {
-    internal::Hit* full_hit = static_cast<internal::Hit*>(hit_list);
-    if (!full_hit->geometry) {
-      full_hit->geometry = this;
-    }
-  }
+  hit_allocator.arena_.SetGeometry(this);
+  Hit* result = Trace(hit_allocator.ray_, hit_allocator);
+  hit_allocator.arena_.SetGeometry(old);
 
   return result;
 }

@@ -16,8 +16,8 @@ Hit& HitArena::Allocate(iris::Hit* next, geometric distance,
   void* allocated_additional_data = arena_.Allocate(additional_data_size);
   memcpy(allocated_additional_data, additional_data, additional_data_size);
 
-  return arena_.Allocate<Hit>(next, distance, distance_error, front, back,
-                              allocated_additional_data);
+  return arena_.Allocate<Hit>(next, distance, distance_error, geometry_, front,
+                              back, allocated_additional_data);
 }
 
 void HitArena::Clear() { arena_.Clear(); }

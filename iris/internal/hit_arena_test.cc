@@ -52,6 +52,26 @@ TEST(HitArena, AllocateAndClear) {
   EXPECT_EQ(0xFFFFFFFFu, copy2[0]);
 }
 
+TEST(HitArena, SetGeometry) {
+  HitArena arena;
+  EXPECT_EQ(nullptr, arena.GetGeometry());
+
+  int object;
+  void* address = &object;
+  arena.SetGeometry(static_cast<const Geometry*>(address));
+  EXPECT_EQ(address, arena.GetGeometry());
+
+  Hit& hit0 = arena.Allocate(nullptr, 1.0, 3.0, 1, 2, nullptr, 0);
+  EXPECT_EQ(nullptr, hit0.next);
+  EXPECT_EQ(1.0, hit0.distance);
+  EXPECT_EQ(3.0, hit0.distance_error);
+  EXPECT_EQ(address, hit0.geometry);
+  EXPECT_EQ(nullptr, hit0.model_to_world);
+  EXPECT_EQ(1u, hit0.front);
+  EXPECT_EQ(2u, hit0.back);
+  EXPECT_EQ(nullptr, hit0.additional_data);
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace iris
