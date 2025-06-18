@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "iris/geometry.h"
 #include "iris/hit.h"
 #include "iris/hit_allocator.h"
 #include "iris/intersector.h"
@@ -19,7 +20,9 @@ void Intersect(const BVHNode& bvh, const SceneObjects& scene_objects,
 
 Hit* Intersect(const BVHNode& bvh,
                const std::vector<ReferenceCounted<Geometry>>& geometry,
-               const Ray& ray, HitAllocator& hit_allocator);
+               const Ray& ray, geometric_t minimum_distance,
+               geometric_t maximum_distance, Geometry::TraceMode trace_mode,
+               HitAllocator& hit_allocator);
 
 }  // namespace internal
 }  // namespace scenes

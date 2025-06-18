@@ -100,6 +100,7 @@ TEST(BVHAggregate, FirstSphere) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
   Hit* hit = aggregate->TraceAllHits(hit_allocator);
+  ASSERT_NE(nullptr, hit);
   EXPECT_EQ(hit->distance, 0.5);
 }
 
@@ -114,6 +115,7 @@ TEST(BVHAggregate, SecondSphere) {
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
   Hit* hit = aggregate->TraceAllHits(hit_allocator);
+  ASSERT_NE(nullptr, hit);
   EXPECT_EQ(hit->distance, 0.5);
 }
 

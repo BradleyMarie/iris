@@ -62,7 +62,8 @@ struct BoundingBox final {
     const geometric_t end;
   };
 
-  std::optional<Intersection> Intersect(const Ray& ray) const {
+  bool Intersects(const Ray& ray, geometric_t minimum_distance,
+                  geometric_t maximum_distance) const {
     geometric_t inverse_direction_x =
         static_cast<geometric_t>(1.0) / ray.direction.x;
     geometric_t inverse_direction_y =
@@ -72,7 +73,7 @@ struct BoundingBox final {
 
     geometric_t tx0 = (lower.x - ray.origin.x) * inverse_direction_x;
     geometric_t tx1 = (upper.x - ray.origin.x) * inverse_direction_x;
-    geometric_t min = Max(static_cast<geometric_t>(0.0), Min(tx0, tx1));
+    geometric_t min = Min(tx0, tx1);
     geometric_t max = Max(tx0, tx1);
 
     geometric_t ty0 = (lower.y - ray.origin.y) * inverse_direction_y;
@@ -85,14 +86,7 @@ struct BoundingBox final {
     min = Max(min, Min(tz0, tz1));
     max = Min(max, Max(tz0, tz1));
 
-    if (max < min) {
-      return std::nullopt;
-    }
-
-    return Intersection{
-        {inverse_direction_x, inverse_direction_y, inverse_direction_z},
-        min,
-        max};
+    return min <= max && minimum_distance < max && maximum_distance > min;
   }
 
   bool operator==(const BoundingBox&) const = default;

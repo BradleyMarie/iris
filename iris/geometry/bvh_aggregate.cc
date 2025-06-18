@@ -71,7 +71,8 @@ class BVHAggregate final : public Geometry {
              geometric_t maximum_distance, TraceMode trace_mode,
              HitAllocator& hit_allocator) const override {
     return scenes::internal::Intersect(bvh_.front(), geometry_, ray,
-                                       hit_allocator);
+                                       minimum_distance, maximum_distance,
+                                       trace_mode, hit_allocator);
   }
 
   std::vector<BVHNode> bvh_;

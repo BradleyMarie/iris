@@ -58,28 +58,32 @@ class GeometryIntersector : public Intersector {
  private:
   const SceneObjects& scene_objects_;
   iris::Intersector& intersector_;
+  bool done_ = false;
 };
 
 class NestedGeometryIntersector : public Intersector {
  public:
   NestedGeometryIntersector(
       const std::vector<ReferenceCounted<Geometry>>& geometry,
-      HitAllocator& hit_allocator)
-      : Intersector(static_cast<geometric_t>(0.0),
-                    std::numeric_limits<geometric_t>::infinity()),
+      geometric_t minimum_distance, geometric_t maximum_distance,
+      bool find_closest_hit, HitAllocator& hit_allocator)
+      : Intersector(minimum_distance, maximum_distance),
         geometry_(geometry),
-        hit_allocator_(hit_allocator) {}
+        hit_allocator_(hit_allocator),
+        find_closest_hit_(find_closest_hit) {}
 
   bool Intersect(const BVHNode& bvh_node) override {
     auto [start_index, num_shapes] = bvh_node.Shapes();
     for (size_t i = 0; i < num_shapes; i++) {
-      for (Hit* hit_list =
-               geometry_[start_index + i]->TraceAllHits(hit_allocator_);
-           hit_list; hit_list = hit_list->next) {
-        if (hit_list->distance > minimum_distance &&
-            hit_list->distance < maximum_distance) {
-          closest_hit = hit_list;
-          maximum_distance = hit_list->distance;
+      if (Hit* hit = geometry_[start_index + i]->TraceOneHit(
+              hit_allocator_, minimum_distance, maximum_distance,
+              find_closest_hit_);
+          hit) {
+        maximum_distance = hit->distance;
+        result = hit;
+
+        if (!find_closest_hit_) {
+          return true;
         }
       }
     }
@@ -87,7 +91,49 @@ class NestedGeometryIntersector : public Intersector {
     return false;
   }
 
-  Hit* closest_hit = nullptr;
+  Hit* result = nullptr;
+
+ private:
+  const std::vector<ReferenceCounted<Geometry>>& geometry_;
+  HitAllocator& hit_allocator_;
+  bool find_closest_hit_;
+};
+
+class AllNestedGeometryIntersector : public Intersector {
+ public:
+  AllNestedGeometryIntersector(
+      const std::vector<ReferenceCounted<Geometry>>& geometry,
+      geometric_t minimum_distance, geometric_t maximum_distance,
+      HitAllocator& hit_allocator)
+      : Intersector(minimum_distance, maximum_distance),
+        geometry_(geometry),
+        hit_allocator_(hit_allocator) {}
+
+  bool Intersect(const BVHNode& bvh_node) override {
+    auto [start_index, num_shapes] = bvh_node.Shapes();
+    for (size_t i = 0; i < num_shapes; i++) {
+      if (Hit* hit_list =
+              geometry_[start_index + i]->TraceAllHits(hit_allocator_);
+          hit_list) {
+        if (!result) {
+          result = hit_list;
+          list_end = hit_list;
+        } else {
+          list_end->next = hit_list;
+          list_end = hit_list;
+        }
+
+        while (list_end->next) {
+          list_end = list_end->next;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  Hit* result = nullptr;
+  Hit* list_end = nullptr;
 
  private:
   const std::vector<ReferenceCounted<Geometry>>& geometry_;
@@ -139,10 +185,21 @@ void Intersect(const BVHNode& bvh, const SceneObjects& scene_objects,
 
 Hit* Intersect(const BVHNode& bvh,
                const std::vector<ReferenceCounted<Geometry>>& geometry,
-               const Ray& ray, HitAllocator& hit_allocator) {
-  NestedGeometryIntersector nested_intersector(geometry, hit_allocator);
+               const Ray& ray, geometric_t minimum_distance,
+               geometric_t maximum_distance, Geometry::TraceMode trace_mode,
+               HitAllocator& hit_allocator) {
+  if (trace_mode != Geometry::ALL_HITS) {
+    NestedGeometryIntersector nested_intersector(
+        geometry, minimum_distance, maximum_distance,
+        trace_mode == Geometry::CLOSEST_HIT, hit_allocator);
+    Intersect(bvh, ray, nested_intersector);
+    return nested_intersector.result;
+  }
+
+  AllNestedGeometryIntersector nested_intersector(
+      geometry, minimum_distance, maximum_distance, hit_allocator);
   Intersect(bvh, ray, nested_intersector);
-  return nested_intersector.closest_hit;
+  return nested_intersector.result;
 }
 
 }  // namespace internal

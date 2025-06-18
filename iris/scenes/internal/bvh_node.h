@@ -28,10 +28,7 @@ class BVHNode final {
 
   inline bool Intersects(const Ray& ray, geometric_t minimum_distance,
                          geometric_t maximum_distance) const {
-    assert(minimum_distance <= maximum_distance);
-    auto result = bounds_.Intersect(ray);
-    return result.has_value() && result->end > minimum_distance &&
-           result->begin < maximum_distance;
+    return bounds_.Intersects(ray, minimum_distance, maximum_distance);
   }
 
   inline bool HasChildren() const { return num_shapes_ == 0; }

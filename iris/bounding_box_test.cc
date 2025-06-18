@@ -136,27 +136,38 @@ TEST(BoundingBoxTest, SurfaceArea) {
   EXPECT_EQ(54.0, bounding_box.SurfaceArea());
 }
 
-TEST(BoundingBoxTest, ProbablyIntersectInFront) {
+TEST(BoundingBoxTest, IntersectInFront) {
   Point point0(-1.0, -1.0, -1.0);
   Point point1(1.0, 1.0, 1.0);
   BoundingBox bounding_box(point0, point1);
 
   Ray ray(Point(0.0, 0.0, -2.0), Vector(0.0, 0.0, 1.0));
-  std::optional<BoundingBox::Intersection> intersection =
-      bounding_box.Intersect(ray);
-  ASSERT_TRUE(intersection);
-  EXPECT_TRUE(std::isinf(intersection->inverse_direction[0]));
-  EXPECT_TRUE(std::isinf(intersection->inverse_direction[1]));
-  EXPECT_EQ(1.0, intersection->inverse_direction[2]);
-  EXPECT_EQ(1.0, intersection->begin);
-  EXPECT_EQ(3.0, intersection->end);
+  EXPECT_TRUE(bounding_box.Intersects(ray, 0.0, 10000.0));
+}
+
+TEST(BoundingBoxTest, IntersectInFrontReversedDistances) {
+  Point point0(-1.0, -1.0, -1.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box(point0, point1);
+
+  Ray ray(Point(0.0, 0.0, -2.0), Vector(0.0, 0.0, 1.0));
+  EXPECT_FALSE(bounding_box.Intersects(ray, 10000.0, 0.0));
+}
+
+TEST(BoundingBoxTest, TooFar) {
+  Point point0(-1.0, -1.0, -1.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box(point0, point1);
+
+  Ray ray(Point(0.0, 0.0, -2000.0), Vector(0.0, 0.0, 1.0));
+  EXPECT_FALSE(bounding_box.Intersects(ray, 0.0, 10.0));
 }
 
 TEST(BoundingBoxTest, IntersectEmpty) {
   Point point0(-1.0, -1.0, -1.0);
   BoundingBox bounding_box(point0);
   Ray ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
-  EXPECT_FALSE(bounding_box.Intersect(ray).has_value());
+  EXPECT_FALSE(bounding_box.Intersects(ray, 0.0, 10000.0));
 }
 
 TEST(BoundingBoxTest, IntersectInside) {
@@ -165,14 +176,7 @@ TEST(BoundingBoxTest, IntersectInside) {
   BoundingBox bounding_box(point0, point1);
 
   Ray ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
-  std::optional<BoundingBox::Intersection> intersection =
-      bounding_box.Intersect(ray);
-  ASSERT_TRUE(intersection);
-  EXPECT_TRUE(std::isinf(intersection->inverse_direction[0]));
-  EXPECT_TRUE(std::isinf(intersection->inverse_direction[1]));
-  EXPECT_EQ(1.0, intersection->inverse_direction[2]);
-  EXPECT_EQ(0.0, intersection->begin);
-  EXPECT_EQ(1.0, intersection->end);
+  EXPECT_TRUE(bounding_box.Intersects(ray, 0.0, 10000.0));
 }
 
 TEST(BoundingBoxTest, IntersectThin) {
@@ -181,13 +185,7 @@ TEST(BoundingBoxTest, IntersectThin) {
   BoundingBox bounding_box(point0, point1);
 
   Ray ray(Point(0.0, 0.0, -1.0), Vector(0.0, 0.0, 1.0));
-  std::optional<BoundingBox::Intersection> intersection =
-      bounding_box.Intersect(ray);
-  EXPECT_TRUE(std::isinf(intersection->inverse_direction[0]));
-  EXPECT_TRUE(std::isinf(intersection->inverse_direction[1]));
-  EXPECT_EQ(1.0, intersection->inverse_direction[2]);
-  EXPECT_EQ(1.0, intersection->begin);
-  EXPECT_EQ(1.0, intersection->end);
+  EXPECT_TRUE(bounding_box.Intersects(ray, 0.0, 10000.0));
 }
 
 TEST(BoundingBoxTest, IntersectBehind) {
@@ -196,9 +194,16 @@ TEST(BoundingBoxTest, IntersectBehind) {
   BoundingBox bounding_box(point0, point1);
 
   Ray ray(Point(0.0, 0.0, 2.0), Vector(0.0, 0.0, 1.0));
-  std::optional<BoundingBox::Intersection> intersection =
-      bounding_box.Intersect(ray);
-  ASSERT_FALSE(intersection);
+  EXPECT_FALSE(bounding_box.Intersects(ray, 0.0, 10000.0));
+}
+
+TEST(BoundingBoxTest, IntersectBehindOK) {
+  Point point0(-1.0, -1.0, -1.0);
+  Point point1(1.0, 1.0, 1.0);
+  BoundingBox bounding_box(point0, point1);
+
+  Ray ray(Point(0.0, 0.0, 2.0), Vector(0.0, 0.0, 1.0));
+  EXPECT_TRUE(bounding_box.Intersects(ray, -10000.0, 10000.0));
 }
 
 TEST(BoundingBoxTest, NoIntersection) {
