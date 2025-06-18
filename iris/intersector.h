@@ -16,14 +16,13 @@ class Intersector final {
  public:
   Intersector(const Ray& ray, geometric_t minimum_distance,
               geometric_t maximum_distance, internal::HitArena& hit_arena,
-              Hit*& hit, bool find_any_hit) noexcept
+              Hit*& hit, bool find_closest_hit) noexcept
       : ray_(ray),
         minimum_distance_(minimum_distance),
         closest_hit_distance_(maximum_distance),
-        maximum_distance_(maximum_distance),
         hit_arena_(hit_arena),
         hit_(hit),
-        find_any_hit_(find_any_hit),
+        find_closest_hit_(find_closest_hit),
         done_(false) {
     hit_ = nullptr;
   }
@@ -47,10 +46,9 @@ class Intersector final {
   const Ray& ray_;
   geometric_t minimum_distance_;
   geometric_t closest_hit_distance_;
-  geometric_t maximum_distance_;
   internal::HitArena& hit_arena_;
   Hit*& hit_;
-  bool find_any_hit_;
+  bool find_closest_hit_;
   bool done_;
 };
 

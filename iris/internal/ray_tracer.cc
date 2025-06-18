@@ -18,7 +18,7 @@ Hit* RayTracer::TraceClosestHit(const Ray& ray, geometric_t minimum_distance,
   iris::Hit* closest_hit;
   Intersector intersector(ray, minimum_distance, maximum_distance,
                           closest_hit_arena_, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
   scene.Trace(ray, intersector);
 
   return static_cast<Hit*>(closest_hit);
@@ -30,7 +30,7 @@ Hit* RayTracer::TraceAnyHit(const Ray& ray, geometric_t minimum_distance,
 
   iris::Hit* any_hit;
   Intersector intersector(ray, minimum_distance, maximum_distance,
-                          any_hit_arena_, any_hit, /*find_any_hit=*/true);
+                          any_hit_arena_, any_hit, /*find_closest_hit=*/false);
   scene.Trace(ray, intersector);
 
   return static_cast<Hit*>(any_hit);

@@ -41,7 +41,7 @@ TEST(InspectorTest, Initialize) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   EXPECT_EQ(nullptr, closest_hit);
   EXPECT_EQ(1.0, intersector.MinimumDistance());
@@ -53,7 +53,7 @@ TEST(IntersectorTest, TooClose) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.0);
   EXPECT_FALSE(intersector.Intersect(*geometry));
@@ -68,7 +68,7 @@ TEST(IntersectorTest, TooCloseAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry));
@@ -83,7 +83,7 @@ TEST(IntersectorTest, TooFar) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(3.0);
   EXPECT_FALSE(intersector.Intersect(*geometry));
@@ -98,7 +98,7 @@ TEST(IntersectorTest, TooFarAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry));
@@ -113,7 +113,7 @@ TEST(IntersectorTest, Hits) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry));
@@ -137,7 +137,7 @@ TEST(IntersectorTest, HitsAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_TRUE(intersector.Intersect(*geometry));
@@ -161,7 +161,7 @@ TEST(IntersectorTest, HitsIgnoreFarther) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(1.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0));
@@ -188,7 +188,7 @@ TEST(IntersectorTest, KeepsCloser) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0));
@@ -218,7 +218,7 @@ TEST(IntersectorTest, KeepsCloserAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_TRUE(intersector.Intersect(*geometry0));
@@ -250,7 +250,7 @@ TEST(IntersectorTest, TransformedTooClose) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -266,7 +266,7 @@ TEST(IntersectorTest, TransformedTooCloseAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -282,7 +282,7 @@ TEST(IntersectorTest, TransformedTooFar) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(3.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -298,7 +298,7 @@ TEST(IntersectorTest, TransformedTooFarAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -314,7 +314,7 @@ TEST(IntersectorTest, TransformedHits) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -340,7 +340,7 @@ TEST(IntersectorTest, TransformedHitsAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -366,7 +366,7 @@ TEST(IntersectorTest, TransformedHitsIgnoreFarther) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -396,7 +396,7 @@ TEST(IntersectorTest, TransformedKeepsCloser) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -429,7 +429,7 @@ TEST(IntersectorTest, TransformedKeepsCloserAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -462,7 +462,7 @@ TEST(IntersectorTest, MatrixPointerTooClose) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.0);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
@@ -477,7 +477,7 @@ TEST(IntersectorTest, MatrixPointerTooCloseAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(0.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
@@ -492,7 +492,7 @@ TEST(IntersectorTest, MatrixPointerTooFar) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(3.0);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
@@ -507,7 +507,7 @@ TEST(IntersectorTest, MatrixPointerTooFarAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.5, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
@@ -522,7 +522,7 @@ TEST(IntersectorTest, MatrixPointerHits) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
@@ -546,7 +546,7 @@ TEST(IntersectorTest, MatrixPointerHitsAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(1.0, 0.5);
   EXPECT_TRUE(intersector.Intersect(*geometry, nullptr));
@@ -570,7 +570,7 @@ TEST(IntersectorTest, MatrixPointerHitsIgnoreFarther) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(1.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0, nullptr));
@@ -597,7 +597,7 @@ TEST(IntersectorTest, MatrixPointerKeepsCloser) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_FALSE(intersector.Intersect(*geometry0));
@@ -627,7 +627,7 @@ TEST(IntersectorTest, MatrixPointerKeepsCloserAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry0 = MakeMockGeometry(2.0);
   EXPECT_TRUE(intersector.Intersect(*geometry0));
@@ -657,7 +657,7 @@ TEST(IntersectorTest, MatrixPointerTransformedTooClose) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -673,7 +673,7 @@ TEST(IntersectorTest, MatrixPointerTransformedTooCloseAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(0.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -689,7 +689,7 @@ TEST(IntersectorTest, MatrixPointerTransformedTooFar) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(3.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -705,7 +705,7 @@ TEST(IntersectorTest, MatrixPointerTransformedTooFarAfterError) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 1.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.5, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -721,7 +721,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHits) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -747,7 +747,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry =
       MakeMockGeometry(1.0, 0.5, model_to_world.InverseMultiplyWithError(ray));
@@ -773,7 +773,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsIgnoreFarther) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(1.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -803,7 +803,7 @@ TEST(IntersectorTest, MatrixPointerTransformedKeepsCloser) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/false);
+                          /*find_closest_hit=*/true);
 
   std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));
@@ -836,7 +836,7 @@ TEST(IntersectorTest, MatrixPointerTransformedKeepsCloserAny) {
 
   Hit* closest_hit = nullptr;
   Intersector intersector(ray, 0.0, 3.0, arena, closest_hit,
-                          /*find_any_hit=*/true);
+                          /*find_closest_hit=*/false);
 
   std::unique_ptr<MockBasicGeometry> geometry0 =
       MakeMockGeometry(2.0, 0.0, model_to_world.InverseMultiplyWithError(ray));

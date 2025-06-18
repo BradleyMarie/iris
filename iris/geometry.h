@@ -29,6 +29,9 @@ class Geometry : public ReferenceCountable {
  public:
   Hit* TraceAllHits(HitAllocator& hit_allocator) const;
 
+  Hit* TraceOneHit(HitAllocator& hit_allocator, geometric_t minimum_distance,
+                   geometric_t maximum_distance, bool find_closest_hit) const;
+
   virtual Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                       const void* additional_data) const = 0;
 

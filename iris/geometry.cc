@@ -27,6 +27,42 @@ Hit* Geometry::TraceAllHits(HitAllocator& hit_allocator) const {
   return result;
 }
 
+Hit* Geometry::TraceOneHit(HitAllocator& hit_allocator,
+                           geometric_t minimum_distance,
+                           geometric_t maximum_distance,
+                           bool find_closest_hit) const {
+  const Geometry* old = hit_allocator.arena_.GetGeometry();
+
+  hit_allocator.arena_.SetGeometry(this);
+  Hit* hit_list = Trace(hit_allocator.ray_, hit_allocator);
+  hit_allocator.arena_.SetGeometry(old);
+
+  Hit* closest = nullptr;
+  for (Hit* current = hit_list; current; current = current->next) {
+    internal::Hit* full_hit = static_cast<internal::Hit*>(current);
+
+    if (full_hit->distance - full_hit->distance_error <= minimum_distance ||
+        full_hit->distance + full_hit->distance_error >= maximum_distance) {
+      continue;
+    }
+
+    if (!find_closest_hit) {
+      current->next = nullptr;
+      return current;
+    }
+
+    if (!closest || current->distance < closest->distance) {
+      closest = current;
+    }
+  }
+
+  if (closest) {
+    closest->next = nullptr;
+  }
+
+  return closest;
+}
+
 std::optional<TextureCoordinates> Geometry::ComputeTextureCoordinates(
     const Point& hit_point, const std::optional<Differentials>& differentials,
     face_t face, const void* additional_data) const {

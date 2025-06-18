@@ -20,7 +20,7 @@ Intersector MakeIntersector(const Ray& ray, geometric_t minimum_distance,
   rays.push_back(std::make_unique<Ray>(ray));
 
   return Intersector(*rays.back(), minimum_distance, maximum_distance, arena,
-                     closest_hit, /*find_any_hit=*/false);
+                     closest_hit, /*find_closest_hit=*/true);
 }
 
 }  // namespace testing
