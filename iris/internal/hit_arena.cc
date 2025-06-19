@@ -16,8 +16,10 @@ Hit& HitArena::Allocate(iris::Hit* next, geometric distance,
   void* allocated_additional_data = arena_.Allocate(additional_data_size);
   memcpy(allocated_additional_data, additional_data, additional_data_size);
 
+  // Emissive surfaces are disabled in nested geometry
   return arena_.Allocate<Hit>(next, distance, distance_error, geometry_, front,
-                              back, allocated_additional_data);
+                              back, geometry_ == first_geometry_,
+                              allocated_additional_data);
 }
 
 void HitArena::Clear() { arena_.Clear(); }

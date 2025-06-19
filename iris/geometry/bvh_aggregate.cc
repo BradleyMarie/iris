@@ -79,117 +79,12 @@ class BVHAggregate final : public Geometry {
   std::vector<ReferenceCounted<Geometry>> geometry_;
 };
 
-class NoEmissiveSurfacesGeometry : public Geometry {
- public:
-  NoEmissiveSurfacesGeometry(ReferenceCounted<Geometry> impl)
-      : impl_(std::move(impl)) {}
-
-  Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
-                              const void* additional_data) const override {
-    return impl_->ComputeSurfaceNormal(hit_point, face, additional_data);
-  }
-
-  std::optional<TextureCoordinates> ComputeTextureCoordinates(
-      const Point& hit_point,
-      const std::optional<Geometry::Differentials>& differentials, face_t face,
-      const void* additional_data) const override {
-    return impl_->ComputeTextureCoordinates(hit_point, differentials, face,
-                                            additional_data);
-  }
-
-  ComputeShadingNormalResult ComputeShadingNormal(
-      face_t face, const void* additional_data) const override {
-    return impl_->ComputeShadingNormal(face, additional_data);
-  }
-
-  ComputeHitPointResult ComputeHitPoint(
-      const Ray& ray, geometric_t distance,
-      const void* additional_data) const override {
-    return impl_->ComputeHitPoint(ray, distance, additional_data);
-  }
-
-  const Material* GetMaterial(face_t face) const override {
-    return impl_->GetMaterial(face);
-  }
-
-  const EmissiveMaterial* GetEmissiveMaterial(face_t face) const override {
-    return nullptr;
-  }
-
-  visual_t ComputeSurfaceArea(face_t face,
-                              const Matrix* model_to_world) const override {
-    return impl_->ComputeSurfaceArea(face, model_to_world);
-  }
-
-  std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
-      const Point& origin, face_t face, Sampler& sampler) const override {
-    return impl_->SampleBySolidAngle(origin, face, sampler);
-  }
-
-  std::optional<visual_t> ComputePdfBySolidAngle(
-      const Point& origin, face_t face, const void* additional_data,
-      const Point& on_face) const override {
-    return impl_->ComputePdfBySolidAngle(origin, face, additional_data,
-                                         on_face);
-  }
-
-  BoundingBox ComputeBounds(const Matrix* model_to_world) const override {
-    return impl_->ComputeBounds(model_to_world);
-  }
-
-  std::span<const face_t> GetFaces() const override {
-    return impl_->GetFaces();
-  }
-
- private:
-  Hit* Trace(const Ray& ray, geometric_t minimum_distance,
-             geometric_t maximum_distance, TraceMode trace_mode,
-             HitAllocator& hit_allocator) const override {
-    return impl_->TraceAllHits(hit_allocator);
-  }
-
-  ReferenceCounted<Geometry> impl_;
-};
-
-void PreprocessGeometry(std::vector<ReferenceCounted<Geometry>>& geometry) {
-  size_t insert_index = 0;
-  for (size_t i = 0; i < geometry.size(); i++) {
-    if (!geometry[i]) {
-      continue;
-    }
-
-    bool is_emissive = false;
-    for (face_t face : geometry[i]->GetFaces()) {
-      if (geometry[i]->GetEmissiveMaterial(face)) {
-        is_emissive = true;
-        break;
-      }
-    }
-
-    if (is_emissive) {
-      geometry[insert_index++] =
-          MakeReferenceCounted<NoEmissiveSurfacesGeometry>(
-              std::move(geometry[i]));
-    } else {
-      std::swap(geometry[insert_index++], geometry[i]);
-    }
-  }
-
-  geometry.resize(insert_index);
-}
-
 }  // namespace
 
 ReferenceCounted<Geometry> AllocateBVHAggregate(
     std::vector<ReferenceCounted<Geometry>> geometry) {
-  PreprocessGeometry(geometry);
-
   if (geometry.empty()) {
     return ReferenceCounted<Geometry>();
-  }
-
-  if (geometry.size() == 1) {
-    return std::move(geometry[0]);
   }
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;

@@ -56,10 +56,48 @@ using ::testing::Return;
 
 static const uint32_t g_data = 0xDEADBEEF;
 
+class Wrapper final : public Geometry {
+ public:
+  Wrapper(ReferenceCounted<Geometry> geometry)
+      : geometry_(std::move(geometry)) {}
+
+  Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
+                              const void* additional_data) const override {
+    std::unreachable();
+  }
+
+  ComputeHitPointResult ComputeHitPoint(
+      const Ray& ray, geometric_t distance,
+      const void* additional_data) const override {
+    std::unreachable();
+  }
+
+  visual_t ComputeSurfaceArea(face_t face,
+                              const Matrix* model_to_world) const override {
+    std::unreachable();
+  }
+
+  BoundingBox ComputeBounds(const Matrix* model_to_world) const override {
+    return geometry_->ComputeBounds(model_to_world);
+  }
+
+  std::span<const face_t> GetFaces() const override { return {}; }
+
+ private:
+  Hit* Trace(const Ray& ray, geometric_t minimum_distance,
+             geometric_t maximum_distance, TraceMode trace_mode,
+             HitAllocator& hit_allocator) const override {
+    return geometry_->TraceAllHits(hit_allocator);
+  }
+
+  ReferenceCounted<Geometry> geometry_;
+};
+
 void MakeBasicGeometryImpl(ReferenceCounted<MockBasicGeometry> geometry,
                            const Ray& expected_ray,
                            const Point& expected_hit_point) {
-  EXPECT_CALL(*geometry, GetFaces()).WillOnce(Return(std::vector<face_t>({1})));
+  EXPECT_CALL(*geometry, GetFaces())
+      .WillRepeatedly(Return(std::vector<face_t>({1})));
   EXPECT_CALL(*geometry, Trace(expected_ray, _, _, _, _))
       .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
                           geometric_t maximum_distance,
@@ -220,6 +258,43 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
   RayTracer::TraceResult result = ray_tracer.Trace(
       RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
   EXPECT_EQ(spectrum.get(), result.emission);
+  EXPECT_FALSE(result.surface_intersection);
+}
+
+TEST(RayTracerTest, WithNestedEmissiveMaterial) {
+  Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
+
+  ReferenceCounted<MockGeometry> geometry =
+      MakeReferenceCounted<MockGeometry>();
+  MakeBasicGeometryImpl(geometry, ray, Point(1.0, 1.0, 1.0));
+  EXPECT_CALL(*geometry, ComputeBounds(nullptr))
+      .WillOnce(
+          Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
+  EXPECT_CALL(*geometry,
+              ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
+      .WillOnce(
+          Invoke([](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+            return std::nullopt;
+          }));
+  EXPECT_CALL(*geometry, GetMaterial(2u)).WillOnce(Return(nullptr));
+  EXPECT_CALL(*geometry, GetEmissiveMaterial(_)).Times(0);
+
+  SceneObjects::Builder builder;
+  builder.Add(MakeReferenceCounted<Wrapper>(geometry));
+
+  SceneObjects objects = builder.Build();
+  std::unique_ptr<Scene> scene = MakeListSceneBuilder()->Build(objects);
+
+  internal::RayTracer internal_ray_tracer;
+  internal::Arena arena;
+  RayTracer ray_tracer(*scene, nullptr, 0.0, internal_ray_tracer, arena);
+
+  RayTracer::TraceResult result = ray_tracer.Trace(
+      RayDifferential(Ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0))));
+  EXPECT_EQ(nullptr, result.emission);
   EXPECT_FALSE(result.surface_intersection);
 }
 

@@ -127,6 +127,7 @@ cc_test(
     srcs = ["hit_arena_test.cc"],
     deps = [
         ":hit_arena",
+        "//iris/geometry:mock_geometry",
         "@googletest//:gtest_main",
     ],
 )

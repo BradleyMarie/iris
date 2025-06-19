@@ -16,19 +16,21 @@ namespace internal {
 
 struct Hit final : public iris::Hit {
   Hit(iris::Hit* next, geometric_t distance, geometric_t distance_error,
-      const Geometry* geometry, face_t front, face_t back,
+      const Geometry* geometry, face_t front, face_t back, bool allow_emissive,
       const void* additional_data) noexcept
       : iris::Hit(next, distance, std::abs(distance_error)),
         geometry(geometry),
         model_to_world(nullptr),
         front(front),
         back(back),
+        allow_emissive(allow_emissive),
         additional_data(additional_data) {}
 
   const Geometry* geometry;
   const Matrix* model_to_world;
   face_t front;
   face_t back;
+  bool allow_emissive;
   const void* additional_data;
   std::optional<Ray> model_ray;
 };

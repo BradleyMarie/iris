@@ -5,8 +5,6 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bounding_box.h"
-#include "iris/emissive_material.h"
-#include "iris/emissive_materials/mock_emissive_material.h"
 #include "iris/float.h"
 #include "iris/geometry.h"
 #include "iris/geometry/mock_geometry.h"
@@ -28,7 +26,6 @@ namespace iris {
 namespace geometry {
 namespace {
 
-using ::iris::emissive_materials::MockEmissiveMaterial;
 using ::iris::materials::MockMaterial;
 using ::iris::testing::MakeHitAllocator;
 using ::testing::Return;
@@ -49,23 +46,6 @@ ReferenceCounted<Geometry> MakeSphere(geometric x_origin) {
 TEST(BVHAggregate, NoShapes) {
   std::vector<ReferenceCounted<Geometry>> shapes;
   EXPECT_EQ(nullptr, AllocateBVHAggregate(shapes).Get());
-}
-
-TEST(BVHAggregate, OneShape) {
-  ReferenceCounted<MockGeometry> geometry =
-      MakeReferenceCounted<MockGeometry>();
-  EXPECT_CALL(*geometry, GetFaces()).WillOnce(Return(std::span<face_t>()));
-  EXPECT_EQ(geometry.Get(), AllocateBVHAggregate({geometry}).Get());
-}
-
-TEST(BVHAggregate, OneEmissiveShape) {
-  MockEmissiveMaterial emissive;
-  face_t faces[1] = {0};
-  ReferenceCounted<MockGeometry> geometry =
-      MakeReferenceCounted<MockGeometry>();
-  EXPECT_CALL(*geometry, GetFaces()).WillOnce(Return(std::span<face_t>(faces)));
-  EXPECT_CALL(*geometry, GetEmissiveMaterial(0)).WillOnce(Return(&emissive));
-  EXPECT_NE(geometry.Get(), AllocateBVHAggregate({geometry}).Get());
 }
 
 TEST(BVHAggregate, ComputeBounds) {

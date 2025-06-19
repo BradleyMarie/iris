@@ -276,10 +276,13 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
           .value_or(TextureCoordinates{0.0, 0.0});
 
   const Spectrum* spectrum = nullptr;
-  if (const EmissiveMaterial* emissive_material =
-          hit->geometry->GetEmissiveMaterial(hit->front)) {
-    spectrum =
-        emissive_material->Evaluate(texture_coordinates, spectral_allocator);
+  if (hit->allow_emissive) {
+    if (const EmissiveMaterial* emissive_material =
+            hit->geometry->GetEmissiveMaterial(hit->front);
+        emissive_material) {
+      spectrum =
+          emissive_material->Evaluate(texture_coordinates, spectral_allocator);
+    }
   }
 
   BxdfAllocator bxdf_allocator(arena_);

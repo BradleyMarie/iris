@@ -23,7 +23,15 @@ class HitArena final {
   void Clear();
 
   const Geometry* GetGeometry() const { return geometry_; }
-  void SetGeometry(const Geometry* geometry) { geometry_ = geometry; }
+  void SetGeometry(const Geometry* geometry) { 
+    geometry_ = geometry;
+
+    if (!geometry) {
+      first_geometry_ = nullptr;
+    } else if (!first_geometry_) {
+      first_geometry_ = geometry;
+    }
+  }
 
  private:
   HitArena(const HitArena&) = delete;
@@ -31,6 +39,7 @@ class HitArena final {
 
   Arena arena_;
   const Geometry* geometry_ = nullptr;
+  const Geometry* first_geometry_ = nullptr;
 };
 
 }  // namespace internal
