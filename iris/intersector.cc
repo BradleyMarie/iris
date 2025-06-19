@@ -20,7 +20,7 @@ bool Intersector::Intersect(const Geometry& geometry) {
     full_hit->model_ray.emplace(ray_);
 
     closest_hit_distance_ = full_hit->distance;
-    maximum_distance_ = full_hit->distance + full_hit->distance_error;
+    maximum_distance_ = full_hit->distance + full_hit->error;
     hit_ = full_hit;
     done_ = !find_closest_hit_;
   }
@@ -42,7 +42,7 @@ bool Intersector::Intersect(const Geometry& geometry,
     full_hit->model_to_world = model_to_world;
 
     closest_hit_distance_ = full_hit->distance;
-    maximum_distance_ = full_hit->distance + full_hit->distance_error;
+    maximum_distance_ = full_hit->distance + full_hit->error;
     hit_ = full_hit;
     done_ = !find_closest_hit_;
   }
@@ -63,7 +63,7 @@ bool Intersector::Intersect(const Geometry& geometry,
     full_hit->model_to_world = &model_to_world;
 
     closest_hit_distance_ = full_hit->distance;
-    maximum_distance_ = full_hit->distance + full_hit->distance_error;
+    maximum_distance_ = full_hit->distance + full_hit->error;
     hit_ = full_hit;
     done_ = !find_closest_hit_;
   }

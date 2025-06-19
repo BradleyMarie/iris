@@ -127,7 +127,7 @@ TEST(IntersectorTest, Hits) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -151,7 +151,7 @@ TEST(IntersectorTest, HitsAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -178,7 +178,7 @@ TEST(IntersectorTest, HitsIgnoreFarther) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
@@ -208,7 +208,7 @@ TEST(IntersectorTest, KeepsCloser) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
@@ -238,7 +238,7 @@ TEST(IntersectorTest, KeepsCloserAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
@@ -329,7 +329,7 @@ TEST(IntersectorTest, TransformedHits) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -355,7 +355,7 @@ TEST(IntersectorTest, TransformedHitsAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -385,7 +385,7 @@ TEST(IntersectorTest, TransformedHitsIgnoreFarther) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
@@ -418,7 +418,7 @@ TEST(IntersectorTest, TransformedKeepsCloser) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
@@ -451,7 +451,7 @@ TEST(IntersectorTest, TransformedKeepsCloserAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
@@ -536,7 +536,7 @@ TEST(IntersectorTest, MatrixPointerHits) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -560,7 +560,7 @@ TEST(IntersectorTest, MatrixPointerHitsAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -587,7 +587,7 @@ TEST(IntersectorTest, MatrixPointerHitsIgnoreFarther) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
@@ -617,7 +617,7 @@ TEST(IntersectorTest, MatrixPointerKeepsCloser) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
@@ -647,7 +647,7 @@ TEST(IntersectorTest, MatrixPointerKeepsCloserAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
@@ -736,7 +736,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHits) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -762,7 +762,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.5, full_hit->distance_error);
+  EXPECT_EQ(0.5, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry.get(), full_hit->geometry);
@@ -792,7 +792,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsIgnoreFarther) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry0.get(), full_hit->geometry);
@@ -825,7 +825,7 @@ TEST(IntersectorTest, MatrixPointerTransformedKeepsCloser) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);
@@ -858,7 +858,7 @@ TEST(IntersectorTest, MatrixPointerTransformedKeepsCloserAny) {
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
   EXPECT_EQ(1.0, closest_hit->distance);
-  EXPECT_EQ(0.0, full_hit->distance_error);
+  EXPECT_EQ(0.0, full_hit->error);
   EXPECT_EQ(2u, full_hit->front);
   EXPECT_EQ(3u, full_hit->back);
   EXPECT_EQ(geometry1.get(), full_hit->geometry);

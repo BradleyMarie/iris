@@ -23,7 +23,7 @@ TEST(HitAllocator, Allocate) {
   EXPECT_EQ(2.0, hit0.distance);
 
   internal::Hit& full_hit0 = static_cast<internal::Hit&>(hit0);
-  EXPECT_EQ(3.0, full_hit0.distance_error);
+  EXPECT_EQ(3.0, full_hit0.error);
   EXPECT_EQ(nullptr, full_hit0.geometry);
   EXPECT_EQ(nullptr, full_hit0.model_to_world);
   EXPECT_EQ(1u, full_hit0.front);
@@ -36,7 +36,7 @@ TEST(HitAllocator, Allocate) {
   EXPECT_EQ(1.0, hit1.distance);
 
   internal::Hit& full_hit1 = static_cast<internal::Hit&>(hit1);
-  EXPECT_EQ(5.0, full_hit1.distance_error);
+  EXPECT_EQ(5.0, full_hit1.error);
   EXPECT_EQ(nullptr, full_hit1.geometry);
   EXPECT_EQ(nullptr, full_hit1.model_to_world);
   EXPECT_EQ(3u, full_hit1.front);

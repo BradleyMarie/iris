@@ -70,6 +70,7 @@ class NestedGeometryIntersector : public Intersector {
       : Intersector(minimum_distance, maximum_distance),
         geometry_(geometry),
         hit_allocator_(hit_allocator),
+        closest_hit_distance_(maximum_distance),
         find_closest_hit_(find_closest_hit) {}
 
   bool Intersect(const BVHNode& bvh_node) override {
@@ -78,8 +79,9 @@ class NestedGeometryIntersector : public Intersector {
       if (Hit* hit = geometry_[start_index + i]->TraceOneHit(
               hit_allocator_, minimum_distance, maximum_distance,
               find_closest_hit_);
-          hit) {
-        maximum_distance = hit->distance;
+          hit && hit->distance < closest_hit_distance_) {
+        closest_hit_distance_ = hit->distance;
+        maximum_distance = hit->distance + hit->error;
         result = hit;
 
         if (!find_closest_hit_) {
@@ -96,6 +98,7 @@ class NestedGeometryIntersector : public Intersector {
  private:
   const std::vector<ReferenceCounted<Geometry>>& geometry_;
   HitAllocator& hit_allocator_;
+  geometric_t closest_hit_distance_;
   bool find_closest_hit_;
 };
 

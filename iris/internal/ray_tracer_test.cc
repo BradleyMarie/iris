@@ -60,7 +60,7 @@ TEST(TraceClosestHit, WithGeometry) {
   const Hit* hit = ray_tracer.TraceClosestHit(ray, 0.0, 2.0, *scene);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
-  EXPECT_EQ(0.0, hit->distance_error);
+  EXPECT_EQ(0.0, hit->error);
   EXPECT_EQ(nullptr, hit->next);
   EXPECT_EQ(2u, hit->front);
   EXPECT_EQ(3u, hit->back);
@@ -104,7 +104,7 @@ TEST(TraceAnyHit, WithGeometry) {
   const Hit* hit = ray_tracer.TraceAnyHit(ray, 0.0, 2.0, *scene);
   ASSERT_NE(nullptr, hit);
   EXPECT_EQ(1.0, hit->distance);
-  EXPECT_EQ(0.0, hit->distance_error);
+  EXPECT_EQ(0.0, hit->error);
   EXPECT_EQ(nullptr, hit->next);
   EXPECT_EQ(2u, hit->front);
   EXPECT_EQ(3u, hit->back);
@@ -141,7 +141,7 @@ TEST(TraceBoth, WithGeometry) {
 
   ASSERT_NE(nullptr, hit0);
   EXPECT_EQ(1.0, hit0->distance);
-  EXPECT_EQ(0.0, hit0->distance_error);
+  EXPECT_EQ(0.0, hit0->error);
   EXPECT_EQ(nullptr, hit0->next);
   EXPECT_EQ(2u, hit0->front);
   EXPECT_EQ(3u, hit0->back);
@@ -151,7 +151,7 @@ TEST(TraceBoth, WithGeometry) {
 
   ASSERT_NE(nullptr, hit1);
   EXPECT_EQ(1.0, hit1->distance);
-  EXPECT_EQ(0.0, hit1->distance_error);
+  EXPECT_EQ(0.0, hit1->error);
   EXPECT_EQ(nullptr, hit1->next);
   EXPECT_EQ(2u, hit1->front);
   EXPECT_EQ(3u, hit1->back);
