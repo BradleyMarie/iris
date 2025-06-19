@@ -216,6 +216,7 @@ cc_library(
         ":reference_countable",
         ":texture_coordinates",
         ":vector",
+        "//iris/internal:hit",
         "//iris/internal:hit_arena",
     ],
 )

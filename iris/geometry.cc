@@ -9,6 +9,7 @@
 #include "iris/hit.h"
 #include "iris/hit_allocator.h"
 #include "iris/integer.h"
+#include "iris/internal/hit.h"
 #include "iris/internal/hit_arena.h"
 #include "iris/material.h"
 #include "iris/point.h"
@@ -44,7 +45,9 @@ Hit* Geometry::TraceOneHit(HitAllocator& hit_allocator,
 
   Hit* closest = nullptr;
   for (Hit* current = hit_list; current; current = current->next) {
-    if (current->distance - current->error <= minimum_distance ||
+    internal::Hit* full_hit = static_cast<internal::Hit*>(current);
+
+    if (current->distance - full_hit->error <= minimum_distance ||
         current->distance >= maximum_distance) {
       continue;
     }

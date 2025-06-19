@@ -15,12 +15,11 @@ bool Intersector::Intersect(const Geometry& geometry) {
 
   if (Hit* hit = geometry.TraceOneHit(allocator, minimum_distance_,
                                       maximum_distance_, find_closest_hit_);
-      hit && hit->distance < closest_hit_distance_) {
+      hit) {
     internal::Hit* full_hit = static_cast<internal::Hit*>(hit);
     full_hit->model_ray.emplace(ray_);
 
-    closest_hit_distance_ = full_hit->distance;
-    maximum_distance_ = full_hit->distance + full_hit->error;
+    maximum_distance_ = full_hit->distance;
     hit_ = full_hit;
     done_ = !find_closest_hit_;
   }
@@ -36,13 +35,12 @@ bool Intersector::Intersect(const Geometry& geometry,
 
   if (Hit* hit = geometry.TraceOneHit(allocator, minimum_distance_,
                                       maximum_distance_, find_closest_hit_);
-      hit && hit->distance < closest_hit_distance_) {
+      hit) {
     internal::Hit* full_hit = static_cast<internal::Hit*>(hit);
     full_hit->model_ray.emplace(trace_ray);
     full_hit->model_to_world = model_to_world;
 
-    closest_hit_distance_ = full_hit->distance;
-    maximum_distance_ = full_hit->distance + full_hit->error;
+    maximum_distance_ = full_hit->distance;
     hit_ = full_hit;
     done_ = !find_closest_hit_;
   }
@@ -57,13 +55,12 @@ bool Intersector::Intersect(const Geometry& geometry,
 
   if (Hit* hit = geometry.TraceOneHit(allocator, minimum_distance_,
                                       maximum_distance_, find_closest_hit_);
-      hit && hit->distance < closest_hit_distance_) {
+      hit) {
     internal::Hit* full_hit = static_cast<internal::Hit*>(hit);
     full_hit->model_ray.emplace(trace_ray);
     full_hit->model_to_world = &model_to_world;
 
-    closest_hit_distance_ = full_hit->distance;
-    maximum_distance_ = full_hit->distance + full_hit->error;
+    maximum_distance_ = full_hit->distance;
     hit_ = full_hit;
     done_ = !find_closest_hit_;
   }

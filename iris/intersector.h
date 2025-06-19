@@ -20,7 +20,6 @@ class Intersector final {
       : ray_(ray),
         minimum_distance_(minimum_distance),
         maximum_distance_(maximum_distance),
-        closest_hit_distance_(maximum_distance),
         hit_arena_(hit_arena),
         hit_(hit),
         find_closest_hit_(find_closest_hit),
@@ -47,7 +46,6 @@ class Intersector final {
   const Ray& ray_;
   geometric_t minimum_distance_;
   geometric_t maximum_distance_;
-  geometric_t closest_hit_distance_;
   internal::HitArena& hit_arena_;
   Hit*& hit_;
   bool find_closest_hit_;
