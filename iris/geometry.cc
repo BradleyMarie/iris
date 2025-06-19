@@ -45,7 +45,7 @@ Hit* Geometry::TraceOneHit(HitAllocator& hit_allocator,
   Hit* closest = nullptr;
   for (Hit* current = hit_list; current; current = current->next) {
     if (current->distance - current->error <= minimum_distance ||
-        current->distance + current->error >= maximum_distance) {
+        current->distance >= maximum_distance) {
       continue;
     }
 

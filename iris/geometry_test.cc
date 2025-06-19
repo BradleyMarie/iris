@@ -120,7 +120,7 @@ TEST(GeometryTest, TraceOneHitIgnoresTooFar) {
   HitAllocator allocator(ray, arena);
 
   MockBasicGeometry geom;
-  EXPECT_CALL(geom, Trace(_, 3.0, 4.0, Geometry::ANY_HIT, _))
+  EXPECT_CALL(geom, Trace(_, 2.0, 4.0, Geometry::ANY_HIT, _))
       .WillOnce(
           ([&](const Ray& trace_ray, geometric_t minimum_distance,
                geometric_t maximum_distance, Geometry::TraceMode trace_mode,
@@ -130,16 +130,16 @@ TEST(GeometryTest, TraceOneHitIgnoresTooFar) {
                                            static_cast<geometric_t>(0.0), 3, 4);
           }));
 
-  EXPECT_EQ(nullptr, geom.TraceOneHit(allocator, 3.0, 4.0, false));
+  EXPECT_EQ(nullptr, geom.TraceOneHit(allocator, 2.0, 4.0, false));
 };
 
-TEST(GeometryTest, TraceOneHitIgnoresTooFarAfterError) {
+TEST(GeometryTest, TraceOneHitNotTooFarBecauseOfError) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
   internal::HitArena arena;
   HitAllocator allocator(ray, arena);
 
   MockBasicGeometry geom;
-  EXPECT_CALL(geom, Trace(_, 3.0, 5.0, Geometry::ANY_HIT, _))
+  EXPECT_CALL(geom, Trace(_, 2.0, 5.0, Geometry::ANY_HIT, _))
       .WillOnce(
           ([&](const Ray& trace_ray, geometric_t minimum_distance,
                geometric_t maximum_distance, Geometry::TraceMode trace_mode,
@@ -149,7 +149,10 @@ TEST(GeometryTest, TraceOneHitIgnoresTooFarAfterError) {
                                            static_cast<geometric_t>(1.0), 3, 4);
           }));
 
-  EXPECT_EQ(nullptr, geom.TraceOneHit(allocator, 3.0, 5.0, false));
+  Hit* hit = geom.TraceOneHit(allocator, 2.0, 5.0, false);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(4.0, hit->distance);
+  EXPECT_EQ(nullptr, hit->next);
 };
 
 TEST(GeometryTest, TraceOneHitFindsClosest) {
