@@ -122,7 +122,7 @@ TEST(IntersectorTest, Hits) {
   EXPECT_FALSE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
@@ -146,7 +146,7 @@ TEST(IntersectorTest, HitsAny) {
   EXPECT_TRUE(intersector.Intersect(*geometry));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
@@ -324,7 +324,7 @@ TEST(IntersectorTest, TransformedHits) {
   EXPECT_FALSE(intersector.Intersect(*geometry, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
@@ -350,7 +350,7 @@ TEST(IntersectorTest, TransformedHitsAny) {
   EXPECT_TRUE(intersector.Intersect(*geometry, model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
@@ -531,7 +531,7 @@ TEST(IntersectorTest, MatrixPointerHits) {
   EXPECT_FALSE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
@@ -555,7 +555,7 @@ TEST(IntersectorTest, MatrixPointerHitsAny) {
   EXPECT_TRUE(intersector.Intersect(*geometry, nullptr));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
@@ -731,7 +731,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHits) {
   EXPECT_FALSE(intersector.Intersect(*geometry, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
@@ -757,7 +757,7 @@ TEST(IntersectorTest, MatrixPointerTransformedHitsAny) {
   EXPECT_TRUE(intersector.Intersect(*geometry, &model_to_world));
 
   EXPECT_EQ(0.0, intersector.MinimumDistance());
-  EXPECT_EQ(1.0, intersector.MaximumDistance());
+  EXPECT_EQ(1.5, intersector.MaximumDistance());
 
   internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
   ASSERT_NE(full_hit, nullptr);
