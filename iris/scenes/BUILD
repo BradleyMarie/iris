@@ -11,6 +11,7 @@ cc_library(
         "//iris:ray",
         "//iris:scene",
         "//iris:scene_objects",
+        "//iris/scenes/internal:aligned_vector",
         "//iris/scenes/internal:bvh_builder",
         "//iris/scenes/internal:bvh_node",
         "//iris/scenes/internal:bvh_traversal",

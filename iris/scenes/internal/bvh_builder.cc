@@ -14,6 +14,7 @@
 #include "iris/geometry.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
+#include "iris/scenes/internal/aligned_vector.h"
 #include "iris/scenes/internal/bvh_node.h"
 #include "iris/vector.h"
 
@@ -172,7 +173,7 @@ PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
 }
 
 size_t AddLeafNode(std::span<const size_t> indices,
-                   const BoundingBox& node_bounds, std::vector<BVHNode>& bvh,
+                   const BoundingBox& node_bounds, AlignedVector<BVHNode>& bvh,
                    size_t& geometry_offset,
                    std::span<size_t> geometry_sort_order) {
   bvh.push_back(
@@ -184,14 +185,14 @@ size_t AddLeafNode(std::span<const size_t> indices,
 }
 
 size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
-                       std::vector<BVHNode>& bvh) {
+                       AlignedVector<BVHNode>& bvh) {
   bvh.push_back(BVHNode::MakeInteriorNode(node_bounds, split_axis));
   return bvh.size() - 1;
 }
 
 size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
                 size_t depth_remaining, std::span<size_t> indices,
-                std::vector<BVHNode>& bvh, size_t& geometry_offset,
+                AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
                 std::span<size_t> geometry_sort_order) {
   assert(!indices.empty());
 
@@ -261,7 +262,7 @@ size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
 BuildBVHResult BuildBVH(
     const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
-    size_t num_geometry) {
+    size_t num_geometry, bool for_scene) {
   std::vector<BoundingBox> geometry_bounds;
   geometry_bounds.reserve(num_geometry);
   std::vector<size_t> geometry_order;
@@ -273,7 +274,7 @@ BuildBVHResult BuildBVH(
     geometry_order.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(for_scene);
   if (num_geometry != 0) {
     size_t geometry_offset = 0;
     internal::BuildBVH(geometry_bounds, internal::kMaxBvhDepth, geometry_order,

@@ -21,6 +21,7 @@
 #include "iris/reference_countable.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
+#include "iris/scenes/internal/aligned_vector.h"
 #include "iris/scenes/internal/bvh_builder.h"
 #include "iris/scenes/internal/bvh_traversal.h"
 #include "iris/texture_coordinates.h"
@@ -30,13 +31,14 @@ namespace iris {
 namespace geometry {
 namespace {
 
+using ::iris::scenes::internal::AlignedVector;
 using ::iris::scenes::internal::BuildBVH;
 using ::iris::scenes::internal::BuildBVHResult;
 using ::iris::scenes::internal::BVHNode;
 
 class BVHAggregate final : public Geometry {
  public:
-  BVHAggregate(std::vector<BVHNode> bvh,
+  BVHAggregate(AlignedVector<BVHNode> bvh,
                std::vector<ReferenceCounted<Geometry>> geometry)
       : bvh_(std::move(bvh)), geometry_(std::move(geometry)) {}
 
@@ -75,7 +77,7 @@ class BVHAggregate final : public Geometry {
                                        trace_mode, hit_allocator);
   }
 
-  std::vector<BVHNode> bvh_;
+  AlignedVector<BVHNode> bvh_;
   std::vector<ReferenceCounted<Geometry>> geometry_;
 };
 
@@ -95,7 +97,7 @@ ReferenceCounted<Geometry> AllocateBVHAggregate(
         return std::pair<const Geometry&, const Matrix*>(*geometry[index],
                                                          nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   for (size_t index = 0; index < result.geometry_sort_order.size(); index++) {
     sorted_geometry[result.geometry_sort_order[index]] =

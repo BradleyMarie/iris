@@ -13,6 +13,7 @@
 #include "iris/matrix.h"
 #include "iris/point.h"
 #include "iris/reference_counted.h"
+#include "iris/scenes/internal/aligned_vector.h"
 #include "iris/scenes/internal/bvh_node.h"
 
 namespace iris {
@@ -214,7 +215,7 @@ TEST(AddLeafNode, Add) {
 
   BoundingBox bounds(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::AddLeafNode(indices, bounds, bvh, geometry_offset,
@@ -231,7 +232,7 @@ TEST(AddLeafNode, Add) {
 
 TEST(AddInteriorNode, Add) {
   BoundingBox bounds(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t result = internal::AddInteriorNode(bounds, Vector::Y_AXIS, bvh);
   EXPECT_EQ(0u, result);
   EXPECT_EQ(1u, bvh.size());
@@ -253,7 +254,7 @@ TEST(BuildBVH, OneGeometry) {
     indices.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
@@ -280,7 +281,7 @@ TEST(BuildBVH, DepthLimit) {
     indices.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::BuildBVH(geometry_bounds, 0u, indices, bvh,
@@ -303,7 +304,7 @@ TEST(BuildBVH, TooMuchOverlap) {
     indices.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
@@ -325,7 +326,7 @@ TEST(BuildBVH, EmptyCentroidBounds) {
     indices.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
@@ -347,7 +348,7 @@ TEST(BuildBVH, TwoGeometry) {
     indices.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
@@ -380,7 +381,7 @@ TEST(BuildBVH, TwoGeometryReversed) {
     indices.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
@@ -417,7 +418,7 @@ TEST(BuildBVH, HitsDepthLimit) {
     indices.push_back(i);
   }
 
-  std::vector<BVHNode> bvh;
+  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
   size_t result = internal::BuildBVH(geometry_bounds, 1u, indices, bvh,
@@ -451,7 +452,7 @@ TEST(BuildBVH, NoGeometry) {
         return std::pair<const Geometry&, const Matrix*>(*entry.first,
                                                          entry.second);
       },
-      geometry.size());
+      geometry.size(), false);
   EXPECT_TRUE(result.bvh.empty());
   EXPECT_TRUE(result.geometry_sort_order.empty());
 }
@@ -478,7 +479,7 @@ TEST(BuildBVH, FullTwoGeometry) {
         return std::pair<const Geometry&, const Matrix*>(*entry.first,
                                                          entry.second);
       },
-      geometry.size());
+      geometry.size(), false);
 
   ASSERT_FALSE(result.bvh.empty());
   EXPECT_TRUE(result.bvh[0].HasChildren());

@@ -3,6 +3,24 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//iris/scenes:__subpackages__"])
 
 cc_library(
+    name = "aligned_vector",
+    hdrs = ["aligned_vector.h"],
+    visibility = [
+        "//iris/geometry:__subpackages__",
+        "//iris/scenes:__subpackages__",
+    ],
+)
+
+cc_test(
+    name = "aligned_vector_test",
+    srcs = ["aligned_vector_test.cc"],
+    deps = [
+        ":aligned_vector",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "bvh_builder",
     srcs = ["bvh_builder.cc"],
     hdrs = ["bvh_builder.h"],
@@ -11,6 +29,7 @@ cc_library(
         "//iris/scenes:__subpackages__",
     ],
     deps = [
+        ":aligned_vector",
         ":bvh_node",
         "//iris:bounding_box",
         "//iris:float",

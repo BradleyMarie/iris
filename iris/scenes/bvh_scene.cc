@@ -6,6 +6,7 @@
 
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
+#include "iris/scenes/internal/aligned_vector.h"
 #include "iris/scenes/internal/bvh_builder.h"
 #include "iris/scenes/internal/bvh_node.h"
 #include "iris/scenes/internal/bvh_traversal.h"
@@ -18,6 +19,7 @@ class BVHNode;
 
 namespace {
 
+using ::iris::scenes::internal::AlignedVector;
 using ::iris::scenes::internal::BuildBVH;
 using ::iris::scenes::internal::BuildBVHResult;
 using ::iris::scenes::internal::BVHNode;
@@ -31,14 +33,14 @@ class BVHScene final : public Scene {
   };
 
   BVHScene(const SceneObjects& scene_objects,
-           std::vector<BVHNode> bvh_nodes) noexcept
+           AlignedVector<BVHNode> bvh_nodes) noexcept
       : scene_objects_(scene_objects), bvh_nodes_(std::move(bvh_nodes)) {}
 
   void Trace(const Ray& ray, Intersector& intersector) const override;
 
  private:
   const SceneObjects& scene_objects_;
-  std::vector<BVHNode> bvh_nodes_;
+  AlignedVector<BVHNode> bvh_nodes_;
 };
 
 std::unique_ptr<Scene> BVHScene::Builder::Build(
@@ -46,7 +48,7 @@ std::unique_ptr<Scene> BVHScene::Builder::Build(
   BuildBVHResult result =
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
-               scene_objects.NumGeometry());
+               scene_objects.NumGeometry(), /*for_scene=*/true);
   scene_objects.Reorder(std::move(result.geometry_sort_order));
 
   return std::make_unique<BVHScene>(scene_objects, std::move(result.bvh));

@@ -69,7 +69,7 @@ TEST(BVHScene, TestsAll) {
   BuildBVHResult result =
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
-               scene_objects.NumGeometry());
+               scene_objects.NumGeometry(), /*for_scene=*/false);
   scene_objects.Reorder(result.geometry_sort_order);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))

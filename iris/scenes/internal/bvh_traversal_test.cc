@@ -61,7 +61,7 @@ TEST(SceneIntersect, FirstNegative) {
   BuildBVHResult result =
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
-               scene_objects.NumGeometry());
+               scene_objects.NumGeometry(), /*for_scene=*/false);
   scene_objects.Reorder(result.geometry_sort_order);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
@@ -101,7 +101,7 @@ TEST(SceneIntersect, FirstPositive) {
   BuildBVHResult result =
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
-               scene_objects.NumGeometry());
+               scene_objects.NumGeometry(), /*for_scene=*/false);
   scene_objects.Reorder(result.geometry_sort_order);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
@@ -141,7 +141,7 @@ TEST(SceneIntersect, SecondNegative) {
   BuildBVHResult result =
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
-               scene_objects.NumGeometry());
+               scene_objects.NumGeometry(), /*for_scene=*/false);
   scene_objects.Reorder(result.geometry_sort_order);
 
   EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
@@ -181,7 +181,7 @@ TEST(SceneIntersect, SecondPositive) {
   BuildBVHResult result =
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
-               scene_objects.NumGeometry());
+               scene_objects.NumGeometry(), /*for_scene=*/false);
   scene_objects.Reorder(result.geometry_sort_order);
 
   EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
@@ -221,7 +221,7 @@ TEST(SceneIntersect, Overlapped) {
   BuildBVHResult result =
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
-               scene_objects.NumGeometry());
+               scene_objects.NumGeometry(), /*for_scene=*/false);
   scene_objects.Reorder(result.geometry_sort_order);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
@@ -260,7 +260,7 @@ TEST(NestedIntersect, NoHit) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
@@ -304,7 +304,7 @@ TEST(NestedIntersect, FirstNegative) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
@@ -350,7 +350,7 @@ TEST(NestedIntersect, FirstPositive) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
@@ -396,7 +396,7 @@ TEST(NestedIntersect, SecondNegative) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
@@ -442,7 +442,7 @@ TEST(NestedIntersect, SecondPositive) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
@@ -488,7 +488,7 @@ TEST(NestedIntersect, OverlappedClosest) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
@@ -538,7 +538,7 @@ TEST(NestedIntersect, OverlappedAny) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
@@ -585,7 +585,7 @@ TEST(NestedIntersect, OverlappedAll) {
         return std::pair<const Geometry&, const Matrix*>(
             *geometry.at(index).Get(), nullptr);
       },
-      geometry.size());
+      geometry.size(), /*for_scene=*/false);
 
   std::vector<ReferenceCounted<Geometry>> sorted_geometry;
   sorted_geometry.resize(geometry.size());
