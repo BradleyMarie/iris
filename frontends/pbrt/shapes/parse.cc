@@ -35,8 +35,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
     SpectrumManager& spectrum_manager) {
   if (shape.has_overrides()) {
     material =
-        ParseMaterial(material_proto, shape.overrides(), material_manager,
-                      texture_manager, spectrum_manager);
+        ParseMaterial(material_proto, shape.overrides(), search_root,
+                      material_manager, texture_manager, spectrum_manager);
   }
 
   if (reverse_orientation) {

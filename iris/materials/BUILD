@@ -3,6 +3,18 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "fourier_material",
+    srcs = ["fourier_material.cc"],
+    hdrs = ["fourier_material.h"],
+    deps = [
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+    ],
+)
+
+cc_library(
     name = "glass_material",
     srcs = ["glass_material.cc"],
     hdrs = ["glass_material.h"],

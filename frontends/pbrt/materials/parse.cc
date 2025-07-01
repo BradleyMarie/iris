@@ -1,6 +1,7 @@
 #include "frontends/pbrt/materials/parse.h"
 
 #include "frontends/pbrt/material_manager.h"
+#include "frontends/pbrt/materials/fourier.h"
 #include "frontends/pbrt/materials/glass.h"
 #include "frontends/pbrt/materials/matte.h"
 #include "frontends/pbrt/materials/metal.h"
@@ -24,6 +25,7 @@ using ::pbrt_proto::v3::Shape;
 
 MaterialResult ParseMaterial(const Material& material,
                              const Shape::MaterialOverrides& overrides,
+                             const std::filesystem::path& search_root,
                              const MaterialManager& material_manager,
                              TextureManager& texture_manager,
                              SpectrumManager& spectrum_manager) {
@@ -32,6 +34,9 @@ MaterialResult ParseMaterial(const Material& material,
     case Material::kDisney:
       break;
     case Material::kFourier:
+      result =
+          materials::MakeFourier(material.fourier(), overrides, search_root,
+                                 texture_manager, spectrum_manager);
       break;
     case Material::kGlass:
       result =
@@ -81,12 +86,13 @@ MaterialResult ParseMaterial(const Material& material,
 }
 
 MaterialResult ParseMakeNamedMaterial(const MakeNamedMaterial& named_material,
+                                      const std::filesystem::path& search_root,
                                       MaterialManager& material_manager,
                                       TextureManager& texture_manager,
                                       SpectrumManager& spectrum_manager) {
   MaterialResult result = ParseMaterial(
       named_material.material(), Shape::MaterialOverrides::default_instance(),
-      material_manager, texture_manager, spectrum_manager);
+      search_root, material_manager, texture_manager, spectrum_manager);
   material_manager.Put(named_material.name(),
                        {named_material.material(), result});
   return result;

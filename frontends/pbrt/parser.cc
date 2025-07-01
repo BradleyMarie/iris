@@ -77,7 +77,7 @@ struct State {
     graphics.top().material.first = Defaults().default_material();
     graphics.top().material.second =
         ParseMaterial(Defaults().default_material(),
-                      Shape::MaterialOverrides::default_instance(),
+                      Shape::MaterialOverrides::default_instance(), search_root,
                       material_manager, texture_manager, spectrum_manager);
   }
 
@@ -348,7 +348,7 @@ std::optional<ParsingResult> ParseDirective(
         exit(EXIT_FAILURE);
       }
 
-      ParseMakeNamedMaterial(directive.make_named_material(),
+      ParseMakeNamedMaterial(directive.make_named_material(), search_root,
                              state.material_manager, state.texture_manager,
                              state.spectrum_manager);
       break;
@@ -367,7 +367,7 @@ std::optional<ParsingResult> ParseDirective(
 
       state.graphics.top().material.second = ParseMaterial(
           directive.material(), Shape::MaterialOverrides::default_instance(),
-          state.material_manager, state.texture_manager,
+          search_root, state.material_manager, state.texture_manager,
           state.spectrum_manager);
       state.graphics.top().material.first = directive.material();
       break;

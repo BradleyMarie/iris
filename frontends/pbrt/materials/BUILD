@@ -34,6 +34,37 @@ cc_test(
 )
 
 cc_library(
+    name = "fourier",
+    srcs = ["fourier.cc"],
+    hdrs = ["fourier.h"],
+    deps = [
+        ":bumpmap",
+        ":result",
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:material",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris/materials:fourier_material",
+        "@libfbsdf//libfbsdf/readers:validating_bsdf_reader",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "fourier_test",
+    srcs = ["fourier_test.cc"],
+    deps = [
+        ":fourier",
+        ":result",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "glass",
     srcs = ["glass.cc"],
     hdrs = ["glass.h"],
@@ -193,6 +224,7 @@ cc_library(
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":fourier",
         ":glass",
         ":matte",
         ":metal",

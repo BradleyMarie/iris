@@ -1,5 +1,7 @@
 #include "frontends/pbrt/materials/parse.h"
 
+#include <filesystem>
+
 #include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/result.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
@@ -16,6 +18,7 @@ using ::iris::materials::MockMaterial;
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
+using ::testing::ExitedWithCode;
 
 TEST(ParseMaterial, Empty) {
   TestSpectrumManager spectrum_manager;
@@ -26,7 +29,8 @@ TEST(ParseMaterial, Empty) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_FALSE(result.materials[0]);
   EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -43,7 +47,8 @@ TEST(ParseMaterial, Disney) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_FALSE(result.materials[0]);
   EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -58,13 +63,12 @@ TEST(ParseMaterial, Fourier) {
   Material material;
   material.mutable_fourier();
 
-  MaterialResult result =
+  EXPECT_EXIT(
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.materials[0]);
-  EXPECT_FALSE(result.materials[1]);
-  EXPECT_FALSE(result.bumpmaps[0]);
-  EXPECT_FALSE(result.bumpmaps[1]);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager),
+      ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Could not open file specified by fourier parameter: bsdffile");
 }
 
 TEST(ParseMaterial, Glass) {
@@ -77,7 +81,8 @@ TEST(ParseMaterial, Glass) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -94,7 +99,8 @@ TEST(ParseMaterial, Hair) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_FALSE(result.materials[0]);
   EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -111,7 +117,8 @@ TEST(ParseMaterial, KdSubsurface) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_FALSE(result.materials[0]);
   EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -128,7 +135,8 @@ TEST(ParseMaterial, Matte) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -145,7 +153,8 @@ TEST(ParseMaterial, Metal) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -162,7 +171,8 @@ TEST(ParseMaterial, Mirror) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -185,7 +195,8 @@ TEST(ParseMaterial, Mix) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -202,7 +213,8 @@ TEST(ParseMaterial, Plastic) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -219,7 +231,8 @@ TEST(ParseMaterial, Substrate) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -236,7 +249,8 @@ TEST(ParseMaterial, Subsurface) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_FALSE(result.materials[0]);
   EXPECT_FALSE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -253,7 +267,8 @@ TEST(ParseMaterial, Translucent) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
@@ -270,7 +285,8 @@ TEST(ParseMaterial, Uber) {
 
   MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
-                    material_manager, texture_manager, spectrum_manager);
+                    std::filesystem::current_path(), material_manager,
+                    texture_manager, spectrum_manager);
   EXPECT_TRUE(result.materials[0]);
   EXPECT_TRUE(result.materials[1]);
   EXPECT_FALSE(result.bumpmaps[0]);
