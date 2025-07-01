@@ -1,5 +1,6 @@
 #include "frontends/pbrt/shapes/plymesh.h"
 
+#include <filesystem>
 #include <fstream>
 #include <utility>
 #include <vector>
