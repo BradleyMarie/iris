@@ -44,7 +44,7 @@ struct FourierBsdfData final : public ValidatingBsdfReader {
     if (!flags.is_bsdf || flags.uses_harmonic_extrapolation ||
         num_basis_functions != 1 ||
         (num_color_channels != 1 && num_color_channels != 3) ||
-        index_of_refraction <= 1.0f) {
+        index_of_refraction < 1.0f) {
       return std::unexpected("ERROR: Unsupported fourier bsdf input");
     }
 
