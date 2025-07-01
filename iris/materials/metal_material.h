@@ -5,7 +5,6 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
-#include "iris/spectral_allocator.h"
 #include "iris/textures/texture2d.h"
 
 namespace iris {
