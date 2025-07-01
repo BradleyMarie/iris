@@ -14,13 +14,12 @@ namespace iris {
 namespace bxdfs {
 namespace internal {
 
-static inline geometric_t CosTheta(const Vector& vector) {
-  return std::clamp(static_cast<geometric_t>(vector.z),
-                    static_cast<geometric_t>(-1.0),
-                    static_cast<geometric_t>(1.0));
+static inline geometric CosTheta(const Vector& vector) {
+  return std::clamp(static_cast<geometric>(vector.z),
+                    static_cast<geometric>(-1.0), static_cast<geometric>(1.0));
 }
 
-static inline geometric_t AbsCosTheta(const Vector& vector) {
+static inline geometric AbsCosTheta(const Vector& vector) {
   return std::min(static_cast<geometric>(1.0), std::abs(vector.z));
 }
 
