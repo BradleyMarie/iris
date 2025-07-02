@@ -29,10 +29,10 @@ using ::pbrt_proto::v3::Shape;
 
 struct FourierBsdfData final : public ValidatingBsdfReader {
   std::vector<float> elevational_samples_;
-  std::vector<float> coefficients_;
+  std::vector<float> interleaved_coefficients_;
   std::vector<float> cdf_;
   std::vector<std::pair<uint32_t, uint32_t>> series_;
-  uint32_t num_color_channels;
+  uint32_t num_color_channels_;
   float eta_;
 
   std::expected<Options, std::string> Start(const Flags& flags,
@@ -48,7 +48,7 @@ struct FourierBsdfData final : public ValidatingBsdfReader {
       return std::unexpected("ERROR: Unsupported fourier bsdf input");
     }
 
-    num_color_channels = num_color_channels;
+    num_color_channels_ = num_color_channels;
     eta_ = index_of_refraction;
 
     return Options{
@@ -71,7 +71,7 @@ struct FourierBsdfData final : public ValidatingBsdfReader {
   }
 
   void HandleCoefficients(std::vector<float> coefficients) override {
-    coefficients_ = std::move(coefficients);
+    interleaved_coefficients_ = std::move(coefficients);
   }
 
   void HandleSeries(
@@ -119,13 +119,23 @@ MaterialResult MakeFourier(const Material::Fourier& fourier,
   }
 
   ReferenceCounted<iris::Material> material;
-  if (data.num_color_channels == 1) {
-    material = MakeFourierMaterial(
-        std::move(data.elevational_samples_), std::move(data.cdf_),
-        std::move(data.coefficients_), std::move(data.series_), data.eta_);
-  } else {
-    size_t num_samples =
-        data.elevational_samples_.size() * data.elevational_samples_.size();
+  if (data.num_color_channels_ == 3) {
+    std::vector<float> y_coefficients;
+    std::vector<float> r_coefficients;
+    std::vector<float> b_coefficients;
+    for (auto& [start, length] : data.series_) {
+      size_t current = start;
+      for (size_t i = 0; i < length; i++) {
+        y_coefficients.push_back(data.interleaved_coefficients_[current++]);
+      }
+      for (size_t i = 0; i < length; i++) {
+        r_coefficients.push_back(data.interleaved_coefficients_[current++]);
+      }
+      for (size_t i = 0; i < length; i++) {
+        b_coefficients.push_back(data.interleaved_coefficients_[current++]);
+      }
+      start /= 3;
+    }
 
     material = MakeFourierMaterial(
         spectrum_manager.AllocateReflector(static_cast<visual_t>(1.0),
@@ -138,16 +148,12 @@ MaterialResult MakeFourier(const Material::Fourier& fourier,
                                            static_cast<visual_t>(0.0),
                                            static_cast<visual_t>(1.0)),
         std::move(data.elevational_samples_), std::move(data.cdf_),
-        std::move(data.coefficients_),
-        std::vector<std::pair<uint32_t, uint32_t>>(
-            data.series_.begin() + 0 * num_samples,
-            data.series_.begin() + 1 * num_samples),
-        std::vector<std::pair<uint32_t, uint32_t>>(
-            data.series_.begin() + 1 * num_samples,
-            data.series_.begin() + 2 * num_samples),
-        std::vector<std::pair<uint32_t, uint32_t>>(
-            data.series_.begin() + 2 * num_samples,
-            data.series_.begin() + 3 * num_samples),
+        std::move(data.series_), std::move(y_coefficients),
+        std::move(r_coefficients), std::move(b_coefficients), data.eta_);
+  } else {
+    material = MakeFourierMaterial(
+        std::move(data.elevational_samples_), std::move(data.cdf_),
+        std::move(data.series_), std::move(data.interleaved_coefficients_),
         data.eta_);
   }
 

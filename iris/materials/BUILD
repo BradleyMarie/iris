@@ -7,10 +7,27 @@ cc_library(
     srcs = ["fourier_material.cc"],
     hdrs = ["fourier_material.h"],
     deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
         "//iris:float",
         "//iris:material",
         "//iris:reference_counted",
         "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:fourier_bxdf",
+    ],
+)
+
+cc_test(
+    name = "fourier_material_test",
+    srcs = ["fourier_material_test.cc"],
+    deps = [
+        ":fourier_material",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest_main",
     ],
 )
 

@@ -92,6 +92,20 @@ cc_test(
 )
 
 cc_library(
+    name = "fourier_bxdf",
+    srcs = ["fourier_bxdf.cc"],
+    hdrs = ["fourier_bxdf.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris/bxdfs/internal:diffuse_bxdf",
+        "//iris/bxdfs/internal:math",
+        "//iris/reflectors:uniform_reflector",
+    ],
+)
+
+cc_library(
     name = "lambertian_bxdf",
     srcs = ["lambertian_bxdf.cc"],
     hdrs = ["lambertian_bxdf.h"],
