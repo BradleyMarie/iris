@@ -19,6 +19,8 @@ class SpectralAllocator {
   const Spectrum* Reflect(const Spectrum* spectrum, const Reflector* reflector);
 
   const Reflector* Add(const Reflector* addend0, const Reflector* addend1);
+  const Reflector* Add(const Reflector* addend0, const Reflector* addend1,
+                       const Reflector* addend2);
   const Reflector* Scale(const Reflector* reflector, visual_t attenuation);
   const Reflector* Scale(const Reflector* reflector,
                          const Reflector* attenuation);

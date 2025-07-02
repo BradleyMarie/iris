@@ -330,6 +330,12 @@ const Reflector* SpectralAllocator::Add(const Reflector* addend0,
   return &arena_.Allocate<SumReflector>(*addend0, *addend1);
 }
 
+const Reflector* SpectralAllocator::Add(const Reflector* addend0,
+                                        const Reflector* addend1,
+                                        const Reflector* addend2) {
+  return Add(Add(addend0, addend1), addend2);
+}
+
 const Reflector* SpectralAllocator::Scale(const Reflector* reflector,
                                           visual_t attenuation) {
   assert(std::isfinite(attenuation) && attenuation >= 0.0 &&
