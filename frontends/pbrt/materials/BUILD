@@ -46,7 +46,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:fourier_material",
-        "@libfbsdf//libfbsdf/readers:validating_bsdf_reader",
+        "@libfbsdf//libfbsdf/readers:standard_bsdf_reader",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

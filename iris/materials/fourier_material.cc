@@ -1,6 +1,6 @@
 #include "iris/materials/fourier_material.h"
 
-#include <cstdint>
+#include <cstddef>
 #include <span>
 #include <utility>
 #include <vector>
@@ -23,13 +23,14 @@ using ::iris::bxdfs::MakeFourierBxdf;
 
 class FourierMaterial : public Material {
  public:
-  FourierMaterial(
-      ReferenceCounted<Reflector> r, ReferenceCounted<Reflector> g,
-      ReferenceCounted<Reflector> b, std::vector<geometric> elevational_samples,
-      std::vector<visual> cdf,
-      std::vector<std::pair<uint32_t, uint32_t>> coefficient_extents,
-      std::vector<visual> y_coefficients, std::vector<visual> r_coefficients,
-      std::vector<visual> b_coefficients, visual eta)
+  FourierMaterial(ReferenceCounted<Reflector> r, ReferenceCounted<Reflector> g,
+                  ReferenceCounted<Reflector> b,
+                  std::vector<geometric> elevational_samples,
+                  std::vector<visual> cdf,
+                  std::vector<std::pair<size_t, size_t>> coefficient_extents,
+                  std::vector<visual> y_coefficients,
+                  std::vector<visual> r_coefficients,
+                  std::vector<visual> b_coefficients, visual eta)
       : r_(std::move(r)),
         g_(std::move(g)),
         b_(std::move(b)),
@@ -51,7 +52,7 @@ class FourierMaterial : public Material {
   ReferenceCounted<Reflector> b_;
   std::vector<geometric> elevational_samples_;
   std::vector<visual> cdf_;
-  std::vector<std::pair<uint32_t, uint32_t>> coefficient_extents_;
+  std::vector<std::pair<size_t, size_t>> coefficient_extents_;
   std::vector<visual> y_coefficients_;
   std::vector<visual> r_coefficients_;
   std::vector<visual> b_coefficients_;
@@ -77,7 +78,7 @@ const Bxdf* FourierMaterial::Evaluate(
 
 ReferenceCounted<Material> MakeFourierMaterial(
     std::vector<geometric> elevational_samples, std::vector<visual> cdf,
-    std::vector<std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::vector<std::pair<size_t, size_t>> coefficient_extents,
     std::vector<visual> y_coefficients, visual eta) {
   return MakeReferenceCounted<FourierMaterial>(
       ReferenceCounted<Reflector>(), ReferenceCounted<Reflector>(),
@@ -90,7 +91,7 @@ ReferenceCounted<Material> MakeFourierMaterial(
     ReferenceCounted<Reflector> r, ReferenceCounted<Reflector> g,
     ReferenceCounted<Reflector> b, std::vector<geometric> elevational_samples,
     std::vector<visual> cdf,
-    std::vector<std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::vector<std::pair<size_t, size_t>> coefficient_extents,
     std::vector<visual> y_coefficients, std::vector<visual> r_coefficients,
     std::vector<visual> b_coefficients, visual eta) {
   return MakeReferenceCounted<FourierMaterial>(

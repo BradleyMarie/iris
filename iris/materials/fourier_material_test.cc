@@ -1,6 +1,6 @@
 #include "iris/materials/fourier_material.h"
 
-#include <cstdint>
+#include <cstddef>
 #include <utility>
 #include <vector>
 
@@ -22,7 +22,7 @@ TEST(FourierMaterialTest, EvaluateY) {
   std::vector<visual> cdf = {0.0,  0.0,  0.0,  0.0,  0.33, 0.33, 0.33, 0.33,
                              0.66, 0.66, 0.66, 0.66, 1.0,  1.0,  1.0,  1.0};
   std::vector<visual> coefficients = {1.0};
-  std::vector<std::pair<uint32_t, uint32_t>> coefficient_extents = {
+  std::vector<std::pair<size_t, size_t>> coefficient_extents = {
       {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
       {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}};
 
@@ -44,7 +44,7 @@ TEST(FourierMaterialTest, EvaluateYRB) {
   std::vector<visual> cdf = {0.0,  0.0,  0.0,  0.0,  0.33, 0.33, 0.33, 0.33,
                              0.66, 0.66, 0.66, 0.66, 1.0,  1.0,  1.0,  1.0};
   std::vector<visual> coefficients = {1.0};
-  std::vector<std::pair<uint32_t, uint32_t>> coefficient_extents = {
+  std::vector<std::pair<size_t, size_t>> coefficient_extents = {
       {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
       {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}};
 

@@ -12,7 +12,7 @@ bazel_dep(name = "libfbsdf")
 git_override(
     module_name = "libfbsdf",
     remote = "https://github.com/bradleymarie/libfbsdf.git",
-    commit = "af85a9443d90743832c8d9816bdd16064de735e3",
+    commit = "935112b50640c2afaba1efed34e89802966516a1",
 )
 
 bazel_dep(name = "libspd")

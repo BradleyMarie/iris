@@ -1,6 +1,7 @@
 #ifndef _IRIS_BXDFS_FOURIER_BXDF_
 #define _IRIS_BXDFS_FOURIER_BXDF_
 
+#include <cstddef>
 #include <span>
 #include <utility>
 
@@ -14,14 +15,14 @@ namespace bxdfs {
 const Bxdf* MakeFourierBxdf(
     BxdfAllocator& bxdf_allocator,
     std::span<const geometric> elevational_samples, std::span<const visual> cdf,
-    std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> y_coefficients, visual eta_transmitted);
 
 const Bxdf* MakeFourierBxdf(
     BxdfAllocator& bxdf_allocator, const Reflector* r, const Reflector* g,
     const Reflector* b, std::span<const geometric> elevational_samples,
     std::span<const visual> cdf,
-    std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> y_coefficients,
     std::span<const visual> r_coefficients,
     std::span<const visual> b_coefficients, visual eta_transmitted);

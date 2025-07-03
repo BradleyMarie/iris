@@ -14,7 +14,7 @@
 #include "iris/materials/fourier_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "libfbsdf/readers/validating_bsdf_reader.h"
+#include "libfbsdf/readers/standard_bsdf_reader.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
@@ -23,62 +23,10 @@ namespace materials {
 namespace {
 
 using ::iris::materials::MakeFourierMaterial;
-using ::libfbsdf::ValidatingBsdfReader;
+using ::libfbsdf::ReadFromStandardBsdf;
+using ::libfbsdf::ReadFromStandardBsdfResult;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
-
-struct FourierBsdfData final : public ValidatingBsdfReader {
-  std::vector<float> elevational_samples_;
-  std::vector<float> interleaved_coefficients_;
-  std::vector<float> cdf_;
-  std::vector<std::pair<uint32_t, uint32_t>> series_;
-  uint32_t num_color_channels_;
-  float eta_;
-
-  std::expected<Options, std::string> Start(const Flags& flags,
-                                            uint32_t num_basis_functions,
-                                            size_t num_color_channels,
-                                            float index_of_refraction,
-                                            float roughness_top,
-                                            float roughness_bottom) override {
-    if (!flags.is_bsdf || flags.uses_harmonic_extrapolation ||
-        num_basis_functions != 1 ||
-        (num_color_channels != 1 && num_color_channels != 3) ||
-        index_of_refraction < 1.0f) {
-      return std::unexpected("ERROR: Unsupported fourier bsdf input");
-    }
-
-    num_color_channels_ = num_color_channels;
-    eta_ = index_of_refraction;
-
-    return Options{
-        .parse_elevational_samples = true,
-        .parse_parameter_sample_counts = false,
-        .parse_parameter_values = false,
-        .parse_cdf_mu = true,
-        .parse_series = true,
-        .parse_coefficients = true,
-        .parse_metadata = false,
-    };
-  }
-
-  void HandleElevationalSamples(std::vector<float> samples) override {
-    elevational_samples_ = std::move(samples);
-  }
-
-  void HandleCdf(std::vector<float> values) override {
-    cdf_ = std::move(values);
-  }
-
-  void HandleCoefficients(std::vector<float> coefficients) override {
-    interleaved_coefficients_ = std::move(coefficients);
-  }
-
-  void HandleSeries(
-      std::vector<std::pair<uint32_t, uint32_t>> series) override {
-    series_ = std::move(series);
-  }
-};
 
 }  // namespace
 
@@ -110,33 +58,16 @@ MaterialResult MakeFourier(const Material::Fourier& fourier,
     exit(EXIT_FAILURE);
   }
 
-  FourierBsdfData data;
-  if (std::expected<void, std::string> result = data.ReadFrom(file_stream);
-      !result) {
+  std::expected<ReadFromStandardBsdfResult, std::string> result =
+      ReadFromStandardBsdf(file_stream);
+  if (!result) {
     std::cerr << "ERROR: Failed to read fourier bsdf file with error: "
               << result.error() << std::endl;
     exit(EXIT_FAILURE);
   }
 
   ReferenceCounted<iris::Material> material;
-  if (data.num_color_channels_ == 3) {
-    std::vector<float> y_coefficients;
-    std::vector<float> r_coefficients;
-    std::vector<float> b_coefficients;
-    for (auto& [start, length] : data.series_) {
-      size_t current = start;
-      for (size_t i = 0; i < length; i++) {
-        y_coefficients.push_back(data.interleaved_coefficients_[current++]);
-      }
-      for (size_t i = 0; i < length; i++) {
-        r_coefficients.push_back(data.interleaved_coefficients_[current++]);
-      }
-      for (size_t i = 0; i < length; i++) {
-        b_coefficients.push_back(data.interleaved_coefficients_[current++]);
-      }
-      start /= 3;
-    }
-
+  if (!result->r_coefficients.empty() && !result->b_coefficients.empty()) {
     material = MakeFourierMaterial(
         spectrum_manager.AllocateReflector(static_cast<visual_t>(1.0),
                                            static_cast<visual_t>(0.0),
@@ -147,14 +78,15 @@ MaterialResult MakeFourier(const Material::Fourier& fourier,
         spectrum_manager.AllocateReflector(static_cast<visual_t>(0.0),
                                            static_cast<visual_t>(0.0),
                                            static_cast<visual_t>(1.0)),
-        std::move(data.elevational_samples_), std::move(data.cdf_),
-        std::move(data.series_), std::move(y_coefficients),
-        std::move(r_coefficients), std::move(b_coefficients), data.eta_);
+        std::move(result->elevational_samples), std::move(result->cdf),
+        std::move(result->series_extents), std::move(result->y_coefficients),
+        std::move(result->r_coefficients), std::move(result->b_coefficients),
+        result->index_of_refraction);
   } else {
     material = MakeFourierMaterial(
-        std::move(data.elevational_samples_), std::move(data.cdf_),
-        std::move(data.series_), std::move(data.interleaved_coefficients_),
-        data.eta_);
+        std::move(result->elevational_samples), std::move(result->cdf),
+        std::move(result->series_extents), std::move(result->y_coefficients),
+        result->index_of_refraction);
   }
 
   return MaterialResult{{material, material},

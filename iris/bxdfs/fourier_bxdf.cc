@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <numbers>
 #include <optional>
 #include <span>
@@ -24,14 +25,13 @@ using ::iris::reflectors::CreateUniformReflector;
 
 class FourierBxdf : public internal::DiffuseBxdf {
  public:
-  FourierBxdf(
-      const Reflector* r, const Reflector* g, const Reflector* b,
-      std::span<const geometric> elevational_samples,
-      std::span<const visual> cdf,
-      std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
-      std::span<const visual> y_coefficients,
-      std::span<const visual> r_coefficients,
-      std::span<const visual> b_coefficients, visual eta_transmitted)
+  FourierBxdf(const Reflector* r, const Reflector* g, const Reflector* b,
+              std::span<const geometric> elevational_samples,
+              std::span<const visual> cdf,
+              std::span<const std::pair<size_t, size_t>> coefficient_extents,
+              std::span<const visual> y_coefficients,
+              std::span<const visual> r_coefficients,
+              std::span<const visual> b_coefficients, visual eta_transmitted)
       : r_(r),
         g_(g),
         b_(b),
@@ -61,7 +61,7 @@ class FourierBxdf : public internal::DiffuseBxdf {
   const Reflector* b_;
   std::span<const geometric> elevational_samples_;
   std::span<const visual> cdf_;
-  std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents_;
+  std::span<const std::pair<size_t, size_t>> coefficient_extents_;
   std::span<const visual> y_coefficients_;
   std::span<const visual> r_coefficients_;
   std::span<const visual> b_coefficients_;
@@ -167,7 +167,7 @@ std::optional<CatmullRomWeights> ComputeCatmullRomWeights(
 
 std::optional<geometric_t> SampleCatmullRom2D(
     std::span<const geometric> elevational_samples,
-    std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> all_coefficients, std::span<const visual> cdf,
     geometric mu_incoming, geometric_t sample) {
   std::optional<CatmullRomWeights> incoming_weights =
@@ -380,7 +380,7 @@ geometric_t SamplePhi(
 visual_t ComputeChannel(
     const CatmullRomWeights& incoming_weights,
     const CatmullRomWeights& outgoing_weights, double cos_phi,
-    std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> all_coefficients, size_t num_elevational_samples) {
   std::span<const visual_t> coefficients[4][4];
   double weights[4][4];
@@ -455,7 +455,7 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
   }
 
   std::array<std::pair<visual_t, visual_t>, 256> coefficients;
-  uint32_t num_coefficients = 0;
+  size_t num_coefficients = 0;
   for (size_t i_index = 0; i_index < incoming_weights->num_weights; i_index++) {
     for (size_t o_index = 0; o_index < outgoing_weights->num_weights;
          o_index++) {
@@ -464,13 +464,13 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
                                    elevational_samples_.size() +
                                outgoing_weights->offsets[o_index]];
       num_coefficients = std::max(num_coefficients, length);
-      num_coefficients = std::min(num_coefficients,
-                                  static_cast<uint32_t>(coefficients.size()));
+      num_coefficients =
+          std::min(num_coefficients, static_cast<size_t>(coefficients.size()));
 
       visual_t weight = incoming_weights->weights[i_index] *
                         outgoing_weights->weights[o_index];
 
-      for (uint32_t coeff = 0; coeff < length; coeff++) {
+      for (size_t coeff = 0; coeff < length; coeff++) {
         coefficients[coeff].first +=
             weight * y_coefficients_[start_index + coeff];
         coefficients[coeff].second = coefficients[coeff].first;
@@ -478,7 +478,7 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
     }
   }
 
-  for (uint32_t coeff = 1; coeff < num_coefficients; coeff++) {
+  for (size_t coeff = 1; coeff < num_coefficients; coeff++) {
     coefficients[coeff].second =
         coefficients[coeff].first / static_cast<visual_t>(coeff);
   }
@@ -611,7 +611,7 @@ const Reflector* FourierBxdf::ReflectanceDiffuse(
 const Bxdf* MakeFourierBxdf(
     BxdfAllocator& bxdf_allocator,
     std::span<const geometric> elevational_samples, std::span<const visual> cdf,
-    std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> y_coefficients, visual eta_transmitted) {
   size_t num_samples = elevational_samples.size();
   if (num_samples < 3 || cdf.size() / num_samples != num_samples ||
@@ -631,7 +631,7 @@ const Bxdf* MakeFourierBxdf(
     BxdfAllocator& bxdf_allocator, const Reflector* r, const Reflector* g,
     const Reflector* b, std::span<const geometric> elevational_samples,
     std::span<const visual> cdf,
-    std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> y_coefficients,
     std::span<const visual> r_coefficients,
     std::span<const visual> b_coefficients, visual eta_transmitted) {
