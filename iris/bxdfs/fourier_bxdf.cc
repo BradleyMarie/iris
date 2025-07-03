@@ -2,8 +2,8 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <cmath>
+#include <numbers>
 #include <optional>
 #include <span>
 #include <utility>
@@ -165,6 +165,218 @@ std::optional<CatmullRomWeights> ComputeCatmullRomWeights(
   return result;
 }
 
+std::optional<geometric_t> SampleCatmullRom2D(
+    std::span<const geometric> elevational_samples,
+    std::span<const std::pair<uint32_t, uint32_t>> coefficient_extents,
+    std::span<const visual> all_coefficients, std::span<const visual> cdf,
+    geometric mu_incoming, geometric_t sample) {
+  std::optional<CatmullRomWeights> incoming_weights =
+      ComputeCatmullRomWeights(elevational_samples, mu_incoming);
+  if (!incoming_weights) {
+    return std::nullopt;
+  }
+
+  auto interpolate_cdf = [&](size_t o_offset) {
+    visual_t result = 0;
+    for (size_t i_index = 0; i_index < incoming_weights->num_weights;
+         i_index++) {
+      result +=
+          cdf[incoming_weights->offsets[i_index] * elevational_samples.size() +
+              o_offset] *
+          incoming_weights->weights[i_index];
+    }
+    return result;
+  };
+
+  sample *= interpolate_cdf(elevational_samples.size() - 1);
+
+  auto find_interval = [&]() -> size_t {
+    size_t first = 0;
+    size_t len = elevational_samples.size();
+
+    while (len > 0) {
+      size_t half = len >> 1;
+      size_t middle = first + half;
+
+      if (interpolate_cdf(middle) < sample) {
+        first = middle + 1;
+        len -= half + 1;
+      } else {
+        len = half;
+      }
+    }
+
+    if (first == 0) {
+      return 0;
+    }
+
+    first -= 1;
+
+    if (first > elevational_samples.size() - 2) {
+      return elevational_samples.size() - 2;
+    }
+
+    return first;
+  };
+
+  size_t index = find_interval();
+
+  auto interpolate_a0 = [&](size_t o_offset) {
+    visual_t result = 0;
+    for (size_t i_index = 0; i_index < incoming_weights->num_weights;
+         i_index++) {
+      auto [start, length] =
+          coefficient_extents[incoming_weights->offsets[i_index] *
+                                  elevational_samples.size() +
+                              o_offset];
+      if (length != 0) {
+        result += all_coefficients[start] * incoming_weights->weights[i_index];
+      }
+    }
+    return result;
+  };
+
+  visual_t f0 = interpolate_a0(index);
+  visual_t f1 = interpolate_a0(index + 1);
+  geometric x0 = elevational_samples[index];
+  geometric x1 = elevational_samples[index + 1];
+  geometric width = x1 - x0;
+
+  sample = (sample - interpolate_cdf(index)) / width;
+
+  visual_t d0;
+  if (index > 0) {
+    d0 = width * (f1 - interpolate_a0(index - 1)) /
+         (x1 - elevational_samples[index - 1]);
+  } else {
+    d0 = f1 - f0;
+  }
+
+  visual_t d1;
+  if (index + 2 < elevational_samples.size()) {
+    d1 = width * (interpolate_a0(index + 2) - f0) /
+         (elevational_samples[index + 2] - x0);
+  } else {
+    d1 = f1 - f0;
+  }
+
+  geometric_t t;
+  if (f0 != f1) {
+    t = (f0 - std::sqrt(std::max(static_cast<geometric_t>(0.0),
+                                 f0 * f0 + static_cast<geometric_t>(2.0) *
+                                               sample * (f1 - f0)))) /
+        (f0 - f1);
+  } else {
+    t = sample / f0;
+  }
+
+  geometric_t a = static_cast<geometric_t>(0.0);
+  geometric_t b = static_cast<geometric_t>(1.0);
+  geometric_t Fhat;
+  geometric_t fhat;
+  for (;;) {
+    if (!(t >= a && t <= b)) {
+      t = static_cast<geometric_t>(0.5) * (a + b);
+    }
+
+    Fhat =
+        t * (f0 + t * (static_cast<geometric_t>(0.5) * d0 +
+                       t * (static_cast<geometric_t>(1.0 / 3.0) *
+                                (static_cast<geometric_t>(-2.0) * d0 - d1) +
+                            f1 - f0 +
+                            t * (static_cast<geometric_t>(0.25) * (d0 + d1) +
+                                 static_cast<geometric_t>(0.5) * (f0 - f1)))));
+    fhat =
+        f0 + t * (d0 + t * (static_cast<geometric_t>(-2.0) * d0 - d1 +
+                            static_cast<geometric_t>(3.0) * (f1 - f0) +
+                            t * (d0 + d1 +
+                                 static_cast<geometric_t>(2.0) * (f0 - f1))));
+
+    if (std::abs(Fhat - sample) < static_cast<geometric_t>(1e-6) ||
+        b - a < static_cast<geometric_t>(1e-6)) {
+      break;
+    }
+
+    if (Fhat - sample < static_cast<geometric_t>(0.0)) {
+      a = t;
+    } else {
+      b = t;
+    }
+
+    t -= (Fhat - sample) / fhat;
+  }
+
+  return x0 + width * t;
+}
+
+geometric_t SamplePhi(
+    std::span<const std::pair<visual_t, visual_t>> coefficients,
+    geometric_t sample) {
+  bool flip;
+  if (sample >= static_cast<geometric_t>(0.5)) {
+    sample = static_cast<geometric_t>(1.0) -
+             static_cast<geometric_t>(2.0) *
+                 (sample - static_cast<geometric_t>(0.5));
+    flip = true;
+  } else {
+    sample *= static_cast<geometric_t>(2.0);
+    flip = false;
+  }
+
+  double a = 0.0;
+  double b = std::numbers::pi_v<double>;
+  double phi = 0.5 * std::numbers::pi_v<double>;
+  double target = sample * coefficients[0].first * std::numbers::pi_v<double>;
+  for (;;) {
+    double cosPhi = std::cos(phi);
+    double sinPhi = std::sin(phi);
+    double cosPhiPrev = cosPhi;
+    double cosPhiCur = 1.0;
+    double sinPhiPrev = -sinPhi;
+    double sinPhiCur = 0.0;
+
+    double F = coefficients[0].first * phi;
+    double f = coefficients[0].first;
+    for (size_t k = 1; k < coefficients.size(); k++) {
+      double sinPhiNext = 2 * cosPhi * sinPhiCur - sinPhiPrev;
+      double cosPhiNext = 2 * cosPhi * cosPhiCur - cosPhiPrev;
+      sinPhiPrev = sinPhiCur;
+      sinPhiCur = sinPhiNext;
+      cosPhiPrev = cosPhiCur;
+      cosPhiCur = cosPhiNext;
+
+      F += coefficients[k].second * sinPhiNext;
+      f += coefficients[k].first * cosPhiNext;
+    }
+
+    F -= target;
+
+    if (F > 1e-6) {
+      b = phi;
+    } else if (F < -1e-6) {
+      a = phi;
+    } else {
+      break;
+    }
+
+    if (b - a < 1e-6) {
+      break;
+    }
+
+    phi -= F / f;
+
+    if (!(phi > a && phi < b)) {
+      phi = 0.5 * (a + b);
+    }
+  }
+
+  if (flip) {
+    phi = 2.0 * std::numbers::pi_v<double> - phi;
+  }
+
+  return static_cast<geometric_t>(phi);
+}
+
 visual_t ComputeChannel(
     const CatmullRomWeights& incoming_weights,
     const CatmullRomWeights& outgoing_weights, double cos_phi,
@@ -180,7 +392,7 @@ visual_t ComputeChannel(
           coefficient_extents[incoming_weights.offsets[i_index] *
                                   num_elevational_samples +
                               outgoing_weights.offsets[o_index]];
-      assert(start_index + length <= all_coefficients.size());
+
       coefficients[i_index][o_index] =
           std::span(all_coefficients.begin() + start_index, length);
       num_coefficients =
@@ -221,29 +433,129 @@ visual_t ComputeChannel(
 std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
                                                  const Vector& surface_normal,
                                                  Sampler& sampler) const {
-  Vector outgoing = internal::CosineSampleHemisphere(incoming.z, sampler);
-  return outgoing.AlignWith(surface_normal);
+  geometric mu_incoming = CosTheta(incoming);
+
+  std::optional<geometric_t> mu_outgoing =
+      SampleCatmullRom2D(elevational_samples_, coefficient_extents_,
+                         y_coefficients_, cdf_, mu_incoming, sampler.Next());
+  if (!mu_outgoing) {
+    return std::nullopt;
+  }
+
+  std::optional<CatmullRomWeights> incoming_weights =
+      ComputeCatmullRomWeights(elevational_samples_, mu_incoming);
+  if (!incoming_weights) {
+    return std::nullopt;
+  }
+
+  std::optional<CatmullRomWeights> outgoing_weights =
+      ComputeCatmullRomWeights(elevational_samples_, *mu_outgoing);
+  if (!outgoing_weights) {
+    return std::nullopt;
+  }
+
+  std::array<std::pair<visual_t, visual_t>, 256> coefficients;
+  uint32_t num_coefficients = 0;
+  for (size_t i_index = 0; i_index < incoming_weights->num_weights; i_index++) {
+    for (size_t o_index = 0; o_index < outgoing_weights->num_weights;
+         o_index++) {
+      auto [start_index, length] =
+          coefficient_extents_[incoming_weights->offsets[i_index] *
+                                   elevational_samples_.size() +
+                               outgoing_weights->offsets[o_index]];
+      num_coefficients = std::max(num_coefficients, length);
+      num_coefficients = std::min(num_coefficients,
+                                  static_cast<uint32_t>(coefficients.size()));
+
+      visual_t weight = incoming_weights->weights[i_index] *
+                        outgoing_weights->weights[o_index];
+
+      for (uint32_t coeff = 0; coeff < length; coeff++) {
+        coefficients[coeff].first +=
+            weight * y_coefficients_[start_index + coeff];
+        coefficients[coeff].second = coefficients[coeff].first;
+      }
+    }
+  }
+
+  for (uint32_t coeff = 1; coeff < num_coefficients; coeff++) {
+    coefficients[coeff].second =
+        coefficients[coeff].first / static_cast<visual_t>(coeff);
+  }
+
+  geometric_t phi_outgoing = SamplePhi(
+      std::span(coefficients.begin(), coefficients.begin() + num_coefficients),
+      sampler.Next());
+  geometric_t sin_squared_theta_outgoing =
+      std::max(static_cast<geometric_t>(0.0),
+               static_cast<geometric_t>(1.0) - *mu_outgoing * *mu_outgoing);
+
+  geometric_t norm = std::sqrt(sin_squared_theta_outgoing /
+                               internal::SinSquaredTheta(incoming));
+  if (!std::isfinite(norm)) {
+    return Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+                  static_cast<geometric>(1.0));
+  }
+
+  geometric_t sin_phi_outgoing = std::sin(phi_outgoing);
+  geometric_t cos_phi_outgoing = std::cos(phi_outgoing);
+
+  Vector outgoing(
+      norm * (cos_phi_outgoing * incoming.x - sin_phi_outgoing * incoming.y),
+      norm * (sin_phi_outgoing * incoming.x + cos_phi_outgoing * incoming.y),
+      *mu_outgoing);
+
+  return -Normalize(outgoing);
 }
 
 visual_t FourierBxdf::PdfDiffuse(const Vector& incoming, const Vector& outgoing,
                                  const Vector& surface_normal,
                                  Hemisphere hemisphere) const {
-  if (hemisphere != Hemisphere::BRDF) {
+  Vector reversed_outgoing = -outgoing;
+  geometric mu_incoming = CosTheta(incoming);
+  geometric mu_outgoing = CosTheta(reversed_outgoing);
+  if (mu_incoming == static_cast<visual_t>(0.0) ||
+      mu_outgoing == static_cast<visual_t>(0.0)) {
     return static_cast<visual_t>(0.0);
   }
 
-  return std::abs(static_cast<visual_t>(outgoing.z) *
-                  std::numbers::inv_pi_v<visual_t>);
+  std::optional<CatmullRomWeights> incoming_weights =
+      ComputeCatmullRomWeights(elevational_samples_, mu_incoming);
+  if (!incoming_weights) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  std::optional<CatmullRomWeights> outgoing_weights =
+      ComputeCatmullRomWeights(elevational_samples_, mu_outgoing);
+  if (!outgoing_weights) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  double cos_phi = CosDPhi(reversed_outgoing, incoming);
+  visual_t y = ComputeChannel(*incoming_weights, *outgoing_weights, cos_phi,
+                              coefficient_extents_, y_coefficients_,
+                              elevational_samples_.size());
+  if (y <= static_cast<visual_t>(0.0)) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  visual_t rho = static_cast<visual_t>(0.0);
+  for (size_t i_index = 0; i_index < incoming_weights->num_weights; i_index++) {
+    size_t cdf_index =
+        incoming_weights->offsets[i_index] * elevational_samples_.size() +
+        (elevational_samples_.size() - 1);
+
+    rho += incoming_weights->weights[i_index] * cdf_[cdf_index] *
+           static_cast<visual_t>(2.0 * std::numbers::pi_v<visual_t>);
+  }
+
+  return (rho > static_cast<visual_t>(0.0)) ? (y / rho)
+                                            : static_cast<visual_t>(0.0);
 }
 
 const Reflector* FourierBxdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
-  // TODO: Remove this
-  if (hemisphere != Hemisphere::BRDF) {
-    return nullptr;
-  }
-
   Vector reversed_outgoing = -outgoing;
   geometric mu_incoming = CosTheta(incoming);
   geometric mu_outgoing = CosTheta(reversed_outgoing);
@@ -271,9 +583,8 @@ const Reflector* FourierBxdf::ReflectanceDiffuse(
 
   const Reflector* result;
   if (r_coefficients_.empty() || b_coefficients_.empty()) {
-    result = allocator.Scale(
-        kUniform.Get(),
-        std::clamp(y, static_cast<visual_t>(0.0), static_cast<visual_t>(1.0)));
+    result = allocator.UnboundedScale(kUniform.Get(),
+                                      std::max(static_cast<visual_t>(0.0), y));
   } else {
     visual_t r = ComputeChannel(*incoming_weights, *outgoing_weights, cos_phi,
                                 coefficient_extents_, r_coefficients_,
@@ -285,13 +596,10 @@ const Reflector* FourierBxdf::ReflectanceDiffuse(
                  static_cast<visual_t>(0.297375) * r -
                  static_cast<visual_t>(0.100913) * b;
 
-    result = allocator.Add(
-        allocator.Scale(r_, std::clamp(r, static_cast<visual_t>(0.0),
-                                       static_cast<visual_t>(1.0))),
-        allocator.Scale(g_, std::clamp(g, static_cast<visual_t>(0.0),
-                                       static_cast<visual_t>(1.0))),
-        allocator.Scale(b_, std::clamp(b, static_cast<visual_t>(0.0),
-                                       static_cast<visual_t>(1.0))));
+    result = allocator.UnboundedAdd(
+        allocator.UnboundedScale(r_, std::max(static_cast<visual_t>(0.0), r)),
+        allocator.UnboundedScale(g_, std::max(static_cast<visual_t>(0.0), g)),
+        allocator.UnboundedScale(b_, std::max(static_cast<visual_t>(0.0), b)));
   }
 
   return allocator.UnboundedScale(
