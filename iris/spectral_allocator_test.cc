@@ -218,6 +218,20 @@ TEST(SpectralAllocator, ReflectorUnboundedAdd) {
             allocator.UnboundedAdd(&reflector0, &reflector1)->Reflectance(1.0));
 }
 
+TEST(SpectralAllocator, ReflectorUnboundedAdd3) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector0;
+  EXPECT_CALL(reflector0, Reflectance(1.0)).WillOnce(Return(0.25));
+  MockReflector reflector1;
+  EXPECT_CALL(reflector1, Reflectance(1.0)).WillOnce(Return(0.50));
+  MockReflector reflector2;
+  EXPECT_CALL(reflector2, Reflectance(1.0)).WillOnce(Return(0.75));
+  EXPECT_EQ(1.5, allocator.UnboundedAdd(&reflector0, &reflector1, &reflector2)
+                     ->Reflectance(1.0));
+}
+
 TEST(SpectralAllocator, ReflectorUnboundedScaleNullptr) {
   Arena arena;
   SpectralAllocator allocator(arena);

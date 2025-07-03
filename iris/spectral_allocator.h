@@ -29,6 +29,9 @@ class SpectralAllocator {
   // Prefer the bounded version of these if possible.
   const Reflector* UnboundedAdd(const Reflector* addend0,
                                 const Reflector* addend1);
+  const Reflector* UnboundedAdd(const Reflector* addend0,
+                                const Reflector* addend1,
+                                const Reflector* addend2);
   const Reflector* UnboundedScale(const Reflector* reflector,
                                   visual_t attenuation);
 

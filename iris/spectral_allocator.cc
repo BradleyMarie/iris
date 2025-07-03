@@ -388,6 +388,12 @@ const Reflector* SpectralAllocator::UnboundedAdd(const Reflector* addend0,
   return &arena_.Allocate<UnboundedSumReflector>(*addend0, *addend1);
 }
 
+const Reflector* SpectralAllocator::UnboundedAdd(const Reflector* addend0,
+                                                 const Reflector* addend1,
+                                                 const Reflector* addend2) {
+  return UnboundedAdd(UnboundedAdd(addend0, addend1), addend2);
+}
+
 const Reflector* SpectralAllocator::UnboundedScale(const Reflector* reflector,
                                                    visual_t attenuation) {
   assert(std::isfinite(attenuation) && attenuation >= 0.0);
