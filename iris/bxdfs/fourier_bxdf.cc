@@ -635,6 +635,10 @@ const Bxdf* MakeFourierBxdf(
     std::span<const visual> y_coefficients,
     std::span<const visual> r_coefficients,
     std::span<const visual> b_coefficients, visual eta_transmitted) {
+  if (r == nullptr && g == nullptr && b == nullptr) {
+    return nullptr;
+  }
+
   size_t num_samples = elevational_samples.size();
   if (num_samples < 3 || cdf.size() / num_samples != num_samples ||
       coefficient_extents.size() / num_samples != num_samples ||

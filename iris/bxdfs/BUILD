@@ -105,6 +105,18 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "fourier_bxdf_test",
+    srcs = ["fourier_bxdf_test.cc"],
+    deps = [
+        ":fourier_bxdf",
+        "//iris:float",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "lambertian_bxdf",
     srcs = ["lambertian_bxdf.cc"],
