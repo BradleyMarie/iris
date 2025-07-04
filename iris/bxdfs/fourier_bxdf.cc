@@ -14,25 +14,25 @@
 #include "iris/bxdfs/internal/diffuse_bxdf.h"
 #include "iris/bxdfs/internal/math.h"
 #include "iris/float.h"
-#include "iris/reflectors/uniform_reflector.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
 using ::iris::bxdfs::internal::CosTheta;
-using ::iris::reflectors::CreateUniformReflector;
 
 class FourierBxdf : public internal::DiffuseBxdf {
  public:
-  FourierBxdf(const Reflector* r, const Reflector* g, const Reflector* b,
+  FourierBxdf(const Reflector* reflectance, const Reflector* r,
+              const Reflector* g, const Reflector* b,
               std::span<const geometric> elevational_samples,
               std::span<const visual> cdf,
               std::span<const std::pair<size_t, size_t>> coefficient_extents,
               std::span<const visual> y_coefficients,
               std::span<const visual> r_coefficients,
               std::span<const visual> b_coefficients, visual eta_transmitted)
-      : r_(r),
+      : reflectance_(reflectance),
+        r_(r),
         g_(g),
         b_(b),
         elevational_samples_(elevational_samples),
@@ -56,6 +56,7 @@ class FourierBxdf : public internal::DiffuseBxdf {
       SpectralAllocator& allocator) const override;
 
  private:
+  const Reflector* reflectance_;
   const Reflector* r_;
   const Reflector* g_;
   const Reflector* b_;
@@ -67,9 +68,6 @@ class FourierBxdf : public internal::DiffuseBxdf {
   std::span<const visual> b_coefficients_;
   visual eta_transmitted_;
 };
-
-const static ReferenceCounted<Reflector> kUniform =
-    CreateUniformReflector(static_cast<visual>(1.0));
 
 double CosDPhi(const Vector& wa, const Vector& wb) {
   double waxy = wa.x * wa.x + wa.y * wa.y;
@@ -583,7 +581,7 @@ const Reflector* FourierBxdf::ReflectanceDiffuse(
 
   const Reflector* result;
   if (r_coefficients_.empty() || b_coefficients_.empty()) {
-    result = allocator.UnboundedScale(kUniform.Get(),
+    result = allocator.UnboundedScale(reflectance_,
                                       std::max(static_cast<visual_t>(0.0), y));
   } else {
     visual_t r = ComputeChannel(*incoming_weights, *outgoing_weights, cos_phi,
@@ -609,10 +607,14 @@ const Reflector* FourierBxdf::ReflectanceDiffuse(
 }  // namespace
 
 const Bxdf* MakeFourierBxdf(
-    BxdfAllocator& bxdf_allocator,
+    BxdfAllocator& bxdf_allocator, const Reflector* reflectance,
     std::span<const geometric> elevational_samples, std::span<const visual> cdf,
     std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> y_coefficients, visual eta_transmitted) {
+  if (reflectance == nullptr) {
+    return nullptr;
+  }
+
   size_t num_samples = elevational_samples.size();
   if (num_samples < 3 || cdf.size() / num_samples != num_samples ||
       coefficient_extents.size() / num_samples != num_samples ||
@@ -622,9 +624,9 @@ const Bxdf* MakeFourierBxdf(
   }
 
   return &bxdf_allocator.Allocate<FourierBxdf>(
-      nullptr, nullptr, nullptr, elevational_samples, cdf, coefficient_extents,
-      y_coefficients, std::span<const visual>(), std::span<const visual>(),
-      eta_transmitted);
+      reflectance, nullptr, nullptr, nullptr, elevational_samples, cdf,
+      coefficient_extents, y_coefficients, std::span<const visual>(),
+      std::span<const visual>(), eta_transmitted);
 }
 
 const Bxdf* MakeFourierBxdf(
@@ -648,8 +650,8 @@ const Bxdf* MakeFourierBxdf(
   }
 
   return &bxdf_allocator.Allocate<FourierBxdf>(
-      r, g, b, elevational_samples, cdf, coefficient_extents, y_coefficients,
-      r_coefficients, b_coefficients, eta_transmitted);
+      nullptr, r, g, b, elevational_samples, cdf, coefficient_extents,
+      y_coefficients, r_coefficients, b_coefficients, eta_transmitted);
 }
 
 }  // namespace bxdfs

@@ -12,6 +12,7 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
+#include "iris/reflectors/uniform_reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
 
@@ -20,6 +21,10 @@ namespace materials {
 namespace {
 
 using ::iris::bxdfs::MakeFourierBxdf;
+using ::iris::reflectors::CreateUniformReflector;
+
+static const ReferenceCounted<Reflector> kReflectance =
+    CreateUniformReflector(static_cast<visual_t>(1.0));
 
 class FourierMaterial : public Material {
  public:
@@ -70,8 +75,9 @@ const Bxdf* FourierMaterial::Evaluate(
                            eta_);
   }
 
-  return MakeFourierBxdf(bxdf_allocator, elevational_samples_, cdf_,
-                         coefficient_extents_, y_coefficients_, eta_);
+  return MakeFourierBxdf(bxdf_allocator, kReflectance.Get(),
+                         elevational_samples_, cdf_, coefficient_extents_,
+                         y_coefficients_, eta_);
 }
 
 }  // namespace

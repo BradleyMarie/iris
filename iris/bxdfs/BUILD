@@ -101,7 +101,6 @@ cc_library(
         "//iris:float",
         "//iris/bxdfs/internal:diffuse_bxdf",
         "//iris/bxdfs/internal:math",
-        "//iris/reflectors:uniform_reflector",
     ],
 )
 

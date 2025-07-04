@@ -28,6 +28,7 @@ using ::testing::Return;
 using ::testing::SetArgPointee;
 
 TEST(FourierBrdfTest, MakeFourierBxdfYNone) {
+  MockReflector reflector;
   std::vector<geometric> empty_geometric;
   std::vector<visual> empty_visual;
   std::vector<std::pair<size_t, size_t>> empty_coefficient_extents;
@@ -38,24 +39,29 @@ TEST(FourierBrdfTest, MakeFourierBxdfYNone) {
       {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}};
   visual eta = 1.0;
 
-  EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), empty_geometric, cdf,
+  EXPECT_EQ(nullptr,
+            MakeFourierBxdf(GetBxdfAllocator(), nullptr, elevational_samples,
+                            cdf, coefficient_extents, coefficients, eta));
+  EXPECT_EQ(nullptr,
+            MakeFourierBxdf(GetBxdfAllocator(), &reflector, empty_geometric,
+                            cdf, coefficient_extents, coefficients, eta));
+  EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), &reflector,
+                                     elevational_samples, empty_visual,
                                      coefficient_extents, coefficients, eta));
-  EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), elevational_samples,
-                                     empty_visual, coefficient_extents,
-                                     coefficients, eta));
   EXPECT_EQ(nullptr,
-            MakeFourierBxdf(GetBxdfAllocator(), elevational_samples, cdf,
-                            empty_coefficient_extents, coefficients, eta));
+            MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
+                            cdf, empty_coefficient_extents, coefficients, eta));
   EXPECT_EQ(nullptr,
-            MakeFourierBxdf(GetBxdfAllocator(), elevational_samples, cdf,
-                            coefficient_extents, coefficients, 0.0));
+            MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
+                            cdf, coefficient_extents, coefficients, 0.0));
   EXPECT_EQ(nullptr,
-            MakeFourierBxdf(GetBxdfAllocator(), elevational_samples, cdf,
-                            coefficient_extents, coefficients,
+            MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
+                            cdf, coefficient_extents, coefficients,
                             std::numeric_limits<visual_t>::infinity()));
 }
 
 TEST(FourierBrdfTest, MakeFourierBxdfYCreates) {
+  MockReflector reflector;
   std::vector<visual> elevational_samples = {-1.0, 0.0, 1.0};
   std::vector<visual> cdf = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
   std::vector<visual> coefficients = {1.0};
@@ -64,8 +70,8 @@ TEST(FourierBrdfTest, MakeFourierBxdfYCreates) {
   visual eta = 1.0;
 
   EXPECT_NE(nullptr,
-            MakeFourierBxdf(GetBxdfAllocator(), elevational_samples, cdf,
-                            coefficient_extents, coefficients, eta));
+            MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
+                            cdf, coefficient_extents, coefficients, eta));
 }
 
 TEST(FourierBrdfTest, MakeFourierBxdfYRBNone) {

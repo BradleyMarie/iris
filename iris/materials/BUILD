@@ -16,6 +16,7 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:fourier_bxdf",
+        "//iris/reflectors:uniform_reflector",
     ],
 )
 
