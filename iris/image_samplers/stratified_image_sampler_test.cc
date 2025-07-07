@@ -23,9 +23,9 @@ TEST(StraifiedImageSamplerTest, NoSamples) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(0, 0, false);
 
-  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
-
   MockRandom rng;
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
+
   EXPECT_FALSE(sampler->NextSample(false, rng).has_value());
 }
 
@@ -33,9 +33,9 @@ TEST(StraifiedImageSamplerTest, SampleNoLens) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(2, 2, false);
 
-  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
-
   MockRandom rng;
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
+
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(false, rng);
   EXPECT_EQ(sample->image_uv[0], 0.625);
   EXPECT_EQ(sample->image_uv[1], 0.125);
@@ -50,12 +50,12 @@ TEST(StraifiedImageSamplerTest, SampleWithLens) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(2, 2, false);
 
-  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
-
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
       .Times(2)
       .WillRepeatedly(testing::Return(0.1));
+
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(true, rng);
   EXPECT_EQ(sample->image_uv[0], 0.625);
@@ -75,12 +75,12 @@ TEST(StraifiedImageSamplerTest, SampleWithJitter) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(2, 2, true);
 
-  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
-
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric())
       .Times(2)
       .WillRepeatedly(testing::Return(0.1));
+
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(false, rng);
   EXPECT_TRUE(sample->image_uv[0] >= 0.5);

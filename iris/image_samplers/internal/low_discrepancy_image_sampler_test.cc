@@ -11,27 +11,31 @@ namespace image_samplers {
 namespace internal {
 namespace {
 
+using ::iris::random::MockRandom;
+using ::testing::_;
+using ::testing::InSequence;
+using ::testing::Return;
+
 TEST(LowDiscrepancyImageSamplerTest, NextSampleDesiredReached) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
 
   LowDiscrepancyImageSampler sampler(std::move(sequence), 0);
 
-  sampler.StartPixel({0, 0}, {0, 0});
+  MockRandom rng;
+  sampler.StartPixel({0, 0}, {0, 0}, rng);
 
-  random::MockRandom rng;
   EXPECT_FALSE(sampler.NextSample(false, rng));
 }
 
 TEST(LowDiscrepancyImageSamplerTest, NextSampleNone) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
 
-  EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
-      .WillOnce(testing::Return(false));
+  EXPECT_CALL(*sequence, Start(_, _, 0)).WillOnce(Return(false));
 
+  MockRandom rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
-  sampler.StartPixel({0, 0}, {0, 0});
+  sampler.StartPixel({0, 0}, {0, 0}, rng);
 
-  random::MockRandom rng;
   EXPECT_FALSE(sampler.NextSample(false, rng));
 }
 
@@ -40,23 +44,22 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
   auto sequence_ptr = sequence.get();
 
   {
-    testing::InSequence s;
+    InSequence s;
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.25)));
+        .WillOnce(Return(static_cast<visual_t>(0.25)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.75)));
+        .WillOnce(Return(static_cast<visual_t>(0.75)));
   }
 
-  EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
-      .WillOnce(testing::Return(true));
+  EXPECT_CALL(*sequence, Start(_, _, 0)).WillOnce(Return(true));
 
   EXPECT_CALL(*sequence, SampleWeight(1))
-      .WillOnce(testing::Return(static_cast<visual_t>(1.0)));
+      .WillOnce(Return(static_cast<visual_t>(1.0)));
 
+  MockRandom rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
-  sampler.StartPixel({1, 1}, {0, 0});
+  sampler.StartPixel({1, 1}, {0, 0}, rng);
 
-  random::MockRandom rng;
   auto sample = sampler.NextSample(false, rng);
   ASSERT_TRUE(sample);
   EXPECT_EQ(0.25, sample->image_uv[0]);
@@ -73,27 +76,26 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
   auto sequence_ptr = sequence.get();
 
   {
-    testing::InSequence s;
+    InSequence s;
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.25)));
+        .WillOnce(Return(static_cast<visual_t>(0.25)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.75)));
+        .WillOnce(Return(static_cast<visual_t>(0.75)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.125)));
+        .WillOnce(Return(static_cast<visual_t>(0.125)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.375)));
+        .WillOnce(Return(static_cast<visual_t>(0.375)));
   }
 
-  EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
-      .WillOnce(testing::Return(true));
+  EXPECT_CALL(*sequence, Start(_, _, 0)).WillOnce(Return(true));
 
   EXPECT_CALL(*sequence, SampleWeight(1))
-      .WillOnce(testing::Return(static_cast<visual_t>(1.0)));
+      .WillOnce(Return(static_cast<visual_t>(1.0)));
 
+  MockRandom rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
-  sampler.StartPixel({1, 1}, {0, 0});
+  sampler.StartPixel({1, 1}, {0, 0}, rng);
 
-  random::MockRandom rng;
   auto sample = sampler.NextSample(true, rng);
   ASSERT_TRUE(sample);
   EXPECT_EQ(0.25, sample->image_uv[0]);
@@ -111,29 +113,27 @@ TEST(LowDiscrepancyImageSamplerTest, TwoSamples) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
 
   {
-    testing::InSequence s;
+    InSequence s;
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.25)));
+        .WillOnce(Return(static_cast<visual_t>(0.25)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.75)));
+        .WillOnce(Return(static_cast<visual_t>(0.75)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.125)));
+        .WillOnce(Return(static_cast<visual_t>(0.125)));
     EXPECT_CALL(*sequence, Next())
-        .WillOnce(testing::Return(static_cast<visual_t>(0.375)));
+        .WillOnce(Return(static_cast<visual_t>(0.375)));
   }
 
-  EXPECT_CALL(*sequence, Start(testing::_, testing::_, 0))
-      .WillOnce(testing::Return(true));
-  EXPECT_CALL(*sequence, Start(testing::_, testing::_, 1))
-      .WillOnce(testing::Return(true));
+  EXPECT_CALL(*sequence, Start(_, _, 0)).WillOnce(Return(true));
+  EXPECT_CALL(*sequence, Start(_, _, 1)).WillOnce(Return(true));
 
   EXPECT_CALL(*sequence, SampleWeight(2))
-      .WillRepeatedly(testing::Return(static_cast<visual_t>(0.5)));
+      .WillRepeatedly(Return(static_cast<visual_t>(0.5)));
 
+  MockRandom rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 2);
-  sampler.StartPixel({0, 0}, {0, 0});
+  sampler.StartPixel({0, 0}, {0, 0}, rng);
 
-  random::MockRandom rng;
   EXPECT_TRUE(sampler.NextSample(false, rng));
   EXPECT_TRUE(sampler.NextSample(false, rng));
   EXPECT_FALSE(sampler.NextSample(false, rng));

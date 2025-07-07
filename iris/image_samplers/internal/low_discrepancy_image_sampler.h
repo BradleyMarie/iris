@@ -28,7 +28,7 @@ class LowDiscrepancyImageSampler final : public ImageSampler {
         sample_index_(0) {}
 
   void StartPixel(std::pair<size_t, size_t> image_dimensions,
-                  std::pair<size_t, size_t> pixel) override;
+                  std::pair<size_t, size_t> pixel, Random& rng) override;
   std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
 
   std::unique_ptr<ImageSampler> Replicate() const override;

@@ -20,7 +20,7 @@ class RandomImageSampler final : public ImageSampler {
   RandomImageSampler(uint32_t samples_per_pixel) noexcept;
 
   void StartPixel(std::pair<size_t, size_t> image_dimensions,
-                  std::pair<size_t, size_t> pixel) override;
+                  std::pair<size_t, size_t> pixel, Random& rng) override;
   std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
 
   std::unique_ptr<ImageSampler> Replicate() const override;
@@ -47,7 +47,8 @@ RandomImageSampler::RandomImageSampler(uint32_t samples_per_pixel) noexcept
       sample_index_(0) {}
 
 void RandomImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
-                                    std::pair<size_t, size_t> pixel) {
+                                    std::pair<size_t, size_t> pixel,
+                                    Random& rng) {
   num_pixels_x_ = image_dimensions.second;
   num_pixels_y_ = image_dimensions.first;
   pixel_x_ = pixel.second;

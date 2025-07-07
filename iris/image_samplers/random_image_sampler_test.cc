@@ -22,10 +22,10 @@ TEST(RandomImageSamplerTest, Replicate) {
 TEST(RandomImageSamplerTest, SampleNoLens) {
   std::unique_ptr<ImageSampler> sampler = MakeRandomImageSampler(1);
 
-  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
-
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.1));
+
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(false, rng);
   ASSERT_TRUE(sample.has_value());
@@ -45,10 +45,10 @@ TEST(RandomImageSamplerTest, SampleNoLens) {
 TEST(RandomImageSamplerTest, SampleWithLens) {
   std::unique_ptr<ImageSampler> sampler = MakeRandomImageSampler(1);
 
-  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1));
-
   MockRandom rng;
   EXPECT_CALL(rng, NextGeometric()).Times(4).WillRepeatedly(Return(0.1));
+
+  sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(true, rng);
   ASSERT_TRUE(sample.has_value());

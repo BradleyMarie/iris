@@ -17,8 +17,8 @@ namespace image_samplers {
 namespace internal {
 
 void LowDiscrepancyImageSampler::StartPixel(
-    std::pair<size_t, size_t> image_dimensions,
-    std::pair<size_t, size_t> pixel) {
+    std::pair<size_t, size_t> image_dimensions, std::pair<size_t, size_t> pixel,
+    Random& rng) {
   image_dimensions_ = image_dimensions;
   pixel_ = pixel;
 

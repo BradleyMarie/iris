@@ -99,7 +99,7 @@ void RenderChunk(
         pixel_index += 1;
 
         chunk.image_sampler->StartPixel(framebuffer.Size(),
-                                        std::make_pair(y, x));
+                                        std::make_pair(y, x), *chunk.rng);
 
         for (;;) {
           std::optional<ImageSampler::Sample> image_sample =

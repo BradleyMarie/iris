@@ -105,7 +105,8 @@ void RunTestBody(
                                                     static_cast<size_t>(33)),
                                      std::make_pair(
                                          static_cast<size_t>(sampler_index / 2),
-                                         static_cast<size_t>(i))));
+                                         static_cast<size_t>(i)),
+                                     _));
               EXPECT_CALL(*result, NextSample(_, _))
                   .Times(samples_per_pixel)
                   .WillRepeatedly(Return(ImageSampler::Sample{
@@ -127,7 +128,8 @@ void RunTestBody(
                                                   static_cast<size_t>(33)),
                                    std::make_pair(
                                        static_cast<size_t>(sampler_index / 2),
-                                       static_cast<size_t>(32))));
+                                       static_cast<size_t>(32)),
+                                   _));
             {
               InSequence s;
               EXPECT_CALL(*result, NextSample(_, _))

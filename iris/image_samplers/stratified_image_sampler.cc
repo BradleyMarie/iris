@@ -21,7 +21,7 @@ class StratifiedImageSampler final : public ImageSampler {
                          bool jittered) noexcept;
 
   void StartPixel(std::pair<size_t, size_t> image_dimensions,
-                  std::pair<size_t, size_t> pixel) override;
+                  std::pair<size_t, size_t> pixel, Random& rng) override;
   std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
 
   std::unique_ptr<ImageSampler> Replicate() const override;
@@ -52,8 +52,8 @@ StratifiedImageSampler::StratifiedImageSampler(uint16_t x_samples,
       sample_index_(0) {}
 
 void StratifiedImageSampler::StartPixel(
-    std::pair<size_t, size_t> image_dimensions,
-    std::pair<size_t, size_t> pixel) {
+    std::pair<size_t, size_t> image_dimensions, std::pair<size_t, size_t> pixel,
+    Random& rng) {
   num_subpixels_x_ = image_dimensions.second * x_samples_;
   num_subpixels_y_ = image_dimensions.first * y_samples_;
   subpixel_x_ = pixel.second * x_samples_;
