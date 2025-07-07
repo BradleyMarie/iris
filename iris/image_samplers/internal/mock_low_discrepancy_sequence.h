@@ -8,6 +8,7 @@
 #include "googlemock/include/gmock/gmock.h"
 #include "iris/float.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
+#include "iris/random.h"
 
 namespace iris {
 namespace image_samplers {
@@ -15,6 +16,7 @@ namespace internal {
 
 class MockLowDiscrepancySequence final : public LowDiscrepancySequence {
  public:
+  MOCK_METHOD(void, Permute, (Random&), (override));
   MOCK_METHOD(bool, Start,
               ((std::pair<size_t, size_t>), (std::pair<size_t, size_t>),
                unsigned),

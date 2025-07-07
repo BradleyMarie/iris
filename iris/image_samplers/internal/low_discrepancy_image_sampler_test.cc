@@ -18,6 +18,7 @@ using ::testing::Return;
 
 TEST(LowDiscrepancyImageSamplerTest, NextSampleDesiredReached) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
+  EXPECT_CALL(*sequence, Permute(_)).Times(1);
 
   LowDiscrepancyImageSampler sampler(std::move(sequence), 0);
 
@@ -42,6 +43,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNone) {
 TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
   auto sequence_ptr = sequence.get();
+  EXPECT_CALL(*sequence, Permute(_)).Times(1);
 
   {
     InSequence s;
@@ -74,6 +76,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
 TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
   auto sequence_ptr = sequence.get();
+  EXPECT_CALL(*sequence, Permute(_)).Times(1);
 
   {
     InSequence s;
@@ -111,6 +114,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
 
 TEST(LowDiscrepancyImageSamplerTest, TwoSamples) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
+  EXPECT_CALL(*sequence, Permute(_)).Times(1);
 
   {
     InSequence s;

@@ -73,6 +73,7 @@ cc_library(
     deps = [
         ":low_discrepancy_sequence",
         "//iris:float",
+        "//iris:random",
         "@googletest//:gtest",
     ],
 )
