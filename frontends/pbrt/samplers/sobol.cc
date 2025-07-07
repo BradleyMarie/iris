@@ -14,6 +14,7 @@ namespace pbrt_frontend {
 namespace samplers {
 
 using ::iris::image_samplers::MakeSobolImageSampler;
+using ::iris::image_samplers::SobolScrambler;
 using ::pbrt_proto::v3::Sampler;
 
 std::unique_ptr<ImageSampler> MakeSobol(const Sampler::Sobol& sobol) {
@@ -23,7 +24,8 @@ std::unique_ptr<ImageSampler> MakeSobol(const Sampler::Sobol& sobol) {
     exit(EXIT_FAILURE);
   }
 
-  return MakeSobolImageSampler(static_cast<uint32_t>(sobol.pixelsamples()));
+  return MakeSobolImageSampler(static_cast<uint32_t>(sobol.pixelsamples()),
+                               SobolScrambler::FastOwen);
 }
 
 }  // namespace samplers

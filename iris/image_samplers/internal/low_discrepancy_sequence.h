@@ -16,16 +16,16 @@ namespace internal {
 class LowDiscrepancySequence : public Random {
  public:
   // Random Interface
-  size_t NextIndex(size_t size) final;
-  void DiscardIndex(size_t num_to_discard) final;
+  size_t NextIndex(size_t size) override final;
+  void DiscardIndex(size_t num_to_discard) override final;
 
-  geometric NextGeometric() final;
-  void DiscardGeometric(size_t num_to_discard) final;
+  geometric NextGeometric() override final;
+  void DiscardGeometric(size_t num_to_discard) override final;
 
-  visual NextVisual() final;
-  void DiscardVisual(size_t num_to_discard) final;
+  visual NextVisual() override final;
+  void DiscardVisual(size_t num_to_discard) override final;
 
-  std::unique_ptr<Random> Replicate() final;
+  std::unique_ptr<Random> Replicate() override final;
 
   // LowDiscrepancySequence Interface
   virtual void Permute(Random& rng) {}

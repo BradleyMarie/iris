@@ -12,20 +12,20 @@ namespace internal {
 namespace {
 
 TEST(SobolSequence, StartLimits) {
-  SobolSequence sequence;
+  SobolSequence sequence(SobolSequence::Scrambler::None);
   EXPECT_TRUE(sequence.Start({1, 59049u}, {0, 0}, 0));
   EXPECT_TRUE(sequence.Start({59049u, 1}, {0, 0}, 0));
   EXPECT_TRUE(sequence.Start({59049u, 59049u}, {0, 0}, 0));
 }
 
 TEST(SobolSequence, StartSampleLimit) {
-  SobolSequence sequence;
+  SobolSequence sequence(SobolSequence::Scrambler::None);
   EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 0));
   EXPECT_FALSE(sequence.Start({1u << 27, 1u << 27}, {0, 0}, 0));
 }
 
 TEST(SobolSequence, Samples) {
-  SobolSequence sequence;
+  SobolSequence sequence(SobolSequence::Scrambler::None);
   EXPECT_TRUE(sequence.Start({2, 2}, {0, 0}, 0));
   for (uint32_t i = 0; i < 4; i++) {
     std::optional<geometric_t> value = sequence.Next();
@@ -118,7 +118,7 @@ TEST(SobolSequence, Samples) {
 }
 
 TEST(SobolSequence, SamplesLimit) {
-  SobolSequence sequence;
+  SobolSequence sequence(SobolSequence::Scrambler::None);
   EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 0));
   for (uint32_t i = 0; i < 1024; i++) {
     std::optional<geometric_t> value = sequence.Next();
@@ -130,7 +130,7 @@ TEST(SobolSequence, SamplesLimit) {
 }
 
 TEST(SobolSequence, Discard) {
-  SobolSequence sequence;
+  SobolSequence sequence(SobolSequence::Scrambler::None);
   EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 0));
   for (uint32_t i = 0; i < 1024; i++) {
     sequence.Discard(1);
@@ -139,14 +139,14 @@ TEST(SobolSequence, Discard) {
 }
 
 TEST(SobolSequence, DiscardMultiple) {
-  SobolSequence sequence;
+  SobolSequence sequence(SobolSequence::Scrambler::None);
   EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 0));
   sequence.Discard(1025);
   EXPECT_FALSE(sequence.Next());
 }
 
 TEST(SobolSequence, SampleWeight) {
-  SobolSequence sequence;
+  SobolSequence sequence(SobolSequence::Scrambler::None);
   EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 0));
   EXPECT_EQ(1.0, sequence.SampleWeight(1));
   EXPECT_EQ(0.5, sequence.SampleWeight(2));

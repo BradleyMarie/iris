@@ -10,9 +10,10 @@ namespace image_samplers {
 namespace {
 
 TEST(SobolImageSamplerTest, Make) {
-  EXPECT_TRUE(MakeSobolImageSampler(0));
-  EXPECT_TRUE(MakeSobolImageSampler(1));
-  EXPECT_TRUE(MakeSobolImageSampler(std::numeric_limits<uint32_t>::max()));
+  EXPECT_TRUE(MakeSobolImageSampler(0, SobolScrambler::None));
+  EXPECT_TRUE(MakeSobolImageSampler(1, SobolScrambler::None));
+  EXPECT_TRUE(MakeSobolImageSampler(std::numeric_limits<uint32_t>::max(),
+                                    SobolScrambler::None));
 }
 
 }  // namespace

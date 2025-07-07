@@ -8,8 +8,13 @@
 namespace iris {
 namespace image_samplers {
 
+enum class SobolScrambler {
+  None,
+  FastOwen,
+};
+
 std::unique_ptr<ImageSampler> MakeSobolImageSampler(
-    uint32_t desired_samples_per_pixel);
+    uint32_t desired_samples_per_pixel, SobolScrambler scrambler);
 
 }  // namespace image_samplers
 }  // namespace iris

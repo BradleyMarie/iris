@@ -8,6 +8,7 @@
 
 #include "iris/float.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
+#include "iris/random.h"
 
 namespace iris {
 namespace image_samplers {
@@ -15,9 +16,15 @@ namespace internal {
 
 class SobolSequence final : public LowDiscrepancySequence {
  public:
-  SobolSequence() = default;
+  enum class Scrambler {
+    None,
+    FastOwen,
+  };
+
+  SobolSequence(Scrambler scrambler) : scrambler_(scrambler) {}
   SobolSequence(const SobolSequence& to_copy) = default;
 
+  void Permute(Random& random) override;
   bool Start(std::pair<size_t, size_t> image_dimensions,
              std::pair<size_t, size_t> pixel, unsigned sample_index) override;
   std::optional<geometric_t> Next() override;
@@ -33,6 +40,9 @@ class SobolSequence final : public LowDiscrepancySequence {
   unsigned long long sample_index_;
   unsigned dimension_;
   unsigned num_dimensions_;
+  uint64_t seed64_[2];
+  uint32_t seed32_[2];
+  Scrambler scrambler_;
 };
 
 }  // namespace internal

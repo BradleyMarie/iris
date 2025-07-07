@@ -22,8 +22,6 @@ namespace {
 static const geometric_t kMaxValue = std::nextafter(
     static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
 
-}  // namespace
-
 std::optional<uint64_t> BitMatrixVectorMultiply(
     const uint64_t bit_matrix[pbrt::SobolMatrixSize], uint64_t bit_vector) {
   if (bit_vector >> static_cast<uint64_t>(pbrt::SobolMatrixSize)) {
@@ -75,6 +73,24 @@ std::optional<size_t> SobolSequenceIndex(uint64_t log2_resolution,
   uint64_t sample_index_base = sample_index << num_pixels_log2;
 
   return sample_index_base ^ *transformed_image_sample_index;
+}
+
+}  // namespace
+
+void SobolSequence::Permute(Random& random) {
+  switch (scrambler_) {
+    case Scrambler::None:
+      break;
+    case Scrambler::FastOwen:
+      if constexpr (std::is_same<geometric_t, float>::value) {
+        seed32_[0] = 0;
+        seed32_[1] = 0;
+      } else {
+        seed64_[0] = 0;
+        seed64_[1] = 0;
+      }
+      break;
+  }
 }
 
 bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
