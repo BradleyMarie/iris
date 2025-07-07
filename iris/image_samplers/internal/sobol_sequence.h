@@ -8,7 +8,7 @@
 
 #include "iris/float.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
@@ -24,7 +24,7 @@ class SobolSequence final : public LowDiscrepancySequence {
   SobolSequence(Scrambler scrambler) : scrambler_(scrambler) {}
   SobolSequence(const SobolSequence& to_copy) = default;
 
-  void Permute(Random& random) override;
+  void Permute(RandomBitstream& rng) override;
   bool Start(std::pair<size_t, size_t> image_dimensions,
              std::pair<size_t, size_t> pixel, unsigned sample_index) override;
   std::optional<geometric_t> Next() override;
@@ -40,8 +40,7 @@ class SobolSequence final : public LowDiscrepancySequence {
   unsigned long long sample_index_;
   unsigned dimension_;
   unsigned num_dimensions_;
-  uint64_t seed64_[2];
-  uint32_t seed32_[2];
+  uint32_t seed_[2];
   Scrambler scrambler_;
 };
 

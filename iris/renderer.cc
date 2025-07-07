@@ -28,7 +28,7 @@
 #include "iris/light_sampler.h"
 #include "iris/light_scene.h"
 #include "iris/power_matcher.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 #include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
 #include "iris/scene.h"
@@ -43,7 +43,7 @@ static const size_t kChunkSize = 32;
 
 struct Chunk {
   std::unique_ptr<ImageSampler> image_sampler;
-  std::unique_ptr<Random> rng;
+  std::unique_ptr<RandomBitstream> rng;
   size_t chunk_start_x, chunk_end_x;
   size_t pixel_start;
 };
@@ -190,7 +190,8 @@ Framebuffer Renderer::Render(const Camera& camera,
                              const ImageSampler& image_sampler,
                              const Integrator& integrator,
                              const AlbedoMatcher& albedo_matcher,
-                             const ColorMatcher& color_matcher, Random& rng,
+                             const ColorMatcher& color_matcher,
+                             RandomBitstream& rng,
                              const std::pair<size_t, size_t>& image_dimensions,
                              const AdditionalOptions& options) const {
   Framebuffer result(image_dimensions);

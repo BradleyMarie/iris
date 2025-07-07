@@ -5,13 +5,13 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/image_sampler.h"
-#include "iris/random/mock_random.h"
+#include "iris/random_bitstreams/mock_random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
 namespace {
 
-using ::iris::random::MockRandom;
+using ::iris::random_bitstreams::MockRandomBitstream;
 using ::testing::Return;
 
 TEST(RandomImageSamplerTest, Replicate) {
@@ -22,8 +22,8 @@ TEST(RandomImageSamplerTest, Replicate) {
 TEST(RandomImageSamplerTest, SampleNoLens) {
   std::unique_ptr<ImageSampler> sampler = MakeRandomImageSampler(1);
 
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.1));
+  MockRandomBitstream rng;
+  EXPECT_CALL(rng, Next()).Times(2).WillRepeatedly(Return(0xF0000000u));
 
   sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
@@ -45,8 +45,8 @@ TEST(RandomImageSamplerTest, SampleNoLens) {
 TEST(RandomImageSamplerTest, SampleWithLens) {
   std::unique_ptr<ImageSampler> sampler = MakeRandomImageSampler(1);
 
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(4).WillRepeatedly(Return(0.1));
+  MockRandomBitstream rng;
+  EXPECT_CALL(rng, Next()).Times(4).WillRepeatedly(Return(0xF0000000u));
 
   sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 

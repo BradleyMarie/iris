@@ -8,13 +8,15 @@
 
 #include "iris/float.h"
 #include "iris/random.h"
+#include "iris/random_bitstream.h"
 
 namespace iris {
 
 class ImageSampler {
  public:
   virtual void StartPixel(std::pair<size_t, size_t> image_dimensions,
-                          std::pair<size_t, size_t> pixel, Random& rng) = 0;
+                          std::pair<size_t, size_t> pixel,
+                          RandomBitstream& rng) = 0;
 
   struct Sample {
     const std::array<geometric_t, 2> image_uv;
@@ -24,7 +26,8 @@ class ImageSampler {
     Random& rng;
   };
 
-  virtual std::optional<Sample> NextSample(bool sample_lens, Random& rng) = 0;
+  virtual std::optional<Sample> NextSample(bool sample_lens,
+                                           RandomBitstream& rng) = 0;
 
   virtual std::unique_ptr<ImageSampler> Replicate() const = 0;
 

@@ -9,7 +9,7 @@
 
 #include "iris/float.h"
 #include "iris/image_sampler.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
@@ -20,8 +20,10 @@ class RandomImageSampler final : public ImageSampler {
   RandomImageSampler(uint32_t samples_per_pixel) noexcept;
 
   void StartPixel(std::pair<size_t, size_t> image_dimensions,
-                  std::pair<size_t, size_t> pixel, Random& rng) override;
-  std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
+                  std::pair<size_t, size_t> pixel,
+                  RandomBitstream& rng) override;
+  std::optional<Sample> NextSample(bool sample_lens,
+                                   RandomBitstream& rng) override;
 
   std::unique_ptr<ImageSampler> Replicate() const override;
 
@@ -48,7 +50,7 @@ RandomImageSampler::RandomImageSampler(uint32_t samples_per_pixel) noexcept
 
 void RandomImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
                                     std::pair<size_t, size_t> pixel,
-                                    Random& rng) {
+                                    RandomBitstream& rng) {
   num_pixels_x_ = image_dimensions.second;
   num_pixels_y_ = image_dimensions.first;
   pixel_x_ = pixel.second;
@@ -58,7 +60,7 @@ void RandomImageSampler::StartPixel(std::pair<size_t, size_t> image_dimensions,
 }
 
 std::optional<ImageSampler::Sample> RandomImageSampler::NextSample(
-    bool sample_lens, Random& rng) {
+    bool sample_lens, RandomBitstream& rng) {
   if (sample_index_ == samples_per_pixel_) {
     return std::nullopt;
   }

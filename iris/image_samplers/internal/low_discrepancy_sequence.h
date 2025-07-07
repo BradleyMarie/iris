@@ -8,6 +8,7 @@
 
 #include "iris/float.h"
 #include "iris/random.h"
+#include "iris/random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
@@ -25,10 +26,8 @@ class LowDiscrepancySequence : public Random {
   visual NextVisual() override final;
   void DiscardVisual(size_t num_to_discard) override final;
 
-  std::unique_ptr<Random> Replicate() override final;
-
   // LowDiscrepancySequence Interface
-  virtual void Permute(Random& rng) {}
+  virtual void Permute(RandomBitstream& rng) {}
 
   virtual bool Start(std::pair<size_t, size_t> image_dimensions,
                      std::pair<size_t, size_t> pixel,

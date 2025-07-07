@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
 #include <tuple>

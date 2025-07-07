@@ -569,6 +569,17 @@ cc_library(
 )
 
 cc_library(
+    name = "random_bitstream",
+    srcs = ["random_bitstream.cc"],
+    hdrs = ["random_bitstream.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":float",
+        ":random",
+    ],
+)
+
+cc_library(
     name = "random",
     srcs = ["random.cc"],
     hdrs = ["random.h"],
@@ -745,6 +756,7 @@ cc_library(
         ":light_scene",
         ":power_matcher",
         ":random",
+        ":random_bitstream",
         ":ray_differential",
         ":ray_tracer",
         ":scene",
@@ -777,7 +789,7 @@ cc_test(
         "//iris/integrators:mock_integrator",
         "//iris/light_scenes:all_light_scene",
         "//iris/power_matchers:mock_power_matcher",
-        "//iris/random:mock_random",
+        "//iris/random_bitstreams:mock_random_bitstream",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
         "@googletest//:gtest_main",

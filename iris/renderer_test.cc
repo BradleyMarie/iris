@@ -19,7 +19,7 @@
 #include "iris/light_scene.h"
 #include "iris/light_scenes/all_light_scene.h"
 #include "iris/power_matchers/mock_power_matcher.h"
-#include "iris/random/mock_random.h"
+#include "iris/random_bitstreams/mock_random_bitstream.h"
 #include "iris/ray_differential.h"
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
@@ -36,7 +36,7 @@ using ::iris::image_samplers::MockImageSampler;
 using ::iris::integrators::MockIntegrator;
 using ::iris::light_scenes::MakeAllLightSceneBuilder;
 using ::iris::power_matchers::MockPowerMatcher;
-using ::iris::random::MockRandom;
+using ::iris::random_bitstreams::MockRandomBitstream;
 using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
@@ -76,9 +76,9 @@ void RunTestBody(
   size_t samples = num_pixels * samples_per_pixel;
   size_t chunks = 64;
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   EXPECT_CALL(rng, Replicate()).Times(chunks).WillRepeatedly(Invoke([]() {
-    return std::make_unique<MockRandom>();
+    return std::make_unique<MockRandomBitstream>();
   }));
 
   size_t sampler_index = 0;

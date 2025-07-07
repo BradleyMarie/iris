@@ -31,7 +31,7 @@ cc_library(
         ":low_discrepancy_sequence",
         "//iris:float",
         "//iris:image_sampler",
-        "//iris:random",
+        "//iris:random_bitstream",
     ],
 )
 
@@ -41,7 +41,7 @@ cc_test(
     deps = [
         ":low_discrepancy_image_sampler",
         ":mock_low_discrepancy_sequence",
-        "//iris/random:mock_random",
+        "//iris/random_bitstreams:mock_random_bitstream",
         "@googletest//:gtest_main",
     ],
 )
@@ -53,6 +53,7 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:random",
+        "//iris:random_bitstream",
     ],
 )
 
@@ -73,7 +74,7 @@ cc_library(
     deps = [
         ":low_discrepancy_sequence",
         "//iris:float",
-        "//iris:random",
+        "//iris:random_bitstream",
         "@googletest//:gtest",
     ],
 )
@@ -85,6 +86,7 @@ cc_library(
     deps = [
         ":low_discrepancy_sequence",
         "//iris:float",
+        "//iris:random_bitstream",
         "//third_party/gruenschloss/double:sobol",
         "//third_party/gruenschloss/single:sobol",
         "//third_party/pbrt:sobolmatrices",

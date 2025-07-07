@@ -35,10 +35,6 @@ void LowDiscrepancySequence::DiscardVisual(size_t num_to_discard) {
   Discard(num_to_discard);
 }
 
-std::unique_ptr<Random> LowDiscrepancySequence::Replicate() {
-  return Duplicate();
-}
-
 }  // namespace internal
 }  // namespace image_samplers
 }  // namespace iris

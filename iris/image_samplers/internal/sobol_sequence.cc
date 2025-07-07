@@ -10,6 +10,7 @@
 
 #include "iris/float.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
+#include "iris/random_bitstream.h"
 #include "third_party/gruenschloss/double/sobol.h"
 #include "third_party/gruenschloss/single/sobol.h"
 #include "third_party/pbrt/sobolmatrices.h"
@@ -77,18 +78,13 @@ std::optional<size_t> SobolSequenceIndex(uint64_t log2_resolution,
 
 }  // namespace
 
-void SobolSequence::Permute(Random& random) {
+void SobolSequence::Permute(RandomBitstream& rng) {
   switch (scrambler_) {
     case Scrambler::None:
       break;
     case Scrambler::FastOwen:
-      if constexpr (std::is_same<geometric_t, float>::value) {
-        seed32_[0] = 0;
-        seed32_[1] = 0;
-      } else {
-        seed64_[0] = 0;
-        seed64_[1] = 0;
-      }
+      seed_[0] = rng.Next();
+      seed_[1] = rng.Next();
       break;
   }
 }
@@ -101,7 +97,7 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
   size_t logical_resolution = std::bit_ceil(longest_dimension);
   size_t logical_resolution_log2 = std::countr_zero(logical_resolution);
 
-  auto maybe_sample_index = SobolSequenceIndex(
+  std::optional<size_t> maybe_sample_index = SobolSequenceIndex(
       static_cast<uint64_t>(logical_resolution_log2),
       static_cast<uint64_t>(pixel.second), static_cast<uint64_t>(pixel.first),
       static_cast<uint64_t>(sample_index));

@@ -15,7 +15,7 @@
 #include "iris/integrator.h"
 #include "iris/light_scene.h"
 #include "iris/power_matcher.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
 
@@ -44,7 +44,7 @@ class Renderer final {
   Framebuffer Render(
       const Camera& camera, const ImageSampler& image_sampler,
       const Integrator& integrator, const AlbedoMatcher& albedo_matcher,
-      const ColorMatcher& color_matcher, Random& rng,
+      const ColorMatcher& color_matcher, RandomBitstream& rng,
       const std::pair<size_t, size_t>& image_dimensions,
       const AdditionalOptions& options = AdditionalOptions()) const;
 

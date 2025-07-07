@@ -9,7 +9,7 @@
 
 #include "iris/float.h"
 #include "iris/image_sampler.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
@@ -21,8 +21,10 @@ class StratifiedImageSampler final : public ImageSampler {
                          bool jittered) noexcept;
 
   void StartPixel(std::pair<size_t, size_t> image_dimensions,
-                  std::pair<size_t, size_t> pixel, Random& rng) override;
-  std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
+                  std::pair<size_t, size_t> pixel,
+                  RandomBitstream& rng) override;
+  std::optional<Sample> NextSample(bool sample_lens,
+                                   RandomBitstream& rng) override;
 
   std::unique_ptr<ImageSampler> Replicate() const override;
 
@@ -53,7 +55,7 @@ StratifiedImageSampler::StratifiedImageSampler(uint16_t x_samples,
 
 void StratifiedImageSampler::StartPixel(
     std::pair<size_t, size_t> image_dimensions, std::pair<size_t, size_t> pixel,
-    Random& rng) {
+    RandomBitstream& rng) {
   num_subpixels_x_ = image_dimensions.second * x_samples_;
   num_subpixels_y_ = image_dimensions.first * y_samples_;
   subpixel_x_ = pixel.second * x_samples_;
@@ -62,7 +64,7 @@ void StratifiedImageSampler::StartPixel(
 }
 
 std::optional<ImageSampler::Sample> StratifiedImageSampler::NextSample(
-    bool sample_lens, Random& rng) {
+    bool sample_lens, RandomBitstream& rng) {
   if (sample_index_ == x_samples_ * y_samples_) {
     return std::nullopt;
   }

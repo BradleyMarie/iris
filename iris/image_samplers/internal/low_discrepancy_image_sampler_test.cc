@@ -4,14 +4,14 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/image_samplers/internal/mock_low_discrepancy_sequence.h"
-#include "iris/random/mock_random.h"
+#include "iris/random_bitstreams/mock_random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
 namespace internal {
 namespace {
 
-using ::iris::random::MockRandom;
+using ::iris::random_bitstreams::MockRandomBitstream;
 using ::testing::_;
 using ::testing::InSequence;
 using ::testing::Return;
@@ -22,7 +22,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleDesiredReached) {
 
   LowDiscrepancyImageSampler sampler(std::move(sequence), 0);
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   sampler.StartPixel({0, 0}, {0, 0}, rng);
 
   EXPECT_FALSE(sampler.NextSample(false, rng));
@@ -33,7 +33,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNone) {
 
   EXPECT_CALL(*sequence, Start(_, _, 0)).WillOnce(Return(false));
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
   sampler.StartPixel({0, 0}, {0, 0}, rng);
 
@@ -58,7 +58,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
   EXPECT_CALL(*sequence, SampleWeight(1))
       .WillOnce(Return(static_cast<visual_t>(1.0)));
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
   sampler.StartPixel({1, 1}, {0, 0}, rng);
 
@@ -95,7 +95,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
   EXPECT_CALL(*sequence, SampleWeight(1))
       .WillOnce(Return(static_cast<visual_t>(1.0)));
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
   sampler.StartPixel({1, 1}, {0, 0}, rng);
 
@@ -134,7 +134,7 @@ TEST(LowDiscrepancyImageSamplerTest, TwoSamples) {
   EXPECT_CALL(*sequence, SampleWeight(2))
       .WillRepeatedly(Return(static_cast<visual_t>(0.5)));
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   LowDiscrepancyImageSampler sampler(std::move(sequence), 2);
   sampler.StartPixel({0, 0}, {0, 0}, rng);
 

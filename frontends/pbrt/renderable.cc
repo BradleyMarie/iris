@@ -1,6 +1,19 @@
 #include "frontends/pbrt/renderable.h"
 
 #include <cassert>
+#include <functional>
+#include <memory>
+
+#include "iris/camera.h"
+#include "iris/color_matcher.h"
+#include "iris/framebuffer.h"
+#include "iris/image_sampler.h"
+#include "iris/integrator.h"
+#include "iris/light_scene.h"
+#include "iris/random_bitstream.h"
+#include "iris/renderer.h"
+#include "iris/scene.h"
+#include "iris/scene_objects.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -27,7 +40,7 @@ Renderable::Renderable(Renderer renderer, std::unique_ptr<Camera> camera,
 }
 
 Framebuffer Renderable::Render(
-    Random& rng, const Renderer::AdditionalOptions& options) const {
+    RandomBitstream& rng, const Renderer::AdditionalOptions& options) const {
   return renderer_.Render(*camera_, *image_sampler_, *integrator_,
                           *albedo_matcher_, *color_matcher_, rng,
                           image_dimensions_, options);

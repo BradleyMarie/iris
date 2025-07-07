@@ -5,13 +5,14 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/image_sampler.h"
-#include "iris/random/mock_random.h"
+#include "iris/random_bitstreams/mock_random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
 namespace {
 
-using ::iris::random::MockRandom;
+using ::iris::random_bitstreams::MockRandomBitstream;
+using ::testing::Return;
 
 TEST(StraifiedImageSamplerTest, Duplicate) {
   std::unique_ptr<ImageSampler> sampler =
@@ -23,7 +24,7 @@ TEST(StraifiedImageSamplerTest, NoSamples) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(0, 0, false);
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   EXPECT_FALSE(sampler->NextSample(false, rng).has_value());
@@ -33,7 +34,7 @@ TEST(StraifiedImageSamplerTest, SampleNoLens) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(2, 2, false);
 
-  MockRandom rng;
+  MockRandomBitstream rng;
   sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(false, rng);
@@ -50,11 +51,7 @@ TEST(StraifiedImageSamplerTest, SampleWithLens) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(2, 2, false);
 
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.1));
-
+  MockRandomBitstream rng;
   sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(true, rng);
@@ -75,10 +72,8 @@ TEST(StraifiedImageSamplerTest, SampleWithJitter) {
   std::unique_ptr<ImageSampler> sampler =
       MakeStratifiedImageSampler(2, 2, true);
 
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric())
-      .Times(2)
-      .WillRepeatedly(testing::Return(0.1));
+  MockRandomBitstream rng;
+  EXPECT_CALL(rng, Next()).Times(2).WillRepeatedly(Return(0xF0000000u));
 
   sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 

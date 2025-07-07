@@ -1,7 +1,7 @@
 #ifndef _IRIS_RANDOM_MOCK_RANDOM_
 #define _IRIS_RANDOM_MOCK_RANDOM_
 
-#include <memory>
+#include <cstddef>
 
 #include "googlemock/include/gmock/gmock.h"
 #include "iris/float.h"
@@ -15,7 +15,6 @@ class MockBasicRandom : public Random {
   MOCK_METHOD(size_t, NextIndex, (size_t), (override));
   MOCK_METHOD(geometric, NextGeometric, (), (override));
   MOCK_METHOD(visual, NextVisual, (), (override));
-  MOCK_METHOD(std::unique_ptr<Random>, Replicate, (), (override));
 };
 
 class MockRandom final : public MockBasicRandom {

@@ -10,7 +10,7 @@
 #include "iris/image_sampler.h"
 #include "iris/integrator.h"
 #include "iris/light_scene.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 #include "iris/renderer.h"
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
@@ -27,8 +27,9 @@ class Renderable {
              std::unique_ptr<ColorMatcher> color_matcher,
              std::pair<size_t, size_t> image_dimensions) noexcept;
 
-  Framebuffer Render(Random& rng, const Renderer::AdditionalOptions& options =
-                                      Renderer::AdditionalOptions()) const;
+  Framebuffer Render(RandomBitstream& rng,
+                     const Renderer::AdditionalOptions& options =
+                         Renderer::AdditionalOptions()) const;
 
  private:
   Renderer renderer_;

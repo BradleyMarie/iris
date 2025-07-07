@@ -27,7 +27,7 @@
 #include "frontends/pbrt/file.h"
 #include "frontends/pbrt/parser.h"
 #include "iris/framebuffer.h"
-#include "iris/random/mersenne_twister_random.h"
+#include "iris/random_bitstreams/mersenne_twister_random_bitstream.h"
 #include "iris/renderer.h"
 #include "pbrt_proto/v3/convert.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
@@ -65,14 +65,14 @@ ABSL_FLAG(bool, spectral, false, "If true, spectral rendering is performed.");
 namespace {
 
 using ::iris::Framebuffer;
-using ::iris::Random;
+using ::iris::RandomBitstream;
 using ::iris::Renderer;
 using ::iris::pbrt_frontend::Directives;
 using ::iris::pbrt_frontend::LoadFile;
 using ::iris::pbrt_frontend::Options;
 using ::iris::pbrt_frontend::ParseScene;
 using ::iris::pbrt_frontend::ParsingResult;
-using ::iris::random::MakeMersenneTwisterRandom;
+using ::iris::random_bitstreams::MakeMersenneTwisterRandomBitstream;
 using ::pbrt_proto::v3::Convert;
 using ::pbrt_proto::v3::Directive;
 using ::pbrt_proto::v3::PbrtProto;
@@ -268,7 +268,7 @@ int main(int argc, char** argv) {
       options.maximum_sample_luminance = result->max_sample_luminance;
     }
 
-    std::unique_ptr<Random> rng = MakeMersenneTwisterRandom();
+    std::unique_ptr<RandomBitstream> rng = MakeMersenneTwisterRandomBitstream();
     Framebuffer framebuffer = result->renderable.Render(*rng, options);
 
     result->output_write_function(framebuffer, output);

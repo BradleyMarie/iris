@@ -1,7 +1,7 @@
 #ifndef _IRIS_RANDOM_
 #define _IRIS_RANDOM_
 
-#include <memory>
+#include <cstddef>
 
 #include "iris/float.h"
 
@@ -17,8 +17,6 @@ class Random {
 
   virtual visual NextVisual() = 0;
   virtual void DiscardVisual(size_t num_to_discard);
-
-  virtual std::unique_ptr<Random> Replicate() = 0;
 
   virtual ~Random() {}
 };

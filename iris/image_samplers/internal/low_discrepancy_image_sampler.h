@@ -9,7 +9,7 @@
 #include "iris/float.h"
 #include "iris/image_sampler.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
@@ -28,8 +28,10 @@ class LowDiscrepancyImageSampler final : public ImageSampler {
         sample_index_(0) {}
 
   void StartPixel(std::pair<size_t, size_t> image_dimensions,
-                  std::pair<size_t, size_t> pixel, Random& rng) override;
-  std::optional<Sample> NextSample(bool sample_lens, Random& rng) override;
+                  std::pair<size_t, size_t> pixel,
+                  RandomBitstream& rng) override;
+  std::optional<Sample> NextSample(bool sample_lens,
+                                   RandomBitstream& rng) override;
 
   std::unique_ptr<ImageSampler> Replicate() const override;
 

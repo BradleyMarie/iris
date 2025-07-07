@@ -10,7 +10,7 @@
 #include "iris/float.h"
 #include "iris/image_sampler.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
-#include "iris/random.h"
+#include "iris/random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
@@ -18,7 +18,7 @@ namespace internal {
 
 void LowDiscrepancyImageSampler::StartPixel(
     std::pair<size_t, size_t> image_dimensions, std::pair<size_t, size_t> pixel,
-    Random& rng) {
+    RandomBitstream& rng) {
   sequence_->Permute(rng);
 
   image_dimensions_ = image_dimensions;
@@ -43,7 +43,7 @@ void LowDiscrepancyImageSampler::StartPixel(
 }
 
 std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
-    bool sample_lens, Random& rng) {
+    bool sample_lens, RandomBitstream& rng) {
   if (!sequence_) {
     return std::nullopt;
   }

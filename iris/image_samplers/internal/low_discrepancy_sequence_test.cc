@@ -51,12 +51,6 @@ TEST(LowDiscrepancySequenceTest, DiscardVisual) {
   sequence.DiscardVisual(2);
 }
 
-TEST(LowDiscrepancySequenceTest, Replicate) {
-  MockLowDiscrepancySequence sequence;
-  EXPECT_CALL(sequence, Duplicate()).WillOnce(Invoke([]() { return nullptr; }));
-  EXPECT_FALSE(sequence.Replicate());
-}
-
 }  // namespace
 }  // namespace internal
 }  // namespace image_samplers
