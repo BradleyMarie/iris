@@ -43,7 +43,7 @@ std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
 std::optional<uint64_t> SobolSequenceIndex(uint64_t logical_resolution,
                                            uint64_t first_dimension,
                                            uint64_t second_dimension,
-                                           uint64_t sample_index) {
+                                           uint64_t sample_index) {                                           
   unsigned log2_resolution = std::countr_zero(logical_resolution);
 
   if (log2_resolution > 26) {
@@ -120,12 +120,16 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
 }
 
 std::optional<geometric_t> SobolSequence::Next() {
+  if (dimension_ >= num_dimensions_) {
+    return std::nullopt;
+  }
+
   geometric_t sample;
   if constexpr (std::is_same<geometric_t, float>::value) {
-    std::optional<uint32_t> value = BitMatrixVectorMultiply(
+    std::optional<uint32_t> product = BitMatrixVectorMultiply(
         sobol32::Matrices::matrices + dimension_ * sobol32::Matrices::size,
         sobol32::Matrices::size, sample_index_);
-    if (!value) {
+    if (!product) {
       return std::nullopt;
     }
 
@@ -134,22 +138,46 @@ std::optional<geometric_t> SobolSequence::Next() {
         case Scrambler::None:
           break;
         case Scrambler::FastOwen:
-          *value ^= *value * 0x3D20ADEAu;
-          *value += seed_[0];
-          *value *= seed_[1] | 1u;
-          *value ^= *value * 0x05526C56u;
-          *value ^= *value * 0x53A22864u;
+          *product ^= *product * 0x3D20ADEAu;
+          *product += seed_[0];
+          *product *= seed_[1] | 1u;
+          *product ^= *product * 0x05526C56u;
+          *product ^= *product * 0x53A22864u;
           break;
       }
     }
 
-    sample = static_cast<float>(*value) / 4294967296.0f;
+    sample = static_cast<float>(*product) / 4294967296.0f;
   } else {
-    if (dimension_ >= num_dimensions_) {
+    std::optional<uint64_t> product = BitMatrixVectorMultiply(
+        sobol64::Matrices::matrices + dimension_ * sobol64::Matrices::size,
+        sobol64::Matrices::size, sample_index_);
+    if (!product) {
       return std::nullopt;
     }
 
-    sample = sobol64::sample(sample_index_, dimension_);
+    uint32_t top_bits;
+    uint64_t result;
+    if (dimension_ >= 2) {
+      switch (scrambler_) {
+        case Scrambler::None:
+          result = *product;
+          break;
+        case Scrambler::FastOwen:
+          top_bits = (*product >> 20);
+          top_bits ^= top_bits * 0x3D20ADEAu;
+          top_bits += seed_[0];
+          top_bits *= seed_[1] | 1u;
+          top_bits ^= top_bits * 0x05526C56u;
+          top_bits ^= top_bits * 0x53A22864u;
+          result = top_bits;
+          result <<= 20;
+          result |= *product & 0xFFFFFu;
+          break;
+      }
+    }
+
+    sample = static_cast<double>(result) / 4503599627370496.0;
   }
 
   if (dimension_ == 0) {
