@@ -35,12 +35,14 @@ class SobolSequence final : public LowDiscrepancySequence {
   std::unique_ptr<LowDiscrepancySequence> Duplicate() override;
 
  private:
+  float SobolSample32();
+
   geometric_t to_first_dimension_;
   geometric_t to_second_dimension_;
-  unsigned long long sample_index_;
+  uint64_t sample_index_;
+  uint32_t seed_[2];
   unsigned dimension_;
   unsigned num_dimensions_;
-  uint32_t seed_[2];
   Scrambler scrambler_;
 };
 
