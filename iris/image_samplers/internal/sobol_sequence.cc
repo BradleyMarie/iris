@@ -22,6 +22,7 @@ namespace {
 
 static const geometric_t kMaxValue = std::nextafter(
     static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
+static constexpr size_t kMaxImageDimension = (1u << 26u);
 
 template <typename Result, typename BitVector>
 std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
@@ -38,43 +39,6 @@ std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
   }
 
   return product;
-}
-
-std::optional<uint64_t> SobolSequenceIndex(uint64_t logical_resolution,
-                                           uint64_t first_dimension,
-                                           uint64_t second_dimension,
-                                           uint64_t sample_index) {                                           
-  unsigned log2_resolution = std::countr_zero(logical_resolution);
-
-  if (log2_resolution > 26) {
-    return std::nullopt;
-  }
-
-  if (log2_resolution == 0) {
-    return sample_index;
-  }
-
-  std::optional<uint64_t> transformed_sample_index =
-      BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[log2_resolution - 1],
-                              pbrt::SobolMatrixSize, sample_index);
-  if (!transformed_sample_index) {
-    return std::nullopt;
-  }
-
-  uint64_t pixel_index =
-      (first_dimension << log2_resolution) | second_dimension;
-  uint64_t image_sample_index = pixel_index ^ *transformed_sample_index;
-
-  std::optional<uint64_t> transformed_image_sample_index =
-      BitMatrixVectorMultiply(pbrt::VdCSobolMatricesInv[log2_resolution - 1],
-                              pbrt::SobolMatrixSize, image_sample_index);
-  if (!transformed_image_sample_index) {
-    return std::nullopt;
-  }
-
-  uint64_t num_pixels_log2 = log2_resolution << 1;
-  uint64_t sample_index_base = sample_index << num_pixels_log2;
-  return sample_index_base ^ *transformed_image_sample_index;
 }
 
 }  // namespace
@@ -95,19 +59,38 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
                           unsigned sample_index) {
   size_t longest_dimension =
       std::max(image_dimensions.first, image_dimensions.second);
-  size_t logical_resolution = std::bit_ceil(longest_dimension);
-
-  std::optional<uint64_t> maybe_sample_index = SobolSequenceIndex(
-      logical_resolution, pixel.second, pixel.first, sample_index);
-  if (!maybe_sample_index) {
+  if (longest_dimension == 0 || longest_dimension > kMaxImageDimension) {
     return false;
   }
 
+  size_t logical_resolution = std::bit_ceil(longest_dimension);
+  size_t log2_resolution = std::countr_zero(logical_resolution);
+  size_t num_pixels_log2 = log2_resolution << 1;
+
+  std::optional<uint64_t> transformed_sample_index =
+      BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[log2_resolution - 1],
+                              pbrt::SobolMatrixSize, sample_index);
+  if (!transformed_sample_index) {
+    return false;
+  }
+
+  uint64_t pixel_index =
+      (static_cast<uint64_t>(pixel.second) << log2_resolution) | pixel.first;
+  uint64_t image_sample_index = pixel_index ^ *transformed_sample_index;
+
+  std::optional<uint64_t> transformed_image_sample_index =
+      BitMatrixVectorMultiply(pbrt::VdCSobolMatricesInv[log2_resolution - 1],
+                              pbrt::SobolMatrixSize, image_sample_index);
+  if (!transformed_image_sample_index) {
+    return false;
+  }
+
+  sample_index_ = *transformed_image_sample_index ^
+                  (static_cast<uint64_t>(sample_index) << num_pixels_log2);
   to_first_dimension_ = static_cast<geometric_t>(logical_resolution) /
                         static_cast<geometric_t>(image_dimensions.second);
   to_second_dimension_ = static_cast<geometric_t>(logical_resolution) /
                          static_cast<geometric_t>(image_dimensions.first);
-  sample_index_ = *maybe_sample_index;
   dimension_ = 0;
 
   if constexpr (std::is_same<geometric_t, float>::value) {
