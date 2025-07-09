@@ -22,7 +22,6 @@ namespace {
 
 static const geometric_t kMaxValue = std::nextafter(
     static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
-static constexpr size_t kMaxImageDimension = (1u << 26u);
 
 template <typename Result, typename BitVector>
 std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
@@ -43,6 +42,14 @@ std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
 
 }  // namespace
 
+SobolSequence::SobolSequence(Scrambler scrambler) : scrambler_(scrambler) {
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    to_dimension_[2] = 1.0f / 4294967296.0f;
+  } else {
+    to_dimension_[2] = 1.0 / 4503599627370496.0;
+  }
+}
+
 void SobolSequence::Permute(RandomBitstream& rng) {
   switch (scrambler_) {
     case Scrambler::None:
@@ -59,13 +66,24 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
                           unsigned sample_index) {
   size_t longest_dimension =
       std::max(image_dimensions.first, image_dimensions.second);
-  if (longest_dimension == 0 || longest_dimension > kMaxImageDimension) {
+  if (longest_dimension == 0 || std::bit_width(longest_dimension) >
+                                    std::numeric_limits<geometric_t>::digits) {
     return false;
   }
 
   size_t logical_resolution = std::bit_ceil(longest_dimension);
   size_t log2_resolution = std::countr_zero(logical_resolution);
   size_t num_pixels_log2 = log2_resolution << 1;
+
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    if (log2_resolution > sobol32::Matrices::size / 2) {
+      return false;
+    }
+  } else {
+    if (log2_resolution > sobol64::Matrices::size / 2) {
+      return false;
+    }
+  }
 
   std::optional<uint64_t> transformed_sample_index =
       BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[log2_resolution - 1],
@@ -87,27 +105,30 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
 
   sample_index_ = *transformed_image_sample_index ^
                   (static_cast<uint64_t>(sample_index) << num_pixels_log2);
-  to_first_dimension_ = static_cast<geometric_t>(logical_resolution) /
-                        static_cast<geometric_t>(image_dimensions.second);
-  to_second_dimension_ = static_cast<geometric_t>(logical_resolution) /
-                         static_cast<geometric_t>(image_dimensions.first);
+  to_dimension_[0] = (static_cast<geometric_t>(logical_resolution) /
+                      static_cast<geometric_t>(image_dimensions.second)) *
+                     to_dimension_[2];
+  to_dimension_[1] = (static_cast<geometric_t>(logical_resolution) /
+                      static_cast<geometric_t>(image_dimensions.first)) *
+                     to_dimension_[2];
   dimension_ = 0;
-
-  if constexpr (std::is_same<geometric_t, float>::value) {
-    num_dimensions_ = sobol32::Matrices::num_dimensions;
-  } else {
-    num_dimensions_ = sobol64::Matrices::num_dimensions;
-  }
 
   return true;
 }
 
 std::optional<geometric_t> SobolSequence::Next() {
-  if (dimension_ >= num_dimensions_) {
-    return std::nullopt;
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    if (dimension_ >= sobol32::Matrices::num_dimensions) {
+      return std::nullopt;
+    }
+  } else {
+    if (dimension_ >= sobol64::Matrices::num_dimensions) {
+      return std::nullopt;
+    }
   }
 
   geometric_t sample;
+  unsigned dimension_index = dimension_;
   if constexpr (std::is_same<geometric_t, float>::value) {
     std::optional<uint32_t> product = BitMatrixVectorMultiply(
         sobol32::Matrices::matrices + dimension_ * sobol32::Matrices::size,
@@ -128,9 +149,11 @@ std::optional<geometric_t> SobolSequence::Next() {
           *product ^= *product * 0x53A22864u;
           break;
       }
+
+      dimension_index = 2;
     }
 
-    sample = static_cast<float>(*product) / 4294967296.0f;
+    sample = static_cast<float>(*product) * to_dimension_[dimension_index];
   } else {
     std::optional<uint64_t> product = BitMatrixVectorMultiply(
         sobol64::Matrices::matrices + dimension_ * sobol64::Matrices::size,
@@ -158,15 +181,11 @@ std::optional<geometric_t> SobolSequence::Next() {
           result |= *product & 0xFFFFFu;
           break;
       }
+
+      dimension_index = 2;
     }
 
-    sample = static_cast<double>(result) / 4503599627370496.0;
-  }
-
-  if (dimension_ == 0) {
-    sample *= to_first_dimension_;
-  } else if (dimension_ == 1) {
-    sample *= to_second_dimension_;
+    sample = static_cast<double>(result) * to_dimension_[dimension_index];
   }
 
   dimension_ += 1;
@@ -180,10 +199,18 @@ visual_t SobolSequence::SampleWeight(uint32_t desired_num_samples) const {
 }
 
 void SobolSequence::Discard(size_t num_to_discard) {
-  if (num_to_discard >= num_dimensions_ - dimension_) {
-    dimension_ = num_dimensions_;
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    if (num_to_discard >= sobol32::Matrices::num_dimensions - dimension_) {
+      dimension_ = sobol32::Matrices::num_dimensions;
+    } else {
+      dimension_ += static_cast<unsigned>(num_to_discard);
+    }
   } else {
-    dimension_ += static_cast<unsigned>(num_to_discard);
+    if (num_to_discard >= sobol64::Matrices::num_dimensions - dimension_) {
+      dimension_ = sobol64::Matrices::num_dimensions;
+    } else {
+      dimension_ += static_cast<unsigned>(num_to_discard);
+    }
   }
 }
 
