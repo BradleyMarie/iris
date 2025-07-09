@@ -40,6 +40,14 @@ std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
   return product;
 }
 
+constexpr unsigned NumDimensions() {
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    return sobol32::Matrices::num_dimensions;
+  } else {
+    return sobol64::Matrices::num_dimensions;
+  }
+}
+
 }  // namespace
 
 SobolSequence::SobolSequence(Scrambler scrambler) : scrambler_(scrambler) {
@@ -75,16 +83,6 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
   size_t log2_resolution = std::countr_zero(logical_resolution);
   size_t num_pixels_log2 = log2_resolution << 1;
 
-  if constexpr (std::is_same<geometric_t, float>::value) {
-    if (log2_resolution > sobol32::Matrices::size / 2) {
-      return false;
-    }
-  } else {
-    if (log2_resolution > sobol64::Matrices::size / 2) {
-      return false;
-    }
-  }
-
   std::optional<uint64_t> transformed_sample_index =
       BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[log2_resolution - 1],
                               pbrt::SobolMatrixSize, sample_index);
@@ -117,14 +115,8 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
 }
 
 std::optional<geometric_t> SobolSequence::Next() {
-  if constexpr (std::is_same<geometric_t, float>::value) {
-    if (dimension_ >= sobol32::Matrices::num_dimensions) {
-      return std::nullopt;
-    }
-  } else {
-    if (dimension_ >= sobol64::Matrices::num_dimensions) {
-      return std::nullopt;
-    }
+  if (dimension_ >= NumDimensions()) {
+    return std::nullopt;
   }
 
   geometric_t sample;
@@ -199,18 +191,10 @@ visual_t SobolSequence::SampleWeight(uint32_t desired_num_samples) const {
 }
 
 void SobolSequence::Discard(size_t num_to_discard) {
-  if constexpr (std::is_same<geometric_t, float>::value) {
-    if (num_to_discard >= sobol32::Matrices::num_dimensions - dimension_) {
-      dimension_ = sobol32::Matrices::num_dimensions;
-    } else {
-      dimension_ += static_cast<unsigned>(num_to_discard);
-    }
+  if (num_to_discard >= NumDimensions() - dimension_) {
+    dimension_ = NumDimensions();
   } else {
-    if (num_to_discard >= sobol64::Matrices::num_dimensions - dimension_) {
-      dimension_ = sobol64::Matrices::num_dimensions;
-    } else {
-      dimension_ += static_cast<unsigned>(num_to_discard);
-    }
+    dimension_ += static_cast<unsigned>(num_to_discard);
   }
 }
 
