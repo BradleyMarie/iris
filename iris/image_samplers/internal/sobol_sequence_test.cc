@@ -36,15 +36,9 @@ TEST(SobolSequence, SamplesOnePixel) {
   EXPECT_TRUE(sequence.Start({1, 1}, {0, 0}, 0));
   for (uint32_t i = 0; i < 4; i++) {
     std::optional<geometric_t> value = sequence.Next();
-
     ASSERT_TRUE(value);
-    if (i < 2) {
-      EXPECT_GE(*value, 0.0);
-      EXPECT_LE(*value, 1.0);
-    } else {
-      EXPECT_GE(*value, 0.0);
-      EXPECT_LE(*value, 1.0);
-    }
+    EXPECT_GE(*value, 0.0);
+    EXPECT_LE(*value, 1.0);
   }
 }
 
