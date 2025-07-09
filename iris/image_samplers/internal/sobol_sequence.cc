@@ -23,6 +23,14 @@ namespace {
 static const geometric_t kMaxValue = std::nextafter(
     static_cast<geometric_t>(1.0), static_cast<geometric_t>(0.0));
 
+constexpr unsigned NumDimensions() {
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    return sobol32::Matrices::num_dimensions;
+  } else {
+    return sobol64::Matrices::num_dimensions;
+  }
+}
+
 template <typename Result, typename BitVector>
 std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
                                               size_t bit_matrix_size,
@@ -38,14 +46,6 @@ std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
   }
 
   return product;
-}
-
-constexpr unsigned NumDimensions() {
-  if constexpr (std::is_same<geometric_t, float>::value) {
-    return sobol32::Matrices::num_dimensions;
-  } else {
-    return sobol64::Matrices::num_dimensions;
-  }
 }
 
 }  // namespace
