@@ -32,13 +32,8 @@ constexpr unsigned NumDimensions() {
 }
 
 template <typename Result, typename BitVector>
-std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
-                                              size_t bit_matrix_size,
-                                              BitVector bit_vector) {
-  if (static_cast<unsigned>(std::bit_width(bit_vector)) >= bit_matrix_size) {
-    return std::nullopt;
-  }
-
+Result BitMatrixVectorMultiply(const Result bit_matrix[],
+                               BitVector bit_vector) {
   Result product = 0u;
   while (bit_vector) {
     product ^= bit_matrix[std::countr_zero(bit_vector)];
@@ -46,6 +41,17 @@ std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
   }
 
   return product;
+}
+
+template <typename Result, typename BitVector>
+std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
+                                              size_t bit_matrix_size,
+                                              BitVector bit_vector) {
+  if (static_cast<unsigned>(std::bit_width(bit_vector)) >= bit_matrix_size) {
+    return std::nullopt;
+  }
+
+  return BitMatrixVectorMultiply(bit_matrix, bit_vector);
 }
 
 }  // namespace
@@ -101,8 +107,23 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
     return false;
   }
 
-  sample_index_ = *transformed_image_sample_index ^
-                  (static_cast<uint64_t>(sample_index) << num_pixels_log2);
+  uint64_t next_sample_index =
+      *transformed_image_sample_index ^
+      (static_cast<uint64_t>(sample_index) << num_pixels_log2);
+
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
+        sobol32::Matrices::size) {
+      return false;
+    }
+  } else {
+    if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
+        sobol64::Matrices::size) {
+      return false;
+    }
+  }
+
+  sample_index_ = next_sample_index;
   to_dimension_[0] = (static_cast<geometric_t>(logical_resolution) /
                       static_cast<geometric_t>(image_dimensions.second)) *
                      to_dimension_[2];
@@ -122,47 +143,41 @@ std::optional<geometric_t> SobolSequence::Next() {
   geometric_t sample;
   unsigned dimension_index = dimension_;
   if constexpr (std::is_same<geometric_t, float>::value) {
-    std::optional<uint32_t> product = BitMatrixVectorMultiply(
+    uint32_t product = BitMatrixVectorMultiply(
         sobol32::Matrices::matrices + dimension_ * sobol32::Matrices::size,
-        sobol32::Matrices::size, sample_index_);
-    if (!product) {
-      return std::nullopt;
-    }
+        sample_index_);
 
     if (dimension_ >= 2) {
       switch (scrambler_) {
         case Scrambler::None:
           break;
         case Scrambler::FastOwen:
-          *product ^= *product * 0x3D20ADEAu;
-          *product += seed_[0];
-          *product *= seed_[1] | 1u;
-          *product ^= *product * 0x05526C56u;
-          *product ^= *product * 0x53A22864u;
+          product ^= product * 0x3D20ADEAu;
+          product += seed_[0];
+          product *= seed_[1] | 1u;
+          product ^= product * 0x05526C56u;
+          product ^= product * 0x53A22864u;
           break;
       }
 
       dimension_index = 2;
     }
 
-    sample = static_cast<float>(*product) * to_dimension_[dimension_index];
+    sample = static_cast<float>(product) * to_dimension_[dimension_index];
   } else {
-    std::optional<uint64_t> product = BitMatrixVectorMultiply(
+    uint64_t product = BitMatrixVectorMultiply(
         sobol64::Matrices::matrices + dimension_ * sobol64::Matrices::size,
-        sobol64::Matrices::size, sample_index_);
-    if (!product) {
-      return std::nullopt;
-    }
+        sample_index_);
 
     uint32_t top_bits;
     uint64_t result;
     if (dimension_ >= 2) {
       switch (scrambler_) {
         case Scrambler::None:
-          result = *product;
+          result = product;
           break;
         case Scrambler::FastOwen:
-          top_bits = (*product >> 20);
+          top_bits = product >> 20;
           top_bits ^= top_bits * 0x3D20ADEAu;
           top_bits += seed_[0];
           top_bits *= seed_[1] | 1u;
@@ -170,7 +185,7 @@ std::optional<geometric_t> SobolSequence::Next() {
           top_bits ^= top_bits * 0x53A22864u;
           result = top_bits;
           result <<= 20;
-          result |= *product & 0xFFFFFu;
+          result |= product & 0xFFFFFu;
           break;
       }
 
