@@ -4,6 +4,7 @@
 #include <bit>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -80,56 +81,64 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
                           unsigned sample_index) {
   size_t longest_dimension =
       std::max(image_dimensions.first, image_dimensions.second);
-  if (longest_dimension == 0 || std::bit_width(longest_dimension) >
-                                    std::numeric_limits<geometric_t>::digits) {
-    return false;
-  }
 
-  size_t logical_resolution = std::bit_ceil(longest_dimension);
-  size_t log2_resolution = std::countr_zero(logical_resolution);
-  size_t num_pixels_log2 = log2_resolution << 1;
-
-  std::optional<uint64_t> transformed_sample_index =
-      BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[log2_resolution - 1],
-                              pbrt::SobolMatrixSize, sample_index);
-  if (!transformed_sample_index) {
-    return false;
-  }
-
-  uint64_t pixel_index =
-      (static_cast<uint64_t>(pixel.second) << log2_resolution) | pixel.first;
-  uint64_t image_sample_index = pixel_index ^ *transformed_sample_index;
-
-  std::optional<uint64_t> transformed_image_sample_index =
-      BitMatrixVectorMultiply(pbrt::VdCSobolMatricesInv[log2_resolution - 1],
-                              pbrt::SobolMatrixSize, image_sample_index);
-  if (!transformed_image_sample_index) {
-    return false;
-  }
-
-  uint64_t next_sample_index =
-      *transformed_image_sample_index ^
-      (static_cast<uint64_t>(sample_index) << num_pixels_log2);
-
-  if constexpr (std::is_same<geometric_t, float>::value) {
-    if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
-        sobol32::Matrices::size) {
-      return false;
-    }
+  if (longest_dimension == 1) {
+    sample_index_ = sample_index;
+    to_dimension_[0] = static_cast<geometric_t>(1.0);
+    to_dimension_[1] = static_cast<geometric_t>(1.0);
   } else {
-    if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
-        sobol64::Matrices::size) {
+    if (std::bit_width(longest_dimension) >
+        std::numeric_limits<geometric_t>::digits) {
       return false;
     }
+
+    size_t logical_resolution = std::bit_ceil(longest_dimension);
+    size_t log2_resolution = std::countr_zero(logical_resolution);
+    size_t num_pixels_log2 = log2_resolution << 1;
+
+    std::optional<uint64_t> transformed_sample_index =
+        BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[log2_resolution - 1],
+                                pbrt::SobolMatrixSize, sample_index);
+    if (!transformed_sample_index) {
+      return false;
+    }
+
+    uint64_t pixel_index =
+        (static_cast<uint64_t>(pixel.second) << log2_resolution) | pixel.first;
+    uint64_t image_sample_index = pixel_index ^ *transformed_sample_index;
+
+    std::optional<uint64_t> transformed_image_sample_index =
+        BitMatrixVectorMultiply(pbrt::VdCSobolMatricesInv[log2_resolution - 1],
+                                pbrt::SobolMatrixSize, image_sample_index);
+    if (!transformed_image_sample_index) {
+      return false;
+    }
+
+    uint64_t next_sample_index =
+        *transformed_image_sample_index ^
+        (static_cast<uint64_t>(sample_index) << num_pixels_log2);
+
+    if constexpr (std::is_same<geometric_t, float>::value) {
+      if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
+          sobol32::Matrices::size) {
+        return false;
+      }
+    } else {
+      if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
+          sobol64::Matrices::size) {
+        return false;
+      }
+    }
+
+    sample_index_ = next_sample_index;
+    to_dimension_[0] = (static_cast<geometric_t>(logical_resolution) /
+                        static_cast<geometric_t>(image_dimensions.second)) *
+                       to_dimension_[2];
+    to_dimension_[1] = (static_cast<geometric_t>(logical_resolution) /
+                        static_cast<geometric_t>(image_dimensions.first)) *
+                       to_dimension_[2];
   }
 
-  sample_index_ = next_sample_index;
-  to_dimension_[0] = (static_cast<geometric_t>(logical_resolution) /
-                      static_cast<geometric_t>(image_dimensions.second)) *
-                     to_dimension_[2];
-  to_dimension_[1] = (static_cast<geometric_t>(logical_resolution) /
-                      static_cast<geometric_t>(image_dimensions.first)) *
-                     to_dimension_[2];
   dimension_ = 0;
 
   return true;

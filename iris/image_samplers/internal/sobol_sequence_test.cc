@@ -1,6 +1,7 @@
 #include "iris/image_samplers/internal/sobol_sequence.h"
 
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 #include "googletest/include/gtest/gtest.h"
@@ -20,8 +21,31 @@ TEST(SobolSequence, StartLimits) {
 
 TEST(SobolSequence, StartSampleLimit) {
   SobolSequence sequence(SobolSequence::Scrambler::None);
-  EXPECT_TRUE(sequence.Start({255, 255}, {0, 0}, 0));
-  EXPECT_FALSE(sequence.Start({1u << 27, 1u << 27}, {0, 0}, 0));
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    EXPECT_FALSE(sequence.Start(
+        {1u << std::numeric_limits<geometric_t>::digits, 1u}, {0, 0}, 0));
+    EXPECT_FALSE(sequence.Start(
+        {1u, 1u << std::numeric_limits<geometric_t>::digits}, {0, 0}, 0));
+  }
+  EXPECT_FALSE(sequence.Start({0xFFFFFFu, 0xFFFFFFu}, {0xFFFFFEu, 0xFFFFFEu},
+                              0xFFFFFFFFu));
+}
+
+TEST(SobolSequence, SamplesOnePixel) {
+  SobolSequence sequence(SobolSequence::Scrambler::None);
+  EXPECT_TRUE(sequence.Start({1, 1}, {0, 0}, 0));
+  for (uint32_t i = 0; i < 4; i++) {
+    std::optional<geometric_t> value = sequence.Next();
+
+    ASSERT_TRUE(value);
+    if (i < 2) {
+      EXPECT_GE(*value, 0.0);
+      EXPECT_LE(*value, 1.0);
+    } else {
+      EXPECT_GE(*value, 0.0);
+      EXPECT_LE(*value, 1.0);
+    }
+  }
 }
 
 TEST(SobolSequence, Samples) {
