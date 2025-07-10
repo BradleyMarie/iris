@@ -32,6 +32,14 @@ constexpr unsigned NumDimensions() {
   }
 }
 
+constexpr int MatrixSize() {
+  if constexpr (std::is_same<geometric_t, float>::value) {
+    return static_cast<int>(sobol32::Matrices::size);
+  } else {
+    return static_cast<int>(sobol64::Matrices::size);
+  }
+}
+
 template <typename Result, typename BitVector>
 Result BitMatrixVectorMultiply(const Result bit_matrix[],
                                BitVector bit_vector) {
@@ -42,17 +50,6 @@ Result BitMatrixVectorMultiply(const Result bit_matrix[],
   }
 
   return product;
-}
-
-template <typename Result, typename BitVector>
-std::optional<Result> BitMatrixVectorMultiply(const Result bit_matrix[],
-                                              size_t bit_matrix_size,
-                                              BitVector bit_vector) {
-  if (static_cast<unsigned>(std::bit_width(bit_vector)) >= bit_matrix_size) {
-    return std::nullopt;
-  }
-
-  return BitMatrixVectorMultiply(bit_matrix, bit_vector);
 }
 
 }  // namespace
@@ -83,52 +80,43 @@ bool SobolSequence::Start(std::pair<size_t, size_t> image_dimensions,
       std::max(image_dimensions.first, image_dimensions.second);
 
   if (longest_dimension == 1) {
+    if (std::bit_width(sample_index) >= MatrixSize()) {
+      return false;
+    }
+
     sample_index_ = sample_index;
     to_dimension_[0] = static_cast<geometric_t>(1.0);
     to_dimension_[1] = static_cast<geometric_t>(1.0);
   } else {
     if (std::bit_width(longest_dimension) >
-        std::numeric_limits<geometric_t>::digits) {
+            std::numeric_limits<geometric_t>::digits ||
+        std::bit_width(sample_index) >= pbrt::SobolMatrixSize) {
       return false;
     }
 
     size_t logical_resolution = std::bit_ceil(longest_dimension);
-    size_t log2_resolution = std::countr_zero(logical_resolution);
-    size_t num_pixels_log2 = log2_resolution << 1;
-
-    std::optional<uint64_t> transformed_sample_index =
-        BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[log2_resolution - 1],
-                                pbrt::SobolMatrixSize, sample_index);
-    if (!transformed_sample_index) {
+    int log2_resolution = std::countr_zero(logical_resolution);
+    int num_pixels_log2 = log2_resolution << 1;
+    if (std::bit_width(sample_index) + num_pixels_log2 >= MatrixSize()) {
       return false;
     }
 
-    uint64_t pixel_index =
-        (static_cast<uint64_t>(pixel.second) << log2_resolution) | pixel.first;
-    uint64_t image_sample_index = pixel_index ^ *transformed_sample_index;
-
-    std::optional<uint64_t> transformed_image_sample_index =
-        BitMatrixVectorMultiply(pbrt::VdCSobolMatricesInv[log2_resolution - 1],
-                                pbrt::SobolMatrixSize, image_sample_index);
-    if (!transformed_image_sample_index) {
+    int matrix_index = log2_resolution - 1;
+    if (matrix_index >= pbrt::VdCSobolMatricesInvSize ||
+        matrix_index >= pbrt::VdCSobolMatricesSize) {
       return false;
     }
+
+    uint64_t image_sample_index =
+        BitMatrixVectorMultiply(pbrt::VdCSobolMatrices[matrix_index],
+                                sample_index) ^
+        ((static_cast<uint64_t>(pixel.second) << log2_resolution) |
+         static_cast<uint64_t>(pixel.first));
 
     uint64_t next_sample_index =
-        *transformed_image_sample_index ^
+        BitMatrixVectorMultiply(pbrt::VdCSobolMatricesInv[matrix_index],
+                                image_sample_index) ^
         (static_cast<uint64_t>(sample_index) << num_pixels_log2);
-
-    if constexpr (std::is_same<geometric_t, float>::value) {
-      if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
-          sobol32::Matrices::size) {
-        return false;
-      }
-    } else {
-      if (static_cast<unsigned>(std::bit_width(next_sample_index)) >=
-          sobol64::Matrices::size) {
-        return false;
-      }
-    }
 
     sample_index_ = next_sample_index;
     to_dimension_[0] = (static_cast<geometric_t>(logical_resolution) /
