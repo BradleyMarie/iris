@@ -11,7 +11,6 @@
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
-#include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 
 namespace iris {
@@ -89,7 +88,7 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
           if (!std::isfinite(r) || r < 0.0 || !std::isfinite(g) || g < 0.0 ||
               !std::isfinite(b) || b < 0.0) {
             std::cerr << "ERROR: Image file contained an out of range value"
-                      << stbi_failure_reason() << std::endl;
+                      << std::endl;
             exit(EXIT_FAILURE);
           }
 
