@@ -33,8 +33,8 @@ TEST(ParseScene, Empty) {
 
   Options options;
 
-  EXPECT_FALSE(ParseScene(directives, options, std::filesystem::current_path())
-                   .has_value());
+  EXPECT_FALSE(
+      ParseScene(directives, options, std::filesystem::current_path()));
 }
 
 TEST(ParseScene, NoEnd) {
@@ -490,9 +490,9 @@ TEST(Render, EmptyScene) {
 
   Options options;
 
-  std::optional<ParsingResult> result =
+  std::unique_ptr<ParsingResult> result =
       ParseScene(directives, options, std::filesystem::current_path());
-  ASSERT_TRUE(result.has_value());
+  ASSERT_TRUE(result);
 
   EXPECT_FALSE(result->skip_pixel_callback({0, 0}, {720, 1280}));
   EXPECT_FALSE(result->skip_pixel_callback({719, 1279}, {720, 1280}));

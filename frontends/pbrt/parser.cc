@@ -90,7 +90,7 @@ struct State {
                    const std::filesystem::path& search_root);
   void Shape(const pbrt_proto::v3::Shape& shape,
              const std::filesystem::path& search_root);
-  ParsingResult WorldEnd();
+  std::unique_ptr<ParsingResult> WorldEnd();
 
   // Various Managers
   ColorSpectrumManager spectrum_manager;
@@ -161,7 +161,7 @@ void State::Shape(const pbrt_proto::v3::Shape& shape,
   }
 }
 
-ParsingResult State::WorldEnd() {
+std::unique_ptr<ParsingResult> State::WorldEnd() {
   std::unique_ptr<Scene::Builder> scene_builder = MakeBVHSceneBuilder();
   Renderer renderer(*scene_builder, *integrator->light_scene_builder,
                     objects.Build(), ColorPowerMatcher());
@@ -171,9 +171,9 @@ ParsingResult State::WorldEnd() {
       std::move(integrator->integrator), std::make_unique<ColorAlbedoMatcher>(),
       std::make_unique<ColorColorMatcher>(), film->resolution);
 
-  return ParsingResult{std::move(renderable), film->skip_pixel_function,
-                       film->filename, film->write_function,
-                       film->max_sample_luminance};
+  return std::make_unique<ParsingResult>(ParsingResult{
+      std::move(renderable), film->skip_pixel_function, film->filename,
+      film->write_function, film->max_sample_luminance});
 }
 
 MatrixManager::ActiveTransformation ToActiveTransform(
@@ -194,7 +194,7 @@ MatrixManager::ActiveTransformation ToActiveTransform(
   return result;
 }
 
-std::optional<ParsingResult> ParseDirective(
+std::unique_ptr<ParsingResult> ParseDirective(
     State& state, const Directive& directive,
     const std::filesystem::path& search_root) {
   switch (directive.directive_type_case()) {
@@ -603,12 +603,12 @@ std::optional<ParsingResult> ParseDirective(
       break;
   }
 
-  return std::nullopt;
+  return nullptr;
 }
 
 }  // namespace
 
-std::optional<ParsingResult> ParseScene(
+std::unique_ptr<ParsingResult> ParseScene(
     Directives& directives, const Options& options,
     const std::filesystem::path& search_root) {
   State state(directives, search_root, options.always_reflective);
@@ -618,7 +618,7 @@ std::optional<ParsingResult> ParseScene(
 
   for (const Directive* next = directives.Next(); next != nullptr;
        next = directives.Next()) {
-    if (std::optional<ParsingResult> result =
+    if (std::unique_ptr<ParsingResult> result =
             ParseDirective(state, *next, search_root);
         result) {
       return result;
@@ -630,7 +630,7 @@ std::optional<ParsingResult> ParseScene(
     exit(EXIT_FAILURE);
   }
 
-  return std::nullopt;
+  return nullptr;
 }
 
 }  // namespace pbrt_frontend

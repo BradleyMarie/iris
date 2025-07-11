@@ -75,5 +75,16 @@ const Directive* Directives::Next() {
   return &state_.back().directives->directives(state_.back().current);
 }
 
+bool Directives::HasNext() const {
+  for (auto it = state_.rbegin(); it != state_.rend(); it++) {
+    if (it->directives->directives_size() != 0 &&
+        it->current < it->directives->directives_size() - 1) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace pbrt_frontend
 }  // namespace iris

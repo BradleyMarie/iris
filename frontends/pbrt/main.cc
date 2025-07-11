@@ -26,6 +26,7 @@
 #include "frontends/pbrt/directives.h"
 #include "frontends/pbrt/file.h"
 #include "frontends/pbrt/parser.h"
+#include "google/protobuf/arena.h"
 #include "iris/framebuffer.h"
 #include "iris/random_bitstreams/mersenne_twister_random_bitstream.h"
 #include "iris/renderer.h"
@@ -50,6 +51,11 @@ ABSL_FLAG(iris::geometric_t, epsilon, 0.0,
           "compensates for precision errors caused by floating point rounding. "
           "Must be finite and greater than or equal to zero. ");
 
+ABSL_FLAG(bool, fast_exit, true,
+          "If true, optimizes the exit time of the program by skipping "
+          "optional cleanup steps. When memory profiling or running with a "
+          "leak checker this flag should be switched to false.");
+
 #ifdef _XOPEN_SOURCE
 ABSL_FLAG(unsigned short, nice_increment, 19,
           "The number of steps to increment the nice value of iris.");
@@ -64,6 +70,7 @@ ABSL_FLAG(bool, spectral, false, "If true, spectral rendering is performed.");
 
 namespace {
 
+using ::google::protobuf::Arena;
 using ::iris::Framebuffer;
 using ::iris::RandomBitstream;
 using ::iris::Renderer;
@@ -170,7 +177,7 @@ int main(int argc, char** argv) {
   options.always_reflective = absl::GetFlag(FLAGS_all_spectra_are_reflective);
 
   for (size_t render_index = 0;; render_index += 1) {
-    std::optional<ParsingResult> result =
+    std::unique_ptr<ParsingResult> result =
         ParseScene(directives, options, search_root);
     if (!result) {
       if (render_index == 0) {
@@ -271,6 +278,10 @@ int main(int argc, char** argv) {
     Framebuffer framebuffer = result->renderable.Render(*rng, options);
 
     result->output_write_function(framebuffer, output);
+
+    if (absl::GetFlag(FLAGS_fast_exit) && !directives.HasNext()) {
+      result.release();
+    }
   }
 
 #ifdef INSTRUMENTED_BUILD

@@ -21,7 +21,9 @@ class Directives {
       std::unique_ptr<google::protobuf::Arena> arena,
       const pbrt_proto::v3::PbrtProto* directives,
       std::optional<std::filesystem::path> included_file = std::nullopt);
+
   const pbrt_proto::v3::Directive* Next();
+  bool HasNext() const;
 
  private:
   struct State {

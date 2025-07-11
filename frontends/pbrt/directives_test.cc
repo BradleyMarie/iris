@@ -61,15 +61,18 @@ TEST(Directive, Next) {
   directives.Include(std::move(arena), second, "second");
   directives.Include(first, "first");
 
+  EXPECT_TRUE(directives.HasNext());
   const Directive* first_directive = directives.Next();
   ASSERT_TRUE(first_directive);
   EXPECT_EQ(first.directives(0).DebugString(), first_directive->DebugString());
 
+  EXPECT_TRUE(directives.HasNext());
   const Directive* second_directive = directives.Next();
   ASSERT_TRUE(second_directive);
   EXPECT_EQ(second->directives(0).DebugString(),
             second_directive->DebugString());
 
+  EXPECT_FALSE(directives.HasNext());
   EXPECT_FALSE(directives.Next());
 }
 

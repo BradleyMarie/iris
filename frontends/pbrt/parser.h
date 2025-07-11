@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <optional>
+#include <memory>
 
 #include "frontends/pbrt/directives.h"
 #include "frontends/pbrt/renderable.h"
@@ -26,7 +26,7 @@ struct Options {
   bool always_reflective = false;
 };
 
-std::optional<ParsingResult> ParseScene(
+std::unique_ptr<ParsingResult> ParseScene(
     Directives& directives, const Options& options,
     const std::filesystem::path& search_root);
 
