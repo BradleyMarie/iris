@@ -54,3 +54,57 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "png_writer",
+    srcs = ["png_writer.cc"],
+    hdrs = ["png_writer.h"],
+    deps = [
+        "//iris:color",
+        "//iris:framebuffer",
+        "//third_party/stb:stb_image_write",
+    ],
+)
+
+cc_test(
+    name = "png_writer_test",
+    srcs = ["png_writer_test.cc"],
+    data = [
+        "test_data/black.png",
+        "test_data/white.png",
+    ],
+    deps = [
+        ":png_writer",
+        "//iris:color",
+        "//iris:framebuffer",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "tga_writer",
+    srcs = ["tga_writer.cc"],
+    hdrs = ["tga_writer.h"],
+    deps = [
+        "//iris:color",
+        "//iris:framebuffer",
+        "//third_party/stb:stb_image_write",
+    ],
+)
+
+cc_test(
+    name = "tga_writer_test",
+    srcs = ["tga_writer_test.cc"],
+    data = [
+        "test_data/black.tga",
+        "test_data/white.tga",
+    ],
+    deps = [
+        ":tga_writer",
+        "//iris:color",
+        "//iris:framebuffer",
+        "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -12,6 +12,8 @@ cc_library(
         "//iris:framebuffer",
         "//iris/file:exr_writer",
         "//iris/file:pfm_writer",
+        "//iris/file:png_writer",
+        "//iris/file:tga_writer",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

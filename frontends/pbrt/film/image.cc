@@ -12,6 +12,8 @@
 #include "frontends/pbrt/film/result.h"
 #include "iris/file/exr_writer.h"
 #include "iris/file/pfm_writer.h"
+#include "iris/file/png_writer.h"
+#include "iris/file/tga_writer.h"
 #include "iris/framebuffer.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
@@ -21,6 +23,8 @@ namespace film {
 
 using ::iris::file::WriteExr;
 using ::iris::file::WritePfm;
+using ::iris::file::WritePng;
+using ::iris::file::WriteTga;
 using ::pbrt_proto::v3::Film;
 
 constexpr int32_t kMaxImageDimensionSize = 16384u;
@@ -97,6 +101,24 @@ std::unique_ptr<FilmResult> MakeImage(const Film::Image& image) {
     write_to_file_function = [](Framebuffer& framebuffer,
                                 std::ofstream& output) {
       bool success = WritePfm(framebuffer, Color::LINEAR_SRGB, output);
+      if (!success) {
+        std::cerr << "ERROR: Failed to write output file" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    };
+  } else if (filename.extension() == ".png") {
+    write_to_file_function = [](Framebuffer& framebuffer,
+                                std::ofstream& output) {
+      bool success = WritePng(framebuffer, Color::LINEAR_SRGB, output);
+      if (!success) {
+        std::cerr << "ERROR: Failed to write output file" << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    };
+  } else if (filename.extension() == ".tga") {
+    write_to_file_function = [](Framebuffer& framebuffer,
+                                std::ofstream& output) {
+      bool success = WriteTga(framebuffer, Color::LINEAR_SRGB, output);
       if (!success) {
         std::cerr << "ERROR: Failed to write output file" << std::endl;
         exit(EXIT_FAILURE);
