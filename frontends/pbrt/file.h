@@ -10,8 +10,9 @@
 namespace iris {
 namespace pbrt_frontend {
 
-std::pair<pbrt_proto::v3::PbrtProto, std::filesystem::path> LoadFile(
-    const std::filesystem::path& search_root, const std::string& path);
+std::filesystem::path LoadFile(const std::filesystem::path& search_root,
+                               const std::string& path,
+                               pbrt_proto::v3::PbrtProto& output);
 
 }  // namespace pbrt_frontend
 }  // namespace iris

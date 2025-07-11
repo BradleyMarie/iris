@@ -150,22 +150,21 @@ int main(int argc, char** argv) {
   std::filesystem::path search_root;
   std::optional<std::filesystem::path> file_path;
   if (unparsed.size() == 1) {
-    absl::StatusOr<PbrtProto> parsed = Convert(std::cin);
-    if (!parsed.ok()) {
+    if (absl::Status status = Convert(std::cin, proto); !status.ok()) {
       std::cerr << "ERROR: Failed to parse input from console: "
-                << parsed.status().message() << std::endl;
+                << status.message() << std::endl;
       exit(EXIT_FAILURE);
     }
 
     search_root = std::filesystem::current_path();
   } else {
-    std::tie(proto, file_path) =
-        LoadFile(std::filesystem::current_path(), unparsed.at(1));
+    file_path =
+        LoadFile(std::filesystem::current_path(), unparsed.at(1), proto);
     search_root = file_path->parent_path();
   }
 
   Directives directives;
-  directives.Include(std::move(proto), std::move(file_path));
+  directives.Include(proto, std::move(file_path));
 
   Options options;
   options.always_reflective = absl::GetFlag(FLAGS_all_spectra_are_reflective);

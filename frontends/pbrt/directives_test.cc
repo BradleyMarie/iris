@@ -2,8 +2,10 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <memory>
 #include <string>
 
+#include "google/protobuf/arena.h"
 #include "googletest/include/gtest/gtest.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
@@ -12,6 +14,7 @@ namespace pbrt_frontend {
 namespace {
 
 using ::bazel::tools::cpp::runfiles::Runfiles;
+using ::google::protobuf::Arena;
 using ::pbrt_proto::v3::Directive;
 using ::pbrt_proto::v3::PbrtProto;
 using ::testing::ExitedWithCode;
@@ -32,15 +35,30 @@ TEST(Directive, IncludeCyclic) {
       ExitedWithCode(EXIT_FAILURE), "ERROR: Detected cyclic Include of file:");
 }
 
+TEST(Directive, IncludeCyclicByArena) {
+  std::unique_ptr<Arena> arena = std::make_unique<Arena>();
+  PbrtProto* proto = Arena::Create<PbrtProto>(arena.get());
+
+  Directives directives;
+  directives.Include(*proto,
+                     std::filesystem::path(RawRunfilePath("cornell_box.pbrt")));
+  EXPECT_EXIT(directives.Include(
+                  std::move(arena), proto,
+                  std::filesystem::path(RawRunfilePath("cornell_box.pbrt"))),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Detected cyclic Include of file:");
+}
+
 TEST(Directive, Next) {
   PbrtProto first;
   first.add_directives()->mutable_world_begin();
 
-  PbrtProto second;
-  second.add_directives()->mutable_world_end();
+  std::unique_ptr<Arena> arena = std::make_unique<Arena>();
+  PbrtProto* second = Arena::Create<PbrtProto>(arena.get());
+  second->add_directives()->mutable_world_end();
 
   Directives directives;
-  directives.Include(second, "second");
+  directives.Include(std::move(arena), second, "second");
   directives.Include(first, "first");
 
   const Directive* first_directive = directives.Next();
@@ -49,7 +67,7 @@ TEST(Directive, Next) {
 
   const Directive* second_directive = directives.Next();
   ASSERT_TRUE(second_directive);
-  EXPECT_EQ(second.directives(0).DebugString(),
+  EXPECT_EQ(second->directives(0).DebugString(),
             second_directive->DebugString());
 
   EXPECT_FALSE(directives.Next());

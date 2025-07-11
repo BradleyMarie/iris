@@ -31,6 +31,7 @@
 #include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "frontends/pbrt/textures/parse.h"
+#include "google/protobuf/arena.h"
 #include "iris/camera.h"
 #include "iris/emissive_material.h"
 #include "iris/environmental_light.h"
@@ -50,6 +51,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace {
 
+using ::google::protobuf::Arena;
 using ::iris::geometry::AllocateBVHAggregate;
 using ::iris::pbrt_frontend::spectrum_managers::ColorAlbedoMatcher;
 using ::iris::pbrt_frontend::spectrum_managers::ColorColorMatcher;
@@ -58,6 +60,7 @@ using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
 using ::iris::scenes::MakeBVHSceneBuilder;
 using ::pbrt_proto::v3::ActiveTransform;
 using ::pbrt_proto::v3::Directive;
+using ::pbrt_proto::v3::PbrtProto;
 using ::pbrt_proto::v3::Shape;
 
 struct GraphicsState {
@@ -120,8 +123,10 @@ struct State {
 
 void State::Include(const std::filesystem::path& search_root,
                     const std::string& path) {
-  auto [proto, file_path] = LoadFile(search_root, path);
-  directives_.Include(std::move(proto), std::move(file_path));
+  std::unique_ptr<Arena> arena = std::make_unique<Arena>();
+  PbrtProto* proto = Arena::Create<PbrtProto>(arena.get());
+  directives_.Include(std::move(arena), proto,
+                      LoadFile(search_root, path, *proto));
 }
 
 void State::LightSource(const pbrt_proto::v3::LightSource& light_source,

@@ -23,21 +23,25 @@ std::string RawRunfilePath(const std::string& path) {
 }
 
 TEST(LoadFile, NotAFile) {
-  EXPECT_EXIT(LoadFile(std::filesystem::current_path(), "notarealfile"),
+  PbrtProto proto;
+  EXPECT_EXIT(LoadFile(std::filesystem::current_path(), "notarealfile", proto),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Failed to open file: notarealfile");
 }
 
 TEST(LoadFile, InvalidBinpb) {
+  PbrtProto proto;
   EXPECT_EXIT(LoadFile(std::filesystem::current_path(),
-                       RawRunfilePath("invalid.pbrt.v3.binpb")),
+                       RawRunfilePath("invalid.pbrt.v3.binpb"), proto),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Failed to parse binpb input:");
 }
 
 TEST(LoadFile, Binpb) {
-  auto [proto, path] = LoadFile(std::filesystem::current_path(),
-                                RawRunfilePath("cornell_box.pbrt.v3.binpb"));
+  PbrtProto proto;
+  std::filesystem::path path =
+      LoadFile(std::filesystem::current_path(),
+               RawRunfilePath("cornell_box.pbrt.v3.binpb"), proto);
   EXPECT_EQ(path,
             std::filesystem::path(RawRunfilePath("cornell_box.pbrt.v3.binpb")));
   ASSERT_EQ(proto.directives_size(), 36);
@@ -45,15 +49,18 @@ TEST(LoadFile, Binpb) {
 }
 
 TEST(LoadFile, InvalidTxtpb) {
+  PbrtProto proto;
   EXPECT_EXIT(LoadFile(std::filesystem::current_path(),
-                       RawRunfilePath("invalid.pbrt.v3.txtpb")),
+                       RawRunfilePath("invalid.pbrt.v3.txtpb"), proto),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Failed to parse txtpb input:");
 }
 
 TEST(LoadFile, Txtpb) {
-  auto [proto, path] = LoadFile(std::filesystem::current_path(),
-                                RawRunfilePath("cornell_box.pbrt.v3.txtpb"));
+  PbrtProto proto;
+  std::filesystem::path path =
+      LoadFile(std::filesystem::current_path(),
+               RawRunfilePath("cornell_box.pbrt.v3.txtpb"), proto);
   EXPECT_EQ(path,
             std::filesystem::path(RawRunfilePath("cornell_box.pbrt.v3.txtpb")));
   ASSERT_EQ(proto.directives_size(), 36);
@@ -61,15 +68,18 @@ TEST(LoadFile, Txtpb) {
 }
 
 TEST(LoadFile, ConversionFailed) {
-  EXPECT_EXIT(
-      LoadFile(std::filesystem::current_path(), RawRunfilePath("rgba8.png")),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Failed to parse pbrt file with error:");
+  PbrtProto proto;
+  EXPECT_EXIT(LoadFile(std::filesystem::current_path(),
+                       RawRunfilePath("rgba8.png"), proto),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Failed to parse pbrt file with error:");
 }
 
 TEST(LoadFile, Pbrt) {
-  auto [proto, path] = LoadFile(std::filesystem::current_path(),
-                                RawRunfilePath("cornell_box.pbrt"));
+  PbrtProto proto;
+  std::filesystem::path path =
+      LoadFile(std::filesystem::current_path(),
+               RawRunfilePath("cornell_box.pbrt"), proto);
   EXPECT_EQ(path, std::filesystem::path(RawRunfilePath("cornell_box.pbrt")));
   ASSERT_EQ(proto.directives_size(), 36);
   EXPECT_TRUE(proto.directives(0).has_look_at());
