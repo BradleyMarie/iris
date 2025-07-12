@@ -24,6 +24,18 @@ TEST(BlackbodySpectrum, Intensity) {
               1e10);
 }
 
+TEST(ScaledBlackbodySpectrum, Null) {
+  EXPECT_FALSE(MakeScaledBlackbodySpectrum(0.0, 1.0));
+  EXPECT_FALSE(MakeScaledBlackbodySpectrum(-1.0, 1.0));
+  EXPECT_FALSE(MakeScaledBlackbodySpectrum(65000.0, 0.0));
+  EXPECT_FALSE(MakeScaledBlackbodySpectrum(65000.0, -1.0));
+}
+
+TEST(ScaledBlackbodySpectrum, Intensity) {
+  EXPECT_NEAR(MakeScaledBlackbodySpectrum(6000.0, 2.0)->Intensity(482.9619925),
+              2.0, 0.01);
+}
+
 }  // namespace
 }  // namespace spectra
 }  // namespace iris

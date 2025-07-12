@@ -10,6 +10,9 @@ namespace spectra {
 
 ReferenceCounted<Spectrum> MakeBlackbodySpectrum(visual temperature_kelvin);
 
+ReferenceCounted<Spectrum> MakeScaledBlackbodySpectrum(
+    visual temperature_kelvin, visual peak_intensity);
+
 }  // namespace spectra
 }  // namespace iris
 
