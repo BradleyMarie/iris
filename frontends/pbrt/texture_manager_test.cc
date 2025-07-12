@@ -159,11 +159,10 @@ TEST(TextureManager, AllocateReflectorTextureSpectrumParameterBlackbody) {
   TextureManager texture_manager(spectrum_manager);
 
   SpectrumTextureParameter parameter;
-  parameter.mutable_blackbody_spectrum();
+  parameter.mutable_blackbody_spectrum()->set_temperature(65000.0);
+  parameter.mutable_blackbody_spectrum()->set_scale(1.0);
 
-  EXPECT_EXIT(texture_manager.AllocateReflectorTexture(parameter),
-              testing::ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Blackbody spectrum parsing is not implemented");
+  EXPECT_TRUE(texture_manager.AllocateReflectorTexture(parameter));
 }
 
 TEST(TextureManager, AllocateReflectorTextureSpectrumParameterRgb) {

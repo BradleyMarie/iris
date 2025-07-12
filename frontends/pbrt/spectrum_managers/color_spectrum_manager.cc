@@ -19,6 +19,7 @@
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/reflectors/sampled_reflector.h"
+#include "iris/spectra/blackbody_spectrum.h"
 #include "iris/spectra/sampled_spectrum.h"
 #include "iris/spectrum.h"
 #include "libspd/readers/emissive_spd_reader.h"
@@ -36,6 +37,7 @@ using ::iris::pbrt_frontend::spectrum_managers::internal::MakeColorReflector;
 using ::iris::pbrt_frontend::spectrum_managers::internal::MakeColorSpectrum;
 using ::iris::reflectors::CreateSampledReflector;
 using ::iris::spectra::MakeSampledSpectrum;
+using ::iris::spectra::MakeScaledBlackbodySpectrum;
 using ::libspd::ReadEmissiveSpdFrom;
 using ::libspd::ReadReflectiveSpdFrom;
 using ::pbrt_proto::v3::SampledSpectrum;
@@ -120,6 +122,50 @@ Color ToSpectrumColor(std::map<visual, visual> samples, bool normalize_luma) {
   return result.ConvertTo(Color::LINEAR_SRGB);
 }
 
+Color ToReflectorColor(visual temperature_kelvin, visual_t scale) {
+  std::unique_ptr<ColorMatcher> color_matcher = MakeCieColorMatcher();
+
+  std::array<visual, 3> colors = {static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0)};
+  if (ReferenceCounted<iris::Spectrum> reflector = MakeScaledBlackbodySpectrum(
+          temperature_kelvin, static_cast<visual>(1.0));
+      reflector) {
+    colors = color_matcher->Match(*reflector);
+    colors[0] *= scale / kCieYIntegral;
+    colors[1] *= scale / kCieYIntegral;
+    colors[2] *= scale / kCieYIntegral;
+  }
+
+  Color result(colors[0], colors[1], colors[2], color_matcher->ColorSpace());
+  return result.ConvertTo(Color::LINEAR_SRGB);
+}
+
+Color ToSpectrumColor(visual temperature_kelvin, visual_t scale,
+                      bool normalize_luma) {
+  std::unique_ptr<ColorMatcher> color_matcher = MakeCieColorMatcher();
+
+  std::array<visual, 3> colors = {static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0),
+                                  static_cast<visual>(0.0)};
+  if (ReferenceCounted<iris::Spectrum> spectrum = MakeScaledBlackbodySpectrum(
+          temperature_kelvin, static_cast<visual>(1.0));
+      spectrum) {
+    colors = color_matcher->Match(*spectrum);
+    if (normalize_luma) {
+      colors[0] /= kCieYIntegral;
+      colors[1] /= kCieYIntegral;
+      colors[2] /= kCieYIntegral;
+    }
+    colors[0] *= scale;
+    colors[1] *= scale;
+    colors[2] *= scale;
+  }
+
+  Color result(colors[0], colors[1], colors[2], color_matcher->ColorSpace());
+  return result.ConvertTo(Color::LINEAR_SRGB);
+}
+
 }  // namespace
 
 std::array<visual_t, 3> ColorColorMatcher::Match(
@@ -165,9 +211,10 @@ ReferenceCounted<iris::Spectrum> ColorSpectrumManager::AllocateSpectrum(
           static_cast<visual>(spectrum.uniform_spectrum()), Color::LINEAR_SRGB);
       break;
     case Spectrum::kBlackbodySpectrum:
-      std::cerr << "ERROR: Blackbody spectrum parsing is not implemented"
-                << std::endl;
-      exit(EXIT_FAILURE);
+      result = MakeColorSpectrum(ToSpectrumColor(
+          static_cast<visual>(spectrum.blackbody_spectrum().temperature()),
+          static_cast<visual>(spectrum.blackbody_spectrum().scale()),
+          all_sampled_spectra_are_reflective_));
       break;
     case Spectrum::kRgbSpectrum:
       result = MakeColorSpectrum(
@@ -216,9 +263,9 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
           static_cast<visual>(spectrum.uniform_spectrum()), Color::LINEAR_SRGB);
       break;
     case Spectrum::kBlackbodySpectrum:
-      std::cerr << "ERROR: Blackbody spectrum parsing is not implemented"
-                << std::endl;
-      exit(EXIT_FAILURE);
+      result = MakeColorReflector(ToReflectorColor(
+          static_cast<visual>(spectrum.blackbody_spectrum().temperature()),
+          static_cast<visual>(spectrum.blackbody_spectrum().scale())));
       break;
     case Spectrum::kRgbSpectrum:
       result = MakeColorReflector(

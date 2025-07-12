@@ -19,6 +19,7 @@ cc_library(
         "//iris:spectrum",
         "//iris/color_matchers:cie_color_matcher",
         "//iris/reflectors:sampled_reflector",
+        "//iris/spectra:blackbody_spectrum",
         "//iris/spectra:sampled_spectrum",
         "@libspd//libspd/readers:emissive_spd_reader",
         "@libspd//libspd/readers:reflective_spd_reader",

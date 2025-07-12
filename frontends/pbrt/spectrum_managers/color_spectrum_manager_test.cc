@@ -99,11 +99,14 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromBlackbody) {
   ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum blackbody_spectrum;
-  blackbody_spectrum.mutable_blackbody_spectrum();
+  blackbody_spectrum.mutable_blackbody_spectrum()->set_temperature(65000.0);
+  blackbody_spectrum.mutable_blackbody_spectrum()->set_scale(2.0);
 
-  EXPECT_EXIT(spectrum_manager.AllocateSpectrum(blackbody_spectrum),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Blackbody spectrum parsing is not implemented");
+  ReferenceCounted<iris::Spectrum> spectrum =
+      spectrum_manager.AllocateSpectrum(blackbody_spectrum);
+  EXPECT_NEAR(0.144622, spectrum->Intensity(0.5), 0.01);
+  EXPECT_NEAR(0.206813, spectrum->Intensity(1.5), 0.01);
+  EXPECT_NEAR(0.447234, spectrum->Intensity(2.5), 0.01);
 }
 
 TEST(ColorSpectrumManager, AllocateSpectrumFromColor) {
@@ -251,11 +254,14 @@ TEST(ColorSpectrumManager, AllocateReflectorFromBlackbody) {
   ColorSpectrumManager spectrum_manager(path, false);
 
   Spectrum blackbody_spectrum;
-  blackbody_spectrum.mutable_blackbody_spectrum();
+  blackbody_spectrum.mutable_blackbody_spectrum()->set_temperature(65000.0);
+  blackbody_spectrum.mutable_blackbody_spectrum()->set_scale(1.0);
 
-  EXPECT_EXIT(spectrum_manager.AllocateReflector(blackbody_spectrum),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Blackbody spectrum parsing is not implemented");
+  ReferenceCounted<iris::Spectrum> spectrum =
+      spectrum_manager.AllocateSpectrum(blackbody_spectrum);
+  EXPECT_NEAR(0.07231, spectrum->Intensity(0.5), 0.01);
+  EXPECT_NEAR(0.10340, spectrum->Intensity(1.5), 0.01);
+  EXPECT_NEAR(0.22361, spectrum->Intensity(2.5), 0.01);
 }
 
 TEST(ColorSpectrumManager, AllocateReflectorFromColor) {
