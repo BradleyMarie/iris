@@ -21,9 +21,9 @@ ReferenceCounted<Light> MakePoint(const LightSource::Point& point,
   LightSource::Point with_defaults = Defaults().light_sources().point();
   with_defaults.MergeFrom(point);
 
-  ReferenceCounted<Spectrum> l =
-      spectrum_manager.AllocateSpectrum(with_defaults.l());
-  if (!l) {
+  ReferenceCounted<Spectrum> i =
+      spectrum_manager.AllocateSpectrum(with_defaults.i());
+  if (!i) {
     return ReferenceCounted<Light>();
   }
 
@@ -34,7 +34,7 @@ ReferenceCounted<Light> MakePoint(const LightSource::Point& point,
   }
 
   ReferenceCounted<Spectrum> scaled =
-      spectrum_manager.AllocateSpectrum(l, scale);
+      spectrum_manager.AllocateSpectrum(i, scale);
   if (!scaled) {
     return ReferenceCounted<Light>();
   }
