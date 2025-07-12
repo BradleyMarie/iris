@@ -97,7 +97,7 @@ TEST(PointLightTest, Power) {
 
   MockPowerMatcher power_matcher;
   EXPECT_CALL(power_matcher, Match(Ref(*spectrum))).WillOnce(Return(1.0));
-  EXPECT_EQ(1.0, light->Power(power_matcher, 2.0));
+  EXPECT_NEAR(12.566371, light->Power(power_matcher, 2.0), 0.01);
 }
 
 }  // namespace

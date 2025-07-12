@@ -1,5 +1,6 @@
 #include "iris/lights/point_light.h"
 
+#include <numbers>
 #include <optional>
 #include <utility>
 
@@ -69,7 +70,8 @@ visual_t PointLight::Power(const PowerMatcher& power_matcher,
     return static_cast<visual_t>(0.0);
   }
 
-  return power_matcher.Match(*spectrum_);
+  return static_cast<visual_t>(4.0) * std::numbers::pi_v<visual_t> *
+         power_matcher.Match(*spectrum_);
 }
 
 }  // namespace
