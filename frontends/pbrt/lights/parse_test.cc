@@ -77,10 +77,10 @@ TEST(Default, Point) {
   LightSource light_source;
   light_source.mutable_point();
 
-  EXPECT_EXIT(ParseLightSource(light_source, std::filesystem::current_path(),
-                               model_to_world, spectrum_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported LightSource type: point");
+  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
+      result = ParseLightSource(light_source, std::filesystem::current_path(),
+                                model_to_world, spectrum_manager);
+  EXPECT_TRUE(std::get<ReferenceCounted<Light>>(result));
 }
 
 TEST(Default, Projection) {

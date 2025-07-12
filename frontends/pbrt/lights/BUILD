@@ -71,6 +71,7 @@ cc_library(
     deps = [
         ":distant",
         ":infinite",
+        ":point",
         "//frontends/pbrt:spectrum_manager",
         "//iris:environmental_light",
         "//iris:light",
@@ -90,6 +91,33 @@ cc_test(
         "//iris:light",
         "//iris:matrix",
         "//iris:reference_counted",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "point",
+    srcs = ["point.cc"],
+    hdrs = ["point.h"],
+    deps = [
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:spectrum_manager",
+        "//iris:light",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris/lights:point_light",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "point_test",
+    srcs = ["point_test.cc"],
+    deps = [
+        ":point",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:matrix",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
