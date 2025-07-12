@@ -1,5 +1,7 @@
 #include "frontends/pbrt/cameras/parse.h"
 
+#include <cstdlib>
+
 #include "frontends/pbrt/matrix_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
@@ -24,7 +26,8 @@ TEST(ParseCamera, Environment) {
   Camera camera;
   camera.mutable_environment();
 
-  EXPECT_FALSE(ParseCamera(camera, Identity()));
+  EXPECT_EXIT(ParseCamera(camera, Identity()), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Camera type: environment");
 }
 
 TEST(ParseCamera, Orthographic) {
@@ -45,7 +48,8 @@ TEST(ParseCamera, Realistic) {
   Camera camera;
   camera.mutable_realistic();
 
-  EXPECT_FALSE(ParseCamera(camera, Identity()));
+  EXPECT_EXIT(ParseCamera(camera, Identity()), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Camera type: realistic");
 }
 
 }  // namespace

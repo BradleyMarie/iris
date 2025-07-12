@@ -22,6 +22,8 @@ ParseCamera(const Camera& camera,
       result;
   switch (camera.camera_type_case()) {
     case Camera::kEnvironment:
+      std::cerr << "ERROR: Unsupported Camera type: environment" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Camera::kOrthographic:
       result = cameras::MakeOrthographic(camera.orthographic(), transformation);
@@ -30,6 +32,8 @@ ParseCamera(const Camera& camera,
       result = cameras::MakePerspective(camera.perspective(), transformation);
       break;
     case Camera::kRealistic:
+      std::cerr << "ERROR: Unsupported Camera type: realistic" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Camera::CAMERA_TYPE_NOT_SET:
       break;

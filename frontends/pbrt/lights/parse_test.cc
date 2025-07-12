@@ -1,5 +1,6 @@
 #include "frontends/pbrt/lights/parse.h"
 
+#include <cstdlib>
 #include <filesystem>
 
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
@@ -50,10 +51,10 @@ TEST(Default, Goniometric) {
   LightSource light_source;
   light_source.mutable_goniometric();
 
-  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-      result = ParseLightSource(light_source, std::filesystem::current_path(),
-                                model_to_world, spectrum_manager);
-  EXPECT_FALSE(std::get<ReferenceCounted<Light>>(result));
+  EXPECT_EXIT(ParseLightSource(light_source, std::filesystem::current_path(),
+                               model_to_world, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported LightSource type: goniometric");
 }
 
 TEST(Default, Infinite) {
@@ -76,10 +77,10 @@ TEST(Default, Point) {
   LightSource light_source;
   light_source.mutable_point();
 
-  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-      result = ParseLightSource(light_source, std::filesystem::current_path(),
-                                model_to_world, spectrum_manager);
-  EXPECT_FALSE(std::get<ReferenceCounted<Light>>(result));
+  EXPECT_EXIT(ParseLightSource(light_source, std::filesystem::current_path(),
+                               model_to_world, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported LightSource type: point");
 }
 
 TEST(Default, Projection) {
@@ -89,10 +90,10 @@ TEST(Default, Projection) {
   LightSource light_source;
   light_source.mutable_projection();
 
-  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-      result = ParseLightSource(light_source, std::filesystem::current_path(),
-                                model_to_world, spectrum_manager);
-  EXPECT_FALSE(std::get<ReferenceCounted<Light>>(result));
+  EXPECT_EXIT(ParseLightSource(light_source, std::filesystem::current_path(),
+                               model_to_world, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported LightSource type: projection");
 }
 
 TEST(Default, Spot) {
@@ -102,10 +103,10 @@ TEST(Default, Spot) {
   LightSource light_source;
   light_source.mutable_spot();
 
-  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
-      result = ParseLightSource(light_source, std::filesystem::current_path(),
-                                model_to_world, spectrum_manager);
-  EXPECT_FALSE(std::get<ReferenceCounted<Light>>(result));
+  EXPECT_EXIT(ParseLightSource(light_source, std::filesystem::current_path(),
+                               model_to_world, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported LightSource type: spot");
 }
 
 }  // namespace

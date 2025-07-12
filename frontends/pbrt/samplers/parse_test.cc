@@ -1,5 +1,7 @@
 #include "frontends/pbrt/samplers/parse.h"
 
+#include <cstdlib>
+
 #include "googletest/include/gtest/gtest.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
@@ -8,6 +10,7 @@ namespace pbrt_frontend {
 namespace {
 
 using ::pbrt_proto::v3::Sampler;
+using ::testing::ExitedWithCode;
 
 TEST(ParseSampler, Empty) {
   Sampler sampler;
@@ -23,7 +26,9 @@ TEST(ParseSampler, Halton) {
 TEST(ParseSampler, MaxMinDist) {
   Sampler sampler;
   sampler.mutable_maxmindist();
-  EXPECT_FALSE(ParseSampler(sampler));
+
+  EXPECT_EXIT(ParseSampler(sampler), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Sampler type: minmaxdist");
 }
 
 TEST(ParseSampler, Random) {
@@ -47,7 +52,9 @@ TEST(ParseSampler, Stratified) {
 TEST(ParseSampler, ZeroTwoSequence) {
   Sampler sampler;
   sampler.mutable_zerotwosequence();
-  EXPECT_FALSE(ParseSampler(sampler));
+
+  EXPECT_EXIT(ParseSampler(sampler), ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Sampler type: zerotwosequence");
 }
 
 }  // namespace

@@ -49,22 +49,40 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
       {}, model_to_world);
   switch (shape.shape_type_case()) {
     case Shape::kCone:
+      std::cerr << "ERROR: Unsupported Shape type: cone" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kCurve:
+      std::cerr << "ERROR: Unsupported Shape type: curve" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kCylinder:
+      std::cerr << "ERROR: Unsupported Shape type: cylinder" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kDisk:
+      std::cerr << "ERROR: Unsupported Shape type: disk" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kHeightfield:
+      std::cerr << "ERROR: Unsupported Shape type: heightfield" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kHyperboloid:
+      std::cerr << "ERROR: Unsupported Shape type: hyperboloid" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kLoopsubdiv:
+      std::cerr << "ERROR: Unsupported Shape type: loopsubdiv" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kNurbs:
+      std::cerr << "ERROR: Unsupported Shape type: nurbs" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kParaboloid:
+      std::cerr << "ERROR: Unsupported Shape type: paraboloid" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Shape::kPlymesh:
       return shapes::MakePlyMesh(shape.plymesh(), model_to_world,

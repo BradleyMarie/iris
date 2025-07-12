@@ -32,6 +32,8 @@ MaterialResult ParseMaterial(const Material& material,
   MaterialResult result;
   switch (material.material_type_case()) {
     case Material::kDisney:
+      std::cerr << "ERROR: Unsupported Material type: disney" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Material::kFourier:
       result =
@@ -43,8 +45,13 @@ MaterialResult ParseMaterial(const Material& material,
           materials::MakeGlass(material.glass(), overrides, texture_manager);
       break;
     case Material::kHair:
+      std::cerr << "ERROR: Unsupported Material type: hair" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Material::kKdsubsurface:
+      std::cerr << "ERROR: Unsupported Material type: kdsubsurface"
+                << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Material::kMatte:
       result =
@@ -71,6 +78,8 @@ MaterialResult ParseMaterial(const Material& material,
                                         texture_manager);
       break;
     case Material::kSubsurface:
+      std::cerr << "ERROR: Unsupported Material type: subsurface" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Material::kTranslucent:
       result = materials::MakeTranslucent(material.translucent(), overrides,

@@ -1,5 +1,6 @@
 #include "frontends/pbrt/shapes/parse.h"
 
+#include <cstdlib>
 #include <filesystem>
 #include <utility>
 
@@ -47,11 +48,11 @@ TEST(ParseShape, Cone) {
   Shape shape;
   shape.mutable_cone();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: cone");
 }
 
 TEST(ParseShape, Curve) {
@@ -62,11 +63,11 @@ TEST(ParseShape, Curve) {
   Shape shape;
   shape.mutable_curve();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: curve");
 }
 
 TEST(ParseShape, Cylinder) {
@@ -77,11 +78,11 @@ TEST(ParseShape, Cylinder) {
   Shape shape;
   shape.mutable_cylinder();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: cylinder");
 }
 
 TEST(ParseShape, Disk) {
@@ -92,11 +93,11 @@ TEST(ParseShape, Disk) {
   Shape shape;
   shape.mutable_disk();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: disk");
 }
 
 TEST(ParseShape, HeightField) {
@@ -107,11 +108,11 @@ TEST(ParseShape, HeightField) {
   Shape shape;
   shape.mutable_heightfield();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: heightfield");
 }
 
 TEST(ParseShape, Hyperboloid) {
@@ -121,12 +122,11 @@ TEST(ParseShape, Hyperboloid) {
 
   Shape shape;
   shape.mutable_hyperboloid();
-
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: hyperboloid");
 }
 
 TEST(ParseShape, LoopSubdiv) {
@@ -137,11 +137,11 @@ TEST(ParseShape, LoopSubdiv) {
   Shape shape;
   shape.mutable_loopsubdiv();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: loopsubdiv");
 }
 
 TEST(ParseShape, Nurbs) {
@@ -152,11 +152,11 @@ TEST(ParseShape, Nurbs) {
   Shape shape;
   shape.mutable_nurbs();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: nurbs");
 }
 
 TEST(ParseShape, Paraboloid) {
@@ -167,11 +167,11 @@ TEST(ParseShape, Paraboloid) {
   Shape shape;
   shape.mutable_paraboloid();
 
-  auto result =
-      ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
-                 {}, std::filesystem::current_path(), material_manager,
-                 texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_EXIT(ParseShape(shape, Matrix::Identity(), true, Material(),
+                         MaterialResult(), {}, std::filesystem::current_path(),
+                         material_manager, texture_manager, spectrum_manager),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported Shape type: paraboloid");
 }
 
 TEST(ParseShape, PlyMesh) {

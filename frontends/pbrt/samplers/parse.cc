@@ -21,6 +21,8 @@ std::unique_ptr<ImageSampler> ParseSampler(const Sampler& sampler) {
       result = samplers::MakeHalton(sampler.halton());
       break;
     case Sampler::kMaxmindist:
+      std::cerr << "ERROR: Unsupported Sampler type: minmaxdist" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Sampler::kRandom:
       result = samplers::MakeRandom(sampler.random());
@@ -32,6 +34,9 @@ std::unique_ptr<ImageSampler> ParseSampler(const Sampler& sampler) {
       result = samplers::MakeStratified(sampler.stratified());
       break;
     case Sampler::kZerotwosequence:
+      std::cerr << "ERROR: Unsupported Sampler type: zerotwosequence"
+                << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case Sampler::SAMPLER_TYPE_NOT_SET:
       break;

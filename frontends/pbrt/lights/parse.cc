@@ -29,16 +29,26 @@ ParseLightSource(const LightSource& light_source,
                                    spectrum_manager);
       break;
     case LightSource::kGoniometric:
+      std::cerr << "ERROR: Unsupported LightSource type: goniometric"
+                << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case LightSource::kInfinite:
       result = lights::MakeInfinite(light_source.infinite(), search_root,
                                     model_to_world, spectrum_manager);
       break;
     case LightSource::kPoint:
+      std::cerr << "ERROR: Unsupported LightSource type: point" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case LightSource::kProjection:
+      std::cerr << "ERROR: Unsupported LightSource type: projection"
+                << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case LightSource::kSpot:
+      std::cerr << "ERROR: Unsupported LightSource type: spot" << std::endl;
+      exit(EXIT_FAILURE);
       break;
     case LightSource::LIGHT_SOURCE_TYPE_NOT_SET:
       break;

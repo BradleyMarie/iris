@@ -1,5 +1,6 @@
 #include "frontends/pbrt/materials/parse.h"
 
+#include <cstdlib>
 #include <filesystem>
 
 #include "frontends/pbrt/material_manager.h"
@@ -45,14 +46,11 @@ TEST(ParseMaterial, Disney) {
   Material material;
   material.mutable_disney();
 
-  MaterialResult result =
+  EXPECT_EXIT(
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     std::filesystem::current_path(), material_manager,
-                    texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.materials[0]);
-  EXPECT_FALSE(result.materials[1]);
-  EXPECT_FALSE(result.bumpmaps[0]);
-  EXPECT_FALSE(result.bumpmaps[1]);
+                    texture_manager, spectrum_manager),
+      ExitedWithCode(EXIT_FAILURE), "ERROR: Unsupported Material type: disney");
 }
 
 TEST(ParseMaterial, Fourier) {
@@ -97,14 +95,11 @@ TEST(ParseMaterial, Hair) {
   Material material;
   material.mutable_hair();
 
-  MaterialResult result =
+  EXPECT_EXIT(
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     std::filesystem::current_path(), material_manager,
-                    texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.materials[0]);
-  EXPECT_FALSE(result.materials[1]);
-  EXPECT_FALSE(result.bumpmaps[0]);
-  EXPECT_FALSE(result.bumpmaps[1]);
+                    texture_manager, spectrum_manager),
+      ExitedWithCode(EXIT_FAILURE), "ERROR: Unsupported Material type: hair");
 }
 
 TEST(ParseMaterial, KdSubsurface) {
@@ -115,14 +110,12 @@ TEST(ParseMaterial, KdSubsurface) {
   Material material;
   material.mutable_kdsubsurface();
 
-  MaterialResult result =
+  EXPECT_EXIT(
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     std::filesystem::current_path(), material_manager,
-                    texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.materials[0]);
-  EXPECT_FALSE(result.materials[1]);
-  EXPECT_FALSE(result.bumpmaps[0]);
-  EXPECT_FALSE(result.bumpmaps[1]);
+                    texture_manager, spectrum_manager),
+      ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Unsupported Material type: kdsubsurface");
 }
 
 TEST(ParseMaterial, Matte) {
@@ -247,14 +240,12 @@ TEST(ParseMaterial, Subsurface) {
   Material material;
   material.mutable_subsurface();
 
-  MaterialResult result =
+  EXPECT_EXIT(
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     std::filesystem::current_path(), material_manager,
-                    texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.materials[0]);
-  EXPECT_FALSE(result.materials[1]);
-  EXPECT_FALSE(result.bumpmaps[0]);
-  EXPECT_FALSE(result.bumpmaps[1]);
+                    texture_manager, spectrum_manager),
+      ExitedWithCode(EXIT_FAILURE),
+      "ERROR: Unsupported Material type: subsurface");
 }
 
 TEST(ParseMaterial, Translucent) {
