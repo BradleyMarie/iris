@@ -2,7 +2,7 @@
 module(name = "iris", version = "head", compatibility_level = 1)
 
 # Bazel Central Registry dependencies
-bazel_dep(name = "abseil-cpp", version = "20240722.0")
+bazel_dep(name = "abseil-cpp", version = "20250512.1")
 bazel_dep(name = "googletest", version = "1.17.0")
 bazel_dep(name = "plyodine", version = "1.0.4")
 bazel_dep(name = "rules_cc", version = "0.1.1")
@@ -26,5 +26,5 @@ bazel_dep(name = "pbrt_proto")
 git_override(
     module_name = "pbrt_proto",
     remote = "https://github.com/bradleymarie/pbrt_proto.git",
-    commit = "5e370d54113019367fb1392e7d5da4650c6d9a5d",
+    commit = "241d2b09a74e7ef322d60ea5cef120c55ed11f26",
 )
