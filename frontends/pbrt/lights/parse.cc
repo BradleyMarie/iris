@@ -5,6 +5,7 @@
 #include "frontends/pbrt/lights/distant.h"
 #include "frontends/pbrt/lights/infinite.h"
 #include "frontends/pbrt/lights/point.h"
+#include "frontends/pbrt/lights/spot.h"
 #include "frontends/pbrt/spectrum_manager.h"
 #include "iris/environmental_light.h"
 #include "iris/light.h"
@@ -48,8 +49,8 @@ ParseLightSource(const LightSource& light_source,
       exit(EXIT_FAILURE);
       break;
     case LightSource::kSpot:
-      std::cerr << "ERROR: Unsupported LightSource type: spot" << std::endl;
-      exit(EXIT_FAILURE);
+      result = lights::MakeSpot(light_source.spot(), model_to_world,
+                                spectrum_manager);
       break;
     case LightSource::LIGHT_SOURCE_TYPE_NOT_SET:
       break;

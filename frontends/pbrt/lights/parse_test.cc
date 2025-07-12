@@ -102,11 +102,10 @@ TEST(Default, Spot) {
 
   LightSource light_source;
   light_source.mutable_spot();
-
-  EXPECT_EXIT(ParseLightSource(light_source, std::filesystem::current_path(),
-                               model_to_world, spectrum_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported LightSource type: spot");
+  std::variant<ReferenceCounted<Light>, ReferenceCounted<EnvironmentalLight>>
+      result = ParseLightSource(light_source, std::filesystem::current_path(),
+                                model_to_world, spectrum_manager);
+  EXPECT_TRUE(std::get<ReferenceCounted<Light>>(result));
 }
 
 }  // namespace

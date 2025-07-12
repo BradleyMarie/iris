@@ -100,3 +100,44 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "spot_light",
+    srcs = ["spot_light.cc"],
+    hdrs = ["spot_light.h"],
+    deps = [
+        "//iris:float",
+        "//iris:hit_point",
+        "//iris:light",
+        "//iris:point",
+        "//iris:power_matcher",
+        "//iris:ray",
+        "//iris:reference_counted",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:visibility_tester",
+    ],
+)
+
+cc_test(
+    name = "spot_light_test",
+    srcs = ["spot_light_test.cc"],
+    deps = [
+        ":spot_light",
+        "//iris:float",
+        "//iris:hit_point",
+        "//iris:light",
+        "//iris:point",
+        "//iris:ray",
+        "//iris:reference_counted",
+        "//iris:sampler",
+        "//iris:spectrum",
+        "//iris/power_matchers:mock_power_matcher",
+        "//iris/random:mock_random",
+        "//iris/spectra:mock_spectrum",
+        "//iris/testing:spectral_allocator",
+        "//iris/testing:visibility_tester",
+        "@googletest//:gtest_main",
+    ],
+)
