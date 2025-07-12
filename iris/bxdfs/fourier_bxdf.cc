@@ -1,13 +1,13 @@
 #include "iris/bxdfs/fourier_bxdf.h"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstddef>
 #include <numbers>
 #include <optional>
 #include <span>
 #include <utility>
+#include <vector>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -20,6 +20,8 @@ namespace bxdfs {
 namespace {
 
 using ::iris::bxdfs::internal::CosTheta;
+
+thread_local std::vector<std::pair<visual_t, visual_t>> gSampleCoefficients;
 
 class FourierBxdf : public internal::DiffuseBxdf {
  public:
@@ -452,8 +454,7 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
     return std::nullopt;
   }
 
-  std::array<std::pair<visual_t, visual_t>, 256> coefficients;
-  size_t num_coefficients = 0;
+  gSampleCoefficients.clear();
   for (size_t i_index = 0; i_index < incoming_weights->num_weights; i_index++) {
     for (size_t o_index = 0; o_index < outgoing_weights->num_weights;
          o_index++) {
@@ -461,29 +462,27 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
           coefficient_extents_[incoming_weights->offsets[i_index] *
                                    elevational_samples_.size() +
                                outgoing_weights->offsets[o_index]];
-      num_coefficients = std::max(num_coefficients, length);
-      num_coefficients =
-          std::min(num_coefficients, static_cast<size_t>(coefficients.size()));
+      if (gSampleCoefficients.size() < length) {
+        gSampleCoefficients.resize(length);
+      }
 
       visual_t weight = incoming_weights->weights[i_index] *
                         outgoing_weights->weights[o_index];
 
       for (size_t coeff = 0; coeff < length; coeff++) {
-        coefficients[coeff].first +=
+        gSampleCoefficients[coeff].first +=
             weight * y_coefficients_[start_index + coeff];
-        coefficients[coeff].second = coefficients[coeff].first;
+        gSampleCoefficients[coeff].second = gSampleCoefficients[coeff].first;
       }
     }
   }
 
-  for (size_t coeff = 1; coeff < num_coefficients; coeff++) {
-    coefficients[coeff].second =
-        coefficients[coeff].first / static_cast<visual_t>(coeff);
+  for (size_t coeff = 1; coeff < gSampleCoefficients.size(); coeff++) {
+    gSampleCoefficients[coeff].second =
+        gSampleCoefficients[coeff].first / static_cast<visual_t>(coeff);
   }
 
-  geometric_t phi_outgoing = SamplePhi(
-      std::span(coefficients.begin(), coefficients.begin() + num_coefficients),
-      sampler.Next());
+  geometric_t phi_outgoing = SamplePhi(gSampleCoefficients, sampler.Next());
   geometric_t sin_squared_theta_outgoing =
       std::max(static_cast<geometric_t>(0.0),
                static_cast<geometric_t>(1.0) - *mu_outgoing * *mu_outgoing);
