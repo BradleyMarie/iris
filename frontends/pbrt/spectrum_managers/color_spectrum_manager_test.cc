@@ -321,7 +321,7 @@ TEST(ColorSpectrumManager, AllocateReflectorFromSpectrum) {
 
   ReferenceCounted<Reflector> reflector =
       spectrum_manager.AllocateReflector(sampled_spectrum);
-  EXPECT_NEAR(1.000, reflector->Reflectance(0.5), 0.1);
+  EXPECT_NEAR(1.204, reflector->Reflectance(0.5), 0.1);
   EXPECT_NEAR(0.948, reflector->Reflectance(1.5), 0.1);
   EXPECT_NEAR(0.909, reflector->Reflectance(2.5), 0.1);
 }

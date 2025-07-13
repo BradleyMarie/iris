@@ -44,9 +44,9 @@ ReferenceCounted<Reflector> MakeColorReflector(const Color& color) {
   }
 
   return MakeReferenceCounted<ColorReflector>(
-      std::clamp(rgb.r, static_cast<visual>(0.0), static_cast<visual>(1.0)),
-      std::clamp(rgb.g, static_cast<visual>(0.0), static_cast<visual>(1.0)),
-      std::clamp(rgb.b, static_cast<visual>(0.0), static_cast<visual>(1.0)));
+      std::max(static_cast<visual>(0.0), rgb.r),
+      std::max(static_cast<visual>(0.0), rgb.g),
+      std::max(static_cast<visual>(0.0), rgb.b));
 }
 
 }  // namespace internal

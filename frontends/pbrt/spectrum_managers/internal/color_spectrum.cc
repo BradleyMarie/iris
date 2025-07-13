@@ -1,5 +1,6 @@
 #include "frontends/pbrt/spectrum_managers/internal/color_spectrum.h"
 
+#include <algorithm>
 #include <array>
 
 #include "iris/color.h"
@@ -42,7 +43,10 @@ ReferenceCounted<Spectrum> MakeColorSpectrum(const Color& color) {
     return ReferenceCounted<Spectrum>();
   }
 
-  return MakeReferenceCounted<ColorSpectrum>(rgb.r, rgb.g, rgb.b);
+  return MakeReferenceCounted<ColorSpectrum>(
+      std::max(static_cast<visual>(0.0), rgb.r),
+      std::max(static_cast<visual>(0.0), rgb.g),
+      std::max(static_cast<visual>(0.0), rgb.b));
 }
 
 }  // namespace internal
