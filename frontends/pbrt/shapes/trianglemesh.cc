@@ -101,7 +101,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
   }
 
   std::vector<ReferenceCounted<Geometry>> triangles;
-  if (model_to_world.SwapsHandedness()) {
+  if (model_to_world.SwapsHandedness() && normals.empty()) {
     triangles = AllocateTriangleMesh(
         points, indices, normals, uvs, std::move(alpha_mask), back_material,
         front_material, back_emissive_material, front_emissive_material,
