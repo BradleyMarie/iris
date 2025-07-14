@@ -7,6 +7,7 @@ cc_library(
     srcs = ["constant.cc"],
     hdrs = ["constant.h"],
     deps = [
+        "//frontends/pbrt:defaults",
         "//frontends/pbrt:texture_manager",
         "//iris:reference_counted",
         "//iris:reflector",

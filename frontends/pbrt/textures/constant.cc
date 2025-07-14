@@ -1,5 +1,6 @@
 #include "frontends/pbrt/textures/constant.h"
 
+#include "frontends/pbrt/defaults.h"
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/reference_counted.h"
@@ -26,7 +27,11 @@ ReferenceCounted<ValueTexture2D<visual>> MakeConstant(
 ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeConstant(
     const SpectrumTexture::Constant& constant,
     TextureManager& texture_manager) {
-  return texture_manager.AllocateReflectorTexture(constant.value());
+  SpectrumTexture::Constant with_defaults =
+      Defaults().spectrum_textures().constant();
+  with_defaults.MergeFrom(constant);
+
+  return texture_manager.AllocateReflectorTexture(with_defaults.value());
 }
 
 }  // namespace textures
