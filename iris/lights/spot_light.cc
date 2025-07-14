@@ -65,8 +65,9 @@ std::optional<Light::SampleResult> SpotLight::Sample(
     return std::nullopt;
   }
 
-  geometric_t distance;
-  Ray trace_ray = hit_point.CreateRayTo(location_, &distance);
+  geometric_t distance_squared, distance;
+  Ray trace_ray =
+      hit_point.CreateRayTo(location_, &distance_squared, &distance);
   if (!tester.Visible(trace_ray, distance)) {
     return std::nullopt;
   }
@@ -78,12 +79,13 @@ std::optional<Light::SampleResult> SpotLight::Sample(
     scalar = (delta * delta) * (delta * delta);
   }
 
-  const Spectrum* result = allocator.Scale(spectrum_.Get(), scalar);
-  if (!result) {
+  const Spectrum* attenuated =
+      allocator.Scale(spectrum_.Get(), scalar / distance_squared);
+  if (!attenuated) {
     return std::nullopt;
   }
 
-  return Light::SampleResult{*result, trace_ray.direction, std::nullopt};
+  return Light::SampleResult{*attenuated, trace_ray.direction, std::nullopt};
 }
 
 const Spectrum* SpotLight::Emission(const Ray& to_light,

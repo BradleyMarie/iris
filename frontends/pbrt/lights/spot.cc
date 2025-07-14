@@ -45,7 +45,7 @@ ReferenceCounted<Light> MakeSpot(const LightSource::Spot& spot,
                  with_defaults.to().z());
   Point world_from = model_to_world.Multiply(model_from);
   Point world_to = model_to_world.Multiply(model_to);
-  Vector world_direction = world_from - world_to;
+  Vector world_direction = world_to - world_from;
   return MakeSpotLight(
       model_to_world.Multiply(model_from), world_direction,
       with_defaults.coneangle(),

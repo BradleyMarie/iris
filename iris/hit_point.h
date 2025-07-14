@@ -21,7 +21,8 @@ class HitPoint final {
   const Point& ApproximateLocation() const { return hit_point_; }
 
   Ray CreateRay(const Vector& direction) const;
-  Ray CreateRayTo(const Point& point, geometric_t* distance = nullptr) const;
+  Ray CreateRayTo(const Point& point, geometric_t* distance_squared = nullptr,
+                  geometric_t* distance = nullptr) const;
 
  private:
   Point hit_point_;

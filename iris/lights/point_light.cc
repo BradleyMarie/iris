@@ -48,13 +48,20 @@ std::optional<Light::SampleResult> PointLight::Sample(
     return std::nullopt;
   }
 
-  geometric_t distance;
-  Ray trace_ray = hit_point.CreateRayTo(location_, &distance);
+  geometric_t distance_squared, distance;
+  Ray trace_ray =
+      hit_point.CreateRayTo(location_, &distance_squared, &distance);
   if (!tester.Visible(trace_ray, distance)) {
     return std::nullopt;
   }
 
-  return Light::SampleResult{*spectrum_, trace_ray.direction, std::nullopt};
+  const Spectrum* attenuated = allocator.Scale(
+      spectrum_.Get(), static_cast<geometric_t>(1.0) / distance_squared);
+  if (!attenuated) {
+    return std::nullopt;
+  }
+
+  return Light::SampleResult{*attenuated, trace_ray.direction, std::nullopt};
 }
 
 const Spectrum* PointLight::Emission(const Ray& to_light,

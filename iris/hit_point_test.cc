@@ -103,7 +103,7 @@ TEST(HitPoint, CreateRayTo) {
   EXPECT_EQ(rx.direction, Vector(1.0, 0.0, 0.0));
 }
 
-TEST(HitPoint, CreateRayToWithDistance) {
+TEST(HitPoint, CreateRayToWithDistances) {
   Point point(0.0, 0.0, 0.0);
   PositionError error(1.0, 1.0, 1.0);
   Vector surface_normal(1.0, 0.0, 0.0);
@@ -111,8 +111,8 @@ TEST(HitPoint, CreateRayToWithDistance) {
 
   Point to_point(2.0, 0.0, 0.0);
 
-  geometric_t distance;
-  Ray rx = hit_point.CreateRayTo(to_point, &distance);
+  geometric_t distance_squared, distance;
+  Ray rx = hit_point.CreateRayTo(to_point, &distance_squared, &distance);
   EXPECT_EQ(rx.origin.x, std::nextafter(static_cast<geometric>(1.0),
                                         static_cast<geometric>(2.0)));
   EXPECT_EQ(rx.origin.y, std::nextafter(static_cast<geometric>(0.0),
@@ -120,6 +120,7 @@ TEST(HitPoint, CreateRayToWithDistance) {
   EXPECT_EQ(rx.origin.z, std::nextafter(static_cast<geometric>(0.0),
                                         static_cast<geometric>(1.0)));
   EXPECT_EQ(rx.direction, Vector(1.0, 0.0, 0.0));
+  EXPECT_EQ(distance_squared, 4.0);
   EXPECT_EQ(distance, 2.0);
 }
 
