@@ -17,6 +17,7 @@
 #include "iris/random.h"
 #include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
+#include "iris/reflectors/uniform_reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
 #include "iris/visibility_tester.h"
@@ -29,6 +30,10 @@ using ::iris::integrators::internal::PathBuilder;
 using ::iris::integrators::internal::RussianRoulette;
 using ::iris::integrators::internal::SampleDirectLighting;
 using ::iris::integrators::internal::SampleIndirectLighting;
+using ::iris::reflectors::CreateUniformReflector;
+
+static ReferenceCounted<Reflector> kPerfectReflector =
+    CreateUniformReflector(static_cast<visual>(1.0));
 
 class PathIntegrator final : public Integrator {
  public:
@@ -73,7 +78,8 @@ const Spectrum* PathIntegrator::Integrate(
     SpectralAllocator& spectral_allocator, Random& rng) {
   PathBuilder path_builder(reflectors_, spectra_, attenuations_);
 
-  visual_t path_throughput = 1.0;
+  const Reflector* path_reflectance = kPerfectReflector.Get();
+  visual_t path_attenuation = static_cast<visual_t>(1.0);
   bool add_light_emissions = true;
   for (uint8_t bounces = 0;; bounces++) {
     RayTracer::TraceResult trace_result = ray_tracer.Trace(ray);
@@ -114,22 +120,20 @@ const Spectrum* PathIntegrator::Integrate(
       add_light_emissions = true;
     }
 
+    path_reflectance =
+        spectral_allocator.Scale(path_reflectance, &bsdf_sample->reflector);
+    path_attenuation /= bsdf_sample->pdf;
     attenuation /= bsdf_sample->pdf;
 
-    path_throughput *=
-        albedo_matcher.Match(bsdf_sample->reflector) * attenuation;
-
     if (min_bounces_ <= bounces) {
-      std::optional<visual_t> roulette_pdf =
-          russian_roulette_.Evaluate(rng, path_throughput);
+      std::optional<visual_t> roulette_pdf = russian_roulette_.Evaluate(
+          rng, path_attenuation * albedo_matcher.Match(*path_reflectance));
       if (!roulette_pdf) {
         break;
       }
 
-      visual_t inverse_roulette_pdf =
-          static_cast<visual_t>(1.0) / *roulette_pdf;
-      attenuation *= inverse_roulette_pdf;
-      path_throughput *= inverse_roulette_pdf;
+      path_attenuation /= *roulette_pdf;
+      attenuation /= *roulette_pdf;
     }
 
     path_builder.Bounce(&bsdf_sample->reflector, attenuation);

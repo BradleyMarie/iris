@@ -116,9 +116,10 @@ std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
   }
 
   // It may be better to scale by relative_refractive_index in the integrator
-  transmittance = allocator.UnboundedScale(
-      transmittance, static_cast<visual_t>(relative_refractive_index *
-                                           relative_refractive_index));
+  // If this is done, it might be better to ignore this scaling in any Russian
+  // roulette computations as is done in PBRT, see
+  // https://github.com/mmp/pbrt-v3/commit/615b134
+  pdf /= relative_refractive_index * relative_refractive_index;
 
   return Bxdf::SpecularSample{
       Bxdf::Hemisphere::BTDF, *outgoing, transmittance,

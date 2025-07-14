@@ -47,8 +47,8 @@ using ::iris::testing::ScopedListLightSampler;
 using ::iris::testing::ScopedNoHitsRayTracer;
 using ::testing::_;
 using ::testing::DoAll;
+using ::testing::InSequence;
 using ::testing::NotNull;
-using ::testing::Ref;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
@@ -378,15 +378,15 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
   MockReflector reflector0;
   EXPECT_CALL(reflector0, Reflectance(_)).WillRepeatedly(Return(0.4));
 
-  MockAlbedoMatcher albedo_matcher;
-  EXPECT_CALL(albedo_matcher, Match(Ref(reflector0)))
-      .WillRepeatedly(Return(0.4));
-
   MockReflector reflector1;
   EXPECT_CALL(reflector1, Reflectance(_)).WillRepeatedly(Return(0.01));
 
-  EXPECT_CALL(albedo_matcher, Match(Ref(reflector1)))
-      .WillRepeatedly(Return(0.01));
+  MockAlbedoMatcher albedo_matcher;
+  {
+    InSequence sequence;
+    EXPECT_CALL(albedo_matcher, Match(_)).WillOnce(Return(0.4));
+    EXPECT_CALL(albedo_matcher, Match(_)).WillOnce(Return(0.004));
+  }
 
   MockBxdf specular0, specular1;
   EXPECT_CALL(specular0, IsDiffuse(NotNull()))
@@ -418,7 +418,7 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
                               {1.0, &spectrum, nullptr, Vector(0.0, 0.0, -1.0),
                                Vector(0.0, 0.0, -1.0)}};
 
-  std::unique_ptr<Integrator> integrator = MakePathIntegrator(0.2, 1.0, 0u, 3u);
+  std::unique_ptr<Integrator> integrator = MakePathIntegrator(1.0, 1.0, 0u, 3u);
   ScopedHitsRayTracer(nullptr, path, [&](RayTracer& ray_tracer) {
     const Spectrum* result =
         integrator->Integrate(kTraceRay, ray_tracer, GetEmptyLightSampler(),

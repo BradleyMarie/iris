@@ -39,6 +39,7 @@ cc_library(
         "//iris/integrators/internal:russian_roulette",
         "//iris/integrators/internal:sample_direct_lighting",
         "//iris/integrators/internal:sample_indirect_lighting",
+        "//iris/reflectors:uniform_reflector",
     ],
 )
 
