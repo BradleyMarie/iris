@@ -40,6 +40,7 @@ TEST(MirrorBrdfTest, Sample) {
   EXPECT_EQ(result.reflectance, &reflector);
   EXPECT_FALSE(result.differentials);
   EXPECT_EQ(result.pdf, 1.0);
+  EXPECT_EQ(result.etendue_conservation_scalar, 1.0);
 }
 
 TEST(MirrorBrdfTest, SampleWithDerivatives) {
@@ -59,6 +60,7 @@ TEST(MirrorBrdfTest, SampleWithDerivatives) {
   EXPECT_EQ(Vector(-1.0, -0.5, 1.0), result.differentials->dx);
   EXPECT_EQ(Vector(-0.5, -1.0, 1.0), result.differentials->dy);
   EXPECT_EQ(result.pdf, 1.0);
+  EXPECT_EQ(result.etendue_conservation_scalar, 1.0);
 }
 
 }  // namespace

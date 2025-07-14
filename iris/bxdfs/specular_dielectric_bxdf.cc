@@ -17,6 +17,10 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
+using ::iris::bxdfs::internal::CosTheta;
+using ::iris::bxdfs::internal::FesnelDielectricReflectance;
+using ::iris::bxdfs::internal::Refract;
+
 class SpecularDielectricBxdf final : public internal::SpecularBxdf {
  public:
   SpecularDielectricBxdf(const Reflector* reflectance,
@@ -68,16 +72,16 @@ std::optional<Bxdf::Differentials> GetRefractedDifferentials(
     return std::nullopt;
   }
 
-  std::optional<Vector> outgoing_dx = internal::Refract(
-      differentials->dx, kShadingNormal.AlignWith(differentials->dx),
-      relative_refractive_index);
+  std::optional<Vector> outgoing_dx =
+      Refract(differentials->dx, kShadingNormal.AlignWith(differentials->dx),
+              relative_refractive_index);
   if (!outgoing_dx) {
     return std::nullopt;
   }
 
-  std::optional<Vector> outgoing_dy = internal::Refract(
-      differentials->dy, kShadingNormal.AlignWith(differentials->dy),
-      relative_refractive_index);
+  std::optional<Vector> outgoing_dy =
+      Refract(differentials->dy, kShadingNormal.AlignWith(differentials->dy),
+              relative_refractive_index);
   if (!outgoing_dy) {
     return std::nullopt;
   }
@@ -94,8 +98,12 @@ std::optional<Bxdf::SpecularSample> SampleSpecularReflection(
   }
 
   return Bxdf::SpecularSample{
-      Bxdf::Hemisphere::BRDF, GetReflectedVector(incoming), reflectance,
-      GetReflectedDifferentials(incoming, differentials), pdf};
+      .hemisphere = Bxdf::Hemisphere::BRDF,
+      .direction = GetReflectedVector(incoming),
+      .reflectance = reflectance,
+      .differentials = GetReflectedDifferentials(incoming, differentials),
+      .pdf = pdf,
+      .etendue_conservation_scalar = static_cast<visual_t>(1.0)};
 }
 
 std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
@@ -108,24 +116,24 @@ std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
   }
 
   geometric_t relative_refractive_index = eta_incident / eta_transmitted;
+  geometric_t reversed_relative_refractive_index =
+      eta_transmitted / eta_incident;
 
-  std::optional<Vector> outgoing = internal::Refract(
+  std::optional<Vector> outgoing = Refract(
       incoming, kShadingNormal.AlignWith(incoming), relative_refractive_index);
   if (!outgoing) {
     return std::nullopt;
   }
 
-  // It may be better to scale by relative_refractive_index in the integrator
-  // If this is done, it might be better to ignore this scaling in any Russian
-  // roulette computations as is done in PBRT, see
-  // https://github.com/mmp/pbrt-v3/commit/615b134
-  pdf /= relative_refractive_index * relative_refractive_index;
-
   return Bxdf::SpecularSample{
-      Bxdf::Hemisphere::BTDF, *outgoing, transmittance,
-      GetRefractedDifferentials(incoming, differentials,
-                                relative_refractive_index),
-      pdf};
+      .hemisphere = Bxdf::Hemisphere::BTDF,
+      .direction = *outgoing,
+      .reflectance = transmittance,
+      .differentials = GetRefractedDifferentials(incoming, differentials,
+                                                 relative_refractive_index),
+      .pdf = pdf,
+      .etendue_conservation_scalar = reversed_relative_refractive_index *
+                                     reversed_relative_refractive_index};
 }
 
 std::optional<Bxdf::SpecularSample> SpecularDielectricBxdf::SampleSpecular(
@@ -147,8 +155,8 @@ std::optional<Bxdf::SpecularSample> SpecularDielectricBxdf::SampleSpecular(
     std::swap(eta_incident, eta_transmitted);
   }
 
-  visual_t fresnel_reflectance = internal::FesnelDielectricReflectance(
-      internal::CosTheta(incoming), eta_incident, eta_transmitted);
+  visual_t fresnel_reflectance = FesnelDielectricReflectance(
+      CosTheta(incoming), eta_incident, eta_transmitted);
   visual_t fresnel_transmittance =
       static_cast<visual_t>(1.0) - fresnel_reflectance;
 

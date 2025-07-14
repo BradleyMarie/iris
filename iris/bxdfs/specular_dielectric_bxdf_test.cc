@@ -56,7 +56,8 @@ TEST(SpecularBxdfTest, SampleTransmittanceNoReflectance) {
   EXPECT_NEAR(-0.8388, result.direction.z, 0.001);
   EXPECT_TRUE(result.reflectance);
   EXPECT_FALSE(result.differentials);
-  EXPECT_NEAR(result.pdf, 2.2499, 0.001);
+  EXPECT_EQ(result.pdf, 1.0);
+  EXPECT_NEAR(result.etendue_conservation_scalar, 2.25, 0.001);
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceFront) {
@@ -78,7 +79,8 @@ TEST(SpecularBxdfTest, SampleTransmittanceFront) {
   EXPECT_NEAR(-0.8388, result.direction.z, 0.001);
   EXPECT_TRUE(result.reflectance);
   EXPECT_FALSE(result.differentials);
-  EXPECT_NEAR(result.pdf, 2.0949, 0.001);
+  EXPECT_NEAR(result.pdf, 0.9310, 0.001);
+  EXPECT_NEAR(result.etendue_conservation_scalar, 2.25, 0.001);
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceBack) {
@@ -100,7 +102,8 @@ TEST(SpecularBxdfTest, SampleTransmittanceBack) {
   EXPECT_NEAR(0.8388, result.direction.z, 0.001);
   EXPECT_TRUE(result.reflectance);
   EXPECT_FALSE(result.differentials);
-  EXPECT_NEAR(result.pdf, 2.0949, 0.001);
+  EXPECT_NEAR(result.pdf, 0.9310, 0.001);
+  EXPECT_NEAR(result.etendue_conservation_scalar, 2.25, 0.001);
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
@@ -129,7 +132,8 @@ TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
   EXPECT_NEAR(-0.2222, result.differentials->dy.x, 0.001);
   EXPECT_NEAR(-0.4444, result.differentials->dy.y, 0.001);
   EXPECT_NEAR(-0.8678, result.differentials->dy.z, 0.001);
-  EXPECT_NEAR(result.pdf, 2.0949, 0.001);
+  EXPECT_NEAR(result.pdf, 0.9310, 0.001);
+  EXPECT_NEAR(result.etendue_conservation_scalar, 2.25, 0.001);
 }
 
 TEST(SpecularBxdfTest, SampleReflectanceNoTransmittance) {
@@ -150,6 +154,7 @@ TEST(SpecularBxdfTest, SampleReflectanceNoTransmittance) {
   EXPECT_NEAR(0.5773, result.direction.z, 0.001);
   EXPECT_FALSE(result.differentials);
   EXPECT_EQ(result.pdf, 1.0);
+  EXPECT_EQ(result.etendue_conservation_scalar, 1.0);
 }
 
 TEST(SpecularBxdfTest, SampleReflectance) {
@@ -171,6 +176,7 @@ TEST(SpecularBxdfTest, SampleReflectance) {
   EXPECT_NEAR(0.5773, result.direction.z, 0.001);
   EXPECT_FALSE(result.differentials);
   EXPECT_NEAR(result.pdf, 0.0689, 0.001);
+  EXPECT_EQ(result.etendue_conservation_scalar, 1.0);
 }
 
 TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
@@ -199,6 +205,7 @@ TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
   EXPECT_NEAR(-0.6666, result.differentials->dy.y, 0.001);
   EXPECT_NEAR(0.6666, result.differentials->dy.z, 0.001);
   EXPECT_NEAR(result.pdf, 0.0689, 0.001);
+  EXPECT_EQ(result.etendue_conservation_scalar, 1.0);
 }
 
 }  // namespace

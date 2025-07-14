@@ -28,6 +28,7 @@ using ::testing::Eq;
 using ::testing::IsNull;
 using ::testing::Not;
 using ::testing::NotNull;
+using ::testing::Optional;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
@@ -198,7 +199,7 @@ TEST(BsdfTest, SampleAdjustByDiffusePdf) {
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(0.25, result->pdf);
-  EXPECT_TRUE(result->diffuse);
+  EXPECT_FALSE(result->etendue_conservation_factor);
 }
 
 TEST(BsdfTest, SampleBtdf) {
@@ -227,7 +228,7 @@ TEST(BsdfTest, SampleBtdf) {
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(0.5, result->pdf);
-  EXPECT_TRUE(result->diffuse);
+  EXPECT_FALSE(result->etendue_conservation_factor);
 }
 
 TEST(BsdfTest, SampleBrdf) {
@@ -255,7 +256,7 @@ TEST(BsdfTest, SampleBrdf) {
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
   EXPECT_EQ(0.5, result->pdf);
-  EXPECT_TRUE(result->diffuse);
+  EXPECT_FALSE(result->etendue_conservation_factor);
 }
 
 TEST(BsdfTest, SampleDiffuse) {
@@ -284,7 +285,7 @@ TEST(BsdfTest, SampleDiffuse) {
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
   EXPECT_EQ(0.5, result->pdf);
-  EXPECT_TRUE(result->diffuse);
+  EXPECT_FALSE(result->etendue_conservation_factor);
 }
 
 TEST(BsdfTest, SamplePartiallyDiffuse) {
@@ -313,7 +314,7 @@ TEST(BsdfTest, SamplePartiallyDiffuse) {
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
   EXPECT_EQ(0.5, result->pdf);
-  EXPECT_TRUE(result->diffuse);
+  EXPECT_FALSE(result->etendue_conservation_factor);
 }
 
 TEST(BsdfTest, SampleWithInputDerivatives) {
@@ -344,7 +345,7 @@ TEST(BsdfTest, SampleWithInputDerivatives) {
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(1.0, result->pdf);
-  EXPECT_TRUE(result->diffuse);
+  EXPECT_FALSE(result->etendue_conservation_factor);
 }
 
 TEST(BsdfTest, SampleSpecularInvalidPdf) {
@@ -428,7 +429,7 @@ TEST(BsdfTest, SampleSpecularWithNoDifferentials) {
   EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
-                                      &reflector, std::nullopt, 1.0}));
+                                      &reflector, std::nullopt, 1.0, 2.0}));
 
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -441,7 +442,7 @@ TEST(BsdfTest, SampleSpecularWithNoDifferentials) {
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(1.0, result->pdf);
-  EXPECT_FALSE(result->diffuse);
+  EXPECT_THAT(result->etendue_conservation_factor, Optional(Eq(2.0)));
 }
 
 TEST(BsdfTest, SampleSpecularWithOnlyIncomingDifferentials) {
@@ -454,7 +455,7 @@ TEST(BsdfTest, SampleSpecularWithOnlyIncomingDifferentials) {
               Sample(kIncoming, Not(Eq(std::nullopt)), kSurfaceNormal, _, _))
       .WillOnce(
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
-                                      &reflector, std::nullopt, 1.0}));
+                                      &reflector, std::nullopt, 1.0, 2.0}));
 
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -468,7 +469,7 @@ TEST(BsdfTest, SampleSpecularWithOnlyIncomingDifferentials) {
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_FALSE(result->differentials);
   EXPECT_EQ(1.0, result->pdf);
-  EXPECT_FALSE(result->diffuse);
+  EXPECT_THAT(result->etendue_conservation_factor, Optional(Eq(2.0)));
 }
 
 TEST(BsdfTest, SampleSpecularWithDifferentials) {
@@ -483,7 +484,8 @@ TEST(BsdfTest, SampleSpecularWithDifferentials) {
                                             kBtdfOutgoing,
                                             &reflector,
                                             {{kBtdfOutgoing, kBtdfOutgoing}},
-                                            1.0}));
+                                            1.0,
+                                            2.0}));
 
   MockRandom rng;
   EXPECT_CALL(rng, DiscardGeometric(2));
@@ -499,7 +501,7 @@ TEST(BsdfTest, SampleSpecularWithDifferentials) {
   EXPECT_EQ(kTrueBtdfOutgoing, result->differentials->dx);
   EXPECT_EQ(kTrueBtdfOutgoing, result->differentials->dy);
   EXPECT_EQ(1.0, result->pdf);
-  EXPECT_FALSE(result->diffuse);
+  EXPECT_THAT(result->etendue_conservation_factor, Optional(Eq(2.0)));
 }
 
 TEST(BsdfTest, ReflectanceNotDiffuse) {
@@ -661,7 +663,7 @@ TEST(BsdfTest, Normalize) {
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
   EXPECT_EQ(0.5, result->pdf);
-  EXPECT_TRUE(result->diffuse);
+  EXPECT_FALSE(result->etendue_conservation_factor);
 }
 
 }  // namespace

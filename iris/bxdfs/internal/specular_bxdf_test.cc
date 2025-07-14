@@ -48,13 +48,13 @@ TEST(SpecularBxdfTest, Sample) {
                                    Vector(0.0, 0.0, 1.0), Ref(sampler), _))
       .WillOnce(Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BRDF,
                                             Vector(1.0, 2.0, 3.0), &reflector,
-                                            std::nullopt, 1.0}));
+                                            std::nullopt, 1.0, 2.0}));
   auto sample =
       bxdf.Sample(Vector(0.0, 1.0, 0.0), std::nullopt, Vector(0.0, 0.0, 1.0),
                   sampler, GetSpectralAllocator());
   EXPECT_THAT(std::get<Bxdf::SpecularSample>(sample),
               FieldsAre(Bxdf::Hemisphere::BRDF, Vector(1.0, 2.0, 3.0),
-                        Eq(&reflector), Eq(std::nullopt), Eq(1.0)));
+                        Eq(&reflector), Eq(std::nullopt), Eq(1.0), Eq(2.0)));
 }
 
 TEST(SpecularBxdfTest, SampleFails) {

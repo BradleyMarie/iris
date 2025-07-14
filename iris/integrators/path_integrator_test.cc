@@ -101,7 +101,7 @@ TEST(PathIntegratorTest, BounceLimit) {
   EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
-                               &reflector, std::nullopt, 1.0}));
+                               &reflector, std::nullopt, 1.0, 1.0}));
 
   MockSpectrum spectrum;
   EXPECT_CALL(spectrum, Intensity(_))
@@ -212,11 +212,11 @@ TEST(PathIntegratorTest, TwoSpecularBouncesHitsEmissive) {
   EXPECT_CALL(specular0, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
-                               &reflector, std::nullopt, 1.0}));
+                               &reflector, std::nullopt, 1.0, 1.0}));
   EXPECT_CALL(specular1, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
-                               &reflector, std::nullopt, 1.0}));
+                               &reflector, std::nullopt, 1.0, 1.0}));
 
   MockSpectrum spectrum;
   EXPECT_CALL(spectrum, Intensity(_))
@@ -263,7 +263,7 @@ TEST(PathIntegratorTest, DiffuseBounceToSpecularBounceToEmissive) {
   EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
-                               &reflector, std::nullopt, 1.0}));
+                               &reflector, std::nullopt, 1.0, 1.0}));
   EXPECT_CALL(diffuse, PdfDiffuse(_, _, _, _))
       .WillRepeatedly(Return(static_cast<visual_t>(0.5)));
   EXPECT_CALL(diffuse, ReflectanceDiffuse(_, _, _, _))
@@ -348,7 +348,7 @@ TEST(PathIntegratorTest, OneSpecularBounceRoulettePasses) {
   EXPECT_CALL(specular, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
-                               &reflector, std::nullopt, 1.0}));
+                               &reflector, std::nullopt, 1.0, 1.0}));
 
   MockSpectrum spectrum;
   EXPECT_CALL(spectrum, Intensity(_))
@@ -396,11 +396,11 @@ TEST(PathIntegratorTest, TwoSpecularBounceRoulettePasses) {
   EXPECT_CALL(specular0, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
-                               &reflector0, std::nullopt, 1.0}));
+                               &reflector0, std::nullopt, 1.0, 1.0}));
   EXPECT_CALL(specular1, Sample(_, _, _, _, _))
       .WillRepeatedly(Return(
           Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, Vector(0.0, 0.0, -1.0),
-                               &reflector1, std::nullopt, 1.0}));
+                               &reflector1, std::nullopt, 1.0, 1.0}));
 
   MockSpectrum spectrum;
   EXPECT_CALL(spectrum, Intensity(_))

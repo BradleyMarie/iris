@@ -29,7 +29,9 @@ class Bsdf final {
     const Vector direction;
     const std::optional<Differentials> differentials;
     visual_t pdf;
-    bool diffuse;
+
+    // Never set on diffuse paths and always set on specular paths.
+    std::optional<visual_t> etendue_conservation_factor;
   };
 
   std::optional<SampleResult> Sample(

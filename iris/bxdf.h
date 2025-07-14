@@ -36,6 +36,7 @@ class Bxdf {
     const Reflector* reflectance;
     const std::optional<Differentials> differentials;
     visual_t pdf;
+    visual_t etendue_conservation_scalar;
   };
 
   virtual std::variant<std::monostate, DiffuseSample, SpecularSample> Sample(

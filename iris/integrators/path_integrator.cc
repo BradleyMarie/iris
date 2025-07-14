@@ -111,12 +111,12 @@ const Spectrum* PathIntegrator::Integrate(
     }
 
     visual_t attenuation;
-    if (bsdf_sample->diffuse) {
+    if (!bsdf_sample->etendue_conservation_factor) {
       attenuation = ClampedAbsDotProduct(
           trace_result.surface_intersection->shading_normal,
           bsdf_sample->direction);
     } else {
-      attenuation = static_cast<visual_t>(1.0);
+      attenuation = *bsdf_sample->etendue_conservation_factor;
       add_light_emissions = true;
     }
 

@@ -47,8 +47,12 @@ std::optional<Bxdf::SpecularSample> MirrorBrdf::SampleSpecular(
     const Vector& surface_normal, Sampler& sampler,
     SpectralAllocator& allocator) const {
   return Bxdf::SpecularSample{
-      Hemisphere::BRDF, ReflectVector(incoming), &reflectance_,
-      ReflectDifferentials(differentials), static_cast<visual_t>(1.0)};
+      .hemisphere = Hemisphere::BRDF,
+      .direction = ReflectVector(incoming),
+      .reflectance = &reflectance_,
+      .differentials = ReflectDifferentials(differentials),
+      .pdf = static_cast<visual_t>(1.0),
+      .etendue_conservation_scalar = static_cast<visual_t>(1.0)};
 }
 
 }  // namespace

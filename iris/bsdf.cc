@@ -175,7 +175,7 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
     return Bsdf::SampleResult{
         *sample->second->reflectance, world_outgoing,
         ToWorld(differentials, sample->second->differentials),
-        sample->second->pdf, false};
+        sample->second->pdf, sample->second->etendue_conservation_scalar};
   }
 
   visual_t pdf = bxdf_.PdfDiffuse(local_incoming, sample->first,
@@ -195,7 +195,7 @@ std::optional<Bsdf::SampleResult> Bsdf::Sample(
   }
 
   return Bsdf::SampleResult{*reflector, world_outgoing, std::nullopt, pdf,
-                            true};
+                            std::nullopt};
 }
 
 std::optional<Bsdf::ReflectanceResult> Bsdf::Reflectance(
