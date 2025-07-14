@@ -180,11 +180,9 @@ Color::Space ColorColorMatcher::ColorSpace() const {
 }
 
 visual_t ColorAlbedoMatcher::Match(const Reflector& reflector) const {
-  Color color(reflector.Reflectance(static_cast<visual_t>(0.5)),
-              reflector.Reflectance(static_cast<visual_t>(1.5)),
-              reflector.Reflectance(static_cast<visual_t>(2.5)),
-              Color::LINEAR_SRGB);
-  return color.Luma();
+  return std::max(reflector.Reflectance(static_cast<visual_t>(0.5)),
+                  std::max(reflector.Reflectance(static_cast<visual_t>(1.5)),
+                           reflector.Reflectance(static_cast<visual_t>(2.5))));
 }
 
 visual_t ColorPowerMatcher::Match(const iris::Spectrum& spectrum) const {

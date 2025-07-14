@@ -46,14 +46,14 @@ TEST(ColorAlbedoMatcher, Match) {
   ColorAlbedoMatcher albedo_matcher;
   ColorSpectrumManager spectrum_manager(path, false);
 
-  Spectrum xyz_spectrum;
-  xyz_spectrum.mutable_xyz_spectrum()->set_x(0.6);
-  xyz_spectrum.mutable_xyz_spectrum()->set_y(0.5);
-  xyz_spectrum.mutable_xyz_spectrum()->set_z(0.4);
+  Spectrum rgb_spectrum;
+  rgb_spectrum.mutable_rgb_spectrum()->set_r(0.6);
+  rgb_spectrum.mutable_rgb_spectrum()->set_g(0.5);
+  rgb_spectrum.mutable_rgb_spectrum()->set_b(0.4);
 
   ReferenceCounted<Reflector> reflector =
-      spectrum_manager.AllocateReflector(xyz_spectrum);
-  EXPECT_NEAR(0.5, albedo_matcher.Match(*reflector), 0.001);
+      spectrum_manager.AllocateReflector(rgb_spectrum);
+  EXPECT_NEAR(0.6, albedo_matcher.Match(*reflector), 0.001);
 }
 
 TEST(ColorPowerMatcher, Match) {
