@@ -115,6 +115,7 @@ const Spectrum* PathIntegrator::Integrate(
       attenuation = ClampedAbsDotProduct(
           trace_result.surface_intersection->shading_normal,
           bsdf_sample->direction);
+      path_attenuation *= attenuation;
     } else {
       attenuation = *bsdf_sample->etendue_conservation_factor;
       add_light_emissions = true;
