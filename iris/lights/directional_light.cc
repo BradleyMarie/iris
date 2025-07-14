@@ -23,7 +23,7 @@ class DirectionalLight final : public Light {
  public:
   DirectionalLight(Vector to_light,
                    ReferenceCounted<Spectrum> spectrum) noexcept
-      : spectrum_(std::move(spectrum)), to_light_(to_light) {}
+      : spectrum_(std::move(spectrum)), to_light_(Normalize(to_light)) {}
 
   std::optional<SampleResult> Sample(
       const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
