@@ -16,7 +16,10 @@ ReferenceCounted<Material> MakeGlassMaterial(
     ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
         transmittance,
     ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted);
+    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
+    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
+    bool remap_roughness);
 
 }  // namespace materials
 }  // namespace iris

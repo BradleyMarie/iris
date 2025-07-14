@@ -33,12 +33,18 @@ MaterialResult MakeGlass(const Material::Glass& glass,
            texture_manager.AllocateReflectorTexture(with_defaults.kr()),
            texture_manager.AllocateReflectorTexture(with_defaults.kt()),
            texture_manager.AllocateFloatTexture(kDefaultEtaFront),
-           texture_manager.AllocateFloatTexture(with_defaults.eta())),
+           texture_manager.AllocateFloatTexture(with_defaults.eta()),
+           texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
+           texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
+           with_defaults.remaproughness()),
        MakeGlassMaterial(
            texture_manager.AllocateReflectorTexture(with_defaults.kr()),
            texture_manager.AllocateReflectorTexture(with_defaults.kt()),
            texture_manager.AllocateFloatTexture(with_defaults.eta()),
-           texture_manager.AllocateFloatTexture(kDefaultEtaFront))},
+           texture_manager.AllocateFloatTexture(kDefaultEtaFront),
+           texture_manager.AllocateFloatTexture(with_defaults.uroughness()),
+           texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
+           with_defaults.remaproughness())},
       MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 

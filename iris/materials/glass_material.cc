@@ -4,6 +4,8 @@
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
+#include "iris/bxdfs/composite_bxdf.h"
+#include "iris/bxdfs/microfacet_bxdf.h"
 #include "iris/bxdfs/specular_dielectric_bxdf.h"
 #include "iris/float.h"
 #include "iris/material.h"
@@ -16,6 +18,9 @@ namespace iris {
 namespace materials {
 namespace {
 
+using ::iris::bxdfs::MakeCompositeBxdf;
+using ::iris::bxdfs::MakeMicrofacetDielectricBrdf;
+using ::iris::bxdfs::MakeMicrofacetDielectricBtdf;
 using ::iris::bxdfs::MakeSpecularDielectricBxdf;
 using ::iris::textures::PointerTexture2D;
 using ::iris::textures::ValueTexture2D;
@@ -27,11 +32,17 @@ class GlassMaterial final : public Material {
                 ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
                     transmittance,
                 ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-                ReferenceCounted<ValueTexture2D<visual>> eta_transmitted)
+                ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
+                ReferenceCounted<ValueTexture2D<visual>> roughness_u,
+                ReferenceCounted<ValueTexture2D<visual>> roughness_v,
+                bool remap_roughness)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
         eta_incident_(std::move(eta_incident)),
-        eta_transmitted_(std::move(eta_transmitted)) {}
+        eta_transmitted_(std::move(eta_transmitted)),
+        roughness_u_(std::move(roughness_u)),
+        roughness_v_(std::move(roughness_v)),
+        remap_roughness_(remap_roughness) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
@@ -43,6 +54,9 @@ class GlassMaterial final : public Material {
       transmittance_;
   ReferenceCounted<ValueTexture2D<visual>> eta_incident_;
   ReferenceCounted<ValueTexture2D<visual>> eta_transmitted_;
+  ReferenceCounted<ValueTexture2D<visual>> roughness_u_;
+  ReferenceCounted<ValueTexture2D<visual>> roughness_v_;
+  bool remap_roughness_;
 };
 
 const Bxdf* GlassMaterial::Evaluate(
@@ -71,8 +85,32 @@ const Bxdf* GlassMaterial::Evaluate(
     eta_transmitted = eta_transmitted_->Evaluate(texture_coordinates);
   }
 
-  return MakeSpecularDielectricBxdf(bxdf_allocator, reflectance, transmittance,
-                                    eta_incident, eta_transmitted);
+  visual roughness_u = static_cast<visual>(0.0);
+  if (roughness_u_) {
+    roughness_u = roughness_u_->Evaluate(texture_coordinates);
+  }
+
+  visual roughness_v = static_cast<visual>(0.0);
+  if (roughness_v_) {
+    roughness_v = roughness_v_->Evaluate(texture_coordinates);
+  }
+
+  if (roughness_u == static_cast<visual>(0.0) &&
+      roughness_v == static_cast<visual>(0.0)) {
+    return MakeSpecularDielectricBxdf(bxdf_allocator, reflectance,
+                                      transmittance, eta_incident,
+                                      eta_transmitted);
+  }
+
+  const Bxdf* microfacet_brdf = MakeMicrofacetDielectricBtdf(
+      bxdf_allocator, reflectance, eta_incident, eta_transmitted, roughness_u,
+      roughness_v, remap_roughness_);
+
+  const Bxdf* microfacet_btdf = MakeMicrofacetDielectricBrdf(
+      bxdf_allocator, transmittance, eta_incident, eta_transmitted, roughness_u,
+      roughness_v, remap_roughness_);
+
+  return MakeCompositeBxdf(bxdf_allocator, microfacet_brdf, microfacet_btdf);
 }
 
 }  // namespace
@@ -83,7 +121,10 @@ ReferenceCounted<Material> MakeGlassMaterial(
     ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
         transmittance,
     ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<ValueTexture2D<visual>> eta_transmitted) {
+    ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
+    ReferenceCounted<ValueTexture2D<visual>> roughness_u,
+    ReferenceCounted<ValueTexture2D<visual>> roughness_v,
+    bool remap_roughness) {
   if (!eta_incident || !eta_transmitted) {
     eta_incident.Reset();
     eta_transmitted.Reset();
@@ -96,7 +137,8 @@ ReferenceCounted<Material> MakeGlassMaterial(
 
   return MakeReferenceCounted<GlassMaterial>(
       std::move(reflectance), std::move(transmittance), std::move(eta_incident),
-      std::move(eta_transmitted));
+      std::move(eta_transmitted), std::move(roughness_u),
+      std::move(roughness_v), remap_roughness);
 }
 
 }  // namespace materials

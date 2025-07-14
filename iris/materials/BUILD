@@ -45,6 +45,8 @@ cc_library(
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
+        "//iris/bxdfs:composite_bxdf",
+        "//iris/bxdfs:microfacet_bxdf",
         "//iris/bxdfs:specular_dielectric_bxdf",
         "//iris/textures:texture2d",
     ],
