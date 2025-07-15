@@ -26,22 +26,21 @@ static const geometric_t kLimit = std::nextafter(static_cast<geometric_t>(1.0),
                                                  static_cast<geometric_t>(0.0));
 
 std::vector<visual> ScaleLuma(std::vector<visual> luma,
-                              std::pair<size_t, size_t> size, visual_t& power) {
+                              std::pair<size_t, size_t> size,
+                              visual_t& average_power) {
   assert(size.first * size.second == luma.size());
 
-  visual_t total_weight = 0.0;
-  power = static_cast<visual_t>(0.0);
+  visual_t total_power = static_cast<visual_t>(0.0);
   for (size_t index = 0; index < luma.size(); index += 1) {
     size_t y = index / size.second;
     visual_t v = (static_cast<visual_t>(y) + static_cast<visual_t>(0.5)) /
                  static_cast<visual_t>(size.first);
     visual_t weight = std::sin(std::numbers::pi_v<geometric_t> * v);
     luma[index] *= weight;
-    power += luma[index];
-    total_weight += weight;
+    total_power += luma[index];
   }
 
-  power *= static_cast<visual_t>(4.0 * std::numbers::pi) / total_weight;
+  average_power = total_power / static_cast<visual_t>(luma.size());
 
   return luma;
 }
@@ -75,14 +74,14 @@ class ImageEnvironmentalLight final : public EnvironmentalLight {
   internal::Distribution2D distribution_;
   std::pair<size_t, size_t> size_;
   Matrix model_to_world_;
-  visual_t power_;
+  visual_t average_power_;
 };
 
 ImageEnvironmentalLight::ImageEnvironmentalLight(
     std::vector<ReferenceCounted<Spectrum>> spectra, std::vector<visual> luma,
     std::pair<size_t, size_t> size, const Matrix& model_to_world)
     : spectra_(std::move(spectra)),
-      distribution_(ScaleLuma(std::move(luma), size, power_), size),
+      distribution_(ScaleLuma(std::move(luma), size, average_power_), size),
       size_(size),
       model_to_world_(model_to_world) {
   assert(!spectra_.empty());
@@ -156,7 +155,7 @@ const Spectrum* ImageEnvironmentalLight::Emission(const Vector& to_light,
 
 visual_t ImageEnvironmentalLight::Power(const PowerMatcher& power_matcher,
                                         visual_t world_radius_squared) const {
-  return world_radius_squared * power_;
+  return std::numbers::pi_v<visual_t> * world_radius_squared * average_power_;
 }
 
 }  // namespace

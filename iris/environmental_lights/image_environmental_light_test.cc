@@ -1,7 +1,5 @@
 #include "iris/environmental_lights/image_environmental_light.h"
 
-#include <numbers>
-
 #include "googletest/include/gtest/gtest.h"
 #include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/random/mock_random.h"
@@ -146,7 +144,7 @@ TEST(ImageEnvironmentalLight, Power1x1) {
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(4.0 * std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(3.1415, light->Power(power_matcher, 1.0), 0.001);
 }
 
 TEST(ImageEnvironmentalLight, Power2x2) {
@@ -160,7 +158,7 @@ TEST(ImageEnvironmentalLight, Power2x2) {
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(4.0 * std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(2.2214, light->Power(power_matcher, 1.0), 0.001);
 }
 
 TEST(ImageEnvironmentalLight, Power2x2Quarter) {
@@ -174,7 +172,7 @@ TEST(ImageEnvironmentalLight, Power2x2Quarter) {
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(0.5553, light->Power(power_matcher, 1.0), 0.001);
 }
 
 TEST(ImageEnvironmentalLight, Power2x2Half) {
@@ -188,7 +186,7 @@ TEST(ImageEnvironmentalLight, Power2x2Half) {
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   MockPowerMatcher power_matcher;
-  EXPECT_NEAR(3.0 * std::numbers::pi, light->Power(power_matcher, 1.0), 0.001);
+  EXPECT_NEAR(1.6660, light->Power(power_matcher, 1.0), 0.001);
 }
 
 }  // namespace

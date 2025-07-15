@@ -233,7 +233,7 @@ TEST(AreaLightTest, Power) {
   std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
   ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
 
-  EXPECT_EQ(6.0, light->Power(power_matcher, 1.0));
+  EXPECT_NEAR(18.8495, light->Power(power_matcher, 1.0), 0.001);
 }
 
 }  // namespace

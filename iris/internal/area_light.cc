@@ -1,5 +1,6 @@
 #include "iris/internal/area_light.h"
 
+#include <numbers>
 #include <optional>
 
 #include "iris/float.h"
@@ -111,7 +112,8 @@ visual_t AreaLight::Power(const PowerMatcher& power_matcher,
                           geometric_t world_radius_squared) const {
   visual_t unit_power =
       geometry_.GetEmissiveMaterial(face_)->UnitPower(power_matcher);
-  return unit_power * geometry_.ComputeSurfaceArea(face_, model_to_world_);
+  return std::numbers::pi_v<visual_t> * unit_power *
+         geometry_.ComputeSurfaceArea(face_, model_to_world_);
 }
 
 }  // namespace
