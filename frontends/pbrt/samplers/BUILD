@@ -25,15 +25,38 @@ cc_test(
 )
 
 cc_library(
+    name = "maxmindist",
+    srcs = ["maxmindist.cc"],
+    hdrs = ["maxmindist.h"],
+    deps = [
+        "//iris:image_sampler",
+        "//iris/image_samplers:sobol_image_sampler",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "maxmindist_test",
+    srcs = ["maxmindist_test.cc"],
+    deps = [
+        ":maxmindist",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":halton",
+        ":maxmindist",
         ":random",
         ":sobol",
         ":stratified",
+        ":zerotwosequence",
         "//iris:image_sampler",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -107,6 +130,27 @@ cc_test(
     srcs = ["stratified_test.cc"],
     deps = [
         ":stratified",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "zerotwosequence",
+    srcs = ["zerotwosequence.cc"],
+    hdrs = ["zerotwosequence.h"],
+    deps = [
+        "//iris:image_sampler",
+        "//iris/image_samplers:sobol_image_sampler",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "zerotwosequence_test",
+    srcs = ["zerotwosequence_test.cc"],
+    deps = [
+        ":zerotwosequence",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

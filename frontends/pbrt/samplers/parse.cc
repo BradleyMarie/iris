@@ -3,9 +3,11 @@
 #include <memory>
 
 #include "frontends/pbrt/samplers/halton.h"
+#include "frontends/pbrt/samplers/maxmindist.h"
 #include "frontends/pbrt/samplers/random.h"
 #include "frontends/pbrt/samplers/sobol.h"
 #include "frontends/pbrt/samplers/stratified.h"
+#include "frontends/pbrt/samplers/zerotwosequence.h"
 #include "iris/image_sampler.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
@@ -21,8 +23,7 @@ std::unique_ptr<ImageSampler> ParseSampler(const Sampler& sampler) {
       result = samplers::MakeHalton(sampler.halton());
       break;
     case Sampler::kMaxmindist:
-      std::cerr << "ERROR: Unsupported Sampler type: minmaxdist" << std::endl;
-      exit(EXIT_FAILURE);
+      result = samplers::MakeMaxMinDist(sampler.maxmindist());
       break;
     case Sampler::kRandom:
       result = samplers::MakeRandom(sampler.random());
@@ -34,9 +35,7 @@ std::unique_ptr<ImageSampler> ParseSampler(const Sampler& sampler) {
       result = samplers::MakeStratified(sampler.stratified());
       break;
     case Sampler::kZerotwosequence:
-      std::cerr << "ERROR: Unsupported Sampler type: zerotwosequence"
-                << std::endl;
-      exit(EXIT_FAILURE);
+      result = samplers::MakeZeroTwoSequence(sampler.zerotwosequence());
       break;
     case Sampler::SAMPLER_TYPE_NOT_SET:
       break;
