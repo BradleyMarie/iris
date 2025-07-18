@@ -36,12 +36,13 @@ TEST(TransparentBtdfTest, SampleWithDerivatives) {
       Vector(1.0, 1.0, 1.0), {{Vector(1.0, 0.5, 1.0), Vector(0.5, 1.0, 1.0)}},
       Vector(0.0, 0.0, 1.0), sampler, GetSpectralAllocator()));
   EXPECT_EQ(result.hemisphere, Bxdf::Hemisphere::BTDF);
-  EXPECT_EQ(Vector(1.0, 1.0, 1.0), result.direction);
+  EXPECT_EQ(Vector(-1.0, -1.0, -1.0), result.direction);
   EXPECT_EQ(result.reflectance, &reflector);
   ASSERT_TRUE(result.differentials);
-  EXPECT_EQ(Vector(1.0, 0.5, 1.0), result.differentials->dx);
-  EXPECT_EQ(Vector(0.5, 1.0, 1.0), result.differentials->dy);
+  EXPECT_EQ(Vector(-1.0, -0.5, -1.0), result.differentials->dx);
+  EXPECT_EQ(Vector(-0.5, -1.0, -1.0), result.differentials->dy);
   EXPECT_EQ(result.pdf, 1.0);
+  EXPECT_EQ(result.etendue_conservation_scalar, 1.0);
 }
 
 }  // namespace

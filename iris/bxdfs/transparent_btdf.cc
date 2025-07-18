@@ -13,6 +13,15 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
+std::optional<Bxdf::Differentials> Negate(
+    const std::optional<Bxdf::Differentials>& differentials) {
+  if (!differentials) {
+    return std::nullopt;
+  }
+
+  return Bxdf::Differentials{-differentials->dx, -differentials->dy};
+}
+
 class TransparentBtdf final : public internal::SpecularBxdf {
  public:
   TransparentBtdf(const Reflector& transmittance) noexcept
@@ -32,8 +41,12 @@ std::optional<Bxdf::SpecularSample> TransparentBtdf::SampleSpecular(
     const Vector& incoming, const std::optional<Differentials>& differentials,
     const Vector& surface_normal, Sampler& sampler,
     SpectralAllocator& allocator) const {
-  return Bxdf::SpecularSample{Hemisphere::BTDF, incoming, &transmittance_,
-                              differentials, static_cast<visual_t>(1.0)};
+  return Bxdf::SpecularSample{Hemisphere::BTDF,
+                              -incoming,
+                              &transmittance_,
+                              Negate(differentials),
+                              static_cast<visual_t>(1.0),
+                              static_cast<visual_t>(1.0)};
 }
 
 }  // namespace
