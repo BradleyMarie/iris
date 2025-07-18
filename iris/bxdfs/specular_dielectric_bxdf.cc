@@ -116,9 +116,6 @@ std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
   }
 
   geometric_t relative_refractive_index = eta_incident / eta_transmitted;
-  geometric_t reversed_relative_refractive_index =
-      eta_transmitted / eta_incident;
-
   std::optional<Vector> outgoing = Refract(
       incoming, kShadingNormal.AlignWith(incoming), relative_refractive_index);
   if (!outgoing) {
@@ -132,8 +129,8 @@ std::optional<Bxdf::SpecularSample> SampleSpecularTransmission(
       .differentials = GetRefractedDifferentials(incoming, differentials,
                                                  relative_refractive_index),
       .pdf = pdf,
-      .etendue_conservation_scalar = reversed_relative_refractive_index *
-                                     reversed_relative_refractive_index};
+      .etendue_conservation_scalar =
+          relative_refractive_index * relative_refractive_index};
 }
 
 std::optional<Bxdf::SpecularSample> SpecularDielectricBxdf::SampleSpecular(
