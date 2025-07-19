@@ -100,9 +100,7 @@ std::optional<CatmullRomWeights> ComputeCatmullRomWeights(
     return std::nullopt;
   }
 
-  if (*iterator != value) {
-    iterator -= 1;
-  }
+  iterator -= 1;
 
   size_t offsets[4] = {
       static_cast<size_t>((iterator - 1) - elevational_samples.begin()),
@@ -338,8 +336,8 @@ geometric_t SamplePhi(
     double F = coefficients[0].first * phi;
     double f = coefficients[0].first;
     for (size_t k = 1; k < coefficients.size(); k++) {
-      double sinPhiNext = 2 * cosPhi * sinPhiCur - sinPhiPrev;
-      double cosPhiNext = 2 * cosPhi * cosPhiCur - cosPhiPrev;
+      double sinPhiNext = 2.0 * cosPhi * sinPhiCur - sinPhiPrev;
+      double cosPhiNext = 2.0 * cosPhi * cosPhiCur - cosPhiPrev;
       sinPhiPrev = sinPhiCur;
       sinPhiCur = sinPhiNext;
       cosPhiPrev = cosPhiCur;
@@ -364,10 +362,11 @@ geometric_t SamplePhi(
     }
 
     phi -= F / f;
-
-    if (!(phi > a && phi < b)) {
-      phi = 0.5 * (a + b);
+    if (a < phi && phi < b) {
+      continue;
     }
+
+    phi = 0.5 * (a + b);
   }
 
   if (flip) {
@@ -454,7 +453,7 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
     return std::nullopt;
   }
 
-  gSampleCoefficients.clear();
+  gSampleCoefficients.assign(1, {0.0, 0.0});
   for (size_t i_index = 0; i_index < incoming_weights->num_weights; i_index++) {
     for (size_t o_index = 0; o_index < outgoing_weights->num_weights;
          o_index++) {
@@ -472,7 +471,6 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
       for (size_t coeff = 0; coeff < length; coeff++) {
         gSampleCoefficients[coeff].first +=
             weight * y_coefficients_[start_index + coeff];
-        gSampleCoefficients[coeff].second = gSampleCoefficients[coeff].first;
       }
     }
   }
