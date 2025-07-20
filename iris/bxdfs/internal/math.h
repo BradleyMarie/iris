@@ -2,8 +2,8 @@
 #define _IRIS_BXDFS_INTERNAL_MATH_
 
 #include <algorithm>
-#include <cassert>
 #include <optional>
+#include <span>
 #include <utility>
 
 #include "iris/float.h"
@@ -69,6 +69,21 @@ static inline std::pair<geometric_t, geometric_t> SinCosSquaredPhi(
   return result;
 }
 
+static inline geometric_t CosDPhi(const Vector& v0, const Vector& v1) {
+  geometric_t v0_length_squared_xy = v0.x * v0.x + v0.y * v0.y;
+  geometric_t v1_length_squared_xy = v1.x * v1.x + v1.y * v1.y;
+
+  if (v0_length_squared_xy == static_cast<geometric_t>(0.0) ||
+      v1_length_squared_xy == static_cast<geometric_t>(0.0)) {
+    return static_cast<geometric_t>(1.0);
+  }
+
+  return std::clamp((v0.x * v1.x + v0.y * v1.y) /
+                        std::sqrt(v0_length_squared_xy * v1_length_squared_xy),
+                    static_cast<geometric_t>(-1.0),
+                    static_cast<geometric_t>(1.0));
+}
+
 static inline std::optional<Vector> HalfAngle(const Vector& v0,
                                               const Vector& v1) {
   Vector half_angle = v0 + v1;
@@ -117,6 +132,16 @@ visual_t FesnelDielectricReflectance(visual_t cos_theta_incident,
                                      visual_t eta_transmission);
 
 Vector CosineSampleHemisphere(geometric incoming_z, Sampler& sampler);
+
+struct CatmullRomWeights {
+  size_t control_point_indices[4];
+  visual_t control_point_weights[4];
+  size_t num_weights;
+};
+
+std::optional<CatmullRomWeights> ComputeCatmullRomWeights(
+    std::span<const geometric> control_point_locations,
+    geometric sample_location);
 
 }  // namespace internal
 }  // namespace bxdfs

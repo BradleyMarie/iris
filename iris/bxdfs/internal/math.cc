@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <numbers>
+#include <span>
 
 namespace iris {
 namespace bxdfs {
@@ -84,6 +85,83 @@ Vector CosineSampleHemisphere(geometric incoming_z, Sampler& sampler) {
   geometric_t z = std::sqrt(static_cast<geometric_t>(1.0) - radius * radius);
 
   return Vector(x, y, std::copysign(z, incoming_z));
+}
+
+std::optional<CatmullRomWeights> ComputeCatmullRomWeights(
+    std::span<const geometric> control_point_locations,
+    geometric sample_location) {
+  if (control_point_locations.empty() ||
+      sample_location < control_point_locations.front()) {
+    return std::nullopt;
+  }
+
+  std::span<const geometric>::iterator iterator =
+      std::lower_bound(control_point_locations.begin(),
+                       control_point_locations.end(), sample_location);
+  if (iterator == control_point_locations.end()) {
+    return std::nullopt;
+  }
+
+  CatmullRomWeights result;
+  if (*iterator == sample_location) {
+    result.num_weights = 1;
+    result.control_point_indices[0] =
+        iterator - control_point_locations.begin();
+    result.control_point_weights[0] = static_cast<geometric_t>(1.0);
+    return result;
+  }
+
+  iterator -= 1;
+
+  visual_t x0 = iterator[0];
+  visual_t x1 = iterator[1];
+
+  visual_t interval_width = x1 - x0;
+  visual_t t = (sample_location - x0) / interval_width;
+  visual_t t2 = t * t;
+  visual_t t3 = t2 * t;
+
+  visual_t weights[4];
+  visual_t w0 = t3 - static_cast<visual_t>(2.0) * t2 + t;
+  weights[1] = static_cast<visual_t>(2.0) * t3 -
+               static_cast<visual_t>(3.0) * t2 + static_cast<visual_t>(1.0);
+  weights[2] =
+      static_cast<visual_t>(-2.0) * t3 + static_cast<visual_t>(3.0) * t2;
+  visual_t w3 = t3 - t2;
+
+  size_t start;
+  if (iterator == control_point_locations.begin() || iterator[-1] == x0) {
+    weights[1] -= w0;
+    weights[2] += w0;
+    start = 1;
+  } else {
+    w0 *= (x1 - x0) / (x1 - iterator[-1]);
+    weights[0] = -w0;
+    weights[2] += w0;
+    start = 0;
+  }
+
+  size_t end;
+  if (iterator + 2 == control_point_locations.end() || iterator[2] == x1) {
+    weights[1] -= w3;
+    weights[2] += w3;
+    end = 3;
+  } else {
+    w3 *= (x1 - x0) / (iterator[2] - x0);
+    weights[1] -= w3;
+    weights[3] = w3;
+    end = 4;
+  }
+
+  result.num_weights = 0;
+  for (size_t i = start; i < end; i++) {
+    result.control_point_indices[result.num_weights] =
+        iterator - control_point_locations.begin() - 1 + i;
+    result.control_point_weights[result.num_weights] = weights[i];
+    result.num_weights += 1;
+  }
+
+  return result;
 }
 
 }  // namespace internal
