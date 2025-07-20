@@ -16,7 +16,8 @@ const Bxdf* MakeFourierBxdf(
     BxdfAllocator& bxdf_allocator, const Reflector* reflectance,
     std::span<const geometric> elevational_samples, std::span<const visual> cdf,
     std::span<const std::pair<size_t, size_t>> coefficient_extents,
-    std::span<const visual> y_coefficients, visual eta_transmitted);
+    std::span<const visual> y_coefficients, visual eta_transmitted,
+    bool front_face);
 
 const Bxdf* MakeFourierBxdf(
     BxdfAllocator& bxdf_allocator, const Reflector* r, const Reflector* g,
@@ -25,7 +26,8 @@ const Bxdf* MakeFourierBxdf(
     std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> y_coefficients,
     std::span<const visual> r_coefficients,
-    std::span<const visual> b_coefficients, visual eta_transmitted);
+    std::span<const visual> b_coefficients, visual eta_transmitted,
+    bool front_face);
 
 }  // namespace bxdfs
 }  // namespace iris

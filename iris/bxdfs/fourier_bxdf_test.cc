@@ -41,23 +41,25 @@ TEST(FourierBrdfTest, MakeFourierBxdfYNone) {
 
   EXPECT_EQ(nullptr,
             MakeFourierBxdf(GetBxdfAllocator(), nullptr, elevational_samples,
-                            cdf, coefficient_extents, coefficients, eta));
+                            cdf, coefficient_extents, coefficients, eta, true));
   EXPECT_EQ(nullptr,
             MakeFourierBxdf(GetBxdfAllocator(), &reflector, empty_geometric,
-                            cdf, coefficient_extents, coefficients, eta));
-  EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), &reflector,
-                                     elevational_samples, empty_visual,
-                                     coefficient_extents, coefficients, eta));
+                            cdf, coefficient_extents, coefficients, eta, true));
   EXPECT_EQ(nullptr,
             MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
-                            cdf, empty_coefficient_extents, coefficients, eta));
+                            empty_visual, coefficient_extents, coefficients,
+                            eta, true));
+  EXPECT_EQ(
+      nullptr,
+      MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples, cdf,
+                      empty_coefficient_extents, coefficients, eta, true));
   EXPECT_EQ(nullptr,
             MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
-                            cdf, coefficient_extents, coefficients, 0.0));
+                            cdf, coefficient_extents, coefficients, 0.0, true));
   EXPECT_EQ(nullptr,
             MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
                             cdf, coefficient_extents, coefficients,
-                            std::numeric_limits<visual_t>::infinity()));
+                            std::numeric_limits<visual_t>::infinity(), true));
 }
 
 TEST(FourierBrdfTest, MakeFourierBxdfYCreates) {
@@ -71,7 +73,7 @@ TEST(FourierBrdfTest, MakeFourierBxdfYCreates) {
 
   EXPECT_NE(nullptr,
             MakeFourierBxdf(GetBxdfAllocator(), &reflector, elevational_samples,
-                            cdf, coefficient_extents, coefficients, eta));
+                            cdf, coefficient_extents, coefficients, eta, true));
 }
 
 TEST(FourierBrdfTest, MakeFourierBxdfYRBNone) {
@@ -86,31 +88,31 @@ TEST(FourierBrdfTest, MakeFourierBxdfYRBNone) {
       {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}};
   visual eta = 1.0;
 
-  EXPECT_EQ(nullptr,
-            MakeFourierBxdf(GetBxdfAllocator(), nullptr, nullptr, nullptr,
-                            elevational_samples, cdf, coefficient_extents,
-                            coefficients, coefficients, coefficients, eta));
+  EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), nullptr, nullptr,
+                                     nullptr, elevational_samples, cdf,
+                                     coefficient_extents, coefficients,
+                                     coefficients, coefficients, eta, true));
   EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), &reflector, &reflector,
                                      &reflector, empty_geometric, cdf,
                                      coefficient_extents, coefficients,
-                                     coefficients, coefficients, eta));
+                                     coefficients, coefficients, eta, true));
   EXPECT_EQ(nullptr, MakeFourierBxdf(
                          GetBxdfAllocator(), &reflector, &reflector, &reflector,
                          elevational_samples, empty_visual, coefficient_extents,
-                         coefficients, coefficients, coefficients, eta));
+                         coefficients, coefficients, coefficients, eta, true));
   EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), &reflector, &reflector,
                                      &reflector, elevational_samples, cdf,
                                      empty_coefficient_extents, coefficients,
-                                     coefficients, coefficients, eta));
+                                     coefficients, coefficients, eta, true));
   EXPECT_EQ(nullptr, MakeFourierBxdf(GetBxdfAllocator(), &reflector, &reflector,
                                      &reflector, elevational_samples, cdf,
                                      coefficient_extents, coefficients,
-                                     coefficients, coefficients, 0.0));
+                                     coefficients, coefficients, 0.0, true));
   EXPECT_EQ(nullptr, MakeFourierBxdf(
                          GetBxdfAllocator(), &reflector, &reflector, &reflector,
                          elevational_samples, cdf, coefficient_extents,
                          coefficients, coefficients, coefficients,
-                         std::numeric_limits<visual_t>::infinity()));
+                         std::numeric_limits<visual_t>::infinity(), true));
 }
 
 TEST(FourierBrdfTest, MakeFourierBxdfYRBCreates) {
@@ -125,7 +127,7 @@ TEST(FourierBrdfTest, MakeFourierBxdfYRBCreates) {
   EXPECT_NE(nullptr, MakeFourierBxdf(GetBxdfAllocator(), &reflector, &reflector,
                                      &reflector, elevational_samples, cdf,
                                      coefficient_extents, coefficients,
-                                     coefficients, coefficients, eta));
+                                     coefficients, coefficients, eta, true));
 }
 
 }  // namespace

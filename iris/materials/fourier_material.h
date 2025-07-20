@@ -16,7 +16,7 @@ namespace materials {
 ReferenceCounted<Material> MakeFourierMaterial(
     std::vector<geometric> elevational_samples, std::vector<visual> cdf,
     std::vector<std::pair<size_t, size_t>> coefficient_extents,
-    std::vector<visual> y_coefficients, visual eta);
+    std::vector<visual> y_coefficients, visual eta, bool front_face);
 
 ReferenceCounted<Material> MakeFourierMaterial(
     ReferenceCounted<Reflector> r, ReferenceCounted<Reflector> g,
@@ -24,7 +24,7 @@ ReferenceCounted<Material> MakeFourierMaterial(
     std::vector<visual> cdf,
     std::vector<std::pair<size_t, size_t>> coefficient_extents,
     std::vector<visual> y_coefficients, std::vector<visual> r_coefficients,
-    std::vector<visual> b_coefficients, visual eta);
+    std::vector<visual> b_coefficients, visual eta, bool front_face);
 
 }  // namespace materials
 }  // namespace iris

@@ -19,6 +19,9 @@ namespace iris {
 namespace bxdfs {
 namespace {
 
+using ::iris::bxdfs::internal::CatmullRomWeights;
+using ::iris::bxdfs::internal::ComputeCatmullRomWeights;
+using ::iris::bxdfs::internal::CosDPhi;
 using ::iris::bxdfs::internal::CosTheta;
 
 thread_local std::vector<std::pair<visual_t, visual_t>> gSampleCoefficients;
@@ -32,7 +35,8 @@ class FourierBxdf : public internal::DiffuseBxdf {
               std::span<const std::pair<size_t, size_t>> coefficient_extents,
               std::span<const visual> y_coefficients,
               std::span<const visual> r_coefficients,
-              std::span<const visual> b_coefficients, visual eta_transmitted)
+              std::span<const visual> b_coefficients, visual eta_transmitted,
+              bool front_face)
       : reflectance_(reflectance),
         r_(r),
         g_(g),
@@ -43,7 +47,8 @@ class FourierBxdf : public internal::DiffuseBxdf {
         y_coefficients_(y_coefficients),
         r_coefficients_(r_coefficients),
         b_coefficients_(b_coefficients),
-        eta_transmitted_(eta_transmitted) {}
+        eta_transmitted_(eta_transmitted),
+        front_face_(front_face) {}
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -58,6 +63,14 @@ class FourierBxdf : public internal::DiffuseBxdf {
       SpectralAllocator& allocator) const override;
 
  private:
+  Vector Incoming(const Vector& incoming) const {
+    return front_face_ ? incoming : -incoming;
+  }
+
+  Vector Outgoing(const Vector& outgoing) const {
+    return front_face_ ? -outgoing : outgoing;
+  }
+
   const Reflector* reflectance_;
   const Reflector* r_;
   const Reflector* g_;
@@ -69,99 +82,8 @@ class FourierBxdf : public internal::DiffuseBxdf {
   std::span<const visual> r_coefficients_;
   std::span<const visual> b_coefficients_;
   visual eta_transmitted_;
+  bool front_face_;
 };
-
-double CosDPhi(const Vector& wa, const Vector& wb) {
-  double waxy = wa.x * wa.x + wa.y * wa.y;
-  double wbxy = wb.x * wb.x + wb.y * wb.y;
-  if (waxy == 0.0 || wbxy == 0.0) {
-    return 1.0;
-  }
-
-  return std::clamp((wa.x * wb.x + wa.y * wb.y) / std::sqrt(waxy * wbxy), -1.0,
-                    1.0);
-}
-
-struct CatmullRomWeights {
-  size_t offsets[4];
-  visual_t weights[4];
-  size_t num_weights;
-};
-
-std::optional<CatmullRomWeights> ComputeCatmullRomWeights(
-    std::span<const geometric> elevational_samples, geometric value) {
-  if (elevational_samples.empty() || value < elevational_samples.front()) {
-    return std::nullopt;
-  }
-
-  auto iterator = std::upper_bound(elevational_samples.begin(),
-                                   elevational_samples.end(), value);
-  if (iterator == elevational_samples.end()) {
-    return std::nullopt;
-  }
-
-  iterator -= 1;
-
-  size_t offsets[4] = {
-      static_cast<size_t>((iterator - 1) - elevational_samples.begin()),
-      static_cast<size_t>((iterator + 0) - elevational_samples.begin()),
-      static_cast<size_t>((iterator + 1) - elevational_samples.begin()),
-      static_cast<size_t>((iterator + 2) - elevational_samples.begin())};
-  visual_t weights[4] = {static_cast<visual_t>(0.0), static_cast<visual_t>(0.0),
-                         static_cast<visual_t>(0.0),
-                         static_cast<visual_t>(0.0)};
-
-  visual_t x0 = iterator[0];
-  visual_t x1 = iterator[1];
-
-  visual_t interval_width = x1 - x0;
-  visual_t t = (value - x0) / interval_width;
-  visual_t t2 = t * t;
-  visual_t t3 = t2 * t;
-
-  weights[1] = static_cast<visual_t>(2.0) * t3 -
-               static_cast<visual_t>(3.0) * t2 + static_cast<visual_t>(1.0);
-  weights[2] =
-      static_cast<visual_t>(-2.0) * t3 + static_cast<visual_t>(3.0) * t2;
-
-  if (iterator > elevational_samples.begin()) {
-    visual_t w0 = (t3 - static_cast<visual_t>(2.0) * t2 + t) * (x1 - x0) /
-                  (x1 - iterator[-1]);
-    weights[0] = -w0;
-    weights[2] += w0;
-  } else {
-    visual_t w0 = t3 - static_cast<visual_t>(2.0) * t2 + t;
-    weights[0] = static_cast<visual_t>(0.0);
-    weights[1] -= w0;
-    weights[2] += w0;
-  }
-
-  if (iterator + 2 < elevational_samples.end()) {
-    visual_t w3 = (t3 - t2) * (x1 - x0) / (iterator[2] - x0);
-    weights[1] -= w3;
-    weights[3] = w3;
-  } else {
-    visual_t w3 = t3 - t2;
-    weights[1] -= w3;
-    weights[2] += w3;
-    weights[3] = static_cast<visual_t>(0.0);
-  }
-
-  CatmullRomWeights result;
-  result.num_weights = 0;
-
-  for (size_t i = 0; i < 4; i++) {
-    if (weights[i] == static_cast<visual_t>(0.0)) {
-      continue;
-    }
-
-    result.offsets[result.num_weights] = offsets[i];
-    result.weights[result.num_weights] = weights[i];
-    result.num_weights += 1;
-  }
-
-  return result;
-}
 
 std::optional<geometric_t> SampleCatmullRom2D(
     std::span<const geometric> elevational_samples,
@@ -178,10 +100,10 @@ std::optional<geometric_t> SampleCatmullRom2D(
     visual_t result = 0;
     for (size_t i_index = 0; i_index < incoming_weights->num_weights;
          i_index++) {
-      result +=
-          cdf[incoming_weights->offsets[i_index] * elevational_samples.size() +
-              o_offset] *
-          incoming_weights->weights[i_index];
+      result += cdf[incoming_weights->control_point_indices[i_index] *
+                        elevational_samples.size() +
+                    o_offset] *
+                incoming_weights->control_point_weights[i_index];
     }
     return result;
   };
@@ -224,11 +146,12 @@ std::optional<geometric_t> SampleCatmullRom2D(
     for (size_t i_index = 0; i_index < incoming_weights->num_weights;
          i_index++) {
       auto [start, length] =
-          coefficient_extents[incoming_weights->offsets[i_index] *
+          coefficient_extents[incoming_weights->control_point_indices[i_index] *
                                   elevational_samples.size() +
                               o_offset];
       if (length != 0) {
-        result += all_coefficients[start] * incoming_weights->weights[i_index];
+        result += all_coefficients[start] *
+                  incoming_weights->control_point_weights[i_index];
       }
     }
     return result;
@@ -382,23 +305,24 @@ visual_t ComputeChannel(
     std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> all_coefficients, size_t num_elevational_samples) {
   std::span<const visual_t> coefficients[4][4];
-  double weights[4][4];
+  double control_point_weights[4][4];
   size_t num_coefficients = 0;
   for (size_t i_index = 0; i_index < incoming_weights.num_weights; i_index++) {
     for (size_t o_index = 0; o_index < outgoing_weights.num_weights;
          o_index++) {
       auto [start_index, length] =
-          coefficient_extents[incoming_weights.offsets[i_index] *
+          coefficient_extents[incoming_weights.control_point_indices[i_index] *
                                   num_elevational_samples +
-                              outgoing_weights.offsets[o_index]];
+                              outgoing_weights.control_point_indices[o_index]];
 
       coefficients[i_index][o_index] =
           std::span(all_coefficients.begin() + start_index, length);
       num_coefficients =
           std::max(num_coefficients, static_cast<size_t>(length));
 
-      weights[i_index][o_index] =
-          incoming_weights.weights[i_index] * outgoing_weights.weights[o_index];
+      control_point_weights[i_index][o_index] =
+          incoming_weights.control_point_weights[i_index] *
+          outgoing_weights.control_point_weights[o_index];
     }
   }
 
@@ -414,7 +338,7 @@ visual_t ComputeChannel(
            o_index++) {
         if (coefficient_index < coefficients[i_index][o_index].size()) {
           value += coefficients[i_index][o_index][coefficient_index] *
-                   weights[i_index][o_index];
+                   control_point_weights[i_index][o_index];
         }
       }
     }
@@ -432,7 +356,8 @@ visual_t ComputeChannel(
 std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
                                                  const Vector& surface_normal,
                                                  Sampler& sampler) const {
-  geometric mu_incoming = CosTheta(incoming);
+  Vector actual_incoming = Incoming(incoming);
+  geometric mu_incoming = CosTheta(actual_incoming);
 
   std::optional<geometric_t> mu_outgoing =
       SampleCatmullRom2D(elevational_samples_, coefficient_extents_,
@@ -457,16 +382,16 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
   for (size_t i_index = 0; i_index < incoming_weights->num_weights; i_index++) {
     for (size_t o_index = 0; o_index < outgoing_weights->num_weights;
          o_index++) {
-      auto [start_index, length] =
-          coefficient_extents_[incoming_weights->offsets[i_index] *
-                                   elevational_samples_.size() +
-                               outgoing_weights->offsets[o_index]];
+      auto [start_index, length] = coefficient_extents_
+          [incoming_weights->control_point_indices[i_index] *
+               elevational_samples_.size() +
+           outgoing_weights->control_point_indices[o_index]];
       if (gSampleCoefficients.size() < length) {
         gSampleCoefficients.resize(length);
       }
 
-      visual_t weight = incoming_weights->weights[i_index] *
-                        outgoing_weights->weights[o_index];
+      visual_t weight = incoming_weights->control_point_weights[i_index] *
+                        outgoing_weights->control_point_weights[o_index];
 
       for (size_t coeff = 0; coeff < length; coeff++) {
         gSampleCoefficients[coeff].first +=
@@ -486,7 +411,7 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
                static_cast<geometric_t>(1.0) - *mu_outgoing * *mu_outgoing);
 
   geometric_t norm = std::sqrt(sin_squared_theta_outgoing /
-                               internal::SinSquaredTheta(incoming));
+                               internal::SinSquaredTheta(actual_incoming));
   if (!std::isfinite(norm)) {
     return Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
                   static_cast<geometric>(1.0));
@@ -495,20 +420,24 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
   geometric_t sin_phi_outgoing = std::sin(phi_outgoing);
   geometric_t cos_phi_outgoing = std::cos(phi_outgoing);
 
-  Vector outgoing(
-      norm * (cos_phi_outgoing * incoming.x - sin_phi_outgoing * incoming.y),
-      norm * (sin_phi_outgoing * incoming.x + cos_phi_outgoing * incoming.y),
-      *mu_outgoing);
+  Vector outgoing =
+      Normalize(Vector(norm * (cos_phi_outgoing * actual_incoming.x -
+                               sin_phi_outgoing * actual_incoming.y),
+                       norm * (sin_phi_outgoing * actual_incoming.x +
+                               cos_phi_outgoing * actual_incoming.y),
+                       *mu_outgoing));
 
-  return -Normalize(outgoing);
+  return front_face_ ? -outgoing : outgoing;
 }
 
 visual_t FourierBxdf::PdfDiffuse(const Vector& incoming, const Vector& outgoing,
                                  const Vector& surface_normal,
                                  Hemisphere hemisphere) const {
-  Vector reversed_outgoing = -outgoing;
-  geometric mu_incoming = CosTheta(incoming);
-  geometric mu_outgoing = CosTheta(reversed_outgoing);
+  Vector actual_incoming = Incoming(incoming);
+  Vector actual_outgoing = Outgoing(outgoing);
+
+  geometric mu_incoming = CosTheta(actual_incoming);
+  geometric mu_outgoing = CosTheta(actual_outgoing);
   if (mu_incoming == static_cast<visual_t>(0.0) ||
       mu_outgoing == static_cast<visual_t>(0.0)) {
     return static_cast<visual_t>(0.0);
@@ -526,7 +455,7 @@ visual_t FourierBxdf::PdfDiffuse(const Vector& incoming, const Vector& outgoing,
     return static_cast<visual_t>(0.0);
   }
 
-  double cos_phi = CosDPhi(reversed_outgoing, incoming);
+  geometric_t cos_phi = CosDPhi(actual_outgoing, actual_incoming);
   visual_t y = ComputeChannel(*incoming_weights, *outgoing_weights, cos_phi,
                               coefficient_extents_, y_coefficients_,
                               elevational_samples_.size());
@@ -536,11 +465,11 @@ visual_t FourierBxdf::PdfDiffuse(const Vector& incoming, const Vector& outgoing,
 
   visual_t rho = static_cast<visual_t>(0.0);
   for (size_t i_index = 0; i_index < incoming_weights->num_weights; i_index++) {
-    size_t cdf_index =
-        incoming_weights->offsets[i_index] * elevational_samples_.size() +
-        (elevational_samples_.size() - 1);
+    size_t cdf_index = incoming_weights->control_point_indices[i_index] *
+                           elevational_samples_.size() +
+                       (elevational_samples_.size() - 1);
 
-    rho += incoming_weights->weights[i_index] * cdf_[cdf_index] *
+    rho += incoming_weights->control_point_weights[i_index] * cdf_[cdf_index] *
            static_cast<visual_t>(2.0 * std::numbers::pi_v<visual_t>);
   }
 
@@ -551,9 +480,11 @@ visual_t FourierBxdf::PdfDiffuse(const Vector& incoming, const Vector& outgoing,
 const Reflector* FourierBxdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
     SpectralAllocator& allocator) const {
-  Vector reversed_outgoing = -outgoing;
-  geometric mu_incoming = CosTheta(incoming);
-  geometric mu_outgoing = CosTheta(reversed_outgoing);
+  Vector actual_incoming = Incoming(incoming);
+  Vector actual_outgoing = Outgoing(outgoing);
+
+  geometric mu_incoming = CosTheta(actual_incoming);
+  geometric mu_outgoing = CosTheta(actual_outgoing);
   if (mu_incoming == static_cast<visual_t>(0.0) ||
       mu_outgoing == static_cast<visual_t>(0.0)) {
     return nullptr;
@@ -571,7 +502,7 @@ const Reflector* FourierBxdf::ReflectanceDiffuse(
     return nullptr;
   }
 
-  double cos_phi = CosDPhi(reversed_outgoing, incoming);
+  geometric_t cos_phi = CosDPhi(actual_outgoing, actual_incoming);
   visual_t y = ComputeChannel(*incoming_weights, *outgoing_weights, cos_phi,
                               coefficient_extents_, y_coefficients_,
                               elevational_samples_.size());
@@ -607,7 +538,8 @@ const Bxdf* MakeFourierBxdf(
     BxdfAllocator& bxdf_allocator, const Reflector* reflectance,
     std::span<const geometric> elevational_samples, std::span<const visual> cdf,
     std::span<const std::pair<size_t, size_t>> coefficient_extents,
-    std::span<const visual> y_coefficients, visual eta_transmitted) {
+    std::span<const visual> y_coefficients, visual eta_transmitted,
+    bool front_face) {
   if (reflectance == nullptr) {
     return nullptr;
   }
@@ -623,7 +555,7 @@ const Bxdf* MakeFourierBxdf(
   return &bxdf_allocator.Allocate<FourierBxdf>(
       reflectance, nullptr, nullptr, nullptr, elevational_samples, cdf,
       coefficient_extents, y_coefficients, std::span<const visual>(),
-      std::span<const visual>(), eta_transmitted);
+      std::span<const visual>(), eta_transmitted, front_face);
 }
 
 const Bxdf* MakeFourierBxdf(
@@ -633,7 +565,8 @@ const Bxdf* MakeFourierBxdf(
     std::span<const std::pair<size_t, size_t>> coefficient_extents,
     std::span<const visual> y_coefficients,
     std::span<const visual> r_coefficients,
-    std::span<const visual> b_coefficients, visual eta_transmitted) {
+    std::span<const visual> b_coefficients, visual eta_transmitted,
+    bool front_face) {
   if (r == nullptr && g == nullptr && b == nullptr) {
     return nullptr;
   }
@@ -648,7 +581,8 @@ const Bxdf* MakeFourierBxdf(
 
   return &bxdf_allocator.Allocate<FourierBxdf>(
       nullptr, r, g, b, elevational_samples, cdf, coefficient_extents,
-      y_coefficients, r_coefficients, b_coefficients, eta_transmitted);
+      y_coefficients, r_coefficients, b_coefficients, eta_transmitted,
+      front_face);
 }
 
 }  // namespace bxdfs

@@ -66,9 +66,22 @@ MaterialResult MakeFourier(const Material::Fourier& fourier,
     exit(EXIT_FAILURE);
   }
 
-  ReferenceCounted<iris::Material> material;
+  ReferenceCounted<iris::Material> front_material, back_material;
   if (!result->r_coefficients.empty() && !result->b_coefficients.empty()) {
-    material = MakeFourierMaterial(
+    front_material = MakeFourierMaterial(
+        spectrum_manager.AllocateReflector(static_cast<visual_t>(1.0),
+                                           static_cast<visual_t>(0.0),
+                                           static_cast<visual_t>(0.0)),
+        spectrum_manager.AllocateReflector(static_cast<visual_t>(0.0),
+                                           static_cast<visual_t>(1.0),
+                                           static_cast<visual_t>(0.0)),
+        spectrum_manager.AllocateReflector(static_cast<visual_t>(0.0),
+                                           static_cast<visual_t>(0.0),
+                                           static_cast<visual_t>(1.0)),
+        result->elevational_samples, result->cdf, result->series_extents,
+        result->y_coefficients, result->r_coefficients, result->b_coefficients,
+        result->index_of_refraction, /*front_face=*/true);
+    back_material = MakeFourierMaterial(
         spectrum_manager.AllocateReflector(static_cast<visual_t>(1.0),
                                            static_cast<visual_t>(0.0),
                                            static_cast<visual_t>(0.0)),
@@ -81,15 +94,19 @@ MaterialResult MakeFourier(const Material::Fourier& fourier,
         std::move(result->elevational_samples), std::move(result->cdf),
         std::move(result->series_extents), std::move(result->y_coefficients),
         std::move(result->r_coefficients), std::move(result->b_coefficients),
-        result->index_of_refraction);
+        result->index_of_refraction, /*front_face=*/false);
   } else {
-    material = MakeFourierMaterial(
+    front_material =
+        MakeFourierMaterial(result->elevational_samples, result->cdf,
+                            result->series_extents, result->y_coefficients,
+                            result->index_of_refraction, /*front_face=*/true);
+    back_material = MakeFourierMaterial(
         std::move(result->elevational_samples), std::move(result->cdf),
         std::move(result->series_extents), std::move(result->y_coefficients),
-        result->index_of_refraction);
+        result->index_of_refraction, /*front_face=*/false);
   }
 
-  return MaterialResult{{material, material},
+  return MaterialResult{{std::move(front_material), std::move(back_material)},
                         MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
 }
 

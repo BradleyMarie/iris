@@ -27,7 +27,7 @@ TEST(FourierMaterialTest, EvaluateY) {
       {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}};
 
   ReferenceCounted<Material> material = MakeFourierMaterial(
-      elevational_samples, cdf, coefficient_extents, coefficients, 1.5);
+      elevational_samples, cdf, coefficient_extents, coefficients, 1.5, true);
 
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -50,7 +50,7 @@ TEST(FourierMaterialTest, EvaluateYRB) {
 
   ReferenceCounted<Material> material = MakeFourierMaterial(
       r, g, b, elevational_samples, cdf, coefficient_extents, coefficients,
-      coefficients, coefficients, 1.5);
+      coefficients, coefficients, 1.5, true);
 
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},

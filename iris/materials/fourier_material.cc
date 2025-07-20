@@ -35,7 +35,8 @@ class FourierMaterial : public Material {
                   std::vector<std::pair<size_t, size_t>> coefficient_extents,
                   std::vector<visual> y_coefficients,
                   std::vector<visual> r_coefficients,
-                  std::vector<visual> b_coefficients, visual eta)
+                  std::vector<visual> b_coefficients, visual eta,
+                  bool front_face)
       : r_(std::move(r)),
         g_(std::move(g)),
         b_(std::move(b)),
@@ -45,7 +46,8 @@ class FourierMaterial : public Material {
         y_coefficients_(std::move(y_coefficients)),
         r_coefficients_(std::move(r_coefficients)),
         b_coefficients_(std::move(b_coefficients)),
-        eta_(eta) {}
+        eta_(eta),
+        front_face_(front_face) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
                        SpectralAllocator& spectral_allocator,
@@ -62,6 +64,7 @@ class FourierMaterial : public Material {
   std::vector<visual> r_coefficients_;
   std::vector<visual> b_coefficients_;
   visual eta_;
+  bool front_face_;
 };
 
 const Bxdf* FourierMaterial::Evaluate(
@@ -72,12 +75,12 @@ const Bxdf* FourierMaterial::Evaluate(
     return MakeFourierBxdf(bxdf_allocator, r_.Get(), g_.Get(), b_.Get(),
                            elevational_samples_, cdf_, coefficient_extents_,
                            y_coefficients_, r_coefficients_, b_coefficients_,
-                           eta_);
+                           eta_, front_face_);
   }
 
   return MakeFourierBxdf(bxdf_allocator, kReflectance.Get(),
                          elevational_samples_, cdf_, coefficient_extents_,
-                         y_coefficients_, eta_);
+                         y_coefficients_, eta_, front_face_);
 }
 
 }  // namespace
@@ -85,12 +88,12 @@ const Bxdf* FourierMaterial::Evaluate(
 ReferenceCounted<Material> MakeFourierMaterial(
     std::vector<geometric> elevational_samples, std::vector<visual> cdf,
     std::vector<std::pair<size_t, size_t>> coefficient_extents,
-    std::vector<visual> y_coefficients, visual eta) {
+    std::vector<visual> y_coefficients, visual eta, bool front_face) {
   return MakeReferenceCounted<FourierMaterial>(
       ReferenceCounted<Reflector>(), ReferenceCounted<Reflector>(),
       ReferenceCounted<Reflector>(), std::move(elevational_samples),
       std::move(cdf), coefficient_extents, std::move(y_coefficients),
-      std::vector<visual>(), std::vector<visual>(), eta);
+      std::vector<visual>(), std::vector<visual>(), eta, front_face);
 }
 
 ReferenceCounted<Material> MakeFourierMaterial(
@@ -99,11 +102,11 @@ ReferenceCounted<Material> MakeFourierMaterial(
     std::vector<visual> cdf,
     std::vector<std::pair<size_t, size_t>> coefficient_extents,
     std::vector<visual> y_coefficients, std::vector<visual> r_coefficients,
-    std::vector<visual> b_coefficients, visual eta) {
+    std::vector<visual> b_coefficients, visual eta, bool front_face) {
   return MakeReferenceCounted<FourierMaterial>(
       std::move(r), std::move(g), std::move(b), std::move(elevational_samples),
       std::move(cdf), coefficient_extents, std::move(y_coefficients),
-      std::move(r_coefficients), std::move(b_coefficients), eta);
+      std::move(r_coefficients), std::move(b_coefficients), eta, front_face);
 }
 
 }  // namespace materials
