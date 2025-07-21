@@ -25,6 +25,16 @@ cc_test(
 )
 
 cc_library(
+    name = "float_texture",
+    hdrs = ["float_texture.h"],
+    deps = [
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:texture_coordinates",
+    ],
+)
+
+cc_library(
     name = "image_texture",
     hdrs = ["image_texture.h"],
     deps = [
@@ -44,6 +54,37 @@ cc_test(
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "reflector_texture",
+    srcs = ["reflector_texture.cc"],
+    hdrs = ["reflector_texture.h"],
+    deps = [
+        ":spectrum_texture",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:texture_coordinates",
+    ],
+)
+
+cc_test(
+    name = "reflector_texture_test",
+    srcs = ["reflector_texture_test.cc"],
+    deps = [
+        ":reflector_texture",
+        ":spectrum_texture",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:texture_coordinates",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
     ],
 )
@@ -70,6 +111,17 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "spectrum_texture",
+    hdrs = ["spectrum_texture.h"],
+    deps = [
+        "//iris:reference_counted",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:texture_coordinates",
     ],
 )
 
