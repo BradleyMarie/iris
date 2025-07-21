@@ -7,6 +7,8 @@
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/test_util.h"
 
 namespace iris {
 namespace materials {
@@ -16,9 +18,8 @@ using ::iris::bxdfs::MockBxdf;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
-using ::iris::textures::ConstantValueTexture2D;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::MakeConstantTexture;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::IsNull;
@@ -27,16 +28,14 @@ using ::testing::Return;
 using ::testing::SetArgPointee;
 
 TEST(MixMaterialTest, Null) {
-  ReferenceCounted<ConstantValueTexture2D<visual>> attenuation =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.25);
+  ReferenceCounted<FloatTexture> attenuation = MakeConstantTexture(0.25);
   EXPECT_FALSE(MakeMixMaterial(ReferenceCounted<Material>(),
                                ReferenceCounted<Material>(),
                                std::move(attenuation)));
 }
 
 TEST(MixMaterialTest, Evaluate) {
-  ReferenceCounted<ConstantValueTexture2D<visual>> attenuation =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.25);
+  ReferenceCounted<FloatTexture> attenuation = MakeConstantTexture(0.25);
 
   MockReflector reflector0;
   EXPECT_CALL(reflector0, Reflectance(1.0)).WillOnce(Return(0.75));

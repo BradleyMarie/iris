@@ -2,7 +2,6 @@
 
 #include <limits>
 #include <memory>
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -10,8 +9,6 @@
 #include "iris/float.h"
 #include "iris/reference_counted.h"
 #include "iris/reflectors/mock_reflector.h"
-#include "iris/spectra/mock_spectrum.h"
-#include "iris/spectral_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
 #include "iris/textures/float_texture.h"
@@ -179,110 +176,6 @@ TEST(Image2D, ComputeSampleCoordinates) {
   EXPECT_EQ(result7.high_coordinates[1][1], -0.5);
   EXPECT_EQ(result7.left_right_interpolation, 0.0);
   EXPECT_EQ(result7.low_high_interpolation, 0.0);
-}
-
-TEST(BorderedSpectralImageTexture2D, Test) {
-  std::vector<ReferenceCounted<Reflector>> reflectors;
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image =
-      std::make_shared<Image2D<ReferenceCounted<Reflector>>>(
-          reflectors, std::pair<size_t, size_t>(2, 2));
-
-  BorderedSpectralImageTexture2D<Reflector> texture(
-      image, ReferenceCounted<Reflector>(), std::nullopt, std::nullopt,
-      std::nullopt, std::nullopt);
-  EXPECT_EQ(reflectors[0].Get(),
-            texture.Evaluate(TextureCoordinates{{0.25, 0.25}}));
-  EXPECT_EQ(nullptr, texture.Evaluate(TextureCoordinates{{-0.25, 0.25}}));
-}
-
-TEST(ClampedSpectralImageTexture2D, Test) {
-  std::vector<ReferenceCounted<Reflector>> reflectors;
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image =
-      std::make_shared<Image2D<ReferenceCounted<Reflector>>>(
-          reflectors, std::pair<size_t, size_t>(2, 2));
-
-  ClampedSpectralImageTexture2D<Reflector> texture(
-      image, std::nullopt, std::nullopt, std::nullopt, std::nullopt);
-  EXPECT_EQ(reflectors[3].Get(),
-            texture.Evaluate(TextureCoordinates{{1.25, 1.25}}));
-}
-
-TEST(RepeatedSpectralImageTexture2D, Test) {
-  std::vector<ReferenceCounted<Reflector>> reflectors;
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  reflectors.push_back(MakeReferenceCounted<MockReflector>());
-  std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image =
-      std::make_shared<Image2D<ReferenceCounted<Reflector>>>(
-          reflectors, std::pair<size_t, size_t>(2, 2));
-
-  RepeatedSpectralImageTexture2D<Reflector> texture(
-      image, std::nullopt, std::nullopt, std::nullopt, std::nullopt);
-  EXPECT_EQ(reflectors[0].Get(),
-            texture.Evaluate(TextureCoordinates{{1.25, 1.25}}));
-}
-
-TEST(BorderedImageTexture2D, Test) {
-  std::vector<float> reflectors;
-  reflectors.push_back(1.0);
-  reflectors.push_back(2.0);
-  reflectors.push_back(3.0);
-  reflectors.push_back(4.0);
-  std::shared_ptr<Image2D<float>> image = std::make_shared<Image2D<float>>(
-      reflectors, std::pair<size_t, size_t>(2, 2));
-
-  BorderedImageTexture2D<float> texture(image, 0.0, std::nullopt, std::nullopt,
-                                        std::nullopt, std::nullopt);
-  EXPECT_EQ(reflectors[0], texture.Evaluate(TextureCoordinates{{0.25, 0.25}}));
-  EXPECT_EQ(0.0, texture.Evaluate(TextureCoordinates{{-0.25, 0.25}}));
-  EXPECT_EQ(0.25, texture.Evaluate(TextureCoordinates{{0.0, 0.0}}));
-  EXPECT_EQ(2.5, texture.Evaluate(TextureCoordinates{{0.5, 0.5}}));
-  EXPECT_EQ(1.0, texture.Evaluate(TextureCoordinates{{1.0, 1.0}}));
-}
-
-TEST(ClampedImageTexture2D, Test) {
-  std::vector<float> reflectors;
-  reflectors.push_back(1.0);
-  reflectors.push_back(2.0);
-  reflectors.push_back(3.0);
-  reflectors.push_back(4.0);
-  std::shared_ptr<Image2D<float>> image = std::make_shared<Image2D<float>>(
-      reflectors, std::pair<size_t, size_t>(2, 2));
-
-  ClampedImageTexture2D<float> texture(image, std::nullopt, std::nullopt,
-                                       std::nullopt, std::nullopt);
-  EXPECT_EQ(reflectors[3], texture.Evaluate(TextureCoordinates{{1.25, 1.25}}));
-  EXPECT_EQ(1.0, texture.Evaluate(TextureCoordinates{{0.0, 0.0}}));
-  EXPECT_EQ(2.5, texture.Evaluate(TextureCoordinates{{0.5, 0.5}}));
-  EXPECT_EQ(4.0, texture.Evaluate(TextureCoordinates{{1.0, 1.0}}));
-}
-
-TEST(RepeatedImageTexture2D, Test) {
-  std::vector<float> reflectors;
-  reflectors.push_back(1.0);
-  reflectors.push_back(2.0);
-  reflectors.push_back(3.0);
-  reflectors.push_back(4.0);
-  std::shared_ptr<Image2D<float>> image = std::make_shared<Image2D<float>>(
-      reflectors, std::pair<size_t, size_t>(2, 2));
-
-  RepeatedImageTexture2D<float> texture(image, std::nullopt, std::nullopt,
-                                        std::nullopt, std::nullopt);
-  EXPECT_EQ(reflectors[0], texture.Evaluate(TextureCoordinates{{1.25, 1.25}}));
-  EXPECT_EQ(2.5, texture.Evaluate(TextureCoordinates{{0.0, 0.0}}));
-  EXPECT_EQ(2.5, texture.Evaluate(TextureCoordinates{{0.5, 0.5}}));
-  EXPECT_EQ(2.5, texture.Evaluate(TextureCoordinates{{1.0, 1.0}}));
-  EXPECT_EQ(2.5, texture.Evaluate(TextureCoordinates{{1.5, 1.5}}));
-  EXPECT_EQ(2.5, texture.Evaluate(TextureCoordinates{{2.0, 2.0}}));
 }
 
 TEST(BorderedImageFloatTexture, Null) {

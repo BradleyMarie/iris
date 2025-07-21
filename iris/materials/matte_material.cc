@@ -11,7 +11,8 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
@@ -19,14 +20,13 @@ namespace {
 
 using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MakeOrenNayarBrdf;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::ReflectorTexture;
 
 class MatteMaterial final : public Material {
  public:
-  MatteMaterial(ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-                    reflectance,
-                ReferenceCounted<ValueTexture2D<visual>> sigma)
+  MatteMaterial(ReferenceCounted<ReflectorTexture> reflectance,
+                ReferenceCounted<FloatTexture> sigma)
       : reflectance_(std::move(reflectance)), sigma_(std::move(sigma)) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
@@ -34,8 +34,8 @@ class MatteMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
-  ReferenceCounted<ValueTexture2D<visual>> sigma_;
+  ReferenceCounted<ReflectorTexture> reflectance_;
+  ReferenceCounted<FloatTexture> sigma_;
 };
 
 const Bxdf* MatteMaterial::Evaluate(
@@ -61,9 +61,8 @@ const Bxdf* MatteMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeMatteMaterial(
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-        reflectance,
-    ReferenceCounted<ValueTexture2D<visual>> sigma) {
+    ReferenceCounted<ReflectorTexture> reflectance,
+    ReferenceCounted<FloatTexture> sigma) {
   if (!reflectance) {
     return ReferenceCounted<Material>();
   }

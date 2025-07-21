@@ -10,20 +10,18 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
 namespace {
 
 using ::iris::bxdfs::MakeMirrorBrdf;
-using ::iris::textures::PointerTexture2D;
+using ::iris::textures::ReflectorTexture;
 
 class MirrorMaterial final : public Material {
  public:
-  MirrorMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-          reflectance)
+  MirrorMaterial(ReferenceCounted<ReflectorTexture> reflectance)
       : reflectance_(std::move(reflectance)) {}
 
   const Bxdf* Evaluate(const TextureCoordinates& texture_coordinates,
@@ -31,7 +29,7 @@ class MirrorMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
+  ReferenceCounted<ReflectorTexture> reflectance_;
 };
 
 const Bxdf* MirrorMaterial::Evaluate(
@@ -46,8 +44,7 @@ const Bxdf* MirrorMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeMirrorMaterial(
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-        reflectance) {
+    ReferenceCounted<ReflectorTexture> reflectance) {
   if (!reflectance) {
     return ReferenceCounted<Material>();
   }

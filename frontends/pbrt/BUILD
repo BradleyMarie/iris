@@ -304,7 +304,8 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris/reflectors:uniform_reflector",
         "//iris/textures:constant_texture",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 

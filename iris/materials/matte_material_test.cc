@@ -5,6 +5,9 @@
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
+#include "iris/textures/test_util.h"
 
 namespace iris {
 namespace materials {
@@ -13,24 +16,19 @@ namespace {
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
-using ::iris::textures::ConstantPointerTexture2D;
-using ::iris::textures::ConstantValueTexture2D;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::MakeBlackTexture;
+using ::iris::textures::MakeConstantTexture;
+using ::iris::textures::ReflectorTexture;
 
 TEST(MatteMaterialTest, NullMaterial) {
-  EXPECT_FALSE(MakeMatteMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0)));
+  EXPECT_FALSE(MakeMatteMaterial(ReferenceCounted<ReflectorTexture>(),
+                                 MakeConstantTexture(1.0)));
 }
 
 TEST(MatteMaterialTest, EvaluateEmpty) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance = MakeBlackTexture();
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
   ReferenceCounted<Material> material =
       MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
@@ -41,11 +39,9 @@ TEST(MatteMaterialTest, EvaluateEmpty) {
 TEST(MatteMaterialTest, EvaluateLambertian) {
   ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(reflector);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(0.0);
   ReferenceCounted<Material> material =
       MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
@@ -58,11 +54,9 @@ TEST(MatteMaterialTest, EvaluateLambertian) {
 TEST(MatteMaterialTest, EvaluateOrenNayar) {
   ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(reflector);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
   ReferenceCounted<Material> material =
       MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 

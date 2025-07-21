@@ -34,7 +34,8 @@ TEST(TextureManager, AttributePushPop) {
   TextureManager texture_manager(spectrum_manager);
 
   texture_manager.AttributeBegin();
-  texture_manager.Put("test", TextureManager::ReflectorTexturePtr());
+  texture_manager.Put("test",
+                      ReferenceCounted<iris::textures::ReflectorTexture>());
   texture_manager.AttributeEnd();
 
   EXPECT_EXIT(texture_manager.GetReflectorTexture("test"),
@@ -47,7 +48,7 @@ TEST(TextureManager, AllocateFloatTexture) {
   ColorSpectrumManager spectrum_manager(current_path, true);
   TextureManager texture_manager(spectrum_manager);
 
-  TextureManager::FloatTexturePtr tex0 =
+  ReferenceCounted<iris::textures::FloatTexture> tex0 =
       texture_manager.AllocateFloatTexture(1.0);
   EXPECT_TRUE(tex0);
   EXPECT_EQ(tex0, texture_manager.AllocateFloatTexture(1.0));
@@ -252,7 +253,7 @@ TEST(TextureManager, FloatTextureGetSucceeds) {
   ColorSpectrumManager spectrum_manager(current_path, true);
   TextureManager texture_manager(spectrum_manager);
 
-  TextureManager::FloatTexturePtr texture;
+  ReferenceCounted<iris::textures::FloatTexture> texture;
   texture_manager.Put("test", texture);
 
   EXPECT_EQ(nullptr, texture_manager.GetFloatTexture("test").Get());
@@ -263,7 +264,7 @@ TEST(TextureManager, ReflectorTextureGetSucceeds) {
   ColorSpectrumManager spectrum_manager(current_path, true);
   TextureManager texture_manager(spectrum_manager);
 
-  TextureManager::ReflectorTexturePtr texture;
+  ReferenceCounted<iris::textures::ReflectorTexture> texture;
   texture_manager.Put("test", texture);
 
   EXPECT_EQ(nullptr, texture_manager.GetReflectorTexture("test").Get());

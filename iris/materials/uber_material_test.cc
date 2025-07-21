@@ -5,6 +5,9 @@
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
+#include "iris/textures/test_util.h"
 
 namespace iris {
 namespace materials {
@@ -13,37 +16,30 @@ namespace {
 using ::iris::reflectors::CreateUniformReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
-using ::iris::textures::ConstantPointerTexture2D;
-using ::iris::textures::ConstantValueTexture2D;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::MakeBlackTexture;
+using ::iris::textures::MakeConstantTexture;
+using ::iris::textures::ReflectorTexture;
 
-static const ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-    kBlack = MakeReferenceCounted<
-        ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-        ReferenceCounted<Reflector>());
-static const ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-    kWhite = MakeReferenceCounted<
-        ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-        CreateUniformReflector(1.0));
-static const ReferenceCounted<ValueTexture2D<visual>> kEtaIncident =
-    MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-static const ReferenceCounted<ValueTexture2D<visual>> kEtaTransmitted =
-    MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-static const ReferenceCounted<ValueTexture2D<visual>> kRoughness =
-    MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-static const ReferenceCounted<ValueTexture2D<visual>> kTransparent =
-    MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.0);
-static const ReferenceCounted<ValueTexture2D<visual>> kTranslucent =
-    MakeReferenceCounted<ConstantValueTexture2D<visual>>(0.5);
-static const ReferenceCounted<ValueTexture2D<visual>> kOpaque =
-    MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+static const ReferenceCounted<ReflectorTexture> kBlack = MakeBlackTexture();
+static const ReferenceCounted<ReflectorTexture> kWhite =
+    MakeConstantTexture(CreateUniformReflector(1.0));
+static const ReferenceCounted<FloatTexture> kEtaIncident =
+    MakeConstantTexture(1.0);
+static const ReferenceCounted<FloatTexture> kEtaTransmitted =
+    MakeConstantTexture(1.5);
+static const ReferenceCounted<FloatTexture> kRoughness =
+    MakeConstantTexture(1.0);
+static const ReferenceCounted<FloatTexture> kTransparent =
+    MakeConstantTexture(0.0);
+static const ReferenceCounted<FloatTexture> kTranslucent =
+    MakeConstantTexture(0.5);
+static const ReferenceCounted<FloatTexture> kOpaque = MakeConstantTexture(1.0);
 
 TEST(UberMaterialTest, NoEtaIncident) {
-  ReferenceCounted<Material> material =
-      MakeUberMaterial(kWhite, kWhite, kWhite, kWhite, kOpaque,
-                       ReferenceCounted<ValueTexture2D<visual>>(),
-                       kEtaTransmitted, kRoughness, kRoughness, true);
+  ReferenceCounted<Material> material = MakeUberMaterial(
+      kWhite, kWhite, kWhite, kWhite, kOpaque, ReferenceCounted<FloatTexture>(),
+      kEtaTransmitted, kRoughness, kRoughness, true);
 
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -55,7 +51,7 @@ TEST(UberMaterialTest, NoEtaIncident) {
 TEST(UberMaterialTest, NoEtaTransmitted) {
   ReferenceCounted<Material> material = MakeUberMaterial(
       kWhite, kWhite, kWhite, kWhite, kOpaque, kEtaIncident,
-      ReferenceCounted<ValueTexture2D<visual>>(), kRoughness, kRoughness, true);
+      ReferenceCounted<FloatTexture>(), kRoughness, kRoughness, true);
 
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},

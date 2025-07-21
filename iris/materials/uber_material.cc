@@ -16,7 +16,8 @@
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
@@ -28,27 +29,23 @@ using ::iris::bxdfs::MakeMicrofacetDielectricBrdf;
 using ::iris::bxdfs::MakeSpecularDielectricBxdf;
 using ::iris::bxdfs::MakeTransparentBtdf;
 using ::iris::reflectors::CreateUniformReflector;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::ReflectorTexture;
 
 static const ReferenceCounted<Reflector> kWhite =
     CreateUniformReflector(static_cast<visual>(1.0));
 
 class UberMaterial final : public Material {
  public:
-  UberMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-          reflectance,
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-          transmittance,
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
-      ReferenceCounted<ValueTexture2D<visual>> opacity,
-      ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-      ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
-      ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-      ReferenceCounted<ValueTexture2D<visual>> roughness_v,
-      bool remap_roughness)
+  UberMaterial(ReferenceCounted<ReflectorTexture> reflectance,
+               ReferenceCounted<ReflectorTexture> transmittance,
+               ReferenceCounted<ReflectorTexture> diffuse,
+               ReferenceCounted<ReflectorTexture> specular,
+               ReferenceCounted<FloatTexture> opacity,
+               ReferenceCounted<FloatTexture> eta_incident,
+               ReferenceCounted<FloatTexture> eta_transmitted,
+               ReferenceCounted<FloatTexture> roughness_u,
+               ReferenceCounted<FloatTexture> roughness_v, bool remap_roughness)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
         diffuse_(std::move(diffuse)),
@@ -65,16 +62,15 @@ class UberMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-      transmittance_;
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse_;
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular_;
-  ReferenceCounted<ValueTexture2D<visual>> opacity_;
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident_;
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_u_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_v_;
+  ReferenceCounted<ReflectorTexture> reflectance_;
+  ReferenceCounted<ReflectorTexture> transmittance_;
+  ReferenceCounted<ReflectorTexture> diffuse_;
+  ReferenceCounted<ReflectorTexture> specular_;
+  ReferenceCounted<FloatTexture> opacity_;
+  ReferenceCounted<FloatTexture> eta_incident_;
+  ReferenceCounted<FloatTexture> eta_transmitted_;
+  ReferenceCounted<FloatTexture> roughness_u_;
+  ReferenceCounted<FloatTexture> roughness_v_;
   bool remap_roughness_;
 };
 
@@ -163,18 +159,15 @@ const Bxdf* UberMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeUberMaterial(
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-        reflectance,
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-        transmittance,
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
-    ReferenceCounted<ValueTexture2D<visual>> opacity,
-    ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_v,
-    bool remap_roughness) {
+    ReferenceCounted<ReflectorTexture> reflectance,
+    ReferenceCounted<ReflectorTexture> transmittance,
+    ReferenceCounted<ReflectorTexture> diffuse,
+    ReferenceCounted<ReflectorTexture> specular,
+    ReferenceCounted<FloatTexture> opacity,
+    ReferenceCounted<FloatTexture> eta_incident,
+    ReferenceCounted<FloatTexture> eta_transmitted,
+    ReferenceCounted<FloatTexture> roughness_u,
+    ReferenceCounted<FloatTexture> roughness_v, bool remap_roughness) {
   if (!eta_incident || !eta_transmitted) {
     eta_incident.Reset();
     eta_transmitted.Reset();

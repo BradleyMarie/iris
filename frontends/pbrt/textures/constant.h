@@ -5,20 +5,21 @@
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
-ReferenceCounted<iris::textures::ValueTexture2D<visual>> MakeConstant(
+ReferenceCounted<iris::textures::FloatTexture> MakeConstant(
     const pbrt_proto::v3::FloatTexture::Constant& constant,
     TextureManager& texture_manager);
 
-ReferenceCounted<iris::textures::PointerTexture2D<Reflector, SpectralAllocator>>
-MakeConstant(const pbrt_proto::v3::SpectrumTexture::Constant& constant,
-             TextureManager& texture_manager);
+ReferenceCounted<iris::textures::ReflectorTexture> MakeConstant(
+    const pbrt_proto::v3::SpectrumTexture::Constant& constant,
+    TextureManager& texture_manager);
 
 }  // namespace textures
 }  // namespace pbrt_frontend

@@ -3,33 +3,6 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//visibility:private"])
 
 cc_library(
-    name = "alpha_mask",
-    srcs = ["alpha_mask.cc"],
-    hdrs = ["alpha_mask.h"],
-    deps = [
-        "//frontends/pbrt:texture_manager",
-        "//iris:float",
-        "//iris:reference_counted",
-        "//iris/textures:texture2d",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
-    ],
-)
-
-cc_test(
-    name = "alpha_mask_test",
-    srcs = ["alpha_mask_test.cc"],
-    deps = [
-        ":alpha_mask",
-        "//frontends/pbrt:texture_manager",
-        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
-        "//iris:reference_counted",
-        "//iris/textures:texture2d",
-        "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
-    ],
-)
-
-cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
@@ -78,7 +51,6 @@ cc_library(
     srcs = ["plymesh.cc"],
     hdrs = ["plymesh.h"],
     deps = [
-        ":alpha_mask",
         "//frontends/pbrt:defaults",
         "//frontends/pbrt:texture_manager",
         "//iris:emissive_material",
@@ -152,7 +124,6 @@ cc_library(
     srcs = ["trianglemesh.cc"],
     hdrs = ["trianglemesh.h"],
     deps = [
-        ":alpha_mask",
         "//frontends/pbrt:defaults",
         "//frontends/pbrt:texture_manager",
         "//iris:emissive_material",

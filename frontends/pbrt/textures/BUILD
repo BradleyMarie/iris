@@ -13,7 +13,8 @@ cc_library(
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris/textures:constant_texture",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
@@ -41,9 +42,10 @@ cc_library(
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
+        "//iris/textures:float_texture",
         "//iris/textures:image_texture",
+        "//iris/textures:reflector_texture",
         "//iris/textures:scaled_texture",
-        "//iris/textures:texture2d",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
@@ -103,8 +105,9 @@ cc_library(
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
         "//iris/textures:scaled_texture",
-        "//iris/textures:texture2d",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

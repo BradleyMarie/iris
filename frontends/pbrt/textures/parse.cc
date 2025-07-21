@@ -12,21 +12,20 @@
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
 using ::pbrt_proto::v3::FloatTexture;
 using ::pbrt_proto::v3::SpectrumTexture;
 
 void ParseFloatTexture(const FloatTexture& float_texture,
                        ImageManager& image_manager,
                        TextureManager& texture_manager) {
-  ReferenceCounted<ValueTexture2D<visual>> result;
+  ReferenceCounted<iris::textures::FloatTexture> result;
   switch (float_texture.float_texture_type_case()) {
     case FloatTexture::kBilerp:
       std::cerr << "ERROR: Unsupported FloatTexture type: bilerp" << std::endl;
@@ -92,7 +91,7 @@ void ParseFloatTexture(const FloatTexture& float_texture,
 void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
                           ImageManager& image_manager,
                           TextureManager& texture_manager) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> result;
+  ReferenceCounted<iris::textures::ReflectorTexture> result;
   switch (spectrum_texture.spectrum_texture_type_case()) {
     case SpectrumTexture::kBilerp:
       std::cerr << "ERROR: Unsupported SpectrumTexture type: bilerp"

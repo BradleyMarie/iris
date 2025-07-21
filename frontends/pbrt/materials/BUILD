@@ -12,7 +12,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris/normal_maps:bump_normal_map",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
@@ -27,7 +27,7 @@ cc_test(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

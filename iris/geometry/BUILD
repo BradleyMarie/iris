@@ -155,7 +155,7 @@ cc_library(
         "//iris:sampler",
         "//iris:texture_coordinates",
         "//iris:vector",
-        "//iris/textures:texture2d",
+        "//iris/textures:mask_texture",
     ],
 )
 

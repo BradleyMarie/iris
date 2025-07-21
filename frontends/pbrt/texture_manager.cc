@@ -9,14 +9,14 @@
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 
-using ::iris::textures::ConstantPointerTexture2D;
-using ::iris::textures::ConstantValueTexture2D;
+using ::iris::textures::MakeConstantTexture;
 using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Spectrum;
 using ::pbrt_proto::v3::SpectrumTextureParameter;
@@ -37,23 +37,24 @@ void TextureManager::AttributeEnd() {
   reflector_textures_.pop();
 }
 
-TextureManager::FloatTexturePtr TextureManager::AllocateFloatTexture(
+ReferenceCounted<textures::FloatTexture> TextureManager::AllocateFloatTexture(
     visual value) {
   if (value == static_cast<visual>(0.0)) {
-    return TextureManager::FloatTexturePtr();
+    return ReferenceCounted<textures::FloatTexture>();
   }
 
-  FloatTexturePtr& texture = constant_float_textures_[value];
+  ReferenceCounted<textures::FloatTexture>& texture =
+      constant_float_textures_[value];
   if (!texture) {
-    texture = MakeReferenceCounted<ConstantValueTexture2D<visual>>(value);
+    texture = MakeConstantTexture(value);
   }
 
   return texture;
 }
 
-TextureManager::FloatTexturePtr TextureManager::AllocateFloatTexture(
+ReferenceCounted<textures::FloatTexture> TextureManager::AllocateFloatTexture(
     const FloatTextureParameter& parameter) {
-  TextureManager::FloatTexturePtr result;
+  ReferenceCounted<textures::FloatTexture> result;
   switch (parameter.float_texture_parameter_type_case()) {
     case FloatTextureParameter::kFloatValue:
       result = AllocateFloatTexture(parameter.float_value());
@@ -68,34 +69,34 @@ TextureManager::FloatTexturePtr TextureManager::AllocateFloatTexture(
   return result;
 }
 
-TextureManager::ReflectorTexturePtr TextureManager::AllocateReflectorTexture(
-    visual value) {
+ReferenceCounted<textures::ReflectorTexture>
+TextureManager::AllocateReflectorTexture(visual value) {
   Spectrum spectrum;
   spectrum.set_uniform_spectrum(value);
   return AllocateReflectorTexture(spectrum);
 }
 
-TextureManager::ReflectorTexturePtr TextureManager::AllocateReflectorTexture(
-    const Spectrum& spectrum) {
+ReferenceCounted<textures::ReflectorTexture>
+TextureManager::AllocateReflectorTexture(const Spectrum& spectrum) {
   ReferenceCounted<Reflector> reflector =
       spectrum_manager_.AllocateReflector(spectrum);
   if (!reflector) {
-    return TextureManager::ReflectorTexturePtr();
+    return ReferenceCounted<textures::ReflectorTexture>();
   }
 
-  ReflectorTexturePtr& texture = constant_reflector_textures_[reflector.Get()];
+  ReferenceCounted<textures::ReflectorTexture>& texture =
+      constant_reflector_textures_[reflector.Get()];
   if (!texture) {
-    texture = MakeReferenceCounted<
-        ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-        std::move(reflector));
+    texture = MakeConstantTexture(std::move(reflector));
   }
 
   return texture;
 }
 
-TextureManager::ReflectorTexturePtr TextureManager::AllocateReflectorTexture(
+ReferenceCounted<textures::ReflectorTexture>
+TextureManager::AllocateReflectorTexture(
     const SpectrumTextureParameter& parameter) {
-  TextureManager::ReflectorTexturePtr result;
+  ReferenceCounted<textures::ReflectorTexture> result;
   Spectrum spectrum;
   switch (parameter.spectrum_texture_parameter_type_case()) {
     case SpectrumTextureParameter::kBlackbodySpectrum:
@@ -133,7 +134,7 @@ TextureManager::ReflectorTexturePtr TextureManager::AllocateReflectorTexture(
   return result;
 }
 
-TextureManager::FloatTexturePtr TextureManager::GetFloatTexture(
+ReferenceCounted<textures::FloatTexture> TextureManager::GetFloatTexture(
     const std::string& name) const {
   if (auto iter = float_textures_.top().find(name);
       iter != float_textures_.top().end()) {
@@ -145,8 +146,8 @@ TextureManager::FloatTexturePtr TextureManager::GetFloatTexture(
   exit(EXIT_FAILURE);
 }
 
-TextureManager::ReflectorTexturePtr TextureManager::GetReflectorTexture(
-    const std::string& name) const {
+ReferenceCounted<textures::ReflectorTexture>
+TextureManager::GetReflectorTexture(const std::string& name) const {
   if (auto iter = reflector_textures_.top().find(name);
       iter != reflector_textures_.top().end()) {
     return iter->second;
@@ -157,11 +158,13 @@ TextureManager::ReflectorTexturePtr TextureManager::GetReflectorTexture(
   exit(EXIT_FAILURE);
 }
 
-void TextureManager::Put(const std::string& name, FloatTexturePtr texture) {
+void TextureManager::Put(const std::string& name,
+                         ReferenceCounted<textures::FloatTexture> texture) {
   float_textures_.top()[name] = std::move(texture);
 }
 
-void TextureManager::Put(const std::string& name, ReflectorTexturePtr texture) {
+void TextureManager::Put(const std::string& name,
+                         ReferenceCounted<textures::ReflectorTexture> texture) {
   reflector_textures_.top()[name] = std::move(texture);
 }
 

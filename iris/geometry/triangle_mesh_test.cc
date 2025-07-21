@@ -53,16 +53,16 @@ struct AdditionalDataContents {
 static const face_t FRONT_FACE = 0u;
 static const face_t BACK_FACE = 1u;
 
-class AlphaHits : public textures::ValueTexture2D<bool> {
+class AlphaHits : public textures::MaskTexture {
  public:
-  bool Evaluate(const TextureCoordinates& coords) const override {
+  bool Included(const TextureCoordinates& coords) const override {
     return true;
   }
 };
 
-class AlphaMisses : public textures::ValueTexture2D<bool> {
+class AlphaMisses : public textures::MaskTexture {
  public:
-  bool Evaluate(const TextureCoordinates& coords) const override {
+  bool Included(const TextureCoordinates& coords) const override {
     return false;
   }
 };
@@ -87,9 +87,9 @@ ReferenceCounted<Geometry> MakeSimpleTriangle() {
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
-      ReferenceCounted<textures::ValueTexture2D<bool>>(), front_material,
-      back_material, front_emissive_material, back_emissive_material,
-      front_normal_map, back_normal_map);
+      ReferenceCounted<textures::MaskTexture>(), front_material, back_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
   EXPECT_EQ(triangles.size(), 1u);
   return triangles.front();
 }
@@ -102,7 +102,7 @@ TEST(Triangle, Empty) {
           {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
             {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
             {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
-          ReferenceCounted<textures::ValueTexture2D<bool>>(), front_material,
+          ReferenceCounted<textures::MaskTexture>(), front_material,
           back_material, front_emissive_material, back_emissive_material,
           front_normal_map, back_normal_map),
       IsEmpty());
@@ -171,7 +171,7 @@ TEST(Triangle, MissesRight) {
 TEST(Triangle, HitsXDominantFront) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::ValueTexture2D<bool>>(),
+      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -203,7 +203,7 @@ TEST(Triangle, HitsXDominantFront) {
 TEST(Triangle, HitsXDominantBack) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::ValueTexture2D<bool>>(),
+      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -235,7 +235,7 @@ TEST(Triangle, HitsXDominantBack) {
 TEST(Triangle, HitsYDominantFront) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 1.0), Point(1.0, 0.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::ValueTexture2D<bool>>(),
+      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -267,7 +267,7 @@ TEST(Triangle, HitsYDominantFront) {
 TEST(Triangle, HitsYDominantBack) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 1.0), Point(1.0, 0.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::ValueTexture2D<bool>>(),
+      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -356,9 +356,9 @@ TEST(Triangle, VertexNormalsLeaves) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
       {{{0, 1, 2}}}, {{{1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}}}, {},
-      ReferenceCounted<textures::ValueTexture2D<bool>>(), back_material,
-      front_material, front_emissive_material, back_emissive_material,
-      front_normal_map, back_normal_map);
+      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
 
   Point origin(-1.0, 0.25, 0.25);
   Vector direction(1.0, 0.0, 0.0);
@@ -375,7 +375,7 @@ TEST(Triangle, VertexNormalsReverses) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
       {{{0, 1, 2}}}, {{{-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}}},
-      {}, ReferenceCounted<textures::ValueTexture2D<bool>>(), back_material,
+      {}, ReferenceCounted<textures::MaskTexture>(), back_material,
       front_material, front_emissive_material, back_emissive_material,
       front_normal_map, back_normal_map);
 
@@ -465,7 +465,7 @@ TEST(Triangle, ComputeSurfaceNormal) {
 TEST(Triangle, ComputeTextureCoordinatesNone) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::ValueTexture2D<bool>>(),
+      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -525,7 +525,7 @@ TEST(Triangle, ComputeTextureCoordinates) {
 TEST(Triangle, ComputeShadingNormalNoUVs) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::ValueTexture2D<bool>>(),
+      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, ReferenceCounted<NormalMap>(),
       ReferenceCounted<NormalMap>());
@@ -550,8 +550,8 @@ TEST(Triangle, ComputeShadingNormalUVsDegenerate) {
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)}}},
-      ReferenceCounted<textures::ValueTexture2D<bool>>(), back_material,
-      front_material, front_emissive_material, back_emissive_material,
+      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
+      front_emissive_material, back_emissive_material,
       ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>());
 
   Geometry::ComputeShadingNormalResult front_normal =
@@ -574,8 +574,8 @@ TEST(Triangle, ComputeShadingNormalNone) {
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
-      ReferenceCounted<textures::ValueTexture2D<bool>>(), back_material,
-      front_material, front_emissive_material, back_emissive_material,
+      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
+      front_emissive_material, back_emissive_material,
       ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>());
 
   Geometry::ComputeShadingNormalResult front_normal =
@@ -610,8 +610,8 @@ TEST(Triangle, ComputeShadingNormalZeroLength) {
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
-      ReferenceCounted<textures::ValueTexture2D<bool>>(), back_material,
-      front_material, front_emissive_material, back_emissive_material,
+      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
+      front_emissive_material, back_emissive_material,
       ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>());
 
   AdditionalDataContents additional_data{{1.0, 1.0, 1.0},
@@ -677,8 +677,8 @@ TEST(Triangle, ComputeShadingNormalFromNormals) {
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
-      ReferenceCounted<textures::ValueTexture2D<bool>>(), back_material,
-      front_material, front_emissive_material, back_emissive_material,
+      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
+      front_emissive_material, back_emissive_material,
       ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>());
 
   AdditionalDataContents additional_data0_front{{1.0, 0.0, 0.0},

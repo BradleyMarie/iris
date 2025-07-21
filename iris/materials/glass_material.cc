@@ -12,7 +12,8 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
@@ -22,19 +23,17 @@ using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MakeMicrofacetDielectricBrdf;
 using ::iris::bxdfs::MakeMicrofacetDielectricBtdf;
 using ::iris::bxdfs::MakeSpecularDielectricBxdf;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::ReflectorTexture;
 
 class GlassMaterial final : public Material {
  public:
-  GlassMaterial(ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-                    reflectance,
-                ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-                    transmittance,
-                ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-                ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
-                ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-                ReferenceCounted<ValueTexture2D<visual>> roughness_v,
+  GlassMaterial(ReferenceCounted<ReflectorTexture> reflectance,
+                ReferenceCounted<ReflectorTexture> transmittance,
+                ReferenceCounted<FloatTexture> eta_incident,
+                ReferenceCounted<FloatTexture> eta_transmitted,
+                ReferenceCounted<FloatTexture> roughness_u,
+                ReferenceCounted<FloatTexture> roughness_v,
                 bool remap_roughness)
       : reflectance_(std::move(reflectance)),
         transmittance_(std::move(transmittance)),
@@ -49,13 +48,12 @@ class GlassMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance_;
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-      transmittance_;
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident_;
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_u_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_v_;
+  ReferenceCounted<ReflectorTexture> reflectance_;
+  ReferenceCounted<ReflectorTexture> transmittance_;
+  ReferenceCounted<FloatTexture> eta_incident_;
+  ReferenceCounted<FloatTexture> eta_transmitted_;
+  ReferenceCounted<FloatTexture> roughness_u_;
+  ReferenceCounted<FloatTexture> roughness_v_;
   bool remap_roughness_;
 };
 
@@ -116,15 +114,12 @@ const Bxdf* GlassMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeGlassMaterial(
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-        reflectance,
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-        transmittance,
-    ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_v,
-    bool remap_roughness) {
+    ReferenceCounted<ReflectorTexture> reflectance,
+    ReferenceCounted<ReflectorTexture> transmittance,
+    ReferenceCounted<FloatTexture> eta_incident,
+    ReferenceCounted<FloatTexture> eta_transmitted,
+    ReferenceCounted<FloatTexture> roughness_u,
+    ReferenceCounted<FloatTexture> roughness_v, bool remap_roughness) {
   if (!eta_incident || !eta_transmitted) {
     eta_incident.Reset();
     eta_transmitted.Reset();

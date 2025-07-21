@@ -5,6 +5,9 @@
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
+#include "iris/textures/test_util.h"
 
 namespace iris {
 namespace materials {
@@ -13,70 +16,54 @@ namespace {
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
-using ::iris::textures::ConstantPointerTexture2D;
-using ::iris::textures::ConstantValueTexture2D;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::MakeBlackTexture;
+using ::iris::textures::MakeConstantTexture;
+using ::iris::textures::ReflectorTexture;
 
 TEST(GlassMaterialTest, NullMaterial) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<ValueTexture2D<visual>> eta_front =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> eta_back =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(MakeReferenceCounted<MockReflector>());
+  ReferenceCounted<FloatTexture> eta_front = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> eta_back = MakeConstantTexture(1.0);
+
+  EXPECT_FALSE(MakeGlassMaterial(ReferenceCounted<ReflectorTexture>(),
+                                 ReferenceCounted<ReflectorTexture>(),
+                                 eta_front, eta_back,
+                                 ReferenceCounted<FloatTexture>(),
+                                 ReferenceCounted<FloatTexture>(), true));
+
+  EXPECT_FALSE(MakeGlassMaterial(ReferenceCounted<ReflectorTexture>(),
+                                 reflectance, ReferenceCounted<FloatTexture>(),
+                                 eta_back, ReferenceCounted<FloatTexture>(),
+                                 ReferenceCounted<FloatTexture>(), true));
 
   EXPECT_FALSE(MakeGlassMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      eta_front, eta_back, ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(), true));
+      ReferenceCounted<ReflectorTexture>(), reflectance, eta_front,
+      ReferenceCounted<FloatTexture>(), ReferenceCounted<FloatTexture>(),
+      ReferenceCounted<FloatTexture>(), true));
 
-  EXPECT_FALSE(MakeGlassMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      reflectance, ReferenceCounted<ValueTexture2D<visual>>(), eta_back,
-      ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(), true));
+  EXPECT_TRUE(MakeGlassMaterial(reflectance,
+                                ReferenceCounted<ReflectorTexture>(), eta_front,
+                                eta_back, ReferenceCounted<FloatTexture>(),
+                                ReferenceCounted<FloatTexture>(), true));
 
-  EXPECT_FALSE(MakeGlassMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      reflectance, eta_front, ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(), true));
-
-  EXPECT_TRUE(MakeGlassMaterial(
-      reflectance,
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      eta_front, eta_back, ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(), true));
-
-  EXPECT_TRUE(MakeGlassMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      reflectance, eta_front, eta_back,
-      ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(), true));
+  EXPECT_TRUE(MakeGlassMaterial(ReferenceCounted<ReflectorTexture>(),
+                                reflectance, eta_front, eta_back,
+                                ReferenceCounted<FloatTexture>(),
+                                ReferenceCounted<FloatTexture>(), true));
 }
 
 TEST(GlassMaterialTest, EvaluateEmpty) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-      transmittance = MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<ValueTexture2D<visual>> eta_front =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> eta_back =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance = MakeBlackTexture();
+  ReferenceCounted<ReflectorTexture> transmittance = MakeBlackTexture();
+  ReferenceCounted<FloatTexture> eta_front = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> eta_back = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material = MakeGlassMaterial(
       std::move(reflectance), std::move(transmittance), std::move(eta_front),
-      std::move(eta_back), ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(), true);
+      std::move(eta_back), ReferenceCounted<FloatTexture>(),
+      ReferenceCounted<FloatTexture>(), true);
 
   ASSERT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
                                   GetSpectralAllocator(), GetBxdfAllocator()));
@@ -87,21 +74,17 @@ TEST(GlassMaterialTest, EvaluateSpecular) {
   ReferenceCounted<Reflector> transmitter =
       MakeReferenceCounted<MockReflector>();
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-      transmittance = MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(transmitter);
-  ReferenceCounted<ValueTexture2D<visual>> eta_front =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> eta_back =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(reflector);
+  ReferenceCounted<ReflectorTexture> transmittance =
+      MakeConstantTexture(transmitter);
+  ReferenceCounted<FloatTexture> eta_front = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> eta_back = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material = MakeGlassMaterial(
       std::move(reflectance), std::move(transmittance), std::move(eta_front),
-      std::move(eta_back), ReferenceCounted<ValueTexture2D<visual>>(),
-      ReferenceCounted<ValueTexture2D<visual>>(), true);
+      std::move(eta_back), ReferenceCounted<FloatTexture>(),
+      ReferenceCounted<FloatTexture>(), true);
 
   const Bxdf* result =
       material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -112,19 +95,13 @@ TEST(GlassMaterialTest, EvaluateSpecular) {
 TEST(GlassMaterialTest, EvaluateBrdf) {
   ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-      transmittance = MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<ValueTexture2D<visual>> eta_front =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> eta_back =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> roughness =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(reflector);
+  ReferenceCounted<ReflectorTexture> transmittance =
+      MakeConstantTexture(MakeReferenceCounted<MockReflector>());
+  ReferenceCounted<FloatTexture> eta_front = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> eta_back = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> roughness = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material = MakeGlassMaterial(
       std::move(reflectance), std::move(transmittance), std::move(eta_front),
@@ -140,19 +117,13 @@ TEST(GlassMaterialTest, EvaluateBtdf) {
   ReferenceCounted<Reflector> transmitter =
       MakeReferenceCounted<MockReflector>();
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>
-      transmittance = MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(transmitter);
-  ReferenceCounted<ValueTexture2D<visual>> eta_front =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> eta_back =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> roughness =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(MakeReferenceCounted<MockReflector>());
+  ReferenceCounted<ReflectorTexture> transmittance =
+      MakeConstantTexture(transmitter);
+  ReferenceCounted<FloatTexture> eta_front = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> eta_back = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> roughness = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material = MakeGlassMaterial(
       std::move(reflectance), std::move(transmittance), std::move(eta_front),

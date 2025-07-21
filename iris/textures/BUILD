@@ -9,7 +9,6 @@ cc_library(
     deps = [
         ":float_texture",
         ":reflector_texture",
-        ":texture2d",
         "//iris:float",
         "//iris:reference_counted",
         "//iris:reflector",
@@ -26,7 +25,6 @@ cc_test(
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
-        "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
     ],
@@ -34,8 +32,10 @@ cc_test(
 
 cc_library(
     name = "float_texture",
+    srcs = ["float_texture.cc"],
     hdrs = ["float_texture.h"],
     deps = [
+        ":mask_texture",
         "//iris:float",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
@@ -49,7 +49,6 @@ cc_library(
     deps = [
         ":float_texture",
         ":reflector_texture",
-        ":uv_texture",
         "//iris:float",
         "//iris:reference_counted",
         "//iris:reflector",
@@ -66,14 +65,22 @@ cc_test(
         ":image_texture",
         "//iris:float",
         "//iris:reference_counted",
-        "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
-        "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "mask_texture",
+    hdrs = ["mask_texture.h"],
+    deps = [
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:texture_coordinates",
     ],
 )
 
@@ -115,7 +122,6 @@ cc_library(
     deps = [
         ":float_texture",
         ":reflector_texture",
-        ":texture2d",
         "//iris:float",
         "//iris:reference_counted",
         "//iris:reflector",
@@ -150,33 +156,16 @@ cc_library(
 )
 
 cc_library(
-    name = "texture2d",
-    hdrs = ["texture2d.h"],
+    name = "test_util",
+    testonly = True,
+    srcs = ["test_util.cc"],
+    hdrs = ["test_util.h"],
     deps = [
-        "//iris:reference_countable",
-        "//iris:texture_coordinates",
-    ],
-)
-
-cc_library(
-    name = "uv_texture",
-    hdrs = ["uv_texture.h"],
-    deps = [
-        ":texture2d",
-        "//iris:float",
         "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
         "//iris:texture_coordinates",
-    ],
-)
-
-cc_test(
-    name = "uv_texture_test",
-    srcs = ["uv_texture_test.cc"],
-    deps = [
-        ":uv_texture",
-        "//iris:float",
-        "//iris:texture_coordinates",
-        "//iris/reflectors:mock_reflector",
-        "@googletest//:gtest_main",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )

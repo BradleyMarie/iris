@@ -4,13 +4,13 @@
 #include "iris/float.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
 
 namespace iris {
 namespace normal_maps {
 
 ReferenceCounted<NormalMap> MakeBumpNormalMap(
-    ReferenceCounted<textures::ValueTexture2D<visual>> bumps);
+    ReferenceCounted<textures::FloatTexture> bumps);
 
 }  // namespace normal_maps
 }  // namespace iris

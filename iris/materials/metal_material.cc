@@ -11,7 +11,7 @@
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
 
 namespace iris {
 namespace materials {
@@ -19,18 +19,18 @@ namespace {
 
 using ::iris::bxdfs::MakeMicrofacetConductorBrdf;
 using ::iris::reflectors::CreateUniformReflector;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
 
 static const ReferenceCounted<Reflector> kWhite =
     CreateUniformReflector(static_cast<visual>(1.0));
 
 class MetalMaterial final : public Material {
  public:
-  MetalMaterial(ReferenceCounted<ValueTexture2D<visual>> eta_dielectric,
+  MetalMaterial(ReferenceCounted<FloatTexture> eta_dielectric,
                 ReferenceCounted<Spectrum> eta_conductor,
                 ReferenceCounted<Spectrum> k_conductor,
-                ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-                ReferenceCounted<ValueTexture2D<visual>> roughness_v,
+                ReferenceCounted<FloatTexture> roughness_u,
+                ReferenceCounted<FloatTexture> roughness_v,
                 bool remap_roughness)
       : eta_dielectric_(std::move(eta_dielectric)),
         eta_conductor_(std::move(eta_conductor)),
@@ -44,11 +44,11 @@ class MetalMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<ValueTexture2D<visual>> eta_dielectric_;
+  ReferenceCounted<FloatTexture> eta_dielectric_;
   ReferenceCounted<Spectrum> eta_conductor_;
   ReferenceCounted<Spectrum> k_conductor_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_u_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_v_;
+  ReferenceCounted<FloatTexture> roughness_u_;
+  ReferenceCounted<FloatTexture> roughness_v_;
   bool remap_roughness_;
 };
 
@@ -79,12 +79,11 @@ const Bxdf* MetalMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeMetalMaterial(
-    ReferenceCounted<ValueTexture2D<visual>> eta_dielectric,
+    ReferenceCounted<FloatTexture> eta_dielectric,
     ReferenceCounted<Spectrum> eta_conductor,
     ReferenceCounted<Spectrum> k_conductor,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_v,
-    bool remap_roughness) {
+    ReferenceCounted<FloatTexture> roughness_u,
+    ReferenceCounted<FloatTexture> roughness_v, bool remap_roughness) {
   if (!eta_dielectric || !eta_conductor) {
     return ReferenceCounted<Material>();
   }

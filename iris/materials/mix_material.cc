@@ -11,7 +11,7 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
 
 namespace iris {
 namespace materials {
@@ -19,13 +19,13 @@ namespace {
 
 using ::iris::bxdfs::MakeAttenuatedBxdf;
 using ::iris::bxdfs::MakeCompositeBxdf;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
 
 class MixMaterial final : public Material {
  public:
   MixMaterial(ReferenceCounted<Material> material0,
               ReferenceCounted<Material> material1,
-              ReferenceCounted<ValueTexture2D<visual>> interpolation)
+              ReferenceCounted<FloatTexture> interpolation)
       : material0_(std::move(material0)),
         material1_(std::move(material1)),
         interpolation_(std::move(interpolation)) {}
@@ -37,7 +37,7 @@ class MixMaterial final : public Material {
  private:
   ReferenceCounted<Material> material0_;
   ReferenceCounted<Material> material1_;
-  ReferenceCounted<ValueTexture2D<visual>> interpolation_;
+  ReferenceCounted<FloatTexture> interpolation_;
 };
 
 const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
@@ -70,7 +70,7 @@ const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
 
 ReferenceCounted<Material> MakeMixMaterial(
     ReferenceCounted<Material> material0, ReferenceCounted<Material> material1,
-    ReferenceCounted<ValueTexture2D<visual>> interpolation) {
+    ReferenceCounted<FloatTexture> interpolation) {
   if (!material0 && !material1) {
     return ReferenceCounted<Material>();
   }

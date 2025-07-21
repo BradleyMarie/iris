@@ -5,14 +5,13 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
 
 ReferenceCounted<Material> MakeMirrorMaterial(
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        reflectance);
+    ReferenceCounted<textures::ReflectorTexture> reflectance);
 
 }  // namespace materials
 }  // namespace iris

@@ -5,26 +5,22 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
 
 ReferenceCounted<Material> MakeUberMaterial(
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        reflectance,
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        transmittance,
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        diffuse,
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        specular,
-    ReferenceCounted<textures::ValueTexture2D<visual>> opacity,
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_transmitted,
-    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
-    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
-    bool remap_roughness);
+    ReferenceCounted<textures::ReflectorTexture> reflectance,
+    ReferenceCounted<textures::ReflectorTexture> transmittance,
+    ReferenceCounted<textures::ReflectorTexture> diffuse,
+    ReferenceCounted<textures::ReflectorTexture> specular,
+    ReferenceCounted<textures::FloatTexture> opacity,
+    ReferenceCounted<textures::FloatTexture> eta_incident,
+    ReferenceCounted<textures::FloatTexture> eta_transmitted,
+    ReferenceCounted<textures::FloatTexture> roughness_u,
+    ReferenceCounted<textures::FloatTexture> roughness_v, bool remap_roughness);
 
 }  // namespace materials
 }  // namespace iris

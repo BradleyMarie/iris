@@ -5,18 +5,17 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
 
 namespace iris {
 namespace materials {
 
 ReferenceCounted<Material> MakeMetalMaterial(
-    ReferenceCounted<textures::ValueTexture2D<visual>> eta_dielectric,
+    ReferenceCounted<textures::FloatTexture> eta_dielectric,
     ReferenceCounted<Spectrum> eta_conductor,
     ReferenceCounted<Spectrum> k_conductor,
-    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_u,
-    ReferenceCounted<textures::ValueTexture2D<visual>> roughness_v,
-    bool remap_roughness);
+    ReferenceCounted<textures::FloatTexture> roughness_u,
+    ReferenceCounted<textures::FloatTexture> roughness_v, bool remap_roughness);
 
 }  // namespace materials
 }  // namespace iris

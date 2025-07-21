@@ -7,7 +7,7 @@
 #include "iris/normal_maps/bump_normal_map.h"
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
@@ -15,7 +15,7 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::normal_maps::MakeBumpNormalMap;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
 using ::pbrt_proto::v3::FloatTextureParameter;
 
 class PbrtFrontBumpMap final : public NormalMap {
@@ -73,7 +73,7 @@ std::array<ReferenceCounted<NormalMap>, 2> MakeBumpMap(
     return std::array<ReferenceCounted<NormalMap>, 2>();
   }
 
-  ReferenceCounted<ValueTexture2D<visual>> texture =
+  ReferenceCounted<FloatTexture> texture =
       texture_manager.AllocateFloatTexture(bumpmap);
   if (!texture) {
     return std::array<ReferenceCounted<NormalMap>, 2>();

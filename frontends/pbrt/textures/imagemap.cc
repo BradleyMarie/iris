@@ -13,30 +13,25 @@
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
+#include "iris/textures/float_texture.h"
 #include "iris/textures/image_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "iris/textures/scaled_texture.h"
-#include "iris/textures/texture2d.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
-using ::iris::textures::BorderedImageTexture2D;
-using ::iris::textures::BorderedSpectralImageTexture2D;
-using ::iris::textures::ClampedImageTexture2D;
-using ::iris::textures::ClampedSpectralImageTexture2D;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::RepeatedImageTexture2D;
-using ::iris::textures::RepeatedSpectralImageTexture2D;
-using ::iris::textures::ScaledSpectralTexture2D;
-using ::iris::textures::ScaledValueTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::MakeBorderedImageTexture;
+using ::iris::textures::MakeClampedImageTexture;
+using ::iris::textures::MakeRepeatedImageTexture;
+using ::iris::textures::MakeScaledTexture;
 using ::pbrt_proto::v3::FloatTexture;
 using ::pbrt_proto::v3::ImageWrapping;
 using ::pbrt_proto::v3::SpectrumTexture;
 
-ReferenceCounted<ValueTexture2D<visual>> MakeImageMap(
+ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
     const FloatTexture::ImageMap& imagemap, ImageManager& image_manager,
     TextureManager& texture_manager) {
   FloatTexture::ImageMap with_defaults = Defaults().float_textures().imagemap();
@@ -111,25 +106,25 @@ ReferenceCounted<ValueTexture2D<visual>> MakeImageMap(
   auto image = image_manager.LoadFloatImageFromSDR(
       with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
 
-  ReferenceCounted<ValueTexture2D<visual>> texture;
+  ReferenceCounted<iris::textures::FloatTexture> texture;
   switch (with_defaults.wrap()) {
     case ImageWrapping::BLACK:
-      texture = MakeReferenceCounted<BorderedImageTexture2D<visual>>(
-          std::move(image), static_cast<visual>(0.0),
-          static_cast<visual>(with_defaults.uscale()),
-          static_cast<visual>(with_defaults.vscale()),
-          static_cast<visual>(with_defaults.udelta()),
-          static_cast<visual>(with_defaults.vdelta()));
+      texture =
+          MakeBorderedImageTexture(std::move(image), static_cast<visual>(0.0),
+                                   static_cast<visual>(with_defaults.uscale()),
+                                   static_cast<visual>(with_defaults.vscale()),
+                                   static_cast<visual>(with_defaults.udelta()),
+                                   static_cast<visual>(with_defaults.vdelta()));
       break;
     case ImageWrapping::CLAMP:
-      texture = MakeReferenceCounted<ClampedImageTexture2D<visual>>(
+      texture = MakeClampedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
           static_cast<visual>(with_defaults.udelta()),
           static_cast<visual>(with_defaults.vdelta()));
       break;
     case ImageWrapping::REPEAT:
-      texture = MakeReferenceCounted<RepeatedImageTexture2D<visual>>(
+      texture = MakeRepeatedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
           static_cast<visual>(with_defaults.udelta()),
@@ -138,16 +133,15 @@ ReferenceCounted<ValueTexture2D<visual>> MakeImageMap(
   };
 
   if (with_defaults.scale() != static_cast<visual_t>(1.0)) {
-    texture = MakeReferenceCounted<ScaledValueTexture2D<visual>>(
-        texture_manager.AllocateFloatTexture(
-            static_cast<visual>(with_defaults.scale())),
-        std::move(texture));
+    texture = MakeScaledTexture(texture_manager.AllocateFloatTexture(
+                                    static_cast<visual>(with_defaults.scale())),
+                                std::move(texture));
   }
 
   return texture;
 }
 
-ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeImageMap(
+ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
     const SpectrumTexture::ImageMap& imagemap, ImageManager& image_manager,
     TextureManager& texture_manager) {
   SpectrumTexture::ImageMap with_defaults =
@@ -223,11 +217,10 @@ ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeImageMap(
   auto image = image_manager.LoadReflectorImageFromSDR(
       with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> texture;
+  ReferenceCounted<iris::textures::ReflectorTexture> texture;
   switch (with_defaults.wrap()) {
     case ImageWrapping::BLACK:
-      texture = MakeReferenceCounted<
-          BorderedSpectralImageTexture2D<Reflector, SpectralAllocator>>(
+      texture = MakeBorderedImageTexture(
           std::move(image), ReferenceCounted<Reflector>(),
           static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
@@ -235,16 +228,14 @@ ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeImageMap(
           static_cast<visual>(with_defaults.vdelta()));
       break;
     case ImageWrapping::CLAMP:
-      texture = iris::MakeReferenceCounted<
-          ClampedSpectralImageTexture2D<Reflector, SpectralAllocator>>(
+      texture = MakeClampedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
           static_cast<visual>(with_defaults.udelta()),
           static_cast<visual>(with_defaults.vdelta()));
       break;
     case ImageWrapping::REPEAT:
-      texture = iris::MakeReferenceCounted<
-          RepeatedSpectralImageTexture2D<Reflector, SpectralAllocator>>(
+      texture = MakeRepeatedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
           static_cast<visual>(with_defaults.udelta()),
@@ -253,10 +244,9 @@ ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> MakeImageMap(
   };
 
   if (with_defaults.scale() != static_cast<visual_t>(1.0)) {
-    texture = MakeReferenceCounted<ScaledSpectralTexture2D<Reflector>>(
-        texture_manager.AllocateReflectorTexture(
-            static_cast<visual>(with_defaults.scale())),
-        std::move(texture));
+    texture = MakeScaledTexture(texture_manager.AllocateReflectorTexture(
+                                    static_cast<visual>(with_defaults.scale())),
+                                std::move(texture));
   }
 
   return texture;

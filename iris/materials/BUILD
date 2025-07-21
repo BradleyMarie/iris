@@ -48,7 +48,8 @@ cc_library(
         "//iris/bxdfs:composite_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/bxdfs:specular_dielectric_bxdf",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -61,6 +62,9 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -80,7 +84,8 @@ cc_library(
         "//iris:texture_coordinates",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:oren_nayar_bxdf",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -93,6 +98,9 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -112,7 +120,7 @@ cc_library(
         "//iris:texture_coordinates",
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/reflectors:uniform_reflector",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
     ],
 )
 
@@ -125,6 +133,7 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
         "@googletest//:gtest_main",
     ],
 )
@@ -143,7 +152,7 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:mirror_brdf",
-        "//iris/textures:texture2d",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -156,6 +165,8 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -175,7 +186,7 @@ cc_library(
         "//iris:texture_coordinates",
         "//iris/bxdfs:attenuated_bxdf",
         "//iris/bxdfs:composite_bxdf",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
     ],
 )
 
@@ -190,6 +201,8 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -224,7 +237,8 @@ cc_library(
         "//iris/bxdfs:composite_bxdf",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -237,6 +251,9 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -255,7 +272,8 @@ cc_library(
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/bxdfs:ashikhmin_shirley_brdf",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -268,6 +286,9 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -288,7 +309,8 @@ cc_library(
         "//iris/bxdfs:composite_bxdf",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:microfacet_bxdf",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -301,6 +323,9 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )
@@ -324,7 +349,8 @@ cc_library(
         "//iris/bxdfs:specular_dielectric_bxdf",
         "//iris/bxdfs:transparent_btdf",
         "//iris/reflectors:uniform_reflector",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -337,6 +363,9 @@ cc_test(
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )

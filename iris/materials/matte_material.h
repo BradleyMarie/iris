@@ -5,15 +5,15 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
 
 ReferenceCounted<Material> MakeMatteMaterial(
-    ReferenceCounted<textures::PointerTexture2D<Reflector, SpectralAllocator>>
-        reflectance,
-    ReferenceCounted<textures::ValueTexture2D<visual>> sigma);
+    ReferenceCounted<textures::ReflectorTexture> reflectance,
+    ReferenceCounted<textures::FloatTexture> sigma);
 
 }  // namespace materials
 }  // namespace iris

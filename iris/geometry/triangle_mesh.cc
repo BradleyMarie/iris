@@ -27,7 +27,7 @@
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/mask_texture.h"
 #include "iris/vector.h"
 
 namespace iris {
@@ -72,7 +72,7 @@ class Triangle final : public Geometry {
     std::vector<Point> points;
     std::vector<std::tuple<geometric, geometric, geometric>> normals;
     std::vector<std::pair<geometric, geometric>> uv;
-    ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask;
+    ReferenceCounted<textures::MaskTexture> alpha_mask;
     ReferenceCounted<Material> materials[2];
     ReferenceCounted<EmissiveMaterial> emissive_materials[2];
     ReferenceCounted<NormalMap> normal_maps[2];
@@ -508,7 +508,7 @@ Hit* Triangle::Trace(const Ray& ray, geometric_t minimum_distance,
         ComputeTextureCoordinates(std::nullopt, barycentric0, barycentric1,
                                   barycentric2);
     if (texture_coordinates &&
-        !shared_->alpha_mask->Evaluate(*texture_coordinates)) {
+        !shared_->alpha_mask->Included(*texture_coordinates)) {
       return nullptr;
     }
   }
@@ -579,7 +579,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
     std::span<const std::tuple<geometric, geometric, geometric>> normals,
     std::span<const std::pair<geometric, geometric>> uv,
-    ReferenceCounted<textures::ValueTexture2D<bool>> alpha_mask,
+    ReferenceCounted<textures::MaskTexture> alpha_mask,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<Material> back_material,
     ReferenceCounted<EmissiveMaterial> front_emissive_material,

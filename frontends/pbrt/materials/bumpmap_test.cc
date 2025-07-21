@@ -6,7 +6,7 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -14,12 +14,12 @@ namespace materials {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
 using ::pbrt_proto::v3::FloatTextureParameter;
 
-class TestTexture : public ValueTexture2D<visual> {
+class TestTexture : public FloatTexture {
  public:
-  visual Evaluate(const TextureCoordinates& coords) const override {
+  visual_t Evaluate(const TextureCoordinates& coords) const override {
     return 0.0;
   }
 };

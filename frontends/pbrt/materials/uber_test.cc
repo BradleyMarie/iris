@@ -19,7 +19,7 @@ TEST(MakeUber, Empty) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  TextureManager::FloatTexturePtr bump =
+  ReferenceCounted<iris::textures::FloatTexture> bump =
       texture_manager.AllocateFloatTexture(1.0);
   texture_manager.Put("bump", bump);
 

@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "frontends/pbrt/defaults.h"
-#include "frontends/pbrt/shapes/alpha_mask.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/emissive_material.h"
 #include "iris/geometry.h"
@@ -24,7 +23,7 @@ namespace shapes {
 namespace {
 
 using ::iris::geometry::AllocateTriangleMesh;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::MaskTexture;
 using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Shape;
 
@@ -118,8 +117,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
     exit(EXIT_FAILURE);
   }
 
-  ReferenceCounted<ValueTexture2D<bool>> alpha_mask;
-  if (!MakeAlphaMask(texture_manager, with_defaults.alpha(), alpha_mask)) {
+  ReferenceCounted<textures::MaskTexture> alpha_mask =
+      texture_manager.AllocateFloatTexture(with_defaults.alpha());
+  if (!alpha_mask) {
     return std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>(
         {}, model_to_world);
   }

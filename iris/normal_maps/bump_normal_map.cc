@@ -8,17 +8,17 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
 #include "iris/vector.h"
 
 namespace iris {
 namespace normal_maps {
 namespace {
 
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
 
 std::pair<geometric_t, geometric_t> ComputeNormal(
-    const ReferenceCounted<ValueTexture2D<visual>>& bumps,
+    const ReferenceCounted<FloatTexture>& bumps,
     const TextureCoordinates& texture_coordinates,
     const NormalMap::Differentials& differentials) {
   visual_t displacement = bumps->Evaluate(texture_coordinates);
@@ -88,7 +88,7 @@ std::pair<geometric_t, geometric_t> ComputeNormal(
 
 class BumpNormalMap final : public NormalMap {
  public:
-  BumpNormalMap(ReferenceCounted<ValueTexture2D<visual>> bumps)
+  BumpNormalMap(ReferenceCounted<FloatTexture> bumps)
       : bumps_(std::move(bumps)) {}
 
   Vector Evaluate(const TextureCoordinates& texture_coordinates,
@@ -96,7 +96,7 @@ class BumpNormalMap final : public NormalMap {
                   const Vector& surface_normal) const override;
 
  private:
-  ReferenceCounted<ValueTexture2D<visual>> bumps_;
+  ReferenceCounted<FloatTexture> bumps_;
 };
 
 Vector BumpNormalMap::Evaluate(
@@ -127,7 +127,7 @@ Vector BumpNormalMap::Evaluate(
 }  // namespace
 
 ReferenceCounted<NormalMap> MakeBumpNormalMap(
-    ReferenceCounted<ValueTexture2D<visual>> bumps) {
+    ReferenceCounted<FloatTexture> bumps) {
   if (!bumps) {
     return ReferenceCounted<NormalMap>();
   }

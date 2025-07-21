@@ -12,7 +12,8 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
@@ -21,17 +22,17 @@ namespace {
 using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MakeMicrofacetDielectricBrdf;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::ReflectorTexture;
 
 class PlasticMaterial final : public Material {
  public:
-  PlasticMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
-      ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-      ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
-      ReferenceCounted<ValueTexture2D<visual>> roughness, bool remap_roughness)
+  PlasticMaterial(ReferenceCounted<ReflectorTexture> diffuse,
+                  ReferenceCounted<ReflectorTexture> specular,
+                  ReferenceCounted<FloatTexture> eta_incident,
+                  ReferenceCounted<FloatTexture> eta_transmitted,
+                  ReferenceCounted<FloatTexture> roughness,
+                  bool remap_roughness)
       : diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
         eta_incident_(std::move(eta_incident)),
@@ -44,11 +45,11 @@ class PlasticMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse_;
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular_;
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident_;
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_;
+  ReferenceCounted<ReflectorTexture> diffuse_;
+  ReferenceCounted<ReflectorTexture> specular_;
+  ReferenceCounted<FloatTexture> eta_incident_;
+  ReferenceCounted<FloatTexture> eta_transmitted_;
+  ReferenceCounted<FloatTexture> roughness_;
   bool remap_roughness_;
 };
 
@@ -92,11 +93,11 @@ const Bxdf* PlasticMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakePlasticMaterial(
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
-    ReferenceCounted<ValueTexture2D<visual>> eta_incident,
-    ReferenceCounted<ValueTexture2D<visual>> eta_transmitted,
-    ReferenceCounted<ValueTexture2D<visual>> roughness, bool remap_roughness) {
+    ReferenceCounted<ReflectorTexture> diffuse,
+    ReferenceCounted<ReflectorTexture> specular,
+    ReferenceCounted<FloatTexture> eta_incident,
+    ReferenceCounted<FloatTexture> eta_transmitted,
+    ReferenceCounted<FloatTexture> roughness, bool remap_roughness) {
   if (!eta_incident || !eta_transmitted) {
     eta_incident.Reset();
     eta_transmitted.Reset();

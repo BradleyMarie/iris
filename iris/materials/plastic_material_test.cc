@@ -8,6 +8,9 @@
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
+#include "iris/textures/test_util.h"
 
 namespace iris {
 namespace materials {
@@ -16,63 +19,49 @@ namespace {
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
-using ::iris::textures::ConstantPointerTexture2D;
-using ::iris::textures::ConstantValueTexture2D;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::MakeBlackTexture;
+using ::iris::textures::MakeConstantTexture;
+using ::iris::textures::ReflectorTexture;
 using ::testing::_;
 using ::testing::Return;
 
 TEST(PlasticMaterialTest, NullMaterial) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance = MakeBlackTexture();
+  ReferenceCounted<FloatTexture> eta_incident = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> eta_transmitted = MakeConstantTexture(1.5);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
 
+  EXPECT_FALSE(MakePlasticMaterial(ReferenceCounted<ReflectorTexture>(),
+                                   ReferenceCounted<ReflectorTexture>(),
+                                   eta_incident, eta_transmitted,
+                                   std::move(sigma), false));
+  EXPECT_FALSE(MakePlasticMaterial(ReferenceCounted<ReflectorTexture>(),
+                                   reflectance,
+                                   ReferenceCounted<FloatTexture>(),
+                                   eta_transmitted, std::move(sigma), false));
   EXPECT_FALSE(MakePlasticMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      eta_incident, eta_transmitted, std::move(sigma), false));
-  EXPECT_FALSE(MakePlasticMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      reflectance, ReferenceCounted<ValueTexture2D<visual>>(), eta_transmitted,
-      std::move(sigma), false));
-  EXPECT_FALSE(MakePlasticMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      reflectance, eta_incident, ReferenceCounted<ValueTexture2D<visual>>(),
-      std::move(sigma), false));
+      ReferenceCounted<ReflectorTexture>(), reflectance, eta_incident,
+      ReferenceCounted<FloatTexture>(), std::move(sigma), false));
   EXPECT_TRUE(MakePlasticMaterial(
-      reflectance,
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      eta_incident, eta_transmitted, std::move(sigma), false));
+      reflectance, ReferenceCounted<ReflectorTexture>(), eta_incident,
+      eta_transmitted, std::move(sigma), false));
   EXPECT_TRUE(MakePlasticMaterial(reflectance, reflectance,
-                                  ReferenceCounted<ValueTexture2D<visual>>(),
+                                  ReferenceCounted<FloatTexture>(),
                                   eta_transmitted, std::move(sigma), false));
   EXPECT_TRUE(MakePlasticMaterial(reflectance, reflectance, eta_incident,
-                                  ReferenceCounted<ValueTexture2D<visual>>(),
+                                  ReferenceCounted<FloatTexture>(),
                                   std::move(sigma), false));
-  EXPECT_TRUE(MakePlasticMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>(),
-      reflectance, eta_incident, eta_transmitted, std::move(sigma), false));
+  EXPECT_TRUE(MakePlasticMaterial(ReferenceCounted<ReflectorTexture>(),
+                                  reflectance, eta_incident, eta_transmitted,
+                                  std::move(sigma), false));
 }
 
 TEST(PlasticMaterialTest, NoBxdfs) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance = MakeBlackTexture();
+  ReferenceCounted<FloatTexture> eta_incident = MakeConstantTexture(1.5);
+  ReferenceCounted<FloatTexture> eta_transmitted = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material =
       MakePlasticMaterial(reflectance, reflectance, eta_incident,
@@ -87,19 +76,12 @@ TEST(PlasticMaterialTest, LambertianOnly) {
       MakeReferenceCounted<MockReflector>();
   EXPECT_CALL(*reflector, Reflectance(_)).Times(1).WillOnce(Return(1.0));
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(reflector);
+  ReferenceCounted<ReflectorTexture> specular = MakeBlackTexture();
+  ReferenceCounted<FloatTexture> eta_incident = MakeConstantTexture(1.5);
+  ReferenceCounted<FloatTexture> eta_transmitted = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material =
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
@@ -123,19 +105,11 @@ TEST(PlasticMaterialTest, SpecularOnly) {
       MakeReferenceCounted<MockReflector>();
   EXPECT_CALL(*reflector, Reflectance(_)).Times(1).WillOnce(Return(1.0));
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance = MakeBlackTexture();
+  ReferenceCounted<ReflectorTexture> specular = MakeConstantTexture(reflector);
+  ReferenceCounted<FloatTexture> eta_incident = MakeConstantTexture(1.5);
+  ReferenceCounted<FloatTexture> eta_transmitted = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material =
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
@@ -158,19 +132,11 @@ TEST(PlasticMaterialTest, Remap) {
       MakeReferenceCounted<MockReflector>();
   EXPECT_CALL(*reflector, Reflectance(_)).Times(1).WillOnce(Return(1.0));
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance = MakeBlackTexture();
+  ReferenceCounted<ReflectorTexture> specular = MakeConstantTexture(reflector);
+  ReferenceCounted<FloatTexture> eta_incident = MakeConstantTexture(1.5);
+  ReferenceCounted<FloatTexture> eta_transmitted = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material =
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
@@ -193,18 +159,12 @@ TEST(PlasticMaterialTest, Both) {
       MakeReferenceCounted<MockReflector>();
   EXPECT_CALL(*reflector, Reflectance(_)).Times(2).WillRepeatedly(Return(1.0));
 
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
-  ReferenceCounted<ValueTexture2D<visual>> eta_incident =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.5);
-  ReferenceCounted<ValueTexture2D<visual>> eta_transmitted =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
-  ReferenceCounted<ValueTexture2D<visual>> sigma =
-      MakeReferenceCounted<ConstantValueTexture2D<visual>>(1.0);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(reflector);
+  ReferenceCounted<ReflectorTexture> specular = MakeConstantTexture(reflector);
+  ReferenceCounted<FloatTexture> eta_incident = MakeConstantTexture(1.5);
+  ReferenceCounted<FloatTexture> eta_transmitted = MakeConstantTexture(1.0);
+  ReferenceCounted<FloatTexture> sigma = MakeConstantTexture(1.0);
 
   ReferenceCounted<Material> material =
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,

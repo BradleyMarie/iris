@@ -10,24 +10,24 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
 namespace {
 
 using ::iris::bxdfs::MakeAshikhminShirleyBrdf;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::FloatTexture;
+using ::iris::textures::ReflectorTexture;
 
 class SubstrateMaterial final : public Material {
  public:
-  SubstrateMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
-      ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-      ReferenceCounted<ValueTexture2D<visual>> roughness_v,
-      bool remap_roughness)
+  SubstrateMaterial(ReferenceCounted<ReflectorTexture> diffuse,
+                    ReferenceCounted<ReflectorTexture> specular,
+                    ReferenceCounted<FloatTexture> roughness_u,
+                    ReferenceCounted<FloatTexture> roughness_v,
+                    bool remap_roughness)
       : diffuse_(std::move(diffuse)),
         specular_(std::move(specular)),
         roughness_u_(std::move(roughness_u)),
@@ -39,10 +39,10 @@ class SubstrateMaterial final : public Material {
                        BxdfAllocator& bxdf_allocator) const override;
 
  private:
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse_;
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_u_;
-  ReferenceCounted<ValueTexture2D<visual>> roughness_v_;
+  ReferenceCounted<ReflectorTexture> diffuse_;
+  ReferenceCounted<ReflectorTexture> specular_;
+  ReferenceCounted<FloatTexture> roughness_u_;
+  ReferenceCounted<FloatTexture> roughness_v_;
   bool remap_roughness_;
 };
 
@@ -77,11 +77,10 @@ const Bxdf* SubstrateMaterial::Evaluate(
 }  // namespace
 
 ReferenceCounted<Material> MakeSubstrateMaterial(
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> diffuse,
-    ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> specular,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_u,
-    ReferenceCounted<ValueTexture2D<visual>> roughness_v,
-    bool remap_roughness) {
+    ReferenceCounted<ReflectorTexture> diffuse,
+    ReferenceCounted<ReflectorTexture> specular,
+    ReferenceCounted<FloatTexture> roughness_u,
+    ReferenceCounted<FloatTexture> roughness_v, bool remap_roughness) {
   if (!diffuse && !specular) {
     return ReferenceCounted<Material>();
   }

@@ -12,7 +12,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris:vector",
-        "//iris/textures:texture2d",
+        "//iris/textures:float_texture",
     ],
 )
 
@@ -25,9 +25,9 @@ cc_test(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
-        "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
         "//iris/textures:image_texture",
-        "//iris/textures:texture2d",
+        "//iris/textures:test_util",
         "@googletest//:gtest_main",
     ],
 )

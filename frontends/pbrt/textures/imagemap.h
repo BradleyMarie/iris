@@ -6,20 +6,21 @@
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
-ReferenceCounted<iris::textures::ValueTexture2D<visual>> MakeImageMap(
+ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
     const pbrt_proto::v3::FloatTexture::ImageMap& imagemap,
     ImageManager& image_manager, TextureManager& texture_manager);
 
-ReferenceCounted<iris::textures::PointerTexture2D<Reflector, SpectralAllocator>>
-MakeImageMap(const pbrt_proto::v3::SpectrumTexture::ImageMap& imagemap,
-             ImageManager& image_manager, TextureManager& texture_manager);
+ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
+    const pbrt_proto::v3::SpectrumTexture::ImageMap& imagemap,
+    ImageManager& image_manager, TextureManager& texture_manager);
 
 }  // namespace textures
 }  // namespace pbrt_frontend

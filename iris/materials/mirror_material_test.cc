@@ -5,6 +5,8 @@
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/textures/constant_texture.h"
+#include "iris/textures/reflector_texture.h"
+#include "iris/textures/test_util.h"
 
 namespace iris {
 namespace materials {
@@ -13,20 +15,16 @@ namespace {
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
-using ::iris::textures::ConstantPointerTexture2D;
-using ::iris::textures::PointerTexture2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::MakeBlackTexture;
+using ::iris::textures::MakeConstantTexture;
+using ::iris::textures::ReflectorTexture;
 
 TEST(MirrorMaterialTest, NullMaterial) {
-  EXPECT_FALSE(MakeMirrorMaterial(
-      ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>>()));
+  EXPECT_FALSE(MakeMirrorMaterial(ReferenceCounted<ReflectorTexture>()));
 }
 
 TEST(MirrorMaterialTest, EvaluateEmpty) {
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(
-          ReferenceCounted<Reflector>());
+  ReferenceCounted<ReflectorTexture> reflectance = MakeBlackTexture();
   ReferenceCounted<Material> material =
       MakeMirrorMaterial(std::move(reflectance));
 
@@ -36,9 +34,8 @@ TEST(MirrorMaterialTest, EvaluateEmpty) {
 
 TEST(MirrorMaterialTest, Evaluate) {
   ReferenceCounted<Reflector> reflector = MakeReferenceCounted<MockReflector>();
-  ReferenceCounted<PointerTexture2D<Reflector, SpectralAllocator>> reflectance =
-      MakeReferenceCounted<
-          ConstantPointerTexture2D<Reflector, SpectralAllocator>>(reflector);
+  ReferenceCounted<ReflectorTexture> reflectance =
+      MakeConstantTexture(reflector);
   ReferenceCounted<Material> material =
       MakeMirrorMaterial(std::move(reflectance));
 

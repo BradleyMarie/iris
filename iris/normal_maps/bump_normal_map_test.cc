@@ -9,27 +9,25 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/constant_texture.h"
+#include "iris/textures/float_texture.h"
 #include "iris/textures/image_texture.h"
-#include "iris/textures/texture2d.h"
+#include "iris/textures/test_util.h"
 
 namespace iris {
 namespace normal_maps {
 namespace {
 
-using ::iris::textures::ClampedImageTexture2D;
-using ::iris::textures::ConstantValueTexture2D;
+using ::iris::textures::FloatTexture;
 using ::iris::textures::Image2D;
-using ::iris::textures::ValueTexture2D;
+using ::iris::textures::MakeClampedImageTexture;
+using ::iris::textures::MakeZeroTexture;
 
 TEST(BumpNormalMap, Null) {
-  EXPECT_FALSE(MakeBumpNormalMap(ReferenceCounted<ValueTexture2D<visual>>()));
+  EXPECT_FALSE(MakeBumpNormalMap(ReferenceCounted<FloatTexture>()));
 }
 
 TEST(BumpNormalMap, EvaluateNoDifferentials) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result =
       normal_map->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -38,9 +36,7 @@ TEST(BumpNormalMap, EvaluateNoDifferentials) {
 }
 
 TEST(BumpNormalMap, EvaluateNoNormalMapDifferentials) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}}, std::nullopt,
@@ -49,9 +45,7 @@ TEST(BumpNormalMap, EvaluateNoNormalMapDifferentials) {
 }
 
 TEST(BumpNormalMap, EvaluateNoTextureCoordinateDifferentials) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result =
       normal_map->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
@@ -62,9 +56,7 @@ TEST(BumpNormalMap, EvaluateNoTextureCoordinateDifferentials) {
 }
 
 TEST(BumpNormalMap, EvaluateNoDUVTextureCoordinateDifferentials) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{0.0, 0.0, 0.0, 0.0}}},
@@ -75,9 +67,7 @@ TEST(BumpNormalMap, EvaluateNoDUVTextureCoordinateDifferentials) {
 }
 
 TEST(BumpNormalMap, EvaluateConstantValueXY) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
@@ -88,9 +78,7 @@ TEST(BumpNormalMap, EvaluateConstantValueXY) {
 }
 
 TEST(BumpNormalMap, EvaluateConstantValueUV) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
@@ -110,8 +98,7 @@ TEST(BumpNormalMap, EvaluateXY) {
       std::make_shared<Image2D<float>>(values, std::pair<size_t, size_t>(2, 2));
 
   ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ClampedImageTexture2D<float>>(
-          image, std::nullopt, std::nullopt, std::nullopt, std::nullopt));
+      MakeBumpNormalMap(MakeClampedImageTexture(image, 1.0, 1.0, 0.0, 0.0));
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
@@ -124,9 +111,7 @@ TEST(BumpNormalMap, EvaluateXY) {
 }
 
 TEST(BumpNormalMap, EvaluateNoDUTextureCoordinateDifferentials) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{0.0, 1.0, 0.0, 1.0}}},
@@ -137,9 +122,7 @@ TEST(BumpNormalMap, EvaluateNoDUTextureCoordinateDifferentials) {
 }
 
 TEST(BumpNormalMap, EvaluateNoDVTextureCoordinateDifferentials) {
-  ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ConstantValueTexture2D<visual>>(
-          static_cast<visual>(0.0)));
+  ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 1.0, 0.0}}},
@@ -159,8 +142,7 @@ TEST(BumpNormalMap, EvaluateUV) {
       std::make_shared<Image2D<float>>(values, std::pair<size_t, size_t>(2, 2));
 
   ReferenceCounted<NormalMap> normal_map =
-      MakeBumpNormalMap(MakeReferenceCounted<ClampedImageTexture2D<float>>(
-          image, std::nullopt, std::nullopt, std::nullopt, std::nullopt));
+      MakeBumpNormalMap(MakeClampedImageTexture(image, 1.0, 1.0, 0.0, 0.0));
 
   Vector result = normal_map->Evaluate(
       TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
