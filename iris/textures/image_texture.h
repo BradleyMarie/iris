@@ -11,6 +11,8 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "iris/textures/uv_texture.h"
 
 namespace iris {
@@ -284,6 +286,29 @@ class RepeatedImageTexture2D final : public UVValueTexture2D<T> {
  private:
   std::shared_ptr<Image2D<T>> image_;
 };
+
+ReferenceCounted<FloatTexture> MakeBorderedImageTexture(
+    std::shared_ptr<Image2D<visual>> image, visual_t border, geometric u_scale,
+    geometric v_scale, geometric u_offset, geometric v_offset);
+ReferenceCounted<FloatTexture> MakeClampedImageTexture(
+    std::shared_ptr<Image2D<visual>> image, geometric u_scale,
+    geometric v_scale, geometric u_offset, geometric v_offset);
+ReferenceCounted<FloatTexture> MakeRepeatedImageTexture(
+    std::shared_ptr<Image2D<visual>> image, geometric u_scale,
+    geometric v_scale, geometric u_offset, geometric v_offset);
+
+ReferenceCounted<ReflectorTexture> MakeBorderedImageTexture(
+    std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image,
+    ReferenceCounted<Reflector> border, geometric u_scale, geometric v_scale,
+    geometric u_offset, geometric v_offset);
+ReferenceCounted<ReflectorTexture> MakeClampedImageTexture(
+    std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image,
+    geometric u_scale, geometric v_scale, geometric u_offset,
+    geometric v_offset);
+ReferenceCounted<ReflectorTexture> MakeRepeatedImageTexture(
+    std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image,
+    geometric u_scale, geometric v_scale, geometric u_offset,
+    geometric v_offset);
 
 }  // namespace textures
 }  // namespace iris

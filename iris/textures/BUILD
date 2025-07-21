@@ -4,10 +4,16 @@ package(default_visibility = ["//visibility:public"])
 
 cc_library(
     name = "constant_texture",
+    srcs = ["constant_texture.cc"],
     hdrs = ["constant_texture.h"],
     deps = [
+        ":float_texture",
+        ":reflector_texture",
         ":texture2d",
+        "//iris:float",
         "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
         "//iris:texture_coordinates",
     ],
 )
@@ -19,7 +25,9 @@ cc_test(
         ":constant_texture",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
+        "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
+        "//iris/testing:spectral_allocator",
         "@googletest//:gtest_main",
     ],
 )
@@ -36,12 +44,18 @@ cc_library(
 
 cc_library(
     name = "image_texture",
+    srcs = ["image_texture.cc"],
     hdrs = ["image_texture.h"],
     deps = [
+        ":float_texture",
+        ":reflector_texture",
         ":uv_texture",
+        "//iris:float",
         "//iris:reference_counted",
+        "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
+        "//iris/textures/internal:uv_texture",
     ],
 )
 
@@ -52,8 +66,13 @@ cc_test(
         ":image_texture",
         "//iris:float",
         "//iris:reference_counted",
+        "//iris:spectral_allocator",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
+        "//iris/spectra:mock_spectrum",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
         "@googletest//:gtest_main",
     ],
 )
@@ -91,10 +110,15 @@ cc_test(
 
 cc_library(
     name = "scaled_texture",
+    srcs = ["scaled_texture.cc"],
     hdrs = ["scaled_texture.h"],
     deps = [
+        ":float_texture",
+        ":reflector_texture",
         ":texture2d",
+        "//iris:float",
         "//iris:reference_counted",
+        "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",
     ],

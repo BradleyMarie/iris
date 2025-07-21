@@ -19,7 +19,7 @@ class ReflectorTexture : public SpectrumTexture {
 
  private:
   const Spectrum* Eval(const TextureCoordinates& coordinates,
-                       SpectralAllocator& allocator) const override final;
+                       SpectralAllocator& allocator) const final override;
 };
 
 }  // namespace textures

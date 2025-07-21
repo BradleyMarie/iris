@@ -3,6 +3,8 @@
 
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "iris/textures/texture2d.h"
 
 namespace iris {
@@ -36,6 +38,11 @@ class ConstantValueTexture2D final : public ValueTexture2D<T> {
  private:
   T value_;
 };
+
+ReferenceCounted<FloatTexture> MakeConstantTexture(visual value);
+
+ReferenceCounted<ReflectorTexture> MakeConstantTexture(
+    ReferenceCounted<Reflector> reflectance);
 
 }  // namespace textures
 }  // namespace iris

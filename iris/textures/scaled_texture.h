@@ -7,6 +7,8 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
+#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 #include "iris/textures/texture2d.h"
 
 namespace iris {
@@ -86,6 +88,14 @@ ReferenceCounted<ScaledValueTexture2D<T>> MakeScaledValueTexture2D(
   return MakeReferenceCounted<ScaledValueTexture2D<T>>(std::move(texture0),
                                                        std::move(texture1));
 }
+
+ReferenceCounted<FloatTexture> MakeScaledTexture(
+    ReferenceCounted<FloatTexture> texture0,
+    ReferenceCounted<FloatTexture> texture1);
+
+ReferenceCounted<ReflectorTexture> MakeScaledTexture(
+    ReferenceCounted<ReflectorTexture> texture0,
+    ReferenceCounted<ReflectorTexture> texture1);
 
 }  // namespace textures
 }  // namespace iris
