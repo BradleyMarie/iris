@@ -1,4 +1,4 @@
-#include "frontends/pbrt/textures/scale.h"
+#include "frontends/pbrt/textures/mix.h"
 
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
@@ -14,20 +14,20 @@ using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
 using ::pbrt_proto::v3::FloatTexture;
 using ::pbrt_proto::v3::SpectrumTexture;
 
-TEST(Scale, FloatTexture) {
+TEST(Mix, FloatTexture) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  FloatTexture::Scale scale;
-  EXPECT_TRUE(MakeScale(scale, texture_manager));
+  FloatTexture::Mix mix;
+  EXPECT_TRUE(MakeMix(mix, texture_manager));
 }
 
-TEST(Scale, SpectrumTexture) {
+TEST(Mix, SpectrumTexture) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  SpectrumTexture::Scale scale;
-  EXPECT_TRUE(MakeScale(scale, texture_manager));
+  SpectrumTexture::Mix mix;
+  EXPECT_TRUE(MakeMix(mix, texture_manager));
 }
 
 }  // namespace

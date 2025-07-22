@@ -8,6 +8,7 @@
 #include "frontends/pbrt/texture_manager.h"
 #include "frontends/pbrt/textures/constant.h"
 #include "frontends/pbrt/textures/imagemap.h"
+#include "frontends/pbrt/textures/mix.h"
 #include "frontends/pbrt/textures/scale.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
@@ -62,8 +63,7 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       exit(EXIT_FAILURE);
       break;
     case FloatTexture::kMix:
-      std::cerr << "ERROR: Unsupported FloatTexture type: mix" << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakeMix(float_texture.mix(), texture_manager);
       break;
     case FloatTexture::kPtex:
       std::cerr << "ERROR: Unsupported FloatTexture type: ptex" << std::endl;
@@ -130,8 +130,7 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       exit(EXIT_FAILURE);
       break;
     case SpectrumTexture::kMix:
-      std::cerr << "ERROR: Unsupported SpectrumTexture type: mix" << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakeMix(spectrum_texture.mix(), texture_manager);
       break;
     case SpectrumTexture::kPtex:
       std::cerr << "ERROR: Unsupported SpectrumTexture type: ptex" << std::endl;

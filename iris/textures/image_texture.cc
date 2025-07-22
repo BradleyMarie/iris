@@ -29,6 +29,10 @@ class BorderedImageFloatTexture final : public internal::UVFloatTexture {
  protected:
   visual_t NestedEvaluate(
       const TextureCoordinates& coordinates) const override {
+    if (!image_) {
+      return static_cast<visual_t>(0.0);
+    }
+
     Image2D<visual>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
@@ -65,6 +69,10 @@ class ClampedImageFloatTexture final : public internal::UVFloatTexture {
  protected:
   visual_t NestedEvaluate(
       const TextureCoordinates& coordinates) const override {
+    if (!image_) {
+      return static_cast<visual_t>(0.0);
+    }
+
     Image2D<visual>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
@@ -100,6 +108,10 @@ class RepeatedImageFloatTexture final : public internal::UVFloatTexture {
  protected:
   visual_t NestedEvaluate(
       const TextureCoordinates& coordinates) const override {
+    if (!image_) {
+      return static_cast<visual_t>(0.0);
+    }
+
     Image2D<visual>::SampleCoordinates coords =
         image_->ComputeSampleCoordinates(coordinates.uv[0], coordinates.uv[1]);
 
@@ -138,6 +150,10 @@ class BorderedImageReflectorTexture final
  protected:
   const Reflector* NestedEvaluate(const TextureCoordinates& coordinates,
                                   SpectralAllocator& allocator) const override {
+    if (!image_) {
+      return nullptr;
+    }
+
     return image_->GetBordered(coordinates.uv[0], coordinates.uv[1], border_)
         .Get();
   }
@@ -159,6 +175,10 @@ class ClampedImageReflectorTexture final : public internal::UVReflectorTexture {
  protected:
   const Reflector* NestedEvaluate(const TextureCoordinates& coordinates,
                                   SpectralAllocator& allocator) const override {
+    if (!image_) {
+      return nullptr;
+    }
+
     return image_->GetClamped(coordinates.uv[0], coordinates.uv[1]).Get();
   }
 
@@ -179,6 +199,10 @@ class RepeatedImageReflectorTexture final
  protected:
   const Reflector* NestedEvaluate(const TextureCoordinates& coordinates,
                                   SpectralAllocator& allocator) const override {
+    if (!image_) {
+      return nullptr;
+    }
+
     return image_->GetRepeated(coordinates.uv[0], coordinates.uv[1]).Get();
   }
 

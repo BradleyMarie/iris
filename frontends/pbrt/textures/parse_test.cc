@@ -162,9 +162,8 @@ TEST(ParseFloatTexture, Mix) {
   float_texture.set_name("A");
   float_texture.mutable_mix();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported FloatTexture type: mix");
+  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
 TEST(ParseFloatTexture, PTex) {
@@ -376,10 +375,8 @@ TEST(ParseSpectrumTexture, Mix) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_mix();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: mix");
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
 TEST(ParseSpectrumTexture, PTex) {

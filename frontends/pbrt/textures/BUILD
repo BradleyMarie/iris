@@ -12,7 +12,6 @@ cc_library(
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
-        "//iris/textures:constant_texture",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
@@ -69,6 +68,35 @@ cc_test(
 )
 
 cc_library(
+    name = "mix",
+    srcs = ["mix.cc"],
+    hdrs = ["mix.h"],
+    deps = [
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris/textures:float_texture",
+        "//iris/textures:mixed_texture",
+        "//iris/textures:reflector_texture",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "mix_test",
+    srcs = ["mix_test.cc"],
+    deps = [
+        ":mix",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
@@ -76,6 +104,7 @@ cc_library(
     deps = [
         ":constant",
         ":imagemap",
+        ":mix",
         ":scale",
         "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",

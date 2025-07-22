@@ -85,6 +85,35 @@ cc_library(
 )
 
 cc_library(
+    name = "mixed_texture",
+    srcs = ["mixed_texture.cc"],
+    hdrs = ["mixed_texture.h"],
+    deps = [
+        ":float_texture",
+        ":reflector_texture",
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+    ],
+)
+
+cc_test(
+    name = "mixed_texture_test",
+    srcs = ["mixed_texture_test.cc"],
+    deps = [
+        ":constant_texture",
+        ":mixed_texture",
+        "//iris:float",
+        "//iris:texture_coordinates",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "reflector_texture",
     srcs = ["reflector_texture.cc"],
     hdrs = ["reflector_texture.h"],
