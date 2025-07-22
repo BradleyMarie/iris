@@ -220,9 +220,8 @@ TEST(ParseFloatTexture, Wrinkled) {
   float_texture.set_name("A");
   float_texture.mutable_wrinkled();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported FloatTexture type: wrinkled");
+  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
 TEST(ParseSpectrumTexture, Empty) {
@@ -451,10 +450,8 @@ TEST(ParseSpectrumTexture, Wrinkled) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_wrinkled();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: wrinkled");
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
 }  // namespace

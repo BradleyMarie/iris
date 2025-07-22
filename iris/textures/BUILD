@@ -203,3 +203,30 @@ cc_library(
         "//iris/textures:reflector_texture",
     ],
 )
+
+cc_library(
+    name = "wrinkled_texture",
+    srcs = ["wrinkled_texture.cc"],
+    hdrs = ["wrinkled_texture.h"],
+    deps = [
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures/internal:math",
+    ],
+)
+
+cc_test(
+    name = "wrinkled_texture_test",
+    srcs = ["wrinkled_texture_test.cc"],
+    deps = [
+        ":wrinkled_texture",
+        "//iris:reference_counted",
+        "//iris/reflectors:mock_reflector",
+        "@googletest//:gtest_main",
+    ],
+)

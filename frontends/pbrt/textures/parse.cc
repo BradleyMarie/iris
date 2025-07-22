@@ -10,6 +10,7 @@
 #include "frontends/pbrt/textures/imagemap.h"
 #include "frontends/pbrt/textures/mix.h"
 #include "frontends/pbrt/textures/scale.h"
+#include "frontends/pbrt/textures/wrinkled.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
@@ -77,9 +78,8 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       exit(EXIT_FAILURE);
       break;
     case FloatTexture::kWrinkled:
-      std::cerr << "ERROR: Unsupported FloatTexture type: wrinkled"
-                << std::endl;
-      exit(EXIT_FAILURE);
+      result =
+          textures::MakeWrinkled(float_texture.wrinkled(), texture_manager);
       break;
     case FloatTexture::FLOAT_TEXTURE_TYPE_NOT_SET:
       return;
@@ -149,9 +149,8 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       exit(EXIT_FAILURE);
       break;
     case SpectrumTexture::kWrinkled:
-      std::cerr << "ERROR: Unsupported SpectrumTexture type: wrinkled"
-                << std::endl;
-      exit(EXIT_FAILURE);
+      result =
+          textures::MakeWrinkled(spectrum_texture.wrinkled(), texture_manager);
       break;
     case SpectrumTexture::SPECTRUM_TEXTURE_TYPE_NOT_SET:
       return;

@@ -3,6 +3,17 @@ load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 package(default_visibility = ["//iris/textures:__subpackages__"])
 
 cc_library(
+    name = "math",
+    srcs = ["math.cc"],
+    hdrs = ["math.h"],
+    deps = [
+        "//iris:float",
+        "//iris:point",
+        "//iris:vector",
+    ],
+)
+
+cc_library(
     name = "uv_texture",
     hdrs = ["uv_texture.h"],
     deps = [
