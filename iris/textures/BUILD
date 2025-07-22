@@ -22,6 +22,7 @@ cc_test(
     srcs = ["constant_texture_test.cc"],
     deps = [
         ":constant_texture",
+        "//iris:point",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
@@ -64,6 +65,7 @@ cc_test(
     deps = [
         ":image_texture",
         "//iris:float",
+        "//iris:point",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
@@ -106,6 +108,7 @@ cc_test(
         ":constant_texture",
         ":mixed_texture",
         "//iris:float",
+        "//iris:point",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
@@ -133,6 +136,7 @@ cc_test(
     deps = [
         ":reflector_texture",
         ":spectrum_texture",
+        "//iris:point",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
@@ -166,6 +170,7 @@ cc_test(
         ":constant_texture",
         ":scaled_texture",
         "//iris:float",
+        "//iris:point",
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",

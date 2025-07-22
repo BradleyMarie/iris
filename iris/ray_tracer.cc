@@ -273,7 +273,7 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
           ->ComputeTextureCoordinates(model_hit_point.point,
                                       model_differentials, hit->front,
                                       hit->additional_data)
-          .value_or(TextureCoordinates{0.0, 0.0});
+          .value_or(TextureCoordinates{model_hit_point.point, {}, {0.0, 0.0}});
 
   const Spectrum* spectrum = nullptr;
   if (hit->allow_emissive) {

@@ -1,6 +1,7 @@
 #include "iris/materials/uber_material.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/point.h"
 #include "iris/reflectors/uniform_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -41,9 +42,9 @@ TEST(UberMaterialTest, NoEtaIncident) {
       kWhite, kWhite, kWhite, kWhite, kOpaque, ReferenceCounted<FloatTexture>(),
       kEtaTransmitted, kRoughness, kRoughness, true);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(result->IsDiffuse());
 }
@@ -53,9 +54,9 @@ TEST(UberMaterialTest, NoEtaTransmitted) {
       kWhite, kWhite, kWhite, kWhite, kOpaque, kEtaIncident,
       ReferenceCounted<FloatTexture>(), kRoughness, kRoughness, true);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(result->IsDiffuse());
 }
@@ -65,9 +66,9 @@ TEST(UberMaterialTest, TransparencyOnly) {
       kWhite, kWhite, kWhite, kWhite, kTransparent, kEtaIncident,
       kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -76,9 +77,9 @@ TEST(UberMaterialTest, OpaqueOnlyAllTermsEmpty) {
       MakeUberMaterial(kBlack, kBlack, kBlack, kBlack, kOpaque, kEtaIncident,
                        kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -87,9 +88,9 @@ TEST(UberMaterialTest, LambertianOnly) {
       MakeUberMaterial(kBlack, kBlack, kWhite, kBlack, kOpaque, kEtaIncident,
                        kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -98,9 +99,9 @@ TEST(UberMaterialTest, SpecularReflectionOnly) {
       MakeUberMaterial(kWhite, kBlack, kBlack, kBlack, kOpaque, kEtaIncident,
                        kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -109,9 +110,9 @@ TEST(UberMaterialTest, SpecularTransmissionOnly) {
       MakeUberMaterial(kBlack, kWhite, kBlack, kBlack, kOpaque, kEtaIncident,
                        kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -120,9 +121,9 @@ TEST(UberMaterialTest, MicrofacetOnly) {
       MakeUberMaterial(kBlack, kBlack, kBlack, kWhite, kOpaque, kEtaIncident,
                        kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -131,9 +132,9 @@ TEST(UberMaterialTest, DiffuseAndMicrofacetOnly) {
       MakeUberMaterial(kBlack, kBlack, kWhite, kWhite, kOpaque, kEtaIncident,
                        kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(result->IsDiffuse());
 }
@@ -143,9 +144,9 @@ TEST(UberMaterialTest, SpecularOnly) {
       kWhite, kWhite, kBlack, kBlack, kTranslucent, kEtaIncident,
       kEtaTransmitted, kRoughness, kRoughness, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_FALSE(result->IsDiffuse());
 }
@@ -155,9 +156,9 @@ TEST(UberMaterialTest, All) {
       kWhite, kWhite, kWhite, kWhite, kTranslucent, kEtaIncident,
       kEtaTransmitted, kRoughness, kRoughness, true);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
   EXPECT_TRUE(result->IsDiffuse());
 }

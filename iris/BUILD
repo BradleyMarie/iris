@@ -910,6 +910,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
+        ":point",
         ":vector",
     ],
 )
@@ -918,7 +919,9 @@ cc_test(
     name = "texture_coordinates_test",
     srcs = ["texture_coordinates_test.cc"],
     deps = [
+        ":point",
         ":texture_coordinates",
+        ":vector",
         "@googletest//:gtest_main",
     ],
 )

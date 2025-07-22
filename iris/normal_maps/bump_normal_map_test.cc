@@ -7,6 +7,7 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/float.h"
 #include "iris/normal_map.h"
+#include "iris/point.h"
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
 #include "iris/textures/float_texture.h"
@@ -29,9 +30,9 @@ TEST(BumpNormalMap, Null) {
 TEST(BumpNormalMap, EvaluateNoDifferentials) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
-  Vector result =
-      normal_map->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                           std::nullopt, Vector(0.0, 0.0, 1.0));
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      std::nullopt, Vector(0.0, 0.0, 1.0));
   EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
@@ -39,19 +40,20 @@ TEST(BumpNormalMap, EvaluateNoNormalMapDifferentials) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}}, std::nullopt,
-      Vector(0.0, 0.0, 1.0));
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
+      std::nullopt, Vector(0.0, 0.0, 1.0));
   EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
 TEST(BumpNormalMap, EvaluateNoTextureCoordinateDifferentials) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
-  Vector result =
-      normal_map->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                           {{NormalMap::Differentials::DX_DY,
-                             {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
-                           Vector(0.0, 0.0, 1.0));
+  Vector result = normal_map->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      {{NormalMap::Differentials::DX_DY,
+        {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
+      Vector(0.0, 0.0, 1.0));
   EXPECT_EQ(Vector(0.0, 0.0, 1.0), result);
 }
 
@@ -59,7 +61,8 @@ TEST(BumpNormalMap, EvaluateNoDUVTextureCoordinateDifferentials) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{0.0, 0.0, 0.0, 0.0}}},
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{0.0, 0.0, 0.0, 0.0}}},
       {{NormalMap::Differentials::DX_DY,
         {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
       Vector(0.0, 0.0, 1.0));
@@ -70,7 +73,8 @@ TEST(BumpNormalMap, EvaluateConstantValueXY) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
       {{NormalMap::Differentials::DX_DY,
         {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
       Vector(0.0, 0.0, 1.0));
@@ -81,7 +85,8 @@ TEST(BumpNormalMap, EvaluateConstantValueUV) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{1.0, 1.0, 1.0, 1.0}}},
       {{NormalMap::Differentials::DU_DV,
         {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
       Vector(0.0, 0.0, 1.0));
@@ -101,7 +106,8 @@ TEST(BumpNormalMap, EvaluateXY) {
       MakeBumpNormalMap(MakeClampedImageTexture(image, 1.0, 1.0, 0.0, 0.0));
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
       {{NormalMap::Differentials::DX_DY,
         {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
       Vector(0.0, 0.0, 1.0));
@@ -114,7 +120,8 @@ TEST(BumpNormalMap, EvaluateNoDUTextureCoordinateDifferentials) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{0.0, 1.0, 0.0, 1.0}}},
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{0.0, 1.0, 0.0, 1.0}}},
       {{NormalMap::Differentials::DU_DV,
         {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
       Vector(0.0, 0.0, 1.0));
@@ -125,7 +132,8 @@ TEST(BumpNormalMap, EvaluateNoDVTextureCoordinateDifferentials) {
   ReferenceCounted<NormalMap> normal_map = MakeBumpNormalMap(MakeZeroTexture());
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 1.0, 0.0}}},
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{1.0, 0.0, 1.0, 0.0}}},
       {{NormalMap::Differentials::DU_DV,
         {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
       Vector(0.0, 0.0, 1.0));
@@ -145,7 +153,8 @@ TEST(BumpNormalMap, EvaluateUV) {
       MakeBumpNormalMap(MakeClampedImageTexture(image, 1.0, 1.0, 0.0, 0.0));
 
   Vector result = normal_map->Evaluate(
-      TextureCoordinates{{0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
+      TextureCoordinates{
+          Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, {{1.0, 0.0, 0.0, 1.0}}},
       {{NormalMap::Differentials::DU_DV,
         {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
       Vector(0.0, 0.0, 1.0));

@@ -23,6 +23,7 @@ cc_test(
         ":bump_normal_map",
         "//iris:float",
         "//iris:normal_map",
+        "//iris:point",
         "//iris:reference_counted",
         "//iris:texture_coordinates",
         "//iris/textures:float_texture",

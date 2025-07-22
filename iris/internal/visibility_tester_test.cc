@@ -49,17 +49,19 @@ using ::testing::Return;
 static const uint32_t g_data = 0xDEADBEEF;
 
 std::unique_ptr<EmissiveMaterial> MakeEmissiveMaterial(
-    std::array<geometric, 2> expected, const Spectrum* spectrum = nullptr) {
+    const Point& expected_hit_point, std::array<geometric, 2> expected_uv,
+    const Spectrum* spectrum = nullptr) {
   std::unique_ptr<MockEmissiveMaterial> result =
       std::make_unique<MockEmissiveMaterial>();
   EXPECT_CALL(*result, Evaluate(_, _))
-      .WillRepeatedly(Invoke(
-          [expected, spectrum](const TextureCoordinates& texture_coordinates,
-                               SpectralAllocator& spectral_allocator) {
-            EXPECT_EQ(expected, texture_coordinates.uv);
-            EXPECT_FALSE(texture_coordinates.differentials);
-            return spectrum;
-          }));
+      .WillRepeatedly(Invoke([expected_hit_point, expected_uv, spectrum](
+                                 const TextureCoordinates& texture_coordinates,
+                                 SpectralAllocator& spectral_allocator) {
+        EXPECT_EQ(expected_hit_point, texture_coordinates.hit_point);
+        EXPECT_EQ(expected_uv, texture_coordinates.uv);
+        EXPECT_FALSE(texture_coordinates.uv_differentials);
+        return spectrum;
+      }));
   return result;
 }
 
@@ -296,7 +298,7 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   Ray model_ray(Point(0.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
 
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0});
+      MakeEmissiveMaterial(Point(1.0, 0.0, 0.0), {0.0, 0.0});
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -346,7 +348,7 @@ TEST(VisibilityTesterTest, NoPdf) {
 
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+      MakeEmissiveMaterial(Point(1.0, 0.0, 0.0), {0.0, 0.0}, spectrum.get());
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -399,7 +401,7 @@ TEST(VisibilityTesterTest, NegativePdf) {
 
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+      MakeEmissiveMaterial(Point(1.0, 0.0, 0.0), {0.0, 0.0}, spectrum.get());
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -452,7 +454,7 @@ TEST(VisibilityTesterTest, Succeeds) {
 
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+      MakeEmissiveMaterial(Point(1.0, 0.0, 0.0), {0.0, 0.0}, spectrum.get());
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -501,7 +503,7 @@ TEST(VisibilityTesterTest, SceneTraceMissSucceeds) {
 
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+      MakeEmissiveMaterial(Point(1.0, 0.0, 0.0), {0.0, 0.0}, spectrum.get());
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -558,7 +560,7 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
 
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+      MakeEmissiveMaterial(Point(1.0, 0.0, 0.0), {0.0, 0.0}, spectrum.get());
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -616,7 +618,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
 
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.0, 0.0}, spectrum.get());
+      MakeEmissiveMaterial(Point(0.5, 0.0, 0.0), {0.0, 0.0}, spectrum.get());
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -675,7 +677,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
 
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   std::unique_ptr<EmissiveMaterial> emissive_material =
-      MakeEmissiveMaterial({0.5, 0.5}, spectrum.get());
+      MakeEmissiveMaterial(Point(1.0, 0.0, 0.0), {0.5, 0.5}, spectrum.get());
 
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -702,7 +704,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
               const std::optional<Geometry::Differentials>& differentials,
               face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{{0.5, 0.5}};
+            return TextureCoordinates{hit_point, {}, {0.5, 0.5}};
           }));
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))

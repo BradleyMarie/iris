@@ -21,6 +21,7 @@ cc_test(
     deps = [
         ":uv_texture",
         "//iris:float",
+        "//iris:point",
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:texture_coordinates",

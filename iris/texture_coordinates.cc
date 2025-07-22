@@ -20,15 +20,15 @@ TextureCoordinates TextureCoordinates::Scale(geometric u_scale,
   new_uv[0] = uv[0] * u_scale + u_offset;
   new_uv[1] = uv[1] * v_scale + v_offset;
 
-  if (!differentials) {
-    return {new_uv};
+  if (!uv_differentials) {
+    return {hit_point, hit_point_differentials, new_uv};
   }
 
-  TextureCoordinates::Differentials new_differentials{
-      differentials->du_dx * u_scale, differentials->du_dy * u_scale,
-      differentials->dv_dx * v_scale, differentials->dv_dy * v_scale};
+  TextureCoordinates::UVDifferentials new_differentials{
+      uv_differentials->du_dx * u_scale, uv_differentials->du_dy * u_scale,
+      uv_differentials->dv_dx * v_scale, uv_differentials->dv_dy * v_scale};
 
-  return {new_uv, new_differentials};
+  return {hit_point, hit_point_differentials, new_uv, new_differentials};
 }
 
 }  // namespace iris

@@ -1,6 +1,7 @@
 #include "iris/materials/glass_material.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/point.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -65,8 +66,9 @@ TEST(GlassMaterialTest, EvaluateEmpty) {
       std::move(eta_back), ReferenceCounted<FloatTexture>(),
       ReferenceCounted<FloatTexture>(), true);
 
-  ASSERT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                  GetSpectralAllocator(), GetBxdfAllocator()));
+  ASSERT_FALSE(material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(GlassMaterialTest, EvaluateSpecular) {
@@ -86,9 +88,9 @@ TEST(GlassMaterialTest, EvaluateSpecular) {
       std::move(eta_back), ReferenceCounted<FloatTexture>(),
       ReferenceCounted<FloatTexture>(), true);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -107,9 +109,9 @@ TEST(GlassMaterialTest, EvaluateBrdf) {
       std::move(reflectance), std::move(transmittance), std::move(eta_front),
       std::move(eta_back), roughness, roughness, true);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -129,9 +131,9 @@ TEST(GlassMaterialTest, EvaluateBtdf) {
       std::move(reflectance), std::move(transmittance), std::move(eta_front),
       std::move(eta_back), roughness, roughness, true);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

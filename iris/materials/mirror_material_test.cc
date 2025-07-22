@@ -1,6 +1,7 @@
 #include "iris/materials/mirror_material.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/point.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -28,8 +29,9 @@ TEST(MirrorMaterialTest, EvaluateEmpty) {
   ReferenceCounted<Material> material =
       MakeMirrorMaterial(std::move(reflectance));
 
-  ASSERT_FALSE(material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                  GetSpectralAllocator(), GetBxdfAllocator()));
+  ASSERT_FALSE(material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(MirrorMaterialTest, Evaluate) {
@@ -39,9 +41,9 @@ TEST(MirrorMaterialTest, Evaluate) {
   ReferenceCounted<Material> material =
       MakeMirrorMaterial(std::move(reflectance));
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

@@ -2,6 +2,7 @@
 
 #include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/point.h"
 #include "iris/power_matchers/mock_power_matcher.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/spectral_allocator.h"
@@ -26,8 +27,10 @@ TEST(ConstantEmissiveMaterialTest, Evaluate) {
   ReferenceCounted<EmissiveMaterial> material =
       MakeConstantEmissiveMaterial(spectrum);
   EXPECT_EQ(spectrum.Get(),
-            material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                               GetSpectralAllocator()));
+            material->Evaluate(
+                TextureCoordinates{
+                    Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+                GetSpectralAllocator()));
 }
 
 TEST(ConstantEmissiveMaterialTest, UnitPower) {

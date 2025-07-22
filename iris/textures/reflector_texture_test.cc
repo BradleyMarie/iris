@@ -1,6 +1,7 @@
 #include "iris/textures/reflector_texture.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/point.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/reflectors/mock_reflector.h"
@@ -37,7 +38,7 @@ TEST(ReflectorTexture, EvaluateIntensity) {
   const SpectrumTexture& spectrum_texture =
       static_cast<SpectrumTexture&>(reflector_texture);
 
-  TextureCoordinates coordinates{};
+  TextureCoordinates coordinates{Point(0.0, 0.0, 0.0)};
   EXPECT_EQ(2.0, spectrum_texture.Eval(coordinates, GetSpectralAllocator())
                      ->Intensity(1.0));
 }

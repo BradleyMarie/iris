@@ -2,6 +2,7 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/float.h"
+#include "iris/point.h"
 #include "iris/reflector.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectral_allocator.h"
@@ -59,13 +60,16 @@ class TestUVPointerTexture2D : public UVReflectorTexture {
 TEST(UVPointerTexture2D, Test) {
   reflectors::MockReflector reflector;
   TestUVPointerTexture2D texture(reflector);
-  EXPECT_EQ(&reflector, texture.Evaluate(TextureCoordinates{{1.0, 2.0}},
-                                         GetSpectralAllocator()));
+  EXPECT_EQ(
+      &reflector,
+      texture.Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.0, 2.0}},
+                       GetSpectralAllocator()));
 }
 
 TEST(UVValueTexture2D, Test) {
   TestUVValueTexture2D texture(1.0);
-  EXPECT_EQ(1.0, texture.Evaluate(TextureCoordinates{{1.0, 2.0}}));
+  EXPECT_EQ(1.0, texture.Evaluate(
+                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.0, 2.0}}));
 }
 
 }  // namespace

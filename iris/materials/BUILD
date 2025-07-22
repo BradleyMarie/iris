@@ -25,6 +25,7 @@ cc_test(
     srcs = ["fourier_material_test.cc"],
     deps = [
         ":fourier_material",
+        "//iris:point",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -58,6 +59,7 @@ cc_test(
     srcs = ["glass_material_test.cc"],
     deps = [
         ":glass_material",
+        "//iris:point",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -94,6 +96,7 @@ cc_test(
     srcs = ["matte_material_test.cc"],
     deps = [
         ":matte_material",
+        "//iris:point",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -129,6 +132,7 @@ cc_test(
     srcs = ["metal_material_test.cc"],
     deps = [
         ":metal_material",
+        "//iris:point",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -161,6 +165,7 @@ cc_test(
     srcs = ["mirror_material_test.cc"],
     deps = [
         ":mirror_material",
+        "//iris:point",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -196,6 +201,7 @@ cc_test(
     deps = [
         ":mix_material",
         ":mock_material",
+        "//iris:point",
         "//iris/bxdfs:mock_bxdf",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
@@ -247,6 +253,7 @@ cc_test(
     srcs = ["plastic_material_test.cc"],
     deps = [
         ":plastic_material",
+        "//iris:point",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -282,6 +289,7 @@ cc_test(
     srcs = ["substrate_material_test.cc"],
     deps = [
         ":substrate_material",
+        "//iris:point",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -319,6 +327,7 @@ cc_test(
     srcs = ["translucent_material_test.cc"],
     deps = [
         ":translucent_material",
+        "//iris:point",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
@@ -359,6 +368,7 @@ cc_test(
     srcs = ["uber_material_test.cc"],
     deps = [
         ":uber_material",
+        "//iris:point",
         "//iris/reflectors:uniform_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",

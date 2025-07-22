@@ -136,8 +136,8 @@ class Triangle final : public Geometry {
   std::optional<std::pair<Vector, Vector>> MaybeComputeNormalTangents() const;
 
   std::optional<TextureCoordinates> ComputeTextureCoordinates(
-      const std::optional<Differentials>& differentials, geometric_t b0,
-      geometric_t b1, geometric_t b2) const;
+      const Point& hit_point, const std::optional<Differentials>& differentials,
+      geometric_t b0, geometric_t b1, geometric_t b2) const;
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
   std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
@@ -194,8 +194,8 @@ std::array<geometric_t, 2> Triangle::UVCoordinates(const Point& point) const {
 }
 
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
-    const std::optional<Differentials>& differentials, geometric_t b0,
-    geometric_t b1, geometric_t b2) const {
+    const Point& hit_point, const std::optional<Differentials>& differentials,
+    geometric_t b0, geometric_t b1, geometric_t b2) const {
   if (shared_->uv.empty()) {
     return std::nullopt;
   }
@@ -208,12 +208,16 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
                   shared_->uv[std::get<2>(vertices_)].second * b2;
 
   if (!differentials) {
-    return TextureCoordinates{{u, v}};
+    return TextureCoordinates{hit_point, {}, {u, v}};
   }
 
   auto [u_dx, v_dx] = UVCoordinates(differentials->dx);
   auto [u_dy, v_dy] = UVCoordinates(differentials->dy);
-  return TextureCoordinates{{u, v}, {{u_dx - u, u_dy - u, v_dx - v, v_dy - v}}};
+  return TextureCoordinates{
+      hit_point,
+      {{differentials->dx - hit_point, differentials->dy - hit_point}},
+      {u, v},
+      {{u_dx - u, u_dy - u, v_dx - v, v_dy - v}}};
 }
 
 std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
@@ -221,7 +225,7 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
     face_t face, const void* additional_data) const {
   const AdditionalData* additional =
       static_cast<const AdditionalData*>(additional_data);
-  return ComputeTextureCoordinates(differentials,
+  return ComputeTextureCoordinates(hit_point, differentials,
                                    additional->barycentric_coordinates[0],
                                    additional->barycentric_coordinates[1],
                                    additional->barycentric_coordinates[2]);
@@ -503,21 +507,21 @@ Hit* Triangle::Trace(const Ray& ray, geometric_t minimum_distance,
   geometric_t barycentric2 =
       std::max(static_cast<geometric_t>(0.0), amount_remaining);
 
-  if (shared_->alpha_mask) {
-    std::optional<TextureCoordinates> texture_coordinates =
-        ComputeTextureCoordinates(std::nullopt, barycentric0, barycentric1,
-                                  barycentric2);
-    if (texture_coordinates &&
-        !shared_->alpha_mask->Included(*texture_coordinates)) {
-      return nullptr;
-    }
-  }
-
   v0[2] /= direction_z;
   v1[2] /= direction_z;
   v2[2] /= direction_z;
 
   geometric_t distance = b0 * v0[2] + b1 * v1[2] + b2 * v2[2];
+
+  if (shared_->alpha_mask) {
+    std::optional<TextureCoordinates> texture_coordinates =
+        ComputeTextureCoordinates(ray.Endpoint(distance), std::nullopt,
+                                  barycentric0, barycentric1, barycentric2);
+    if (texture_coordinates &&
+        !shared_->alpha_mask->Included(*texture_coordinates)) {
+      return nullptr;
+    }
+  }
 
   geometric_t max_x = AbsMax(v0[0], v1[0], v2[0]);
   geometric_t max_y = AbsMax(v0[1], v1[1], v2[1]);

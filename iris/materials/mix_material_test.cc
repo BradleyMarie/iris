@@ -3,6 +3,7 @@
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/mock_bxdf.h"
 #include "iris/materials/mock_material.h"
+#include "iris/point.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -69,9 +70,9 @@ TEST(MixMaterialTest, Evaluate) {
       MakeMixMaterial(std::move(mock_material0), std::move(mock_material1),
                       std::move(attenuation));
 
-  const Bxdf* bxdf =
-      mix_material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                             GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* bxdf = mix_material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(bxdf);
 
   const Reflector* reflector =

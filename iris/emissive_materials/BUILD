@@ -21,6 +21,7 @@ cc_test(
     srcs = ["constant_emissive_material_test.cc"],
     deps = [
         ":constant_emissive_material",
+        "//iris:point",
         "//iris/power_matchers:mock_power_matcher",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",

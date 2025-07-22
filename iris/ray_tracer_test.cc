@@ -140,19 +140,23 @@ ReferenceCounted<MockGeometry> MakeGeometry(
   return geometry;
 }
 
-std::unique_ptr<Material> MakeMaterial(std::array<geometric_t, 2> expected,
+std::unique_ptr<Material> MakeMaterial(const Point& expected_hit_point,
+                                       std::array<geometric_t, 2> expected_uv,
                                        bool has_differentials = false) {
-  std::unique_ptr<MockMaterial> material = std::make_unique<MockMaterial>();
   std::unique_ptr<MockBxdf> bxdf = std::make_unique<MockBxdf>();
+  EXPECT_CALL(*bxdf, IsDiffuse(_)).WillOnce(Return(false));
 
+  std::unique_ptr<MockMaterial> material = std::make_unique<MockMaterial>();
   EXPECT_CALL(*material, Evaluate(_, _, _))
-      .WillOnce(Invoke([expected, has_differentials, bxdf = std::move(bxdf)](
+      .WillOnce(Invoke([expected_hit_point, expected_uv, has_differentials,
+                        bxdf = std::move(bxdf)](
                            const TextureCoordinates& texture_coordinates,
                            SpectralAllocator& spectral_allocator,
                            BxdfAllocator& allocator) {
-        EXPECT_EQ(expected, texture_coordinates.uv);
+        EXPECT_EQ(expected_hit_point, texture_coordinates.hit_point);
+        EXPECT_EQ(expected_uv, texture_coordinates.uv);
         EXPECT_EQ(has_differentials,
-                  texture_coordinates.differentials.has_value());
+                  texture_coordinates.uv_differentials.has_value());
         return bxdf.get();
       }));
 
@@ -226,7 +230,7 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
                            SpectralAllocator& spectral_allocator) {
         EXPECT_EQ(0.0, texture_coordinates.uv[0]);
         EXPECT_EQ(0.0, texture_coordinates.uv[1]);
-        EXPECT_FALSE(texture_coordinates.differentials);
+        EXPECT_FALSE(texture_coordinates.uv_differentials);
         return spectrum.get();
       }));
 
@@ -300,7 +304,8 @@ TEST(RayTracerTest, WithNestedEmissiveMaterial) {
 
 TEST(RayTracerTest, Minimal) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(1.0, 1.0, 1.0), {0.0, 0.0});
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
@@ -348,7 +353,8 @@ TEST(RayTracerTest, Minimal) {
 
 TEST(RayTracerTest, WithTextureCoordinates) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0});
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(1.0, 1.0, 1.0), {1.0, 1.0});
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
@@ -362,7 +368,7 @@ TEST(RayTracerTest, WithTextureCoordinates) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{1.0, 1.0};
+            return TextureCoordinates{hit_point, {}, {1.0, 1.0}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -396,7 +402,8 @@ TEST(RayTracerTest, WithTextureCoordinates) {
 
 TEST(RayTracerTest, WithMaterial) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(1.0, 1.0, 1.0), {0.0, 0.0});
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
@@ -444,7 +451,8 @@ TEST(RayTracerTest, WithMaterial) {
 
 TEST(RayTracerTest, WithIdentityNormal) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(1.0, 1.0, 1.0), {0.0, 0.0});
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
@@ -492,7 +500,8 @@ TEST(RayTracerTest, WithIdentityNormal) {
 
 TEST(RayTracerTest, WithNormal) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(1.0, 1.0, 1.0), {0.0, 0.0});
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
@@ -540,7 +549,8 @@ TEST(RayTracerTest, WithNormal) {
 
 TEST(RayTracerTest, WithIdentityNormalMap) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(1.0, 1.0, 1.0), {0.0, 0.0});
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsFalse(), Vector(-1.0, 0.0, 0.0)))
@@ -550,7 +560,7 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
               const Vector& surface_normal) {
             EXPECT_EQ(0.0, texture_coordinates.uv[0]);
             EXPECT_EQ(0.0, texture_coordinates.uv[1]);
-            EXPECT_FALSE(texture_coordinates.differentials);
+            EXPECT_FALSE(texture_coordinates.uv_differentials);
             return surface_normal;
           }));
 
@@ -600,7 +610,8 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
 
 TEST(RayTracerTest, WithNormalMap) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
-  std::unique_ptr<Material> material = MakeMaterial({0.0, 0.0});
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(1.0, 1.0, 1.0), {0.0, 0.0});
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsFalse(), Vector(-1.0, 0.0, 0.0)))
@@ -610,7 +621,7 @@ TEST(RayTracerTest, WithNormalMap) {
               const Vector& surface_normal) {
             EXPECT_EQ(0.0, texture_coordinates.uv[0]);
             EXPECT_EQ(0.0, texture_coordinates.uv[1]);
-            EXPECT_FALSE(texture_coordinates.differentials);
+            EXPECT_FALSE(texture_coordinates.uv_differentials);
             return Vector(-1.0, -1.0, 0.0);
           }));
 
@@ -660,7 +671,8 @@ TEST(RayTracerTest, WithNormalMap) {
 
 TEST(RayTracerTest, WithXYDifferentials) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(2.0, 0.0, 0.0), {1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -688,7 +700,8 @@ TEST(RayTracerTest, WithXYDifferentials) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
+            return TextureCoordinates{
+                hit_point, {}, {1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -728,7 +741,8 @@ TEST(RayTracerTest, WithXYDifferentials) {
 
 TEST(RayTracerTest, WithUVDifferentials) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(2.0, 0.0, 0.0), {1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -756,7 +770,8 @@ TEST(RayTracerTest, WithUVDifferentials) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
+            return TextureCoordinates{
+                hit_point, {}, {1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -798,7 +813,8 @@ TEST(RayTracerTest, WithUVDifferentials) {
 
 TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(2.0, 0.0, 0.0), {1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -830,7 +846,8 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
+            return TextureCoordinates{
+                hit_point, {}, {1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -870,7 +887,8 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
 
 TEST(RayTracerTest, WithNormalAndXYDifferentials) {
   Ray ray(Point(1.0, 0.0, 0.0), Vector(1.0, 0.0, 0.0));
-  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material =
+      MakeMaterial(Point(2.0, 0.0, 0.0), {1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map,
@@ -903,7 +921,8 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
+            return TextureCoordinates{
+                hit_point, {}, {1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -957,7 +976,8 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
   Point expected_world_dy_hit_point =
       model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
 
-  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material =
+      MakeMaterial(expected_model_hit_point, {1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -985,7 +1005,8 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
               const std::optional<Geometry::Differentials>& differentials,
               face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
+            return TextureCoordinates{
+                hit_point, {}, {1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -1040,7 +1061,8 @@ TEST(RayTracerTest, WithTransform) {
   Point expected_world_dy_hit_point =
       model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
 
-  std::unique_ptr<Material> material = MakeMaterial({1.0, 1.0}, true);
+  std::unique_ptr<Material> material =
+      MakeMaterial(expected_model_hit_point, {1.0, 1.0}, true);
 
   ReferenceCounted<MockGeometry> geometry = MakeGeometry(
       model_ray, expected_model_hit_point, material.get(), nullptr);
@@ -1056,7 +1078,8 @@ TEST(RayTracerTest, WithTransform) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             EXPECT_EQ(expected_model_dx_hit_point, differentials->dx);
             EXPECT_EQ(expected_model_dy_hit_point, differentials->dy);
-            return TextureCoordinates{{1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
+            return TextureCoordinates{
+                hit_point, {}, {1.0, 1.0}, {{1.0, 0.0, 0.0, 1.0}}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {

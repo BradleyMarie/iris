@@ -2,6 +2,7 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/float.h"
+#include "iris/point.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
@@ -30,7 +31,8 @@ TEST(ScaledFloatTextureTest, Test) {
   ReferenceCounted<FloatTexture> texture1 = MakeConstantTexture(4.0);
   ReferenceCounted<FloatTexture> amount = MakeConstantTexture(0.5);
   EXPECT_EQ(3.0, MakeMixedTexture(texture0, texture1, amount)
-                     ->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt}));
+                     ->Evaluate(TextureCoordinates{
+                         Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt}));
 }
 
 TEST(ScaledReflectorTextureTest, Make) {
@@ -63,10 +65,13 @@ TEST(ScaledReflectorTextureTest, Test) {
   ReferenceCounted<ReflectorTexture> texture1 = MakeConstantTexture(reflector1);
   ReferenceCounted<FloatTexture> amount = MakeConstantTexture(0.5);
 
-  EXPECT_EQ(0.25, MakeMixedTexture(texture0, texture1, amount)
-                      ->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                                 GetSpectralAllocator())
-                      ->Reflectance(1.0));
+  EXPECT_EQ(0.25,
+            MakeMixedTexture(texture0, texture1, amount)
+                ->Evaluate(
+                    TextureCoordinates{
+                        Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+                    GetSpectralAllocator())
+                ->Reflectance(1.0));
 }
 
 }  // namespace

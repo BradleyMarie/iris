@@ -1,6 +1,7 @@
 #include "iris/materials/translucent_material.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/point.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
 #include "iris/testing/spectral_allocator.h"
@@ -105,9 +106,9 @@ TEST(TranslucentMaterialTest, NoBxdfs) {
       MakeTranslucentMaterial(reflectance, transmittance, diffuse, specular,
                               eta_incident, eta_transmitted, sigma, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_FALSE(result);
 }
 
@@ -127,9 +128,9 @@ TEST(TranslucentMaterialTest, DiffuseReflection) {
       MakeTranslucentMaterial(reflectance, transmittance, diffuse, specular,
                               eta_incident, eta_transmitted, sigma, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -149,9 +150,9 @@ TEST(TranslucentMaterialTest, DiffuseTransmission) {
       MakeTranslucentMaterial(reflectance, transmittance, diffuse, specular,
                               eta_incident, eta_transmitted, sigma, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -172,9 +173,9 @@ TEST(TranslucentMaterialTest, SpecularReflection) {
       MakeTranslucentMaterial(reflectance, transmittance, diffuse, specular,
                               eta_incident, eta_transmitted, sigma, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -194,9 +195,9 @@ TEST(TranslucentMaterialTest, SpecularTransmission) {
       MakeTranslucentMaterial(reflectance, transmittance, diffuse, specular,
                               eta_incident, eta_transmitted, sigma, false);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -217,9 +218,9 @@ TEST(TranslucentMaterialTest, All) {
       MakeTranslucentMaterial(reflectance, transmittance, diffuse, specular,
                               eta_incident, eta_transmitted, sigma, true);
 
-  const Bxdf* result =
-      material->Evaluate(TextureCoordinates{{0.0, 0.0}, std::nullopt},
-                         GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result = material->Evaluate(
+      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
+      GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

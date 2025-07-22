@@ -70,7 +70,7 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
       geometry
           .ComputeTextureCoordinates(model_hit_point, std::nullopt, face,
                                      geometry_hit->additional_data)
-          .value_or(TextureCoordinates{0.0, 0.0});
+          .value_or(TextureCoordinates{model_hit_point, {}, {0.0, 0.0}});
 
   const EmissiveMaterial* emissive_material =
       geometry.GetEmissiveMaterial(face);
