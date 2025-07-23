@@ -31,6 +31,34 @@ cc_test(
 )
 
 cc_library(
+    name = "fbm",
+    srcs = ["fbm.cc"],
+    hdrs = ["fbm.h"],
+    deps = [
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris/textures:fbm_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "fbm_test",
+    srcs = ["fbm_test.cc"],
+    deps = [
+        ":fbm",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "imagemap",
     srcs = ["imagemap.cc"],
     hdrs = ["imagemap.h"],
@@ -103,6 +131,7 @@ cc_library(
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
         ":constant",
+        ":fbm",
         ":imagemap",
         ":mix",
         ":scale",

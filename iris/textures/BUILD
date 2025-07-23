@@ -32,6 +32,34 @@ cc_test(
 )
 
 cc_library(
+    name = "fbm_texture",
+    srcs = ["fbm_texture.cc"],
+    hdrs = ["fbm_texture.h"],
+    deps = [
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures/internal:math",
+    ],
+)
+
+cc_test(
+    name = "fbm_texture_test",
+    srcs = ["fbm_texture_test.cc"],
+    deps = [
+        ":fbm_texture",
+        "//iris:reference_counted",
+        "//iris/reflectors:mock_reflector",
+        "//iris/textures:constant_texture",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "float_texture",
     srcs = ["float_texture.cc"],
     hdrs = ["float_texture.h"],

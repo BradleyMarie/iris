@@ -117,9 +117,8 @@ TEST(ParseFloatTexture, Fbm) {
   float_texture.set_name("A");
   float_texture.mutable_fbm();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported FloatTexture type: fbm");
+  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
 TEST(ParseFloatTexture, ImageMap) {
@@ -325,10 +324,9 @@ TEST(ParseSpectrumTexture, Fbm) {
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_fbm();
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: fbm");
+
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
 TEST(ParseSpectrumTexture, ImageMap) {

@@ -7,6 +7,7 @@
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "frontends/pbrt/textures/constant.h"
+#include "frontends/pbrt/textures/fbm.h"
 #include "frontends/pbrt/textures/imagemap.h"
 #include "frontends/pbrt/textures/mix.h"
 #include "frontends/pbrt/textures/scale.h"
@@ -53,8 +54,7 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       exit(EXIT_FAILURE);
       break;
     case FloatTexture::kFbm:
-      std::cerr << "ERROR: Unsupported FloatTexture type: fbm" << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakeFbm(float_texture.fbm(), texture_manager);
       break;
     case FloatTexture::kImagemap:
       result = textures::MakeImageMap(float_texture.imagemap(), image_manager,
@@ -117,8 +117,7 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       exit(EXIT_FAILURE);
       break;
     case SpectrumTexture::kFbm:
-      std::cerr << "ERROR: Unsupported SpectrumTexture type: fbm" << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakeFbm(spectrum_texture.fbm(), texture_manager);
       break;
     case SpectrumTexture::kImagemap:
       result = textures::MakeImageMap(spectrum_texture.imagemap(),
