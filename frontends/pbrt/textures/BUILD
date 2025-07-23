@@ -106,6 +106,7 @@ cc_library(
         ":imagemap",
         ":mix",
         ":scale",
+        ":windy",
         ":wrinkled",
         "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
@@ -155,6 +156,34 @@ cc_test(
 )
 
 cc_library(
+    name = "windy",
+    srcs = ["windy.cc"],
+    hdrs = ["windy.h"],
+    deps = [
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:windy_texture",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "windy_test",
+    srcs = ["windy_test.cc"],
+    deps = [
+        ":windy",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "wrinkled",
     srcs = ["wrinkled.cc"],
     hdrs = ["wrinkled.h"],
@@ -163,7 +192,6 @@ cc_library(
         "//frontends/pbrt:texture_manager",
         "//iris:reference_counted",
         "//iris:reflector",
-        "//iris/reflectors:uniform_reflector",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:wrinkled_texture",

@@ -15,21 +15,8 @@ namespace iris {
 namespace textures {
 namespace {
 
+using ::iris::textures::internal::GetDifferentials;
 using ::iris::textures::internal::Turbulence;
-
-std::pair<Vector, Vector> GetDifferentials(
-    const TextureCoordinates& coordinates) {
-  if (coordinates.hit_point_differentials.has_value()) {
-    return std::make_pair(
-        Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
-               static_cast<geometric>(0.0)),
-        Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
-               static_cast<geometric>(0.0)));
-  }
-
-  return std::make_pair(coordinates.hit_point_differentials->dhit_point_dx,
-                        coordinates.hit_point_differentials->dhit_point_dy);
-}
 
 class WrinkledFloatTexture final : public FloatTexture {
  public:
@@ -48,7 +35,7 @@ class WrinkledFloatTexture final : public FloatTexture {
 
 class WrinkledReflectorTexture final : public ReflectorTexture {
  public:
-  WrinkledReflectorTexture(ReferenceCounted<Reflector> reflectance,
+  WrinkledReflectorTexture(ReferenceCounted<ReflectorTexture> reflectance,
                            uint8_t octaves, visual_t roughness)
       : reflectance_(std::move(reflectance)),
         octaves_(octaves),
@@ -57,13 +44,19 @@ class WrinkledReflectorTexture final : public ReflectorTexture {
   const Reflector* Evaluate(const TextureCoordinates& coordinates,
                             SpectralAllocator& allocator) const override {
     auto [dx, dy] = GetDifferentials(coordinates);
+
+    const Reflector* reflectance = nullptr;
+    if (reflectance_) {
+      reflectance = reflectance_->Evaluate(coordinates, allocator);
+    }
+
     return allocator.UnboundedScale(
-        reflectance_.Get(),
+        reflectance,
         Turbulence(coordinates.hit_point, dx, dy, roughness_, octaves_));
   }
 
  private:
-  ReferenceCounted<Reflector> reflectance_;
+  ReferenceCounted<ReflectorTexture> reflectance_;
   uint8_t octaves_;
   visual_t roughness_;
 };
@@ -80,7 +73,7 @@ ReferenceCounted<FloatTexture> MakeWrinkledTexture(uint8_t octaves,
 }
 
 ReferenceCounted<ReflectorTexture> MakeWrinkledTexture(
-    ReferenceCounted<Reflector> reflectance, uint8_t octaves,
+    ReferenceCounted<ReflectorTexture> reflectance, uint8_t octaves,
     visual_t roughness) {
   if (!reflectance || !std::isfinite(roughness) ||
       roughness < static_cast<visual_t>(0.0)) {

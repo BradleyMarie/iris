@@ -205,9 +205,8 @@ TEST(ParseFloatTexture, Windy) {
   float_texture.set_name("A");
   float_texture.mutable_windy();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported FloatTexture type: windy");
+  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
 TEST(ParseFloatTexture, Wrinkled) {
@@ -434,10 +433,8 @@ TEST(ParseSpectrumTexture, Windy) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_windy();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: windy");
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
 TEST(ParseSpectrumTexture, Wrinkled) {

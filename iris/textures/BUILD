@@ -205,6 +205,34 @@ cc_library(
 )
 
 cc_library(
+    name = "windy_texture",
+    srcs = ["windy_texture.cc"],
+    hdrs = ["windy_texture.h"],
+    deps = [
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures/internal:math",
+    ],
+)
+
+cc_test(
+    name = "windy_texture_test",
+    srcs = ["windy_texture_test.cc"],
+    deps = [
+        ":windy_texture",
+        "//iris:reference_counted",
+        "//iris/reflectors:mock_reflector",
+        "//iris/textures:constant_texture",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "wrinkled_texture",
     srcs = ["wrinkled_texture.cc"],
     hdrs = ["wrinkled_texture.h"],
@@ -227,6 +255,7 @@ cc_test(
         ":wrinkled_texture",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
+        "//iris/textures:constant_texture",
         "@googletest//:gtest_main",
     ],
 )

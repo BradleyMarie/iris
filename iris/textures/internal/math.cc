@@ -96,11 +96,6 @@ visual_t Log2(geometric_t value) {
   return static_cast<visual_t>(std::log(value)) * inverse_log2;
 }
 
-Point ScalePoint(const Point& hit_point, geometric_t scalar) {
-  return Point(hit_point.x * scalar, hit_point.y * scalar,
-               hit_point.z * scalar);
-}
-
 }  // namespace
 
 visual_t PerlinNoise(const Point& hit_point) {
@@ -159,6 +154,38 @@ visual_t PerlinNoise(const Point& hit_point) {
   visual_t y1 = std::lerp(x01, x11, wy);
 
   return std::lerp(y0, y1, wz);
+}
+
+visual_t FractionalBrownianMotion(const Point& hit_point,
+                                  const Vector& dhit_point_dx,
+                                  const Vector& dhit_point_dy, visual_t omega,
+                                  uint8_t max_octaves) {
+  geometric_t length_squared =
+      std::max(DotProduct(dhit_point_dx, dhit_point_dx),
+               DotProduct(dhit_point_dy, dhit_point_dy));
+
+  visual_t n = std::clamp(static_cast<visual_t>(-1.0) -
+                              static_cast<visual_t>(0.5) * Log2(length_squared),
+                          static_cast<visual_t>(0.0),
+                          static_cast<visual_t>(max_octaves));
+  visual_t n_fractional = std::modf(n, &n);
+  uint8_t n_integer = static_cast<uint8_t>(n);
+
+  visual_t sum = static_cast<visual_t>(0.0);
+  visual_t o = static_cast<visual_t>(1.0);
+  geometric_t lambda = static_cast<geometric_t>(1.0);
+  for (uint8_t i = 0; i < n_integer; i++) {
+    sum += o * std::abs(PerlinNoise(ScalePoint(hit_point, lambda)));
+    lambda *= static_cast<visual_t>(1.99);
+    o *= omega;
+  }
+
+  sum += o * std::lerp(static_cast<visual_t>(0.2),
+                       std::abs(PerlinNoise(ScalePoint(hit_point, lambda))),
+                       SmoothStep(static_cast<visual_t>(0.3),
+                                  static_cast<visual_t>(0.7), n_fractional));
+
+  return sum;
 }
 
 visual_t Turbulence(const Point& hit_point, const Vector& dhit_point_dx,

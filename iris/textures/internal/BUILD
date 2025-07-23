@@ -9,6 +9,7 @@ cc_library(
     deps = [
         "//iris:float",
         "//iris:point",
+        "//iris:texture_coordinates",
         "//iris:vector",
     ],
 )

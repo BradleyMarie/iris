@@ -5,7 +5,6 @@
 
 #include "iris/float.h"
 #include "iris/reference_counted.h"
-#include "iris/reflector.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
 
@@ -16,7 +15,7 @@ ReferenceCounted<FloatTexture> MakeWrinkledTexture(uint8_t octaves,
                                                    visual_t roughness);
 
 ReferenceCounted<ReflectorTexture> MakeWrinkledTexture(
-    ReferenceCounted<Reflector> reflectance, uint8_t octaves,
+    ReferenceCounted<ReflectorTexture> reflectance, uint8_t octaves,
     visual_t roughness);
 
 }  // namespace textures

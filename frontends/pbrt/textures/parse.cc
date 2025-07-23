@@ -10,6 +10,7 @@
 #include "frontends/pbrt/textures/imagemap.h"
 #include "frontends/pbrt/textures/mix.h"
 #include "frontends/pbrt/textures/scale.h"
+#include "frontends/pbrt/textures/windy.h"
 #include "frontends/pbrt/textures/wrinkled.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
@@ -74,8 +75,7 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       result = textures::MakeScale(float_texture.scale(), texture_manager);
       break;
     case FloatTexture::kWindy:
-      std::cerr << "ERROR: Unsupported FloatTexture type: windy" << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakeWindy(float_texture.windy(), texture_manager);
       break;
     case FloatTexture::kWrinkled:
       result =
@@ -144,9 +144,7 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       exit(EXIT_FAILURE);
       break;
     case SpectrumTexture::kWindy:
-      std::cerr << "ERROR: Unsupported SpectrumTexture type: windy"
-                << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakeWindy(spectrum_texture.windy(), texture_manager);
       break;
     case SpectrumTexture::kWrinkled:
       result =
