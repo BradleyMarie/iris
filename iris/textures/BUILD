@@ -107,6 +107,35 @@ cc_test(
 )
 
 cc_library(
+    name = "marble_texture",
+    srcs = ["marble_texture.cc"],
+    hdrs = ["marble_texture.h"],
+    deps = [
+        "//iris:float",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/textures:reflector_texture",
+        "//iris/textures/internal:math",
+    ],
+)
+
+cc_test(
+    name = "marble_texture_test",
+    srcs = ["marble_texture_test.cc"],
+    deps = [
+        ":marble_texture",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris/reflectors:mock_reflector",
+        "//iris/textures:constant_texture",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "mask_texture",
     hdrs = ["mask_texture.h"],
     deps = [

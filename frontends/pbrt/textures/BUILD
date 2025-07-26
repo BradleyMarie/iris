@@ -98,6 +98,35 @@ cc_test(
 )
 
 cc_library(
+    name = "marble",
+    srcs = ["marble.cc"],
+    hdrs = ["marble.h"],
+    deps = [
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris/textures:marble_texture",
+        "//iris/textures:reflector_texture",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "marble_test",
+    srcs = ["marble_test.cc"],
+    deps = [
+        ":marble",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:matrix",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "mix",
     srcs = ["mix.cc"],
     hdrs = ["mix.h"],
@@ -135,6 +164,7 @@ cc_library(
         ":constant",
         ":fbm",
         ":imagemap",
+        ":marble",
         ":mix",
         ":scale",
         ":windy",

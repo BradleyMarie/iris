@@ -9,6 +9,7 @@
 #include "frontends/pbrt/textures/constant.h"
 #include "frontends/pbrt/textures/fbm.h"
 #include "frontends/pbrt/textures/imagemap.h"
+#include "frontends/pbrt/textures/marble.h"
 #include "frontends/pbrt/textures/mix.h"
 #include "frontends/pbrt/textures/scale.h"
 #include "frontends/pbrt/textures/windy.h"
@@ -64,9 +65,7 @@ void ParseFloatTexture(const FloatTexture& float_texture,
                                       texture_manager);
       break;
     case FloatTexture::kMarble:
-      std::cerr << "ERROR: Unsupported FloatTexture type: marble" << std::endl;
-      exit(EXIT_FAILURE);
-      break;
+      return;
     case FloatTexture::kMix:
       result = textures::MakeMix(float_texture.mix(), texture_manager);
       break;
@@ -130,9 +129,8 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
                                       image_manager, texture_manager);
       break;
     case SpectrumTexture::kMarble:
-      std::cerr << "ERROR: Unsupported SpectrumTexture type: marble"
-                << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakeMarble(spectrum_texture.marble(), texture_manager,
+                                    world_to_texture);
       break;
     case SpectrumTexture::kMix:
       result = textures::MakeMix(spectrum_texture.mix(), texture_manager);

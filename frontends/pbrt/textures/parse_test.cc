@@ -155,10 +155,11 @@ TEST(ParseFloatTexture, Marble) {
   float_texture.set_name("A");
   float_texture.mutable_marble();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
-                                Matrix::Identity()),
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
+  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported FloatTexture type: marble");
+              "ERROR: No spectrum texture defined with name: \"A\"");
 }
 
 TEST(ParseFloatTexture, Mix) {
@@ -373,10 +374,9 @@ TEST(ParseSpectrumTexture, Marble) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_marble();
 
-  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
-                                   texture_manager, Matrix::Identity()),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported SpectrumTexture type: marble");
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
+  EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
 TEST(ParseSpectrumTexture, Mix) {
