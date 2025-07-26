@@ -45,6 +45,20 @@ static inline Point operator+(const Point& addend0, const Vector& addend1) {
                addend0.z + addend1.z);
 }
 
+template <typename T>
+static inline Point operator*(const Point& point, T scalar)
+  requires std::is_floating_point<T>::value
+{
+  return Point(point.x * scalar, point.y * scalar, point.z * scalar);
+}
+
+template <typename T>
+static inline Point operator*(T scalar, const Point& point)
+  requires std::is_floating_point<T>::value
+{
+  return point * scalar;
+}
+
 }  // namespace iris
 
 #endif  // _IRIS_POINT_

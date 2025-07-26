@@ -13,6 +13,11 @@ TEST(PointTest, Create) {
   EXPECT_EQ(3.0, point.z);
 }
 
+TEST(PointTest, ScalePoint) {
+  Point point(1.0, 2.0, 3.0);
+  EXPECT_EQ(Point(2.0, 4.0, 6.0), 2.0 * point);
+}
+
 TEST(PointTest, SubtractPoint) {
   Point minuend(3.0, 4.0, 5.0);
   Point subtrahend(2.0, 1.0, 3.0);

@@ -98,16 +98,16 @@ visual_t Log2(geometric_t value) {
 
 }  // namespace
 
-visual_t PerlinNoise(const Point& hit_point) {
-  visual_t x = static_cast<visual_t>(
-      std::fmod(hit_point.x, static_cast<geometric_t>(256.0)) +
-      static_cast<geometric_t>(256.0));
-  visual_t y = static_cast<visual_t>(
-      std::fmod(hit_point.y, static_cast<geometric_t>(256.0)) +
-      static_cast<geometric_t>(256.0));
-  visual_t z = static_cast<visual_t>(
-      std::fmod(hit_point.z, static_cast<geometric_t>(256.0)) +
-      static_cast<geometric_t>(256.0));
+visual_t PerlinNoise(const Point& p) {
+  visual_t x =
+      static_cast<visual_t>(std::fmod(p.x, static_cast<geometric_t>(256.0)) +
+                            static_cast<geometric_t>(256.0));
+  visual_t y =
+      static_cast<visual_t>(std::fmod(p.y, static_cast<geometric_t>(256.0)) +
+                            static_cast<geometric_t>(256.0));
+  visual_t z =
+      static_cast<visual_t>(std::fmod(p.z, static_cast<geometric_t>(256.0)) +
+                            static_cast<geometric_t>(256.0));
 
   visual_t dx = static_cast<visual_t>(std::modf(x, &x));
   visual_t dy = static_cast<visual_t>(std::modf(y, &y));
@@ -156,13 +156,11 @@ visual_t PerlinNoise(const Point& hit_point) {
   return std::lerp(y0, y1, wz);
 }
 
-visual_t FractionalBrownianMotion(const Point& hit_point,
-                                  const Vector& dhit_point_dx,
-                                  const Vector& dhit_point_dy, visual_t omega,
+visual_t FractionalBrownianMotion(const Point& p, const Vector& dp_dx,
+                                  const Vector& dp_dy, visual_t omega,
                                   uint8_t max_octaves) {
   geometric_t length_squared =
-      std::max(DotProduct(dhit_point_dx, dhit_point_dx),
-               DotProduct(dhit_point_dy, dhit_point_dy));
+      std::max(DotProduct(dp_dx, dp_dx), DotProduct(dp_dy, dp_dy));
 
   visual_t n = std::clamp(static_cast<visual_t>(-1.0) -
                               static_cast<visual_t>(0.5) * Log2(length_squared),
@@ -175,25 +173,23 @@ visual_t FractionalBrownianMotion(const Point& hit_point,
   visual_t o = static_cast<visual_t>(1.0);
   geometric_t lambda = static_cast<geometric_t>(1.0);
   for (uint8_t i = 0; i < n_integer; i++) {
-    sum += o * std::abs(PerlinNoise(ScalePoint(hit_point, lambda)));
+    sum += o * std::abs(PerlinNoise(p * lambda));
     lambda *= static_cast<visual_t>(1.99);
     o *= omega;
   }
 
   sum += o * std::lerp(static_cast<visual_t>(0.2),
-                       std::abs(PerlinNoise(ScalePoint(hit_point, lambda))),
+                       std::abs(PerlinNoise(p * lambda)),
                        SmoothStep(static_cast<visual_t>(0.3),
                                   static_cast<visual_t>(0.7), n_fractional));
 
   return sum;
 }
 
-visual_t Turbulence(const Point& hit_point, const Vector& dhit_point_dx,
-                    const Vector& dhit_point_dy, visual_t omega,
-                    uint8_t max_octaves) {
+visual_t Turbulence(const Point& p, const Vector& dp_dx, const Vector& dp_dy,
+                    visual_t omega, uint8_t max_octaves) {
   geometric_t length_squared =
-      std::max(DotProduct(dhit_point_dx, dhit_point_dx),
-               DotProduct(dhit_point_dy, dhit_point_dy));
+      std::max(DotProduct(dp_dx, dp_dx), DotProduct(dp_dy, dp_dy));
 
   visual_t n = std::clamp(static_cast<visual_t>(-1.0) -
                               static_cast<visual_t>(0.5) * Log2(length_squared),
@@ -206,13 +202,13 @@ visual_t Turbulence(const Point& hit_point, const Vector& dhit_point_dx,
   visual_t o = static_cast<visual_t>(1.0);
   geometric_t lambda = static_cast<geometric_t>(1.0);
   for (uint8_t i = 0; i < n_integer; i++) {
-    sum += o * std::abs(PerlinNoise(ScalePoint(hit_point, lambda)));
+    sum += o * std::abs(PerlinNoise(p * lambda));
     lambda *= static_cast<visual_t>(1.99);
     o *= omega;
   }
 
   sum += o * std::lerp(static_cast<visual_t>(0.2),
-                       std::abs(PerlinNoise(ScalePoint(hit_point, lambda))),
+                       std::abs(PerlinNoise(p * lambda)),
                        SmoothStep(static_cast<visual_t>(0.3),
                                   static_cast<visual_t>(0.7), n_fractional));
   for (uint8_t i = n_integer; i < max_octaves; i++) {

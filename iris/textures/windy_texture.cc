@@ -17,15 +17,14 @@ namespace textures {
 namespace {
 
 using ::iris::textures::internal::FractionalBrownianMotion;
-using ::iris::textures::internal::ScalePoint;
 
 class WindyFloatTexture final : public FloatTexture {
  public:
   visual_t Evaluate(const TextureCoordinates& coordinates) const override {
     visual_t wind_strength = FractionalBrownianMotion(
-        ScalePoint(coordinates.p, static_cast<geometric_t>(0.1)),
-        static_cast<geometric_t>(0.1) * coordinates.dp_dx,
-        static_cast<geometric_t>(0.1) * coordinates.dp_dy,
+        static_cast<geometric>(0.1) * coordinates.p,
+        static_cast<geometric>(0.1) * coordinates.dp_dx,
+        static_cast<geometric>(0.1) * coordinates.dp_dy,
         static_cast<visual_t>(0.5), 3u);
     visual_t wave_height = FractionalBrownianMotion(
         coordinates.p, coordinates.dp_dx, coordinates.dp_dy,
@@ -47,9 +46,9 @@ class WindyReflectorTexture final : public ReflectorTexture {
     }
 
     visual_t wind_strength = FractionalBrownianMotion(
-        ScalePoint(coordinates.p, static_cast<geometric_t>(0.1)),
-        static_cast<geometric_t>(0.1) * coordinates.dp_dx,
-        static_cast<geometric_t>(0.1) * coordinates.dp_dy,
+        static_cast<geometric>(0.1) * coordinates.p,
+        static_cast<geometric>(0.1) * coordinates.dp_dx,
+        static_cast<geometric>(0.1) * coordinates.dp_dy,
         static_cast<visual_t>(0.5), 3u);
     visual_t wave_height = FractionalBrownianMotion(
         coordinates.p, coordinates.dp_dx, coordinates.dp_dy,
