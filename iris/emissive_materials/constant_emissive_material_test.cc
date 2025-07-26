@@ -27,10 +27,15 @@ TEST(ConstantEmissiveMaterialTest, Evaluate) {
   ReferenceCounted<EmissiveMaterial> material =
       MakeConstantEmissiveMaterial(spectrum);
   EXPECT_EQ(spectrum.Get(),
-            material->Evaluate(
-                TextureCoordinates{
-                    Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-                GetSpectralAllocator()));
+            material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                  Vector(0.0, 0.0, 0.0),
+                                                  Vector(0.0, 0.0, 0.0),
+                                                  {0.0, 0.0},
+                                                  0.0,
+                                                  0.0,
+                                                  0.0,
+                                                  0.0},
+                               GetSpectralAllocator()));
 }
 
 TEST(ConstantEmissiveMaterialTest, UnitPower) {

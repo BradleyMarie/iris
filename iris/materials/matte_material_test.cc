@@ -33,9 +33,15 @@ TEST(MatteMaterialTest, EvaluateEmpty) {
   ReferenceCounted<Material> material =
       MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
-  ASSERT_FALSE(material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator()));
+  ASSERT_FALSE(material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     {0.0, 0.0},
+                                                     0.0,
+                                                     0.0,
+                                                     0.0,
+                                                     0.0},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(MatteMaterialTest, EvaluateLambertian) {
@@ -47,9 +53,16 @@ TEST(MatteMaterialTest, EvaluateLambertian) {
   ReferenceCounted<Material> material =
       MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -62,9 +75,16 @@ TEST(MatteMaterialTest, EvaluateOrenNayar) {
   ReferenceCounted<Material> material =
       MakeMatteMaterial(std::move(reflectance), std::move(sigma));
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

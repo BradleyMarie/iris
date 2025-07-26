@@ -66,11 +66,25 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
                               ? model_to_world->InverseMultiply(world_hit_point)
                               : world_hit_point;
 
-  TextureCoordinates texture_coordinates =
-      geometry
-          .ComputeTextureCoordinates(model_hit_point, std::nullopt, face,
-                                     geometry_hit->additional_data)
-          .value_or(TextureCoordinates{model_hit_point, {}, {0.0, 0.0}});
+  std::optional<Geometry::TextureCoordinates> geometry_texture_coordinates =
+      geometry.ComputeTextureCoordinates(model_hit_point, std::nullopt, face,
+                                         geometry_hit->additional_data);
+
+  TextureCoordinates texture_coordinates{
+      model_hit_point,
+      Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+             static_cast<geometric>(0.0)),
+      Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+             static_cast<geometric>(0.0)),
+      {geometry_texture_coordinates ? geometry_texture_coordinates->uv[0]
+                                    : static_cast<geometric_t>(0.0),
+       geometry_texture_coordinates ? geometry_texture_coordinates->uv[1]
+                                    : static_cast<geometric_t>(0.0)},
+      static_cast<geometric_t>(0.0),
+      static_cast<geometric_t>(0.0),
+      static_cast<geometric_t>(0.0),
+      static_cast<geometric_t>(0.0),
+  };
 
   const EmissiveMaterial* emissive_material =
       geometry.GetEmissiveMaterial(face);

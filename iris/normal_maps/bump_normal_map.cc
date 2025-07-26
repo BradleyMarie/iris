@@ -26,71 +26,63 @@ std::pair<geometric_t, geometric_t> ComputeNormal(
   geometric_t displacement0 = 0.0;
   geometric_t displacement1 = 0.0;
   if (differentials.type == NormalMap::Differentials::DU_DV) {
-    geometric_t du = static_cast<geometric_t>(0.5) *
-                     (std::abs(texture_coordinates.uv_differentials->du_dx) +
-                      std::abs(texture_coordinates.uv_differentials->du_dy));
-
-    if (du != static_cast<geometric_t>(0.0)) {
+    if (geometric_t du = static_cast<geometric_t>(0.5) *
+                         (std::abs(texture_coordinates.du_dx) +
+                          std::abs(texture_coordinates.du_dy));
+        du != static_cast<geometric_t>(0.0)) {
       TextureCoordinates texture_coordinates_du{
-          texture_coordinates.hit_point,
-          texture_coordinates.hit_point_differentials,
+          texture_coordinates.p + differentials.dp.first * du,
+          texture_coordinates.dp_dx,
+          texture_coordinates.dp_dy,
           {texture_coordinates.uv[0] + du, texture_coordinates.uv[1]},
-          texture_coordinates.uv_differentials};
+          texture_coordinates.du_dx,
+          texture_coordinates.du_dy,
+          texture_coordinates.dv_dx,
+          texture_coordinates.du_dy};
       displacement0 =
           (bumps->Evaluate(texture_coordinates_du) - displacement) / du;
     }
 
-    geometric_t dv = static_cast<geometric_t>(0.5) *
-                     (std::abs(texture_coordinates.uv_differentials->dv_dx) +
-                      std::abs(texture_coordinates.uv_differentials->dv_dy));
-
-    if (dv != static_cast<geometric_t>(0.0)) {
+    if (geometric_t dv = static_cast<geometric_t>(0.5) *
+                         (std::abs(texture_coordinates.dv_dx) +
+                          std::abs(texture_coordinates.dv_dy));
+        dv != static_cast<geometric_t>(0.0)) {
       TextureCoordinates texture_coordinates_dv{
-          texture_coordinates.hit_point,
-          texture_coordinates.hit_point_differentials,
+          texture_coordinates.p + differentials.dp.second * dv,
+          texture_coordinates.dp_dx,
+          texture_coordinates.dp_dy,
           {texture_coordinates.uv[0], texture_coordinates.uv[1] + dv},
-          texture_coordinates.uv_differentials};
+          texture_coordinates.du_dx,
+          texture_coordinates.du_dy,
+          texture_coordinates.dv_dx,
+          texture_coordinates.du_dy};
       displacement1 =
           (bumps->Evaluate(texture_coordinates_dv) - displacement) / dv;
     }
   } else {
-    geometric_t duv_dx =
-        std::sqrt(texture_coordinates.uv_differentials->du_dx *
-                      texture_coordinates.uv_differentials->du_dx +
-                  texture_coordinates.uv_differentials->dv_dx *
-                      texture_coordinates.uv_differentials->dv_dx);
+    TextureCoordinates texture_coordinates_dx{
+        texture_coordinates.p + texture_coordinates.dp_dx,
+        texture_coordinates.dp_dx,
+        texture_coordinates.dp_dy,
+        {texture_coordinates.uv[0] + texture_coordinates.du_dx,
+         texture_coordinates.uv[1] + texture_coordinates.dv_dx},
+        texture_coordinates.du_dx,
+        texture_coordinates.du_dy,
+        texture_coordinates.dv_dx,
+        texture_coordinates.du_dy};
+    displacement0 = bumps->Evaluate(texture_coordinates_dx) - displacement;
 
-    if (duv_dx != static_cast<geometric_t>(0.0)) {
-      TextureCoordinates texture_coordinates_dx{
-          texture_coordinates.hit_point,
-          texture_coordinates.hit_point_differentials,
-          {texture_coordinates.uv[0] +
-               texture_coordinates.uv_differentials->du_dx,
-           texture_coordinates.uv[1] +
-               texture_coordinates.uv_differentials->dv_dx},
-          texture_coordinates.uv_differentials};
-      displacement0 =
-          (bumps->Evaluate(texture_coordinates_dx) - displacement) / duv_dx;
-    }
-
-    geometric_t duv_dy =
-        std::sqrt(texture_coordinates.uv_differentials->du_dy *
-                      texture_coordinates.uv_differentials->du_dy +
-                  texture_coordinates.uv_differentials->dv_dy *
-                      texture_coordinates.uv_differentials->dv_dy);
-
-    if (duv_dy != static_cast<geometric_t>(0.0)) {
-      TextureCoordinates texture_coordinates_dy{
-          texture_coordinates.hit_point,
-          texture_coordinates.hit_point_differentials,
-          {texture_coordinates.uv[0] +
-               texture_coordinates.uv_differentials->du_dy,
-           texture_coordinates.uv[1] +
-               texture_coordinates.uv_differentials->dv_dy},
-          texture_coordinates.uv_differentials};
-      displacement1 =
-          (bumps->Evaluate(texture_coordinates_dy) - displacement) / duv_dy;
-    }
+    TextureCoordinates texture_coordinates_dy{
+        texture_coordinates.p + texture_coordinates.dp_dy,
+        texture_coordinates.dp_dx,
+        texture_coordinates.dp_dy,
+        {texture_coordinates.uv[0] + texture_coordinates.du_dy,
+         texture_coordinates.uv[1] + texture_coordinates.dv_dy},
+        texture_coordinates.du_dx,
+        texture_coordinates.du_dy,
+        texture_coordinates.dv_dx,
+        texture_coordinates.du_dy};
+    displacement1 = bumps->Evaluate(texture_coordinates_dy) - displacement;
   }
 
   return {displacement0, displacement1};
@@ -113,22 +105,25 @@ Vector BumpNormalMap::Evaluate(
     const TextureCoordinates& texture_coordinates,
     const std::optional<Differentials>& differentials,
     const Vector& surface_normal) const {
-  if (!bumps_) {
+  if (!bumps_ || !differentials) {
     return surface_normal;
   }
 
-  // If we instead had guaranteed values for dp_du and dp_dv we could instead
-  // convert the bump map into a normal map during construction so that we could
-  // always return a value from this function without falling back on the
-  // surface normal.
-  if (!texture_coordinates.uv_differentials || !differentials) {
+  bool first_is_zero = differentials->dp.first.IsZero();
+  bool second_is_zero = differentials->dp.second.IsZero();
+  if (first_is_zero && second_is_zero) {
     return surface_normal;
   }
 
   auto [displacement0, displacement1] =
       ComputeNormal(bumps_, texture_coordinates, *differentials);
-  Vector dn_dx = differentials->dp.first + surface_normal * displacement0;
-  Vector dn_dy = differentials->dp.second + surface_normal * displacement1;
+  Vector dn_dx = first_is_zero
+                     ? CrossProduct(surface_normal, differentials->dp.second)
+                     : differentials->dp.first + surface_normal * displacement0;
+  Vector dn_dy =
+      second_is_zero
+          ? CrossProduct(surface_normal, differentials->dp.first)
+          : differentials->dp.second + surface_normal * displacement1;
   Vector shading_normal = CrossProduct(dn_dy, dn_dx);
 
   return shading_normal.AlignWith(surface_normal);

@@ -181,7 +181,7 @@ TEST(Sphere, ComputeSurfaceNormal) {
 
 TEST(Sphere, ComputeTextureCoordinatesNone) {
   ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
-  std::optional<TextureCoordinates> texture_coordinates =
+  std::optional<Geometry::TextureCoordinates> texture_coordinates =
       sphere->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
                                         FRONT_FACE, nullptr);
   EXPECT_FALSE(texture_coordinates);

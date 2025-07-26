@@ -29,9 +29,15 @@ TEST(MirrorMaterialTest, EvaluateEmpty) {
   ReferenceCounted<Material> material =
       MakeMirrorMaterial(std::move(reflectance));
 
-  ASSERT_FALSE(material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator()));
+  ASSERT_FALSE(material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     {0.0, 0.0},
+                                                     0.0,
+                                                     0.0,
+                                                     0.0,
+                                                     0.0},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(MirrorMaterialTest, Evaluate) {
@@ -41,9 +47,16 @@ TEST(MirrorMaterialTest, Evaluate) {
   ReferenceCounted<Material> material =
       MakeMirrorMaterial(std::move(reflectance));
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

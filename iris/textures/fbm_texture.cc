@@ -16,7 +16,6 @@ namespace textures {
 namespace {
 
 using ::iris::textures::internal::FractionalBrownianMotion;
-using ::iris::textures::internal::GetDifferentials;
 
 class FbmFloatTexture final : public FloatTexture {
  public:
@@ -24,9 +23,8 @@ class FbmFloatTexture final : public FloatTexture {
       : octaves_(octaves), roughness_(roughness) {}
 
   visual_t Evaluate(const TextureCoordinates& coordinates) const override {
-    auto [dx, dy] = GetDifferentials(coordinates);
-    return FractionalBrownianMotion(coordinates.hit_point, dx, dy, roughness_,
-                                    octaves_);
+    return FractionalBrownianMotion(coordinates.p, coordinates.dp_dx,
+                                    coordinates.dp_dy, roughness_, octaves_);
   }
 
  private:
@@ -44,16 +42,15 @@ class FbmReflectorTexture final : public ReflectorTexture {
 
   const Reflector* Evaluate(const TextureCoordinates& coordinates,
                             SpectralAllocator& allocator) const override {
-    auto [dx, dy] = GetDifferentials(coordinates);
-
     const Reflector* reflectance = nullptr;
     if (reflectance_) {
       reflectance = reflectance_->Evaluate(coordinates, allocator);
     }
 
     return allocator.UnboundedScale(
-        reflectance, FractionalBrownianMotion(coordinates.hit_point, dx, dy,
-                                              roughness_, octaves_));
+        reflectance,
+        FractionalBrownianMotion(coordinates.p, coordinates.dp_dx,
+                                 coordinates.dp_dy, roughness_, octaves_));
   }
 
  private:

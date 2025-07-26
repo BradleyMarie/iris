@@ -30,9 +30,16 @@ TEST(FourierMaterialTest, EvaluateY) {
   ReferenceCounted<Material> material = MakeFourierMaterial(
       elevational_samples, cdf, coefficient_extents, coefficients, 1.5, true);
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 
@@ -53,9 +60,16 @@ TEST(FourierMaterialTest, EvaluateYRB) {
       r, g, b, elevational_samples, cdf, coefficient_extents, coefficients,
       coefficients, coefficients, 1.5, true);
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

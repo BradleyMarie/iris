@@ -31,8 +31,14 @@ TEST(ScaledFloatTextureTest, Test) {
   ReferenceCounted<FloatTexture> texture1 = MakeConstantTexture(4.0);
   ReferenceCounted<FloatTexture> amount = MakeConstantTexture(0.5);
   EXPECT_EQ(3.0, MakeMixedTexture(texture0, texture1, amount)
-                     ->Evaluate(TextureCoordinates{
-                         Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt}));
+                     ->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                   Vector(0.0, 0.0, 0.0),
+                                                   Vector(0.0, 0.0, 0.0),
+                                                   {0.0, 0.0},
+                                                   0.0,
+                                                   0.0,
+                                                   0.0,
+                                                   0.0}));
 }
 
 TEST(ScaledReflectorTextureTest, Make) {
@@ -65,13 +71,17 @@ TEST(ScaledReflectorTextureTest, Test) {
   ReferenceCounted<ReflectorTexture> texture1 = MakeConstantTexture(reflector1);
   ReferenceCounted<FloatTexture> amount = MakeConstantTexture(0.5);
 
-  EXPECT_EQ(0.25,
-            MakeMixedTexture(texture0, texture1, amount)
-                ->Evaluate(
-                    TextureCoordinates{
-                        Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-                    GetSpectralAllocator())
-                ->Reflectance(1.0));
+  EXPECT_EQ(0.25, MakeMixedTexture(texture0, texture1, amount)
+                      ->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                    Vector(0.0, 0.0, 0.0),
+                                                    Vector(0.0, 0.0, 0.0),
+                                                    {0.0, 0.0},
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0},
+                                 GetSpectralAllocator())
+                      ->Reflectance(1.0));
 }
 
 }  // namespace

@@ -43,9 +43,15 @@ TEST(SubstrateMaterialTest, EvaluateEmpty) {
   ReferenceCounted<Material> material = MakeSubstrateMaterial(
       reflectance, reflectance, roughness, roughness, true);
 
-  ASSERT_FALSE(material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator()));
+  ASSERT_FALSE(material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     {0.0, 0.0},
+                                                     0.0,
+                                                     0.0,
+                                                     0.0,
+                                                     0.0},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(SubstrateMaterialTest, Evaluate) {
@@ -58,9 +64,16 @@ TEST(SubstrateMaterialTest, Evaluate) {
   ReferenceCounted<Material> material = MakeSubstrateMaterial(
       reflectance, reflectance, roughness, roughness, true);
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 }
 

@@ -211,16 +211,47 @@ TEST(BorderedImageFloatTexture, Test) {
 
   ReferenceCounted<FloatTexture> texture =
       MakeBorderedImageTexture(image, 0.0, 1.0, 1.0, 0.0, 0.0);
-  EXPECT_EQ(reflectors[0], texture->Evaluate(TextureCoordinates{
-                               Point(0.0, 0.0, 0.0), {}, {0.25, 0.25}}));
-  EXPECT_EQ(0.0, texture->Evaluate(TextureCoordinates{
-                     Point(0.0, 0.0, 0.0), {}, {-0.25, 0.25}}));
-  EXPECT_EQ(0.25, texture->Evaluate(TextureCoordinates{
-                      Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}}));
-  EXPECT_EQ(2.5, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.5, 0.5}}));
-  EXPECT_EQ(1.0, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.0, 1.0}}));
+  EXPECT_EQ(reflectors[0],
+            texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 {0.25, 0.25},
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0}));
+  EXPECT_EQ(0.0, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {-0.25, -0.25},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(0.25, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                       Vector(0.0, 0.0, 0.0),
+                                                       Vector(0.0, 0.0, 0.0),
+                                                       {0.0, 0.0},
+                                                       0.0,
+                                                       0.0,
+                                                       0.0,
+                                                       0.0}));
+  EXPECT_EQ(2.5, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {0.5, 0.5},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(1.0, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {1.0, 1.0},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
 }
 
 TEST(ClampedImageFloatTexture, Null) {
@@ -253,14 +284,39 @@ TEST(ClampedImageFloatTexture, Test) {
 
   ReferenceCounted<FloatTexture> texture =
       MakeClampedImageTexture(image, 1.0, 1.0, 0.0, 0.0);
-  EXPECT_EQ(reflectors[3], texture->Evaluate(TextureCoordinates{
-                               Point(0.0, 0.0, 0.0), {}, {1.25, 1.25}}));
-  EXPECT_EQ(1.0, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}}));
-  EXPECT_EQ(2.5, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.5, 0.5}}));
-  EXPECT_EQ(4.0, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.0, 1.0}}));
+  EXPECT_EQ(reflectors[3],
+            texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 {1.25, 1.25},
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0}));
+  EXPECT_EQ(1.0, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {0.0, 0.0},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(2.5, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {0.5, 0.5},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(4.0, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {1.0, 1.0},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
 }
 
 TEST(RepeatedImageFloatTexture, Nulls) {
@@ -293,18 +349,55 @@ TEST(RepeatedImageFloatTexture, Test) {
 
   ReferenceCounted<FloatTexture> texture =
       MakeRepeatedImageTexture(image, 1.0, 1.0, 0.0, 0.0);
-  EXPECT_EQ(reflectors[0], texture->Evaluate(TextureCoordinates{
-                               Point(0.0, 0.0, 0.0), {}, {1.25, 1.25}}));
-  EXPECT_EQ(2.5, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}}));
-  EXPECT_EQ(2.5, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.5, 0.5}}));
-  EXPECT_EQ(2.5, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.0, 1.0}}));
-  EXPECT_EQ(2.5, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.5, 1.5}}));
-  EXPECT_EQ(2.5, texture->Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {2.0, 2.0}}));
+  EXPECT_EQ(reflectors[0],
+            texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 {1.25, 1.25},
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0}));
+  EXPECT_EQ(2.5, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {0.0, 0.0},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(2.5, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {0.5, 0.5},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(2.5, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {1.0, 1.0},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(2.5, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {1.5, 1.5},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
+  EXPECT_EQ(2.5, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      Vector(0.0, 0.0, 0.0),
+                                                      {2.0, 2.0},
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0}));
 }
 
 TEST(BorderedImageReflectorTexture, Null) {
@@ -346,13 +439,24 @@ TEST(BorderedImageReflectorTexture, Test) {
   ReferenceCounted<ReflectorTexture> texture = MakeBorderedImageTexture(
       image, ReferenceCounted<Reflector>(), 1.0, 1.0, 0.0, 0.0);
   EXPECT_EQ(reflectors[0].Get(),
-            texture->Evaluate(
-                TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.25, 0.25}},
-                GetSpectralAllocator()));
-  EXPECT_EQ(nullptr,
-            texture->Evaluate(
-                TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {-0.25, 0.25}},
-                GetSpectralAllocator()));
+            texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 {0.25, 0.25},
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0},
+                              GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                          Vector(0.0, 0.0, 0.0),
+                                                          Vector(0.0, 0.0, 0.0),
+                                                          {-0.25, -0.25},
+                                                          0.0,
+                                                          0.0,
+                                                          0.0,
+                                                          0.0},
+                                       GetSpectralAllocator()));
 }
 
 TEST(ClampedImageReflectorTexture, Null) {
@@ -389,9 +493,15 @@ TEST(ClampedImageReflectorTexture, Test) {
   ReferenceCounted<ReflectorTexture> texture =
       MakeClampedImageTexture(image, 1.0, 1.0, 0.0, 0.0);
   EXPECT_EQ(reflectors[3].Get(),
-            texture->Evaluate(
-                TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.25, 1.25}},
-                GetSpectralAllocator()));
+            texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 {1.25, 1.25},
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0},
+                              GetSpectralAllocator()));
 }
 
 TEST(RepeatedImageReflectorTexture, Null) {
@@ -428,9 +538,15 @@ TEST(RepeatedImageReflectorTexture, Test) {
   ReferenceCounted<ReflectorTexture> texture =
       MakeRepeatedImageTexture(image, 1.0, 1.0, 0.0, 0.0);
   EXPECT_EQ(reflectors[0].Get(),
-            texture->Evaluate(
-                TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.25, 1.25}},
-                GetSpectralAllocator()));
+            texture->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 Vector(0.0, 0.0, 0.0),
+                                                 {1.25, 1.25},
+                                                 0.0,
+                                                 0.0,
+                                                 0.0,
+                                                 0.0},
+                              GetSpectralAllocator()));
 }
 
 }  // namespace

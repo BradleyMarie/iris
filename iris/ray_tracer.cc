@@ -238,6 +238,35 @@ std::optional<Geometry::Differentials> MaybeTransformDifferentials(
            model_to_world->Multiply(model_differentials->dy)}};
 }
 
+TextureCoordinates ComputeTextureCoordinates(
+    const Point& model_hit_point,
+    const std::optional<Geometry::Differentials> model_differentials,
+    const std::optional<Geometry::TextureCoordinates> texture_coordinates) {
+  return TextureCoordinates{
+      model_hit_point,
+      model_differentials
+          ? model_differentials->dx - model_hit_point
+          : Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+                   static_cast<geometric>(0.0)),
+      model_differentials
+          ? model_differentials->dy - model_hit_point
+          : Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+                   static_cast<geometric>(0.0)),
+      {texture_coordinates ? texture_coordinates->uv[0]
+                           : static_cast<geometric_t>(0.0),
+       texture_coordinates ? texture_coordinates->uv[1]
+                           : static_cast<geometric_t>(0.0)},
+      texture_coordinates ? texture_coordinates->du_dx
+                          : static_cast<geometric_t>(0.0),
+      texture_coordinates ? texture_coordinates->du_dy
+                          : static_cast<geometric_t>(0.0),
+      texture_coordinates ? texture_coordinates->dv_dx
+                          : static_cast<geometric_t>(0.0),
+      texture_coordinates ? texture_coordinates->dv_dy
+                          : static_cast<geometric_t>(0.0),
+  };
+}
+
 }  // namespace
 
 RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
@@ -268,12 +297,13 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
   std::optional<Geometry::Differentials> world_differentials =
       MaybeTransformDifferentials(model_differentials, hit->model_to_world);
 
-  TextureCoordinates texture_coordinates =
-      hit->geometry
-          ->ComputeTextureCoordinates(model_hit_point.point,
-                                      model_differentials, hit->front,
-                                      hit->additional_data)
-          .value_or(TextureCoordinates{model_hit_point.point, {}, {0.0, 0.0}});
+  std::optional<Geometry::TextureCoordinates> geometry_texture_coordinates =
+      hit->geometry->ComputeTextureCoordinates(model_hit_point.point,
+                                               model_differentials, hit->front,
+                                               hit->additional_data);
+
+  TextureCoordinates texture_coordinates = ComputeTextureCoordinates(
+      model_hit_point.point, model_differentials, geometry_texture_coordinates);
 
   const Spectrum* spectrum = nullptr;
   if (hit->allow_emissive) {

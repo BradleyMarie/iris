@@ -38,8 +38,16 @@ TEST(ReflectorTexture, EvaluateIntensity) {
   const SpectrumTexture& spectrum_texture =
       static_cast<SpectrumTexture&>(reflector_texture);
 
-  TextureCoordinates coordinates{Point(0.0, 0.0, 0.0)};
-  EXPECT_EQ(2.0, spectrum_texture.Eval(coordinates, GetSpectralAllocator())
+  EXPECT_EQ(2.0, spectrum_texture
+                     .Eval(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                              Vector(0.0, 0.0, 0.0),
+                                              Vector(0.0, 0.0, 0.0),
+                                              {0.0, 0.0},
+                                              0.0,
+                                              0.0,
+                                              0.0,
+                                              0.0},
+                           GetSpectralAllocator())
                      ->Intensity(1.0));
 }
 

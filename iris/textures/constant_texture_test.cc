@@ -16,18 +16,30 @@ using ::iris::testing::GetSpectralAllocator;
 
 TEST(ConstantFloatTexture, Test) {
   EXPECT_FALSE(MakeConstantTexture(0.0));
-  EXPECT_EQ(1.0, MakeConstantTexture(1.0)->Evaluate(TextureCoordinates{
-                     Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt}));
+  EXPECT_EQ(1.0, MakeConstantTexture(1.0)->Evaluate(
+                     TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                        Vector(0.0, 0.0, 0.0),
+                                        Vector(0.0, 0.0, 0.0),
+                                        {0.0, 0.0},
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0}));
 }
 
 TEST(ConstantReflectorTexture, Test) {
   EXPECT_FALSE(MakeConstantTexture(ReferenceCounted<Reflector>()));
   ReferenceCounted<Reflector> value = MakeReferenceCounted<MockReflector>();
-  EXPECT_EQ(value.Get(),
-            MakeConstantTexture(value)->Evaluate(
-                TextureCoordinates{
-                    Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-                GetSpectralAllocator()));
+  EXPECT_EQ(value.Get(), MakeConstantTexture(value)->Evaluate(
+                             TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                Vector(0.0, 0.0, 0.0),
+                                                Vector(0.0, 0.0, 0.0),
+                                                {0.0, 0.0},
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                0.0},
+                             GetSpectralAllocator()));
 }
 
 }  // namespace

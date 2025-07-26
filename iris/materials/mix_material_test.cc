@@ -70,9 +70,16 @@ TEST(MixMaterialTest, Evaluate) {
       MakeMixMaterial(std::move(mock_material0), std::move(mock_material1),
                       std::move(attenuation));
 
-  const Bxdf* bxdf = mix_material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* bxdf =
+      mix_material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                Vector(0.0, 0.0, 0.0),
+                                                Vector(0.0, 0.0, 0.0),
+                                                {0.0, 0.0},
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                0.0},
+                             GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(bxdf);
 
   const Reflector* reflector =

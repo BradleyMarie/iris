@@ -101,7 +101,7 @@ Vector Sphere::ComputeSurfaceNormal(const Point& hit_point, face_t face,
   return normal;
 }
 
-std::optional<TextureCoordinates> Sphere::ComputeTextureCoordinates(
+std::optional<Geometry::TextureCoordinates> Sphere::ComputeTextureCoordinates(
     const Point& hit_point, const std::optional<Differentials>& differentials,
     face_t face, const void* additional_data) const {
   return std::nullopt;

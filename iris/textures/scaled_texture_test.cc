@@ -30,8 +30,14 @@ TEST(ScaledFloatTextureTest, Test) {
   ReferenceCounted<FloatTexture> texture0 = MakeConstantTexture(2.0);
   ReferenceCounted<FloatTexture> texture1 = MakeConstantTexture(4.0);
   EXPECT_EQ(8.0, MakeScaledTexture(texture0, texture1)
-                     ->Evaluate(TextureCoordinates{
-                         Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt}));
+                     ->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                   Vector(0.0, 0.0, 0.0),
+                                                   Vector(0.0, 0.0, 0.0),
+                                                   {0.0, 0.0},
+                                                   0.0,
+                                                   0.0,
+                                                   0.0,
+                                                   0.0}));
 }
 
 TEST(ScaledReflectorTextureTest, Make) {
@@ -56,13 +62,17 @@ TEST(ScaledReflectorTextureTest, Test) {
 
   ReferenceCounted<ReflectorTexture> texture = MakeConstantTexture(reflector);
 
-  EXPECT_EQ(0.25,
-            MakeScaledTexture(texture, texture)
-                ->Evaluate(
-                    TextureCoordinates{
-                        Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-                    GetSpectralAllocator())
-                ->Reflectance(1.0));
+  EXPECT_EQ(0.25, MakeScaledTexture(texture, texture)
+                      ->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                    Vector(0.0, 0.0, 0.0),
+                                                    Vector(0.0, 0.0, 0.0),
+                                                    {0.0, 0.0},
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    0.0},
+                                 GetSpectralAllocator())
+                      ->Reflectance(1.0));
 }
 
 }  // namespace

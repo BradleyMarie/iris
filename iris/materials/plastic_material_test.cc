@@ -68,9 +68,15 @@ TEST(PlasticMaterialTest, NoBxdfs) {
       MakePlasticMaterial(reflectance, reflectance, eta_incident,
                           eta_transmitted, std::move(sigma), false);
 
-  EXPECT_FALSE(material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator()));
+  EXPECT_FALSE(material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     {0.0, 0.0},
+                                                     0.0,
+                                                     0.0,
+                                                     0.0,
+                                                     0.0},
+                                  GetSpectralAllocator(), GetBxdfAllocator()));
 }
 
 TEST(PlasticMaterialTest, LambertianOnly) {
@@ -89,9 +95,16 @@ TEST(PlasticMaterialTest, LambertianOnly) {
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
                           std::move(sigma), false);
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(
@@ -117,9 +130,16 @@ TEST(PlasticMaterialTest, SpecularOnly) {
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
                           std::move(sigma), false);
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(
@@ -144,9 +164,16 @@ TEST(PlasticMaterialTest, Remap) {
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
                           std::move(sigma), true);
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(
@@ -172,9 +199,16 @@ TEST(PlasticMaterialTest, Both) {
       MakePlasticMaterial(reflectance, specular, eta_incident, eta_transmitted,
                           std::move(sigma), false);
 
-  const Bxdf* result = material->Evaluate(
-      TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {0.0, 0.0}, std::nullopt},
-      GetSpectralAllocator(), GetBxdfAllocator());
+  const Bxdf* result =
+      material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            Vector(0.0, 0.0, 0.0),
+                                            {0.0, 0.0},
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            0.0},
+                         GetSpectralAllocator(), GetBxdfAllocator());
   ASSERT_TRUE(result);
 
   const Reflector* returned_reflector = result->ReflectanceDiffuse(

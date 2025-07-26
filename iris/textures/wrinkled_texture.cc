@@ -15,7 +15,6 @@ namespace iris {
 namespace textures {
 namespace {
 
-using ::iris::textures::internal::GetDifferentials;
 using ::iris::textures::internal::Turbulence;
 
 class WrinkledFloatTexture final : public FloatTexture {
@@ -24,8 +23,8 @@ class WrinkledFloatTexture final : public FloatTexture {
       : octaves_(octaves), roughness_(roughness) {}
 
   visual_t Evaluate(const TextureCoordinates& coordinates) const override {
-    auto [dx, dy] = GetDifferentials(coordinates);
-    return Turbulence(coordinates.hit_point, dx, dy, roughness_, octaves_);
+    return Turbulence(coordinates.p, coordinates.dp_dx, coordinates.dp_dy,
+                      roughness_, octaves_);
   }
 
  private:
@@ -43,16 +42,14 @@ class WrinkledReflectorTexture final : public ReflectorTexture {
 
   const Reflector* Evaluate(const TextureCoordinates& coordinates,
                             SpectralAllocator& allocator) const override {
-    auto [dx, dy] = GetDifferentials(coordinates);
-
     const Reflector* reflectance = nullptr;
     if (reflectance_) {
       reflectance = reflectance_->Evaluate(coordinates, allocator);
     }
 
     return allocator.UnboundedScale(
-        reflectance,
-        Turbulence(coordinates.hit_point, dx, dy, roughness_, octaves_));
+        reflectance, Turbulence(coordinates.p, coordinates.dp_dx,
+                                coordinates.dp_dy, roughness_, octaves_));
   }
 
  private:

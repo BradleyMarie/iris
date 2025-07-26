@@ -193,7 +193,7 @@ std::array<geometric_t, 2> Triangle::UVCoordinates(const Point& point) const {
   return {u, v};
 }
 
-std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
+std::optional<Geometry::TextureCoordinates> Triangle::ComputeTextureCoordinates(
     const Point& hit_point, const std::optional<Differentials>& differentials,
     geometric_t b0, geometric_t b1, geometric_t b2) const {
   if (shared_->uv.empty()) {
@@ -208,19 +208,16 @@ std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
                   shared_->uv[std::get<2>(vertices_)].second * b2;
 
   if (!differentials) {
-    return TextureCoordinates{hit_point, {}, {u, v}};
+    return Geometry::TextureCoordinates{{u, v}};
   }
 
   auto [u_dx, v_dx] = UVCoordinates(differentials->dx);
   auto [u_dy, v_dy] = UVCoordinates(differentials->dy);
-  return TextureCoordinates{
-      hit_point,
-      {{differentials->dx - hit_point, differentials->dy - hit_point}},
-      {u, v},
-      {{u_dx - u, u_dy - u, v_dx - v, v_dy - v}}};
+  return Geometry::TextureCoordinates{
+      {u, v}, u_dx - u, u_dy - u, v_dx - v, v_dy - v};
 }
 
-std::optional<TextureCoordinates> Triangle::ComputeTextureCoordinates(
+std::optional<Geometry::TextureCoordinates> Triangle::ComputeTextureCoordinates(
     const Point& hit_point, const std::optional<Differentials>& differentials,
     face_t face, const void* additional_data) const {
   const AdditionalData* additional =
@@ -514,12 +511,27 @@ Hit* Triangle::Trace(const Ray& ray, geometric_t minimum_distance,
   geometric_t distance = b0 * v0[2] + b1 * v1[2] + b2 * v2[2];
 
   if (shared_->alpha_mask) {
-    std::optional<TextureCoordinates> texture_coordinates =
-        ComputeTextureCoordinates(ray.Endpoint(distance), std::nullopt,
-                                  barycentric0, barycentric1, barycentric2);
-    if (texture_coordinates &&
-        !shared_->alpha_mask->Included(*texture_coordinates)) {
-      return nullptr;
+    Point endpoint = ray.Endpoint(distance);
+    if (std::optional<Geometry::TextureCoordinates> texture_coordinates =
+            ComputeTextureCoordinates(endpoint, std::nullopt, barycentric0,
+                                      barycentric1, barycentric2);
+        texture_coordinates) {
+      iris::TextureCoordinates coords = {
+          endpoint,
+          Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+                 static_cast<geometric>(0.0)),
+          Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+                 static_cast<geometric>(0.0)),
+          {texture_coordinates->uv[0], texture_coordinates->uv[1]},
+          texture_coordinates->du_dx,
+          texture_coordinates->du_dy,
+          texture_coordinates->dv_dx,
+          texture_coordinates->dv_dy,
+      };
+
+      if (!shared_->alpha_mask->Included(coords)) {
+        return nullptr;
+      }
     }
   }
 

@@ -11,25 +11,15 @@
 namespace iris {
 
 struct TextureCoordinates final {
-  const Point hit_point;
+  const Point p;
+  const Vector dp_dx;
+  const Vector dp_dy;
 
-  struct HitPointDifferentials {
-    Vector dhit_point_dx;
-    Vector dhit_point_dy;
-  };
-
-  const std::optional<HitPointDifferentials> hit_point_differentials;
-
-  const std::array<geometric_t, 2> uv;
-
-  struct UVDifferentials {
-    geometric_t du_dx;
-    geometric_t du_dy;
-    geometric_t dv_dx;
-    geometric_t dv_dy;
-  };
-
-  const std::optional<UVDifferentials> uv_differentials;
+  const geometric_t uv[2];
+  const geometric_t du_dx;
+  const geometric_t du_dy;
+  const geometric_t dv_dx;
+  const geometric_t dv_dy;
 
   TextureCoordinates Scale(geometric u_scale, geometric v_scale,
                            geometric u_offset, geometric v_offset) const;

@@ -60,16 +60,28 @@ class TestUVPointerTexture2D : public UVReflectorTexture {
 TEST(UVPointerTexture2D, Test) {
   reflectors::MockReflector reflector;
   TestUVPointerTexture2D texture(reflector);
-  EXPECT_EQ(
-      &reflector,
-      texture.Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.0, 2.0}},
-                       GetSpectralAllocator()));
+  EXPECT_EQ(&reflector,
+            texture.Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                Vector(0.0, 0.0, 0.0),
+                                                Vector(0.0, 0.0, 0.0),
+                                                {1.0, 2.0},
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                0.0},
+                             GetSpectralAllocator()));
 }
 
 TEST(UVValueTexture2D, Test) {
   TestUVValueTexture2D texture(1.0);
-  EXPECT_EQ(1.0, texture.Evaluate(
-                     TextureCoordinates{Point(0.0, 0.0, 0.0), {}, {1.0, 2.0}}));
+  EXPECT_EQ(1.0, texture.Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     Vector(0.0, 0.0, 0.0),
+                                                     {1.0, 2.0},
+                                                     0.0,
+                                                     0.0,
+                                                     0.0,
+                                                     0.0}));
 }
 
 }  // namespace

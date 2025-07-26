@@ -471,7 +471,7 @@ TEST(Triangle, ComputeTextureCoordinatesNone) {
 
   AdditionalDataContents additional_data{{1.0, 0.0, 0.0},
                                          Vector(0.0, 0.0, 1.0)};
-  std::optional<TextureCoordinates> texture_coordinates =
+  std::optional<Geometry::TextureCoordinates> texture_coordinates =
       triangles.front()->ComputeTextureCoordinates(
           Point(0.0, 0.0, 0.0), std::nullopt, FRONT_FACE, &additional_data);
   EXPECT_FALSE(texture_coordinates);
@@ -482,54 +482,52 @@ TEST(Triangle, ComputeTextureCoordinates) {
 
   AdditionalDataContents additional_data0{{1.0, 0.0, 0.0},
                                           Vector(0.0, 0.0, 1.0)};
-  std::optional<TextureCoordinates> texture_coordinates0 =
+  std::optional<Geometry::TextureCoordinates> texture_coordinates0 =
       triangle->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
                                           FRONT_FACE, &additional_data0);
   EXPECT_EQ(0.0, texture_coordinates0->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates0->uv[1]);
-  EXPECT_FALSE(texture_coordinates0->uv_differentials);
+  EXPECT_EQ(0.0, texture_coordinates0->du_dx);
+  EXPECT_EQ(0.0, texture_coordinates0->du_dy);
+  EXPECT_EQ(0.0, texture_coordinates0->dv_dx);
+  EXPECT_EQ(0.0, texture_coordinates0->dv_dy);
 
   AdditionalDataContents additional_data1{{0.0, 1.0, 0.0},
                                           Vector(0.0, 0.0, 1.0)};
-  std::optional<TextureCoordinates> texture_coordinates1 =
+  std::optional<Geometry::TextureCoordinates> texture_coordinates1 =
       triangle->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
                                           FRONT_FACE, &additional_data1);
-  EXPECT_EQ(Point(0.0, 0.0, 0.0), texture_coordinates1->hit_point);
-  ASSERT_FALSE(texture_coordinates1->hit_point_differentials);
   EXPECT_EQ(1.0, texture_coordinates1->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates1->uv[1]);
-  EXPECT_FALSE(texture_coordinates1->uv_differentials);
+  EXPECT_EQ(0.0, texture_coordinates1->du_dx);
+  EXPECT_EQ(0.0, texture_coordinates1->du_dy);
+  EXPECT_EQ(0.0, texture_coordinates1->dv_dx);
+  EXPECT_EQ(0.0, texture_coordinates1->dv_dy);
 
   AdditionalDataContents additional_data2{{0.0, 0.0, 1.0},
                                           Vector(0.0, 0.0, 1.0)};
-  std::optional<TextureCoordinates> texture_coordinates2 =
+  std::optional<Geometry::TextureCoordinates> texture_coordinates2 =
       triangle->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
                                           FRONT_FACE, &additional_data2);
-  EXPECT_EQ(Point(0.0, 0.0, 0.0), texture_coordinates2->hit_point);
-  ASSERT_FALSE(texture_coordinates2->hit_point_differentials);
   EXPECT_EQ(0.0, texture_coordinates2->uv[0]);
   EXPECT_EQ(1.0, texture_coordinates2->uv[1]);
-  EXPECT_FALSE(texture_coordinates2->uv_differentials);
+  EXPECT_EQ(0.0, texture_coordinates2->du_dx);
+  EXPECT_EQ(0.0, texture_coordinates2->du_dy);
+  EXPECT_EQ(0.0, texture_coordinates2->dv_dx);
+  EXPECT_EQ(0.0, texture_coordinates2->dv_dy);
 
   AdditionalDataContents additional_data3{{1.0, 0.0, 0.0},
                                           Vector(0.0, 0.0, 1.0)};
-  std::optional<TextureCoordinates> texture_coordinates3 =
+  std::optional<Geometry::TextureCoordinates> texture_coordinates3 =
       triangle->ComputeTextureCoordinates(
           Point(0.0, 0.0, 0.0), {{Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
           FRONT_FACE, &additional_data3);
-  EXPECT_EQ(Point(0.0, 0.0, 0.0), texture_coordinates3->hit_point);
-  ASSERT_TRUE(texture_coordinates3->hit_point_differentials);
-  EXPECT_EQ(Vector(1.0, 0.0, 0.0),
-            texture_coordinates3->hit_point_differentials->dhit_point_dx);
-  EXPECT_EQ(Vector(0.0, 1.0, 0.0),
-            texture_coordinates3->hit_point_differentials->dhit_point_dy);
   EXPECT_EQ(0.0, texture_coordinates3->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates3->uv[1]);
-  ASSERT_TRUE(texture_coordinates3->uv_differentials);
-  EXPECT_EQ(1.0, texture_coordinates3->uv_differentials->du_dx);
-  EXPECT_EQ(0.0, texture_coordinates3->uv_differentials->du_dy);
-  EXPECT_EQ(0.0, texture_coordinates3->uv_differentials->dv_dx);
-  EXPECT_EQ(1.0, texture_coordinates3->uv_differentials->dv_dy);
+  EXPECT_EQ(1.0, texture_coordinates3->du_dx);
+  EXPECT_EQ(0.0, texture_coordinates3->du_dy);
+  EXPECT_EQ(0.0, texture_coordinates3->dv_dx);
+  EXPECT_EQ(1.0, texture_coordinates3->dv_dy);
 }
 
 TEST(Triangle, ComputeShadingNormalNoUVs) {

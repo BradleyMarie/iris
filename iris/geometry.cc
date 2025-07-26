@@ -69,7 +69,7 @@ Hit* Geometry::TraceOneHit(HitAllocator& hit_allocator,
   return closest;
 }
 
-std::optional<TextureCoordinates> Geometry::ComputeTextureCoordinates(
+std::optional<Geometry::TextureCoordinates> Geometry::ComputeTextureCoordinates(
     const Point& hit_point, const std::optional<Differentials>& differentials,
     face_t face, const void* additional_data) const {
   return std::nullopt;

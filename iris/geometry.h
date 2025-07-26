@@ -41,6 +41,14 @@ class Geometry : public ReferenceCountable {
   virtual Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                       const void* additional_data) const = 0;
 
+  struct TextureCoordinates {
+    const geometric_t uv[2];
+    const geometric_t du_dx = static_cast<geometric_t>(0.0);
+    const geometric_t du_dy = static_cast<geometric_t>(0.0);
+    const geometric_t dv_dx = static_cast<geometric_t>(0.0);
+    const geometric_t dv_dy = static_cast<geometric_t>(0.0);
+  };
+
   struct Differentials {
     const Point dx;
     const Point dy;

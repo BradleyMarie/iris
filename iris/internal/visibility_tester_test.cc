@@ -57,9 +57,15 @@ std::unique_ptr<EmissiveMaterial> MakeEmissiveMaterial(
       .WillRepeatedly(Invoke([expected_hit_point, expected_uv, spectrum](
                                  const TextureCoordinates& texture_coordinates,
                                  SpectralAllocator& spectral_allocator) {
-        EXPECT_EQ(expected_hit_point, texture_coordinates.hit_point);
-        EXPECT_EQ(expected_uv, texture_coordinates.uv);
-        EXPECT_FALSE(texture_coordinates.uv_differentials);
+        EXPECT_EQ(expected_hit_point, texture_coordinates.p);
+        EXPECT_EQ(Vector(0.0, 0.0, 0.0), texture_coordinates.dp_dx);
+        EXPECT_EQ(Vector(0.0, 0.0, 0.0), texture_coordinates.dp_dy);
+        EXPECT_EQ(expected_uv[0], texture_coordinates.uv[0]);
+        EXPECT_EQ(expected_uv[1], texture_coordinates.uv[1]);
+        EXPECT_EQ(0.0, texture_coordinates.du_dx);
+        EXPECT_EQ(0.0, texture_coordinates.du_dy);
+        EXPECT_EQ(0.0, texture_coordinates.dv_dx);
+        EXPECT_EQ(0.0, texture_coordinates.dv_dy);
         return spectrum;
       }));
   return result;
@@ -704,7 +710,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
               const std::optional<Geometry::Differentials>& differentials,
               face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return TextureCoordinates{hit_point, {}, {0.5, 0.5}};
+            return Geometry::TextureCoordinates{{0.5, 0.5}};
           }));
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))
