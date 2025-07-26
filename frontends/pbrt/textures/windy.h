@@ -2,6 +2,7 @@
 #define _FRONTENDS_PBRT_TEXTURES_WINDY_
 
 #include "frontends/pbrt/texture_manager.h"
+#include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
@@ -15,11 +16,11 @@ namespace textures {
 
 ReferenceCounted<iris::textures::FloatTexture> MakeWindy(
     const pbrt_proto::v3::FloatTexture::Windy& wrinkled,
-    TextureManager& texture_manager);
+    TextureManager& texture_manager, const Matrix& world_to_texture);
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeWindy(
     const pbrt_proto::v3::SpectrumTexture::Windy& wrinkled,
-    TextureManager& texture_manager);
+    TextureManager& texture_manager, const Matrix& world_to_texture);
 
 }  // namespace textures
 }  // namespace pbrt_frontend

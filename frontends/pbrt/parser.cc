@@ -308,7 +308,8 @@ std::unique_ptr<ParsingResult> ParseDirective(
       }
 
       ParseFloatTexture(directive.float_texture(), state.image_manager,
-                        state.texture_manager);
+                        state.texture_manager,
+                        state.matrix_manager.Get().start);
       break;
     case Directive::kIdentity:
       state.matrix_manager.Identity();
@@ -514,7 +515,8 @@ std::unique_ptr<ParsingResult> ParseDirective(
       }
 
       ParseSpectrumTexture(directive.spectrum_texture(), state.image_manager,
-                           state.texture_manager);
+                           state.texture_manager,
+                           state.matrix_manager.Get().start);
       break;
     case Directive::kTransform:
       state.matrix_manager.Transform(

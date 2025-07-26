@@ -3,6 +3,7 @@
 
 #include "frontends/pbrt/image_manager.h"
 #include "frontends/pbrt/texture_manager.h"
+#include "iris/matrix.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
@@ -10,11 +11,13 @@ namespace pbrt_frontend {
 
 void ParseFloatTexture(const pbrt_proto::v3::FloatTexture& float_texture,
                        ImageManager& image_manager,
-                       TextureManager& texture_manager);
+                       TextureManager& texture_manager,
+                       const Matrix& world_to_texture);
 
 void ParseSpectrumTexture(
     const pbrt_proto::v3::SpectrumTexture& spectrum_texture,
-    ImageManager& image_manager, TextureManager& texture_manager);
+    ImageManager& image_manager, TextureManager& texture_manager,
+    const Matrix& world_to_texture);
 
 }  // namespace pbrt_frontend
 }  // namespace iris

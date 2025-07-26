@@ -153,9 +153,11 @@ std::unique_ptr<Material> MakeMaterial(const Point& expected_hit_point,
                            const TextureCoordinates& texture_coordinates,
                            SpectralAllocator& spectral_allocator,
                            BxdfAllocator& allocator) {
-        EXPECT_EQ(expected_hit_point, texture_coordinates.p);
-        EXPECT_EQ(expected_uv[0], texture_coordinates.uv[0]);
-        EXPECT_EQ(expected_uv[1], texture_coordinates.uv[1]);
+        EXPECT_NEAR(expected_hit_point.x, texture_coordinates.p.x, 0.001);
+        EXPECT_NEAR(expected_hit_point.y, texture_coordinates.p.y, 0.001);
+        EXPECT_NEAR(expected_hit_point.z, texture_coordinates.p.z, 0.001);
+        EXPECT_NEAR(expected_uv[0], texture_coordinates.uv[0], 0.001);
+        EXPECT_NEAR(expected_uv[1], texture_coordinates.uv[1], 0.001);
         return bxdf.get();
       }));
 
@@ -981,7 +983,7 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
       model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
 
   std::unique_ptr<Material> material =
-      MakeMaterial(expected_model_hit_point, {1.0, 1.0}, true);
+      MakeMaterial(trace_ray.Endpoint(1.0), {1.0, 1.0}, true);
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
@@ -1065,7 +1067,7 @@ TEST(RayTracerTest, WithTransform) {
       model_to_world.Multiply(model_dy_ray.Endpoint(1.0));
 
   std::unique_ptr<Material> material =
-      MakeMaterial(expected_model_hit_point, {1.0, 1.0}, true);
+      MakeMaterial(trace_ray.Endpoint(1.0), {1.0, 1.0}, true);
 
   ReferenceCounted<MockGeometry> geometry = MakeGeometry(
       model_ray, expected_model_hit_point, material.get(), nullptr);

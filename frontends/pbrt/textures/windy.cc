@@ -2,6 +2,7 @@
 
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
+#include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
@@ -19,13 +20,16 @@ using ::pbrt_proto::v3::FloatTexture;
 using ::pbrt_proto::v3::SpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeWindy(
-    const FloatTexture::Windy& windy, TextureManager& texture_manager) {
-  return MakeWindyTexture();
+    const FloatTexture::Windy& windy, TextureManager& texture_manager,
+    const Matrix& world_to_texture) {
+  return MakeWindyTexture(world_to_texture);
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeWindy(
-    const SpectrumTexture::Windy& windy, TextureManager& texture_manager) {
+    const SpectrumTexture::Windy& windy, TextureManager& texture_manager,
+    const Matrix& world_to_texture) {
   return MakeWindyTexture(
+      world_to_texture,
       texture_manager.AllocateReflectorTexture(static_cast<visual>(1.0)));
 }
 

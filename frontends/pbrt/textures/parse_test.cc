@@ -7,6 +7,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/matrix.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
@@ -27,7 +28,8 @@ TEST(ParseFloatTexture, Empty) {
   FloatTexture float_texture;
   float_texture.set_name("A");
 
-  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
   EXPECT_EXIT(texture_manager.GetFloatTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: No float texture defined with name: \"A\"");
@@ -43,7 +45,8 @@ TEST(ParseFloatTexture, Bilerp) {
   float_texture.set_name("A");
   float_texture.mutable_bilerp();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
+  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
+                                Matrix::Identity()),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported FloatTexture type: bilerp");
 }
@@ -58,7 +61,8 @@ TEST(ParseFloatTexture, Checkerboard2D) {
   float_texture.set_name("A");
   float_texture.mutable_checkerboard2d();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
+  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
+                                Matrix::Identity()),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported FloatTexture type: checkerboard");
 }
@@ -73,7 +77,8 @@ TEST(ParseFloatTexture, Checkerboard3D) {
   float_texture.set_name("A");
   float_texture.mutable_checkerboard3d();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
+  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
+                                Matrix::Identity()),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported FloatTexture type: checkerboard");
 }
@@ -88,7 +93,8 @@ TEST(ParseFloatTexture, Constant) {
   float_texture.set_name("A");
   float_texture.mutable_constant();
 
-  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
@@ -102,7 +108,8 @@ TEST(ParseFloatTexture, Dots) {
   float_texture.set_name("A");
   float_texture.mutable_dots();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
+  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
+                                Matrix::Identity()),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported FloatTexture type: dots");
 }
@@ -117,7 +124,8 @@ TEST(ParseFloatTexture, Fbm) {
   float_texture.set_name("A");
   float_texture.mutable_fbm();
 
-  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
@@ -131,7 +139,8 @@ TEST(ParseFloatTexture, ImageMap) {
   float_texture.set_name("A");
   float_texture.mutable_imagemap();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
+  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
+                                Matrix::Identity()),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Missing required image parameter: filename");
 }
@@ -146,7 +155,8 @@ TEST(ParseFloatTexture, Marble) {
   float_texture.set_name("A");
   float_texture.mutable_marble();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
+  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
+                                Matrix::Identity()),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported FloatTexture type: marble");
 }
@@ -161,7 +171,8 @@ TEST(ParseFloatTexture, Mix) {
   float_texture.set_name("A");
   float_texture.mutable_mix();
 
-  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
@@ -175,7 +186,8 @@ TEST(ParseFloatTexture, PTex) {
   float_texture.set_name("A");
   float_texture.mutable_ptex();
 
-  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager),
+  EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
+                                Matrix::Identity()),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Unsupported FloatTexture type: ptex");
 }
@@ -190,7 +202,8 @@ TEST(ParseFloatTexture, Scale) {
   float_texture.set_name("A");
   float_texture.mutable_scale();
 
-  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
@@ -204,7 +217,8 @@ TEST(ParseFloatTexture, Windy) {
   float_texture.set_name("A");
   float_texture.mutable_windy();
 
-  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
@@ -218,7 +232,8 @@ TEST(ParseFloatTexture, Wrinkled) {
   float_texture.set_name("A");
   float_texture.mutable_wrinkled();
 
-  ParseFloatTexture(float_texture, image_manager, texture_manager);
+  ParseFloatTexture(float_texture, image_manager, texture_manager,
+                    Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
@@ -231,7 +246,8 @@ TEST(ParseSpectrumTexture, Empty) {
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
 
-  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
   EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: No spectrum texture defined with name: \"A\"");
@@ -247,10 +263,10 @@ TEST(ParseSpectrumTexture, Bilerp) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_bilerp();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: bilerp");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported SpectrumTexture type: bilerp");
 }
 
 TEST(ParseSpectrumTexture, Checkerboard2D) {
@@ -263,10 +279,10 @@ TEST(ParseSpectrumTexture, Checkerboard2D) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_checkerboard2d();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: checkerboard");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported SpectrumTexture type: checkerboard");
 }
 
 TEST(ParseSpectrumTexture, Checkerboard3D) {
@@ -279,10 +295,10 @@ TEST(ParseSpectrumTexture, Checkerboard3D) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_checkerboard3d();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: checkerboard");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported SpectrumTexture type: checkerboard");
 }
 
 TEST(ParseSpectrumTexture, Constant) {
@@ -295,7 +311,8 @@ TEST(ParseSpectrumTexture, Constant) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_constant();
 
-  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
@@ -309,10 +326,10 @@ TEST(ParseSpectrumTexture, Dots) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_dots();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: dots");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported SpectrumTexture type: dots");
 }
 
 TEST(ParseSpectrumTexture, Fbm) {
@@ -325,7 +342,8 @@ TEST(ParseSpectrumTexture, Fbm) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_fbm();
 
-  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
@@ -339,10 +357,10 @@ TEST(ParseSpectrumTexture, ImageMap) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_imagemap();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Missing required image parameter: filename");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Missing required image parameter: filename");
 }
 
 TEST(ParseSpectrumTexture, Marble) {
@@ -355,10 +373,10 @@ TEST(ParseSpectrumTexture, Marble) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_marble();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: marble");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported SpectrumTexture type: marble");
 }
 
 TEST(ParseSpectrumTexture, Mix) {
@@ -371,7 +389,8 @@ TEST(ParseSpectrumTexture, Mix) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_mix();
 
-  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
@@ -385,10 +404,10 @@ TEST(ParseSpectrumTexture, PTex) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_ptex();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: ptex");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported SpectrumTexture type: ptex");
 }
 
 TEST(ParseSpectrumTexture, Scale) {
@@ -401,7 +420,8 @@ TEST(ParseSpectrumTexture, Scale) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_scale();
 
-  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
@@ -415,10 +435,10 @@ TEST(ParseSpectrumTexture, UV) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_uv();
 
-  EXPECT_EXIT(
-      ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported SpectrumTexture type: uv");
+  EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
+                                   texture_manager, Matrix::Identity()),
+              ExitedWithCode(EXIT_FAILURE),
+              "ERROR: Unsupported SpectrumTexture type: uv");
 }
 
 TEST(ParseSpectrumTexture, Windy) {
@@ -431,7 +451,8 @@ TEST(ParseSpectrumTexture, Windy) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_windy();
 
-  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
@@ -445,7 +466,8 @@ TEST(ParseSpectrumTexture, Wrinkled) {
   spectrum_texture.set_name("A");
   spectrum_texture.mutable_wrinkled();
 
-  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager);
+  ParseSpectrumTexture(spectrum_texture, image_manager, texture_manager,
+                       Matrix::Identity());
   EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 

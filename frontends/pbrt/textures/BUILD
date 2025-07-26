@@ -37,6 +37,7 @@ cc_library(
     deps = [
         "//frontends/pbrt:defaults",
         "//frontends/pbrt:texture_manager",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris/textures:fbm_texture",
@@ -53,6 +54,7 @@ cc_test(
         ":fbm",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:matrix",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -139,6 +141,7 @@ cc_library(
         ":wrinkled",
         "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
+        "//iris:matrix",
     ],
 )
 
@@ -150,6 +153,7 @@ cc_test(
         "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:matrix",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -191,6 +195,7 @@ cc_library(
     deps = [
         "//frontends/pbrt:defaults",
         "//frontends/pbrt:texture_manager",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris/textures:float_texture",
@@ -207,6 +212,7 @@ cc_test(
         ":windy",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:matrix",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -219,6 +225,7 @@ cc_library(
     deps = [
         "//frontends/pbrt:defaults",
         "//frontends/pbrt:texture_manager",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris/textures:float_texture",
@@ -235,6 +242,7 @@ cc_test(
         ":wrinkled",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris:matrix",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

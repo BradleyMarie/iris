@@ -3,6 +3,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "iris/matrix.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
 namespace iris {
@@ -19,7 +20,7 @@ TEST(Windy, FloatTexture) {
   TextureManager texture_manager(spectrum_manager);
 
   FloatTexture::Windy windy;
-  EXPECT_TRUE(MakeWindy(windy, texture_manager));
+  EXPECT_TRUE(MakeWindy(windy, texture_manager, Matrix::Identity()));
 }
 
 TEST(Windy, SpectrumTexture) {
@@ -27,7 +28,7 @@ TEST(Windy, SpectrumTexture) {
   TextureManager texture_manager(spectrum_manager);
 
   SpectrumTexture::Windy windy;
-  EXPECT_TRUE(MakeWindy(windy, texture_manager));
+  EXPECT_TRUE(MakeWindy(windy, texture_manager, Matrix::Identity()));
 }
 
 }  // namespace

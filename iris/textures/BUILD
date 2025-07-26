@@ -37,6 +37,7 @@ cc_library(
     hdrs = ["fbm_texture.h"],
     deps = [
         "//iris:float",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
@@ -52,6 +53,7 @@ cc_test(
     srcs = ["fbm_texture_test.cc"],
     deps = [
         ":fbm_texture",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
         "//iris/textures:constant_texture",
@@ -238,6 +240,7 @@ cc_library(
     hdrs = ["windy_texture.h"],
     deps = [
         "//iris:float",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
@@ -253,6 +256,7 @@ cc_test(
     srcs = ["windy_texture_test.cc"],
     deps = [
         ":windy_texture",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
         "//iris/textures:constant_texture",
@@ -266,6 +270,7 @@ cc_library(
     hdrs = ["wrinkled_texture.h"],
     deps = [
         "//iris:float",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectral_allocator",
@@ -281,6 +286,7 @@ cc_test(
     srcs = ["wrinkled_texture_test.cc"],
     deps = [
         ":wrinkled_texture",
+        "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
         "//iris/textures:constant_texture",

@@ -239,17 +239,17 @@ std::optional<Geometry::Differentials> MaybeTransformDifferentials(
 }
 
 TextureCoordinates ComputeTextureCoordinates(
-    const Point& model_hit_point,
-    const std::optional<Geometry::Differentials> model_differentials,
+    const Point& world_hit_point,
+    const std::optional<Geometry::Differentials> world_differentials,
     const std::optional<Geometry::TextureCoordinates> texture_coordinates) {
   return TextureCoordinates{
-      model_hit_point,
-      model_differentials
-          ? model_differentials->dx - model_hit_point
+      world_hit_point,
+      world_differentials
+          ? world_differentials->dx - world_hit_point
           : Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
                    static_cast<geometric>(0.0)),
-      model_differentials
-          ? model_differentials->dy - model_hit_point
+      world_differentials
+          ? world_differentials->dy - world_hit_point
           : Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
                    static_cast<geometric>(0.0)),
       {texture_coordinates ? texture_coordinates->uv[0]
@@ -303,7 +303,7 @@ RayTracer::TraceResult RayTracer::Trace(const RayDifferential& ray) {
                                                hit->additional_data);
 
   TextureCoordinates texture_coordinates = ComputeTextureCoordinates(
-      model_hit_point.point, model_differentials, geometry_texture_coordinates);
+      world_hit_point.point, world_differentials, geometry_texture_coordinates);
 
   const Spectrum* spectrum = nullptr;
   if (hit->allow_emissive) {

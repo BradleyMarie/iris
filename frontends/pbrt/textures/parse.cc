@@ -13,6 +13,7 @@
 #include "frontends/pbrt/textures/scale.h"
 #include "frontends/pbrt/textures/windy.h"
 #include "frontends/pbrt/textures/wrinkled.h"
+#include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
@@ -28,7 +29,8 @@ using ::pbrt_proto::v3::SpectrumTexture;
 
 void ParseFloatTexture(const FloatTexture& float_texture,
                        ImageManager& image_manager,
-                       TextureManager& texture_manager) {
+                       TextureManager& texture_manager,
+                       const Matrix& world_to_texture) {
   ReferenceCounted<iris::textures::FloatTexture> result;
   switch (float_texture.float_texture_type_case()) {
     case FloatTexture::kBilerp:
@@ -54,7 +56,8 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       exit(EXIT_FAILURE);
       break;
     case FloatTexture::kFbm:
-      result = textures::MakeFbm(float_texture.fbm(), texture_manager);
+      result = textures::MakeFbm(float_texture.fbm(), texture_manager,
+                                 world_to_texture);
       break;
     case FloatTexture::kImagemap:
       result = textures::MakeImageMap(float_texture.imagemap(), image_manager,
@@ -75,11 +78,12 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       result = textures::MakeScale(float_texture.scale(), texture_manager);
       break;
     case FloatTexture::kWindy:
-      result = textures::MakeWindy(float_texture.windy(), texture_manager);
+      result = textures::MakeWindy(float_texture.windy(), texture_manager,
+                                   world_to_texture);
       break;
     case FloatTexture::kWrinkled:
-      result =
-          textures::MakeWrinkled(float_texture.wrinkled(), texture_manager);
+      result = textures::MakeWrinkled(float_texture.wrinkled(), texture_manager,
+                                      world_to_texture);
       break;
     case FloatTexture::FLOAT_TEXTURE_TYPE_NOT_SET:
       return;
@@ -90,7 +94,8 @@ void ParseFloatTexture(const FloatTexture& float_texture,
 
 void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
                           ImageManager& image_manager,
-                          TextureManager& texture_manager) {
+                          TextureManager& texture_manager,
+                          const Matrix& world_to_texture) {
   ReferenceCounted<iris::textures::ReflectorTexture> result;
   switch (spectrum_texture.spectrum_texture_type_case()) {
     case SpectrumTexture::kBilerp:
@@ -117,7 +122,8 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       exit(EXIT_FAILURE);
       break;
     case SpectrumTexture::kFbm:
-      result = textures::MakeFbm(spectrum_texture.fbm(), texture_manager);
+      result = textures::MakeFbm(spectrum_texture.fbm(), texture_manager,
+                                 world_to_texture);
       break;
     case SpectrumTexture::kImagemap:
       result = textures::MakeImageMap(spectrum_texture.imagemap(),
@@ -143,11 +149,12 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       exit(EXIT_FAILURE);
       break;
     case SpectrumTexture::kWindy:
-      result = textures::MakeWindy(spectrum_texture.windy(), texture_manager);
+      result = textures::MakeWindy(spectrum_texture.windy(), texture_manager,
+                                   world_to_texture);
       break;
     case SpectrumTexture::kWrinkled:
-      result =
-          textures::MakeWrinkled(spectrum_texture.wrinkled(), texture_manager);
+      result = textures::MakeWrinkled(spectrum_texture.wrinkled(),
+                                      texture_manager, world_to_texture);
       break;
     case SpectrumTexture::SPECTRUM_TEXTURE_TYPE_NOT_SET:
       return;

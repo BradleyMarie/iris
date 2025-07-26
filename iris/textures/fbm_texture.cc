@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "iris/float.h"
+#include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/texture_coordinates.h"
@@ -19,26 +20,34 @@ using ::iris::textures::internal::FractionalBrownianMotion;
 
 class FbmFloatTexture final : public FloatTexture {
  public:
-  FbmFloatTexture(uint8_t octaves, visual_t roughness)
-      : octaves_(octaves), roughness_(roughness) {}
+  FbmFloatTexture(const Matrix& world_to_texture, uint8_t octaves,
+                  visual_t roughness)
+      : world_to_texture_(world_to_texture),
+        roughness_(roughness),
+        octaves_(octaves) {}
 
   visual_t Evaluate(const TextureCoordinates& coordinates) const override {
-    return FractionalBrownianMotion(coordinates.p, coordinates.dp_dx,
-                                    coordinates.dp_dy, roughness_, octaves_);
+    return FractionalBrownianMotion(
+        world_to_texture_.Multiply(coordinates.p),
+        world_to_texture_.Multiply(coordinates.dp_dx),
+        world_to_texture_.Multiply(coordinates.dp_dy), roughness_, octaves_);
   }
 
  private:
-  uint8_t octaves_;
+  Matrix world_to_texture_;
   visual_t roughness_;
+  uint8_t octaves_;
 };
 
 class FbmReflectorTexture final : public ReflectorTexture {
  public:
-  FbmReflectorTexture(ReferenceCounted<ReflectorTexture> reflectance,
+  FbmReflectorTexture(const Matrix& world_to_texture,
+                      ReferenceCounted<ReflectorTexture> reflectance,
                       uint8_t octaves, visual_t roughness)
-      : reflectance_(std::move(reflectance)),
-        octaves_(octaves),
-        roughness_(roughness) {}
+      : world_to_texture_(world_to_texture),
+        reflectance_(std::move(reflectance)),
+        roughness_(roughness),
+        octaves_(octaves) {}
 
   const Reflector* Evaluate(const TextureCoordinates& coordinates,
                             SpectralAllocator& allocator) const override {
@@ -49,37 +58,42 @@ class FbmReflectorTexture final : public ReflectorTexture {
 
     return allocator.UnboundedScale(
         reflectance,
-        FractionalBrownianMotion(coordinates.p, coordinates.dp_dx,
-                                 coordinates.dp_dy, roughness_, octaves_));
+        FractionalBrownianMotion(world_to_texture_.Multiply(coordinates.p),
+                                 world_to_texture_.Multiply(coordinates.dp_dx),
+                                 world_to_texture_.Multiply(coordinates.dp_dy),
+                                 roughness_, octaves_));
   }
 
  private:
+  Matrix world_to_texture_;
   ReferenceCounted<ReflectorTexture> reflectance_;
-  uint8_t octaves_;
   visual_t roughness_;
+  uint8_t octaves_;
 };
 
 }  // namespace
 
-ReferenceCounted<FloatTexture> MakeFbmTexture(uint8_t octaves,
+ReferenceCounted<FloatTexture> MakeFbmTexture(const Matrix& world_to_texture,
+                                              uint8_t octaves,
                                               visual_t roughness) {
   if (!std::isfinite(roughness) || roughness < static_cast<visual_t>(0.0)) {
     return ReferenceCounted<FloatTexture>();
   }
 
-  return MakeReferenceCounted<FbmFloatTexture>(octaves, roughness);
+  return MakeReferenceCounted<FbmFloatTexture>(world_to_texture, octaves,
+                                               roughness);
 }
 
 ReferenceCounted<ReflectorTexture> MakeFbmTexture(
-    ReferenceCounted<ReflectorTexture> reflectance, uint8_t octaves,
-    visual_t roughness) {
+    const Matrix& world_to_texture, uint8_t octaves, visual_t roughness,
+    ReferenceCounted<ReflectorTexture> reflectance) {
   if (!reflectance || !std::isfinite(roughness) ||
       roughness < static_cast<visual_t>(0.0)) {
     return ReferenceCounted<ReflectorTexture>();
   }
 
-  return MakeReferenceCounted<FbmReflectorTexture>(std::move(reflectance),
-                                                   octaves, roughness);
+  return MakeReferenceCounted<FbmReflectorTexture>(
+      world_to_texture, std::move(reflectance), octaves, roughness);
 }
 
 }  // namespace textures

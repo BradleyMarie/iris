@@ -2,6 +2,7 @@
 
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
+#include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectral_allocator.h"
@@ -19,17 +20,20 @@ using ::pbrt_proto::v3::FloatTexture;
 using ::pbrt_proto::v3::SpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeFbm(
-    const FloatTexture::FBm& wrinkled, TextureManager& texture_manager) {
-  return MakeFbmTexture(static_cast<uint8_t>(wrinkled.octaves()),
+    const FloatTexture::FBm& wrinkled, TextureManager& texture_manager,
+    const Matrix& world_to_texture) {
+  return MakeFbmTexture(world_to_texture,
+                        static_cast<uint8_t>(wrinkled.octaves()),
                         static_cast<visual_t>(wrinkled.roughness()));
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeFbm(
-    const SpectrumTexture::FBm& wrinkled, TextureManager& texture_manager) {
+    const SpectrumTexture::FBm& wrinkled, TextureManager& texture_manager,
+    const Matrix& world_to_texture) {
   return MakeFbmTexture(
-      texture_manager.AllocateReflectorTexture(static_cast<visual>(1.0)),
-      static_cast<uint8_t>(wrinkled.octaves()),
-      static_cast<visual_t>(wrinkled.roughness()));
+      world_to_texture, static_cast<uint8_t>(wrinkled.octaves()),
+      static_cast<visual_t>(wrinkled.roughness()),
+      texture_manager.AllocateReflectorTexture(static_cast<visual>(1.0)));
 }
 
 }  // namespace textures
