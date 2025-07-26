@@ -1,12 +1,7 @@
 #include "iris/textures/internal/math.h"
 
-#include <cstdint>
-#include <cstdlib>
-
 #include "googletest/include/gtest/gtest.h"
-#include "iris/float.h"
 #include "iris/point.h"
-#include "iris/vector.h"
 
 namespace iris {
 namespace textures {

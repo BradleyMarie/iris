@@ -173,15 +173,15 @@ visual_t FractionalBrownianMotion(const Point& p, const Vector& dp_dx,
   visual_t o = static_cast<visual_t>(1.0);
   geometric_t lambda = static_cast<geometric_t>(1.0);
   for (uint8_t i = 0; i < n_integer; i++) {
-    sum += o * std::abs(PerlinNoise(p * lambda));
+    sum += o * PerlinNoise(p * lambda);
     lambda *= static_cast<visual_t>(1.99);
     o *= omega;
   }
 
-  sum += o * std::lerp(static_cast<visual_t>(0.2),
-                       std::abs(PerlinNoise(p * lambda)),
-                       SmoothStep(static_cast<visual_t>(0.3),
-                                  static_cast<visual_t>(0.7), n_fractional));
+  sum += o *
+         SmoothStep(static_cast<visual_t>(0.3), static_cast<visual_t>(0.7),
+                    n_fractional) *
+         PerlinNoise(p * lambda);
 
   return sum;
 }

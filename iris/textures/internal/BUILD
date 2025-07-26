@@ -18,9 +18,7 @@ cc_test(
     srcs = ["math_test.cc"],
     deps = [
         ":math",
-        "//iris:float",
         "//iris:point",
-        "//iris:vector",
         "@googletest//:gtest_main",
     ],
 )
