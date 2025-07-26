@@ -13,6 +13,18 @@ cc_library(
     ],
 )
 
+cc_test(
+    name = "math_test",
+    srcs = ["math_test.cc"],
+    deps = [
+        ":math",
+        "//iris:float",
+        "//iris:point",
+        "//iris:vector",
+        "@googletest//:gtest_main",
+    ],
+)
+
 cc_library(
     name = "uv_texture",
     hdrs = ["uv_texture.h"],
