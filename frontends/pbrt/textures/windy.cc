@@ -4,8 +4,6 @@
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
-#include "iris/reflector.h"
-#include "iris/spectral_allocator.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
 #include "iris/textures/windy_texture.h"

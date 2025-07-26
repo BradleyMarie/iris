@@ -3,8 +3,6 @@
 
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/reference_counted.h"
-#include "iris/reflector.h"
-#include "iris/spectral_allocator.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
