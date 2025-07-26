@@ -17,127 +17,128 @@ namespace {
 
 using ::iris::textures::FloatTexture;
 
-std::pair<geometric_t, geometric_t> ComputeNormal(
-    const ReferenceCounted<FloatTexture>& bumps,
-    const TextureCoordinates& texture_coordinates,
-    const NormalMap::Differentials& differentials) {
-  visual_t displacement = bumps->Evaluate(texture_coordinates);
+Vector ComputeNormal(const ReferenceCounted<FloatTexture>& bump_map,
+                     const TextureCoordinates& texture_coordinates,
+                     const Vector& dp_du, const Vector& dp_dv, geometric_t du,
+                     geometric_t dv, const Vector& surface_normal) {
+  visual_t displacement = bump_map->Evaluate(texture_coordinates);
 
   geometric_t displacement0 = 0.0;
-  geometric_t displacement1 = 0.0;
-  if (differentials.type == NormalMap::Differentials::DU_DV) {
-    if (geometric_t du = static_cast<geometric_t>(0.5) *
-                         (std::abs(texture_coordinates.du_dx) +
-                          std::abs(texture_coordinates.du_dy));
-        du != static_cast<geometric_t>(0.0)) {
-      TextureCoordinates texture_coordinates_du{
-          texture_coordinates.p + differentials.dp.first * du,
-          texture_coordinates.dp_dx,
-          texture_coordinates.dp_dy,
-          {texture_coordinates.uv[0] + du, texture_coordinates.uv[1]},
-          texture_coordinates.du_dx,
-          texture_coordinates.du_dy,
-          texture_coordinates.dv_dx,
-          texture_coordinates.du_dy};
-      displacement0 =
-          (bumps->Evaluate(texture_coordinates_du) - displacement) / du;
-    }
-
-    if (geometric_t dv = static_cast<geometric_t>(0.5) *
-                         (std::abs(texture_coordinates.dv_dx) +
-                          std::abs(texture_coordinates.dv_dy));
-        dv != static_cast<geometric_t>(0.0)) {
-      TextureCoordinates texture_coordinates_dv{
-          texture_coordinates.p + differentials.dp.second * dv,
-          texture_coordinates.dp_dx,
-          texture_coordinates.dp_dy,
-          {texture_coordinates.uv[0], texture_coordinates.uv[1] + dv},
-          texture_coordinates.du_dx,
-          texture_coordinates.du_dy,
-          texture_coordinates.dv_dx,
-          texture_coordinates.du_dy};
-      displacement1 =
-          (bumps->Evaluate(texture_coordinates_dv) - displacement) / dv;
-    }
-  } else {
-    TextureCoordinates texture_coordinates_dx{
-        texture_coordinates.p + texture_coordinates.dp_dx,
+  if (du != static_cast<geometric_t>(0.0)) {
+    TextureCoordinates texture_coordinates_du{
+        texture_coordinates.p + dp_du * du,
         texture_coordinates.dp_dx,
         texture_coordinates.dp_dy,
-        {texture_coordinates.uv[0] + texture_coordinates.du_dx,
-         texture_coordinates.uv[1] + texture_coordinates.dv_dx},
+        {texture_coordinates.uv[0] + du, texture_coordinates.uv[1]},
         texture_coordinates.du_dx,
         texture_coordinates.du_dy,
         texture_coordinates.dv_dx,
         texture_coordinates.du_dy};
-    displacement0 = bumps->Evaluate(texture_coordinates_dx) - displacement;
 
-    TextureCoordinates texture_coordinates_dy{
-        texture_coordinates.p + texture_coordinates.dp_dy,
-        texture_coordinates.dp_dx,
-        texture_coordinates.dp_dy,
-        {texture_coordinates.uv[0] + texture_coordinates.du_dy,
-         texture_coordinates.uv[1] + texture_coordinates.dv_dy},
-        texture_coordinates.du_dx,
-        texture_coordinates.du_dy,
-        texture_coordinates.dv_dx,
-        texture_coordinates.du_dy};
-    displacement1 = bumps->Evaluate(texture_coordinates_dy) - displacement;
+    displacement0 = bump_map->Evaluate(texture_coordinates_du) - displacement;
+    displacement0 /= du;
   }
 
-  return {displacement0, displacement1};
+  geometric_t displacement1 = 0.0;
+  if (dv != static_cast<geometric_t>(0.0)) {
+    TextureCoordinates texture_coordinates_dv{
+        texture_coordinates.p + dp_dv * dv,
+        texture_coordinates.dp_dx,
+        texture_coordinates.dp_dy,
+        {texture_coordinates.uv[0], texture_coordinates.uv[1] + dv},
+        texture_coordinates.du_dx,
+        texture_coordinates.du_dy,
+        texture_coordinates.dv_dx,
+        texture_coordinates.du_dy};
+
+    displacement1 = bump_map->Evaluate(texture_coordinates_dv) - displacement;
+    displacement1 /= dv;
+  }
+
+  Vector offset_dp_du = dp_du + surface_normal * displacement0;
+  Vector offset_dp_dv = dp_dv + surface_normal * displacement1;
+  Vector shading_normal = CrossProduct(offset_dp_du, offset_dp_dv);
+
+  return shading_normal.AlignWith(surface_normal);
+}
+
+Vector ComputeNormal(const ReferenceCounted<FloatTexture>& bump_map,
+                     const TextureCoordinates& texture_coordinates,
+                     const NormalMap::Differentials& differentials,
+                     const Vector& surface_normal) {
+  if (differentials.type == NormalMap::Differentials::DX_DY) {
+    auto [dp_du, dp_dv] = CoordinateSystem(surface_normal);
+    return ComputeNormal(bump_map, texture_coordinates, dp_du, dp_dv,
+                         static_cast<geometric_t>(0.0005),
+                         static_cast<geometric_t>(0.0005), surface_normal);
+  }
+
+  geometric_t du =
+      static_cast<geometric_t>(0.5) * (std::abs(texture_coordinates.du_dx) +
+                                       std::abs(texture_coordinates.du_dy));
+  geometric_t dv =
+      static_cast<geometric_t>(0.5) * (std::abs(texture_coordinates.dv_dx) +
+                                       std::abs(texture_coordinates.dv_dy));
+
+  bool first_is_zero = differentials.dp.first.IsZero();
+  bool second_is_zero = differentials.dp.second.IsZero();
+  if (first_is_zero && second_is_zero) {
+    return surface_normal;
+  }
+
+  if (first_is_zero) {
+    du = static_cast<geometric_t>(0.0);
+  }
+
+  if (second_is_zero) {
+    dv = static_cast<geometric_t>(0.0);
+  }
+
+  Vector dp_du = first_is_zero
+                     ? CrossProduct(surface_normal, differentials.dp.second)
+                     : differentials.dp.first;
+  Vector dp_dv = second_is_zero
+                     ? CrossProduct(surface_normal, differentials.dp.first)
+                     : differentials.dp.second;
+
+  return ComputeNormal(bump_map, texture_coordinates, dp_du, dp_dv, du, dv,
+                       surface_normal);
 }
 
 class BumpNormalMap final : public NormalMap {
  public:
-  BumpNormalMap(ReferenceCounted<FloatTexture> bumps)
-      : bumps_(std::move(bumps)) {}
+  BumpNormalMap(ReferenceCounted<FloatTexture> bump_map)
+      : bump_map_(std::move(bump_map)) {}
 
   Vector Evaluate(const TextureCoordinates& texture_coordinates,
                   const std::optional<Differentials>& Differentials,
                   const Vector& surface_normal) const override;
 
  private:
-  ReferenceCounted<FloatTexture> bumps_;
+  ReferenceCounted<FloatTexture> bump_map_;
 };
 
 Vector BumpNormalMap::Evaluate(
     const TextureCoordinates& texture_coordinates,
     const std::optional<Differentials>& differentials,
     const Vector& surface_normal) const {
-  if (!bumps_ || !differentials) {
+  if (!bump_map_ || !differentials) {
     return surface_normal;
   }
 
-  bool first_is_zero = differentials->dp.first.IsZero();
-  bool second_is_zero = differentials->dp.second.IsZero();
-  if (first_is_zero && second_is_zero) {
-    return surface_normal;
-  }
-
-  auto [displacement0, displacement1] =
-      ComputeNormal(bumps_, texture_coordinates, *differentials);
-  Vector dn_dx = first_is_zero
-                     ? CrossProduct(surface_normal, differentials->dp.second)
-                     : differentials->dp.first + surface_normal * displacement0;
-  Vector dn_dy =
-      second_is_zero
-          ? CrossProduct(surface_normal, differentials->dp.first)
-          : differentials->dp.second + surface_normal * displacement1;
-  Vector shading_normal = CrossProduct(dn_dy, dn_dx);
-
-  return shading_normal.AlignWith(surface_normal);
+  return ComputeNormal(bump_map_, texture_coordinates, *differentials,
+                       surface_normal);
 }
 
 }  // namespace
 
 ReferenceCounted<NormalMap> MakeBumpNormalMap(
-    ReferenceCounted<FloatTexture> bumps) {
-  if (!bumps) {
+    ReferenceCounted<FloatTexture> bump_map) {
+  if (!bump_map) {
     return ReferenceCounted<NormalMap>();
   }
 
-  return MakeReferenceCounted<BumpNormalMap>(std::move(bumps));
+  return MakeReferenceCounted<BumpNormalMap>(std::move(bump_map));
 }
 
 }  // namespace normal_maps

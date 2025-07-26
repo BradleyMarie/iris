@@ -10,7 +10,7 @@ namespace iris {
 namespace normal_maps {
 
 ReferenceCounted<NormalMap> MakeBumpNormalMap(
-    ReferenceCounted<textures::FloatTexture> bumps);
+    ReferenceCounted<textures::FloatTexture> bump_map);
 
 }  // namespace normal_maps
 }  // namespace iris

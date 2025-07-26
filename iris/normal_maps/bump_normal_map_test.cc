@@ -153,9 +153,9 @@ TEST(BumpNormalMap, EvaluateXY) {
                            {{NormalMap::Differentials::DX_DY,
                              {Vector(1.0, 0.0, 0.0), Vector(0.0, 1.0, 0.0)}}},
                            Vector(0.0, 0.0, 1.0));
-  EXPECT_NEAR(-1.0, result.x, 0.001);
-  EXPECT_NEAR(-1.0, result.y, 0.001);
-  EXPECT_NEAR(+1.0, result.z, 0.001);
+  EXPECT_NEAR(0.0, result.x, 0.001);
+  EXPECT_NEAR(0.0, result.y, 0.001);
+  EXPECT_NEAR(1.0, result.z, 0.001);
 }
 
 TEST(BumpNormalMap, EvaluateNoDUTextureCoordinateDifferentials) {
