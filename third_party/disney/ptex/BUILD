@@ -1,0 +1,43 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "ptex",
+    srcs = [
+        "PtexCache.cpp",
+        "PtexFilters.cpp",
+        "PtexHalf.cpp",
+        "PtexHalfTableGen.cpp",
+        "PtexReader.cpp",
+        "PtexSeparableFilter.cpp",
+        "PtexSeparableKernel.cpp",
+        "PtexTriangleFilter.cpp",
+        "PtexTriangleKernel.cpp",
+        "PtexUtils.cpp",
+        "PtexWriter.cpp",
+    ],
+    hdrs = [
+        "PtexCache.cpp",
+        "PtexCache.h",
+        "PtexExports.h",
+        "PtexHalf.h",
+        "PtexHalfTables.h",
+        "PtexHashMap.h",
+        "PtexIO.h",
+        "PtexInt.h",
+        "PtexMutex.h",
+        "PtexPlatform.h",
+        "PtexReader.h",
+        "PtexSeparableFilter.h",
+        "PtexSeparableKernel.h",
+        "PtexTriangleFilter.h",
+        "PtexTriangleKernel.h",
+        "PtexUtils.h",
+        "PtexVersion.h",
+        "PtexWriter.h",
+        "Ptexture.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@zlib",
+    ],
+)

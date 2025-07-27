@@ -6,13 +6,6 @@ cc_library(
     hdrs = ["tinyexr.h"],
     visibility = ["//visibility:public"],
     deps = [
-        ":miniz",
+        "@zlib",
     ],
-)
-
-cc_library(
-    name = "miniz",
-    srcs = ["miniz.c"],
-    hdrs = ["miniz.h"],
-    visibility = ["//visibility:private"],
 )
