@@ -910,6 +910,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
+        ":integer",
         ":point",
         ":vector",
     ],

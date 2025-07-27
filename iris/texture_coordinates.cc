@@ -23,7 +23,8 @@ TextureCoordinates TextureCoordinates::Scale(geometric u_scale,
           du_dx * u_scale,
           du_dy * u_scale,
           dv_dx * v_scale,
-          dv_dy * v_scale};
+          dv_dy * v_scale,
+          face_index};
 }
 
 }  // namespace iris

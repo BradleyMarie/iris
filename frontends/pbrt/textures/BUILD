@@ -158,6 +158,7 @@ cc_library(
         ":imagemap",
         ":marble",
         ":mix",
+        ":ptex",
         ":scale",
         ":windy",
         ":wrinkled",
@@ -176,6 +177,32 @@ cc_test(
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "ptex",
+    srcs = ["ptex.cc"],
+    hdrs = ["ptex.h"],
+    deps = [
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:reference_counted",
+        "//iris/textures:ptex_texture",
+        "//iris/textures:reflector_texture",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "ptex_test",
+    srcs = ["ptex_test.cc"],
+    deps = [
+        ":ptex",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

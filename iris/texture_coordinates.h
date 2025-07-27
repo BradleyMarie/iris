@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "iris/float.h"
+#include "iris/integer.h"
 #include "iris/point.h"
 #include "iris/vector.h"
 
@@ -20,6 +21,8 @@ struct TextureCoordinates final {
   const geometric_t du_dy;
   const geometric_t dv_dx;
   const geometric_t dv_dy;
+
+  const face_t face_index;
 
   TextureCoordinates Scale(geometric u_scale, geometric v_scale,
                            geometric u_offset, geometric v_offset) const;

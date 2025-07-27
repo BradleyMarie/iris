@@ -52,11 +52,11 @@ cc_test(
     name = "fbm_texture_test",
     srcs = ["fbm_texture_test.cc"],
     deps = [
+        ":constant_texture",
         ":fbm_texture",
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
-        "//iris/textures:constant_texture",
         "@googletest//:gtest_main",
     ],
 )
@@ -126,11 +126,11 @@ cc_test(
     name = "marble_texture_test",
     srcs = ["marble_texture_test.cc"],
     deps = [
+        ":constant_texture",
         ":marble_texture",
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
-        "//iris/textures:constant_texture",
         "@googletest//:gtest_main",
     ],
 )
@@ -171,6 +171,40 @@ cc_test(
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "ptex_texture",
+    srcs = ["ptex_texture.cc"],
+    hdrs = ["ptex_texture.h"],
+    deps = [
+        ":float_texture",
+        ":reflector_texture",
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//third_party/disney/ptex",
+    ],
+)
+
+cc_test(
+    name = "ptex_texture_test",
+    srcs = ["ptex_texture_test.cc"],
+    data = [
+        "test_data/teapot.ptx",
+    ],
+    deps = [
+        ":constant_texture",
+        ":ptex_texture",
+        ":reflector_texture",
+        "//iris:reference_counted",
+        "//iris/reflectors:mock_reflector",
+        "//third_party/disney/ptex",
+        "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest_main",
     ],
 )
@@ -284,11 +318,11 @@ cc_test(
     name = "windy_texture_test",
     srcs = ["windy_texture_test.cc"],
     deps = [
+        ":constant_texture",
         ":windy_texture",
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
-        "//iris/textures:constant_texture",
         "@googletest//:gtest_main",
     ],
 )
@@ -314,11 +348,11 @@ cc_test(
     name = "wrinkled_texture_test",
     srcs = ["wrinkled_texture_test.cc"],
     deps = [
+        ":constant_texture",
         ":wrinkled_texture",
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
-        "//iris/textures:constant_texture",
         "@googletest//:gtest_main",
     ],
 )

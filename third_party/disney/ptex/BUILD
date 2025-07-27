@@ -6,7 +6,6 @@ cc_library(
         "PtexCache.cpp",
         "PtexFilters.cpp",
         "PtexHalf.cpp",
-        "PtexHalfTableGen.cpp",
         "PtexReader.cpp",
         "PtexSeparableFilter.cpp",
         "PtexSeparableKernel.cpp",
