@@ -177,7 +177,7 @@ TEST(ParseFloatTexture, Mix) {
   EXPECT_TRUE(texture_manager.GetFloatTexture("A"));
 }
 
-TEST(ParseFloatTexture, PTex) {
+TEST(ParseFloatTexture, Ptex) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), texture_manager,
@@ -189,8 +189,7 @@ TEST(ParseFloatTexture, PTex) {
 
   EXPECT_EXIT(ParseFloatTexture(float_texture, image_manager, texture_manager,
                                 Matrix::Identity()),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported FloatTexture type: ptex");
+              ExitedWithCode(EXIT_FAILURE), "ERROR: Failed to open ptex file");
 }
 
 TEST(ParseFloatTexture, Scale) {
@@ -394,7 +393,7 @@ TEST(ParseSpectrumTexture, Mix) {
   EXPECT_TRUE(texture_manager.GetReflectorTexture("A"));
 }
 
-TEST(ParseSpectrumTexture, PTex) {
+TEST(ParseSpectrumTexture, Ptex) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), texture_manager,
@@ -406,8 +405,7 @@ TEST(ParseSpectrumTexture, PTex) {
 
   EXPECT_EXIT(ParseSpectrumTexture(spectrum_texture, image_manager,
                                    texture_manager, Matrix::Identity()),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported SpectrumTexture type: ptex");
+              ExitedWithCode(EXIT_FAILURE), "ERROR: Failed to open ptex file");
 }
 
 TEST(ParseSpectrumTexture, Scale) {

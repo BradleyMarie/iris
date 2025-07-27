@@ -1,6 +1,5 @@
 #include "frontends/pbrt/textures/marble.h"
 
-#include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"

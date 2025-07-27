@@ -1,7 +1,6 @@
 #include "frontends/pbrt/textures/mix.h"
 
 #include "frontends/pbrt/defaults.h"
-#include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/reference_counted.h"
 #include "iris/textures/float_texture.h"

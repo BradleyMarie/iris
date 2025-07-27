@@ -4,13 +4,13 @@
 #include <iostream>
 
 #include "frontends/pbrt/image_manager.h"
-#include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "frontends/pbrt/textures/constant.h"
 #include "frontends/pbrt/textures/fbm.h"
 #include "frontends/pbrt/textures/imagemap.h"
 #include "frontends/pbrt/textures/marble.h"
 #include "frontends/pbrt/textures/mix.h"
+#include "frontends/pbrt/textures/ptex.h"
 #include "frontends/pbrt/textures/scale.h"
 #include "frontends/pbrt/textures/windy.h"
 #include "frontends/pbrt/textures/wrinkled.h"
@@ -68,8 +68,7 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       result = textures::MakeMix(float_texture.mix(), texture_manager);
       break;
     case FloatTexture::kPtex:
-      std::cerr << "ERROR: Unsupported FloatTexture type: ptex" << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakePtex(float_texture.ptex(), texture_manager);
       break;
     case FloatTexture::kScale:
       result = textures::MakeScale(float_texture.scale(), texture_manager);
@@ -134,8 +133,7 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       result = textures::MakeMix(spectrum_texture.mix(), texture_manager);
       break;
     case SpectrumTexture::kPtex:
-      std::cerr << "ERROR: Unsupported SpectrumTexture type: ptex" << std::endl;
-      exit(EXIT_FAILURE);
+      result = textures::MakePtex(spectrum_texture.ptex(), texture_manager);
       break;
     case SpectrumTexture::kScale:
       result = textures::MakeScale(spectrum_texture.scale(), texture_manager);
