@@ -100,7 +100,7 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakePtex(
   int num_channels = texture->numChannels();
   texture->release();
 
-  if (texture->numChannels() != 1 && texture->numChannels() != 3) {
+  if (num_channels != 1 && num_channels != 3) {
     std::cerr << "ERROR: Only ptex textures with one or three color channels "
                  "are supported"
               << std::endl;
