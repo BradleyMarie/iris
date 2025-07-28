@@ -2,7 +2,6 @@
 
 #include "frontends/pbrt/defaults.h"
 #include "frontends/pbrt/materials/bumpmap.h"
-#include "frontends/pbrt/materials/matte.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/material.h"
 #include "iris/materials/matte_material.h"
