@@ -68,7 +68,8 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       result = textures::MakeMix(float_texture.mix(), texture_manager);
       break;
     case FloatTexture::kPtex:
-      result = textures::MakePtex(float_texture.ptex(), texture_manager);
+      result = textures::MakePtex(float_texture.ptex(), image_manager,
+                                  texture_manager);
       break;
     case FloatTexture::kScale:
       result = textures::MakeScale(float_texture.scale(), texture_manager);
@@ -133,7 +134,8 @@ void ParseSpectrumTexture(const SpectrumTexture& spectrum_texture,
       result = textures::MakeMix(spectrum_texture.mix(), texture_manager);
       break;
     case SpectrumTexture::kPtex:
-      result = textures::MakePtex(spectrum_texture.ptex(), texture_manager);
+      result = textures::MakePtex(spectrum_texture.ptex(), image_manager,
+                                  texture_manager);
       break;
     case SpectrumTexture::kScale:
       result = textures::MakeScale(spectrum_texture.scale(), texture_manager);

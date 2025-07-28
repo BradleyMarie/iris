@@ -189,6 +189,7 @@ cc_library(
     hdrs = ["ptex.h"],
     deps = [
         "//frontends/pbrt:defaults",
+        "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
         "//iris:reference_counted",
         "//iris/textures:ptex_texture",
@@ -202,6 +203,7 @@ cc_test(
     srcs = ["ptex_test.cc"],
     deps = [
         ":ptex",
+        "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest_main",

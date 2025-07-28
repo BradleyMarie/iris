@@ -24,6 +24,8 @@ class ImageManager {
         texture_manager_(texture_manager),
         spectrum_manager_(spectrum_manager) {}
 
+  std::filesystem::path GetPath(const std::string& filename);
+
   std::shared_ptr<textures::Image2D<visual>> LoadFloatImageFromSDR(
       const std::string& filename, bool gamma_correct);
 

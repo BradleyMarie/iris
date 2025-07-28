@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 
+#include "frontends/pbrt/image_manager.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
@@ -20,19 +21,23 @@ using ::testing::ExitedWithCode;
 TEST(Ptex, FloatTexture) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   FloatTexture::Ptex ptex;
-  EXPECT_EXIT(MakePtex(ptex, texture_manager), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Failed to open ptex file");
+  EXPECT_EXIT(MakePtex(ptex, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE), "ERROR: Failed to open ptex file");
 }
 
 TEST(Ptex, SpectrumTexture) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
 
   SpectrumTexture::Ptex ptex;
-  EXPECT_EXIT(MakePtex(ptex, texture_manager), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Failed to open ptex file");
+  EXPECT_EXIT(MakePtex(ptex, image_manager, texture_manager),
+              ExitedWithCode(EXIT_FAILURE), "ERROR: Failed to open ptex file");
 }
 
 }  // namespace

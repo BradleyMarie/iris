@@ -1,8 +1,10 @@
 #include "frontends/pbrt/textures/ptex.h"
 
+#include <filesystem>
 #include <limits>
 #include <memory>
 
+#include "frontends/pbrt/image_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/reference_counted.h"
 #include "iris/textures/float_texture.h"
@@ -51,7 +53,8 @@ std::shared_ptr<Ptex::PtexCache> GetTextureCache() {
 }  // namespace
 
 ReferenceCounted<iris::textures::FloatTexture> MakePtex(
-    const FloatTexture::Ptex& ptex, TextureManager& texture_manager) {
+    const FloatTexture::Ptex& ptex, ImageManager& image_manager,
+    TextureManager& texture_manager) {
   std::shared_ptr<Ptex::PtexCache> cache = GetTextureCache();
 
   if (!std::isfinite(ptex.gamma()) || ptex.gamma() <= 0.0) {
@@ -59,8 +62,10 @@ ReferenceCounted<iris::textures::FloatTexture> MakePtex(
     exit(EXIT_FAILURE);
   }
 
+  std::filesystem::path path = image_manager.GetPath(ptex.filename());
+
   Ptex::String error;
-  Ptex::PtexTexture* texture = cache->get(ptex.filename().c_str(), error);
+  Ptex::PtexTexture* texture = cache->get(path.native().c_str(), error);
   if (!texture) {
     std::cerr << "ERROR: Failed to open ptex file with error: " << error
               << std::endl;
@@ -77,11 +82,12 @@ ReferenceCounted<iris::textures::FloatTexture> MakePtex(
     exit(EXIT_FAILURE);
   }
 
-  return MakePtexTexture(std::move(cache), ptex.filename(), ptex.gamma());
+  return MakePtexTexture(std::move(cache), path.native(), ptex.gamma());
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakePtex(
-    const SpectrumTexture::Ptex& ptex, TextureManager& texture_manager) {
+    const SpectrumTexture::Ptex& ptex, ImageManager& image_manager,
+    TextureManager& texture_manager) {
   std::shared_ptr<Ptex::PtexCache> cache = GetTextureCache();
 
   if (!std::isfinite(ptex.gamma()) || ptex.gamma() <= 0.0) {
@@ -89,8 +95,10 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakePtex(
     exit(EXIT_FAILURE);
   }
 
+  std::filesystem::path path = image_manager.GetPath(ptex.filename());
+
   Ptex::String error;
-  Ptex::PtexTexture* texture = cache->get(ptex.filename().c_str(), error);
+  Ptex::PtexTexture* texture = cache->get(path.native().c_str(), error);
   if (!texture) {
     std::cerr << "ERROR: Failed to open ptex file with error: " << error
               << std::endl;
@@ -116,7 +124,7 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakePtex(
   Spectrum b;
   b.mutable_rgb_spectrum()->set_b(1.0);
 
-  return MakePtexTexture(std::move(cache), ptex.filename(), ptex.gamma(),
+  return MakePtexTexture(std::move(cache), path.native(), ptex.gamma(),
                          texture_manager.AllocateReflectorTexture(r),
                          texture_manager.AllocateReflectorTexture(g),
                          texture_manager.AllocateReflectorTexture(b));

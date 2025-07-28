@@ -425,13 +425,19 @@ uint32_t ToKey(stbi_uc r, stbi_uc g, stbi_uc b) {
 
 }  // namespace
 
-std::shared_ptr<iris::textures::Image2D<visual>>
-ImageManager::LoadFloatImageFromSDR(const std::string& filename,
-                                    bool gamma_correct) {
+std::filesystem::path ImageManager::GetPath(const std::string& filename) {
   std::filesystem::path path = filename;
   if (path.is_relative()) {
     path = search_root_ / path;
   }
+
+  return path;
+}
+
+std::shared_ptr<iris::textures::Image2D<visual>>
+ImageManager::LoadFloatImageFromSDR(const std::string& filename,
+                                    bool gamma_correct) {
+  std::filesystem::path path = GetPath(filename);
 
   auto& result = gamma_correct ? gamma_corrected_float_images_[path.native()]
                                : float_images_[path.native()];
@@ -538,10 +544,7 @@ ImageManager::LoadFloatImageFromSDR(const std::string& filename,
 std::shared_ptr<iris::textures::Image2D<ReferenceCounted<Reflector>>>
 ImageManager::LoadReflectorImageFromSDR(const std::string& filename,
                                         bool gamma_correct) {
-  std::filesystem::path path = filename;
-  if (path.is_relative()) {
-    path = search_root_ / path;
-  }
+  std::filesystem::path path = GetPath(filename);
 
   auto& result = gamma_correct
                      ? gamma_corrected_reflector_images_[path.native()]
@@ -656,10 +659,7 @@ ImageManager::LoadReflectorImageFromSDR(const std::string& filename,
 std::shared_ptr<iris::textures::Image2D<visual>>
 ImageManager::LoadFloatImageFromHDR(const std::string& filename,
                                     bool gamma_correct) {
-  std::filesystem::path path = filename;
-  if (path.is_relative()) {
-    path = search_root_ / path;
-  }
+  std::filesystem::path path = GetPath(filename);
 
   auto& result = gamma_correct ? gamma_corrected_float_images_[path.native()]
                                : float_images_[path.native()];
@@ -715,10 +715,7 @@ ImageManager::LoadFloatImageFromHDR(const std::string& filename,
 std::shared_ptr<iris::textures::Image2D<ReferenceCounted<Reflector>>>
 ImageManager::LoadReflectorImageFromHDR(const std::string& filename,
                                         bool gamma_correct) {
-  std::filesystem::path path = filename;
-  if (path.is_relative()) {
-    path = search_root_ / path;
-  }
+  std::filesystem::path path = GetPath(filename);
 
   auto& result = gamma_correct
                      ? gamma_corrected_reflector_images_[path.native()]
