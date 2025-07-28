@@ -34,6 +34,35 @@ cc_test(
 )
 
 cc_library(
+    name = "disney",
+    srcs = ["disney.cc"],
+    hdrs = ["disney.h"],
+    deps = [
+        ":bumpmap",
+        ":result",
+        "//frontends/pbrt:defaults",
+        "//frontends/pbrt:texture_manager",
+        "//iris:material",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "disney_test",
+    srcs = ["disney_test.cc"],
+    deps = [
+        ":disney",
+        ":result",
+        "//frontends/pbrt:texture_manager",
+        "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "fourier",
     srcs = ["fourier.cc"],
     hdrs = ["fourier.h"],
@@ -224,6 +253,7 @@ cc_library(
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":disney",
         ":fourier",
         ":glass",
         ":matte",

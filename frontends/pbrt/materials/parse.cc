@@ -1,6 +1,7 @@
 #include "frontends/pbrt/materials/parse.h"
 
 #include "frontends/pbrt/material_manager.h"
+#include "frontends/pbrt/materials/disney.h"
 #include "frontends/pbrt/materials/fourier.h"
 #include "frontends/pbrt/materials/glass.h"
 #include "frontends/pbrt/materials/matte.h"
@@ -32,8 +33,8 @@ MaterialResult ParseMaterial(const Material& material,
   MaterialResult result;
   switch (material.material_type_case()) {
     case Material::kDisney:
-      std::cerr << "ERROR: Unsupported Material type: disney" << std::endl;
-      exit(EXIT_FAILURE);
+      result =
+          materials::MakeDisney(material.disney(), overrides, texture_manager);
       break;
     case Material::kFourier:
       result =
