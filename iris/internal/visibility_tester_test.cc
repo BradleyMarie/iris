@@ -710,7 +710,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
               const std::optional<Geometry::Differentials>& differentials,
               face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{{0.5, 0.5}};
+            return Geometry::TextureCoordinates{face, {0.5, 0.5}};
           }));
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))

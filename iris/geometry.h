@@ -42,6 +42,7 @@ class Geometry : public ReferenceCountable {
                                       const void* additional_data) const = 0;
 
   struct TextureCoordinates {
+    const face_t face_index;
     const geometric_t uv[2];
     const geometric_t du_dx = static_cast<geometric_t>(0.0);
     const geometric_t du_dy = static_cast<geometric_t>(0.0);

@@ -372,7 +372,7 @@ TEST(RayTracerTest, WithTextureCoordinates) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{{1.0, 1.0}};
+            return Geometry::TextureCoordinates{face, {1.0, 1.0}};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -710,7 +710,8 @@ TEST(RayTracerTest, WithXYDifferentials) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{{1.0, 1.0}, 1.0, 0.0, 0.0, 1.0};
+            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                                0.0,  0.0,        1.0};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -779,7 +780,8 @@ TEST(RayTracerTest, WithUVDifferentials) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{{1.0, 1.0}, 1.0, 0.0, 0.0, 1.0};
+            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                                0.0,  0.0,        1.0};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -854,7 +856,8 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{{1.0, 1.0}, 1.0, 0.0, 0.0, 1.0};
+            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                                0.0,  0.0,        1.0};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -928,7 +931,8 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
                     const std::optional<Geometry::Differentials>& differentials,
                     face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{{1.0, 1.0}, 1.0, 0.0, 0.0, 1.0};
+            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                                0.0,  0.0,        1.0};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -1011,7 +1015,8 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
               const std::optional<Geometry::Differentials>& differentials,
               face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{{1.0, 1.0}, 1.0, 0.0, 0.0, 1.0};
+            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                                0.0,  0.0,        1.0};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {
@@ -1083,7 +1088,8 @@ TEST(RayTracerTest, WithTransform) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             EXPECT_EQ(expected_model_dx_hit_point, differentials->dx);
             EXPECT_EQ(expected_model_dy_hit_point, differentials->dy);
-            return Geometry::TextureCoordinates{{1.0, 1.0}, 1.0, 0.0, 0.0, 1.0};
+            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                                0.0,  0.0,        1.0};
           }));
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
       .WillOnce(Invoke([&](face_t face, const void* additional_data) {

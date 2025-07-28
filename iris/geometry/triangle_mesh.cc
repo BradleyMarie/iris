@@ -155,10 +155,10 @@ std::tuple<Vector, face_t, face_t> Triangle::ComputeSurfaceNormalAndFaces(
                              shared_->points[std::get<2>(vertices_)]);
 
   if (DotProduct(surface_normal, ray.direction) < 0.0) {
-    return {surface_normal, face_index_ | kFrontFace, face_index_ | kBackFace};
+    return {surface_normal, kFrontFace, kBackFace};
   }
 
-  return {-surface_normal, face_index_ | kBackFace, face_index_ | kFrontFace};
+  return {-surface_normal, kBackFace, kFrontFace};
 }
 
 Vector Triangle::ComputeSurfaceNormal(const Point& hit_point, face_t face,
@@ -211,13 +211,13 @@ std::optional<Geometry::TextureCoordinates> Triangle::ComputeTextureCoordinates(
                   shared_->uv[std::get<2>(vertices_)].second * b2;
 
   if (!differentials) {
-    return Geometry::TextureCoordinates{{u, v}};
+    return Geometry::TextureCoordinates{face_index_, {u, v}};
   }
 
   auto [u_dx, v_dx] = UVCoordinates(differentials->dx);
   auto [u_dy, v_dy] = UVCoordinates(differentials->dy);
-  return Geometry::TextureCoordinates{
-      {u, v}, u_dx - u, u_dy - u, v_dx - v, v_dy - v};
+  return Geometry::TextureCoordinates{face_index_, {u, v},   u_dx - u,
+                                      u_dy - u,    v_dx - v, v_dy - v};
 }
 
 std::optional<Geometry::TextureCoordinates> Triangle::ComputeTextureCoordinates(
@@ -295,7 +295,7 @@ std::optional<std::pair<Vector, Vector>> Triangle::MaybeComputeNormalTangents()
 Geometry::ComputeShadingNormalResult Triangle::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
   return {MaybeComputeShadingNormal(additional_data),
-          MaybeComputeNormalTangents(), shared_->normal_maps[face & 1u].Get()};
+          MaybeComputeNormalTangents(), shared_->normal_maps[face].Get()};
 }
 
 Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
@@ -346,11 +346,11 @@ Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
 }
 
 const Material* Triangle::GetMaterial(face_t face) const {
-  return shared_->materials[face & 1u].Get();
+  return shared_->materials[face].Get();
 }
 
 const EmissiveMaterial* Triangle::GetEmissiveMaterial(face_t face) const {
-  return shared_->emissive_materials[face & 1u].Get();
+  return shared_->emissive_materials[face].Get();
 }
 
 visual_t Triangle::ComputeSurfaceArea(face_t face,
@@ -413,8 +413,7 @@ BoundingBox Triangle::ComputeBounds(const Matrix* model_to_world) const {
 }
 
 std::span<const face_t> Triangle::GetFaces() const {
-  static const face_t faces[2] = {face_index_ | kFrontFace,
-                                  face_index_ | kBackFace};
+  static const face_t faces[2] = {kFrontFace, kBackFace};
   return faces;
 }
 
@@ -629,7 +628,6 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     assert(shared_data->uv.empty() || v0 < shared_data->uv.size());
     assert(shared_data->uv.empty() || v1 < shared_data->uv.size());
     assert(shared_data->uv.empty() || v2 < shared_data->uv.size());
-    assert(i >= face_indices.size() || face_indices[i] <= 0x7FFFFFFFu);
 
     if (shared_data->points.at(v0) == shared_data->points.at(v1) ||
         shared_data->points.at(v1) == shared_data->points.at(v2) ||
@@ -639,7 +637,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
 
     face_t face_index = 0;
     if (i < face_indices.size()) {
-      face_index = face_indices[i] << 1u;
+      face_index = face_indices[i];
     }
 
     result.push_back(MakeReferenceCounted<Triangle>(

@@ -264,7 +264,7 @@ TextureCoordinates ComputeTextureCoordinates(
                           : static_cast<geometric_t>(0.0),
       texture_coordinates ? texture_coordinates->dv_dy
                           : static_cast<geometric_t>(0.0),
-      face_hit,
+      texture_coordinates ? texture_coordinates->face_index : face_hit,
   };
 }
 

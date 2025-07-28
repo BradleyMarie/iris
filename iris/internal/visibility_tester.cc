@@ -84,7 +84,8 @@ std::optional<VisibilityTester::VisibleResult> VisibilityTester::Visible(
       static_cast<geometric_t>(0.0),
       static_cast<geometric_t>(0.0),
       static_cast<geometric_t>(0.0),
-      geometry_hit->front,
+      geometry_texture_coordinates ? geometry_texture_coordinates->face_index
+                                   : geometry_hit->front,
   };
 
   const EmissiveMaterial* emissive_material =

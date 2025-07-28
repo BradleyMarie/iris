@@ -466,7 +466,7 @@ TEST(Triangle, ComputeSurfaceNormal) {
 TEST(Triangle, ComputeTextureCoordinatesNone) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
+      {{{0, 1, 2}}}, {{5u}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -479,13 +479,14 @@ TEST(Triangle, ComputeTextureCoordinatesNone) {
 }
 
 TEST(Triangle, ComputeTextureCoordinates) {
-  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle();
+  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(5u);
 
   AdditionalDataContents additional_data0{{1.0, 0.0, 0.0},
                                           Vector(0.0, 0.0, 1.0)};
   std::optional<Geometry::TextureCoordinates> texture_coordinates0 =
       triangle->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
                                           FRONT_FACE, &additional_data0);
+  EXPECT_EQ(5u, texture_coordinates0->face_index);
   EXPECT_EQ(0.0, texture_coordinates0->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates0->uv[1]);
   EXPECT_EQ(0.0, texture_coordinates0->du_dx);
@@ -498,6 +499,7 @@ TEST(Triangle, ComputeTextureCoordinates) {
   std::optional<Geometry::TextureCoordinates> texture_coordinates1 =
       triangle->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
                                           FRONT_FACE, &additional_data1);
+  EXPECT_EQ(5u, texture_coordinates1->face_index);
   EXPECT_EQ(1.0, texture_coordinates1->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates1->uv[1]);
   EXPECT_EQ(0.0, texture_coordinates1->du_dx);
@@ -510,6 +512,7 @@ TEST(Triangle, ComputeTextureCoordinates) {
   std::optional<Geometry::TextureCoordinates> texture_coordinates2 =
       triangle->ComputeTextureCoordinates(Point(0.0, 0.0, 0.0), std::nullopt,
                                           FRONT_FACE, &additional_data2);
+  EXPECT_EQ(5u, texture_coordinates2->face_index);
   EXPECT_EQ(0.0, texture_coordinates2->uv[0]);
   EXPECT_EQ(1.0, texture_coordinates2->uv[1]);
   EXPECT_EQ(0.0, texture_coordinates2->du_dx);
@@ -523,6 +526,7 @@ TEST(Triangle, ComputeTextureCoordinates) {
       triangle->ComputeTextureCoordinates(
           Point(0.0, 0.0, 0.0), {{Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
           FRONT_FACE, &additional_data3);
+  EXPECT_EQ(5u, texture_coordinates3->face_index);
   EXPECT_EQ(0.0, texture_coordinates3->uv[0]);
   EXPECT_EQ(0.0, texture_coordinates3->uv[1]);
   EXPECT_EQ(1.0, texture_coordinates3->du_dx);
@@ -655,7 +659,7 @@ TEST(Triangle, ComputeShadingNormalFromMap) {
   ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1u);
 
   Geometry::ComputeShadingNormalResult front_normal =
-      triangle->ComputeShadingNormal(2u, nullptr);
+      triangle->ComputeShadingNormal(FRONT_FACE, nullptr);
   EXPECT_FALSE(front_normal.surface_normal);
   ASSERT_TRUE(front_normal.dp_duv);
   EXPECT_EQ(1.0, front_normal.dp_duv->first.x);
@@ -667,7 +671,7 @@ TEST(Triangle, ComputeShadingNormalFromMap) {
   EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 
   Geometry::ComputeShadingNormalResult back_normal =
-      triangle->ComputeShadingNormal(3u, nullptr);
+      triangle->ComputeShadingNormal(BACK_FACE, nullptr);
   EXPECT_FALSE(back_normal.surface_normal);
   ASSERT_TRUE(back_normal.dp_duv);
   EXPECT_EQ(1.0, back_normal.dp_duv->first.x);
@@ -801,20 +805,20 @@ TEST(Triangle, ComputeHitPoint) {
 TEST(Triangle, GetMaterial) {
   ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1u);
 
-  const Material* front = triangle->GetMaterial(2u);
+  const Material* front = triangle->GetMaterial(FRONT_FACE);
   EXPECT_EQ(front_material.Get(), front);
 
-  const Material* back = triangle->GetMaterial(3u);
+  const Material* back = triangle->GetMaterial(BACK_FACE);
   EXPECT_EQ(back_material.Get(), back);
 }
 
 TEST(Triangle, GetEmissiveMaterial) {
   ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1u);
 
-  const EmissiveMaterial* front = triangle->GetEmissiveMaterial(2u);
+  const EmissiveMaterial* front = triangle->GetEmissiveMaterial(FRONT_FACE);
   EXPECT_EQ(front_emissive_material.Get(), front);
 
-  const EmissiveMaterial* back = triangle->GetEmissiveMaterial(3u);
+  const EmissiveMaterial* back = triangle->GetEmissiveMaterial(BACK_FACE);
   EXPECT_EQ(back_emissive_material.Get(), back);
 }
 
@@ -934,8 +938,8 @@ TEST(Triangle, GetFaces) {
   ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1);
   std::span<const face_t> faces = triangle->GetFaces();
   ASSERT_EQ(2u, faces.size());
-  EXPECT_EQ(2u, faces[0]);
-  EXPECT_EQ(3u, faces[1]);
+  EXPECT_EQ(FRONT_FACE, faces[0]);
+  EXPECT_EQ(BACK_FACE, faces[1]);
 }
 
 }  // namespace
