@@ -116,6 +116,16 @@ TEST(ImageManager, FloatImageSizesCorrect) {
                       RawRunfilePath("rgba16.png"), false))
                   .second);
 
+  // HDR
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadFloatImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), true))
+                  .second);
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadFloatImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), false))
+                  .second);
+
   for (const auto& image : images) {
     auto size = image->Size();
     EXPECT_EQ(size.first, 2u);
@@ -194,6 +204,16 @@ TEST(ImageManager, ReflectorImageSizesCorrect) {
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadReflectorImageFromSDR(
                       RawRunfilePath("rgba16.png"), false))
+                  .second);
+
+  // HDR
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadReflectorImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), true))
+                  .second);
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadReflectorImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), false))
                   .second);
 
   for (const auto& image : images) {
@@ -339,6 +359,24 @@ TEST(ImageManager, ReusesFloatImages) {
                    .emplace(image_manager.LoadFloatImageFromSDR(
                        RawRunfilePath("rgba16.png"), false))
                    .second);
+
+  // HDR
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadFloatImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), true))
+                  .second);
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadFloatImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), false))
+                  .second);
+  EXPECT_FALSE(images
+                   .emplace(image_manager.LoadFloatImageFromHDR(
+                       RawRunfilePath("rgbw.exr"), true))
+                   .second);
+  EXPECT_FALSE(images
+                   .emplace(image_manager.LoadFloatImageFromHDR(
+                       RawRunfilePath("rgbw.exr"), false))
+                   .second);
 }
 
 TEST(ImageManager, ReusesReflectorImages) {
@@ -477,6 +515,24 @@ TEST(ImageManager, ReusesReflectorImages) {
                    .emplace(image_manager.LoadReflectorImageFromSDR(
                        RawRunfilePath("rgba16.png"), false))
                    .second);
+
+  // HDR
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadReflectorImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), true))
+                  .second);
+  EXPECT_TRUE(images
+                  .emplace(image_manager.LoadReflectorImageFromHDR(
+                      RawRunfilePath("rgbw.exr"), false))
+                  .second);
+  EXPECT_FALSE(images
+                   .emplace(image_manager.LoadReflectorImageFromHDR(
+                       RawRunfilePath("rgbw.exr"), true))
+                   .second);
+  EXPECT_FALSE(images
+                   .emplace(image_manager.LoadReflectorImageFromHDR(
+                       RawRunfilePath("rgbw.exr"), false))
+                   .second);
 }
 
 TEST(ImageManager, LinearFloatValues) {
@@ -517,6 +573,11 @@ TEST(ImageManager, LinearFloatValues) {
   auto rgba16 =
       image_manager.LoadFloatImageFromSDR(RawRunfilePath("rgba16.png"), false);
   EXPECT_EQ(1.0, rgba16->Get(0, 1));
+
+  // HDR
+  auto rgbw =
+      image_manager.LoadFloatImageFromHDR(RawRunfilePath("rgbw.exr"), false);
+  EXPECT_NEAR(1.0, rgbw->Get(0, 1), 0.001);
 }
 
 TEST(ImageManager, LinearReflectorValues) {
@@ -573,6 +634,13 @@ TEST(ImageManager, LinearReflectorValues) {
   EXPECT_EQ(1.0, rgba16->Get(0, 1)->Reflectance(0.5));
   EXPECT_EQ(1.0, rgba16->Get(0, 1)->Reflectance(1.5));
   EXPECT_EQ(1.0, rgba16->Get(0, 1)->Reflectance(2.5));
+
+  // HDR
+  auto rgbw = image_manager.LoadReflectorImageFromHDR(
+      RawRunfilePath("rgbw.exr"), false);
+  EXPECT_NEAR(1.0, rgbw->Get(0, 1)->Reflectance(0.5), 0.001);
+  EXPECT_NEAR(1.0, rgbw->Get(0, 1)->Reflectance(1.5), 0.001);
+  EXPECT_NEAR(1.0, rgbw->Get(0, 1)->Reflectance(2.5), 0.001);
 }
 
 }  // namespace

@@ -167,6 +167,18 @@ TEST(FloatImageMap, ZeroVScale) {
               "ERROR: Out of range value for parameter: vscale");
 }
 
+TEST(FloatImageMap, EsrSucceeds) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
+
+  FloatTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image.exr"));
+
+  EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
+}
+
 TEST(FloatImageMap, PngSucceeds) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
@@ -344,6 +356,18 @@ TEST(SpectrumImageMap, ZeroVScale) {
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
               ExitedWithCode(EXIT_FAILURE),
               "ERROR: Out of range value for parameter: vscale");
+}
+
+TEST(SpectrumImageMap, ExrSucceeds) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
+                             spectrum_manager);
+
+  SpectrumTexture::ImageMap imagemap;
+  imagemap.set_filename(RunfilePath("image.exr"));
+
+  EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
 }
 
 TEST(SpectrumImageMap, PngSucceeds) {

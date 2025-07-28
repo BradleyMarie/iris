@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "third_party/stb/stb_image.h"
+#include "third_party/tinyexr/tinyexr.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -638,6 +639,126 @@ ImageManager::LoadReflectorImageFromSDR(const std::string& filename,
 
           reflector_values.push_back(reflector);
         }
+      }
+    }
+
+    stbi_image_free(values);
+  }
+
+  result =
+      std::make_shared<iris::textures::Image2D<ReferenceCounted<Reflector>>>(
+          std::move(reflector_values),
+          std::make_pair(static_cast<size_t>(ny), static_cast<size_t>(nx)));
+
+  return result;
+}
+
+std::shared_ptr<iris::textures::Image2D<visual>>
+ImageManager::LoadFloatImageFromHDR(const std::string& filename,
+                                    bool gamma_correct) {
+  std::filesystem::path path = filename;
+  if (path.is_relative()) {
+    path = search_root_ / path;
+  }
+
+  auto& result = gamma_correct ? gamma_corrected_float_images_[path.native()]
+                               : float_images_[path.native()];
+  if (result) {
+    return result;
+  }
+
+  int nx, ny;
+  std::vector<visual> float_values;
+  if (path.extension() == ".exr") {
+    float* values;
+    const char* error_message;
+    int error =
+        LoadEXR(&values, &nx, &ny, path.native().c_str(), &error_message);
+    if (error < 0) {
+      std::cerr << "ERROR: Image loading failed with error: " << error_message
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    float_values.reserve(nx * ny);
+    for (int y = 0; y < ny; y++) {
+      for (int x = 0; x < nx; x++) {
+        float r = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 0]);
+        float g = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 1]);
+        float b = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 2]);
+
+        if (gamma_correct) {
+          r = GammaCorrect(r);
+          g = GammaCorrect(g);
+          b = GammaCorrect(b);
+        }
+
+        r = std::min(1.0f, r);
+        g = std::min(1.0f, g);
+        b = std::min(1.0f, b);
+
+        float_values.push_back(std::min(
+            static_cast<visual>(1.0), spectrum_manager_.ComputeLuma(r, g, b)));
+      }
+    }
+
+    stbi_image_free(values);
+  }
+
+  result = std::make_shared<iris::textures::Image2D<visual>>(
+      std::move(float_values),
+      std::make_pair(static_cast<size_t>(ny), static_cast<size_t>(nx)));
+
+  return result;
+}
+
+std::shared_ptr<iris::textures::Image2D<ReferenceCounted<Reflector>>>
+ImageManager::LoadReflectorImageFromHDR(const std::string& filename,
+                                        bool gamma_correct) {
+  std::filesystem::path path = filename;
+  if (path.is_relative()) {
+    path = search_root_ / path;
+  }
+
+  auto& result = gamma_correct
+                     ? gamma_corrected_reflector_images_[path.native()]
+                     : reflector_images_[path.native()];
+  if (result) {
+    return result;
+  }
+
+  int nx, ny;
+  std::vector<ReferenceCounted<Reflector>> reflector_values;
+  if (path.extension() == ".exr") {
+    float* values;
+    const char* error_message;
+    int error =
+        LoadEXR(&values, &nx, &ny, path.native().c_str(), &error_message);
+    if (error < 0) {
+      std::cerr << "ERROR: Image loading failed with error: " << error_message
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    reflector_values.reserve(nx * ny);
+    for (int y = 0; y < ny; y++) {
+      for (int x = 0; x < nx; x++) {
+        float r = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 0]);
+        float g = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 1]);
+        float b = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 2]);
+
+        if (gamma_correct) {
+          r = GammaCorrect(r);
+          g = GammaCorrect(g);
+          b = GammaCorrect(b);
+        }
+
+        r = std::min(1.0f, r);
+        g = std::min(1.0f, g);
+        b = std::min(1.0f, b);
+
+        reflector_values.push_back(
+            spectrum_manager_.AllocateReflector(r, g, b));
       }
     }
 

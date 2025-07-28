@@ -104,6 +104,7 @@ cc_library(
         "//iris:reflector",
         "//iris/textures:image_texture",
         "//third_party/stb:stb_image",
+        "//third_party/tinyexr",
     ],
 )
 
@@ -119,6 +120,7 @@ cc_test(
         "test_data/rgb8.png",
         "test_data/rgba16.png",
         "test_data/rgba8.png",
+        "test_data/rgbw.exr",
     ],
     deps = [
         ":image_manager",

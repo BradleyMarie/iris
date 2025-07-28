@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <utility>
 
@@ -21,6 +22,7 @@ namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
+using ::iris::textures::Image2D;
 using ::iris::textures::MakeBorderedImageTexture;
 using ::iris::textures::MakeClampedImageTexture;
 using ::iris::textures::MakeRepeatedImageTexture;
@@ -73,16 +75,23 @@ ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
     exit(EXIT_FAILURE);
   }
 
+  std::shared_ptr<Image2D<visual>> image;
   if (with_defaults.filename().ends_with(".png") ||
       with_defaults.filename().ends_with(".tga")) {
     if (!with_defaults.has_gamma()) {
       with_defaults.set_gamma(true);
     }
-  } else {
+
+    image = image_manager.LoadFloatImageFromSDR(
+        with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
+  } else if (with_defaults.filename().ends_with(".exr")) {
     if (!with_defaults.has_gamma()) {
       with_defaults.set_gamma(false);
     }
 
+    image = image_manager.LoadFloatImageFromHDR(
+        with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
+  } else {
     std::filesystem::path parsed(with_defaults.filename());
 
     std::stringstream stream;
@@ -100,9 +109,6 @@ ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
 
     exit(EXIT_FAILURE);
   }
-
-  auto image = image_manager.LoadFloatImageFromSDR(
-      with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
 
   ReferenceCounted<iris::textures::FloatTexture> texture;
   switch (with_defaults.wrap()) {
@@ -184,16 +190,23 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
     exit(EXIT_FAILURE);
   }
 
+  std::shared_ptr<Image2D<ReferenceCounted<Reflector>>> image;
   if (with_defaults.filename().ends_with(".png") ||
       with_defaults.filename().ends_with(".tga")) {
     if (!with_defaults.has_gamma()) {
       with_defaults.set_gamma(true);
     }
-  } else {
+
+    image = image_manager.LoadReflectorImageFromSDR(
+        with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
+  } else if (with_defaults.filename().ends_with(".exr")) {
     if (!with_defaults.has_gamma()) {
       with_defaults.set_gamma(false);
     }
 
+    image = image_manager.LoadReflectorImageFromHDR(
+        with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
+  } else {
     std::filesystem::path parsed(with_defaults.filename());
 
     std::stringstream stream;
@@ -211,9 +224,6 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
 
     exit(EXIT_FAILURE);
   }
-
-  auto image = image_manager.LoadReflectorImageFromSDR(
-      with_defaults.filename(), static_cast<visual>(with_defaults.gamma()));
 
   ReferenceCounted<iris::textures::ReflectorTexture> texture;
   switch (with_defaults.wrap()) {

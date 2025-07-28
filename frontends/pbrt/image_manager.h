@@ -30,6 +30,12 @@ class ImageManager {
   std::shared_ptr<textures::Image2D<ReferenceCounted<Reflector>>>
   LoadReflectorImageFromSDR(const std::string& filename, bool gamma_correct);
 
+  std::shared_ptr<textures::Image2D<visual>> LoadFloatImageFromHDR(
+      const std::string& filename, bool gamma_correct);
+
+  std::shared_ptr<textures::Image2D<ReferenceCounted<Reflector>>>
+  LoadReflectorImageFromHDR(const std::string& filename, bool gamma_correct);
+
  private:
   std::unordered_map<std::string, std::shared_ptr<textures::Image2D<visual>>>
       float_images_;

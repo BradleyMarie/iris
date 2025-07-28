@@ -79,6 +79,7 @@ cc_test(
     srcs = ["imagemap_test.cc"],
     data = [
         "test_data/image",
+        "test_data/image.exr",
         "test_data/image.png",
         "test_data/image.txt",
     ],
