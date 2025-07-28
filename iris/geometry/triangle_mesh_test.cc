@@ -80,10 +80,10 @@ static const ReferenceCounted<NormalMap> front_normal_map =
 static const ReferenceCounted<NormalMap> back_normal_map =
     MakeReferenceCounted<MockNormalMap>();
 
-ReferenceCounted<Geometry> MakeSimpleTriangle() {
+ReferenceCounted<Geometry> MakeSimpleTriangle(face_t face_index = 0) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}, {0, 1, 1}}}, {},
+      {{{0, 1, 2}, {0, 1, 1}}}, {{face_index}}, {},
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
@@ -98,7 +98,7 @@ TEST(Triangle, Empty) {
   EXPECT_THAT(
       AllocateTriangleMesh(
           {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-          {{{0, 1, 1}}}, {},
+          {{{0, 1, 1}}}, {}, {},
           {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
             {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
             {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
@@ -171,7 +171,7 @@ TEST(Triangle, MissesRight) {
 TEST(Triangle, HitsXDominantFront) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
+      {{{0, 1, 2}}}, {}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -203,7 +203,7 @@ TEST(Triangle, HitsXDominantFront) {
 TEST(Triangle, HitsXDominantBack) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
+      {{{0, 1, 2}}}, {}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -235,7 +235,7 @@ TEST(Triangle, HitsXDominantBack) {
 TEST(Triangle, HitsYDominantFront) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 1.0), Point(1.0, 0.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
+      {{{0, 1, 2}}}, {}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -267,7 +267,7 @@ TEST(Triangle, HitsYDominantFront) {
 TEST(Triangle, HitsYDominantBack) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 1.0), Point(1.0, 0.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
+      {{{0, 1, 2}}}, {}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -355,10 +355,10 @@ TEST(Triangle, HitsZDominantBack) {
 TEST(Triangle, VertexNormalsLeaves) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {{{1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}}}, {},
-      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      {{{0, 1, 2}}}, {}, {{{1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 0.0, 0.0}}},
+      {}, ReferenceCounted<textures::MaskTexture>(), back_material,
+      front_material, front_emissive_material, back_emissive_material,
+      front_normal_map, back_normal_map);
 
   Point origin(-1.0, 0.25, 0.25);
   Vector direction(1.0, 0.0, 0.0);
@@ -374,10 +374,11 @@ TEST(Triangle, VertexNormalsLeaves) {
 TEST(Triangle, VertexNormalsReverses) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {{{-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}}},
-      {}, ReferenceCounted<textures::MaskTexture>(), back_material,
-      front_material, front_emissive_material, back_emissive_material,
-      front_normal_map, back_normal_map);
+      {{{0, 1, 2}}}, {},
+      {{{-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}}}, {},
+      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
 
   Point origin(-1.0, 0.25, 0.25);
   Vector direction(1.0, 0.0, 0.0);
@@ -393,7 +394,7 @@ TEST(Triangle, VertexNormalsReverses) {
 TEST(Triangle, AlphaHits) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {},
+      {{{0, 1, 2}}}, {}, {},
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)}}},
@@ -413,7 +414,7 @@ TEST(Triangle, AlphaHits) {
 TEST(Triangle, AlphaMisses) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {},
+      {{{0, 1, 2}}}, {}, {},
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)}}},
@@ -433,9 +434,9 @@ TEST(Triangle, AlphaMisses) {
 TEST(Triangle, AlphaNoUVHits) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {}, {}, MakeReferenceCounted<AlphaMisses>(), back_material,
-      front_material, front_emissive_material, back_emissive_material,
-      front_normal_map, back_normal_map);
+      {{{0, 1, 2}}}, {}, {}, {}, MakeReferenceCounted<AlphaMisses>(),
+      back_material, front_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   Point origin(1.0, 0.25, 0.25);
   Vector direction(-1.0, 0.0, 0.0);
@@ -465,7 +466,7 @@ TEST(Triangle, ComputeSurfaceNormal) {
 TEST(Triangle, ComputeTextureCoordinatesNone) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
+      {{{0, 1, 2}}}, {}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, front_normal_map, back_normal_map);
 
@@ -533,7 +534,7 @@ TEST(Triangle, ComputeTextureCoordinates) {
 TEST(Triangle, ComputeShadingNormalNoUVs) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
+      {{{0, 1, 2}}}, {}, {}, {}, ReferenceCounted<textures::MaskTexture>(),
       back_material, front_material, front_emissive_material,
       back_emissive_material, ReferenceCounted<NormalMap>(),
       ReferenceCounted<NormalMap>());
@@ -554,7 +555,7 @@ TEST(Triangle, ComputeShadingNormalNoUVs) {
 TEST(Triangle, ComputeShadingNormalUVsDegenerate) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {},
+      {{{0, 1, 2}}}, {}, {},
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(0.0)}}},
@@ -578,7 +579,7 @@ TEST(Triangle, ComputeShadingNormalUVsDegenerate) {
 TEST(Triangle, ComputeShadingNormalNone) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {},
+      {{{0, 1, 2}}}, {}, {},
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
@@ -614,7 +615,7 @@ TEST(Triangle, ComputeShadingNormalNone) {
 TEST(Triangle, ComputeShadingNormalZeroLength) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}},
+      {{{0, 1, 2}}}, {}, {{{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}},
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
@@ -651,10 +652,10 @@ TEST(Triangle, ComputeShadingNormalZeroLength) {
 }
 
 TEST(Triangle, ComputeShadingNormalFromMap) {
-  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle();
+  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1u);
 
   Geometry::ComputeShadingNormalResult front_normal =
-      triangle->ComputeShadingNormal(FRONT_FACE, nullptr);
+      triangle->ComputeShadingNormal(2u, nullptr);
   EXPECT_FALSE(front_normal.surface_normal);
   ASSERT_TRUE(front_normal.dp_duv);
   EXPECT_EQ(1.0, front_normal.dp_duv->first.x);
@@ -666,7 +667,7 @@ TEST(Triangle, ComputeShadingNormalFromMap) {
   EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 
   Geometry::ComputeShadingNormalResult back_normal =
-      triangle->ComputeShadingNormal(BACK_FACE, nullptr);
+      triangle->ComputeShadingNormal(3u, nullptr);
   EXPECT_FALSE(back_normal.surface_normal);
   ASSERT_TRUE(back_normal.dp_duv);
   EXPECT_EQ(1.0, back_normal.dp_duv->first.x);
@@ -681,7 +682,7 @@ TEST(Triangle, ComputeShadingNormalFromMap) {
 TEST(Triangle, ComputeShadingNormalFromNormals) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0)}},
-      {{{0, 1, 2}}}, {{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}},
+      {{{0, 1, 2}}}, {}, {{{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}}},
       {{{static_cast<geometric>(0.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(1.0), static_cast<geometric>(0.0)},
         {static_cast<geometric>(0.0), static_cast<geometric>(1.0)}}},
@@ -798,22 +799,22 @@ TEST(Triangle, ComputeHitPoint) {
 }
 
 TEST(Triangle, GetMaterial) {
-  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle();
+  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1u);
 
-  const Material* front = triangle->GetMaterial(FRONT_FACE);
+  const Material* front = triangle->GetMaterial(2u);
   EXPECT_EQ(front_material.Get(), front);
 
-  const Material* back = triangle->GetMaterial(BACK_FACE);
+  const Material* back = triangle->GetMaterial(3u);
   EXPECT_EQ(back_material.Get(), back);
 }
 
 TEST(Triangle, GetEmissiveMaterial) {
-  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle();
+  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1u);
 
-  const EmissiveMaterial* front = triangle->GetEmissiveMaterial(FRONT_FACE);
+  const EmissiveMaterial* front = triangle->GetEmissiveMaterial(2u);
   EXPECT_EQ(front_emissive_material.Get(), front);
 
-  const EmissiveMaterial* back = triangle->GetEmissiveMaterial(BACK_FACE);
+  const EmissiveMaterial* back = triangle->GetEmissiveMaterial(3u);
   EXPECT_EQ(back_emissive_material.Get(), back);
 }
 
@@ -930,11 +931,11 @@ TEST(Triangle, GetBoundsWithTransform) {
 }
 
 TEST(Triangle, GetFaces) {
-  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle();
+  ReferenceCounted<Geometry> triangle = MakeSimpleTriangle(1);
   std::span<const face_t> faces = triangle->GetFaces();
   ASSERT_EQ(2u, faces.size());
-  EXPECT_EQ(FRONT_FACE, faces[0]);
-  EXPECT_EQ(BACK_FACE, faces[1]);
+  EXPECT_EQ(2u, faces[0]);
+  EXPECT_EQ(3u, faces[1]);
 }
 
 }  // namespace

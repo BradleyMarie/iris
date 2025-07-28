@@ -127,13 +127,13 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
   std::vector<ReferenceCounted<Geometry>> triangles;
   if (model_to_world.SwapsHandedness() && reader.normals.empty()) {
     triangles = AllocateTriangleMesh(
-        reader.positions, reader.faces, reader.normals, reader.uvs,
+        reader.positions, reader.faces, {}, reader.normals, reader.uvs,
         std::move(alpha_mask), back_material, front_material,
         back_emissive_material, front_emissive_material, back_normal_map,
         front_normal_map);
   } else {
     triangles = AllocateTriangleMesh(
-        reader.positions, reader.faces, reader.normals, reader.uvs,
+        reader.positions, reader.faces, {}, reader.normals, reader.uvs,
         std::move(alpha_mask), front_material, back_material,
         front_emissive_material, back_emissive_material, front_normal_map,
         back_normal_map);

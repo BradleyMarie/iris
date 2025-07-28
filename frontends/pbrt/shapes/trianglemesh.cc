@@ -71,6 +71,17 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
                          static_cast<uint32_t>(entry.v2()));
   }
 
+  std::vector<face_t> face_indices;
+  for (const auto& face_index : with_defaults.faceindices()) {
+    if (face_index < 0) {
+      std::cerr << "ERROR: Out of range value for parameter: faceIndices"
+                << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    face_indices.push_back(static_cast<face_t>(face_index));
+  }
+
   std::vector<Point> points;
   for (const auto& p : with_defaults.p()) {
     Point point(static_cast<geometric>(p.x()), static_cast<geometric>(p.y()),
@@ -102,14 +113,14 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
   std::vector<ReferenceCounted<Geometry>> triangles;
   if (model_to_world.SwapsHandedness() && normals.empty()) {
     triangles = AllocateTriangleMesh(
-        points, indices, normals, uvs, std::move(alpha_mask), back_material,
-        front_material, back_emissive_material, front_emissive_material,
-        back_normal_map, front_normal_map);
+        points, indices, face_indices, normals, uvs, std::move(alpha_mask),
+        back_material, front_material, back_emissive_material,
+        front_emissive_material, back_normal_map, front_normal_map);
   } else {
     triangles = AllocateTriangleMesh(
-        points, indices, normals, uvs, std::move(alpha_mask), front_material,
-        back_material, front_emissive_material, back_emissive_material,
-        front_normal_map, back_normal_map);
+        points, indices, face_indices, normals, uvs, std::move(alpha_mask),
+        front_material, back_material, front_emissive_material,
+        back_emissive_material, front_normal_map, back_normal_map);
   }
 
   return std::make_pair(std::move(triangles), Matrix::Identity());

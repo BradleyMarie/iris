@@ -87,8 +87,10 @@ class Triangle final : public Geometry {
   static constexpr face_t kBackFace = 1u;
 
   Triangle(const std::tuple<uint32_t, uint32_t, uint32_t>& vertices,
-           std::shared_ptr<const SharedData> shared) noexcept
-      : vertices_(vertices), shared_(std::move(shared)) {}
+           std::shared_ptr<const SharedData> shared, face_t face_index) noexcept
+      : shared_(std::move(shared)),
+        vertices_(vertices),
+        face_index_(face_index) {}
 
   Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
                               const void* additional_data) const override;
@@ -140,8 +142,9 @@ class Triangle final : public Geometry {
       geometric_t b0, geometric_t b1, geometric_t b2) const;
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
-  std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
   std::shared_ptr<const SharedData> shared_;
+  std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
+  face_t face_index_;
 };
 
 std::tuple<Vector, face_t, face_t> Triangle::ComputeSurfaceNormalAndFaces(
@@ -152,10 +155,10 @@ std::tuple<Vector, face_t, face_t> Triangle::ComputeSurfaceNormalAndFaces(
                              shared_->points[std::get<2>(vertices_)]);
 
   if (DotProduct(surface_normal, ray.direction) < 0.0) {
-    return {surface_normal, kFrontFace, kBackFace};
+    return {surface_normal, face_index_ | kFrontFace, face_index_ | kBackFace};
   }
 
-  return {-surface_normal, kBackFace, kFrontFace};
+  return {-surface_normal, face_index_ | kBackFace, face_index_ | kFrontFace};
 }
 
 Vector Triangle::ComputeSurfaceNormal(const Point& hit_point, face_t face,
@@ -292,7 +295,7 @@ std::optional<std::pair<Vector, Vector>> Triangle::MaybeComputeNormalTangents()
 Geometry::ComputeShadingNormalResult Triangle::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
   return {MaybeComputeShadingNormal(additional_data),
-          MaybeComputeNormalTangents(), shared_->normal_maps[face].Get()};
+          MaybeComputeNormalTangents(), shared_->normal_maps[face & 1u].Get()};
 }
 
 Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
@@ -343,11 +346,11 @@ Geometry::ComputeHitPointResult Triangle::ComputeHitPoint(
 }
 
 const Material* Triangle::GetMaterial(face_t face) const {
-  return shared_->materials[face].Get();
+  return shared_->materials[face & 1u].Get();
 }
 
 const EmissiveMaterial* Triangle::GetEmissiveMaterial(face_t face) const {
-  return shared_->emissive_materials[face].Get();
+  return shared_->emissive_materials[face & 1u].Get();
 }
 
 visual_t Triangle::ComputeSurfaceArea(face_t face,
@@ -410,7 +413,8 @@ BoundingBox Triangle::ComputeBounds(const Matrix* model_to_world) const {
 }
 
 std::span<const face_t> Triangle::GetFaces() const {
-  static const face_t faces[2] = {kFrontFace, kBackFace};
+  static const face_t faces[2] = {face_index_ | kFrontFace,
+                                  face_index_ | kBackFace};
   return faces;
 }
 
@@ -593,6 +597,7 @@ std::tuple<uint32_t, uint32_t, uint32_t> ComputeIndices(
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
+    std::span<const face_t> face_indices,
     std::span<const std::tuple<geometric, geometric, geometric>> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::MaskTexture> alpha_mask,
@@ -615,13 +620,16 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
           {std::move(front_normal_map), std::move(back_normal_map)}});
 
   std::vector<ReferenceCounted<Geometry>> result;
-  for (const auto& [v0, v1, v2] : indices) {
+  for (size_t i = 0; i < indices.size(); i++) {
+    const auto& [v0, v1, v2] = indices[i];
+
     assert(shared_data->normals.empty() || v0 < shared_data->normals.size());
     assert(shared_data->normals.empty() || v1 < shared_data->normals.size());
     assert(shared_data->normals.empty() || v2 < shared_data->normals.size());
     assert(shared_data->uv.empty() || v0 < shared_data->uv.size());
     assert(shared_data->uv.empty() || v1 < shared_data->uv.size());
     assert(shared_data->uv.empty() || v2 < shared_data->uv.size());
+    assert(i >= face_indices.size() || face_indices[i] <= 0x7FFFFFFFu);
 
     if (shared_data->points.at(v0) == shared_data->points.at(v1) ||
         shared_data->points.at(v1) == shared_data->points.at(v2) ||
@@ -629,8 +637,13 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
       continue;
     }
 
+    face_t face_index = 0;
+    if (i < face_indices.size()) {
+      face_index = face_indices[i] << 1u;
+    }
+
     result.push_back(MakeReferenceCounted<Triangle>(
-        ComputeIndices(points, v0, v1, v2, normals), shared_data));
+        ComputeIndices(points, v0, v1, v2, normals), shared_data, face_index));
   }
 
   return result;

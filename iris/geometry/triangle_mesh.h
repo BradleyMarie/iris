@@ -10,6 +10,7 @@
 #include "iris/emissive_material.h"
 #include "iris/float.h"
 #include "iris/geometry.h"
+#include "iris/integer.h"
 #include "iris/material.h"
 #include "iris/normal_map.h"
 #include "iris/point.h"
@@ -22,6 +23,7 @@ namespace geometry {
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
+    std::span<const face_t> face_indices,
     std::span<const std::tuple<geometric, geometric, geometric>> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::MaskTexture> alpha_mask,
