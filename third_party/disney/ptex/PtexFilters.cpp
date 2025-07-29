@@ -148,7 +148,7 @@ class PtexWidth4Filter : public PtexSeparableFilter
 
         // compute desired texture res based on filter width
         k_ureslog2 = (int8_t)PtexUtils::calcResFromWidth(uw);
-        int resu = 1 << k_ureslog2;
+        int resu = 1 << PtexUtils::max(0, (int)k_ureslog2);
         float uwlo = 1.0f/(float)resu; // smallest filter width for this res
 
         // compute lerp weights (amount to blend towards next-lower res)

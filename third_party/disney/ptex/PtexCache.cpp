@@ -259,8 +259,8 @@ void PtexReaderCache::pruneFiles()
             PtexCachedReader* reader = _openFiles.pop();
             if (!reader) { _filesOpen = 0; break; }
             if (reader->tryClose()) {
-                --numToClose;
-                --_filesOpen;
+                numToClose -= 1;
+                _filesOpen -= 1;
             }
         }
     }

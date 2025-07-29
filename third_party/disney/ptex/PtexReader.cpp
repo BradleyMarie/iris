@@ -780,7 +780,7 @@ PtexFaceData* PtexReader::getData(int faceid)
 
     FaceInfo& fi = _faceinfo[faceid];
     if (fi.isConstant() || fi.res == 0) {
-        return new ConstDataPtr(getConstData() + faceid * _pixelsize, _pixelsize);
+        return constData(faceid);
     }
 
     // get level zero (full) res face
@@ -798,7 +798,7 @@ PtexFaceData* PtexReader::getData(int faceid, Res res)
 
     FaceInfo& fi = _faceinfo[faceid];
     if (fi.isConstant() || res == 0) {
-        return new ConstDataPtr(getConstData() + faceid * _pixelsize, _pixelsize);
+        return constData(faceid);
     }
 
     // determine how many reduction levels are needed

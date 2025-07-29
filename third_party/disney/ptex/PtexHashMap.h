@@ -232,7 +232,7 @@ public:
             Entry& e = entries[i & mask];
             if (e.value == 0) {
                 e.value = value;
-                ++_size;
+                _size += 1;
                 PtexMemoryFence();
                 e.key.copy(key);
                 result = e.value;

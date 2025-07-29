@@ -356,7 +356,6 @@ public:
         virtual Ptex::Res tileRes() { return 0; }
         virtual PtexFaceData* getTile(int) { return 0; }
 
-    protected:
         void* _data;
         int _pixelsize;
     };
@@ -600,6 +599,10 @@ protected:
     FaceData* errorData(bool deleteOnRelease=false)
     {
         return new ErrorFace(&_errorPixel[0], _pixelsize, deleteOnRelease);
+    }
+
+    PtexFaceData* __attribute__((noinline)) constData(int faceid) {
+        return new ConstDataPtr(getConstData() + faceid * _pixelsize, _pixelsize);
     }
 
     void computeOffsets(FilePos pos, int noffsets, const FaceDataHeader* fdh, FilePos* offsets)
