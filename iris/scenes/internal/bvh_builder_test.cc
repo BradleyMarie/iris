@@ -207,7 +207,7 @@ TEST(Partition, LotsOfOverlappedGeometry) {
               ElementsAre(6u, 7u, 8u, 9u, 10u, 11u));
 }
 
-TEST(AddLeafNode, Add) {
+TEST(MakeLeafNode, Add) {
   std::vector<size_t> indices;
   for (size_t i = 0; i < internal::kNumShapesPerNode; i++) {
     indices.push_back(i);
@@ -216,31 +216,22 @@ TEST(AddLeafNode, Add) {
   BoundingBox bounds(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(bounds);
+
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::AddLeafNode(indices, bounds, bvh, geometry_offset,
-                                        geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::MakeLeafNode(bvh, bvh.size() - 1, indices, geometry_offset,
+                         geometry_sort_order);
   EXPECT_EQ(internal::kNumShapesPerNode, geometry_offset);
   EXPECT_EQ(indices, geometry_sort_order);
-  EXPECT_EQ(1u, bvh.size());
 
   EXPECT_FALSE(bvh.front().HasChildren());
-  EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(internal::kNumShapesPerNode, bvh.front().Shapes().second);
-}
-
-TEST(AddInteriorNode, Add) {
-  BoundingBox bounds(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
-  AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
-  size_t result = internal::AddInteriorNode(bounds, Vector::Y_AXIS, bvh);
-  EXPECT_EQ(0u, result);
-  EXPECT_EQ(1u, bvh.size());
-  EXPECT_TRUE(bvh.front().HasChildren());
-  EXPECT_EQ(Vector::Y_AXIS, bvh.front().Axis());
+  EXPECT_EQ(0u, bvh.front().Geometry().first);
+  EXPECT_EQ(internal::kNumShapesPerNode, bvh.front().Geometry().second);
 }
 
 TEST(BuildBVH, OneGeometry) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < 1; i++) {
@@ -252,22 +243,24 @@ TEST(BuildBVH, OneGeometry) {
         Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
+    world_bounds.Add(bounds0);
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(world_bounds.Build());
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
-                                     geometry_offset, geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::BuildBVH(bvh, 0u, geometry_bounds, 32u, indices, geometry_offset,
+                     geometry_sort_order);
 
   EXPECT_EQ(1u, bvh.size());
   EXPECT_FALSE(bvh.front().HasChildren());
-  EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(1u, bvh.front().Shapes().second);
+  EXPECT_EQ(0u, bvh.front().Geometry().first);
+  EXPECT_EQ(1u, bvh.front().Geometry().second);
 }
 
 TEST(BuildBVH, DepthLimit) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
@@ -279,22 +272,24 @@ TEST(BuildBVH, DepthLimit) {
         Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
+    world_bounds.Add(bounds0);
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(world_bounds.Build());
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::BuildBVH(geometry_bounds, 0u, indices, bvh,
-                                     geometry_offset, geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::BuildBVH(bvh, 0u, geometry_bounds, 0u, indices, geometry_offset,
+                     geometry_sort_order);
 
   EXPECT_EQ(1u, bvh.size());
   EXPECT_FALSE(bvh.front().HasChildren());
-  EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(internal::kNumSplitsToEvaluate, bvh.front().Shapes().second);
+  EXPECT_EQ(0u, bvh.front().Geometry().first);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate, bvh.front().Geometry().second);
 }
 
 TEST(BuildBVH, TooMuchOverlap) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < internal::kNumShapesPerNode; i++) {
@@ -302,76 +297,82 @@ TEST(BuildBVH, TooMuchOverlap) {
                         Point(1.0, 1.0 + 0.01 * i, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
+    world_bounds.Add(bounds0);
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(world_bounds.Build());
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
-                                     geometry_offset, geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::BuildBVH(bvh, 0u, geometry_bounds, 32u, indices, geometry_offset,
+                     geometry_sort_order);
 
   EXPECT_EQ(1u, bvh.size());
   EXPECT_FALSE(bvh.front().HasChildren());
-  EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(internal::kNumShapesPerNode, bvh.front().Shapes().second);
+  EXPECT_EQ(0u, bvh.front().Geometry().first);
+  EXPECT_EQ(internal::kNumShapesPerNode, bvh.front().Geometry().second);
 }
 
 TEST(BuildBVH, EmptyCentroidBounds) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
     BoundingBox bounds0(Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
+    world_bounds.Add(bounds0);
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(world_bounds.Build());
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
-                                     geometry_offset, geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::BuildBVH(bvh, 0u, geometry_bounds, 32u, indices, geometry_offset,
+                     geometry_sort_order);
 
   EXPECT_EQ(1u, bvh.size());
   EXPECT_FALSE(bvh.front().HasChildren());
-  EXPECT_EQ(0u, bvh.front().Shapes().first);
-  EXPECT_EQ(internal::kNumSplitsToEvaluate, bvh.front().Shapes().second);
+  EXPECT_EQ(0u, bvh.front().Geometry().first);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate, bvh.front().Geometry().second);
 }
 
 TEST(BuildBVH, TwoGeometry) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < 2; i++) {
     BoundingBox bounds0(Point(0.0, i * 2, 0.0), Point(1.0, i * 2 + 1, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
+    world_bounds.Add(bounds0);
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(world_bounds.Build());
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
-                                     geometry_offset, geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::BuildBVH(bvh, 0u, geometry_bounds, 32u, indices, geometry_offset,
+                     geometry_sort_order);
 
   EXPECT_EQ(3u, bvh.size());
   EXPECT_TRUE(bvh.at(0).HasChildren());
   EXPECT_EQ(Vector::Y_AXIS, bvh.at(0).Axis());
   const BVHNode& left_child = bvh.at(0).LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
-  EXPECT_EQ(0u, left_child.Shapes().first);
-  EXPECT_EQ(1u, left_child.Shapes().second);
+  EXPECT_EQ(0u, left_child.Geometry().first);
+  EXPECT_EQ(1u, left_child.Geometry().second);
   const BVHNode& right_child = bvh.at(0).RightChild();
   EXPECT_FALSE(right_child.HasChildren());
-  EXPECT_EQ(1u, right_child.Shapes().first);
-  EXPECT_EQ(1u, right_child.Shapes().second);
+  EXPECT_EQ(1u, right_child.Geometry().first);
+  EXPECT_EQ(1u, right_child.Geometry().second);
 
   EXPECT_EQ(0u, geometry_sort_order.at(0));
   EXPECT_EQ(1u, geometry_sort_order.at(1));
 }
 
 TEST(BuildBVH, TwoGeometryReversed) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < 2; i++) {
@@ -379,32 +380,34 @@ TEST(BuildBVH, TwoGeometryReversed) {
                         Point(1.0, (2 - i) * 2 + 1, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
+    world_bounds.Add(bounds0);
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(world_bounds.Build());
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::BuildBVH(geometry_bounds, 32u, indices, bvh,
-                                     geometry_offset, geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::BuildBVH(bvh, 0u, geometry_bounds, 32u, indices, geometry_offset,
+                     geometry_sort_order);
 
   EXPECT_EQ(3u, bvh.size());
   EXPECT_TRUE(bvh.at(0).HasChildren());
   EXPECT_EQ(Vector::Y_AXIS, bvh.at(0).Axis());
   const BVHNode& left_child = bvh.at(0).LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
-  EXPECT_EQ(0u, left_child.Shapes().first);
-  EXPECT_EQ(1u, left_child.Shapes().second);
+  EXPECT_EQ(0u, left_child.Geometry().first);
+  EXPECT_EQ(1u, left_child.Geometry().second);
   const BVHNode& right_child = bvh.at(0).RightChild();
   EXPECT_FALSE(right_child.HasChildren());
-  EXPECT_EQ(1u, right_child.Shapes().first);
-  EXPECT_EQ(1u, right_child.Shapes().second);
+  EXPECT_EQ(1u, right_child.Geometry().first);
+  EXPECT_EQ(1u, right_child.Geometry().second);
 
   EXPECT_EQ(1u, geometry_sort_order.at(0));
   EXPECT_EQ(0u, geometry_sort_order.at(1));
 }
 
 TEST(BuildBVH, HitsDepthLimit) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   std::vector<size_t> indices;
   for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
@@ -416,26 +419,27 @@ TEST(BuildBVH, HitsDepthLimit) {
         Point(1.0, 1.0 + bound_offset * i + 0.5 * bound_offset, 1.0));
     geometry_bounds.emplace_back(bounds0);
     indices.push_back(i);
+    world_bounds.Add(bounds0);
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(false);
+  bvh.emplace_back(world_bounds.Build());
   size_t geometry_offset = 0;
   std::vector<size_t> geometry_sort_order(indices.size(), indices.size());
-  size_t result = internal::BuildBVH(geometry_bounds, 1u, indices, bvh,
-                                     geometry_offset, geometry_sort_order);
-  EXPECT_EQ(0u, result);
+  internal::BuildBVH(bvh, 0u, geometry_bounds, 1u, indices, geometry_offset,
+                     geometry_sort_order);
 
   EXPECT_EQ(3u, bvh.size());
   EXPECT_TRUE(bvh.at(0).HasChildren());
   EXPECT_EQ(Vector::Y_AXIS, bvh.at(0).Axis());
   const BVHNode& left_child = bvh.at(0).LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
-  EXPECT_EQ(0u, left_child.Shapes().first);
-  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, left_child.Shapes().second);
+  EXPECT_EQ(0u, left_child.Geometry().first);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, left_child.Geometry().second);
   const BVHNode& right_child = bvh.at(0).RightChild();
   EXPECT_FALSE(right_child.HasChildren());
-  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, right_child.Shapes().first);
-  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, right_child.Shapes().second);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, right_child.Geometry().first);
+  EXPECT_EQ(internal::kNumSplitsToEvaluate / 2, right_child.Geometry().second);
 
   for (size_t i = 0; i < internal::kNumSplitsToEvaluate; i++) {
     EXPECT_EQ(i, geometry_sort_order.at(i));
@@ -486,12 +490,12 @@ TEST(BuildBVH, FullTwoGeometry) {
   EXPECT_EQ(Vector::Y_AXIS, result.bvh[0].Axis());
   const BVHNode& left_child = result.bvh[0].LeftChild();
   EXPECT_FALSE(left_child.HasChildren());
-  EXPECT_EQ(0u, left_child.Shapes().first);
-  EXPECT_EQ(1u, left_child.Shapes().second);
+  EXPECT_EQ(0u, left_child.Geometry().first);
+  EXPECT_EQ(1u, left_child.Geometry().second);
   const BVHNode& right_child = result.bvh[0].RightChild();
   EXPECT_FALSE(right_child.HasChildren());
-  EXPECT_EQ(1u, right_child.Shapes().first);
-  EXPECT_EQ(1u, right_child.Shapes().second);
+  EXPECT_EQ(1u, right_child.Geometry().first);
+  EXPECT_EQ(1u, right_child.Geometry().second);
 
   EXPECT_EQ(1u, result.geometry_sort_order.at(0));
   EXPECT_EQ(0u, result.geometry_sort_order.at(1));

@@ -62,18 +62,14 @@ PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
                           Vector::Axis split_axis, geometric_t split,
                           std::span<size_t> indices);
 
-size_t AddLeafNode(std::span<const size_t> indices,
-                   const BoundingBox& node_bounds, AlignedVector<BVHNode>& bvh,
-                   size_t& geometry_offset,
-                   std::span<size_t> geometry_sort_order);
+void MakeLeafNode(AlignedVector<BVHNode>& bvh, size_t node_offset,
+                  std::span<const size_t> indices, size_t& geometry_offset,
+                  std::span<size_t> geometry_sort_order);
 
-size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
-                       AlignedVector<BVHNode>& bvh);
-
-size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
-                size_t depth_remaining, std::span<size_t> indices,
-                AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
-                std::span<size_t> geometry_sort_order);
+void BuildBVH(AlignedVector<BVHNode>& bvh, size_t node_offset,
+              const std::vector<BoundingBox>& geometry_bounds,
+              size_t depth_remaining, std::span<size_t> indices,
+              size_t& geometry_offset, std::span<size_t> geometry_sort_order);
 
 };  // namespace internal
 

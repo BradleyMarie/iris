@@ -40,8 +40,8 @@ class GeometryIntersector : public Intersector {
         intersector_(intersector) {}
 
   bool Intersect(const BVHNode& bvh_node) override {
-    auto [start_index, num_shapes] = bvh_node.Shapes();
-    for (size_t i = 0; i < num_shapes; i++) {
+    auto [start_index, num_geometry] = bvh_node.Geometry();
+    for (size_t i = 0; i < num_geometry; i++) {
       auto [geometry, model_to_world] =
           scene_objects_.GetGeometry(start_index + i);
       if (intersector_.Intersect(geometry, model_to_world)) {
@@ -73,8 +73,8 @@ class NestedGeometryIntersector : public Intersector {
         find_closest_hit_(find_closest_hit) {}
 
   bool Intersect(const BVHNode& bvh_node) override {
-    auto [start_index, num_shapes] = bvh_node.Shapes();
-    for (size_t i = 0; i < num_shapes; i++) {
+    auto [start_index, num_geometry] = bvh_node.Geometry();
+    for (size_t i = 0; i < num_geometry; i++) {
       if (Hit* hit = geometry_[start_index + i]->TraceOneHit(
               hit_allocator_, minimum_distance, maximum_distance,
               find_closest_hit_);
@@ -110,8 +110,8 @@ class AllNestedGeometryIntersector : public Intersector {
         hit_allocator_(hit_allocator) {}
 
   bool Intersect(const BVHNode& bvh_node) override {
-    auto [start_index, num_shapes] = bvh_node.Shapes();
-    for (size_t i = 0; i < num_shapes; i++) {
+    auto [start_index, num_geometry] = bvh_node.Geometry();
+    for (size_t i = 0; i < num_geometry; i++) {
       if (Hit* hit_list =
               geometry_[start_index + i]->TraceAllHits(hit_allocator_);
           hit_list) {

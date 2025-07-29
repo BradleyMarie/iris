@@ -172,34 +172,25 @@ PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
           indices.subspan(0, insert_index)};
 }
 
-size_t AddLeafNode(std::span<const size_t> indices,
-                   const BoundingBox& node_bounds, AlignedVector<BVHNode>& bvh,
-                   size_t& geometry_offset,
-                   std::span<size_t> geometry_sort_order) {
-  bvh.push_back(
-      BVHNode::MakeLeafNode(node_bounds, geometry_offset, indices.size()));
+void MakeLeafNode(AlignedVector<BVHNode>& bvh, size_t node_offset,
+                  std::span<const size_t> indices, size_t& geometry_offset,
+                  std::span<size_t> geometry_sort_order) {
+  bvh[node_offset].MakeLeafNode(geometry_offset, indices.size());
   for (size_t index : indices) {
     geometry_sort_order[index] = geometry_offset++;
   }
-  return bvh.size() - 1;
 }
 
-size_t AddInteriorNode(const BoundingBox& node_bounds, Vector::Axis split_axis,
-                       AlignedVector<BVHNode>& bvh) {
-  bvh.push_back(BVHNode::MakeInteriorNode(node_bounds, split_axis));
-  return bvh.size() - 1;
-}
-
-size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
-                size_t depth_remaining, std::span<size_t> indices,
-                AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
-                std::span<size_t> geometry_sort_order) {
+void BuildBVH(AlignedVector<BVHNode>& bvh, size_t node_offset,
+              const std::vector<BoundingBox>& geometry_bounds,
+              size_t depth_remaining, std::span<size_t> indices,
+              size_t& geometry_offset, std::span<size_t> geometry_sort_order) {
   assert(!indices.empty());
 
-  BoundingBox node_bounds = ComputeBounds(geometry_bounds, indices);
   if (indices.size() == 1 || depth_remaining == 0) {
-    return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
-                       geometry_sort_order);
+    MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+                 geometry_sort_order);
+    return;
   }
 
   BoundingBox centroid_bounds = ComputeCentroidBounds(geometry_bounds, indices);
@@ -208,8 +199,9 @@ size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
   Vector::Axis split_axis = centroid_bounds_diagonal.DominantAxis();
 
   if (centroid_bounds.lower[split_axis] == centroid_bounds.upper[split_axis]) {
-    return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
-                       geometry_sort_order);
+    MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+                 geometry_sort_order);
+    return;
   }
 
   std::span<size_t> above_indices, below_indices;
@@ -225,11 +217,13 @@ size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
       above_indices = indices.subspan(0, 1);
     }
   } else {
-    std::optional<geometric_t> split = FindBestSplitOnAxis(
-        geometry_bounds, indices, node_bounds, centroid_bounds, split_axis);
+    std::optional<geometric_t> split =
+        FindBestSplitOnAxis(geometry_bounds, indices, bvh[node_offset].Bounds(),
+                            centroid_bounds, split_axis);
     if (!split.has_value()) {
-      return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
-                         geometry_sort_order);
+      MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+                   geometry_sort_order);
+      return;
     }
 
     PartitionResult result =
@@ -238,23 +232,24 @@ size_t BuildBVH(const std::vector<BoundingBox>& geometry_bounds,
       // It's unclear how to write a unit test to exercise this branch; however,
       // since FindBestSplitOnAxis has been observed returning splits that do
       // not partition properly this branch is needed to cover that edge case.
-      return AddLeafNode(indices, node_bounds, bvh, geometry_offset,
-                         geometry_sort_order);
+      MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+                   geometry_sort_order);
+      return;
     }
 
     below_indices = result.below;
     above_indices = result.above;
   }
 
-  size_t result = AddInteriorNode(node_bounds, split_axis, bvh);
-  BuildBVH(geometry_bounds, depth_remaining - 1, below_indices, bvh,
-           geometry_offset, geometry_sort_order);
-  size_t right_child =
-      BuildBVH(geometry_bounds, depth_remaining - 1, above_indices, bvh,
-               geometry_offset, geometry_sort_order);
-  bvh.at(result).SetRightChildOffset(right_child - result);
+  bvh[node_offset].MakeInteriorNode(split_axis, bvh.size() - node_offset);
+  bvh.emplace_back(ComputeBounds(geometry_bounds, below_indices));
+  bvh.emplace_back(ComputeBounds(geometry_bounds, above_indices));
 
-  return result;
+  size_t left_offset = bvh.size() - 2u;
+  BuildBVH(bvh, left_offset, geometry_bounds, depth_remaining - 1,
+           below_indices, geometry_offset, geometry_sort_order);
+  BuildBVH(bvh, left_offset + 1, geometry_bounds, depth_remaining - 1,
+           above_indices, geometry_offset, geometry_sort_order);
 }
 
 }  // namespace internal
@@ -263,6 +258,7 @@ BuildBVHResult BuildBVH(
     const std::function<std::pair<const Geometry&, const Matrix*>(size_t)>&
         geometry,
     size_t num_geometry, bool for_scene) {
+  BoundingBox::Builder world_bounds;
   std::vector<BoundingBox> geometry_bounds;
   geometry_bounds.reserve(num_geometry);
   std::vector<size_t> geometry_order;
@@ -272,13 +268,16 @@ BuildBVHResult BuildBVH(
     auto [geometry_ref, model_to_world] = geometry(i);
     geometry_bounds.push_back(geometry_ref.ComputeBounds(model_to_world));
     geometry_order.push_back(i);
+    world_bounds.Add(geometry_bounds.back());
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(for_scene);
   if (num_geometry != 0) {
     size_t geometry_offset = 0;
-    internal::BuildBVH(geometry_bounds, internal::kMaxBvhDepth, geometry_order,
-                       bvh, geometry_offset, geometry_sort_order);
+    bvh.emplace_back(world_bounds.Build());
+    bvh.emplace_back(world_bounds.Build());  // Padding for cache alignment
+    internal::BuildBVH(bvh, 0u, geometry_bounds, internal::kMaxBvhDepth,
+                       geometry_order, geometry_offset, geometry_sort_order);
   }
 
   return {std::move(bvh), std::move(geometry_sort_order)};
