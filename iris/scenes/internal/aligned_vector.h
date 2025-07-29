@@ -1,9 +1,12 @@
 #ifndef _IRIS_SCENES_INTERNAL_ALIGNED_VECTOR_
 #define _IRIS_SCENES_INTERNAL_ALIGNED_VECTOR_
 
+#include <algorithm>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -24,25 +27,42 @@ class AlignedAllocator {
       : for_scene_(other.for_scene_) {}
 
   T* allocate(std::size_t n) {
-    std::size_t alignment;
+    std::size_t allocation_size = n * sizeof(T);
+
+    std::size_t max_alignment;
     if constexpr (sizeof(void*) > sizeof(uint32_t)) {
       if (for_scene_) {
-        alignment = 32 * 1024 * 1024;  // 32MB
+        max_alignment = 32 * 1024 * 1024;  // 32MB
       } else {
-        alignment = 128;  // 128B
+        max_alignment = 128;  // 128B
       }
     } else {
       if (for_scene_) {
-        alignment = 1024 * 1024 * 1024;  // 1GB
+        max_alignment = 1024 * 1024 * 1024;  // 1GB
       } else {
-        alignment = 4096;  // 4KB
+        max_alignment = 4096;  // 4KB
+      }
+    }
+
+    std::size_t alignment =
+        std::min(max_alignment, std::bit_floor(allocation_size));
+    if (std::size_t padding_needed = allocation_size % alignment;
+        padding_needed != 0u) {
+      if (std::numeric_limits<std::size_t>::max() - allocation_size >
+          padding_needed) {
+        allocation_size += padding_needed;
+      } else {
+        alignment = 1u;
+        while (allocation_size % alignment == 0u) {
+          alignment <<= 1u;
+        }
       }
     }
 
 #ifdef MSVC
-    void* result = _aligned_malloc(alignment, n * sizeof(T));
+    void* result = _aligned_malloc(alignment, allocation_size);
 #else
-    void* result = std::aligned_alloc(alignment, n * sizeof(T));
+    void* result = std::malloc(allocation_size);
 #endif  // MSVC
 
     if (!result) {

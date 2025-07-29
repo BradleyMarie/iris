@@ -1,6 +1,6 @@
+#undef NDEBUG  // Enable assertions at runtime
 #include "iris/textures/ptex_texture.h"
 
-#undef NDEBUG  // Enable assertions at runtime
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -69,6 +69,7 @@ visual_t PtexFloatTexture::Evaluate(
 
   Ptex::PtexFilter::Options opts(Ptex::PtexFilter::FilterType::f_bspline);
   Ptex::PtexFilter* filter = Ptex::PtexFilter::getFilter(texture, opts);
+  assert(filter != nullptr);
 
   float results[3];
   filter->eval(results, /*firstchan=*/0, num_channels, coordinates.face_index,
@@ -118,6 +119,7 @@ const Reflector* PtexReflectorTexture::Evaluate(
 
   Ptex::PtexFilter::Options opts(Ptex::PtexFilter::FilterType::f_bspline);
   Ptex::PtexFilter* filter = Ptex::PtexFilter::getFilter(texture, opts);
+  assert(filter != nullptr);
 
   float results[3];
   filter->eval(results, /*firstchan=*/0, num_channels, coordinates.face_index,
