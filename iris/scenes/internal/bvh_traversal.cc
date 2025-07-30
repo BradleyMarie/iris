@@ -145,19 +145,17 @@ void Intersect(const BVHNode& bvh, const Ray& ray, Intersector& intersector) {
   const BVHNode* current = &bvh;
   size_t queue_size = 0;
   for (;;) {
-    bool intersects = current->Intersects(ray, intersector.minimum_distance,
-                                          intersector.maximum_distance);
-    if (intersects) {
+    if (current->Intersects(ray, intersector.minimum_distance,
+                            intersector.maximum_distance)) {
       if (current->HasChildren()) {
-        auto direction = ray.direction[current->Axis()];
-        if (direction < 0.0) {
-          work_list[queue_size++] = &current->LeftChild();
-          current = &current->RightChild();
-        } else {
-          work_list[queue_size++] = &current->RightChild();
-          current = &current->LeftChild();
-        }
-
+        bool right_first =
+            ray.direction[current->Axis()] < static_cast<geometric>(0.0);
+        const BVHNode* left_child = &current->LeftChild();
+        const BVHNode* right_child = &current->RightChild();
+        const BVHNode* first = right_first ? right_child : left_child;
+        const BVHNode* second = right_first ? left_child : right_child;
+        work_list[queue_size++] = second;
+        current = first;
         continue;
       }
 
