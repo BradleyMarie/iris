@@ -86,7 +86,7 @@ struct BoundingBox final {
     min = Max(min, Min(tz0, tz1));
     max = Min(max, Max(tz0, tz1));
 
-    return min <= max && minimum_distance < max && maximum_distance > min;
+    return Max(min, minimum_distance) <= Min(max, maximum_distance);
   }
 
   bool operator==(const BoundingBox&) const = default;
