@@ -20,7 +20,8 @@ BVHNode::BVHNode(const BoundingBox& bounds)
       num_geometry_(0u),
       axis_(std::numeric_limits<uint16_t>::max()) {}
 
-void BVHNode::MakeInteriorNode(Vector::Axis split_axis, uint32_t child_offset) {
+void BVHNode::MakeInteriorNode(Vector::Axis split_axis, size_t child_offset) {
+  assert(child_offset <= std::numeric_limits<uint32_t>::max());
   assert(axis_ == std::numeric_limits<uint16_t>::max());
   offset_ = child_offset;
   num_geometry_ = 0u;
@@ -29,8 +30,8 @@ void BVHNode::MakeInteriorNode(Vector::Axis split_axis, uint32_t child_offset) {
 
 void BVHNode::MakeLeafNode(size_t shape_offset, size_t num_geometry) {
   assert(num_geometry != 0);
-  assert(shape_offset < std::numeric_limits<uint32_t>::max());
-  assert(num_geometry < std::numeric_limits<uint16_t>::max());
+  assert(shape_offset <= std::numeric_limits<uint32_t>::max());
+  assert(num_geometry <= std::numeric_limits<uint16_t>::max());
   assert(axis_ == std::numeric_limits<uint16_t>::max());
   offset_ = shape_offset;
   num_geometry_ = num_geometry;

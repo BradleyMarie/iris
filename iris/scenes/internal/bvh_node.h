@@ -19,7 +19,7 @@ class BVHNode final {
   BVHNode(const BoundingBox& bounds);
   BVHNode(const BVHNode& node) = default;
 
-  void MakeInteriorNode(Vector::Axis split_axis, uint32_t child_offset);
+  void MakeInteriorNode(Vector::Axis split_axis, size_t child_offset);
   void MakeLeafNode(size_t geometry_offset, size_t num_geometry);
 
   const BoundingBox& Bounds() const { return bounds_; }
