@@ -11,6 +11,7 @@
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
+#include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 
 namespace iris {
@@ -60,12 +61,128 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
       exit(EXIT_FAILURE);
     }
 
-    if (filename.extension() == ".png") {
-      std::cerr << "ERROR: Unimplemented image file type: .png" << std::endl;
-      exit(EXIT_FAILURE);
-    } else if (filename.extension() == ".tga") {
-      std::cerr << "ERROR: Unimplemented image file type: .tga" << std::endl;
-      exit(EXIT_FAILURE);
+    if (filename.extension() == ".png" || filename.extension() == ".tga") {
+      int nx, ny;
+      if (stbi_is_16_bit(filename.native().c_str())) {
+        int num_channels;
+        stbi_us* values =
+            stbi_load_16(filename.native().c_str(), &nx, &ny, &num_channels,
+                         /*desired_channels=*/0);
+        if (!values) {
+          std::cerr << "ERROR: Failed to load image: " << filename << std::endl;
+          exit(EXIT_FAILURE);
+        }
+
+        spectra_and_luma.reserve(nx * ny);
+        if (num_channels == 1 || num_channels == 2) {
+          for (int y = 0; y < ny; y++) {
+            for (int x = 0; x < nx; x++) {
+              visual_t grey =
+                  static_cast<visual_t>(
+                      values[num_channels * (ny - y - 1) * nx + x]) /
+                  static_cast<visual_t>(65535.0);
+
+              visual_t luma_value;
+              ReferenceCounted<Spectrum> pixel_spectrum =
+                  spectrum_manager.AllocateSpectrum(
+                      spectrum_manager.AllocateSpectrum(grey, grey, grey),
+                      scaled, &luma_value);
+
+              spectra_and_luma.emplace_back(std::move(pixel_spectrum),
+                                            luma_value);
+            }
+          }
+        } else {
+          for (int y = 0; y < ny; y++) {
+            for (int x = 0; x < nx; x++) {
+              visual_t r =
+                  static_cast<visual_t>(
+                      values[num_channels * ((ny - y - 1) * nx + x) + 0]) /
+                  static_cast<visual_t>(65535.0);
+              visual_t g =
+                  static_cast<visual_t>(
+                      values[num_channels * ((ny - y - 1) * nx + x) + 1]) /
+                  static_cast<visual_t>(65535.0);
+              visual_t b =
+                  static_cast<visual_t>(
+                      values[num_channels * ((ny - y - 1) * nx + x) + 2]) /
+                  static_cast<visual_t>(65535.0);
+
+              visual_t luma_value;
+              ReferenceCounted<Spectrum> pixel_spectrum =
+                  spectrum_manager.AllocateSpectrum(
+                      spectrum_manager.AllocateSpectrum(r, g, b), scaled,
+                      &luma_value);
+
+              spectra_and_luma.emplace_back(std::move(pixel_spectrum),
+                                            luma_value);
+            }
+          }
+        }
+
+        size.first = static_cast<size_t>(ny);
+        size.second = static_cast<size_t>(nx);
+        stbi_image_free(values);
+      } else {
+        int num_channels;
+        stbi_uc* values =
+            stbi_load(filename.native().c_str(), &nx, &ny, &num_channels,
+                      /*desired_channels=*/0);
+        if (!values) {
+          std::cerr << "ERROR: Failed to load image: " << filename << std::endl;
+          exit(EXIT_FAILURE);
+        }
+
+        spectra_and_luma.reserve(nx * ny);
+        if (num_channels == 1 || num_channels == 2) {
+          for (int y = 0; y < ny; y++) {
+            for (int x = 0; x < nx; x++) {
+              visual_t v = static_cast<visual_t>(
+                               values[num_channels * ((ny - y - 1) * nx + x)]) /
+                           static_cast<visual_t>(255.0);
+
+              visual_t luma_value;
+              ReferenceCounted<Spectrum> pixel_spectrum =
+                  spectrum_manager.AllocateSpectrum(
+                      spectrum_manager.AllocateSpectrum(v, v, v), scaled,
+                      &luma_value);
+
+              spectra_and_luma.emplace_back(std::move(pixel_spectrum),
+                                            luma_value);
+            }
+          }
+        } else {
+          for (int y = 0; y < ny; y++) {
+            for (int x = 0; x < nx; x++) {
+              visual_t r =
+                  static_cast<visual_t>(
+                      values[num_channels * ((ny - y - 1) * nx + x) + 0]) /
+                  static_cast<visual_t>(255.0);
+              visual_t g =
+                  static_cast<visual_t>(
+                      values[num_channels * ((ny - y - 1) * nx + x) + 1]) /
+                  static_cast<visual_t>(255.0);
+              visual_t b =
+                  static_cast<visual_t>(
+                      values[num_channels * ((ny - y - 1) * nx + x) + 2]) /
+                  static_cast<visual_t>(255.0);
+
+              visual_t luma_value;
+              ReferenceCounted<Spectrum> pixel_spectrum =
+                  spectrum_manager.AllocateSpectrum(
+                      spectrum_manager.AllocateSpectrum(r, g, b), scaled,
+                      &luma_value);
+
+              spectra_and_luma.emplace_back(std::move(pixel_spectrum),
+                                            luma_value);
+            }
+          }
+        }
+
+        size.first = static_cast<size_t>(ny);
+        size.second = static_cast<size_t>(nx);
+        stbi_image_free(values);
+      }
     } else if (filename.extension() == ".exr") {
       float* values;
       int width, height;

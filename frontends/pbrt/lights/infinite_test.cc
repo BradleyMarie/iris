@@ -62,17 +62,15 @@ TEST(Infinite, AllSpecifiedEXR) {
                            model_to_world, spectrum_manager));
 }
 
-TEST(Infinite, Unimplemented) {
+TEST(Infinite, AllSpecifiedPNG) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
   LightSource::Infinite infinite;
   infinite.set_mapname("frontends/pbrt/lights/test_data/image.png");
 
-  EXPECT_EXIT(MakeInfinite(infinite, std::filesystem::current_path(),
-                           model_to_world, spectrum_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unimplemented image file type: .png");
+  EXPECT_TRUE(MakeInfinite(infinite, std::filesystem::current_path(),
+                           model_to_world, spectrum_manager));
 }
 
 }  // namespace
