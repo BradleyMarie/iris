@@ -34,6 +34,8 @@ class SpectralAllocator {
                                 const Reflector* addend2);
   const Reflector* UnboundedScale(const Reflector* reflector,
                                   visual_t attenuation);
+  const Reflector* UnboundedScale(const Reflector* reflector,
+                                  const Reflector* attenuation);
 
   // Optmization for Fresnel dielectric-conductor interfaces.
   const Reflector* FresnelConductor(visual_t eta_dielectric,

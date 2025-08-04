@@ -11,7 +11,7 @@
 #include "iris/reference_counted.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
-#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
@@ -19,13 +19,13 @@ namespace {
 
 using ::iris::bxdfs::MakeAttenuatedBxdf;
 using ::iris::bxdfs::MakeCompositeBxdf;
-using ::iris::textures::FloatTexture;
+using ::iris::textures::ReflectorTexture;
 
 class MixMaterial final : public Material {
  public:
   MixMaterial(ReferenceCounted<Material> material0,
               ReferenceCounted<Material> material1,
-              ReferenceCounted<FloatTexture> interpolation)
+              ReferenceCounted<ReflectorTexture> interpolation)
       : material0_(std::move(material0)),
         material1_(std::move(material1)),
         interpolation_(std::move(interpolation)) {}
@@ -37,15 +37,16 @@ class MixMaterial final : public Material {
  private:
   ReferenceCounted<Material> material0_;
   ReferenceCounted<Material> material1_;
-  ReferenceCounted<FloatTexture> interpolation_;
+  ReferenceCounted<ReflectorTexture> interpolation_;
 };
 
 const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
                                   SpectralAllocator& spectral_allocator,
                                   BxdfAllocator& bxdf_allocator) const {
-  visual attenuation = static_cast<visual>(0.0);
+  const Reflector* attenuation = nullptr;
   if (interpolation_) {
-    attenuation = interpolation_->Evaluate(texture_coordinates);
+    attenuation =
+        interpolation_->Evaluate(texture_coordinates, spectral_allocator);
   }
 
   const Bxdf* bxdf0 = nullptr;
@@ -60,7 +61,7 @@ const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
     bxdf1 = material1_->Evaluate(texture_coordinates, spectral_allocator,
                                  bxdf_allocator);
     bxdf1 = MakeAttenuatedBxdf(bxdf_allocator, bxdf1,
-                               static_cast<visual_t>(1.0) - attenuation);
+                               spectral_allocator.Invert(attenuation));
   }
 
   return MakeCompositeBxdf(bxdf_allocator, bxdf0, bxdf1);
@@ -70,7 +71,7 @@ const Bxdf* MixMaterial::Evaluate(const TextureCoordinates& texture_coordinates,
 
 ReferenceCounted<Material> MakeMixMaterial(
     ReferenceCounted<Material> material0, ReferenceCounted<Material> material1,
-    ReferenceCounted<FloatTexture> interpolation) {
+    ReferenceCounted<ReflectorTexture> interpolation) {
   if (!material0 && !material1) {
     return ReferenceCounted<Material>();
   }

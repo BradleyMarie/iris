@@ -191,7 +191,7 @@ cc_library(
         "//iris:texture_coordinates",
         "//iris/bxdfs:attenuated_bxdf",
         "//iris/bxdfs:composite_bxdf",
-        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
     ],
 )
 
@@ -357,7 +357,6 @@ cc_library(
         "//iris/bxdfs:microfacet_bxdf",
         "//iris/bxdfs:specular_dielectric_bxdf",
         "//iris/bxdfs:transparent_btdf",
-        "//iris/reflectors:uniform_reflector",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
     ],

@@ -27,33 +27,23 @@ using ::testing::Return;
 using ::testing::SetArgPointee;
 
 TEST(AttenuatedBrdfTest, MakeAttenuatedBxdfNone) {
+  MockReflector mock_reflector;
   MockBxdf mock_bxdf;
-  EXPECT_EQ(nullptr,
-            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, -1.0));
-  EXPECT_EQ(nullptr,
-            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.0));
-  EXPECT_EQ(nullptr,
-            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), nullptr, 1.0));
-  EXPECT_EQ(nullptr,
-            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), nullptr, 0.0));
-}
-
-TEST(AttenuatedBrdfTest, MakeAttenuatedBxdfOne) {
-  MockBxdf mock_bxdf;
-  EXPECT_EQ(&mock_bxdf,
-            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 1.0));
-  EXPECT_EQ(&mock_bxdf,
-            MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 2.0));
+  EXPECT_EQ(nullptr, MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf,
+                                        nullptr));
+  EXPECT_EQ(nullptr, MakeAttenuatedBxdf(testing::GetBxdfAllocator(), nullptr,
+                                        &mock_reflector));
 }
 
 TEST(AttenuatedBrdfTest, IsDiffuse) {
+  MockReflector mock_reflector;
   MockBxdf mock_bxdf;
   EXPECT_CALL(mock_bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(0.5), Return(true)));
   EXPECT_CALL(mock_bxdf, IsDiffuse(IsNull())).WillOnce(Return(false));
 
-  const Bxdf* bxdf =
-      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.25);
+  const Bxdf* bxdf = MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf,
+                                        &mock_reflector);
 
   visual_t pdf;
   EXPECT_TRUE(bxdf->IsDiffuse(&pdf));
@@ -72,8 +62,9 @@ TEST(AttenuatedBrdfTest, SampleDiffuse) {
                                        Vector(0.0, 0.0, 1.0), Ref(sampler)))
       .WillOnce(Return(Vector(1.0, 2.0, 3.0)));
 
-  const Bxdf* bxdf =
-      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+  MockReflector mock_reflector;
+  const Bxdf* bxdf = MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf,
+                                        &mock_reflector);
   std::optional<Vector> result = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(result);
@@ -90,8 +81,9 @@ TEST(AttenuatedBrdfTest, Sample) {
                                 Vector(0.0, 0.0, 1.0), Ref(sampler), _))
       .WillOnce(Return(Bxdf::DiffuseSample{Vector(1.0, 2.0, 3.0)}));
 
-  const Bxdf* bxdf =
-      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+  MockReflector mock_reflector;
+  const Bxdf* bxdf = MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf,
+                                        &mock_reflector);
   auto result =
       bxdf->Sample(Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
                    sampler, GetSpectralAllocator());
@@ -114,8 +106,11 @@ TEST(AttenuatedBrdfTest, SampleSpecular) {
                                             Vector(1.0, 2.0, 3.0), &reflector,
                                             std::nullopt, 1.0}));
 
+  MockReflector attenuation;
+  EXPECT_CALL(attenuation, Reflectance(_)).WillOnce(Return(0.5));
+
   const Bxdf* bxdf =
-      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, &attenuation);
   auto result =
       bxdf->Sample(Vector(0.0, 0.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
                    sampler, GetSpectralAllocator());
@@ -138,8 +133,9 @@ TEST(AttenuatedBrdfTest, PdfDiffuse) {
                          Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF))
       .WillOnce(Return(0.5));
 
-  const Bxdf* bxdf =
-      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+  MockReflector mock_reflector;
+  const Bxdf* bxdf = MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf,
+                                        &mock_reflector);
   EXPECT_EQ(0.5,
             bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
                              Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
@@ -155,8 +151,11 @@ TEST(AttenuatedBrdfTest, ReflectanceDiffuse) {
                                  Bxdf::Hemisphere::BTDF, _))
       .WillOnce(Return(&reflector));
 
+  MockReflector attenuation;
+  EXPECT_CALL(attenuation, Reflectance(_)).WillOnce(Return(0.5));
+
   const Bxdf* bxdf =
-      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, 0.5);
+      MakeAttenuatedBxdf(testing::GetBxdfAllocator(), &mock_bxdf, &attenuation);
   auto* result = bxdf->ReflectanceDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
       testing::GetSpectralAllocator());

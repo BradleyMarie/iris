@@ -5,14 +5,14 @@
 #include "iris/material.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
-#include "iris/textures/float_texture.h"
+#include "iris/textures/reflector_texture.h"
 
 namespace iris {
 namespace materials {
 
 ReferenceCounted<Material> MakeMixMaterial(
     ReferenceCounted<Material> material0, ReferenceCounted<Material> material1,
-    ReferenceCounted<textures::FloatTexture> interpolation);
+    ReferenceCounted<textures::ReflectorTexture> interpolation);
 
 }  // namespace materials
 }  // namespace iris

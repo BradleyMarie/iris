@@ -13,7 +13,6 @@
 #include "iris/float.h"
 #include "iris/material.h"
 #include "iris/reference_counted.h"
-#include "iris/reflectors/uniform_reflector.h"
 #include "iris/spectral_allocator.h"
 #include "iris/texture_coordinates.h"
 #include "iris/textures/float_texture.h"
@@ -28,12 +27,8 @@ using ::iris::bxdfs::MakeLambertianBrdf;
 using ::iris::bxdfs::MakeMicrofacetDielectricBrdf;
 using ::iris::bxdfs::MakeSpecularDielectricBxdf;
 using ::iris::bxdfs::MakeTransparentBtdf;
-using ::iris::reflectors::CreateUniformReflector;
 using ::iris::textures::FloatTexture;
 using ::iris::textures::ReflectorTexture;
-
-static const ReferenceCounted<Reflector> kWhite =
-    CreateUniformReflector(static_cast<visual>(1.0));
 
 class UberMaterial final : public Material {
  public:
@@ -41,7 +36,7 @@ class UberMaterial final : public Material {
                ReferenceCounted<ReflectorTexture> transmittance,
                ReferenceCounted<ReflectorTexture> diffuse,
                ReferenceCounted<ReflectorTexture> specular,
-               ReferenceCounted<FloatTexture> opacity,
+               ReferenceCounted<ReflectorTexture> opacity,
                ReferenceCounted<FloatTexture> eta_incident,
                ReferenceCounted<FloatTexture> eta_transmitted,
                ReferenceCounted<FloatTexture> roughness_u,
@@ -66,7 +61,7 @@ class UberMaterial final : public Material {
   ReferenceCounted<ReflectorTexture> transmittance_;
   ReferenceCounted<ReflectorTexture> diffuse_;
   ReferenceCounted<ReflectorTexture> specular_;
-  ReferenceCounted<FloatTexture> opacity_;
+  ReferenceCounted<ReflectorTexture> opacity_;
   ReferenceCounted<FloatTexture> eta_incident_;
   ReferenceCounted<FloatTexture> eta_transmitted_;
   ReferenceCounted<FloatTexture> roughness_u_;
@@ -78,18 +73,14 @@ const Bxdf* UberMaterial::Evaluate(
     const TextureCoordinates& texture_coordinates,
     SpectralAllocator& spectral_allocator,
     BxdfAllocator& bxdf_allocator) const {
-  visual opacity = static_cast<visual>(0.0);
+  const Reflector* opacity = nullptr;
+  const Bxdf* transparent_btdf = nullptr;
   if (opacity_) {
-    opacity = std::clamp(opacity_->Evaluate(texture_coordinates),
-                         static_cast<visual>(0.0), static_cast<visual>(1.0));
+    opacity = opacity_->Evaluate(texture_coordinates, spectral_allocator);
   }
 
-  const Bxdf* transparent_btdf = nullptr;
-  if (visual transparency = static_cast<visual>(1.0) - opacity;
-      transparency > static_cast<visual>(0.0)) {
-    transparent_btdf = MakeTransparentBtdf(
-        bxdf_allocator, spectral_allocator.Scale(kWhite.Get(), transparency));
-  }
+  transparent_btdf =
+      MakeTransparentBtdf(bxdf_allocator, spectral_allocator.Invert(opacity));
 
   const Bxdf* lambertian_brdf = nullptr;
   if (diffuse_) {
@@ -163,7 +154,7 @@ ReferenceCounted<Material> MakeUberMaterial(
     ReferenceCounted<ReflectorTexture> transmittance,
     ReferenceCounted<ReflectorTexture> diffuse,
     ReferenceCounted<ReflectorTexture> specular,
-    ReferenceCounted<FloatTexture> opacity,
+    ReferenceCounted<ReflectorTexture> opacity,
     ReferenceCounted<FloatTexture> eta_incident,
     ReferenceCounted<FloatTexture> eta_transmitted,
     ReferenceCounted<FloatTexture> roughness_u,

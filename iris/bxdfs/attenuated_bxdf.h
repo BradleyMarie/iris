@@ -3,12 +3,13 @@
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
+#include "iris/reflector.h"
 
 namespace iris {
 namespace bxdfs {
 
 const Bxdf* MakeAttenuatedBxdf(BxdfAllocator& allocator, const Bxdf* bxdf,
-                               visual_t attenuation);
+                               const Reflector* attenuation);
 
 }  // namespace bxdfs
 }  // namespace iris

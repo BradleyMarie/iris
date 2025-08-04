@@ -180,6 +180,29 @@ class UnboundedScaledReflector final : public Reflector {
   visual_t scalar_;
 };
 
+class UnboundedScaledReflectors final : public Reflector {
+ public:
+  UnboundedScaledReflectors(const Reflector& reflector,
+                            const Reflector& attenuation)
+      : reflector_(reflector), attenuation_(attenuation) {}
+
+  visual_t Reflectance(visual_t wavelength) const override {
+    visual_t reflectance = reflector_.Reflectance(wavelength);
+    assert(std::isfinite(reflectance) &&
+           reflectance >= static_cast<visual_t>(0.0));
+
+    visual_t attenuation = attenuation_.Reflectance(wavelength);
+    assert(std::isfinite(attenuation) &&
+           attenuation >= static_cast<visual_t>(0.0));
+
+    return reflectance * attenuation;
+  }
+
+ private:
+  const Reflector& reflector_;
+  const Reflector& attenuation_;
+};
+
 class UnboundedSumReflector final : public Reflector {
  public:
   UnboundedSumReflector(const Reflector& addend0, const Reflector& addend1)
@@ -407,6 +430,15 @@ const Reflector* SpectralAllocator::UnboundedScale(const Reflector* reflector,
   }
 
   return reflector;
+}
+
+const Reflector* SpectralAllocator::UnboundedScale(
+    const Reflector* reflector, const Reflector* attenuation) {
+  if (!reflector || !attenuation) {
+    return nullptr;
+  }
+
+  return &arena_.Allocate<UnboundedScaledReflectors>(*reflector, *attenuation);
 }
 
 const Reflector* SpectralAllocator::FresnelConductor(

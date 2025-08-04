@@ -35,10 +35,10 @@ MaterialResult MakeMix(
   return MaterialResult{
       {MakeMixMaterial(
            material1.materials[0], material2.materials[0],
-           texture_manager.AllocateFloatTexture(with_defaults.amount())),
+           texture_manager.AllocateReflectorTexture(with_defaults.amount())),
        MakeMixMaterial(
            material1.materials[1], material2.materials[1],
-           texture_manager.AllocateFloatTexture(with_defaults.amount()))},
+           texture_manager.AllocateReflectorTexture(with_defaults.amount()))},
       {
           material1.bumpmaps[0] ? material1.bumpmaps[0] : material2.bumpmaps[0],
           material1.bumpmaps[1] ? material1.bumpmaps[1] : material2.bumpmaps[1],

@@ -16,7 +16,7 @@ ReferenceCounted<Material> MakeUberMaterial(
     ReferenceCounted<textures::ReflectorTexture> transmittance,
     ReferenceCounted<textures::ReflectorTexture> diffuse,
     ReferenceCounted<textures::ReflectorTexture> specular,
-    ReferenceCounted<textures::FloatTexture> opacity,
+    ReferenceCounted<textures::ReflectorTexture> opacity,
     ReferenceCounted<textures::FloatTexture> eta_incident,
     ReferenceCounted<textures::FloatTexture> eta_transmitted,
     ReferenceCounted<textures::FloatTexture> roughness_u,

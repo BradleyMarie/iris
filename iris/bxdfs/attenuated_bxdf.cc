@@ -1,7 +1,6 @@
 #include "iris/bxdfs/attenuated_bxdf.h"
 
 #include <algorithm>
-#include <cassert>
 
 #include "iris/float.h"
 #include "iris/reflector.h"
@@ -15,11 +14,8 @@ namespace {
 
 class AttenuatedBxdf final : public Bxdf {
  public:
-  AttenuatedBxdf(const Bxdf& bxdf, visual_t attenuation) noexcept
-      : bxdf_(bxdf), attenuation_(attenuation) {
-    assert(attenuation > static_cast<visual_t>(0.0));
-    assert(attenuation < static_cast<visual_t>(1.0));
-  }
+  AttenuatedBxdf(const Bxdf& bxdf, const Reflector* attenuation) noexcept
+      : bxdf_(bxdf), attenuation_(attenuation) {}
 
   bool IsDiffuse(visual_t* diffuse_pdf) const override {
     return bxdf_.IsDiffuse(diffuse_pdf);
@@ -63,19 +59,15 @@ class AttenuatedBxdf final : public Bxdf {
 
  private:
   const Bxdf& bxdf_;
-  const visual_t attenuation_;
+  const Reflector* attenuation_;
 };
 
 }  // namespace
 
 const Bxdf* MakeAttenuatedBxdf(BxdfAllocator& allocator, const Bxdf* bxdf,
-                               visual_t attenuation) {
-  if (bxdf == nullptr || attenuation <= static_cast<visual_t>(0.0)) {
+                               const Reflector* attenuation) {
+  if (bxdf == nullptr || attenuation == nullptr) {
     return nullptr;
-  }
-
-  if (attenuation >= static_cast<visual_t>(1.0)) {
-    return bxdf;
   }
 
   return &allocator.Allocate<AttenuatedBxdf>(*bxdf, attenuation);

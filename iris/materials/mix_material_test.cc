@@ -29,14 +29,15 @@ using ::testing::Return;
 using ::testing::SetArgPointee;
 
 TEST(MixMaterialTest, Null) {
-  ReferenceCounted<FloatTexture> attenuation = MakeConstantTexture(0.25);
-  EXPECT_FALSE(MakeMixMaterial(ReferenceCounted<Material>(),
-                               ReferenceCounted<Material>(),
-                               std::move(attenuation)));
+  EXPECT_FALSE(MakeMixMaterial(
+      ReferenceCounted<Material>(), ReferenceCounted<Material>(),
+      MakeConstantTexture(MakeReferenceCounted<MockReflector>())));
 }
 
 TEST(MixMaterialTest, Evaluate) {
-  ReferenceCounted<FloatTexture> attenuation = MakeConstantTexture(0.25);
+  ReferenceCounted<MockReflector> attenuation =
+      MakeReferenceCounted<MockReflector>();
+  EXPECT_CALL(*attenuation, Reflectance(1.0)).WillRepeatedly(Return(0.25));
 
   MockReflector reflector0;
   EXPECT_CALL(reflector0, Reflectance(1.0)).WillOnce(Return(0.75));
@@ -66,9 +67,8 @@ TEST(MixMaterialTest, Evaluate) {
       MakeReferenceCounted<MockMaterial>();
   EXPECT_CALL(*mock_material1, Evaluate(_, _, _)).WillOnce(Return(&mock_bxdf1));
 
-  ReferenceCounted<Material> mix_material =
-      MakeMixMaterial(std::move(mock_material0), std::move(mock_material1),
-                      std::move(attenuation));
+  ReferenceCounted<Material> mix_material = MakeMixMaterial(
+      mock_material0, mock_material1, MakeConstantTexture(attenuation));
 
   const Bxdf* bxdf =
       mix_material->Evaluate(TextureCoordinates{Point(0.0, 0.0, 0.0),
