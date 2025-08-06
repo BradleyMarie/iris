@@ -18,6 +18,24 @@ using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
 
+TEST(MakeMix, NotNamed) {
+  TestSpectrumManager spectrum_manager;
+  TextureManager texture_manager(spectrum_manager);
+  MaterialManager material_manager;
+
+  Material::Mix mix;
+  mix.set_namedmaterial1("a");
+  mix.set_namedmaterial2("a");
+
+  MaterialResult result =
+      MakeMix(mix, Shape::MaterialOverrides::default_instance(),
+              material_manager, texture_manager);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
+  EXPECT_FALSE(result.bumpmaps[0]);
+  EXPECT_FALSE(result.bumpmaps[1]);
+}
+
 TEST(MakeMix, Empty) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);

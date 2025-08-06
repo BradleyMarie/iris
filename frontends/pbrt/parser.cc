@@ -390,8 +390,11 @@ std::unique_ptr<ParsingResult> ParseDirective(
         exit(EXIT_FAILURE);
       }
 
-      state.graphics.top().material =
-          state.material_manager.Get(directive.named_material().name());
+      if (const auto* material =
+              state.material_manager.Get(directive.named_material().name());
+          material) {
+        state.graphics.top().material = *material;
+      }
       break;
     case Directive::kObjectBegin:
       if (!state.world_begin_encountered) {

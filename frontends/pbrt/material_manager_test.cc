@@ -29,8 +29,7 @@ TEST(MaterialManager, GetMissing) {
                        std::pair<pbrt_proto::v3::Material, MaterialResult>());
   material_manager.AttributeEnd();
 
-  EXPECT_EXIT(material_manager.Get("test"), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No material defined with name: test");
+  EXPECT_FALSE(material_manager.Get("test"));
 }
 
 TEST(MaterialManager, Get) {
@@ -42,9 +41,9 @@ TEST(MaterialManager, Get) {
 
   material_manager.Put("test", entry);
   EXPECT_EQ(entry.second.materials[0].Get(),
-            material_manager.Get("test").second.materials[0].Get());
+            material_manager.Get("test")->second.materials[0].Get());
   EXPECT_EQ(entry.second.materials[1].Get(),
-            material_manager.Get("test").second.materials[1].Get());
+            material_manager.Get("test")->second.materials[1].Get());
 }
 
 }  // namespace

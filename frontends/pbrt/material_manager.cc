@@ -18,15 +18,16 @@ void MaterialManager::AttributeEnd() {
   materials_.pop();
 }
 
-const std::pair<pbrt_proto::v3::Material, MaterialResult>& MaterialManager::Get(
+const std::pair<pbrt_proto::v3::Material, MaterialResult>* MaterialManager::Get(
     const std::string& name) const {
   auto iter = materials_.top().find(name);
   if (iter == materials_.top().end()) {
-    std::cerr << "ERROR: No material defined with name: " << name << std::endl;
-    exit(EXIT_FAILURE);
+    std::cerr << "WARNING: No material defined with name: " << name
+              << std::endl;
+    return nullptr;
   }
 
-  return iter->second;
+  return &iter->second;
 }
 
 }  // namespace pbrt_frontend

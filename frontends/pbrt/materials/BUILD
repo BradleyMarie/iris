@@ -220,6 +220,7 @@ cc_library(
     hdrs = ["mix.h"],
     deps = [
         ":bumpmap",
+        ":matte",
         ":result",
         "//frontends/pbrt:defaults",
         "//frontends/pbrt:material_manager",

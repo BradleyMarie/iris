@@ -19,7 +19,7 @@ class MaterialManager {
   void AttributeBegin();
   void AttributeEnd();
 
-  const std::pair<pbrt_proto::v3::Material, MaterialResult>& Get(
+  const std::pair<pbrt_proto::v3::Material, MaterialResult>* Get(
       const std::string& name) const;
 
   void Put(const std::string& name,
