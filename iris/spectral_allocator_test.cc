@@ -287,23 +287,21 @@ TEST(SpectralAllocator, FresnelConductorGlancing) {
 }
 
 TEST(SpectralAllocator, FresnelConductorReturnsBadEtaConductor) {
-#ifdef NDEBUG
   Arena arena;
   SpectralAllocator allocator(arena);
 
   MockSpectrum eta_conductor;
   EXPECT_CALL(eta_conductor, Intensity(1.0)).WillOnce(Return(-1.0));
   MockSpectrum k_conductor;
+  EXPECT_CALL(k_conductor, Intensity(1.0)).WillOnce(Return(1.0));
 
   const Reflector* reflector =
       allocator.FresnelConductor(1.0, &eta_conductor, &k_conductor, 0.5);
   ASSERT_TRUE(reflector);
-  EXPECT_NEAR(0.0, reflector->Reflectance(1.0), 0.001);
-#endif  // NDEBUG
+  EXPECT_NEAR(0.3075, reflector->Reflectance(1.0), 0.001);
 }
 
 TEST(SpectralAllocator, FresnelConductorReturnsBadKConductor) {
-#ifdef NDEBUG
   Arena arena;
   SpectralAllocator allocator(arena);
 
@@ -315,8 +313,7 @@ TEST(SpectralAllocator, FresnelConductorReturnsBadKConductor) {
   const Reflector* reflector =
       allocator.FresnelConductor(1.0, &eta_conductor, &k_conductor, 0.5);
   ASSERT_TRUE(reflector);
-  EXPECT_NEAR(0.1613, reflector->Reflectance(1.0), 0.001);
-#endif  // NDEBUG
+  EXPECT_NEAR(0.2468, reflector->Reflectance(1.0), 0.001);
 }
 
 TEST(SpectralAllocator, FresnelConductor) {
