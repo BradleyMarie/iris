@@ -84,7 +84,7 @@ ReferenceCounted<Material> MakeMetalMaterial(
     ReferenceCounted<Spectrum> k_conductor,
     ReferenceCounted<FloatTexture> roughness_u,
     ReferenceCounted<FloatTexture> roughness_v, bool remap_roughness) {
-  if (!eta_dielectric || !eta_conductor) {
+  if (!eta_dielectric) {
     return ReferenceCounted<Material>();
   }
 

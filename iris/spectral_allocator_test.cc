@@ -268,16 +268,10 @@ TEST(SpectralAllocator, FresnelConductorNullptr) {
 #ifdef NDEBUG
   EXPECT_FALSE(allocator.FresnelConductor(0.0, &spectrum, &spectrum, 0.0001));
 #endif  // NDEBUG
-  EXPECT_FALSE(allocator.FresnelConductor(1.0, nullptr, &spectrum, 0.0001));
+  EXPECT_TRUE(allocator.FresnelConductor(1.0, nullptr, &spectrum, 0.0001));
   EXPECT_TRUE(allocator.FresnelConductor(1.0, &spectrum, nullptr, 0.0001));
+  EXPECT_TRUE(allocator.FresnelConductor(1.0, nullptr, nullptr, 0.0001));
   EXPECT_TRUE(allocator.FresnelConductor(1.0, &spectrum, &spectrum, 0.0));
-}
-
-TEST(SpectralAllocator, FresnelConductorPerpendicular) {
-  Arena arena;
-  SpectralAllocator allocator(arena);
-
-  EXPECT_EQ(nullptr, allocator.FresnelConductor(1.0, nullptr, nullptr, 0.0));
 }
 
 TEST(SpectralAllocator, FresnelConductorGlancing) {

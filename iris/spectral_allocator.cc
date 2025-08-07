@@ -226,7 +226,7 @@ class UnboundedSumReflector final : public Reflector {
 class FresnelConductorReflector final : public Reflector {
  public:
   FresnelConductorReflector(visual_t eta_dielectric,
-                            const Spectrum& eta_conductor,
+                            const Spectrum* eta_conductor,
                             const Spectrum* k_conductor,
                             visual_t cos_theta_dielectric)
       : eta_conductor_(eta_conductor),
@@ -241,23 +241,29 @@ class FresnelConductorReflector final : public Reflector {
   }
 
   visual_t Reflectance(visual_t wavelength) const override {
-    visual_t eta_conductor = eta_conductor_.Intensity(wavelength);
-    assert(std::isfinite(eta_conductor) &&
-           eta_conductor > static_cast<visual_t>(0.0));
+    visual_t eta_conductor = static_cast<visual_t>(0.0);
+    if (eta_conductor_) {
+      visual_t raw_eta_conductor = eta_conductor_->Intensity(wavelength);
+      assert(std::isfinite(raw_eta_conductor));
 
-    if (!std::isfinite(eta_conductor) ||
-        eta_conductor <= static_cast<visual_t>(0.0)) {
-      return static_cast<visual_t>(0.0);
+      if (std::isfinite(raw_eta_conductor)) {
+        eta_conductor = raw_eta_conductor;
+      }
     }
 
     visual_t k_conductor = static_cast<visual_t>(0.0);
     if (k_conductor_) {
       visual_t raw_k = k_conductor_->Intensity(wavelength);
-      assert(std::isfinite(raw_k) && raw_k > static_cast<visual_t>(0.0));
+      assert(std::isfinite(raw_k));
 
-      if (std::isfinite(raw_k) && raw_k > static_cast<visual_t>(0.0)) {
+      if (std::isfinite(raw_k)) {
         k_conductor = raw_k;
       }
+    }
+
+    if (eta_conductor == static_cast<visual_t>(0.0) &&
+        k_conductor == static_cast<visual_t>(0.0)) {
+      return static_cast<visual_t>(1.0);
     }
 
     visual_t cos_theta_dielectric_squared =
@@ -291,7 +297,7 @@ class FresnelConductorReflector final : public Reflector {
   }
 
  private:
-  const Spectrum& eta_conductor_;
+  const Spectrum* eta_conductor_;
   const Spectrum* k_conductor_;
   visual_t eta_dielectric_;
   visual_t cos_theta_dielectric_;
@@ -454,12 +460,8 @@ const Reflector* SpectralAllocator::FresnelConductor(
     return nullptr;
   }
 
-  if (!eta_conductor) {
-    return nullptr;
-  }
-
   return &arena_.Allocate<FresnelConductorReflector>(
-      eta_dielectric, *eta_conductor, k_conductor, cos_theta_dielectric);
+      eta_dielectric, eta_conductor, k_conductor, cos_theta_dielectric);
 }
 
 }  // namespace iris

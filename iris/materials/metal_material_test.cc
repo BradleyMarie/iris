@@ -26,10 +26,10 @@ TEST(MetalMaterialTest, NullMaterial) {
   ReferenceCounted<FloatTexture> float_texture = MakeConstantTexture(1.0);
   EXPECT_TRUE(MakeMetalMaterial(float_texture, spectrum, spectrum,
                                 float_texture, float_texture, false));
+  EXPECT_TRUE(MakeMetalMaterial(float_texture, ReferenceCounted<Spectrum>(),
+                                ReferenceCounted<Spectrum>(), float_texture,
+                                float_texture, false));
   EXPECT_FALSE(MakeMetalMaterial(ReferenceCounted<FloatTexture>(), spectrum,
-                                 spectrum, float_texture, float_texture,
-                                 false));
-  EXPECT_FALSE(MakeMetalMaterial(float_texture, ReferenceCounted<Spectrum>(),
                                  spectrum, float_texture, float_texture,
                                  false));
 }

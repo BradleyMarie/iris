@@ -140,7 +140,7 @@ const Reflector* FresnelConductor::AttenuateTransmittance(
 
 bool FresnelConductor::IsValid() const {
   return std::isfinite(eta_dielectric_) &&
-         eta_dielectric_ > static_cast<visual_t>(0.0) && eta_conductor_;
+         eta_dielectric_ >= static_cast<visual_t>(1.0);
 }
 
 template <typename M, typename F>

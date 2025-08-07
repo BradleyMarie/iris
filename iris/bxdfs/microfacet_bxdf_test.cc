@@ -186,14 +186,11 @@ TEST(MicrofacetConductorBrdf, Nullptr) {
   EXPECT_TRUE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
                                           &conductor, &conductor, 1.0, 1.0,
                                           true));
+  EXPECT_TRUE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
+                                          nullptr, nullptr, 1.0, 1.0, true));
   EXPECT_FALSE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 0.0,
                                            &conductor, &conductor, 1.0, 1.0,
                                            true));
-  EXPECT_FALSE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
-                                           nullptr, &conductor, 1.0, 1.0,
-                                           true));
-  EXPECT_TRUE(MakeMicrofacetConductorBrdf(GetBxdfAllocator(), &reflector, 1.0,
-                                          &conductor, nullptr, 1.0, 1.0, true));
 }
 TEST(MicrofacetConductorBrdf, SampleDiffuseZero) {
   MockRandom rng;
