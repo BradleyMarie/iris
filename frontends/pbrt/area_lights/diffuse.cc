@@ -35,8 +35,9 @@ std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
   }
 
   std::array<ReferenceCounted<EmissiveMaterial>, 2> result = {
-      MakeConstantEmissiveMaterial(
-          spectrum_manager.AllocateSpectrum(with_defaults.l())),
+      MakeConstantEmissiveMaterial(spectrum_manager.AllocateSpectrum(
+          spectrum_manager.AllocateSpectrum(with_defaults.l()),
+          spectrum_manager.AllocateSpectrum(with_defaults.scale()))),
   };
 
   if (with_defaults.twosided()) {
