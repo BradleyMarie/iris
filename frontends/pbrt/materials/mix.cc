@@ -50,7 +50,7 @@ MaterialResult MakeMix(
       MakeMixedMaterial(with_defaults.namedmaterial1(), mix, overrides,
                         material_manager, texture_manager);
   MaterialResult material2 =
-      MakeMixedMaterial(with_defaults.namedmaterial1(), mix, overrides,
+      MakeMixedMaterial(with_defaults.namedmaterial2(), mix, overrides,
                         material_manager, texture_manager);
 
   return MaterialResult{
