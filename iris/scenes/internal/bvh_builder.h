@@ -62,16 +62,25 @@ PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
                           Vector::Axis split_axis, geometric_t split,
                           std::span<size_t> indices);
 
-void MakeLeafNode(AlignedVector<BVHNode>& bvh, size_t node_offset,
-                  std::span<const size_t> indices, size_t& geometry_offset,
+void MakeLeafNode(BVHNode& node, std::span<const size_t> indices,
+                  size_t& geometry_offset,
                   std::span<size_t> geometry_sort_order);
 
-void BuildBVH(AlignedVector<BVHNode>& bvh, size_t node_offset,
-              const std::vector<BoundingBox>& geometry_bounds,
-              size_t depth_remaining, std::span<size_t> indices,
-              size_t& geometry_offset, std::span<size_t> geometry_sort_order);
+struct WorkItem {
+  std::span<size_t> left_indices;
+  std::span<size_t> right_indices;
+  Vector::Axis parent_split_axis;
+  size_t parent_node_index;
+  size_t depth;
+};
 
-};  // namespace internal
+std::optional<WorkItem> MakeBVHNode(
+    const std::span<size_t> indices, const size_t depth,
+    const std::vector<BoundingBox>& geometry_bounds,
+    AlignedVector<BVHNode>& bvh, size_t node_index, size_t& geometry_offset,
+    std::span<size_t> geometry_sort_order);
+
+}  // namespace internal
 
 struct BuildBVHResult final {
   AlignedVector<BVHNode> bvh;

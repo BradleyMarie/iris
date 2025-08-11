@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <deque>
 #include <functional>
 #include <optional>
 #include <span>
@@ -23,6 +24,77 @@ namespace scenes {
 namespace internal {
 namespace internal {
 namespace {
+
+struct WorkResult {
+  WorkItem items[2];
+  size_t num_items;
+};
+
+WorkResult MakeBVHNode(const WorkItem& work_item,
+                       const std::vector<BoundingBox>& geometry_bounds,
+                       AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
+                       std::span<size_t> geometry_sort_order) {
+  assert(!work_item.left_indices.empty());
+  assert(!work_item.right_indices.empty());
+
+  size_t left_index = bvh.size();
+  size_t right_index = left_index + 1u;
+
+  bvh[work_item.parent_node_index].MakeInteriorNode(
+      work_item.parent_split_axis, left_index - work_item.parent_node_index);
+
+  bvh.emplace_back(ComputeBounds(geometry_bounds, work_item.left_indices));
+  bvh.emplace_back(ComputeBounds(geometry_bounds, work_item.right_indices));
+
+  std::optional<WorkItem> left_work =
+      MakeBVHNode(work_item.left_indices, work_item.depth, geometry_bounds, bvh,
+                  left_index, geometry_offset, geometry_sort_order);
+
+  std::optional<WorkItem> right_work =
+      MakeBVHNode(work_item.right_indices, work_item.depth, geometry_bounds,
+                  bvh, right_index, geometry_offset, geometry_sort_order);
+
+  WorkResult result;
+  result.num_items = 0u;
+
+  if (left_work) {
+    result.items[result.num_items++] = *left_work;
+  }
+
+  if (right_work) {
+    result.items[result.num_items++] = *right_work;
+  }
+
+  return result;
+}
+
+constexpr size_t kBvhSceneChunkDepth = 10u;
+constexpr size_t kBvhModelChunkDepth = 7u;
+
+void BuildBVH(const WorkItem& work_item,
+              const std::vector<BoundingBox>& geometry_bounds,
+              size_t chunk_depth_limit, AlignedVector<BVHNode>& bvh,
+              size_t& geometry_offset, std::span<size_t> geometry_sort_order) {
+  std::deque<WorkItem> work_list = {work_item};
+
+  while (!work_list.empty()) {
+    WorkItem current = work_list.front();
+    work_list.pop_front();
+
+    if (current.depth == chunk_depth_limit) {
+      BuildBVH(current, geometry_bounds,
+               current.depth + kBvhModelChunkDepth - 1u, bvh, geometry_offset,
+               geometry_sort_order);
+      continue;
+    }
+
+    WorkResult work_result = MakeBVHNode(current, geometry_bounds, bvh,
+                                         geometry_offset, geometry_sort_order);
+    for (size_t i = 0; i < work_result.num_items; i++) {
+      work_list.push_back(work_result.items[i]);
+    }
+  }
+}
 
 template <typename InputIterator, typename OutputIterator>
 void ComputeCosts(InputIterator begin, InputIterator end,
@@ -172,25 +244,26 @@ PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
           indices.subspan(0, insert_index)};
 }
 
-void MakeLeafNode(AlignedVector<BVHNode>& bvh, size_t node_offset,
-                  std::span<const size_t> indices, size_t& geometry_offset,
+void MakeLeafNode(BVHNode& node, std::span<const size_t> indices,
+                  size_t& geometry_offset,
                   std::span<size_t> geometry_sort_order) {
-  bvh[node_offset].MakeLeafNode(geometry_offset, indices.size());
+  node.MakeLeafNode(geometry_offset, indices.size());
   for (size_t index : indices) {
     geometry_sort_order[index] = geometry_offset++;
   }
 }
 
-void BuildBVH(AlignedVector<BVHNode>& bvh, size_t node_offset,
-              const std::vector<BoundingBox>& geometry_bounds,
-              size_t depth_remaining, std::span<size_t> indices,
-              size_t& geometry_offset, std::span<size_t> geometry_sort_order) {
+std::optional<WorkItem> MakeBVHNode(
+    const std::span<size_t> indices, const size_t depth,
+    const std::vector<BoundingBox>& geometry_bounds,
+    AlignedVector<BVHNode>& bvh, size_t node_index, size_t& geometry_offset,
+    std::span<size_t> geometry_sort_order) {
   assert(!indices.empty());
 
-  if (indices.size() == 1 || depth_remaining == 0) {
-    MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+  if (indices.size() == 1 || depth >= kMaxBvhDepth) {
+    MakeLeafNode(bvh[node_index], indices, geometry_offset,
                  geometry_sort_order);
-    return;
+    return std::nullopt;
   }
 
   BoundingBox centroid_bounds = ComputeCentroidBounds(geometry_bounds, indices);
@@ -199,9 +272,9 @@ void BuildBVH(AlignedVector<BVHNode>& bvh, size_t node_offset,
   Vector::Axis split_axis = centroid_bounds_diagonal.DominantAxis();
 
   if (centroid_bounds.lower[split_axis] == centroid_bounds.upper[split_axis]) {
-    MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+    MakeLeafNode(bvh[node_index], indices, geometry_offset,
                  geometry_sort_order);
-    return;
+    return std::nullopt;
   }
 
   std::span<size_t> above_indices, below_indices;
@@ -218,12 +291,12 @@ void BuildBVH(AlignedVector<BVHNode>& bvh, size_t node_offset,
     }
   } else {
     std::optional<geometric_t> split =
-        FindBestSplitOnAxis(geometry_bounds, indices, bvh[node_offset].Bounds(),
+        FindBestSplitOnAxis(geometry_bounds, indices, bvh[node_index].Bounds(),
                             centroid_bounds, split_axis);
     if (!split.has_value()) {
-      MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+      MakeLeafNode(bvh[node_index], indices, geometry_offset,
                    geometry_sort_order);
-      return;
+      return std::nullopt;
     }
 
     PartitionResult result =
@@ -232,24 +305,17 @@ void BuildBVH(AlignedVector<BVHNode>& bvh, size_t node_offset,
       // It's unclear how to write a unit test to exercise this branch; however,
       // since FindBestSplitOnAxis has been observed returning splits that do
       // not partition properly this branch is needed to cover that edge case.
-      MakeLeafNode(bvh, node_offset, indices, geometry_offset,
+      MakeLeafNode(bvh[node_index], indices, geometry_offset,
                    geometry_sort_order);
-      return;
+      return std::nullopt;
     }
 
     below_indices = result.below;
     above_indices = result.above;
   }
 
-  bvh[node_offset].MakeInteriorNode(split_axis, bvh.size() - node_offset);
-  bvh.emplace_back(ComputeBounds(geometry_bounds, below_indices));
-  bvh.emplace_back(ComputeBounds(geometry_bounds, above_indices));
-
-  size_t left_offset = bvh.size() - 2u;
-  BuildBVH(bvh, left_offset, geometry_bounds, depth_remaining - 1,
-           below_indices, geometry_offset, geometry_sort_order);
-  BuildBVH(bvh, left_offset + 1, geometry_bounds, depth_remaining - 1,
-           above_indices, geometry_offset, geometry_sort_order);
+  return WorkItem{below_indices, above_indices, split_axis, node_index,
+                  depth + 1};
 }
 
 }  // namespace internal
@@ -276,8 +342,16 @@ BuildBVHResult BuildBVH(
     size_t geometry_offset = 0;
     bvh.emplace_back(world_bounds.Build());
     bvh.emplace_back(world_bounds.Build());  // Padding for cache alignment
-    internal::BuildBVH(bvh, 0u, geometry_bounds, internal::kMaxBvhDepth,
-                       geometry_order, geometry_offset, geometry_sort_order);
+
+    std::optional<internal::WorkItem> work_item =
+        internal::MakeBVHNode(geometry_order, 0u, geometry_bounds, bvh, 0u,
+                              geometry_offset, geometry_sort_order);
+    if (work_item) {
+      internal::BuildBVH(*work_item, geometry_bounds,
+                         for_scene ? internal::kBvhSceneChunkDepth
+                                   : internal::kBvhModelChunkDepth,
+                         bvh, geometry_offset, geometry_sort_order);
+    }
   }
 
   return {std::move(bvh), std::move(geometry_sort_order)};
