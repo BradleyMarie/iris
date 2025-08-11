@@ -68,30 +68,41 @@ WorkResult MakeBVHNode(const WorkItem& work_item,
   return result;
 }
 
-constexpr size_t kBvhSceneChunkDepth = 10u;
-constexpr size_t kBvhModelChunkDepth = 7u;
-
 void BuildBVH(const WorkItem& work_item,
               const std::vector<BoundingBox>& geometry_bounds,
-              size_t chunk_depth_limit, AlignedVector<BVHNode>& bvh,
-              size_t& geometry_offset, std::span<size_t> geometry_sort_order) {
+              AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
+              std::span<size_t> geometry_sort_order) {
+  constexpr size_t kBvhBfsDepthLimit = 7u;
+
   std::deque<WorkItem> work_list = {work_item};
-
   while (!work_list.empty()) {
-    WorkItem current = work_list.front();
-    work_list.pop_front();
+    WorkResult work_result =
+        MakeBVHNode(work_list.front(), geometry_bounds, bvh, geometry_offset,
+                    geometry_sort_order);
 
-    if (current.depth == chunk_depth_limit) {
-      BuildBVH(current, geometry_bounds,
-               current.depth + kBvhModelChunkDepth - 1u, bvh, geometry_offset,
-               geometry_sort_order);
-      continue;
+    if (work_result.num_items == 2) {
+      geometric_t first_cost =
+          bvh[work_result.items[0].parent_node_index].Bounds().SurfaceArea() *
+          static_cast<geometric_t>(work_result.items[0].left_indices.size() +
+                                   work_result.items[0].right_indices.size());
+
+      geometric_t second_cost =
+          bvh[work_result.items[1].parent_node_index].Bounds().SurfaceArea() *
+          static_cast<geometric_t>(work_result.items[1].left_indices.size() +
+                                   work_result.items[1].right_indices.size());
+
+      if (first_cost > second_cost) {
+        std::swap(work_result.items[0], work_result.items[1]);
+      }
     }
 
-    WorkResult work_result = MakeBVHNode(current, geometry_bounds, bvh,
-                                         geometry_offset, geometry_sort_order);
+    work_list.pop_front();
     for (size_t i = 0; i < work_result.num_items; i++) {
-      work_list.push_back(work_result.items[i]);
+      if (work_list.front().depth < kBvhBfsDepthLimit) {
+        work_list.push_back(work_result.items[i]);
+      } else {
+        work_list.push_front(work_result.items[i]);
+      }
     }
   }
 }
@@ -347,10 +358,8 @@ BuildBVHResult BuildBVH(
         internal::MakeBVHNode(geometry_order, 0u, geometry_bounds, bvh, 0u,
                               geometry_offset, geometry_sort_order);
     if (work_item) {
-      internal::BuildBVH(*work_item, geometry_bounds,
-                         for_scene ? internal::kBvhSceneChunkDepth
-                                   : internal::kBvhModelChunkDepth,
-                         bvh, geometry_offset, geometry_sort_order);
+      internal::BuildBVH(*work_item, geometry_bounds, bvh, geometry_offset,
+                         geometry_sort_order);
     }
   }
 
