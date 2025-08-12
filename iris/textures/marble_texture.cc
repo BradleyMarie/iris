@@ -1,5 +1,6 @@
 #include "iris/textures/marble_texture.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <utility>
@@ -39,6 +40,8 @@ constexpr visual colors[9][3] = {
      static_cast<visual>(0.6)},
 };
 
+constexpr size_t kNumIntervals = 9u - 3u;
+
 class MarbleReflectorTexture final : public ReflectorTexture {
  public:
   MarbleReflectorTexture(const Matrix& world_to_texture, uint8_t octaves,
@@ -76,17 +79,16 @@ class MarbleReflectorTexture final : public ReflectorTexture {
     Vector dp_dx = world_to_texture_.Multiply(coordinates.dp_dx) * scale_;
     Vector dp_dy = world_to_texture_.Multiply(coordinates.dp_dy) * scale_;
 
-    visual_t marble = static_cast<visual_t>(p.y) +
-                      variation_ * FractionalBrownianMotion(
-                                       p, dp_dx, dp_dy, roughness_, octaves_);
+    visual_t marble =
+        FractionalBrownianMotion(p, dp_dx, dp_dy, roughness_, octaves_) *
+            variation_ +
+        static_cast<visual_t>(p.y);
 
-    visual_t t = static_cast<visual_t>(0.5) +
-                 static_cast<visual_t>(0.5) * std::sin(marble);
+    visual_t interval = static_cast<visual_t>(0.5) +
+                        static_cast<visual_t>(0.5) * std::sin(marble);
 
-    size_t first = std::min(
-        static_cast<size_t>(1),
-        static_cast<size_t>(std::floor(t * static_cast<visual_t>(6.0))));
-    t = t * static_cast<visual_t>(6.0) - static_cast<visual_t>(first);
+    visual_t t = std::modf(interval * kNumIntervals, &interval);
+    size_t first = std::min(static_cast<size_t>(interval), kNumIntervals - 1u);
 
     const Reflector* c0 = allocator.UnboundedAdd(
         allocator.UnboundedScale(r, colors[first + 0][0]),
