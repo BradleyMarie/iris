@@ -53,11 +53,10 @@ ReferenceCounted<Light> MakeDistant(const LightSource::Distant& distant,
                    with_defaults.from().z());
   Point model_to(with_defaults.to().x(), with_defaults.to().y(),
                  with_defaults.to().z());
-  Point world_from = model_to_world.Multiply(model_from);
-  Point world_to = model_to_world.Multiply(model_to);
-  Vector world_direction = world_from - world_to;
+  Vector model_direction = model_from - model_to;
 
-  return MakeDirectionalLight(world_direction, std::move(scaled));
+  return MakeDirectionalLight(model_to_world.Multiply(model_direction),
+                              std::move(scaled));
 }
 
 }  // namespace lights
