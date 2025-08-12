@@ -53,6 +53,9 @@ ReferenceCounted<Light> MakeDistant(const LightSource::Distant& distant,
                    with_defaults.from().z());
   Point model_to(with_defaults.to().x(), with_defaults.to().y(),
                  with_defaults.to().z());
+
+  // It would be more correct to transform these points first and then compute
+  // the direction vector in world space; however, that is not what PBRT does.
   Vector model_direction = model_from - model_to;
 
   return MakeDirectionalLight(model_to_world.Multiply(model_direction),
