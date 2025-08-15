@@ -371,26 +371,6 @@ TEST(Triangle, VertexNormalsLeaves) {
   EXPECT_EQ(FRONT_FACE, BackFace(*hit));
 }
 
-TEST(Triangle, VertexNormalsReverses) {
-  std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
-      {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},
-      {{{0, 1, 2}}}, {},
-      {{{-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}, {-1.0, 0.0, 0.0}}}, {},
-      ReferenceCounted<textures::MaskTexture>(), back_material, front_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
-
-  Point origin(-1.0, 0.25, 0.25);
-  Vector direction(1.0, 0.0, 0.0);
-  Ray ray(origin, direction);
-
-  HitAllocator hit_allocator = MakeHitAllocator(ray);
-
-  Hit* hit = triangles.front()->TraceAllHits(hit_allocator);
-  EXPECT_EQ(FRONT_FACE, FrontFace(*hit));
-  EXPECT_EQ(BACK_FACE, BackFace(*hit));
-}
-
 TEST(Triangle, AlphaHits) {
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
       {{Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0)}},

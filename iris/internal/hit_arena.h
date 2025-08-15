@@ -18,12 +18,12 @@ class HitArena final {
   HitArena() = default;
 
   Hit& Allocate(iris::Hit* next, geometric distance, geometric_t distance_error,
-                face_t front, face_t back, const void* additional_data,
-                size_t additional_data_size);
+                face_t front, face_t back, bool is_chiral,
+                const void* additional_data, size_t additional_data_size);
   void Clear();
 
   const Geometry* GetGeometry() const { return geometry_; }
-  void SetGeometry(const Geometry* geometry) { 
+  void SetGeometry(const Geometry* geometry) {
     geometry_ = geometry;
 
     if (!geometry) {

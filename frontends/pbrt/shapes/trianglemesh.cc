@@ -33,7 +33,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
     const ReferenceCounted<NormalMap>& front_normal_map,
     const ReferenceCounted<NormalMap>& back_normal_map,
-    TextureManager& texture_manager) {
+    TextureManager& texture_manager, bool reversed_orientation) {
   Shape::TriangleMesh with_defaults = Defaults().shapes().trianglemesh();
   with_defaults.MergeFrom(trianglemesh);
 
@@ -56,6 +56,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
         {}, model_to_world);
   }
 
+  int largest_index = 0u;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices;
   for (const auto& entry : with_defaults.indices()) {
     if (entry.v0() < 0 || entry.v0() >= with_defaults.p_size() ||
@@ -66,9 +67,31 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
       exit(EXIT_FAILURE);
     }
 
+    largest_index = std::max(largest_index, entry.v0());
+    largest_index = std::max(largest_index, entry.v1());
+    largest_index = std::max(largest_index, entry.v2());
+
     indices.emplace_back(static_cast<uint32_t>(entry.v0()),
                          static_cast<uint32_t>(entry.v1()),
                          static_cast<uint32_t>(entry.v2()));
+  }
+
+  if (!with_defaults.n().empty() && with_defaults.n().size() < largest_index) {
+    std::cerr << "ERROR: Too few values for parameter: n" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (!with_defaults.uv().empty() &&
+      with_defaults.uv().size() < largest_index) {
+    std::cerr << "ERROR: Too few values for parameter: uv" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (!with_defaults.faceindices().empty() &&
+      with_defaults.faceindices().size() < with_defaults.indices().size()) {
+    std::cerr << "ERROR: Too few values for parameter: faceindices"
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
   std::vector<face_t> face_indices;
@@ -82,19 +105,23 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
     face_indices.push_back(static_cast<face_t>(face_index));
   }
 
-  std::vector<Point> points;
+  std::vector<Point> model_points;
+  std::vector<Point> world_points;
   for (const auto& p : with_defaults.p()) {
-    Point point(static_cast<geometric>(p.x()), static_cast<geometric>(p.y()),
-                static_cast<geometric>(p.z()));
-    points.push_back(model_to_world.Multiply(point));
+    model_points.emplace_back(static_cast<geometric>(p.x()),
+                              static_cast<geometric>(p.y()),
+                              static_cast<geometric>(p.z()));
+    world_points.push_back(model_to_world.Multiply(model_points.back()));
   }
 
-  std::vector<std::tuple<geometric, geometric, geometric>> normals;
+  std::vector<Vector> model_normals;
+  std::vector<Vector> world_normals;
   for (const auto& n : with_defaults.n()) {
-    Vector normal(static_cast<geometric>(n.x()), static_cast<geometric>(n.y()),
-                  static_cast<geometric>(n.z()));
-    Vector transformed = model_to_world.InverseTransposeMultiply(normal);
-    normals.emplace_back(transformed.x, transformed.y, transformed.z);
+    model_normals.emplace_back(static_cast<geometric>(n.x()),
+                               static_cast<geometric>(n.y()),
+                               static_cast<geometric>(n.z()));
+    world_normals.emplace_back(
+        model_to_world.InverseTransposeMultiply(model_normals.back()));
   }
 
   std::vector<std::pair<geometric, geometric>> uvs;
@@ -110,18 +137,38 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
         {}, model_to_world);
   }
 
-  std::vector<ReferenceCounted<Geometry>> triangles;
-  if (model_to_world.SwapsHandedness() && normals.empty()) {
-    triangles = AllocateTriangleMesh(
-        points, indices, face_indices, normals, uvs, std::move(alpha_mask),
-        back_material, front_material, back_emissive_material,
-        front_emissive_material, back_normal_map, front_normal_map);
-  } else {
-    triangles = AllocateTriangleMesh(
-        points, indices, face_indices, normals, uvs, std::move(alpha_mask),
-        front_material, back_material, front_emissive_material,
-        back_emissive_material, front_normal_map, back_normal_map);
+  if (!model_normals.empty()) {
+    for (std::tuple<uint32_t, uint32_t, uint32_t>& indices : indices) {
+      Vector surface_normal =
+          CrossProduct(model_points[std::get<1>(indices)] -
+                           model_points[std::get<0>(indices)],
+                       model_points[std::get<2>(indices)] -
+                           model_points[std::get<0>(indices)]);
+
+      geometric_t cumulative_dp =
+          DotProduct(surface_normal, model_normals[std::get<0>(indices)] +
+                                         model_normals[std::get<1>(indices)] +
+                                         model_normals[std::get<2>(indices)]);
+
+      if (cumulative_dp < static_cast<geometric_t>(0.0)) {
+        std::swap(std::get<1>(indices), std::get<2>(indices));
+      }
+
+      if (model_to_world.SwapsHandedness() ^ reversed_orientation) {
+        std::swap(std::get<1>(indices), std::get<2>(indices));
+      }
+    }
+  } else if (model_to_world.SwapsHandedness()) {
+    for (std::tuple<uint32_t, uint32_t, uint32_t>& indices : indices) {
+      std::swap(std::get<1>(indices), std::get<2>(indices));
+    }
   }
+
+  std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
+      world_points, indices, face_indices, world_normals, uvs,
+      std::move(alpha_mask), front_material, back_material,
+      front_emissive_material, back_emissive_material, front_normal_map,
+      back_normal_map);
 
   return std::make_pair(std::move(triangles), Matrix::Identity());
 }

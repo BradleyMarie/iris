@@ -134,11 +134,18 @@ std::array<std::array<geometric, 4>, 4> Multiply4x4(
   return result;
 }
 
+bool ComputeSwapsHandedness(const std::array<std::array<geometric, 4>, 4>& m) {
+  geometric_t determinant = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+                            m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+                            m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+  return determinant < static_cast<geometric_t>(0.0);
+}
+
 }  // namespace
 
 Matrix::Matrix(const std::array<std::array<geometric, 4>, 4>& m,
                const std::array<std::array<geometric, 4>, 4>& i)
-    : m{m}, i{i} {
+    : m{m}, i{i}, swaps_handedness_(ComputeSwapsHandedness(m)) {
   assert(std::isfinite(m[0][0]));
   assert(std::isfinite(m[0][1]));
   assert(std::isfinite(m[0][2]));
@@ -547,13 +554,6 @@ Matrix Matrix::Multiply(const Matrix& matrix) const {
 }
 
 Matrix Matrix::Inverse() const { return Matrix(i, m); }
-
-bool Matrix::SwapsHandedness() const {
-  geometric_t determinant = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
-                            m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
-                            m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-  return determinant < static_cast<geometric_t>(0.0);
-}
 
 bool operator==(const Matrix& left, const Matrix& right) {
   return std::memcmp(&left.m, &right.m, sizeof(left.m)) == 0;

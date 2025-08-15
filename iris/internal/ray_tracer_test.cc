@@ -46,7 +46,7 @@ TEST(TraceClosestHit, WithGeometry) {
                            geometric_t maximum_distance,
                            Geometry::TraceMode trace_mode,
                            HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3, false);
       }));
 
   const Geometry* geometry_ptr = geometry.Get();
@@ -90,7 +90,7 @@ TEST(TraceAnyHit, WithGeometry) {
                            geometric_t maximum_distance,
                            Geometry::TraceMode trace_mode,
                            HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3, false);
       }));
 
   const Geometry* geometry_ptr = geometry.Get();
@@ -125,7 +125,7 @@ TEST(TraceBoth, WithGeometry) {
           [&](const Ray& trace_ray, geometric_t minimum_distance,
               geometric_t maximum_distance, Geometry::TraceMode trace_mode,
               HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3);
+            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3, false);
           }));
 
   const Geometry* geometry_ptr = geometry.Get();
@@ -145,6 +145,7 @@ TEST(TraceBoth, WithGeometry) {
   EXPECT_EQ(nullptr, hit0->next);
   EXPECT_EQ(2u, hit0->front);
   EXPECT_EQ(3u, hit0->back);
+  EXPECT_FALSE(hit0->is_chiral);
   EXPECT_EQ(geometry_ptr, hit0->geometry);
   EXPECT_EQ(nullptr, hit0->model_to_world);
   EXPECT_EQ(nullptr, hit0->additional_data);
@@ -155,6 +156,7 @@ TEST(TraceBoth, WithGeometry) {
   EXPECT_EQ(nullptr, hit1->next);
   EXPECT_EQ(2u, hit1->front);
   EXPECT_EQ(3u, hit1->back);
+  EXPECT_FALSE(hit1->is_chiral);
   EXPECT_EQ(geometry_ptr, hit1->geometry);
   EXPECT_EQ(nullptr, hit1->model_to_world);
   EXPECT_EQ(nullptr, hit1->additional_data);

@@ -52,7 +52,7 @@ std::unique_ptr<MockGeometry> MakeGeometry(
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1u, 2u);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1u, 2u, false);
       }));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(_, _, _, _))
       .WillRepeatedly(Return(std::nullopt));

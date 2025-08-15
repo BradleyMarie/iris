@@ -49,8 +49,8 @@ TEST(VisibilityTesterTest, WithGeometry) {
           [&](const Ray& trace_ray, geometric_t minimum_distance,
               geometric_t maximum_distance, Geometry::TraceMode trace_mode,
               HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0,
-                                           static_cast<geometric_t>(0.0), 2, 3);
+            return &hit_allocator.Allocate(
+                nullptr, 1.0, static_cast<geometric_t>(0.0), 2, 3, false);
           }));
 
   SceneObjects::Builder builder;

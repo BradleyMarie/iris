@@ -16,6 +16,7 @@
 #include "iris/point.h"
 #include "iris/reference_counted.h"
 #include "iris/textures/mask_texture.h"
+#include "iris/vector.h"
 
 namespace iris {
 namespace geometry {
@@ -23,8 +24,7 @@ namespace geometry {
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
-    std::span<const face_t> face_indices,
-    std::span<const std::tuple<geometric, geometric, geometric>> normals,
+    std::span<const face_t> face_indices, std::span<const Vector> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::MaskTexture> alpha_mask,
     ReferenceCounted<Material> front_material,

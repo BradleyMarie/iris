@@ -18,7 +18,7 @@ TEST(HitAllocator, Allocate) {
   internal::HitArena arena;
   HitAllocator allocator(ray, arena);
 
-  Hit& hit0 = allocator.Allocate(nullptr, 2.0, 3.0, 1, 2);
+  Hit& hit0 = allocator.Allocate(nullptr, 2.0, 3.0, 1, 2, true);
   EXPECT_EQ(nullptr, hit0.next);
   EXPECT_EQ(2.0, hit0.distance);
 
@@ -28,10 +28,11 @@ TEST(HitAllocator, Allocate) {
   EXPECT_EQ(nullptr, full_hit0.model_to_world);
   EXPECT_EQ(1u, full_hit0.front);
   EXPECT_EQ(2u, full_hit0.back);
+  EXPECT_TRUE(full_hit0.is_chiral);
   EXPECT_EQ(nullptr, full_hit0.additional_data);
 
   std::array<double, 3> array = {1.0, 2.0, 3.0};
-  Hit& hit1 = allocator.Allocate(&hit0, 1.0, -5.0, 3, 4, array);
+  Hit& hit1 = allocator.Allocate(&hit0, 1.0, -5.0, 3, 4, false, array);
   EXPECT_EQ(&hit0, hit1.next);
   EXPECT_EQ(1.0, hit1.distance);
 
@@ -41,6 +42,7 @@ TEST(HitAllocator, Allocate) {
   EXPECT_EQ(nullptr, full_hit1.model_to_world);
   EXPECT_EQ(3u, full_hit1.front);
   EXPECT_EQ(4u, full_hit1.back);
+  EXPECT_FALSE(full_hit1.is_chiral);
   ASSERT_NE(nullptr, full_hit1.additional_data);
   const std::array<double, 3>* array_copy =
       static_cast<const std::array<double, 3>*>(full_hit1.additional_data);

@@ -106,7 +106,7 @@ TEST(VisibilityTesterTest, WrongFace) {
                           geometric_t maximum_distance,
                           Geometry::TraceMode trace_mode,
                           HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 4u, 5u, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 4u, 5u, false, g_data);
       }));
 
   SceneObjects::Builder builder;
@@ -132,7 +132,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
 
   ReferenceCounted<MockGeometry> scene_geometry =
@@ -149,7 +149,7 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, false, g_data);
       }));
 
   SceneObjects::Builder builder;
@@ -184,14 +184,16 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
                             geometric_t maximum_distance,
                             Geometry::TraceMode trace_mode,
                             HitAllocator& hit_allocator) {
-          return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, g_data);
+          return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, false,
+                                         g_data);
         }));
     EXPECT_CALL(*geometry, Trace(_, _, _, _, _))
         .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
                             geometric_t maximum_distance,
                             Geometry::TraceMode trace_mode,
                             HitAllocator& hit_allocator) {
-          return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, g_data);
+          return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, false,
+                                         g_data);
         }));
   }
   const Geometry* geometry_ptr = geometry.Get();
@@ -229,14 +231,16 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
                             geometric_t maximum_distance,
                             Geometry::TraceMode trace_mode,
                             HitAllocator& hit_allocator) {
-          return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, g_data);
+          return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, false,
+                                         g_data);
         }));
     EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
         .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
                             geometric_t maximum_distance,
                             Geometry::TraceMode trace_mode,
                             HitAllocator& hit_allocator) {
-          return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 3, 4, g_data);
+          return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 3, 4, false,
+                                         g_data);
         }));
   }
   const Geometry* geometry_ptr = geometry.Get();
@@ -273,7 +277,7 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
@@ -318,7 +322,7 @@ TEST(VisibilityTesterTest, NoSpectrum) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
@@ -368,7 +372,7 @@ TEST(VisibilityTesterTest, NoPdf) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
@@ -421,7 +425,7 @@ TEST(VisibilityTesterTest, NegativePdf) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
@@ -469,7 +473,7 @@ TEST(VisibilityTesterTest, Succeeds) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
@@ -523,7 +527,7 @@ TEST(VisibilityTesterTest, SceneTraceMissSucceeds) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
@@ -580,7 +584,7 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
@@ -638,7 +642,7 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
@@ -697,7 +701,7 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
                                 geometric_t maximum_distance,
                                 Geometry::TraceMode trace_mode,
                                 HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
       }));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));

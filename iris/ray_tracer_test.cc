@@ -103,7 +103,8 @@ void MakeBasicGeometryImpl(ReferenceCounted<MockBasicGeometry> geometry,
                           geometric_t maximum_distance,
                           Geometry::TraceMode trace_mode,
                           HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2u, 3u, g_data);
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2u, 3u, false,
+                                       g_data);
       }));
   EXPECT_CALL(*geometry, ComputeHitPoint(expected_ray, 1.0, _))
       .WillOnce(Invoke([](const Ray& ray, const geometric_t distance,

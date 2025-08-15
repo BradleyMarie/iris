@@ -1,5 +1,7 @@
 #include "iris/intersector.h"
 
+#include <utility>
+
 #include "iris/float.h"
 #include "iris/geometry.h"
 #include "iris/hit.h"
@@ -40,6 +42,11 @@ bool Intersector::Intersect(const Geometry& geometry,
     full_hit->model_ray.emplace(trace_ray);
     full_hit->model_to_world = model_to_world;
 
+    if (model_to_world && model_to_world->SwapsHandedness() &&
+        full_hit->is_chiral) {
+      std::swap(full_hit->front, full_hit->back);
+    }
+
     maximum_distance_ = full_hit->distance;
     hit_ = full_hit;
     done_ = !find_closest_hit_;
@@ -59,6 +66,10 @@ bool Intersector::Intersect(const Geometry& geometry,
     internal::Hit* full_hit = static_cast<internal::Hit*>(hit);
     full_hit->model_ray.emplace(trace_ray);
     full_hit->model_to_world = &model_to_world;
+
+    if (model_to_world.SwapsHandedness() && full_hit->is_chiral) {
+      std::swap(full_hit->front, full_hit->back);
+    }
 
     maximum_distance_ = full_hit->distance;
     hit_ = full_hit;

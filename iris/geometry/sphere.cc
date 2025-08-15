@@ -307,15 +307,15 @@ Hit* Sphere::Trace(const Ray& ray, geometric_t minimum_distance,
   if (distance_to_center_squared < radius_squared_) {
     geometric_t forwards_distance =
         distance_to_chord_midpoint + half_chord_length;
-    Hit* forwards_hit = &hit_allocator.Allocate(nullptr, forwards_distance,
-                                                static_cast<geometric_t>(0.0),
-                                                kBackFace, kFrontFace);
+    Hit* forwards_hit = &hit_allocator.Allocate(
+        nullptr, forwards_distance, static_cast<geometric_t>(0.0), kBackFace,
+        kFrontFace, /*is_chiral=*/false);
 
     geometric_t backwards_distance =
         distance_to_chord_midpoint - half_chord_length;
     return &hit_allocator.Allocate(forwards_hit, backwards_distance,
                                    static_cast<geometric_t>(0.0), kBackFace,
-                                   kFrontFace);
+                                   kFrontFace, /*is_chiral=*/false);
   }
 
   // Ignore rays that intersect only at a single point
@@ -334,14 +334,14 @@ Hit* Sphere::Trace(const Ray& ray, geometric_t minimum_distance,
   }
 
   geometric_t farther_distance = distance_to_chord_midpoint + half_chord_length;
-  Hit* farther_hit = &hit_allocator.Allocate(nullptr, farther_distance,
-                                             static_cast<geometric_t>(0.0),
-                                             second_face, first_face);
+  Hit* farther_hit = &hit_allocator.Allocate(
+      nullptr, farther_distance, static_cast<geometric_t>(0.0), second_face,
+      first_face, /*is_chiral=*/false);
 
   geometric_t closer_distance = distance_to_chord_midpoint - half_chord_length;
   return &hit_allocator.Allocate(farther_hit, closer_distance,
                                  static_cast<geometric_t>(0.0), first_face,
-                                 second_face);
+                                 second_face, /*is_chiral=*/false);
 }
 
 }  // namespace

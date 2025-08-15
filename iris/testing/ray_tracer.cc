@@ -82,7 +82,7 @@ class AlwaysHitsGeometry : public Geometry {
              geometric_t maximum_distance, TraceMode trace_mode,
              HitAllocator& hit_allocator) const override {
     return &hit_allocator.Allocate(nullptr, distance_,
-                                   static_cast<geometric_t>(0.0), 1, 1);
+                                   static_cast<geometric_t>(0.0), 1, 1, false);
   }
 
   ComputeHitPointResult ComputeHitPoint(

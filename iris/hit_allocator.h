@@ -19,16 +19,18 @@ class HitAllocator final {
       : ray_(ray), arena_(arena) {}
 
   Hit& Allocate(Hit* next, geometric_t distance, geometric_t distance_error,
-                face_t front, face_t back) {
-    return Allocate(next, distance, distance_error, front, back, nullptr, 0);
+                face_t front, face_t back, bool is_chiral) {
+    return Allocate(next, distance, distance_error, front, back, is_chiral,
+                    nullptr, 0);
   }
 
   template <class T>
     requires(std::is_trivially_copyable<T>::value &&
              std::is_trivially_destructible<T>::value)
   Hit& Allocate(Hit* next, geometric_t distance, geometric_t distance_error,
-                face_t front, face_t back, const T& additional_data) {
-    return Allocate(next, distance, distance_error, front, back,
+                face_t front, face_t back, bool is_chiral,
+                const T& additional_data) {
+    return Allocate(next, distance, distance_error, front, back, is_chiral,
                     &additional_data, sizeof(T));
   }
 
@@ -37,8 +39,8 @@ class HitAllocator final {
   HitAllocator& operator=(const HitAllocator&) = delete;
 
   Hit& Allocate(Hit* next, geometric_t distance, geometric_t distance_error,
-                face_t front, face_t back, const void* additional_data,
-                size_t additional_data_size);
+                face_t front, face_t back, bool is_chiral,
+                const void* additional_data, size_t additional_data_size);
 
   const Ray& ray_;
   internal::HitArena& arena_;

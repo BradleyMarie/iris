@@ -25,17 +25,18 @@ static const Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
 
 std::unique_ptr<MockBasicGeometry> MakeMockGeometry(
     geometric_t distance, geometric_t error = 0.0,
-    const Ray& transformed_ray = ray) {
+    const Ray& transformed_ray = ray, bool is_chiral = false) {
   std::unique_ptr<MockBasicGeometry> result =
       std::make_unique<MockBasicGeometry>();
   EXPECT_CALL(*result, Trace(transformed_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([distance, error](const Ray& trace_ray,
-                                               geometric_t minimum_distance,
-                                               geometric_t maximum_distance,
-                                               Geometry::TraceMode trace_mode,
-                                               HitAllocator& hit_allocator) {
-        return &hit_allocator.Allocate(nullptr, distance, error, 2, 3);
-      }));
+      .WillRepeatedly(Invoke(
+          [distance, error, is_chiral](
+              const Ray& trace_ray, geometric_t minimum_distance,
+              geometric_t maximum_distance, Geometry::TraceMode trace_mode,
+              HitAllocator& hit_allocator) {
+            return &hit_allocator.Allocate(nullptr, distance, error, 2, 3,
+                                           is_chiral);
+          }));
   return result;
 }
 
@@ -335,6 +336,64 @@ TEST(IntersectorTest, TransformedHits) {
   EXPECT_EQ(geometry.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
   EXPECT_EQ(model_to_world.InverseMultiplyWithError(ray),
+            full_hit->model_ray.value());
+}
+
+TEST(IntersectorTest, TransformedHitsSwapsNotChiral) {
+  Matrix scaled_model_to_world =
+      model_to_world.Multiply(Matrix::Scalar(1.0, -1.0, 1.0).value());
+
+  internal::HitArena arena;
+
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_closest_hit=*/true);
+
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(
+      1.0, 0.5, scaled_model_to_world.InverseMultiplyWithError(ray));
+  EXPECT_FALSE(intersector.Intersect(*geometry, scaled_model_to_world));
+
+  EXPECT_EQ(0.0, intersector.MinimumDistance());
+  EXPECT_EQ(1.0, intersector.MaximumDistance());
+
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
+  ASSERT_NE(full_hit, nullptr);
+  EXPECT_EQ(1.0, closest_hit->distance);
+  EXPECT_EQ(0.5, full_hit->error);
+  EXPECT_EQ(2u, full_hit->front);
+  EXPECT_EQ(3u, full_hit->back);
+  EXPECT_EQ(geometry.get(), full_hit->geometry);
+  EXPECT_EQ(&scaled_model_to_world, full_hit->model_to_world);
+  EXPECT_EQ(scaled_model_to_world.InverseMultiplyWithError(ray),
+            full_hit->model_ray.value());
+}
+
+TEST(IntersectorTest, TransformedHitsSwapsChiral) {
+  Matrix scaled_model_to_world =
+      model_to_world.Multiply(Matrix::Scalar(1.0, -1.0, 1.0).value());
+
+  internal::HitArena arena;
+
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_closest_hit=*/true);
+
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(
+      1.0, 0.5, scaled_model_to_world.InverseMultiplyWithError(ray), true);
+  EXPECT_FALSE(intersector.Intersect(*geometry, scaled_model_to_world));
+
+  EXPECT_EQ(0.0, intersector.MinimumDistance());
+  EXPECT_EQ(1.0, intersector.MaximumDistance());
+
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
+  ASSERT_NE(full_hit, nullptr);
+  EXPECT_EQ(1.0, closest_hit->distance);
+  EXPECT_EQ(0.5, full_hit->error);
+  EXPECT_EQ(3u, full_hit->front);
+  EXPECT_EQ(2u, full_hit->back);
+  EXPECT_EQ(geometry.get(), full_hit->geometry);
+  EXPECT_EQ(&scaled_model_to_world, full_hit->model_to_world);
+  EXPECT_EQ(scaled_model_to_world.InverseMultiplyWithError(ray),
             full_hit->model_ray.value());
 }
 
@@ -742,6 +801,64 @@ TEST(IntersectorTest, MatrixPointerTransformedHits) {
   EXPECT_EQ(geometry.get(), full_hit->geometry);
   EXPECT_EQ(&model_to_world, full_hit->model_to_world);
   EXPECT_EQ(model_to_world.InverseMultiplyWithError(ray),
+            full_hit->model_ray.value());
+}
+
+TEST(IntersectorTest, MatrixPointerTransformedHitsSwapsNotChiral) {
+  Matrix scaled_model_to_world =
+      model_to_world.Multiply(Matrix::Scalar(1.0, -1.0, 1.0).value());
+
+  internal::HitArena arena;
+
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_closest_hit=*/true);
+
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(
+      1.0, 0.5, scaled_model_to_world.InverseMultiplyWithError(ray));
+  EXPECT_FALSE(intersector.Intersect(*geometry, &scaled_model_to_world));
+
+  EXPECT_EQ(0.0, intersector.MinimumDistance());
+  EXPECT_EQ(1.0, intersector.MaximumDistance());
+
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
+  ASSERT_NE(full_hit, nullptr);
+  EXPECT_EQ(1.0, closest_hit->distance);
+  EXPECT_EQ(0.5, full_hit->error);
+  EXPECT_EQ(2u, full_hit->front);
+  EXPECT_EQ(3u, full_hit->back);
+  EXPECT_EQ(geometry.get(), full_hit->geometry);
+  EXPECT_EQ(&scaled_model_to_world, full_hit->model_to_world);
+  EXPECT_EQ(scaled_model_to_world.InverseMultiplyWithError(ray),
+            full_hit->model_ray.value());
+}
+
+TEST(IntersectorTest, MatrixPointerTransformedHitsSwapsChiral) {
+  Matrix scaled_model_to_world =
+      model_to_world.Multiply(Matrix::Scalar(1.0, -1.0, 1.0).value());
+
+  internal::HitArena arena;
+
+  Hit* closest_hit = nullptr;
+  Intersector intersector(ray, 0.0, 2.0, arena, closest_hit,
+                          /*find_closest_hit=*/true);
+
+  std::unique_ptr<MockBasicGeometry> geometry = MakeMockGeometry(
+      1.0, 0.5, scaled_model_to_world.InverseMultiplyWithError(ray), true);
+  EXPECT_FALSE(intersector.Intersect(*geometry, &scaled_model_to_world));
+
+  EXPECT_EQ(0.0, intersector.MinimumDistance());
+  EXPECT_EQ(1.0, intersector.MaximumDistance());
+
+  internal::Hit* full_hit = static_cast<internal::Hit*>(closest_hit);
+  ASSERT_NE(full_hit, nullptr);
+  EXPECT_EQ(1.0, closest_hit->distance);
+  EXPECT_EQ(0.5, full_hit->error);
+  EXPECT_EQ(3u, full_hit->front);
+  EXPECT_EQ(2u, full_hit->back);
+  EXPECT_EQ(geometry.get(), full_hit->geometry);
+  EXPECT_EQ(&scaled_model_to_world, full_hit->model_to_world);
+  EXPECT_EQ(scaled_model_to_world.InverseMultiplyWithError(ray),
             full_hit->model_ray.value());
 }
 

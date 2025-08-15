@@ -29,7 +29,7 @@ TEST(MakeTriangleMesh, Empty) {
       trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
       ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
       ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-      ReferenceCounted<NormalMap>(), texture_manager);
+      ReferenceCounted<NormalMap>(), texture_manager, false);
   EXPECT_TRUE(result.first.empty());
 }
 
@@ -45,7 +45,7 @@ TEST(MakeTriangleMesh, InvalidNormalCount) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Invalid number of parameters in parameter list: N");
 }
@@ -62,7 +62,7 @@ TEST(MakeTriangleMesh, InvalidUvCount) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Invalid number of parameters in parameter list: uv");
 }
@@ -80,7 +80,7 @@ TEST(MakeTriangleMesh, IndexTooNegativeV0) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: indices");
 }
@@ -98,7 +98,7 @@ TEST(MakeTriangleMesh, IndexTooHighV0) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: indices");
 }
@@ -116,7 +116,7 @@ TEST(MakeTriangleMesh, IndexTooNegativeV1) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: indices");
 }
@@ -134,7 +134,7 @@ TEST(MakeTriangleMesh, IndexTooHighV1) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: indices");
 }
@@ -152,7 +152,7 @@ TEST(MakeTriangleMesh, IndexTooNegativeV2) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: indices");
 }
@@ -170,7 +170,7 @@ TEST(MakeTriangleMesh, IndexTooHighV2) {
           trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
           ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
           ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-          ReferenceCounted<NormalMap>(), texture_manager),
+          ReferenceCounted<NormalMap>(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Out of range value for parameter: indices");
 }
@@ -204,7 +204,7 @@ TEST(MakeTriangleMesh, Succeeds) {
       trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
       ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
       ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
-      ReferenceCounted<NormalMap>(), texture_manager);
+      ReferenceCounted<NormalMap>(), texture_manager, false);
   EXPECT_EQ(1u, result.first.size());
 }
 

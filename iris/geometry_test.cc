@@ -39,8 +39,8 @@ TEST(GeometryTest, TraceAllHits) {
                geometric_t maximum_distance, Geometry::TraceMode trace_mode,
                HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
-            return &hit_allocator.Allocate(nullptr, 2.0,
-                                           static_cast<geometric_t>(0.0), 3, 4);
+            return &hit_allocator.Allocate(
+                nullptr, 2.0, static_cast<geometric_t>(0.0), 3, 4, false);
           }));
 
   MockBasicGeometry geom;
@@ -54,8 +54,8 @@ TEST(GeometryTest, TraceAllHits) {
             EXPECT_EQ(ray, trace_ray);
             const Geometry* base_geom = &nested_geom;
             Hit* nested_hit = base_geom->TraceAllHits(hit_allocator);
-            return &hit_allocator.Allocate(nested_hit, 1.0,
-                                           static_cast<geometric_t>(0.0), 2, 3);
+            return &hit_allocator.Allocate(
+                nested_hit, 1.0, static_cast<geometric_t>(0.0), 2, 3, false);
           }));
 
   Geometry* base_geom = &geom;
@@ -88,8 +88,8 @@ TEST(GeometryTest, TraceOneHitIgnoresTooClose) {
                geometric_t maximum_distance, Geometry::TraceMode trace_mode,
                HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
-            return &hit_allocator.Allocate(nullptr, 2.0,
-                                           static_cast<geometric_t>(0.0), 3, 4);
+            return &hit_allocator.Allocate(
+                nullptr, 2.0, static_cast<geometric_t>(0.0), 3, 4, false);
           }));
 
   EXPECT_EQ(nullptr, geom.TraceOneHit(allocator, 3.0, 4.0, false));
@@ -107,8 +107,8 @@ TEST(GeometryTest, TraceOneHitIgnoresTooCloseAfterError) {
                geometric_t maximum_distance, Geometry::TraceMode trace_mode,
                HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
-            return &hit_allocator.Allocate(nullptr, 4.0,
-                                           static_cast<geometric_t>(1.0), 3, 4);
+            return &hit_allocator.Allocate(
+                nullptr, 4.0, static_cast<geometric_t>(1.0), 3, 4, false);
           }));
 
   EXPECT_EQ(nullptr, geom.TraceOneHit(allocator, 3.0, 10.0, false));
@@ -126,8 +126,8 @@ TEST(GeometryTest, TraceOneHitIgnoresTooFar) {
                geometric_t maximum_distance, Geometry::TraceMode trace_mode,
                HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
-            return &hit_allocator.Allocate(nullptr, 6.0,
-                                           static_cast<geometric_t>(0.0), 3, 4);
+            return &hit_allocator.Allocate(
+                nullptr, 6.0, static_cast<geometric_t>(0.0), 3, 4, false);
           }));
 
   EXPECT_EQ(nullptr, geom.TraceOneHit(allocator, 2.0, 4.0, false));
@@ -145,8 +145,8 @@ TEST(GeometryTest, TraceOneHitNotTooFarBecauseOfError) {
                geometric_t maximum_distance, Geometry::TraceMode trace_mode,
                HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
-            return &hit_allocator.Allocate(nullptr, 4.0,
-                                           static_cast<geometric_t>(1.0), 3, 4);
+            return &hit_allocator.Allocate(
+                nullptr, 4.0, static_cast<geometric_t>(1.0), 3, 4, false);
           }));
 
   Hit* hit = geom.TraceOneHit(allocator, 2.0, 5.0, false);
@@ -168,9 +168,9 @@ TEST(GeometryTest, TraceOneHitFindsClosest) {
                HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
             Hit* closest_hit = &hit_allocator.Allocate(
-                nullptr, 3.0, static_cast<geometric_t>(0.0), 3, 4);
-            return &hit_allocator.Allocate(closest_hit, 4.0,
-                                           static_cast<geometric_t>(0.0), 3, 4);
+                nullptr, 3.0, static_cast<geometric_t>(0.0), 3, 4, false);
+            return &hit_allocator.Allocate(
+                closest_hit, 4.0, static_cast<geometric_t>(0.0), 3, 4, false);
           }));
 
   Hit* hit = geom.TraceOneHit(allocator, 0.0, 10.0, true);
@@ -192,11 +192,11 @@ TEST(GeometryTest, TraceOneHitFindsAny) {
                HitAllocator& hit_allocator) {
             EXPECT_EQ(ray, trace_ray);
             Hit* last_hit = &hit_allocator.Allocate(
-                nullptr, 10.0, static_cast<geometric_t>(0.0), 3, 4);
+                nullptr, 10.0, static_cast<geometric_t>(0.0), 3, 4, false);
             Hit* closest_hit = &hit_allocator.Allocate(
-                last_hit, 3.0, static_cast<geometric_t>(0.0), 3, 4);
-            return &hit_allocator.Allocate(closest_hit, 4.0,
-                                           static_cast<geometric_t>(0.0), 3, 4);
+                last_hit, 3.0, static_cast<geometric_t>(0.0), 3, 4, false);
+            return &hit_allocator.Allocate(
+                closest_hit, 4.0, static_cast<geometric_t>(0.0), 3, 4, false);
           }));
 
   Hit* hit = geom.TraceOneHit(allocator, 0.0, 10.0, false);

@@ -26,7 +26,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
     const ReferenceCounted<NormalMap>& front_normal_map,
     const ReferenceCounted<NormalMap>& back_normal_map,
-    TextureManager& texture_manager);
+    TextureManager& texture_manager, bool reversed_orientation);
 
 }  // namespace shapes
 }  // namespace pbrt_frontend

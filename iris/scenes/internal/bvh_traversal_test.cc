@@ -315,7 +315,7 @@ TEST(NestedIntersect, FirstNegative) {
   Ray ray(Point(0.25, 0.25, 5.5), Vector(0.0, 0.0, -1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u);
+  Hit& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u, false);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)
@@ -361,7 +361,7 @@ TEST(NestedIntersect, FirstPositive) {
   Ray ray(Point(0.25, 0.25, 5.5), Vector(0.0, 0.0, -1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
+  Hit& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u, false);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)
@@ -407,7 +407,7 @@ TEST(NestedIntersect, SecondNegative) {
   Ray ray(Point(2.25, 2.25, 5.5), Vector(0.0, 0.0, -1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u);
+  Hit& expected_hit = hit_allocator.Allocate(nullptr, -1.0, 0.0, 0u, 0u, false);
 
   EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
   EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
@@ -453,7 +453,7 @@ TEST(NestedIntersect, SecondPositive) {
   Ray ray(Point(2.25, 2.25, -5.5), Vector(0.0, 0.0, 1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u);
+  Hit& expected_hit = hit_allocator.Allocate(nullptr, 1.0, 0.0, 0u, 0u, false);
 
   EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _)).Times(0);
   EXPECT_CALL(*mock_geometry1, Trace(_, _, _, _, _))
@@ -499,8 +499,8 @@ TEST(NestedIntersect, OverlappedClosest) {
   Ray ray(Point(2.25, 2.25, -5.5), Vector(0.0, 0.0, 1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit& first_hit = hit_allocator.Allocate(nullptr, 100.0, 0.0, 0u, 0u);
-  Hit& expected_hit = hit_allocator.Allocate(nullptr, 99.0, 0.0, 0u, 0u);
+  Hit& first_hit = hit_allocator.Allocate(nullptr, 100.0, 0.0, 0u, 0u, false);
+  Hit& expected_hit = hit_allocator.Allocate(nullptr, 99.0, 0.0, 0u, 0u, false);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)
@@ -549,7 +549,7 @@ TEST(NestedIntersect, OverlappedAny) {
   Ray ray(Point(2.25, 2.25, -5.5), Vector(0.0, 0.0, 1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit& first_hit = hit_allocator.Allocate(nullptr, 100.0, 0.0, 0u, 0u);
+  Hit& first_hit = hit_allocator.Allocate(nullptr, 100.0, 0.0, 0u, 0u, false);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)
@@ -596,9 +596,10 @@ TEST(NestedIntersect, OverlappedAll) {
   Ray ray(Point(2.25, 2.25, -5.5), Vector(0.0, 0.0, 1.0));
   HitAllocator hit_allocator = MakeHitAllocator(ray);
 
-  Hit& second_hit = hit_allocator.Allocate(nullptr, 100.0, 0.0, 0u, 0u);
-  Hit& first_hit = hit_allocator.Allocate(&second_hit, 100.0, 0.0, 0u, 0u);
-  Hit& third_hit = hit_allocator.Allocate(nullptr, 99.0, 0.0, 0u, 0u);
+  Hit& second_hit = hit_allocator.Allocate(nullptr, 100.0, 0.0, 0u, 0u, false);
+  Hit& first_hit =
+      hit_allocator.Allocate(&second_hit, 100.0, 0.0, 0u, 0u, false);
+  Hit& third_hit = hit_allocator.Allocate(nullptr, 99.0, 0.0, 0u, 0u, false);
 
   EXPECT_CALL(*mock_geometry0, Trace(_, _, _, _, _))
       .Times(1)

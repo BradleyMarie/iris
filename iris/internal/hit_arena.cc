@@ -11,14 +11,14 @@ namespace internal {
 
 Hit& HitArena::Allocate(iris::Hit* next, geometric distance,
                         geometric_t distance_error, face_t front, face_t back,
-                        const void* additional_data,
+                        bool is_chiral, const void* additional_data,
                         size_t additional_data_size) {
   void* allocated_additional_data = arena_.Allocate(additional_data_size);
   memcpy(allocated_additional_data, additional_data, additional_data_size);
 
   // Emissive surfaces are disabled in nested geometry
   return arena_.Allocate<Hit>(next, distance, distance_error, geometry_, front,
-                              back, geometry_ == first_geometry_,
+                              back, is_chiral, geometry_ == first_geometry_,
                               allocated_additional_data);
 }
 
