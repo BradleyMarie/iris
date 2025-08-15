@@ -565,32 +565,6 @@ Hit* Triangle::Trace(const Ray& ray, geometric_t minimum_distance,
                      surface_normal});
 }
 
-std::tuple<uint32_t, uint32_t, uint32_t> ComputeIndices(
-    std::span<const Point> points, uint32_t v0, uint32_t v1, uint32_t v2,
-    std::span<const std::tuple<geometric, geometric, geometric>> normals) {
-  if (!normals.empty()) {
-    Vector surface_normal =
-        DoComputeSurfaceNormal(points[v0], points[v1], points[v2]);
-
-    geometric_t cumulative_dp =
-        (std::get<0>(normals[v0]) + std::get<0>(normals[v1]) +
-         std::get<0>(normals[v2])) *
-            surface_normal.x +
-        (std::get<1>(normals[v0]) + std::get<1>(normals[v1]) +
-         std::get<1>(normals[v2])) *
-            surface_normal.y +
-        (std::get<2>(normals[v0]) + std::get<2>(normals[v1]) +
-         std::get<2>(normals[v2])) *
-            surface_normal.z;
-
-    if (cumulative_dp < static_cast<geometric_t>(0.0)) {
-      return std::make_tuple(v0, v2, v1);
-    }
-  }
-
-  return std::make_tuple(v0, v1, v2);
-}
-
 }  // namespace
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
@@ -640,8 +614,30 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
       face_index = face_indices[i];
     }
 
-    result.push_back(MakeReferenceCounted<Triangle>(
-        ComputeIndices(points, v0, v1, v2, normals), shared_data, face_index));
+    if (!normals.empty()) {
+      Vector surface_normal =
+          DoComputeSurfaceNormal(points[v0], points[v1], points[v2]);
+
+      geometric_t cumulative_dp =
+          (std::get<0>(normals[v0]) + std::get<0>(normals[v1]) +
+           std::get<0>(normals[v2])) *
+              surface_normal.x +
+          (std::get<1>(normals[v0]) + std::get<1>(normals[v1]) +
+           std::get<1>(normals[v2])) *
+              surface_normal.y +
+          (std::get<2>(normals[v0]) + std::get<2>(normals[v1]) +
+           std::get<2>(normals[v2])) *
+              surface_normal.z;
+
+      if (cumulative_dp < static_cast<geometric_t>(0.0)) {
+        result.push_back(MakeReferenceCounted<Triangle>(
+            std::make_tuple(v0, v2, v1), shared_data, face_index));
+        continue;
+      }
+    }
+
+    result.push_back(MakeReferenceCounted<Triangle>(std::make_tuple(v0, v1, v2),
+                                                    shared_data, face_index));
   }
 
   return result;
