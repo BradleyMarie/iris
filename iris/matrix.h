@@ -67,7 +67,7 @@ struct Matrix final {
 
   Matrix Inverse() const;
 
-  bool SwapsHandedness() const;
+  bool SwapsHandedness() const { return swaps_handedness_; }
 
   const std::array<geometric, 4>& operator[](size_t index) const {
     return m[index];
@@ -83,6 +83,7 @@ struct Matrix final {
 
  private:
   static const geometric_t rounding_error_[4];
+  const bool swaps_handedness_;
 };
 
 bool operator==(const Matrix& left, const Matrix& right);
