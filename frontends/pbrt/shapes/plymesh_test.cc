@@ -42,7 +42,7 @@ TEST(MakePlyMesh, BadFileName) {
                   ReferenceCounted<EmissiveMaterial>(),
                   ReferenceCounted<EmissiveMaterial>(),
                   ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>(),
-                  std::filesystem::current_path(), texture_manager),
+                  std::filesystem::current_path(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Could not open file specified by plymesh parameter: filename");
 }
@@ -60,7 +60,7 @@ TEST(MakePlyMesh, BadFile) {
                   ReferenceCounted<EmissiveMaterial>(),
                   ReferenceCounted<EmissiveMaterial>(),
                   ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>(),
-                  std::filesystem::current_path(), texture_manager),
+                  std::filesystem::current_path(), texture_manager, false),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: PLY file parsing failed with message: The input must contain "
       "only 'ply' on its first line");
@@ -78,7 +78,7 @@ TEST(MakePlyMesh, Triangles) {
       ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
       ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
       ReferenceCounted<NormalMap>(), std::filesystem::current_path(),
-      texture_manager);
+      texture_manager, false);
   EXPECT_EQ(4u, result.first.size());
 }
 

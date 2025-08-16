@@ -70,7 +70,7 @@ class Triangle final : public Geometry {
  public:
   struct SharedData {
     std::vector<Point> points;
-    std::vector<std::tuple<geometric, geometric, geometric>> normals;
+    std::vector<Vector> normals;
     std::vector<std::pair<geometric, geometric>> uv;
     ReferenceCounted<textures::MaskTexture> alpha_mask;
     ReferenceCounted<Material> materials[2];
@@ -243,17 +243,9 @@ std::optional<Vector> Triangle::MaybeComputeShadingNormal(
   geometric_t b1 = additional->barycentric_coordinates[1];
   geometric_t b2 = additional->barycentric_coordinates[2];
 
-  geometric_t x = std::get<0>(shared_->normals[std::get<0>(vertices_)]) * b0 +
-                  std::get<0>(shared_->normals[std::get<1>(vertices_)]) * b1 +
-                  std::get<0>(shared_->normals[std::get<2>(vertices_)]) * b2;
-  geometric_t y = std::get<1>(shared_->normals[std::get<0>(vertices_)]) * b0 +
-                  std::get<1>(shared_->normals[std::get<1>(vertices_)]) * b1 +
-                  std::get<1>(shared_->normals[std::get<2>(vertices_)]) * b2;
-  geometric_t z = std::get<2>(shared_->normals[std::get<0>(vertices_)]) * b0 +
-                  std::get<2>(shared_->normals[std::get<1>(vertices_)]) * b1 +
-                  std::get<2>(shared_->normals[std::get<2>(vertices_)]) * b2;
-
-  Vector shading_normal(x, y, z);
+  Vector shading_normal = shared_->normals[std::get<0>(vertices_)] * b0 +
+                          shared_->normals[std::get<1>(vertices_)] * b1 +
+                          shared_->normals[std::get<2>(vertices_)] * b2;
   if (shading_normal.IsZero()) {
     return std::nullopt;
   }
@@ -570,8 +562,7 @@ Hit* Triangle::Trace(const Ray& ray, geometric_t minimum_distance,
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     std::span<const Point> points,
     std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
-    std::span<const face_t> face_indices,
-    std::span<const std::tuple<geometric, geometric, geometric>> normals,
+    std::span<const face_t> face_indices, std::span<const Vector> normals,
     std::span<const std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::MaskTexture> alpha_mask,
     ReferenceCounted<Material> front_material,
@@ -583,8 +574,7 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
   std::shared_ptr<Triangle::SharedData> shared_data =
       std::make_shared<Triangle::SharedData>(Triangle::SharedData{
           std::vector<Point>(points.begin(), points.end()),
-          std::vector<std::tuple<geometric, geometric, geometric>>(
-              normals.begin(), normals.end()),
+          std::vector<Vector>(normals.begin(), normals.end()),
           std::vector<std::pair<geometric, geometric>>(uv.begin(), uv.end()),
           std::move(alpha_mask),
           {std::move(front_material), std::move(back_material)},
@@ -612,28 +602,6 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     face_t face_index = 0;
     if (i < face_indices.size()) {
       face_index = face_indices[i];
-    }
-
-    if (!normals.empty()) {
-      Vector surface_normal =
-          DoComputeSurfaceNormal(points[v0], points[v1], points[v2]);
-
-      geometric_t cumulative_dp =
-          (std::get<0>(normals[v0]) + std::get<0>(normals[v1]) +
-           std::get<0>(normals[v2])) *
-              surface_normal.x +
-          (std::get<1>(normals[v0]) + std::get<1>(normals[v1]) +
-           std::get<1>(normals[v2])) *
-              surface_normal.y +
-          (std::get<2>(normals[v0]) + std::get<2>(normals[v1]) +
-           std::get<2>(normals[v2])) *
-              surface_normal.z;
-
-      if (cumulative_dp < static_cast<geometric_t>(0.0)) {
-        result.push_back(MakeReferenceCounted<Triangle>(
-            std::make_tuple(v0, v2, v1), shared_data, face_index));
-        continue;
-      }
     }
 
     result.push_back(MakeReferenceCounted<Triangle>(std::make_tuple(v0, v1, v2),

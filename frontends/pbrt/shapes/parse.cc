@@ -85,11 +85,11 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
       exit(EXIT_FAILURE);
       break;
     case Shape::kPlymesh:
-      return shapes::MakePlyMesh(shape.plymesh(), model_to_world,
-                                 material.materials[0], material.materials[1],
-                                 emissive_materials[0], emissive_materials[1],
-                                 material.bumpmaps[0], material.bumpmaps[1],
-                                 search_root, texture_manager);
+      return shapes::MakePlyMesh(
+          shape.plymesh(), model_to_world, material.materials[0],
+          material.materials[1], emissive_materials[0], emissive_materials[1],
+          material.bumpmaps[0], material.bumpmaps[1], search_root,
+          texture_manager, reverse_orientation);
     case Shape::kSphere:
       return shapes::MakeSphere(shape.sphere(), model_to_world,
                                 material.materials[0], material.materials[1],
@@ -99,7 +99,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
       return shapes::MakeTriangleMesh(
           shape.trianglemesh(), model_to_world, material.materials[0],
           material.materials[1], emissive_materials[0], emissive_materials[1],
-          material.bumpmaps[0], material.bumpmaps[1], texture_manager);
+          material.bumpmaps[0], material.bumpmaps[1], texture_manager,
+          reverse_orientation);
       break;
     case Shape::SHAPE_TYPE_NOT_SET:
       break;

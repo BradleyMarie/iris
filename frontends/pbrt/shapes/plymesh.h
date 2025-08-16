@@ -26,7 +26,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
     const ReferenceCounted<EmissiveMaterial>& back_emissive_material,
     const ReferenceCounted<NormalMap>& front_normal_map,
     const ReferenceCounted<NormalMap>& back_normal_map,
-    const std::filesystem::path& search_root, TextureManager& texture_manager);
+    const std::filesystem::path& search_root, TextureManager& texture_manager,
+    bool reversed_orientation);
 
 }  // namespace shapes
 }  // namespace pbrt_frontend
