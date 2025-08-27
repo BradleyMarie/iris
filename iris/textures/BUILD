@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "constant_texture",
@@ -27,6 +33,7 @@ cc_test(
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -57,6 +64,7 @@ cc_test(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -68,7 +76,7 @@ cc_library(
     deps = [
         ":mask_texture",
         "//iris:float",
-        "//iris:reference_counted",
+        "//iris:reference_countable",
         "//iris:texture_coordinates",
     ],
 )
@@ -102,6 +110,7 @@ cc_test(
         "//iris/testing:spectral_allocator",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -131,6 +140,7 @@ cc_test(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -171,6 +181,7 @@ cc_test(
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -205,6 +216,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//third_party/disney/ptex",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -215,7 +227,7 @@ cc_library(
     hdrs = ["reflector_texture.h"],
     deps = [
         ":spectrum_texture",
-        "//iris:reference_counted",
+        "//iris:reference_countable",
         "//iris:reflector",
         "//iris:spectral_allocator",
         "//iris:spectrum",
@@ -237,6 +249,7 @@ cc_test(
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -267,6 +280,7 @@ cc_test(
         "//iris:texture_coordinates",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -323,6 +337,7 @@ cc_test(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -353,6 +368,7 @@ cc_test(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/reflectors:mock_reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

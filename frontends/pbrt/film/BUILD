@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "image",
@@ -24,6 +30,7 @@ cc_test(
     deps = [
         ":image",
         ":result",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -46,6 +53,7 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

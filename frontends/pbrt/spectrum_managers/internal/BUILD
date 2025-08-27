@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//frontends/pbrt/spectrum_managers:__subpackages__"])
+package(
+    default_visibility = ["//frontends/pbrt/spectrum_managers:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "color_reflector",
@@ -19,6 +25,11 @@ cc_test(
     srcs = ["color_reflector_test.cc"],
     deps = [
         ":color_reflector",
+        "//iris:color",
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -40,6 +51,11 @@ cc_test(
     srcs = ["color_spectrum_test.cc"],
     deps = [
         ":color_spectrum",
+        "//iris:color",
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

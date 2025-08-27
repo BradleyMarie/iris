@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//iris/scenes:__subpackages__"])
+package(
+    default_visibility = ["//iris/scenes:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "aligned_vector",
@@ -16,6 +22,7 @@ cc_test(
     srcs = ["aligned_vector_test.cc"],
     deps = [
         ":aligned_vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -44,6 +51,7 @@ cc_test(
     name = "bvh_builder_test",
     srcs = ["bvh_builder_test.cc"],
     deps = [
+        ":aligned_vector",
         ":bvh_builder",
         ":bvh_node",
         "//iris:bounding_box",
@@ -53,6 +61,7 @@ cc_test(
         "//iris:point",
         "//iris:reference_counted",
         "//iris/geometry:mock_geometry",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -78,6 +87,7 @@ cc_test(
         "//iris:point",
         "//iris:ray",
         "//iris:vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -124,6 +134,7 @@ cc_test(
         "//iris/scenes/internal:bvh_builder",
         "//iris/testing:hit_allocator",
         "//iris/testing:intersector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "mock_integrator",
@@ -67,6 +73,7 @@ cc_test(
         "//iris/testing:ray_tracer",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

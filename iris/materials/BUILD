@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "fourier_material",
@@ -29,6 +35,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -67,6 +74,7 @@ cc_test(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -104,6 +112,7 @@ cc_test(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -138,6 +147,8 @@ cc_test(
         "//iris/testing:spectral_allocator",
         "//iris/textures:constant_texture",
         "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -172,6 +183,7 @@ cc_test(
         "//iris/textures:constant_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -209,6 +221,7 @@ cc_test(
         "//iris/textures:constant_texture",
         "//iris/textures:float_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -261,6 +274,7 @@ cc_test(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -297,6 +311,7 @@ cc_test(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -335,6 +350,7 @@ cc_test(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -375,6 +391,7 @@ cc_test(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

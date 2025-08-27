@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "parse",
@@ -42,7 +48,9 @@ cc_test(
         "//iris:matrix",
         "//iris:normal_map",
         "//iris:reference_counted",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -74,6 +82,7 @@ cc_test(
     ],
     deps = [
         ":plymesh",
+        "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:emissive_material",
         "//iris:geometry",
@@ -82,6 +91,7 @@ cc_test(
         "//iris:normal_map",
         "//iris:reference_counted",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -114,6 +124,7 @@ cc_test(
         "//iris:matrix",
         "//iris:normal_map",
         "//iris:reference_counted",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -149,6 +160,7 @@ cc_test(
         "//iris:matrix",
         "//iris:normal_map",
         "//iris:reference_counted",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

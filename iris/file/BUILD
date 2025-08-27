@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "exr_writer",
@@ -25,6 +31,7 @@ cc_test(
         "//iris:color",
         "//iris:framebuffer",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -51,6 +58,7 @@ cc_test(
         "//iris:color",
         "//iris:framebuffer",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -78,6 +86,7 @@ cc_test(
         "//iris:color",
         "//iris:framebuffer",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -105,6 +114,7 @@ cc_test(
         "//iris:color",
         "//iris:framebuffer",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

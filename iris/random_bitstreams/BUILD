@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "mersenne_twister_random_bitstream",
@@ -17,6 +23,7 @@ cc_test(
     deps = [
         ":mersenne_twister_random_bitstream",
         "//iris:random_bitstream",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

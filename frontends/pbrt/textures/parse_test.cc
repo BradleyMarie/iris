@@ -22,8 +22,7 @@ using ::testing::ExitedWithCode;
 TEST(ParseFloatTexture, Empty) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -38,8 +37,7 @@ TEST(ParseFloatTexture, Empty) {
 TEST(ParseFloatTexture, Bilerp) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -54,8 +52,7 @@ TEST(ParseFloatTexture, Bilerp) {
 TEST(ParseFloatTexture, Checkerboard2D) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -70,8 +67,7 @@ TEST(ParseFloatTexture, Checkerboard2D) {
 TEST(ParseFloatTexture, Checkerboard3D) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -86,8 +82,7 @@ TEST(ParseFloatTexture, Checkerboard3D) {
 TEST(ParseFloatTexture, Constant) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -101,8 +96,7 @@ TEST(ParseFloatTexture, Constant) {
 TEST(ParseFloatTexture, Dots) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -117,8 +111,7 @@ TEST(ParseFloatTexture, Dots) {
 TEST(ParseFloatTexture, Fbm) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -132,8 +125,7 @@ TEST(ParseFloatTexture, Fbm) {
 TEST(ParseFloatTexture, ImageMap) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -148,8 +140,7 @@ TEST(ParseFloatTexture, ImageMap) {
 TEST(ParseFloatTexture, Marble) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -165,8 +156,7 @@ TEST(ParseFloatTexture, Marble) {
 TEST(ParseFloatTexture, Mix) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -180,8 +170,7 @@ TEST(ParseFloatTexture, Mix) {
 TEST(ParseFloatTexture, Ptex) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -195,8 +184,7 @@ TEST(ParseFloatTexture, Ptex) {
 TEST(ParseFloatTexture, Scale) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -210,8 +198,7 @@ TEST(ParseFloatTexture, Scale) {
 TEST(ParseFloatTexture, Windy) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -225,8 +212,7 @@ TEST(ParseFloatTexture, Windy) {
 TEST(ParseFloatTexture, Wrinkled) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture float_texture;
   float_texture.set_name("A");
@@ -240,8 +226,7 @@ TEST(ParseFloatTexture, Wrinkled) {
 TEST(ParseSpectrumTexture, Empty) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -256,8 +241,7 @@ TEST(ParseSpectrumTexture, Empty) {
 TEST(ParseSpectrumTexture, Bilerp) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -272,8 +256,7 @@ TEST(ParseSpectrumTexture, Bilerp) {
 TEST(ParseSpectrumTexture, Checkerboard2D) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -288,8 +271,7 @@ TEST(ParseSpectrumTexture, Checkerboard2D) {
 TEST(ParseSpectrumTexture, Checkerboard3D) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -304,8 +286,7 @@ TEST(ParseSpectrumTexture, Checkerboard3D) {
 TEST(ParseSpectrumTexture, Constant) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -319,8 +300,7 @@ TEST(ParseSpectrumTexture, Constant) {
 TEST(ParseSpectrumTexture, Dots) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -335,8 +315,7 @@ TEST(ParseSpectrumTexture, Dots) {
 TEST(ParseSpectrumTexture, Fbm) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -350,8 +329,7 @@ TEST(ParseSpectrumTexture, Fbm) {
 TEST(ParseSpectrumTexture, ImageMap) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -366,8 +344,7 @@ TEST(ParseSpectrumTexture, ImageMap) {
 TEST(ParseSpectrumTexture, Marble) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -381,8 +358,7 @@ TEST(ParseSpectrumTexture, Marble) {
 TEST(ParseSpectrumTexture, Mix) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -396,8 +372,7 @@ TEST(ParseSpectrumTexture, Mix) {
 TEST(ParseSpectrumTexture, Ptex) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -411,8 +386,7 @@ TEST(ParseSpectrumTexture, Ptex) {
 TEST(ParseSpectrumTexture, Scale) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -426,8 +400,7 @@ TEST(ParseSpectrumTexture, Scale) {
 TEST(ParseSpectrumTexture, UV) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -442,8 +415,7 @@ TEST(ParseSpectrumTexture, UV) {
 TEST(ParseSpectrumTexture, Windy) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");
@@ -457,8 +429,7 @@ TEST(ParseSpectrumTexture, Windy) {
 TEST(ParseSpectrumTexture, Wrinkled) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture spectrum_texture;
   spectrum_texture.set_name("A");

@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "constant",
@@ -23,6 +29,7 @@ cc_test(
         ":constant",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -34,6 +41,7 @@ cc_library(
     hdrs = ["fbm.h"],
     deps = [
         "//frontends/pbrt:defaults",
+        "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt:texture_manager",
         "//iris:matrix",
         "//iris:reference_counted",
@@ -52,6 +60,7 @@ cc_test(
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -89,7 +98,9 @@ cc_test(
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -116,6 +127,7 @@ cc_test(
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -143,6 +155,7 @@ cc_test(
         ":mix",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -166,6 +179,10 @@ cc_library(
         "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
         "//iris:matrix",
+        "//iris:reference_counted",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -178,6 +195,7 @@ cc_test(
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -192,8 +210,10 @@ cc_library(
         "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
         "//iris:reference_counted",
+        "//iris/textures:float_texture",
         "//iris/textures:ptex_texture",
         "//iris/textures:reflector_texture",
+        "//third_party/disney/ptex",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
@@ -206,6 +226,9 @@ cc_test(
         "//frontends/pbrt:image_manager",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "//iris/textures:float_texture",
+        "//third_party/disney/ptex",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -233,6 +256,7 @@ cc_test(
         ":scale",
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -262,6 +286,7 @@ cc_test(
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -291,6 +316,7 @@ cc_test(
         "//frontends/pbrt:texture_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

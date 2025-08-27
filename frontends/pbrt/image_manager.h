@@ -7,7 +7,6 @@
 #include <unordered_map>
 
 #include "frontends/pbrt/spectrum_manager.h"
-#include "frontends/pbrt/texture_manager.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/textures/image_texture.h"
@@ -18,11 +17,8 @@ namespace pbrt_frontend {
 class ImageManager {
  public:
   ImageManager(const std::filesystem::path& search_root,
-               TextureManager& texture_manager,
                SpectrumManager& spectrum_manager)
-      : search_root_(search_root),
-        texture_manager_(texture_manager),
-        spectrum_manager_(spectrum_manager) {}
+      : search_root_(search_root), spectrum_manager_(spectrum_manager) {}
 
   std::filesystem::path GetPath(const std::string& filename);
 
@@ -58,7 +54,6 @@ class ImageManager {
       gamma_corrected_reflectors_;
 
   std::filesystem::path search_root_;
-  TextureManager& texture_manager_;
   SpectrumManager& spectrum_manager_;
 };
 

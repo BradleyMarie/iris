@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_test(
     name = "bvh_aggregate_test",
@@ -24,6 +30,7 @@ cc_test(
         "//iris:vector",
         "//iris/materials:mock_material",
         "//iris/testing:hit_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -50,6 +57,7 @@ cc_library(
         "//iris:sampler",
         "//iris:texture_coordinates",
         "//iris:vector",
+        "//iris/scenes/internal:aligned_vector",
         "//iris/scenes/internal:bvh_builder",
         "//iris/scenes/internal:bvh_traversal",
     ],
@@ -130,6 +138,7 @@ cc_test(
         "//iris/normal_maps:mock_normal_map",
         "//iris/random:mock_random",
         "//iris/testing:hit_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -185,6 +194,7 @@ cc_test(
         "//iris/normal_maps:mock_normal_map",
         "//iris/random:mock_random",
         "//iris/testing:hit_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

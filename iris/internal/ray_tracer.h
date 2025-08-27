@@ -10,7 +10,7 @@
 namespace iris {
 namespace internal {
 
-struct RayTracer final {
+class RayTracer final {
  public:
   RayTracer() = default;
 

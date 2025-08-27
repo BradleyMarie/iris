@@ -703,6 +703,10 @@ ImageManager::LoadFloatImageFromHDR(const std::string& filename,
     }
 
     stbi_image_free(values);
+  } else {
+    std::cerr << "ERROR: Unsupported HDR file format: " << path.extension()
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
   result = std::make_shared<iris::textures::Image2D<visual>>(
@@ -760,6 +764,10 @@ ImageManager::LoadReflectorImageFromHDR(const std::string& filename,
     }
 
     stbi_image_free(values);
+  } else {
+    std::cerr << "ERROR: Unsupported HDR file format: " << path.extension()
+              << std::endl;
+    exit(EXIT_FAILURE);
   }
 
   result =

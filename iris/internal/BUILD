@@ -1,9 +1,15 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = [
-    "//iris:__pkg__",
-    "//iris/testing:__pkg__",
-])
+package(
+    default_visibility = [
+        "//iris:__pkg__",
+        "//iris/testing:__pkg__",
+    ],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "area_light",
@@ -48,6 +54,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -63,6 +70,7 @@ cc_test(
     srcs = ["arena_test.cc"],
     deps = [
         ":arena",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -108,6 +116,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -119,6 +128,8 @@ cc_library(
     deps = [
         ":arena",
         ":hit",
+        "//iris:float",
+        "//iris:integer",
     ],
 )
 
@@ -126,8 +137,10 @@ cc_test(
     name = "hit_arena_test",
     srcs = ["hit_arena_test.cc"],
     deps = [
+        ":hit",
         ":hit_arena",
         "//iris/geometry:mock_geometry",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -150,6 +163,7 @@ cc_library(
         ":hit",
         ":hit_arena",
         "//iris:float",
+        "//iris:intersector",
         "//iris:ray",
         "//iris:scene",
     ],
@@ -171,6 +185,7 @@ cc_test(
         "//iris:vector",
         "//iris/geometry:mock_geometry",
         "//iris/scenes:list_scene",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -180,12 +195,16 @@ cc_library(
     srcs = ["visibility_tester.cc"],
     hdrs = ["visibility_tester.h"],
     deps = [
+        ":arena",
         ":hit",
         ":ray_tracer",
         "//iris:float",
         "//iris:geometry",
         "//iris:integer",
         "//iris:matrix",
+        "//iris:point",
+        "//iris:ray",
+        "//iris:scene",
         "//iris:spectral_allocator",
         "//iris:spectrum",
         "//iris:visibility_tester",
@@ -197,6 +216,7 @@ cc_test(
     srcs = ["visibility_tester_test.cc"],
     deps = [
         ":arena",
+        ":ray_tracer",
         ":visibility_tester",
         "//iris:bounding_box",
         "//iris:emissive_material",
@@ -218,6 +238,7 @@ cc_test(
         "//iris/geometry:mock_geometry",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

@@ -81,7 +81,7 @@ class FourierBxdf : public internal::DiffuseBxdf {
   std::span<const visual> y_coefficients_;
   std::span<const visual> r_coefficients_;
   std::span<const visual> b_coefficients_;
-  visual eta_transmitted_;
+  [[maybe_unused]] visual eta_transmitted_;
   bool front_face_;
 };
 

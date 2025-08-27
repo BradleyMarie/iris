@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "mock_reflector",
@@ -29,6 +35,10 @@ cc_test(
     srcs = ["sampled_reflector_test.cc"],
     deps = [
         ":sampled_reflector",
+        "//iris:float",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -49,6 +59,9 @@ cc_test(
     srcs = ["uniform_reflector_test.cc"],
     deps = [
         ":uniform_reflector",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

@@ -149,18 +149,17 @@ std::unique_ptr<Material> MakeMaterial(const Point& expected_hit_point,
 
   std::unique_ptr<MockMaterial> material = std::make_unique<MockMaterial>();
   EXPECT_CALL(*material, Evaluate(_, _, _))
-      .WillOnce(Invoke([expected_hit_point, expected_uv, has_differentials,
-                        bxdf = std::move(bxdf)](
-                           const TextureCoordinates& texture_coordinates,
-                           SpectralAllocator& spectral_allocator,
-                           BxdfAllocator& allocator) {
-        EXPECT_NEAR(expected_hit_point.x, texture_coordinates.p.x, 0.001);
-        EXPECT_NEAR(expected_hit_point.y, texture_coordinates.p.y, 0.001);
-        EXPECT_NEAR(expected_hit_point.z, texture_coordinates.p.z, 0.001);
-        EXPECT_NEAR(expected_uv[0], texture_coordinates.uv[0], 0.001);
-        EXPECT_NEAR(expected_uv[1], texture_coordinates.uv[1], 0.001);
-        return bxdf.get();
-      }));
+      .WillOnce(Invoke(
+          [expected_hit_point, expected_uv, bxdf = std::move(bxdf)](
+              const TextureCoordinates& texture_coordinates,
+              SpectralAllocator& spectral_allocator, BxdfAllocator& allocator) {
+            EXPECT_NEAR(expected_hit_point.x, texture_coordinates.p.x, 0.001);
+            EXPECT_NEAR(expected_hit_point.y, texture_coordinates.p.y, 0.001);
+            EXPECT_NEAR(expected_hit_point.z, texture_coordinates.p.z, 0.001);
+            EXPECT_NEAR(expected_uv[0], texture_coordinates.uv[0], 0.001);
+            EXPECT_NEAR(expected_uv[1], texture_coordinates.uv[1], 0.001);
+            return bxdf.get();
+          }));
 
   return material;
 }

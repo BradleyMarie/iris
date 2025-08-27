@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "orthographic",
@@ -20,6 +26,7 @@ cc_test(
     deps = [
         ":orthographic",
         "//frontends/pbrt:matrix_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -45,6 +52,7 @@ cc_test(
     deps = [
         ":parse",
         "//frontends/pbrt:matrix_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -69,7 +77,9 @@ cc_test(
     deps = [
         ":parse",
         ":perspective",
+        "//frontends/pbrt:matrix_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

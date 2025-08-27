@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "halton_image_sampler",
@@ -18,6 +24,7 @@ cc_test(
     srcs = ["halton_image_sampler_test.cc"],
     deps = [
         ":halton_image_sampler",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -51,6 +58,7 @@ cc_test(
         ":random_image_sampler",
         "//iris:image_sampler",
         "//iris/random_bitstreams:mock_random_bitstream",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -71,6 +79,7 @@ cc_test(
     srcs = ["sobol_image_sampler_test.cc"],
     deps = [
         ":sobol_image_sampler",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -93,6 +102,7 @@ cc_test(
         ":stratified_image_sampler",
         "//iris:image_sampler",
         "//iris/random_bitstreams:mock_random_bitstream",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

@@ -1,6 +1,8 @@
 #include "iris/reflectors/uniform_reflector.h"
 
 #include "googletest/include/gtest/gtest.h"
+#include "iris/reference_counted.h"
+#include "iris/reflector.h"
 
 namespace iris {
 namespace reflectors {

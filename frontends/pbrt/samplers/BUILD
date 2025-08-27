@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "halton",
@@ -19,6 +25,7 @@ cc_test(
     srcs = ["halton_test.cc"],
     deps = [
         ":halton",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -40,6 +47,7 @@ cc_test(
     srcs = ["maxmindist_test.cc"],
     deps = [
         ":maxmindist",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -67,6 +75,7 @@ cc_test(
     srcs = ["parse_test.cc"],
     deps = [
         ":parse",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -88,6 +97,7 @@ cc_test(
     srcs = ["random_test.cc"],
     deps = [
         ":random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -109,6 +119,7 @@ cc_test(
     srcs = ["sobol_test.cc"],
     deps = [
         ":sobol",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -130,6 +141,7 @@ cc_test(
     srcs = ["stratified_test.cc"],
     deps = [
         ":stratified",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -151,6 +163,7 @@ cc_test(
     srcs = ["zerotwosequence_test.cc"],
     deps = [
         ":zerotwosequence",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

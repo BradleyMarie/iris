@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//frontends/pbrt:__subpackages__"])
+package(
+    default_visibility = ["//frontends/pbrt:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "color_spectrum_manager",
@@ -39,7 +45,10 @@ cc_test(
         "//frontends/pbrt/spectrum_managers/internal:color_reflector",
         "//frontends/pbrt/spectrum_managers/internal:color_spectrum",
         "//iris:color",
+        "//iris:reference_counted",
+        "//iris:spectrum",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

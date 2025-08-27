@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "distant",
@@ -24,6 +30,7 @@ cc_test(
         ":distant",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -59,6 +66,7 @@ cc_test(
         ":infinite",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -93,6 +101,7 @@ cc_test(
         "//iris:light",
         "//iris:matrix",
         "//iris:reference_counted",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -120,6 +129,7 @@ cc_test(
         ":point",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -147,6 +157,7 @@ cc_test(
         ":spot",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "//iris:matrix",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

@@ -14,7 +14,7 @@
 
 namespace iris {
 
-struct Matrix final {
+class Matrix final {
  public:
   Matrix(const Matrix& matrix) noexcept = default;
 

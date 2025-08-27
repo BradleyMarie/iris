@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "bvh_scene",
@@ -34,7 +40,9 @@ cc_test(
         "//iris:scene_objects",
         "//iris:vector",
         "//iris/geometry:mock_geometry",
+        "//iris/scenes/internal:bvh_builder",
         "//iris/testing:intersector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -68,6 +76,7 @@ cc_test(
         "//iris:vector",
         "//iris/geometry:mock_geometry",
         "//iris/testing:intersector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

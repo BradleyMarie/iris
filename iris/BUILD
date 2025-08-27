@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "albedo_matcher",
@@ -29,6 +35,7 @@ cc_test(
     srcs = ["bounding_box_test.cc"],
     deps = [
         ":bounding_box",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -54,12 +61,15 @@ cc_test(
     deps = [
         ":bsdf",
         ":bxdf",
+        ":float",
+        ":sampler",
         ":vector",
         "//iris/bxdfs:mock_bxdf",
         "//iris/internal:arena",
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -79,10 +89,14 @@ cc_test(
     name = "bxdf_allocator_test",
     srcs = ["bxdf_allocator_test.cc"],
     deps = [
+        ":bxdf",
         ":bxdf_allocator",
+        ":vector",
         "//iris/bxdfs:lambertian_bxdf",
         "//iris/bxdfs:mock_bxdf",
+        "//iris/internal:arena",
         "//iris/reflectors:mock_reflector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -136,6 +150,7 @@ cc_test(
     srcs = ["color_test.cc"],
     deps = [
         ":color",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -191,6 +206,7 @@ cc_test(
     deps = [
         ":color",
         ":framebuffer",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -211,9 +227,11 @@ cc_library(
         ":matrix",
         ":normal_map",
         ":point",
+        ":position_error",
         ":random",
         ":ray",
         ":reference_countable",
+        ":sampler",
         ":texture_coordinates",
         ":vector",
         "//iris/internal:hit",
@@ -236,6 +254,7 @@ cc_test(
         "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -284,6 +303,7 @@ cc_test(
         ":ray",
         ":vector",
         "//iris/internal:hit_arena",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -313,6 +333,7 @@ cc_test(
         ":position_error",
         ":ray",
         ":vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -350,6 +371,7 @@ cc_library(
         ":hit",
         ":hit_allocator",
         ":matrix",
+        ":ray",
         "//iris/internal:hit",
     ],
 )
@@ -368,6 +390,7 @@ cc_test(
         ":vector",
         "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -412,6 +435,7 @@ cc_test(
         ":light_sample_allocator",
         "//iris/internal:arena",
         "//iris/lights:mock_light",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -454,6 +478,7 @@ cc_test(
         "//iris/light_scenes:mock_light_scene",
         "//iris/lights:mock_light",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -502,7 +527,14 @@ cc_test(
     name = "matrix_test",
     srcs = ["matrix_test.cc"],
     deps = [
+        ":bounding_box",
+        ":float",
         ":matrix",
+        ":point",
+        ":position_error",
+        ":ray",
+        ":vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -535,6 +567,7 @@ cc_test(
     deps = [
         ":point",
         ":vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -554,6 +587,7 @@ cc_test(
     srcs = ["position_error_test.cc"],
     deps = [
         ":position_error",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -595,6 +629,7 @@ cc_test(
     deps = [
         ":random",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -614,6 +649,7 @@ cc_test(
     deps = [
         ":ray",
         ":ray_differential",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -635,6 +671,7 @@ cc_test(
         ":point",
         ":ray",
         ":vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -692,11 +729,13 @@ cc_test(
         "//iris/emissive_materials:mock_emissive_material",
         "//iris/environmental_lights:mock_environmental_light",
         "//iris/geometry:mock_geometry",
+        "//iris/internal:arena",
         "//iris/internal:ray_tracer",
         "//iris/materials:mock_material",
         "//iris/normal_maps:mock_normal_map",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -722,6 +761,7 @@ cc_test(
     srcs = ["reference_counted_test.cc"],
     deps = [
         ":reference_counted",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -792,6 +832,7 @@ cc_test(
         "//iris/random_bitstreams:mock_random_bitstream",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -813,6 +854,7 @@ cc_test(
     deps = [
         ":sampler",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -823,6 +865,7 @@ cc_library(
     hdrs = ["scene_objects.h"],
     visibility = ["//visibility:public"],
     deps = [
+        ":bounding_box",
         ":environmental_light",
         ":geometry",
         ":light",
@@ -837,11 +880,21 @@ cc_test(
     name = "scene_objects_test",
     srcs = ["scene_objects_test.cc"],
     deps = [
+        ":bounding_box",
+        ":geometry",
+        ":integer",
+        ":light",
+        ":matrix",
+        ":point",
+        ":ray",
+        ":reference_counted",
         ":scene_objects",
+        ":vector",
         "//iris/emissive_materials:mock_emissive_material",
         "//iris/environmental_lights:mock_environmental_light",
         "//iris/geometry:mock_geometry",
         "//iris/lights:mock_light",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -899,6 +952,7 @@ cc_test(
         "//iris/internal:arena",
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -923,6 +977,7 @@ cc_test(
         ":point",
         ":texture_coordinates",
         ":vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -942,6 +997,7 @@ cc_test(
     srcs = ["vector_test.cc"],
     deps = [
         ":vector",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -977,6 +1033,7 @@ cc_test(
         "//iris/internal:arena",
         "//iris/internal:ray_tracer",
         "//iris/scenes:list_scene",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

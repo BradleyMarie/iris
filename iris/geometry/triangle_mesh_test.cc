@@ -877,7 +877,7 @@ TEST(Triangle, SampleBySolidAngle) {
   std::variant<std::monostate, Point, Vector> sample5 =
       triangle->SampleBySolidAngle(Point(-1.0, -1.0, -1.0), FRONT_FACE,
                                    sampler5);
-  EXPECT_EQ(Point(0.25, 0.25, 0.0), std::get<Point>(sample4));
+  EXPECT_EQ(Point(0.25, 0.25, 0.0), std::get<Point>(sample5));
 }
 
 TEST(Triangle, ComputePdfBySolidAngle) {

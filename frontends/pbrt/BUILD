@@ -1,6 +1,12 @@
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 
-package(default_visibility = ["//frontends/pbrt:__subpackages__"])
+package(
+    default_visibility = ["//frontends/pbrt:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "color",
@@ -46,6 +52,7 @@ cc_library(
     hdrs = ["directives.h"],
     deps = [
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@protobuf//:protobuf_lite",
     ],
 )
 
@@ -58,8 +65,10 @@ cc_test(
     deps = [
         ":directives",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@protobuf//:protobuf_lite",
     ],
 )
 
@@ -68,9 +77,11 @@ cc_library(
     srcs = ["file.cc"],
     hdrs = ["file.h"],
     deps = [
-        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/status:status",
         "@pbrt_proto//pbrt_proto/v3:convert",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@protobuf",
+        "@protobuf//src/google/protobuf/io",
     ],
 )
 
@@ -88,6 +99,7 @@ cc_test(
     deps = [
         ":file",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -99,7 +111,6 @@ cc_library(
     hdrs = ["image_manager.h"],
     deps = [
         ":spectrum_manager",
-        ":texture_manager",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris/textures:image_texture",
@@ -124,12 +135,12 @@ cc_test(
     ],
     deps = [
         ":image_manager",
-        ":texture_manager",
         "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris/textures:image_texture",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -150,6 +161,7 @@ cc_binary(
         "@abseil-cpp//absl/flags:usage",
         "@pbrt_proto//pbrt_proto/v3:convert",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@protobuf//:protobuf_lite",
     ],
 )
 
@@ -159,7 +171,7 @@ cc_library(
     hdrs = ["material_manager.h"],
     deps = [
         "//frontends/pbrt/materials:result",
-        "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -170,8 +182,9 @@ cc_test(
         ":material_manager",
         "//frontends/pbrt/materials:result",
         "//iris/materials:mock_material",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -189,6 +202,7 @@ cc_test(
     srcs = ["matrix_manager_test.cc"],
     deps = [
         ":matrix_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -198,9 +212,11 @@ cc_library(
     srcs = ["parser.cc"],
     hdrs = ["parser.h"],
     deps = [
+        ":defaults",
         ":directives",
         ":file",
         ":image_manager",
+        ":material_manager",
         ":matrix_manager",
         ":renderable",
         ":spectrum_manager",
@@ -210,21 +226,32 @@ cc_library(
         "//frontends/pbrt/film:parse",
         "//frontends/pbrt/film:result",
         "//frontends/pbrt/integrators:parse",
+        "//frontends/pbrt/integrators:result",
         "//frontends/pbrt/lights:parse",
         "//frontends/pbrt/materials:parse",
+        "//frontends/pbrt/materials:result",
         "//frontends/pbrt/samplers:parse",
         "//frontends/pbrt/shapes:parse",
         "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
         "//frontends/pbrt/textures:parse",
+        "//iris:camera",
+        "//iris:emissive_material",
+        "//iris:environmental_light",
         "//iris:float",
         "//iris:image_sampler",
         "//iris:integrator",
+        "//iris:light",
         "//iris:light_scene",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:renderer",
         "//iris:scene",
+        "//iris:scene_objects",
         "//iris/geometry:bvh_aggregate",
         "//iris/scenes:bvh_scene",
         "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@protobuf//:protobuf_lite",
     ],
 )
 
@@ -242,6 +269,7 @@ cc_test(
         ":parser",
         "//iris/random_bitstreams:mersenne_twister_random_bitstream",
         "@bazel_tools//tools/cpp/runfiles",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -280,6 +308,7 @@ cc_test(
         "//iris/random_bitstreams:mock_random_bitstream",
         "//iris/scenes:list_scene",
         "//iris/spectra:mock_spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -308,6 +337,7 @@ cc_library(
         "//iris/textures:constant_texture",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )
 
@@ -318,6 +348,8 @@ cc_test(
         ":texture_manager",
         "//frontends/pbrt/spectrum_managers:color_spectrum_manager",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
 )

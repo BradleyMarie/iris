@@ -21,8 +21,7 @@ using ::testing::ExitedWithCode;
 TEST(Ptex, FloatTexture) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   FloatTexture::Ptex ptex;
   EXPECT_EXIT(MakePtex(ptex, image_manager, texture_manager),
@@ -32,8 +31,7 @@ TEST(Ptex, FloatTexture) {
 TEST(Ptex, SpectrumTexture) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   SpectrumTexture::Ptex ptex;
   EXPECT_EXIT(MakePtex(ptex, image_manager, texture_manager),

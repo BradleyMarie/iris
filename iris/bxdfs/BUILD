@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "ashikhmin_shirley_brdf",
@@ -29,6 +35,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -58,6 +65,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -87,6 +95,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -112,6 +121,7 @@ cc_test(
         "//iris:float",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -142,6 +152,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -157,6 +168,7 @@ cc_library(
         "//iris:reflector",
         "//iris:sampler",
         "//iris:spectral_allocator",
+        "//iris:spectrum",
         "//iris:vector",
         "//iris/bxdfs/internal:diffuse_bxdf",
         "//iris/bxdfs/internal:math",
@@ -174,6 +186,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -203,6 +216,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -247,6 +261,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -277,6 +292,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -306,6 +322,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

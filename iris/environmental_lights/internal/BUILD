@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//iris/environmental_lights:__subpackages__"])
+package(
+    default_visibility = ["//iris/environmental_lights:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "distribution_1d",
@@ -20,6 +26,7 @@ cc_test(
         "//iris:float",
         "//iris:sampler",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -43,6 +50,7 @@ cc_test(
         "//iris:float",
         "//iris:sampler",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

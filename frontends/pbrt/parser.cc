@@ -74,7 +74,7 @@ struct State {
         bool always_reflective)
       : spectrum_manager(search_root, always_reflective),
         texture_manager(spectrum_manager),
-        image_manager(search_root, texture_manager, spectrum_manager),
+        image_manager(search_root, spectrum_manager),
         directives_(directives) {
     graphics.emplace();
     graphics.top().material.first = Defaults().default_material();

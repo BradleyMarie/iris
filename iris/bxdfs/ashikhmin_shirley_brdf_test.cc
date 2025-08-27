@@ -26,14 +26,14 @@ TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
-                                              &reflector, 0.5, 0.5, true);
+                                              &reflector, 0.0, 0.0, true);
 
   std::optional<Vector> sample = bxdf->SampleDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
+      Normalize(Vector(1.0, 1.0, 1.0)), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
-  EXPECT_NEAR(sample->x, -0.91552, 0.001);
-  EXPECT_NEAR(sample->y, 0.0, 0.001);
-  EXPECT_NEAR(sample->z, 0.40227, 0.001);
+  EXPECT_NEAR(sample->x, -0.60902, 0.001);
+  EXPECT_NEAR(sample->y, -0.60914, 0.001);
+  EXPECT_NEAR(sample->z, 0.50797, 0.001);
 }
 
 TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {

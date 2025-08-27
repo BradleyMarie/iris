@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//iris/bxdfs:__subpackages__"])
+package(
+    default_visibility = ["//iris/bxdfs:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "math",
@@ -19,6 +25,7 @@ cc_test(
     deps = [
         ":math",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -44,6 +51,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -64,6 +72,7 @@ cc_test(
     srcs = ["microfacet_test.cc"],
     deps = [
         ":microfacet",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -90,6 +99,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/testing:bxdf_allocator",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//iris/image_samplers:__subpackages__"])
+package(
+    default_visibility = ["//iris/image_samplers:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "halton_sequence",
@@ -19,6 +25,7 @@ cc_test(
     deps = [
         ":halton_sequence",
         "//iris:float",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -42,6 +49,7 @@ cc_test(
         ":low_discrepancy_image_sampler",
         ":mock_low_discrepancy_sequence",
         "//iris/random_bitstreams:mock_random_bitstream",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -63,6 +71,7 @@ cc_test(
     deps = [
         ":low_discrepancy_sequence",
         ":mock_low_discrepancy_sequence",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -98,6 +107,8 @@ cc_test(
     srcs = ["sobol_sequence_test.cc"],
     deps = [
         ":sobol_sequence",
+        "//iris:float",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

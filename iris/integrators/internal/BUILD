@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//iris/integrators:__subpackages__"])
+package(
+    default_visibility = ["//iris/integrators:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "path_builder",
@@ -25,6 +31,7 @@ cc_test(
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -46,6 +53,7 @@ cc_test(
         ":russian_roulette",
         "//iris:float",
         "//iris/random:mock_random",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -92,6 +100,7 @@ cc_test(
         "//iris/testing:light_sampler",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -128,6 +137,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

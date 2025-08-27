@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//iris/textures:__subpackages__"])
+package(
+    default_visibility = ["//iris/textures:__subpackages__"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "math",
@@ -19,6 +25,7 @@ cc_test(
     deps = [
         ":math",
         "//iris:point",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -50,6 +57,7 @@ cc_test(
         "//iris/testing:spectral_allocator",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

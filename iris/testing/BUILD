@@ -1,8 +1,14 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
-package(default_visibility = [
-    "//iris:__subpackages__",
-])
+package(
+    default_visibility = [
+        "//iris:__subpackages__",
+    ],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "bxdf_allocator",

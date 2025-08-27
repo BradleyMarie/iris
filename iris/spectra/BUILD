@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "blackbody_spectrum",
@@ -21,6 +27,7 @@ cc_test(
         "//iris:float",
         "//iris:reference_counted",
         "//iris:spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -55,6 +62,7 @@ cc_test(
         "//iris:float",
         "//iris:reference_counted",
         "//iris:spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

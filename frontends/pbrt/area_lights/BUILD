@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_visibility = ["//visibility:private"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "diffuse",
@@ -22,6 +28,7 @@ cc_test(
     deps = [
         ":diffuse",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],
@@ -47,6 +54,7 @@ cc_test(
     deps = [
         ":parse",
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
         "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
     ],

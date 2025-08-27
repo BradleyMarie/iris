@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "directional_light",
@@ -17,6 +23,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:spectrum",
+        "//iris:vector",
         "//iris:visibility_tester",
     ],
 )
@@ -39,6 +46,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -97,6 +105,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -116,6 +125,7 @@ cc_library(
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:spectrum",
+        "//iris:vector",
         "//iris:visibility_tester",
     ],
 )
@@ -138,6 +148,7 @@ cc_test(
         "//iris/spectra:mock_spectrum",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

@@ -67,8 +67,9 @@ std::optional<Vector> AshikhminShirleyBrdf::SampleDiffuse(
     return outgoing.AlignWith(surface_normal);
   }
 
-  Vector half_angle =
-      distribution_.Sample(incoming, sampler.Next(), sampler.Next());
+  geometric_t u = sampler.Next();
+  geometric_t v = sampler.Next();
+  Vector half_angle = distribution_.Sample(incoming, u, v);
   return Reflect(incoming, half_angle);
 }
 

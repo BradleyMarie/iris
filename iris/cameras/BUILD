@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "mock_camera",
@@ -31,6 +37,7 @@ cc_test(
     srcs = ["orthographic_camera_test.cc"],
     deps = [
         ":orthographic_camera",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -53,6 +60,7 @@ cc_test(
     srcs = ["pinhole_camera_test.cc"],
     deps = [
         ":pinhole_camera",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -75,6 +83,7 @@ cc_test(
     srcs = ["thin_lens_camera_test.cc"],
     deps = [
         ":thin_lens_camera",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

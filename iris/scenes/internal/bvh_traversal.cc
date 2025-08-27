@@ -58,7 +58,6 @@ class GeometryIntersector : public Intersector {
  private:
   const SceneObjects& scene_objects_;
   iris::Intersector& intersector_;
-  bool done_ = false;
 };
 
 class NestedGeometryIntersector : public Intersector {

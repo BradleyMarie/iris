@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "bump_normal_map",
@@ -29,6 +35,7 @@ cc_test(
         "//iris/textures:float_texture",
         "//iris/textures:image_texture",
         "//iris/textures:test_util",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

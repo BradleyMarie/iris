@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "cie_color_matcher",
@@ -21,6 +27,7 @@ cc_test(
         ":cie_color_matcher",
         "//iris:color_matcher",
         "//iris/spectra:mock_spectrum",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

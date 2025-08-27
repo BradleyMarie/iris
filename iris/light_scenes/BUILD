@@ -1,6 +1,12 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    features = [
+        "layering_check",
+        "parse_headers",
+    ],
+)
 
 cc_library(
     name = "all_light_scene",
@@ -33,6 +39,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -83,6 +90,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )
@@ -121,6 +129,7 @@ cc_test(
         "//iris/random:mock_random",
         "//iris/scenes:list_scene",
         "//iris/testing:light_sample_allocator",
+        "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
 )

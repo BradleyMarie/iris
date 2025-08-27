@@ -6,7 +6,6 @@
 #include <unordered_map>
 
 #include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
-#include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
@@ -31,9 +30,7 @@ std::string RawRunfilePath(const std::string& path) {
 TEST(ImageManager, MissingFile) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   EXPECT_EXIT(image_manager.LoadFloatImageFromSDR("notarealfile", true),
               ExitedWithCode(EXIT_FAILURE),
@@ -46,9 +43,7 @@ TEST(ImageManager, MissingFile) {
 TEST(ImageManager, FloatImageSizesCorrect) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
@@ -136,9 +131,7 @@ TEST(ImageManager, FloatImageSizesCorrect) {
 TEST(ImageManager, ReflectorImageSizesCorrect) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
   EXPECT_TRUE(images
@@ -226,9 +219,7 @@ TEST(ImageManager, ReflectorImageSizesCorrect) {
 TEST(ImageManager, ReusesFloatImages) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
@@ -382,9 +373,7 @@ TEST(ImageManager, ReusesFloatImages) {
 TEST(ImageManager, ReusesReflectorImages) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
   EXPECT_TRUE(images
@@ -538,9 +527,7 @@ TEST(ImageManager, ReusesReflectorImages) {
 TEST(ImageManager, LinearFloatValues) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   auto g8 =
       image_manager.LoadFloatImageFromSDR(RawRunfilePath("g8.png"), false);
@@ -583,9 +570,7 @@ TEST(ImageManager, LinearFloatValues) {
 TEST(ImageManager, LinearReflectorValues) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, true);
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), texture_manager,
-                             spectrum_manager);
+  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
   auto g8 =
       image_manager.LoadReflectorImageFromSDR(RawRunfilePath("g8.png"), false);
