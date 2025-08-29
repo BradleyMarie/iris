@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <numbers>
 
 #include "iris/bxdfs/internal/math.h"
@@ -107,7 +106,6 @@ visual_t TrowbridgeReitzDistribution::Lambda(const Vector& vector) const {
 // Adapted from Heitz 2017 (http://hal.archives-ouvertes.fr/hal-01509746)
 Vector TrowbridgeReitzDistribution::Sample(const Vector& incoming,
                                            geometric_t u, geometric_t v) const {
-  std::cout << u << " " << v << std::endl;
   // Stretch incoming
   Vector stretched_incoming = Normalize(Vector(
       alpha_x_ * incoming.x, alpha_y_ * incoming.y, std::abs(incoming.z)));
