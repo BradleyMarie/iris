@@ -47,8 +47,8 @@ class MockBasicGeometry : public Geometry {
               (const override));
   MOCK_METHOD(ComputeHitPointResult, ComputeHitPoint,
               (const Ray&, geometric_t, const void*), (const override));
-  MOCK_METHOD(visual_t, ComputeSurfaceArea, (face_t, const Matrix*),
-              (const override));
+  MOCK_METHOD(std::optional<visual_t>, ComputeSurfaceArea,
+              (face_t, const Matrix*), (const override));
   MOCK_METHOD(Vector, ComputeSurfaceNormal, (const Point&, face_t, const void*),
               (const override));
   MOCK_METHOD(BoundingBox, ComputeBounds, (const Matrix*), (const override));

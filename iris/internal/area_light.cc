@@ -112,8 +112,13 @@ visual_t AreaLight::Power(const PowerMatcher& power_matcher,
                           geometric_t world_radius_squared) const {
   visual_t unit_power =
       geometry_.GetEmissiveMaterial(face_)->UnitPower(power_matcher);
-  return std::numbers::pi_v<visual_t> * unit_power *
-         geometry_.ComputeSurfaceArea(face_, model_to_world_);
+
+  visual_t surface_area =
+      std::max(static_cast<visual_t>(0.0),
+               geometry_.ComputeSurfaceArea(face_, model_to_world_)
+                   .value_or(static_cast<visual_t>(1.0)));
+
+  return std::numbers::pi_v<visual_t> * unit_power * surface_area;
 }
 
 }  // namespace

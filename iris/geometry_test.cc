@@ -264,5 +264,10 @@ TEST(GeometryTest, ComputePdfBySolidAngle) {
                                            Point(0.0, 0.0, 0.0)));
 }
 
+TEST(GeometryTest, GetFaces) {
+  MockBasicGeometry geom;
+  EXPECT_TRUE(geom.GetFaces().empty());
+}
+
 }  // namespace
 }  // namespace iris

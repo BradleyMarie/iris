@@ -53,8 +53,8 @@ class BVHAggregate final : public Geometry {
     std::unreachable();
   }
 
-  visual_t ComputeSurfaceArea(face_t face,
-                              const Matrix* model_to_world) const override {
+  std::optional<visual_t> ComputeSurfaceArea(
+      face_t face, const Matrix* model_to_world) const override {
     std::unreachable();
   }
 

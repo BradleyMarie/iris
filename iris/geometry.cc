@@ -86,6 +86,11 @@ const EmissiveMaterial* Geometry::GetEmissiveMaterial(face_t face) const {
   return nullptr;
 }
 
+std::optional<visual_t> Geometry::ComputeSurfaceArea(
+    face_t face, const Matrix* model_to_world) const {
+  return std::nullopt;
+}
+
 std::variant<std::monostate, Point, Vector> Geometry::SampleBySolidAngle(
     const Point& origin, face_t face, Sampler& sampler) const {
   return std::variant<std::monostate, Point, Vector>();
@@ -96,5 +101,7 @@ std::optional<visual_t> Geometry::ComputePdfBySolidAngle(
     const Point& on_face) const {
   return std::nullopt;
 }
+
+std::span<const face_t> Geometry::GetFaces() const { return {}; }
 
 }  // namespace iris

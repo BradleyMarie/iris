@@ -110,8 +110,8 @@ class Triangle final : public Geometry {
 
   const EmissiveMaterial* GetEmissiveMaterial(face_t face) const override;
 
-  visual_t ComputeSurfaceArea(face_t face,
-                              const Matrix* model_to_world) const override;
+  std::optional<visual_t> ComputeSurfaceArea(
+      face_t face, const Matrix* model_to_world) const override;
 
   std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
       const Point& origin, face_t face, Sampler& sampler) const override;
@@ -345,8 +345,8 @@ const EmissiveMaterial* Triangle::GetEmissiveMaterial(face_t face) const {
   return shared_->emissive_materials[face].Get();
 }
 
-visual_t Triangle::ComputeSurfaceArea(face_t face,
-                                      const Matrix* model_to_world) const {
+std::optional<visual_t> Triangle::ComputeSurfaceArea(
+    face_t face, const Matrix* model_to_world) const {
   Point p0 =
       MaybeMultiply(model_to_world, shared_->points[std::get<0>(vertices_)]);
   Point p1 =

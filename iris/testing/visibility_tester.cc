@@ -54,8 +54,8 @@ class NeverVisibleScene final : public Scene {
       return BoundingBox(Point(0.0, 0.0, 0.0));
     }
 
-    visual_t ComputeSurfaceArea(face_t face,
-                                const Matrix* model_to_world) const override {
+    std::optional<visual_t> ComputeSurfaceArea(
+        face_t face, const Matrix* model_to_world) const override {
       return 0.0;
     }
 

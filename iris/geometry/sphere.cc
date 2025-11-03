@@ -67,8 +67,8 @@ class Sphere final : public Geometry {
 
   const EmissiveMaterial* GetEmissiveMaterial(face_t face) const override;
 
-  visual_t ComputeSurfaceArea(face_t face,
-                              const Matrix* model_to_world) const override;
+  std::optional<visual_t> ComputeSurfaceArea(
+      face_t face, const Matrix* model_to_world) const override;
 
   std::variant<std::monostate, Point, Vector> SampleBySolidAngle(
       const Point& origin, face_t face, Sampler& sampler) const override;
@@ -162,8 +162,8 @@ const EmissiveMaterial* Sphere::GetEmissiveMaterial(face_t face) const {
   return emissive_materials_[face].Get();
 }
 
-visual_t Sphere::ComputeSurfaceArea(face_t face,
-                                    const Matrix* model_to_world) const {
+std::optional<visual_t> Sphere::ComputeSurfaceArea(
+    face_t face, const Matrix* model_to_world) const {
   visual_t radius_squared = radius_squared_;
   if (model_to_world) {
     // TODO: Compute approximation for non-uniform transformations

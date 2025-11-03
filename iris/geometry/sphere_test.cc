@@ -282,13 +282,16 @@ TEST(Sphere, GetEmissiveMaterial) {
 TEST(Sphere, ComputeSurfaceArea) {
   ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  visual_t surface_area0 = sphere->ComputeSurfaceArea(FRONT_FACE, nullptr);
-  EXPECT_NEAR(16.0 * std::numbers::pi, surface_area0, 0.001);
+  std::optional<visual_t> surface_area0 =
+      sphere->ComputeSurfaceArea(FRONT_FACE, nullptr);
+  ASSERT_TRUE(surface_area0);
+  EXPECT_NEAR(16.0 * std::numbers::pi, *surface_area0, 0.001);
 
   Matrix model_to_world = Matrix::Scalar(2.0, 2.0, 2.0).value();
-  visual_t surface_area1 =
+  std::optional<visual_t> surface_area1 =
       sphere->ComputeSurfaceArea(FRONT_FACE, &model_to_world);
-  EXPECT_NEAR(64.0 * std::numbers::pi, surface_area1, 0.001);
+  ASSERT_TRUE(surface_area1);
+  EXPECT_NEAR(64.0 * std::numbers::pi, *surface_area1, 0.001);
 }
 
 TEST(Sphere, SampleBySolidAngle) {
