@@ -141,11 +141,26 @@ bool ComputeSwapsHandedness(const std::array<std::array<geometric, 4>, 4>& m) {
   return determinant < static_cast<geometric_t>(0.0);
 }
 
+std::array<std::array<geometric, 4>, 4> Normalize(
+    const std::array<std::array<geometric, 4>, 4>& m) {
+  std::array<std::array<geometric, 4>, 4> result = m;
+  for (size_t i = 0; i < 4; i++) {
+    for (size_t j = 0; j < 4; j++) {
+      if (result[i][j] == 0.0) {
+        result[i][j] = 0.0;
+      }
+    }
+  }
+  return result;
+}
+
 }  // namespace
 
 Matrix::Matrix(const std::array<std::array<geometric, 4>, 4>& m,
                const std::array<std::array<geometric, 4>, 4>& i)
-    : m{m}, i{i}, swaps_handedness_(ComputeSwapsHandedness(m)) {
+    : m(Normalize(m)),
+      i(Normalize(i)),
+      swaps_handedness_(ComputeSwapsHandedness(m)) {
   assert(std::isfinite(m[0][0]));
   assert(std::isfinite(m[0][1]));
   assert(std::isfinite(m[0][2]));
@@ -305,40 +320,26 @@ std::expected<Matrix, const char*> Matrix::Rotation(geometric theta,
     return std::unexpected("One of x, y, or z must be non-zero");
   }
 
-  geometric_t theta_intermediate = static_cast<geometric_t>(theta);
-  geometric_t x_intermediate = static_cast<geometric_t>(x);
-  geometric_t y_intermediate = static_cast<geometric_t>(y);
-  geometric_t z_intermediate = static_cast<geometric_t>(z);
-
   geometric_t magnitude = std::sqrt(x * x + y * y + z * z);
-  x_intermediate /= magnitude;
-  y_intermediate /= magnitude;
-  z_intermediate /= magnitude;
+  x /= magnitude;
+  y /= magnitude;
+  z /= magnitude;
 
-  geometric_t sin_theta = std::sin(theta_intermediate);
-  geometric_t cos_theta = std::cos(theta_intermediate);
+  geometric_t sin_theta = std::sin(theta);
+  geometric_t cos_theta = std::cos(theta);
   geometric_t ic = static_cast<geometric_t>(1.0) - cos_theta;
 
-  geometric m00 =
-      static_cast<geometric>(x_intermediate * x_intermediate * ic + cos_theta);
-  geometric m01 = static_cast<geometric>(x_intermediate * y_intermediate * ic -
-                                         z_intermediate * sin_theta);
-  geometric m02 = static_cast<geometric>(x_intermediate * z_intermediate * ic +
-                                         y_intermediate * sin_theta);
+  geometric m00 = static_cast<geometric>(x * x * ic + cos_theta);
+  geometric m01 = static_cast<geometric>(x * y * ic - z * sin_theta);
+  geometric m02 = static_cast<geometric>(x * z * ic + y * sin_theta);
 
-  geometric a0 = static_cast<geometric>(y_intermediate * x_intermediate * ic +
-                                        z_intermediate * sin_theta);
-  geometric a1 =
-      static_cast<geometric>(y_intermediate * y_intermediate * ic + cos_theta);
-  geometric a2 = static_cast<geometric>(y_intermediate * z_intermediate * ic -
-                                        x_intermediate * sin_theta);
+  geometric a0 = static_cast<geometric>(y * x * ic + z * sin_theta);
+  geometric a1 = static_cast<geometric>(y * y * ic + cos_theta);
+  geometric a2 = static_cast<geometric>(y * z * ic - x * sin_theta);
 
-  geometric b0 = static_cast<geometric>(z_intermediate * x_intermediate * ic -
-                                        y_intermediate * sin_theta);
-  geometric b1 = static_cast<geometric>(z_intermediate * y_intermediate * ic +
-                                        x_intermediate * sin_theta);
-  geometric b2 =
-      static_cast<geometric>(z_intermediate * z_intermediate * ic + cos_theta);
+  geometric b0 = static_cast<geometric>(z * x * ic - y * sin_theta);
+  geometric b1 = static_cast<geometric>(z * y * ic + x * sin_theta);
+  geometric b2 = static_cast<geometric>(z * z * ic + cos_theta);
 
   std::array<std::array<geometric, 4>, 4> matrix = {{{m00, m01, m02, 0.0},
                                                      {a0, a1, a2, 0.0},
@@ -400,21 +401,14 @@ std::expected<Matrix, const char*> Matrix::LookAt(
     return std::unexpected("One of up_x, up_y, or up_z must be non-zero");
   }
 
-  geometric_t intermediate_eye_x = eye_x;
-  geometric_t intermediate_eye_y = eye_y;
-  geometric_t intermediate_eye_z = eye_z;
+  geometric_t up_magnitude = std::sqrt(up_x * up_x + up_y * up_y + up_z * up_z);
+  up_x /= up_magnitude;
+  up_y /= up_magnitude;
+  up_z /= up_magnitude;
 
-  geometric_t intermediate_look_at_x = look_at_x;
-  geometric_t intermediate_look_at_y = look_at_y;
-  geometric_t intermediate_look_at_z = look_at_z;
-
-  geometric_t intermediate_up_x = up_x;
-  geometric_t intermediate_up_y = up_y;
-  geometric_t intermediate_up_z = up_z;
-
-  geometric_t look_direction_x = intermediate_look_at_x - intermediate_eye_x;
-  geometric_t look_direction_y = intermediate_look_at_y - intermediate_eye_y;
-  geometric_t look_direction_z = intermediate_look_at_z - intermediate_eye_z;
+  geometric_t look_direction_x = look_at_x - eye_x;
+  geometric_t look_direction_y = look_at_y - eye_y;
+  geometric_t look_direction_z = look_at_z - eye_z;
 
   geometric_t look_direction_magnitude =
       std::sqrt(look_direction_x * look_direction_x +
@@ -424,12 +418,9 @@ std::expected<Matrix, const char*> Matrix::LookAt(
   look_direction_y /= look_direction_magnitude;
   look_direction_z /= look_direction_magnitude;
 
-  geometric_t right_x = intermediate_up_y * look_direction_z -
-                        intermediate_up_z * look_direction_y;
-  geometric_t right_y = intermediate_up_z * look_direction_x -
-                        intermediate_up_x * look_direction_z;
-  geometric_t right_z = intermediate_up_x * look_direction_y -
-                        intermediate_up_y * look_direction_x;
+  geometric_t right_x = up_y * look_direction_z - up_z * look_direction_y;
+  geometric_t right_y = up_z * look_direction_x - up_x * look_direction_z;
+  geometric_t right_z = up_x * look_direction_y - up_y * look_direction_x;
   if (right_x == 0.0 && right_y == 0.0 && right_z == 0.0) {
     return std::unexpected("up and look_at must be perpendicular");
   }
@@ -440,23 +431,34 @@ std::expected<Matrix, const char*> Matrix::LookAt(
   right_y /= right_magnitude;
   right_z /= right_magnitude;
 
-  intermediate_up_x = look_direction_y * right_z - look_direction_z * right_y;
-  intermediate_up_y = look_direction_z * right_x - look_direction_x * right_z;
-  intermediate_up_z = look_direction_x * right_y - look_direction_y * right_x;
+  up_x = look_direction_y * right_z - look_direction_z * right_y;
+  up_y = look_direction_z * right_x - look_direction_x * right_z;
+  up_z = look_direction_x * right_y - look_direction_y * right_x;
 
   std::array<std::array<geometric, 4>, 4> matrix = {
-      {{static_cast<geometric>(right_x),
-        static_cast<geometric>(intermediate_up_x),
+      {{static_cast<geometric>(right_x), static_cast<geometric>(up_x),
         static_cast<geometric>(look_direction_x), eye_x},
-       {static_cast<geometric>(right_y),
-        static_cast<geometric>(intermediate_up_y),
+       {static_cast<geometric>(right_y), static_cast<geometric>(up_y),
         static_cast<geometric>(look_direction_y), eye_y},
-       {static_cast<geometric>(right_z),
-        static_cast<geometric>(intermediate_up_z),
+       {static_cast<geometric>(right_z), static_cast<geometric>(up_z),
         static_cast<geometric>(look_direction_z), eye_z},
        {0.0, 0.0, 0.0, 1.0}}};
 
-  return Matrix::Create(matrix).value();
+  std::array<std::array<geometric, 4>, 4> inverse = {
+      {{static_cast<geometric>(right_x), static_cast<geometric>(right_y),
+        static_cast<geometric>(right_z),
+        -(right_x * eye_x + right_y * eye_y + right_z * eye_z)},
+       {static_cast<geometric>(up_x), static_cast<geometric>(up_y),
+        static_cast<geometric>(up_z),
+        -(up_x * eye_x + up_y * eye_y + up_z * eye_z)},
+       {static_cast<geometric>(look_direction_x),
+        static_cast<geometric>(look_direction_y),
+        static_cast<geometric>(look_direction_z),
+        -(look_direction_x * eye_x + look_direction_y * eye_y +
+          look_direction_z * eye_z)},
+       {0.0, 0.0, 0.0, 1.0}}};
+
+  return Matrix(matrix, inverse);
 }
 
 std::expected<Matrix, const char*> Matrix::Orthographic(
@@ -498,34 +500,22 @@ std::expected<Matrix, const char*> Matrix::Orthographic(
     return std::unexpected("near must not equal far");
   }
 
-  geometric_t left_intermediate = left;
-  geometric_t right_intermediate = right;
-  geometric_t bottom_intermediate = bottom;
-  geometric_t top_intermediate = top;
-  geometric_t near_intermediate = near;
-  geometric_t far_intermediate = far;
+  geometric tx = -static_cast<geometric>((right + left) / (right - left));
+  geometric ty = -static_cast<geometric>((top + bottom) / (top - bottom));
+  geometric tz = -static_cast<geometric>((far + near) / (far - near));
 
-  geometric tx =
-      -static_cast<geometric>((right_intermediate + left_intermediate) /
-                              (right_intermediate - left_intermediate));
-  geometric ty =
-      -static_cast<geometric>((top_intermediate + bottom_intermediate) /
-                              (top_intermediate - bottom_intermediate));
-  geometric tz =
-      -static_cast<geometric>((far_intermediate + near_intermediate) /
-                              (far_intermediate - near_intermediate));
-
-  geometric sx = static_cast<geometric>(
-      static_cast<geometric_t>(2.0) / (right_intermediate - left_intermediate));
-  geometric sy = static_cast<geometric>(
-      static_cast<geometric_t>(2.0) / (top_intermediate - bottom_intermediate));
-  geometric sz = static_cast<geometric>(static_cast<geometric_t>(-2.0) /
-                                        (far_intermediate - near_intermediate));
+  geometric sx =
+      static_cast<geometric>(static_cast<geometric_t>(2.0) / (right - left));
+  geometric sy =
+      static_cast<geometric>(static_cast<geometric_t>(2.0) / (top - bottom));
+  geometric sz =
+      static_cast<geometric>(static_cast<geometric_t>(-2.0) / (far - near));
 
   std::array<std::array<geometric, 4>, 4> matrix = {{{sx, 0.0, 0.0, tx},
                                                      {0.0, sy, 0.0, ty},
                                                      {0.0, 0.0, sz, tz},
                                                      {0.0, 0.0, 0.0, 1.0}}};
+
   std::array<std::array<geometric, 4>, 4> inverse = {
       {{static_cast<geometric>(1.0) / sx, 0.0, 0.0, -tx / sx},
        {0.0, static_cast<geometric>(1.0) / sy, 0.0, -ty / sy},

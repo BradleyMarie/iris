@@ -182,10 +182,9 @@ TEST(MatrixManager, LookAtUpParallel) {
 
 TEST(MatrixManager, LookAt) {
   MatrixManager matrix_manager;
+  matrix_manager.LookAt(1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 
-  matrix_manager.LookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0);
-
-  EXPECT_EQ(Matrix::LookAt(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0)
+  EXPECT_EQ(Matrix::LookAt(1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
                 .value()
                 .Inverse(),
             matrix_manager.Get().start);
@@ -221,7 +220,6 @@ TEST(MatrixManager, ConcatTransformNotInvertible) {
 
 TEST(MatrixManager, ConcatTransform) {
   MatrixManager matrix_manager;
-
   matrix_manager.ConcatTransform(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
                                  0.0, 1.0, 0.0, 2.0, 3.0, 4.0, 1.0);
 
