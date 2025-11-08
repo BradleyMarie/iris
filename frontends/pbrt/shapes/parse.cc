@@ -9,6 +9,7 @@
 #include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/parse.h"
 #include "frontends/pbrt/materials/result.h"
+#include "frontends/pbrt/shapes/curve.h"
 #include "frontends/pbrt/shapes/plymesh.h"
 #include "frontends/pbrt/shapes/sphere.h"
 #include "frontends/pbrt/shapes/trianglemesh.h"
@@ -53,8 +54,10 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
       exit(EXIT_FAILURE);
       break;
     case Shape::kCurve:
-      std::cerr << "ERROR: Unsupported Shape type: curve" << std::endl;
-      exit(EXIT_FAILURE);
+      return shapes::MakeCurve(shape.curve(), model_to_world,
+                               material.materials[0], material.materials[1],
+                               emissive_materials[0], emissive_materials[1],
+                               material.bumpmaps[0], material.bumpmaps[1]);
       break;
     case Shape::kCylinder:
       std::cerr << "ERROR: Unsupported Shape type: cylinder" << std::endl;

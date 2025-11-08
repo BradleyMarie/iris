@@ -67,7 +67,7 @@ TEST(ParseShape, Curve) {
                          MaterialResult(), {}, std::filesystem::current_path(),
                          material_manager, texture_manager, spectrum_manager),
               ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported Shape type: curve");
+              "ERROR: Incorrect number of values for parameter: p");
 }
 
 TEST(ParseShape, Cylinder) {

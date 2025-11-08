@@ -9,11 +9,45 @@ package(
 )
 
 cc_library(
+    name = "curve",
+    srcs = ["curve.cc"],
+    hdrs = ["curve.h"],
+    deps = [
+        "//iris:emissive_material",
+        "//iris:geometry",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "//iris/geometry:curve",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "curve_test",
+    srcs = ["curve_test.cc"],
+    deps = [
+        ":curve",
+        "//iris:emissive_material",
+        "//iris:geometry",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:reference_counted",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+    ],
+)
+
+cc_library(
     name = "parse",
     srcs = ["parse.cc"],
     hdrs = ["parse.h"],
     visibility = ["//frontends/pbrt:__subpackages__"],
     deps = [
+        ":curve",
         ":plymesh",
         ":sphere",
         ":trianglemesh",

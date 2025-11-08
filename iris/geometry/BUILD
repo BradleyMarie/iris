@@ -64,6 +64,58 @@ cc_library(
 )
 
 cc_library(
+    name = "curve",
+    srcs = ["curve.cc"],
+    hdrs = ["curve.h"],
+    deps = [
+        "//iris:bounding_box",
+        "//iris:emissive_material",
+        "//iris:float",
+        "//iris:geometry",
+        "//iris:hit_allocator",
+        "//iris:integer",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:point",
+        "//iris:position_error",
+        "//iris:ray",
+        "//iris:reference_counted",
+        "//iris:sampler",
+        "//iris:texture_coordinates",
+        "//iris:vector",
+        "//iris/geometry/internal:cubic_bezier_curve",
+    ],
+)
+
+cc_test(
+    name = "curve_test",
+    srcs = ["curve_test.cc"],
+    deps = [
+        ":curve",
+        "//iris:bounding_box",
+        "//iris:float",
+        "//iris:geometry",
+        "//iris:hit",
+        "//iris:hit_allocator",
+        "//iris:integer",
+        "//iris:material",
+        "//iris:matrix",
+        "//iris:normal_map",
+        "//iris:point",
+        "//iris:ray",
+        "//iris:reference_counted",
+        "//iris:texture_coordinates",
+        "//iris:vector",
+        "//iris/materials:mock_material",
+        "//iris/normal_maps:mock_normal_map",
+        "//iris/testing:hit_allocator",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "mock_geometry",
     testonly = True,
     hdrs = ["mock_geometry.h"],
