@@ -47,6 +47,13 @@ TEST(CubicBezierCurve, ComputeFlatness) {
   EXPECT_EQ(2.0, CubicBezierCurve(points, 0.0, 1.0).ComputeFlatness());
 }
 
+TEST(CubicBezierCurve, Diagonal) {
+  Point points[4] = {Point(0.0, 0.0, 0.0), Point(2.0, 1.0, 0.0),
+                     Point(4.0, 0.0, 0.0), Point(6.0, 1.0, 0.0)};
+  EXPECT_EQ(Vector(6.0, 1.0, 0.0),
+            CubicBezierCurve(points, 0.0, 1.0).Diagonal());
+}
+
 TEST(CubicBezierCurve, Evaluate) {
   Point points[4] = {Point(0.0, 0.0, 0.0), Point(2.0, 1.0, 0.0),
                      Point(4.0, 0.0, 0.0), Point(6.0, 1.0, 0.0)};
@@ -76,6 +83,13 @@ TEST(CubicBezierCurve, Evaluate) {
   auto [point4, width4] = curve.Evaluate(1.0);
   EXPECT_EQ(Point(6.0, 1.0, 0.0), point4);
   EXPECT_EQ(1.0, width4);
+}
+
+TEST(CubicBezierCurve, EvaluateDerivative) {
+  Point points[4] = {Point(0.0, 0.0, 0.0), Point(2.0, 1.0, 0.0),
+                     Point(4.0, 0.0, 0.0), Point(6.0, 1.0, 0.0)};
+  EXPECT_EQ(Vector(6.0, 3.0, 0.0),
+            CubicBezierCurve(points, 0.0, 1.0).EvaluateDerivative(0.0));
 }
 
 TEST(CubicBezierCurve, ExtractSegment) {
@@ -115,19 +129,15 @@ TEST(CubicBezierCurve, Subdivide) {
   EXPECT_EQ(1.0, width3);
 }
 
-TEST(CubicBezierCurve, Reproject) {
-  Point points[4] = {Point(0.0, 0.0, 0.0), Point(2.0, 1.0, 0.0),
-                     Point(4.0, 0.0, 0.0), Point(6.0, 1.0, 0.0)};
+TEST(CubicBezierCurve, InverseTransform) {
+  Point points[4] = {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                     Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
 
-  CubicBezierCurve curve =
-      CubicBezierCurve(points, 0.0, 1.0)
-          .Reproject(Point(0.0, 0.0, -2.0), Vector(0.0, 0.0, 1.0),
-                     Vector(0.0, 1.0, 0.0))
-          .value();
-  EXPECT_EQ(Point(0.0, 0.0, 2.0), curve[0]);
-  EXPECT_EQ(Point(2.0, 1.0, 2.0), curve[1]);
-  EXPECT_EQ(Point(4.0, 0.0, 2.0), curve[2]);
-  EXPECT_EQ(Point(6.0, 1.0, 2.0), curve[3]);
+  Matrix transform = Matrix::Translation(1.0, 0.0, 0.0).value();
+  EXPECT_EQ(BoundingBox(Point(-2.0, -1.0, -1.0), Point(3.0, 2.0, 1.0)),
+            CubicBezierCurve(points, 0.0, 1.0)
+                .InverseTransform(transform)
+                .ComputeBounds());
 }
 
 }  // namespace

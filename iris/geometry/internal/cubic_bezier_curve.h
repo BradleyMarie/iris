@@ -21,18 +21,18 @@ class CubicBezierCurve {
 
   BoundingBox ComputeBounds(const Matrix* matrix = nullptr) const;
   geometric_t ComputeFlatness() const;
+  Vector Diagonal() const;
 
   std::pair<Point, geometric_t> Evaluate(
       geometric_t u, geometric_t* derivative_x = nullptr,
       geometric_t* derivative_y = nullptr,
       geometric_t* derivative_z = nullptr) const;
+  Vector EvaluateDerivative(geometric_t u) const;
 
   CubicBezierCurve ExtractSegment(geometric_t start, geometric_t end) const;
   std::pair<CubicBezierCurve, CubicBezierCurve> Subdivide() const;
 
-  std::optional<CubicBezierCurve> Reproject(const Point& origin,
-                                            const Vector& z_axis,
-                                            const Vector& y_axis) const;
+  CubicBezierCurve InverseTransform(const Matrix& transform) const;
 
   geometric MaxWidth() const {
     return start_width_ > end_width_ ? start_width_ : end_width_;

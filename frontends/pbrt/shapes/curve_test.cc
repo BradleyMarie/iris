@@ -66,24 +66,6 @@ TEST(MakeCurve, DegreeUnsupported) {
       "ERROR: Unsupported value for parameter: degree");
 }
 
-TEST(MakeCurve, CylinderUnsupported) {
-  Shape::Curve curve;
-  curve.add_p();
-  curve.add_p();
-  curve.add_p();
-  curve.add_p();
-  curve.set_type(Shape::Curve::CYLINDER);
-
-  EXPECT_EXIT(
-      MakeCurve(curve, Matrix::Identity(), ReferenceCounted<Material>(),
-                ReferenceCounted<Material>(),
-                ReferenceCounted<EmissiveMaterial>(),
-                ReferenceCounted<EmissiveMaterial>(),
-                ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>()),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported value for parameter: type");
-}
-
 TEST(MakeCurve, RibbonUnsupported) {
   Shape::Curve curve;
   curve.add_p();

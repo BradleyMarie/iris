@@ -95,6 +95,8 @@ geometric_t CubicBezierCurve::ComputeFlatness() const {
   return flatness;
 }
 
+Vector CubicBezierCurve::Diagonal() const { return points_[3] - points_[0]; }
+
 std::pair<Point, geometric_t> CubicBezierCurve::Evaluate(
     geometric_t u, geometric_t* derivative_x, geometric_t* derivative_y,
     geometric_t* derivative_z) const {
@@ -117,6 +119,14 @@ std::pair<Point, geometric_t> CubicBezierCurve::Evaluate(
 
   return std::make_pair(Lerp(b[0], b[1], u),
                         std::lerp(start_width_, end_width_, u));
+}
+
+Vector CubicBezierCurve::EvaluateDerivative(geometric_t u) const {
+  Point a[3] = {Lerp(points_[0], points_[1], u),
+                Lerp(points_[1], points_[2], u),
+                Lerp(points_[2], points_[3], u)};
+  Point b[2] = {Lerp(a[0], a[1], u), Lerp(a[1], a[2], u)};
+  return static_cast<geometric_t>(3.0) * (b[1] - b[0]);
 }
 
 CubicBezierCurve CubicBezierCurve::ExtractSegment(geometric_t start,
@@ -158,21 +168,13 @@ std::pair<CubicBezierCurve, CubicBezierCurve> CubicBezierCurve::Subdivide()
                         CubicBezierCurve(points + 3, middle_width, end_width_));
 }
 
-std::optional<CubicBezierCurve> CubicBezierCurve::Reproject(
-    const Point& origin, const Vector& z_axis, const Vector& y_axis) const {
-  Point look_at = origin + z_axis;
-  std::expected<Matrix, const char*> transform =
-      Matrix::LookAt(origin.x, origin.y, origin.z, look_at.x, look_at.y,
-                     look_at.z, y_axis.x, y_axis.y, y_axis.z);
-  if (!transform) {
-    return std::nullopt;
-  }
-
+CubicBezierCurve CubicBezierCurve::InverseTransform(
+    const Matrix& transform) const {
   Point points[4] = {
-      transform->InverseMultiply(points_[0]),
-      transform->InverseMultiply(points_[1]),
-      transform->InverseMultiply(points_[2]),
-      transform->InverseMultiply(points_[3]),
+      transform.InverseMultiply(points_[0]),
+      transform.InverseMultiply(points_[1]),
+      transform.InverseMultiply(points_[2]),
+      transform.InverseMultiply(points_[3]),
   };
 
   return CubicBezierCurve(points, start_width_, end_width_);

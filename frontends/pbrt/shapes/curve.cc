@@ -19,7 +19,8 @@ namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
 
-using ::iris::geometry::MakeFlatCurve;
+using ::iris::geometry::MakeCylindricalCubicBezierCurve;
+using ::iris::geometry::MakeFlatCubicBezierCurve;
 using ::pbrt_proto::v3::Shape;
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
@@ -46,7 +47,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     exit(EXIT_FAILURE);
   }
 
-  if (curve.type() != Shape::Curve::FLAT) {
+  if (curve.type() == Shape::Curve::RIBBON) {
     std::cerr << "ERROR: Unsupported value for parameter: type" << std::endl;
     exit(EXIT_FAILURE);
   }
@@ -79,9 +80,25 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
 
   std::vector<ReferenceCounted<Geometry>> result;
   for (size_t i = 0; points.size() - i >= 4; i += 4) {
-    std::vector<ReferenceCounted<Geometry>> segments = MakeFlatCurve(
-        {points[i], points[i + 1], points[i + 2], points[i + 3]}, num_segments,
-        start_width, end_width, front_material, front_normal_map);
+    std::vector<ReferenceCounted<Geometry>> segments;
+
+    switch (curve.type()) {
+      case Shape::Curve::FLAT:
+        segments = MakeFlatCubicBezierCurve(
+            {points[i], points[i + 1], points[i + 2], points[i + 3]},
+            num_segments, start_width, end_width, front_material,
+            front_normal_map);
+        break;
+      case Shape::Curve::CYLINDER:
+        segments = MakeCylindricalCubicBezierCurve(
+            {points[i], points[i + 1], points[i + 2], points[i + 3]},
+            num_segments, start_width, end_width, front_material,
+            front_normal_map);
+        break;
+      case Shape::Curve::RIBBON:
+        break;
+    }
+
     result.insert(result.end(), segments.begin(), segments.end());
   }
 

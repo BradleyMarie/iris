@@ -16,7 +16,13 @@
 namespace iris {
 namespace geometry {
 
-std::vector<ReferenceCounted<Geometry>> MakeFlatCurve(
+std::vector<ReferenceCounted<Geometry>> MakeFlatCubicBezierCurve(
+    const std::array<Point, 4>& control_points, uint32_t num_segments,
+    geometric start_width, geometric end_width,
+    ReferenceCounted<Material> front_material,
+    ReferenceCounted<NormalMap> front_normal_map);
+
+std::vector<ReferenceCounted<Geometry>> MakeCylindricalCubicBezierCurve(
     const std::array<Point, 4>& control_points, uint32_t num_segments,
     geometric start_width, geometric end_width,
     ReferenceCounted<Material> front_material,

@@ -27,12 +27,15 @@ namespace {
 
 using ::iris::materials::MockMaterial;
 using ::iris::normal_maps::MockNormalMap;
+using ::iris::testing::AdditionalData;
 using ::iris::testing::BackFace;
 using ::iris::testing::FrontFace;
 using ::iris::testing::MakeHitAllocator;
 
-struct AdditionalData {
+struct Data {
   Vector direction;
+  Vector dp_du;
+  Vector dp_dv;
   geometric_t error;
   geometric_t u;
   geometric_t v;
@@ -45,30 +48,34 @@ static const ReferenceCounted<Material> front_material =
 static const ReferenceCounted<NormalMap> front_normal_map =
     MakeReferenceCounted<MockNormalMap>();
 
-ReferenceCounted<Geometry> MakeSimpleFlatCurve() {
-  return MakeFlatCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
-                        Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                       1, 0.25, 0.5, front_material, front_normal_map)
+ReferenceCounted<Geometry> MakeCubicBezierCurve() {
+  return MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                                   Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
+                                  1, 0.25, 0.5, front_material,
+                                  front_normal_map)
       .front();
 }
 
-TEST(Curve, Null) {
-  EXPECT_TRUE(MakeFlatCurve({Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0),
-                             Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)},
-                            1, 0.1, 0.2, front_material, front_normal_map)
-                  .empty());
-  EXPECT_TRUE(MakeFlatCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
-                             Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                            1, -0.1, -0.2, front_material, front_normal_map)
-                  .empty());
-  EXPECT_TRUE(MakeFlatCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
-                             Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                            0, 0.5, 0.6, front_material, front_normal_map)
-                  .empty());
+TEST(CubicBezierCurve, Null) {
+  EXPECT_TRUE(
+      MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0),
+                                Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)},
+                               1, 0.1, 0.2, front_material, front_normal_map)
+          .empty());
+  EXPECT_TRUE(
+      MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                                Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
+                               1, -0.1, -0.2, front_material, front_normal_map)
+          .empty());
+  EXPECT_TRUE(
+      MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                                Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
+                               0, 0.5, 0.6, front_material, front_normal_map)
+          .empty());
 }
 
 TEST(Curve, MissesCompletely) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
 
   Point origin(0.0, 0.0, 100.0);
   Vector direction(0.0, 0.0, 1.0);
@@ -80,7 +87,7 @@ TEST(Curve, MissesCompletely) {
 }
 
 TEST(Curve, Hits) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
 
   Point origin(0.1, 0.1, 6.0);
   Vector direction(0.0, 0.0, -1.0);
@@ -94,25 +101,71 @@ TEST(Curve, Hits) {
 
   EXPECT_EQ(FRONT_FACE, FrontFace(*hit));
   EXPECT_EQ(FRONT_FACE, BackFace(*hit));
+
+  const Data* data = static_cast<const Data*>(AdditionalData(*hit));
+  ASSERT_TRUE(data);
+  EXPECT_EQ(direction, data->direction);
+  EXPECT_NEAR(3.0000, data->dp_du.x, 0.001);
+  EXPECT_NEAR(2.5721, data->dp_du.y, 0.001);
+  EXPECT_NEAR(0.0000, data->dp_du.z, 0.001);
+  EXPECT_NEAR(0.3374, data->dp_dv.x, 0.001);
+  EXPECT_NEAR(-0.3936, data->dp_dv.y, 0.001);
+  EXPECT_NEAR(0.0000, data->dp_dv.z, 0.001);
+}
+
+TEST(Curve, HitsCylinder) {
+  ReferenceCounted<Geometry> curve =
+      MakeCylindricalCubicBezierCurve(
+          {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0), Point(2.0, 0.0, 0.0),
+           Point(3.0, 1.0, 0.0)},
+          1, 0.25, 0.5, front_material, front_normal_map)
+          .front();
+
+  Point origin(0.1, 0.1, 6.0);
+  Vector direction(0.0, 0.0, -1.0);
+  Ray ray(origin, direction);
+
+  HitAllocator hit_allocator = MakeHitAllocator(ray);
+
+  Hit* hit = curve->TraceAllHits(hit_allocator);
+  ASSERT_NE(nullptr, hit);
+  EXPECT_EQ(6.0, hit->distance);
+
+  EXPECT_EQ(FRONT_FACE, FrontFace(*hit));
+  EXPECT_EQ(FRONT_FACE, BackFace(*hit));
+
+  const Data* data = static_cast<const Data*>(AdditionalData(*hit));
+  ASSERT_TRUE(data);
+  EXPECT_EQ(direction, data->direction);
+  EXPECT_NEAR(3.0000, data->dp_du.x, 0.001);
+  EXPECT_NEAR(2.5721, data->dp_du.y, 0.001);
+  EXPECT_NEAR(0.0000, data->dp_du.z, 0.001);
+  EXPECT_NEAR(0.3342, data->dp_dv.x, 0.001);
+  EXPECT_NEAR(-0.3898, data->dp_dv.y, 0.001);
+  EXPECT_NEAR(-0.0719, data->dp_dv.z, 0.001);
 }
 
 TEST(Curve, ComputeSurfaceNormal) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
 
-  AdditionalData data{
-      Vector(0.0, 0.0, 3.0),
+  Data data{
+      Vector(0.0, 0.0, 2.0),
+      Vector(1.0, 0.0, 0.0),
+      Vector(0.0, 1.0, 0.0),
   };
 
   Vector normal =
       curve->ComputeSurfaceNormal(Point(0.0, 0.0, 0.0), FRONT_FACE, &data);
-  EXPECT_EQ(-Vector(0.0, 0.0, 3.0), normal);
+  EXPECT_EQ(Vector(0.0, 0.0, -1.0), normal);
 }
 
 TEST(Curve, ComputeTextureCoordinatesNone) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
 
-  AdditionalData data{
+  Data data{
       Vector(0.0, 0.0, 3.0),
+      Vector(1.0, 0.0, 0.0),
+      Vector(0.0, 1.0, 0.0),
       0.0,
       0.125,
       0.250,
@@ -128,20 +181,33 @@ TEST(Curve, ComputeTextureCoordinatesNone) {
 }
 
 TEST(Curve, ComputeShadingNormal) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
+
+  Data data{
+      Vector(0.0, 0.0, 3.0),
+      Vector(1.0, 0.0, 0.0),
+      Vector(0.0, 1.0, 0.0),
+      0.0,
+      0.125,
+      0.250,
+  };
 
   Geometry::ComputeShadingNormalResult front_normal =
-      curve->ComputeShadingNormal(FRONT_FACE, nullptr);
-  EXPECT_FALSE(front_normal.surface_normal);
-  EXPECT_FALSE(front_normal.dp_duv);
+      curve->ComputeShadingNormal(FRONT_FACE, &data);
+  ASSERT_FALSE(front_normal.surface_normal);
+  ASSERT_TRUE(front_normal.dp_duv);
+  EXPECT_EQ(Vector(1.0, 0.0, 0.0), front_normal.dp_duv->first);
+  EXPECT_EQ(Vector(0.0, 1.0, 0.0), front_normal.dp_duv->second);
   EXPECT_EQ(front_normal_map.Get(), front_normal.normal_map);
 }
 
 TEST(Curve, ComputeHitPoint) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
 
-  AdditionalData data{
+  Data data{
       Vector(0.0, 0.0, 3.0),
+      Vector(1.0, 0.0, 0.0),
+      Vector(0.0, 1.0, 0.0),
       1.0,
   };
 
@@ -161,21 +227,21 @@ TEST(Curve, ComputeHitPoint) {
 }
 
 TEST(Curve, GetMaterial) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
 
   const Material* front = curve->GetMaterial(FRONT_FACE);
   EXPECT_EQ(front_material.Get(), front);
 }
 
 TEST(Curve, GetBounds) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
   BoundingBox bounds = curve->ComputeBounds(nullptr);
   EXPECT_EQ(Point(-0.5, -0.5, -0.5), bounds.lower);
   EXPECT_EQ(Point(3.5, 1.5, 0.5), bounds.upper);
 }
 
 TEST(Curve, GetBoundsWithTransform) {
-  ReferenceCounted<Geometry> curve = MakeSimpleFlatCurve();
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
   Matrix transform = Matrix::Translation(1.0, 2.0, 3.0).value();
   BoundingBox bounds = curve->ComputeBounds(&transform);
   EXPECT_EQ(Point(0.5, 1.5, 2.5), bounds.lower);

@@ -55,11 +55,12 @@ struct Shared {
   CubicBezierCurve curve;
   ReferenceCounted<Material> materials[1];
   ReferenceCounted<NormalMap> normal_maps[1];
+  bool cylinder;
 };
 
 struct CurveHit {
   geometric_t distance;
-  geometric_t error;
+  geometric_t width;
   geometric_t u;
   geometric_t v;
 };
@@ -153,12 +154,30 @@ std::optional<CurveHit> RecursiveTrace(const CubicBezierCurve& curve,
   return first_hit->distance < second_hit->distance ? first_hit : second_hit;
 }
 
+Vector ComputeDpDv(const Ray& ray, const Vector& dp_du, geometric_t width,
+                   geometric_t v, bool cylindrical) {
+  Vector orthogonal = CrossProduct(ray.direction, dp_du);
+
+  Vector dp_dv = orthogonal * (width / orthogonal.Length());
+  if (!cylindrical) {
+    return dp_dv;
+  }
+
+  geometric_t theta =
+      std::lerp(static_cast<geometric_t>(0.5) * std::numbers::pi,
+                static_cast<geometric_t>(-0.5) * std::numbers::pi, v);
+
+  return Matrix::Rotation(theta, dp_du.x, dp_du.y, dp_du.z)->Multiply(dp_dv);
+}
+
 class Curve final : public Geometry {
  public:
   static constexpr face_t kFrontFace = 0u;
 
   struct AdditionalData {
     Vector direction;
+    Vector dp_du;
+    Vector dp_dv;
     geometric_t error;
     geometric_t u;
     geometric_t v;
@@ -205,29 +224,37 @@ Hit* Curve::Trace(const Ray& ray, geometric_t minimum_distance,
   Vector up =
       maybe_dx.IsZero() ? CoordinateSystem(ray.direction).first : maybe_dx;
 
-  std::optional<CubicBezierCurve> local_curve =
-      model_curve.Reproject(ray.origin, ray.direction, up);
-  if (!local_curve) {
+  Point look_at = ray.origin + ray.direction;
+  std::expected<Matrix, const char*> transform =
+      Matrix::LookAt(ray.origin.x, ray.origin.y, ray.origin.z, look_at.x,
+                     look_at.y, look_at.z, up.x, up.y, up.z);
+  if (!transform) {
     return nullptr;
   }
 
+  CubicBezierCurve local_curve = model_curve.InverseTransform(*transform);
+
   std::optional<CurveHit> hit =
-      RecursiveTrace(*local_curve, u0_, u1_, ComputeMaxDepth(*local_curve));
+      RecursiveTrace(local_curve, u0_, u1_, ComputeMaxDepth(local_curve));
   if (!hit) {
     return nullptr;
   }
 
+  Vector maybe_dp_du = shared_->curve.EvaluateDerivative(hit->u);
+  Vector dp_du = maybe_dp_du.IsZero() ? shared_->curve.Diagonal() : maybe_dp_du;
+  Vector dp_dv = ComputeDpDv(ray, dp_du, hit->width, hit->v, shared_->cylinder);
+
   return &hit_allocator.Allocate(
-      nullptr, hit->distance, hit->error, kFrontFace, kFrontFace,
+      nullptr, hit->distance, hit->width, kFrontFace, kFrontFace,
       /*is_chiral=*/false,
-      AdditionalData{ray.direction, hit->error, hit->u, hit->v});
+      AdditionalData{ray.direction, dp_du, dp_dv, hit->width, hit->u, hit->v});
 }
 
 Vector Curve::ComputeSurfaceNormal(const Point& hit_point, face_t face,
                                    const void* additional_data) const {
   const AdditionalData* data =
       static_cast<const AdditionalData*>(additional_data);
-  return -data->direction;
+  return CrossProduct(data->dp_du, data->dp_dv).AlignAgainst(data->direction);
 }
 
 std::optional<Geometry::TextureCoordinates> Curve::ComputeTextureCoordinates(
@@ -235,12 +262,31 @@ std::optional<Geometry::TextureCoordinates> Curve::ComputeTextureCoordinates(
     face_t face, const void* additional_data) const {
   const AdditionalData* data =
       static_cast<const AdditionalData*>(additional_data);
-  return Geometry::TextureCoordinates{face, {data->u, data->v}};
+  if (!differentials) {
+    return Geometry::TextureCoordinates{face, {data->u, data->v}};
+  }
+
+  Vector dp_dx = differentials->dx - hit_point;
+  Vector dp_dy = differentials->dy - hit_point;
+
+  geometric_t dp_du_length_squared = DotProduct(data->dp_du, data->dp_du);
+  geometric_t dp_dv_length_squared = DotProduct(data->dp_dv, data->dp_dv);
+
+  return Geometry::TextureCoordinates{
+      face,
+      {data->u, data->v},
+      /*du_dx=*/DotProduct(data->dp_du, dp_dx) / dp_du_length_squared,
+      /*du_dy=*/DotProduct(data->dp_du, dp_dy) / dp_du_length_squared,
+      /*dv_dx=*/DotProduct(data->dp_dv, dp_dx) / dp_dv_length_squared,
+      /*dv_dy=*/DotProduct(data->dp_dv, dp_dy) / dp_dv_length_squared};
 }
 
 Geometry::ComputeShadingNormalResult Curve::ComputeShadingNormal(
     face_t face, const void* additional_data) const {
-  return {std::nullopt, std::nullopt, shared_->normal_maps[face].Get()};
+  const AdditionalData* data =
+      static_cast<const AdditionalData*>(additional_data);
+  return {std::nullopt, std::make_pair(data->dp_du, data->dp_dv),
+          shared_->normal_maps[face].Get()};
 }
 
 Geometry::ComputeHitPointResult Curve::ComputeHitPoint(
@@ -260,11 +306,9 @@ BoundingBox Curve::ComputeBounds(const Matrix* model_to_world) const {
   return shared_->curve.ComputeBounds(model_to_world);
 }
 
-}  // namespace
-
-std::vector<ReferenceCounted<Geometry>> MakeFlatCurve(
+std::vector<ReferenceCounted<Geometry>> MakeCubicBezierCurve(
     const std::array<Point, 4>& control_points, uint32_t num_segments,
-    geometric start_width, geometric end_width,
+    geometric start_width, geometric end_width, bool cylinder,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<NormalMap> front_normal_map) {
   std::vector<ReferenceCounted<Geometry>> result;
@@ -284,7 +328,7 @@ std::vector<ReferenceCounted<Geometry>> MakeFlatCurve(
 
   std::shared_ptr<Shared> shared = std::make_shared<Shared>(
       Shared{CubicBezierCurve(control_points.data(), start_width, end_width),
-             std::move(front_material), std::move(front_normal_map)});
+             std::move(front_material), std::move(front_normal_map), cylinder});
 
   for (uint64_t i = 0; i < num_segments; i++) {
     geometric start =
@@ -296,6 +340,28 @@ std::vector<ReferenceCounted<Geometry>> MakeFlatCurve(
   }
 
   return result;
+}
+
+}  // namespace
+
+std::vector<ReferenceCounted<Geometry>> MakeFlatCubicBezierCurve(
+    const std::array<Point, 4>& control_points, uint32_t num_segments,
+    geometric start_width, geometric end_width,
+    ReferenceCounted<Material> front_material,
+    ReferenceCounted<NormalMap> front_normal_map) {
+  return MakeCubicBezierCurve(
+      control_points, num_segments, start_width, end_width, /*cylinder=*/false,
+      std::move(front_material), std::move(front_normal_map));
+}
+
+std::vector<ReferenceCounted<Geometry>> MakeCylindricalCubicBezierCurve(
+    const std::array<Point, 4>& control_points, uint32_t num_segments,
+    geometric start_width, geometric end_width,
+    ReferenceCounted<Material> front_material,
+    ReferenceCounted<NormalMap> front_normal_map) {
+  return MakeCubicBezierCurve(
+      control_points, num_segments, start_width, end_width, /*cylinder=*/true,
+      std::move(front_material), std::move(front_normal_map));
 }
 
 }  // namespace geometry
