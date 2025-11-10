@@ -98,7 +98,7 @@ void BuildBVH(const WorkItem& work_item,
 
     work_list.pop_front();
     for (size_t i = 0; i < work_result.num_items; i++) {
-      if (work_list.front().depth < kBvhBfsDepthLimit) {
+      if (work_list.empty() || work_list.front().depth < kBvhBfsDepthLimit) {
         work_list.push_back(work_result.items[i]);
       } else {
         work_list.push_front(work_result.items[i]);
