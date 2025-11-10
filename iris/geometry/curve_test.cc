@@ -51,27 +51,27 @@ static const ReferenceCounted<NormalMap> front_normal_map =
 ReferenceCounted<Geometry> MakeCubicBezierCurve() {
   return MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
                                    Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                                  1, 0.25, 0.5, front_material,
+                                  1, 0.25, 0.5, 0.0, 1.0, front_material,
                                   front_normal_map)
       .front();
 }
 
 TEST(CubicBezierCurve, Null) {
-  EXPECT_TRUE(
-      MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0),
-                                Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)},
-                               1, 0.1, 0.2, front_material, front_normal_map)
-          .empty());
-  EXPECT_TRUE(
-      MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
-                                Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                               1, -0.1, -0.2, front_material, front_normal_map)
-          .empty());
-  EXPECT_TRUE(
-      MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
-                                Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                               0, 0.5, 0.6, front_material, front_normal_map)
-          .empty());
+  EXPECT_TRUE(MakeFlatCubicBezierCurve(
+                  {Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0),
+                   Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 0.0)},
+                  1, 0.1, 0.2, 0.0, 1.0, front_material, front_normal_map)
+                  .empty());
+  EXPECT_TRUE(MakeFlatCubicBezierCurve(
+                  {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                   Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
+                  1, -0.1, -0.2, 0.0, 1.0, front_material, front_normal_map)
+                  .empty());
+  EXPECT_TRUE(MakeFlatCubicBezierCurve(
+                  {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                   Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
+                  0, 0.5, 0.6, 0.0, 1.0, front_material, front_normal_map)
+                  .empty());
 }
 
 TEST(Curve, MissesCompletely) {
@@ -118,7 +118,7 @@ TEST(Curve, HitsCylinder) {
       MakeCylindricalCubicBezierCurve(
           {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0), Point(2.0, 0.0, 0.0),
            Point(3.0, 1.0, 0.0)},
-          1, 0.25, 0.5, front_material, front_normal_map)
+          1, 0.25, 0.5, 0.0, 1.0, front_material, front_normal_map)
           .front();
 
   Point origin(0.1, 0.1, 6.0);

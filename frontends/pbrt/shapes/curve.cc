@@ -18,10 +18,42 @@
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
+namespace {
 
 using ::iris::geometry::MakeCylindricalCubicBezierCurve;
 using ::iris::geometry::MakeFlatCubicBezierCurve;
 using ::pbrt_proto::v3::Shape;
+
+Point Lerp(const Point& p0, const Point& p1, geometric_t t) {
+  return Point(std::lerp(p0.x, p1.x, t), std::lerp(p0.y, p1.y, t),
+               std::lerp(p0.z, p1.z, t));
+}
+
+std::array<Point, 4> ComputeCubicSegment(Shape::Curve::Basis basis,
+                                         std::span<const Point> points,
+                                         size_t segment) {
+  if (basis == Shape::Curve::BEZIER) {
+    return {points[segment * 3u + 0], points[segment * 3u + 1],
+            points[segment * 3u + 2], points[segment * 3u + 3]};
+  }
+
+  Point p012 = points[segment + 0];
+  Point p123 = points[segment + 1];
+  Point p234 = points[segment + 2];
+  Point p345 = points[segment + 3];
+
+  Point p122 = Lerp(p012, p123, 2.0 / 3.0);
+  Point p223 = Lerp(p123, p234, 1.0 / 3.0);
+  Point p233 = Lerp(p123, p234, 2.0 / 3.0);
+  Point p334 = Lerp(p234, p345, 1.0 / 3.0);
+
+  Point p222 = Lerp(p122, p223, 0.5);
+  Point p333 = Lerp(p233, p334, 0.5);
+
+  return {p222, p223, p233, p333};
+}
+
+}  // namespace
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     const Shape::Curve& curve, const Matrix& model_to_world,
@@ -34,11 +66,6 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
   if (curve.p_size() < 4) {
     std::cerr << "ERROR: Incorrect number of values for parameter: p"
               << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  if (curve.basis() != Shape::Curve::BEZIER) {
-    std::cerr << "ERROR: Unsupported value for parameter: basis" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -68,7 +95,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     exit(EXIT_FAILURE);
   }
 
-  uint32_t num_segments = 1u << curve.splitdepth();
+  uint32_t splits_per_segment = 1u << curve.splitdepth();
 
   std::vector<Point> points;
   for (const auto& p : curve.p()) {
@@ -78,22 +105,51 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     points.push_back(model_to_world.Multiply(model_point));
   }
 
-  std::vector<ReferenceCounted<Geometry>> result;
-  for (size_t i = 0; points.size() - i >= 4; i += 4) {
-    std::vector<ReferenceCounted<Geometry>> segments;
+  size_t num_segments = 0;
+  switch (curve.basis()) {
+    case Shape::Curve::BEZIER:
+      if (curve.p_size() >= curve.degree() + 1 &&
+          (curve.p_size() - curve.degree() - 1) % curve.degree() == 0) {
+        num_segments =
+            static_cast<size_t>((curve.p_size() - 1) / curve.degree());
+      } else {
+        std::cerr << "WARNING: Invalid number of values to parameter: p"
+                  << std::endl;
+      }
+      break;
+    case Shape::Curve::BSPLINE:
+      if (curve.p_size() > 3) {
+        num_segments = static_cast<size_t>(curve.p_size() - curve.degree());
+      } else {
+        std::cerr << "WARNING: Invalid number of values to parameter: p"
+                  << std::endl;
+      }
+      break;
+  }
 
+  std::vector<ReferenceCounted<Geometry>> result;
+  for (size_t i = 0; i < num_segments; i++) {
+    std::array<Point, 4> control_points =
+        ComputeCubicSegment(curve.basis(), points, i);
+
+    geometric start_u =
+        static_cast<double>(i) / static_cast<double>(num_segments);
+    geometric end_u =
+        static_cast<double>(i + 1) / static_cast<double>(num_segments);
+
+    std::vector<ReferenceCounted<Geometry>> segments;
     switch (curve.type()) {
       case Shape::Curve::FLAT:
         segments = MakeFlatCubicBezierCurve(
-            {points[i], points[i + 1], points[i + 2], points[i + 3]},
-            num_segments, start_width, end_width, front_material,
-            front_normal_map);
+            control_points, splits_per_segment,
+            std::lerp(start_width, end_width, start_u),
+            std::lerp(start_width, end_width, end_u), start_u, end_u,
+            front_material, front_normal_map);
         break;
       case Shape::Curve::CYLINDER:
         segments = MakeCylindricalCubicBezierCurve(
-            {points[i], points[i + 1], points[i + 2], points[i + 3]},
-            num_segments, start_width, end_width, front_material,
-            front_normal_map);
+            control_points, splits_per_segment, start_width, end_width, start_u,
+            end_u, front_material, front_normal_map);
         break;
       case Shape::Curve::RIBBON:
         break;

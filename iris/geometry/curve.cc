@@ -53,6 +53,8 @@ size_t ComputeMaxDepth(const CubicBezierCurve& curve) {
 
 struct Shared {
   CubicBezierCurve curve;
+  geometric u_start;
+  geometric u_end;
   ReferenceCounted<Material> materials[1];
   ReferenceCounted<NormalMap> normal_maps[1];
   bool cylinder;
@@ -240,14 +242,20 @@ Hit* Curve::Trace(const Ray& ray, geometric_t minimum_distance,
     return nullptr;
   }
 
-  Vector maybe_dp_du = shared_->curve.EvaluateDerivative(hit->u);
-  Vector dp_du = maybe_dp_du.IsZero() ? shared_->curve.Diagonal() : maybe_dp_du;
+  geometric_t u = std::lerp(shared_->u_start, shared_->u_end, hit->u);
+  geometric_t u_length = shared_->u_end - shared_->u_start;
+
+  Vector maybe_segment_dp_du = shared_->curve.EvaluateDerivative(hit->u);
+  Vector segment_dp_du = maybe_segment_dp_du.IsZero()
+                             ? shared_->curve.Diagonal()
+                             : maybe_segment_dp_du;
+  Vector dp_du = segment_dp_du / u_length;
   Vector dp_dv = ComputeDpDv(ray, dp_du, hit->width, hit->v, shared_->cylinder);
 
   return &hit_allocator.Allocate(
       nullptr, hit->distance, hit->width, kFrontFace, kFrontFace,
       /*is_chiral=*/false,
-      AdditionalData{ray.direction, dp_du, dp_dv, hit->width, hit->u, hit->v});
+      AdditionalData{ray.direction, dp_du, dp_dv, hit->width, u, hit->v});
 }
 
 Vector Curve::ComputeSurfaceNormal(const Point& hit_point, face_t face,
@@ -308,8 +316,8 @@ BoundingBox Curve::ComputeBounds(const Matrix* model_to_world) const {
 
 std::vector<ReferenceCounted<Geometry>> MakeCubicBezierCurve(
     const std::array<Point, 4>& control_points, uint32_t num_segments,
-    geometric start_width, geometric end_width, bool cylinder,
-    ReferenceCounted<Material> front_material,
+    geometric start_width, geometric end_width, geometric_t u_start,
+    geometric u_end, bool cylinder, ReferenceCounted<Material> front_material,
     ReferenceCounted<NormalMap> front_normal_map) {
   std::vector<ReferenceCounted<Geometry>> result;
   if (control_points[0] == control_points[1] &&
@@ -326,9 +334,9 @@ std::vector<ReferenceCounted<Geometry>> MakeCubicBezierCurve(
     return result;
   }
 
-  std::shared_ptr<Shared> shared = std::make_shared<Shared>(
-      Shared{CubicBezierCurve(control_points.data(), start_width, end_width),
-             std::move(front_material), std::move(front_normal_map), cylinder});
+  std::shared_ptr<Shared> shared = std::make_shared<Shared>(Shared{
+      CubicBezierCurve(control_points.data(), start_width, end_width), u_start,
+      u_end, std::move(front_material), std::move(front_normal_map), cylinder});
 
   for (uint64_t i = 0; i < num_segments; i++) {
     geometric start =
@@ -346,22 +354,24 @@ std::vector<ReferenceCounted<Geometry>> MakeCubicBezierCurve(
 
 std::vector<ReferenceCounted<Geometry>> MakeFlatCubicBezierCurve(
     const std::array<Point, 4>& control_points, uint32_t num_segments,
-    geometric start_width, geometric end_width,
-    ReferenceCounted<Material> front_material,
+    geometric start_width, geometric end_width, geometric_t u_start,
+    geometric u_end, ReferenceCounted<Material> front_material,
     ReferenceCounted<NormalMap> front_normal_map) {
-  return MakeCubicBezierCurve(
-      control_points, num_segments, start_width, end_width, /*cylinder=*/false,
-      std::move(front_material), std::move(front_normal_map));
+  return MakeCubicBezierCurve(control_points, num_segments, start_width,
+                              end_width, u_start, u_end, /*cylinder=*/false,
+                              std::move(front_material),
+                              std::move(front_normal_map));
 }
 
 std::vector<ReferenceCounted<Geometry>> MakeCylindricalCubicBezierCurve(
     const std::array<Point, 4>& control_points, uint32_t num_segments,
-    geometric start_width, geometric end_width,
-    ReferenceCounted<Material> front_material,
+    geometric start_width, geometric end_width, geometric_t u_start,
+    geometric u_end, ReferenceCounted<Material> front_material,
     ReferenceCounted<NormalMap> front_normal_map) {
-  return MakeCubicBezierCurve(
-      control_points, num_segments, start_width, end_width, /*cylinder=*/true,
-      std::move(front_material), std::move(front_normal_map));
+  return MakeCubicBezierCurve(control_points, num_segments, start_width,
+                              end_width, u_start, u_end, /*cylinder=*/true,
+                              std::move(front_material),
+                              std::move(front_normal_map));
 }
 
 }  // namespace geometry

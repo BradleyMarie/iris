@@ -30,24 +30,6 @@ TEST(MakeCurve, Empty) {
       "ERROR: Incorrect number of values for parameter: p");
 }
 
-TEST(MakeCurve, BezierUnsupported) {
-  Shape::Curve curve;
-  curve.add_p();
-  curve.add_p();
-  curve.add_p();
-  curve.add_p();
-  curve.set_basis(Shape::Curve::BSPLINE);
-
-  EXPECT_EXIT(
-      MakeCurve(curve, Matrix::Identity(), ReferenceCounted<Material>(),
-                ReferenceCounted<Material>(),
-                ReferenceCounted<EmissiveMaterial>(),
-                ReferenceCounted<EmissiveMaterial>(),
-                ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>()),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported value for parameter: basis");
-}
-
 TEST(MakeCurve, DegreeUnsupported) {
   Shape::Curve curve;
   curve.add_p();
@@ -156,16 +138,6 @@ TEST(MakeCurve, Valid) {
   p6.set_x(6.0);
   p6.set_y(0.0);
   p6.set_z(0.0);
-
-  pbrt_proto::v3::Point& p7 = *curve.add_p();
-  p7.set_x(7.0);
-  p7.set_y(1.0);
-  p7.set_z(0.0);
-
-  pbrt_proto::v3::Point& p8 = *curve.add_p();
-  p8.set_x(8.0);
-  p8.set_y(0.0);
-  p8.set_z(0.0);
 
   auto [shapes, matrix] = MakeCurve(
       curve, Matrix::Identity(), ReferenceCounted<Material>(),
