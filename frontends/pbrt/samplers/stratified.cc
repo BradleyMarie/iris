@@ -19,15 +19,13 @@ using ::pbrt_proto::v3::Sampler;
 
 std::unique_ptr<ImageSampler> MakeStratified(
     const Sampler::Stratified& stratified) {
-  if (stratified.xsamples() < 0 ||
-      stratified.xsamples() > std::numeric_limits<uint16_t>::max()) {
+  if (stratified.xsamples() > std::numeric_limits<uint16_t>::max()) {
     std::cerr << "ERROR: Out of range value for parameter: xsamples"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (stratified.ysamples() < 0 ||
-      stratified.ysamples() > std::numeric_limits<uint16_t>::max()) {
+  if (stratified.ysamples() > std::numeric_limits<uint16_t>::max()) {
     std::cerr << "ERROR: Out of range value for parameter: ysamples"
               << std::endl;
     exit(EXIT_FAILURE);

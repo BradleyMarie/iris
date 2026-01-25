@@ -1,6 +1,7 @@
 #include "frontends/pbrt/shapes/trianglemesh.h"
 
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <utility>
@@ -56,12 +57,12 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
         {}, model_to_world);
   }
 
-  int largest_index = 0u;
+  uint32_t largest_index = 0u;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices;
   for (const auto& entry : with_defaults.indices()) {
-    if (entry.v0() < 0 || entry.v0() >= with_defaults.p_size() ||
-        entry.v1() < 0 || entry.v1() >= with_defaults.p_size() ||
-        entry.v2() < 0 || entry.v2() >= with_defaults.p_size()) {
+    if (entry.v0() >= with_defaults.p_size() ||
+        entry.v1() >= with_defaults.p_size() ||
+        entry.v2() >= with_defaults.p_size()) {
       std::cerr << "ERROR: Out of range value for parameter: indices"
                 << std::endl;
       exit(EXIT_FAILURE);

@@ -27,8 +27,7 @@ std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
       Defaults().area_light_sources().diffuse();
   with_defaults.MergeFrom(diffuse);
 
-  if (with_defaults.samples() <= 0 ||
-      with_defaults.samples() > std::numeric_limits<uint8_t>::max()) {
+  if (with_defaults.samples() > std::numeric_limits<uint8_t>::max()) {
     std::cerr << "ERROR: Out of range value for parameter: samples"
               << std::endl;
     exit(EXIT_FAILURE);

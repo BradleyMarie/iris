@@ -1,8 +1,5 @@
 #include "frontends/pbrt/samplers/random.h"
 
-#include <cstdint>
-#include <cstdlib>
-#include <iostream>
 #include <memory>
 
 #include "iris/image_sampler.h"
@@ -17,13 +14,7 @@ using ::iris::image_samplers::MakeRandomImageSampler;
 using ::pbrt_proto::v3::Sampler;
 
 std::unique_ptr<ImageSampler> MakeRandom(const Sampler::Random& random) {
-  if (random.pixelsamples() < 0) {
-    std::cerr << "ERROR: Out of range value for parameter: pixelsamples"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return MakeRandomImageSampler(static_cast<uint32_t>(random.pixelsamples()));
+  return MakeRandomImageSampler(random.pixelsamples());
 }
 
 }  // namespace samplers

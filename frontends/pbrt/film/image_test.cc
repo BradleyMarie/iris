@@ -167,7 +167,7 @@ TEST(Image, Scale) {
               "ERROR: Out of range value for parameter: scale");
 }
 
-TEST(Image, XResolutionNegative) {
+TEST(Image, XResolutionZero) {
   Film::Image image;
   image.set_xresolution(0);
 
@@ -183,7 +183,7 @@ TEST(Image, XResolutionTooLarge) {
               "ERROR: Out of range value for parameter: xresolution");
 }
 
-TEST(Image, YResolutionNegative) {
+TEST(Image, YResolutionZero) {
   Film::Image image;
   image.set_yresolution(0);
 

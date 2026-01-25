@@ -55,14 +55,14 @@ std::unique_ptr<FilmResult> MakeImage(const Film::Image& image) {
     exit(EXIT_FAILURE);
   }
 
-  if (with_defaults.xresolution() <= 0 ||
+  if (with_defaults.xresolution() == 0 ||
       with_defaults.xresolution() > kMaxImageDimensionSize) {
     std::cerr << "ERROR: Out of range value for parameter: xresolution"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (with_defaults.yresolution() <= 0 ||
+  if (with_defaults.yresolution() == 0 ||
       with_defaults.yresolution() > kMaxImageDimensionSize) {
     std::cerr << "ERROR: Out of range value for parameter: yresolution"
               << std::endl;

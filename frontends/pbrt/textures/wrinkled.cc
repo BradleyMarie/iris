@@ -1,5 +1,7 @@
 #include "frontends/pbrt/textures/wrinkled.h"
 
+#include <algorithm>
+
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
@@ -20,7 +22,7 @@ ReferenceCounted<iris::textures::FloatTexture> MakeWrinkled(
     const FloatTexture::Wrinkled& wrinkled, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeWrinkledTexture(world_to_texture,
-                             static_cast<uint8_t>(wrinkled.octaves()),
+                             std::min(255u, wrinkled.octaves()),
                              static_cast<visual_t>(wrinkled.roughness()));
 }
 
@@ -28,7 +30,7 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakeWrinkled(
     const SpectrumTexture::Wrinkled& wrinkled, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeWrinkledTexture(
-      world_to_texture, static_cast<uint8_t>(wrinkled.octaves()),
+      world_to_texture, std::min(255u, wrinkled.octaves()),
       static_cast<visual_t>(wrinkled.roughness()),
       texture_manager.AllocateReflectorTexture(static_cast<visual>(1.0)));
 }

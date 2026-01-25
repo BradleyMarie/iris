@@ -24,16 +24,6 @@ TEST(Diffuse, Empty) {
   EXPECT_FALSE(back);
 }
 
-TEST(Diffuse, TooLowSamples) {
-  TestSpectrumManager spectrum_manager;
-  AreaLightSource::Diffuse diffuse;
-  diffuse.set_samples(0);
-
-  EXPECT_EXIT(MakeDiffuse(diffuse, spectrum_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: samples");
-}
-
 TEST(Diffuse, TooHighSamples) {
   TestSpectrumManager spectrum_manager;
   AreaLightSource::Diffuse diffuse;

@@ -18,14 +18,6 @@ TEST(Path, Empty) {
   EXPECT_TRUE(MakePath(path));
 }
 
-TEST(Path, MaxDepthNegative) {
-  Integrator::Path path;
-  path.set_maxdepth(-1);
-
-  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: maxdepth");
-}
-
 TEST(Path, MaxDepthTooHigh) {
   Integrator::Path path;
   path.set_maxdepth(256);
@@ -40,50 +32,6 @@ TEST(Path, NegativeRrthreshold) {
 
   EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Out of range value for parameter: rrthreshold");
-}
-
-TEST(Path, NegativePixelbounds0) {
-  Integrator::Path path;
-  path.mutable_pixelbounds()->set_x_min(-1);
-  path.mutable_pixelbounds()->set_x_max(1);
-  path.mutable_pixelbounds()->set_y_min(0);
-  path.mutable_pixelbounds()->set_y_max(1);
-
-  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
-              "Negative value in parameter list: pixelbounds");
-}
-
-TEST(Path, NegativePixelbounds1) {
-  Integrator::Path path;
-  path.mutable_pixelbounds()->set_x_min(0);
-  path.mutable_pixelbounds()->set_x_max(-1);
-  path.mutable_pixelbounds()->set_y_min(0);
-  path.mutable_pixelbounds()->set_y_max(1);
-
-  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
-              "Negative value in parameter list: pixelbounds");
-}
-
-TEST(Path, NegativePixelbounds2) {
-  Integrator::Path path;
-  path.mutable_pixelbounds()->set_x_min(0);
-  path.mutable_pixelbounds()->set_x_max(1);
-  path.mutable_pixelbounds()->set_y_min(-1);
-  path.mutable_pixelbounds()->set_y_max(1);
-
-  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
-              "Negative value in parameter list: pixelbounds");
-}
-
-TEST(Path, NegativePixelbounds3) {
-  Integrator::Path path;
-  path.mutable_pixelbounds()->set_x_min(0);
-  path.mutable_pixelbounds()->set_x_max(1);
-  path.mutable_pixelbounds()->set_y_min(0);
-  path.mutable_pixelbounds()->set_y_max(-1);
-
-  EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
-              "Negative value in parameter list: pixelbounds");
 }
 
 TEST(Path, InvalidPixelboundsX) {

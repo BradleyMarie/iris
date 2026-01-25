@@ -1,7 +1,5 @@
 #include "frontends/pbrt/samplers/halton.h"
 
-#include <cstdlib>
-
 #include "googletest/include/gtest/gtest.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
@@ -17,14 +15,6 @@ TEST(Halton, Empty) {
   Sampler::Halton halton;
 
   EXPECT_TRUE(MakeHalton(halton));
-}
-
-TEST(Halton, TooLowPixelSamples) {
-  Sampler::Halton halton;
-  halton.set_pixelsamples(-1);
-
-  EXPECT_EXIT(MakeHalton(halton), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: pixelsamples");
 }
 
 }  // namespace

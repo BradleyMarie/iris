@@ -1,8 +1,5 @@
 #include "frontends/pbrt/samplers/sobol.h"
 
-#include <cstdint>
-#include <cstdlib>
-#include <iostream>
 #include <memory>
 
 #include "iris/image_sampler.h"
@@ -18,14 +15,7 @@ using ::iris::image_samplers::SobolScrambler;
 using ::pbrt_proto::v3::Sampler;
 
 std::unique_ptr<ImageSampler> MakeSobol(const Sampler::Sobol& sobol) {
-  if (sobol.pixelsamples() < 0) {
-    std::cerr << "ERROR: Out of range value for parameter: pixelsamples"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return MakeSobolImageSampler(static_cast<uint32_t>(sobol.pixelsamples()),
-                               SobolScrambler::FastOwen);
+  return MakeSobolImageSampler(sobol.pixelsamples(), SobolScrambler::FastOwen);
 }
 
 }  // namespace samplers

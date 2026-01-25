@@ -1,5 +1,7 @@
 #include "frontends/pbrt/shapes/curve.h"
 
+#include <cstdlib>
+
 #include "googletest/include/gtest/gtest.h"
 #include "iris/emissive_material.h"
 #include "iris/geometry.h"
@@ -28,24 +30,6 @@ TEST(MakeCurve, Empty) {
                 ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>()),
       ExitedWithCode(EXIT_FAILURE),
       "ERROR: Incorrect number of values for parameter: p");
-}
-
-TEST(MakeCurve, DegreeUnsupported) {
-  Shape::Curve curve;
-  curve.add_p();
-  curve.add_p();
-  curve.add_p();
-  curve.add_p();
-  curve.set_degree(2);
-
-  EXPECT_EXIT(
-      MakeCurve(curve, Matrix::Identity(), ReferenceCounted<Material>(),
-                ReferenceCounted<Material>(),
-                ReferenceCounted<EmissiveMaterial>(),
-                ReferenceCounted<EmissiveMaterial>(),
-                ReferenceCounted<NormalMap>(), ReferenceCounted<NormalMap>()),
-      ExitedWithCode(EXIT_FAILURE),
-      "ERROR: Unsupported value for parameter: degree");
 }
 
 TEST(MakeCurve, RibbonUnsupported) {

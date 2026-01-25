@@ -1,5 +1,7 @@
 #include "frontends/pbrt/textures/fbm.h"
 
+#include <algorithm>
+
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/matrix.h"
@@ -20,8 +22,7 @@ using ::pbrt_proto::v3::SpectrumTexture;
 ReferenceCounted<iris::textures::FloatTexture> MakeFbm(
     const FloatTexture::FBm& wrinkled, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
-  return MakeFbmTexture(world_to_texture,
-                        static_cast<uint8_t>(wrinkled.octaves()),
+  return MakeFbmTexture(world_to_texture, std::min(255u, wrinkled.octaves()),
                         static_cast<visual_t>(wrinkled.roughness()));
 }
 
@@ -29,7 +30,7 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakeFbm(
     const SpectrumTexture::FBm& wrinkled, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeFbmTexture(
-      world_to_texture, static_cast<uint8_t>(wrinkled.octaves()),
+      world_to_texture, std::min(255u, wrinkled.octaves()),
       static_cast<visual_t>(wrinkled.roughness()),
       texture_manager.AllocateReflectorTexture(static_cast<visual>(1.0)));
 }

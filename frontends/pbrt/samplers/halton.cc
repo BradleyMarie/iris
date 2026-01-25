@@ -23,12 +23,6 @@ std::unique_ptr<ImageSampler> MakeHalton(const Sampler::Halton& halton) {
   Halton_enum enumerator(static_cast<unsigned>(kResolution),
                          static_cast<unsigned>(kResolution));
 
-  if (halton.pixelsamples() < 0) {
-    std::cerr << "ERROR: Out of range value for parameter: pixelsamples"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
   if (static_cast<unsigned>(halton.pixelsamples()) >
       enumerator.get_max_samples_per_pixel()) {
     std::cerr << "ERROR: Halton sampler only supports a maximum of "
@@ -37,7 +31,7 @@ std::unique_ptr<ImageSampler> MakeHalton(const Sampler::Halton& halton) {
     exit(EXIT_FAILURE);
   }
 
-  return MakeHaltonImageSampler(static_cast<uint32_t>(halton.pixelsamples()));
+  return MakeHaltonImageSampler(halton.pixelsamples());
 }
 
 }  // namespace samplers

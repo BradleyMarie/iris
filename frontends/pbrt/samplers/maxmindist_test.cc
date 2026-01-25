@@ -1,7 +1,5 @@
 #include "frontends/pbrt/samplers/maxmindist.h"
 
-#include <cstdlib>
-
 #include "googletest/include/gtest/gtest.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
@@ -17,14 +15,6 @@ TEST(MaxMinDist, Empty) {
   Sampler::MaxMinDist maxmindist;
 
   EXPECT_TRUE(MakeMaxMinDist(maxmindist));
-}
-
-TEST(MaxMinDist, TooLowPixelSamples) {
-  Sampler::MaxMinDist maxmindist;
-  maxmindist.set_pixelsamples(-1);
-
-  EXPECT_EXIT(MakeMaxMinDist(maxmindist), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: pixelsamples");
 }
 
 }  // namespace

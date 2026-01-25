@@ -19,28 +19,12 @@ TEST(Stratified, Empty) {
   EXPECT_TRUE(MakeStratified(stratified));
 }
 
-TEST(Stratified, TooLowXSamples) {
-  Sampler::Stratified stratified;
-  stratified.set_xsamples(-1);
-
-  EXPECT_EXIT(MakeStratified(stratified), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: xsamples");
-}
-
 TEST(Stratified, TooHighXSamples) {
   Sampler::Stratified stratified;
   stratified.set_xsamples(80000);
 
   EXPECT_EXIT(MakeStratified(stratified), ExitedWithCode(EXIT_FAILURE),
               "ERROR: Out of range value for parameter: xsamples");
-}
-
-TEST(Stratified, TooLowYSamples) {
-  Sampler::Stratified stratified;
-  stratified.set_ysamples(-1);
-
-  EXPECT_EXIT(MakeStratified(stratified), ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: ysamples");
 }
 
 TEST(Stratified, TooHighYSamples) {

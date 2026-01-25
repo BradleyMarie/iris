@@ -1,7 +1,5 @@
 #include "frontends/pbrt/samplers/zerotwosequence.h"
 
-#include <cstdlib>
-
 #include "googletest/include/gtest/gtest.h"
 #include "pbrt_proto/v3/pbrt.pb.h"
 
@@ -17,15 +15,6 @@ TEST(ZeroTwoSequence, Empty) {
   Sampler::ZeroTwoSequence zerotwosequence;
 
   EXPECT_TRUE(MakeZeroTwoSequence(zerotwosequence));
-}
-
-TEST(ZeroTwoSequence, TooLowPixelSamples) {
-  Sampler::ZeroTwoSequence zerotwosequence;
-  zerotwosequence.set_pixelsamples(-1);
-
-  EXPECT_EXIT(MakeZeroTwoSequence(zerotwosequence),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Out of range value for parameter: pixelsamples");
 }
 
 }  // namespace

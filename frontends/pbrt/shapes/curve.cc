@@ -69,11 +69,6 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     exit(EXIT_FAILURE);
   }
 
-  if (curve.degree() != 3) {
-    std::cerr << "ERROR: Unsupported value for parameter: degree" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
   if (curve.type() == Shape::Curve::RIBBON) {
     std::cerr << "ERROR: Unsupported value for parameter: type" << std::endl;
     exit(EXIT_FAILURE);
@@ -89,7 +84,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     end_width = curve.width1();
   }
 
-  if (curve.splitdepth() < 0 || curve.splitdepth() >= 32) {
+  if (curve.splitdepth() >= 32) {
     std::cerr << "ERROR: Out of range value for parameter: splitdepth"
               << std::endl;
     exit(EXIT_FAILURE);
@@ -105,13 +100,24 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     points.push_back(model_to_world.Multiply(model_point));
   }
 
+  int degree = 0;
+  switch (curve.degree()) {
+    case Shape::Curve::THREE:
+      degree = 3;
+      break;
+    case Shape::Curve::FOUR:
+      std::cerr << "ERROR: Unsupported value for parameter: degree"
+                << std::endl;
+      exit(EXIT_FAILURE);
+      break;
+  }
+
   size_t num_segments = 0;
   switch (curve.basis()) {
     case Shape::Curve::BEZIER:
       if (curve.p_size() >= curve.degree() + 1 &&
-          (curve.p_size() - curve.degree() - 1) % curve.degree() == 0) {
-        num_segments =
-            static_cast<size_t>((curve.p_size() - 1) / curve.degree());
+          (curve.p_size() - degree - 1) % degree == 0) {
+        num_segments = static_cast<size_t>((curve.p_size() - 1) / degree);
       } else {
         std::cerr << "WARNING: Invalid number of values to parameter: p"
                   << std::endl;
@@ -119,7 +125,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
       break;
     case Shape::Curve::BSPLINE:
       if (curve.p_size() > 3) {
-        num_segments = static_cast<size_t>(curve.p_size() - curve.degree());
+        num_segments = static_cast<size_t>(curve.p_size() - degree);
       } else {
         std::cerr << "WARNING: Invalid number of values to parameter: p"
                   << std::endl;

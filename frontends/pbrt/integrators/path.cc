@@ -22,8 +22,7 @@ constexpr visual kMaximumContinueProbability = 0.95;
 constexpr uint8_t kMinBounces = 3;
 
 std::unique_ptr<IntegratorResult> MakePath(const Integrator::Path& path) {
-  if (path.maxdepth() < 0 ||
-      path.maxdepth() > std::numeric_limits<uint8_t>::max()) {
+  if (path.maxdepth() > std::numeric_limits<uint8_t>::max()) {
     std::cerr << "ERROR: Out of range value for parameter: maxdepth"
               << std::endl;
     exit(EXIT_FAILURE);
@@ -37,13 +36,6 @@ std::unique_ptr<IntegratorResult> MakePath(const Integrator::Path& path) {
 
   std::optional<std::array<size_t, 4>> pixel_bounds;
   if (path.has_pixelbounds()) {
-    if (path.pixelbounds().x_min() < 0 || path.pixelbounds().x_max() < 0 ||
-        path.pixelbounds().y_min() < 0 || path.pixelbounds().y_max() < 0) {
-      std::cerr << "ERROR: Negative value in parameter list: pixelbounds"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
     if (path.pixelbounds().x_max() < path.pixelbounds().x_min() ||
         path.pixelbounds().y_max() < path.pixelbounds().y_min()) {
       std::cerr << "ERROR: Invalid values for parameter list: pixelbounds"

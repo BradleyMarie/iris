@@ -1,8 +1,5 @@
 #include "frontends/pbrt/samplers/zerotwosequence.h"
 
-#include <cstdint>
-#include <cstdlib>
-#include <iostream>
 #include <memory>
 
 #include "iris/image_sampler.h"
@@ -19,15 +16,8 @@ using ::pbrt_proto::v3::Sampler;
 
 std::unique_ptr<ImageSampler> MakeZeroTwoSequence(
     const Sampler::ZeroTwoSequence& zerotwosequence) {
-  if (zerotwosequence.pixelsamples() < 0) {
-    std::cerr << "ERROR: Out of range value for parameter: pixelsamples"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  return MakeSobolImageSampler(
-      static_cast<uint32_t>(zerotwosequence.pixelsamples()),
-      SobolScrambler::FastOwen);
+  return MakeSobolImageSampler(zerotwosequence.pixelsamples(),
+                               SobolScrambler::FastOwen);
 }
 
 }  // namespace samplers
