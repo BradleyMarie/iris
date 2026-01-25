@@ -29,7 +29,7 @@ cc_library(
         "//iris/spectra:sampled_spectrum",
         "@libspd//libspd/readers:emissive_spd_reader",
         "@libspd//libspd/readers:reflective_spd_reader",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -65,6 +65,6 @@ cc_library(
         "//iris:spectrum",
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )

@@ -15,7 +15,7 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 #include "plyodine/readers/triangle_mesh_reader.h"
 
 namespace iris {

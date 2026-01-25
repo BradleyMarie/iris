@@ -9,7 +9,8 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -88,37 +89,37 @@ TEST(MakeCurve, SplitDepthTooHigh) {
 
 TEST(MakeCurve, Valid) {
   Shape::Curve curve;
-  pbrt_proto::v3::Point& p0 = *curve.add_p();
+  pbrt_proto::Point& p0 = *curve.add_p();
   p0.set_x(0.0);
   p0.set_y(0.0);
   p0.set_z(0.0);
 
-  pbrt_proto::v3::Point& p1 = *curve.add_p();
+  pbrt_proto::Point& p1 = *curve.add_p();
   p1.set_x(1.0);
   p1.set_y(1.0);
   p1.set_z(0.0);
 
-  pbrt_proto::v3::Point& p2 = *curve.add_p();
+  pbrt_proto::Point& p2 = *curve.add_p();
   p2.set_x(2.0);
   p2.set_y(0.0);
   p2.set_z(0.0);
 
-  pbrt_proto::v3::Point& p3 = *curve.add_p();
+  pbrt_proto::Point& p3 = *curve.add_p();
   p3.set_x(3.0);
   p3.set_y(1.0);
   p3.set_z(0.0);
 
-  pbrt_proto::v3::Point& p4 = *curve.add_p();
+  pbrt_proto::Point& p4 = *curve.add_p();
   p4.set_x(4.0);
   p4.set_y(0.0);
   p4.set_z(0.0);
 
-  pbrt_proto::v3::Point& p5 = *curve.add_p();
+  pbrt_proto::Point& p5 = *curve.add_p();
   p5.set_x(5.0);
   p5.set_y(1.0);
   p5.set_z(0.0);
 
-  pbrt_proto::v3::Point& p6 = *curve.add_p();
+  pbrt_proto::Point& p6 = *curve.add_p();
   p6.set_x(6.0);
   p6.set_y(0.0);
   p6.set_z(0.0);

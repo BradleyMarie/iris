@@ -6,7 +6,7 @@
 
 #include "frontends/pbrt/film/result.h"
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {

@@ -7,7 +7,7 @@
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectrum.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {

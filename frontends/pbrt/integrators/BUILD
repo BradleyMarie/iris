@@ -16,7 +16,7 @@ cc_library(
     deps = [
         ":path",
         ":result",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -27,7 +27,7 @@ cc_test(
         ":parse",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -41,7 +41,7 @@ cc_library(
         "//iris/integrators:path_integrator",
         "//iris/light_scenes:one_light_scene",
         "//iris/light_scenes:power_light_scene",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -52,7 +52,7 @@ cc_test(
         ":path",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 

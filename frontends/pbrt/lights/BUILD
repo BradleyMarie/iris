@@ -19,7 +19,7 @@ cc_library(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/lights:directional_light",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -32,7 +32,7 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -49,7 +49,7 @@ cc_library(
         "//iris/environmental_lights:image_environmental_light",
         "//third_party/stb:stb_image",
         "//third_party/tinyexr",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -68,7 +68,7 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -87,7 +87,7 @@ cc_library(
         "//iris:light",
         "//iris:matrix",
         "//iris:reference_counted",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -103,7 +103,7 @@ cc_test(
         "//iris:reference_counted",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -118,7 +118,7 @@ cc_library(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/lights:point_light",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -131,7 +131,7 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -146,7 +146,7 @@ cc_library(
         "//iris:matrix",
         "//iris:reference_counted",
         "//iris/lights:spot_light",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -159,6 +159,6 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )

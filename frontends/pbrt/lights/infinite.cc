@@ -10,7 +10,7 @@
 #include "iris/environmental_lights/image_environmental_light.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 

@@ -12,7 +12,7 @@
 #include "iris/materials/plastic_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 ABSL_FLAG(bool, reverse_plastic_eta, true,
           "If true, the eta of the faces of a plastic material are reversed. "

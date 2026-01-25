@@ -16,7 +16,7 @@ cc_library(
         "//iris:image_sampler",
         "//iris/image_samplers:halton_image_sampler",
         "//third_party/gruenschloss/halton",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -27,7 +27,7 @@ cc_test(
         ":halton",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -38,7 +38,7 @@ cc_library(
     deps = [
         "//iris:image_sampler",
         "//iris/image_samplers:sobol_image_sampler",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -49,7 +49,7 @@ cc_test(
         ":maxmindist",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -66,7 +66,7 @@ cc_library(
         ":stratified",
         ":zerotwosequence",
         "//iris:image_sampler",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -77,7 +77,7 @@ cc_test(
         ":parse",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -88,7 +88,7 @@ cc_library(
     deps = [
         "//iris:image_sampler",
         "//iris/image_samplers:random_image_sampler",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -99,7 +99,7 @@ cc_test(
         ":random",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -110,7 +110,7 @@ cc_library(
     deps = [
         "//iris:image_sampler",
         "//iris/image_samplers:sobol_image_sampler",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -121,7 +121,7 @@ cc_test(
         ":sobol",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -132,7 +132,7 @@ cc_library(
     deps = [
         "//iris:image_sampler",
         "//iris/image_samplers:stratified_image_sampler",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -143,7 +143,7 @@ cc_test(
         ":stratified",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -154,7 +154,7 @@ cc_library(
     deps = [
         "//iris:image_sampler",
         "//iris/image_samplers:sobol_image_sampler",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -165,6 +165,6 @@ cc_test(
         ":zerotwosequence",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )

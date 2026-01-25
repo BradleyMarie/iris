@@ -7,7 +7,7 @@
 
 #include "iris/image_sampler.h"
 #include "iris/image_samplers/halton_image_sampler.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 #include "third_party/gruenschloss/halton/halton_enum.h"
 
 namespace iris {

@@ -16,7 +16,7 @@ cc_library(
         "//frontends/pbrt:matrix_manager",
         "//iris:camera",
         "//iris/cameras:orthographic_camera",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -28,7 +28,7 @@ cc_test(
         "//frontends/pbrt:matrix_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -42,7 +42,7 @@ cc_library(
         ":perspective",
         "//frontends/pbrt:matrix_manager",
         "//iris:camera",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -54,7 +54,7 @@ cc_test(
         "//frontends/pbrt:matrix_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -67,7 +67,7 @@ cc_library(
         "//iris:camera",
         "//iris/cameras:pinhole_camera",
         "//iris/cameras:thin_lens_camera",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -81,6 +81,6 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:pbrt_cc_proto",
+        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )

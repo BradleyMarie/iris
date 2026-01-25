@@ -8,7 +8,8 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -180,22 +181,23 @@ TEST(MakeTriangleMesh, Succeeds) {
   TextureManager texture_manager(spectrum_manager);
 
   Shape::TriangleMesh trianglemesh;
-  auto& v0 = *trianglemesh.add_p();
+  pbrt_proto::Point& v0 = *trianglemesh.add_p();
   v0.set_x(0.0);
   v0.set_y(0.0);
   v0.set_z(0.0);
 
-  auto& v1 = *trianglemesh.add_p();
+  pbrt_proto::Point& v1 = *trianglemesh.add_p();
   v1.set_x(1.0);
   v1.set_y(0.0);
   v1.set_z(0.0);
 
-  auto& v2 = *trianglemesh.add_p();
+  pbrt_proto::Point& v2 = *trianglemesh.add_p();
   v2.set_x(0.0);
   v2.set_y(1.0);
   v2.set_z(0.0);
 
-  auto& indices = *trianglemesh.add_indices();
+  pbrt_proto::v3::Shape::TriangleMesh::VertexIndices& indices =
+      *trianglemesh.add_indices();
   indices.set_v0(0);
   indices.set_v1(1);
   indices.set_v2(2);

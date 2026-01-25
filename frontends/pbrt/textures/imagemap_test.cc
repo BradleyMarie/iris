@@ -9,7 +9,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
 namespace iris {

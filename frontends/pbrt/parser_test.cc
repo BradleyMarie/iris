@@ -7,7 +7,7 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/random_bitstreams/mersenne_twister_random_bitstream.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
 namespace iris {

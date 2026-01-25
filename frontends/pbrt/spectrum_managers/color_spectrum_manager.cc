@@ -24,7 +24,7 @@
 #include "iris/spectrum.h"
 #include "libspd/readers/emissive_spd_reader.h"
 #include "libspd/readers/reflective_spd_reader.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -40,7 +40,7 @@ using ::iris::spectra::MakeSampledSpectrum;
 using ::iris::spectra::MakeScaledBlackbodySpectrum;
 using ::libspd::ReadEmissiveSpdFrom;
 using ::libspd::ReadReflectiveSpdFrom;
-using ::pbrt_proto::v3::SampledSpectrum;
+using ::pbrt_proto::SampledSpectrum;
 using ::pbrt_proto::v3::Spectrum;
 
 std::map<visual, visual> FromFile(const std::filesystem::path& search_root,

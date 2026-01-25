@@ -13,7 +13,7 @@
 #include "iris/camera.h"
 #include "iris/cameras/pinhole_camera.h"
 #include "iris/cameras/thin_lens_camera.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {

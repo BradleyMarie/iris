@@ -10,7 +10,7 @@
 #include "iris/textures/float_texture.h"
 #include "iris/textures/ptex_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 #include "third_party/disney/ptex/Ptexture.h"
 
 namespace iris {

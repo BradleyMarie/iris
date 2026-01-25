@@ -31,7 +31,7 @@
 #include "iris/random_bitstreams/mersenne_twister_random_bitstream.h"
 #include "iris/renderer.h"
 #include "pbrt_proto/v3/convert.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 #ifdef INSTRUMENTED_BUILD
 ABSL_FLAG(

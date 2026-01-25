@@ -15,7 +15,7 @@
 #include "iris/file/png_writer.h"
 #include "iris/file/tga_writer.h"
 #include "iris/framebuffer.h"
-#include "pbrt_proto/v3/pbrt.pb.h"
+#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
