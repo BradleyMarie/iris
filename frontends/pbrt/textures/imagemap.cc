@@ -16,6 +16,7 @@
 #include "iris/textures/image_texture.h"
 #include "iris/textures/reflector_texture.h"
 #include "iris/textures/scaled_texture.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -27,8 +28,8 @@ using ::iris::textures::MakeBorderedImageTexture;
 using ::iris::textures::MakeClampedImageTexture;
 using ::iris::textures::MakeRepeatedImageTexture;
 using ::iris::textures::MakeScaledTexture;
+using ::pbrt_proto::ImageWrap;
 using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::ImageWrapping;
 using ::pbrt_proto::v3::SpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
@@ -112,7 +113,7 @@ ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
 
   ReferenceCounted<iris::textures::FloatTexture> texture;
   switch (with_defaults.wrap()) {
-    case ImageWrapping::BLACK:
+    case ImageWrap::BLACK:
       texture =
           MakeBorderedImageTexture(std::move(image), static_cast<visual>(0.0),
                                    static_cast<visual>(with_defaults.uscale()),
@@ -120,14 +121,14 @@ ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
                                    static_cast<visual>(with_defaults.udelta()),
                                    static_cast<visual>(with_defaults.vdelta()));
       break;
-    case ImageWrapping::CLAMP:
+    case ImageWrap::CLAMP:
       texture = MakeClampedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
           static_cast<visual>(with_defaults.udelta()),
           static_cast<visual>(with_defaults.vdelta()));
       break;
-    case ImageWrapping::REPEAT:
+    case ImageWrap::REPEAT:
       texture = MakeRepeatedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
@@ -227,7 +228,7 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
 
   ReferenceCounted<iris::textures::ReflectorTexture> texture;
   switch (with_defaults.wrap()) {
-    case ImageWrapping::BLACK:
+    case ImageWrap::BLACK:
       texture = MakeBorderedImageTexture(
           std::move(image), ReferenceCounted<Reflector>(),
           static_cast<visual>(with_defaults.uscale()),
@@ -235,14 +236,14 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
           static_cast<visual>(with_defaults.udelta()),
           static_cast<visual>(with_defaults.vdelta()));
       break;
-    case ImageWrapping::CLAMP:
+    case ImageWrap::CLAMP:
       texture = MakeClampedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),
           static_cast<visual>(with_defaults.udelta()),
           static_cast<visual>(with_defaults.vdelta()));
       break;
-    case ImageWrapping::REPEAT:
+    case ImageWrap::REPEAT:
       texture = MakeRepeatedImageTexture(
           std::move(image), static_cast<visual>(with_defaults.uscale()),
           static_cast<visual>(with_defaults.vscale()),

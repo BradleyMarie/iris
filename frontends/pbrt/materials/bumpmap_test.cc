@@ -7,6 +7,7 @@
 #include "iris/reference_counted.h"
 #include "iris/texture_coordinates.h"
 #include "iris/textures/float_texture.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -15,7 +16,7 @@ namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
 using ::iris::textures::FloatTexture;
-using ::pbrt_proto::v3::FloatTextureParameter;
+using ::pbrt_proto::FloatTextureParameter;
 
 class TestTexture : public FloatTexture {
  public:

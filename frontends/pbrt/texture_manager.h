@@ -11,7 +11,7 @@
 #include "iris/spectral_allocator.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -29,14 +29,14 @@ class TextureManager {
 
   ReferenceCounted<textures::FloatTexture> AllocateFloatTexture(visual value);
   ReferenceCounted<textures::FloatTexture> AllocateFloatTexture(
-      const pbrt_proto::v3::FloatTextureParameter& parameter);
+      const pbrt_proto::FloatTextureParameter& parameter);
 
   ReferenceCounted<textures::ReflectorTexture> AllocateReflectorTexture(
       visual value);
   ReferenceCounted<textures::ReflectorTexture> AllocateReflectorTexture(
-      const pbrt_proto::v3::Spectrum& spectrum);
+      const pbrt_proto::Spectrum& spectrum);
   ReferenceCounted<textures::ReflectorTexture> AllocateReflectorTexture(
-      const pbrt_proto::v3::SpectrumTextureParameter& parameter);
+      const pbrt_proto::SpectrumTextureParameter& parameter);
 
   ReferenceCounted<textures::FloatTexture> GetFloatTexture(
       const std::string& name) const;

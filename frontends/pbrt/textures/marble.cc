@@ -5,6 +5,7 @@
 #include "iris/reference_counted.h"
 #include "iris/textures/marble_texture.h"
 #include "iris/textures/reflector_texture.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -12,7 +13,7 @@ namespace pbrt_frontend {
 namespace textures {
 
 using ::iris::textures::MakeMarbleTexture;
-using ::pbrt_proto::v3::Spectrum;
+using ::pbrt_proto::Spectrum;
 using ::pbrt_proto::v3::SpectrumTexture;
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeMarble(

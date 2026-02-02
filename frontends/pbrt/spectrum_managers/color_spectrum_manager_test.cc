@@ -7,6 +7,7 @@
 #include "iris/color.h"
 #include "iris/reference_counted.h"
 #include "iris/spectrum.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
 namespace iris {
@@ -15,7 +16,7 @@ namespace spectrum_managers {
 namespace {
 
 using bazel::tools::cpp::runfiles::Runfiles;
-using ::pbrt_proto::v3::Spectrum;
+using ::pbrt_proto::Spectrum;
 using ::testing::ExitedWithCode;
 
 std::string RunfilePath(const std::string& path) {
@@ -80,15 +81,15 @@ TEST(ColorSpectrumManager, ComputeLuma) {
   EXPECT_NEAR(0.5, spectrum_manager.ComputeLuma(rgb.r, rgb.g, rgb.b), 0.001);
 }
 
-TEST(ColorSpectrumManager, AllocateSpectrumFromUniform) {
+TEST(ColorSpectrumManager, AllocateSpectrumFromConstant) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, false);
 
-  Spectrum uniform_spectrum;
-  uniform_spectrum.set_uniform_spectrum(0.5);
+  Spectrum constant_spectrum;
+  constant_spectrum.set_constant_spectrum(0.5);
 
   ReferenceCounted<iris::Spectrum> spectrum =
-      spectrum_manager.AllocateSpectrum(uniform_spectrum);
+      spectrum_manager.AllocateSpectrum(constant_spectrum);
   EXPECT_EQ(0.5, spectrum->Intensity(0.5));
   EXPECT_EQ(0.5, spectrum->Intensity(1.5));
   EXPECT_EQ(0.5, spectrum->Intensity(2.5));
@@ -235,15 +236,15 @@ TEST(ColorSpectrumManager, AllocateSpectrumFromFile) {
   EXPECT_TRUE(spectrum);
 }
 
-TEST(ColorSpectrumManager, AllocateReflectorFromUniform) {
+TEST(ColorSpectrumManager, AllocateReflectorFromConstant) {
   std::filesystem::path path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(path, false);
 
-  Spectrum uniform_spectrum;
-  uniform_spectrum.set_uniform_spectrum(0.5);
+  Spectrum constant_spectrum;
+  constant_spectrum.set_constant_spectrum(0.5);
 
   ReferenceCounted<Reflector> reflector =
-      spectrum_manager.AllocateReflector(uniform_spectrum);
+      spectrum_manager.AllocateReflector(constant_spectrum);
   EXPECT_EQ(0.5, reflector->Reflectance(0.5));
   EXPECT_EQ(0.5, reflector->Reflectance(1.5));
   EXPECT_EQ(0.5, reflector->Reflectance(2.5));

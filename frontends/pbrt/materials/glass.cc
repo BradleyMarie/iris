@@ -14,10 +14,8 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeGlassMaterial;
-using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
-using ::pbrt_proto::v3::SpectrumTextureParameter;
 
 constexpr visual kDefaultEtaFront = 1.0;
 

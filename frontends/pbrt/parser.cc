@@ -45,6 +45,7 @@
 #include "iris/scene.h"
 #include "iris/scene_objects.h"
 #include "iris/scenes/bvh_scene.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -58,7 +59,7 @@ using ::iris::pbrt_frontend::spectrum_managers::ColorColorMatcher;
 using ::iris::pbrt_frontend::spectrum_managers::ColorPowerMatcher;
 using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
 using ::iris::scenes::MakeBVHSceneBuilder;
-using ::pbrt_proto::v3::ActiveTransform;
+using ::pbrt_proto::ActiveTransform;
 using ::pbrt_proto::v3::Directive;
 using ::pbrt_proto::v3::PbrtProto;
 using ::pbrt_proto::v3::Shape;

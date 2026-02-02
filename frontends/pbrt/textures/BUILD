@@ -79,6 +79,7 @@ cc_library(
         "//iris/textures:image_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:scaled_texture",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -115,6 +116,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris/textures:marble_texture",
         "//iris/textures:reflector_texture",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -214,6 +216,7 @@ cc_library(
         "//iris/textures:ptex_texture",
         "//iris/textures:reflector_texture",
         "//third_party/disney/ptex",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )

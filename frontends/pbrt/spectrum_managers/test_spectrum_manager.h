@@ -7,7 +7,7 @@
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
 #include "iris/spectrum.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -18,10 +18,10 @@ class TestSpectrumManager final : public SpectrumManager {
   visual_t ComputeLuma(visual_t r, visual_t g, visual_t b) override;
 
   ReferenceCounted<Spectrum> AllocateSpectrum(
-      const pbrt_proto::v3::Spectrum& spectrum, visual_t* luma) override;
+      const pbrt_proto::Spectrum& spectrum, visual_t* luma) override;
 
   ReferenceCounted<Reflector> AllocateReflector(
-      const pbrt_proto::v3::Spectrum& spectrum) override;
+      const pbrt_proto::Spectrum& spectrum) override;
 
   ReferenceCounted<Spectrum> AllocateSpectrum(
       const ReferenceCounted<Spectrum>& spectrum0,

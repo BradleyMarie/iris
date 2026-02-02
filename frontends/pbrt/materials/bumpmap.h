@@ -6,14 +6,14 @@
 #include "frontends/pbrt/texture_manager.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace materials {
 
 std::array<ReferenceCounted<NormalMap>, 2> MakeBumpMap(
-    const pbrt_proto::v3::FloatTextureParameter& bumpmap,
+    const pbrt_proto::FloatTextureParameter& bumpmap,
     TextureManager& texture_manager);
 
 }  // namespace materials

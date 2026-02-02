@@ -14,10 +14,8 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeTranslucentMaterial;
-using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
-using ::pbrt_proto::v3::SpectrumTextureParameter;
 
 constexpr visual kDefaultEtaIncident = 1.0;
 constexpr visual kDefaultEtaTransmitted = 1.5;

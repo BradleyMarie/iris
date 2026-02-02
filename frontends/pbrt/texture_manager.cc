@@ -11,15 +11,15 @@
 #include "iris/textures/constant_texture.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 
 using ::iris::textures::MakeConstantTexture;
-using ::pbrt_proto::v3::FloatTextureParameter;
-using ::pbrt_proto::v3::Spectrum;
-using ::pbrt_proto::v3::SpectrumTextureParameter;
+using ::pbrt_proto::FloatTextureParameter;
+using ::pbrt_proto::Spectrum;
+using ::pbrt_proto::SpectrumTextureParameter;
 
 void TextureManager::AttributeBegin() {
   float_textures_.push(float_textures_.top());
@@ -72,7 +72,7 @@ ReferenceCounted<textures::FloatTexture> TextureManager::AllocateFloatTexture(
 ReferenceCounted<textures::ReflectorTexture>
 TextureManager::AllocateReflectorTexture(visual value) {
   Spectrum spectrum;
-  spectrum.set_uniform_spectrum(value);
+  spectrum.set_constant_spectrum(value);
   return AllocateReflectorTexture(spectrum);
 }
 
@@ -119,8 +119,8 @@ TextureManager::AllocateReflectorTexture(
     case SpectrumTextureParameter::kSpectrumTextureName:
       result = GetReflectorTexture(parameter.spectrum_texture_name());
       break;
-    case SpectrumTextureParameter::kUniformSpectrum:
-      spectrum.set_uniform_spectrum(parameter.uniform_spectrum());
+    case SpectrumTextureParameter::kConstantSpectrum:
+      spectrum.set_constant_spectrum(parameter.constant_spectrum());
       result = AllocateReflectorTexture(spectrum);
       break;
     case SpectrumTextureParameter::kXyzSpectrum:

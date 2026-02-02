@@ -14,10 +14,8 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeMatteMaterial;
-using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
-using ::pbrt_proto::v3::SpectrumTextureParameter;
 
 MaterialResult MakeMatte(const Material::Matte& matte,
                          const Shape::MaterialOverrides& overrides,

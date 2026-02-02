@@ -16,10 +16,8 @@ namespace materials {
 namespace {
 
 using ::iris::materials::MakeMixMaterial;
-using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
-using ::pbrt_proto::v3::SpectrumTextureParameter;
 
 MaterialResult MakeMixedMaterial(
     const std::string& named_material, const pbrt_proto::v3::Material::Mix& mix,

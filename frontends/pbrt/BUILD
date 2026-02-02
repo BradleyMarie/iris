@@ -249,6 +249,7 @@ cc_library(
         "//iris:scene_objects",
         "//iris/geometry:bvh_aggregate",
         "//iris/scenes:bvh_scene",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
         "@protobuf//:protobuf_lite",
@@ -320,7 +321,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris:spectrum",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -337,7 +338,7 @@ cc_library(
         "//iris/textures:constant_texture",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -350,6 +351,6 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )

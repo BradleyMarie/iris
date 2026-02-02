@@ -7,7 +7,7 @@
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/spectrum.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -21,12 +21,12 @@ visual_t TestSpectrumManager::ComputeLuma(visual_t r, visual_t g, visual_t b) {
 }
 
 ReferenceCounted<Spectrum> TestSpectrumManager::AllocateSpectrum(
-    const pbrt_proto::v3::Spectrum& spectrum, visual_t* luma) {
+    const pbrt_proto::Spectrum& spectrum, visual_t* luma) {
   return MakeReferenceCounted<MockSpectrum>();
 }
 
 ReferenceCounted<Reflector> TestSpectrumManager::AllocateReflector(
-    const pbrt_proto::v3::Spectrum& spectrum) {
+    const pbrt_proto::Spectrum& spectrum) {
   return MakeReferenceCounted<MockReflector>();
 }
 

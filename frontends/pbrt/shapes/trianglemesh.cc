@@ -24,7 +24,6 @@ namespace pbrt_frontend {
 namespace shapes {
 
 using ::iris::geometry::AllocateTriangleMesh;
-using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Shape;
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
@@ -61,9 +60,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
   uint32_t largest_index = 0u;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices;
   for (const auto& entry : with_defaults.indices()) {
-    if (entry.v0() >= with_defaults.p_size() ||
-        entry.v1() >= with_defaults.p_size() ||
-        entry.v2() >= with_defaults.p_size()) {
+    if (entry.v0() >= static_cast<uint32_t>(with_defaults.p_size()) ||
+        entry.v1() >= static_cast<uint32_t>(with_defaults.p_size()) ||
+        entry.v2() >= static_cast<uint32_t>(with_defaults.p_size())) {
       std::cerr << "ERROR: Out of range value for parameter: indices"
                 << std::endl;
       exit(EXIT_FAILURE);
@@ -78,13 +77,14 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
                          static_cast<uint32_t>(entry.v2()));
   }
 
-  if (!with_defaults.n().empty() && with_defaults.n().size() < largest_index) {
+  if (!with_defaults.n().empty() &&
+      static_cast<uint32_t>(with_defaults.n().size()) < largest_index) {
     std::cerr << "ERROR: Too few values for parameter: n" << std::endl;
     exit(EXIT_FAILURE);
   }
 
   if (!with_defaults.uv().empty() &&
-      with_defaults.uv().size() < largest_index) {
+      static_cast<uint32_t>(with_defaults.uv().size()) < largest_index) {
     std::cerr << "ERROR: Too few values for parameter: uv" << std::endl;
     exit(EXIT_FAILURE);
   }

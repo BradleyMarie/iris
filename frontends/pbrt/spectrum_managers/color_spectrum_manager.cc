@@ -24,7 +24,7 @@
 #include "iris/spectrum.h"
 #include "libspd/readers/emissive_spd_reader.h"
 #include "libspd/readers/reflective_spd_reader.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -41,7 +41,7 @@ using ::iris::spectra::MakeScaledBlackbodySpectrum;
 using ::libspd::ReadEmissiveSpdFrom;
 using ::libspd::ReadReflectiveSpdFrom;
 using ::pbrt_proto::SampledSpectrum;
-using ::pbrt_proto::v3::Spectrum;
+using ::pbrt_proto::Spectrum;
 
 std::map<visual, visual> FromFile(const std::filesystem::path& search_root,
                                   std::filesystem::path path, bool reflective) {
@@ -202,11 +202,12 @@ ReferenceCounted<iris::Spectrum> ColorSpectrumManager::AllocateSpectrum(
     const Spectrum& spectrum, visual_t* luma) {
   ReferenceCounted<iris::Spectrum> result;
   switch (spectrum.spectrum_type_case()) {
-    case Spectrum::kUniformSpectrum:
-      result = MakeColorSpectrum(
-          static_cast<visual>(spectrum.uniform_spectrum()),
-          static_cast<visual>(spectrum.uniform_spectrum()),
-          static_cast<visual>(spectrum.uniform_spectrum()), Color::LINEAR_SRGB);
+    case Spectrum::kConstantSpectrum:
+      result =
+          MakeColorSpectrum(static_cast<visual>(spectrum.constant_spectrum()),
+                            static_cast<visual>(spectrum.constant_spectrum()),
+                            static_cast<visual>(spectrum.constant_spectrum()),
+                            Color::LINEAR_SRGB);
       break;
     case Spectrum::kBlackbodySpectrum:
       result = MakeColorSpectrum(ToSpectrumColor(
@@ -254,11 +255,12 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
     const Spectrum& spectrum) {
   ReferenceCounted<Reflector> result;
   switch (spectrum.spectrum_type_case()) {
-    case Spectrum::kUniformSpectrum:
-      result = MakeColorReflector(
-          static_cast<visual>(spectrum.uniform_spectrum()),
-          static_cast<visual>(spectrum.uniform_spectrum()),
-          static_cast<visual>(spectrum.uniform_spectrum()), Color::LINEAR_SRGB);
+    case Spectrum::kConstantSpectrum:
+      result =
+          MakeColorReflector(static_cast<visual>(spectrum.constant_spectrum()),
+                             static_cast<visual>(spectrum.constant_spectrum()),
+                             static_cast<visual>(spectrum.constant_spectrum()),
+                             Color::LINEAR_SRGB);
       break;
     case Spectrum::kBlackbodySpectrum:
       result = MakeColorReflector(ToReflectorColor(

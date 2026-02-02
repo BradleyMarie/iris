@@ -11,6 +11,7 @@
 #include "iris/materials/metal_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -19,19 +20,19 @@ namespace materials {
 namespace {
 
 using ::iris::materials::MakeMetalMaterial;
-using ::pbrt_proto::v3::FloatTextureParameter;
+using ::pbrt_proto::FloatTextureParameter;
+using ::pbrt_proto::Spectrum;
+using ::pbrt_proto::SpectrumTextureParameter;
 using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
-using ::pbrt_proto::v3::Spectrum;
-using ::pbrt_proto::v3::SpectrumTextureParameter;
 
 constexpr visual kDefaultEtaConductor = 1.0;
 
 Spectrum ToSpectrum(const SpectrumTextureParameter& parameter) {
   Spectrum result;
   switch (parameter.spectrum_texture_parameter_type_case()) {
-    case SpectrumTextureParameter::kUniformSpectrum:
-      result.set_uniform_spectrum(parameter.uniform_spectrum());
+    case SpectrumTextureParameter::kConstantSpectrum:
+      result.set_constant_spectrum(parameter.constant_spectrum());
       break;
     case SpectrumTextureParameter::kBlackbodySpectrum:
       *result.mutable_blackbody_spectrum() = parameter.blackbody_spectrum();

@@ -19,7 +19,7 @@ cc_library(
         "//iris:texture_coordinates",
         "//iris/normal_maps:bump_normal_map",
         "//iris/textures:float_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -36,6 +36,7 @@ cc_test(
         "//iris/textures:float_texture",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -179,6 +180,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:metal_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -422,6 +424,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:uber_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )

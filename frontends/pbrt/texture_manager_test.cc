@@ -6,7 +6,7 @@
 #include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -14,9 +14,9 @@ namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::ColorSpectrumManager;
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::FloatTextureParameter;
-using ::pbrt_proto::v3::Spectrum;
-using ::pbrt_proto::v3::SpectrumTextureParameter;
+using ::pbrt_proto::FloatTextureParameter;
+using ::pbrt_proto::Spectrum;
+using ::pbrt_proto::SpectrumTextureParameter;
 using ::testing::ExitedWithCode;
 
 TEST(TextureManager, MismatchedAttribute) {
@@ -72,7 +72,7 @@ TEST(TextureManager, AllocateFloatTextureEmpty) {
   EXPECT_FALSE(texture_manager.AllocateFloatTexture(parameter));
 }
 
-TEST(TextureManager, AllocateFloatTextureUniform) {
+TEST(TextureManager, AllocateFloatTextureConstant) {
   std::filesystem::path current_path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(current_path, true);
   TextureManager texture_manager(spectrum_manager);
@@ -128,7 +128,7 @@ TEST(TextureManager, AllocateReflectorTextureSpectrum) {
   TextureManager texture_manager(spectrum_manager);
 
   Spectrum spectrum;
-  spectrum.set_uniform_spectrum(1.0);
+  spectrum.set_constant_spectrum(1.0);
 
   EXPECT_TRUE(texture_manager.AllocateReflectorTexture(spectrum));
 }
@@ -143,13 +143,13 @@ TEST(TextureManager, AllocateReflectorTextureSpectrumParameterEmpty) {
   EXPECT_FALSE(texture_manager.AllocateReflectorTexture(parameter));
 }
 
-TEST(TextureManager, AllocateReflectorTextureSpectrumParameterUniform) {
+TEST(TextureManager, AllocateReflectorTextureSpectrumParameterConstant) {
   std::filesystem::path current_path = std::filesystem::current_path();
   ColorSpectrumManager spectrum_manager(current_path, true);
   TextureManager texture_manager(spectrum_manager);
 
   SpectrumTextureParameter parameter;
-  parameter.set_uniform_spectrum(1.0);
+  parameter.set_constant_spectrum(1.0);
 
   EXPECT_TRUE(texture_manager.AllocateReflectorTexture(parameter));
 }

@@ -25,7 +25,6 @@ namespace {
 
 using ::iris::geometry::AllocateTriangleMesh;
 using ::iris::textures::MaskTexture;
-using ::pbrt_proto::v3::FloatTextureParameter;
 using ::pbrt_proto::v3::Shape;
 
 class TriangleMeshReader final

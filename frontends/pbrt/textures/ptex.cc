@@ -10,6 +10,7 @@
 #include "iris/textures/float_texture.h"
 #include "iris/textures/ptex_texture.h"
 #include "iris/textures/reflector_texture.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 #include "third_party/disney/ptex/Ptexture.h"
 
@@ -19,8 +20,8 @@ namespace textures {
 namespace {
 
 using ::iris::textures::MakePtexTexture;
+using ::pbrt_proto::Spectrum;
 using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::Spectrum;
 using ::pbrt_proto::v3::SpectrumTexture;
 
 static class ErrorReporter : public PtexErrorHandler {
