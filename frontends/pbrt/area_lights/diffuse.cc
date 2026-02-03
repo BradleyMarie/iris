@@ -11,19 +11,19 @@
 #include "iris/emissive_material.h"
 #include "iris/emissive_materials/constant_emissive_material.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace area_lights {
 
 using ::iris::emissive_materials::MakeConstantEmissiveMaterial;
-using ::pbrt_proto::v3::AreaLightSource;
+using ::pbrt_proto::DiffuseAreaLightSourceV1;
 
 std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
-    const AreaLightSource::Diffuse& diffuse,
+    const DiffuseAreaLightSourceV1& diffuse,
     SpectrumManager& spectrum_manager) {
-  AreaLightSource::Diffuse with_defaults =
+  DiffuseAreaLightSourceV1 with_defaults =
       Defaults().area_light_sources().diffuse();
   with_defaults.MergeFrom(diffuse);
 
