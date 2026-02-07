@@ -13,7 +13,7 @@
 #include "iris/camera.h"
 #include "iris/cameras/pinhole_camera.h"
 #include "iris/cameras/thin_lens_camera.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -21,10 +21,10 @@ namespace cameras {
 
 using ::iris::cameras::PinholeCamera;
 using ::iris::cameras::ThinLensCamera;
-using ::pbrt_proto::v3::Camera;
+using ::pbrt_proto::PerspectiveCamera;
 
 std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
-MakePerspective(const Camera::Perspective& perspective,
+MakePerspective(const PerspectiveCamera& perspective,
                 const MatrixManager::Transformation& transformation) {
   if (perspective.focaldistance() <= 0.0) {
     std::cerr << "ERROR: Out of range value for parameter: focaldistance"
@@ -54,26 +54,8 @@ MakePerspective(const Camera::Perspective& perspective,
     aspect_ratio = perspective.frameaspectratio();
   }
 
-  if (perspective.has_fov() && perspective.has_halffov()) {
-    std::cerr << "ERROR: Cannot specify parameters together: fov, halffov"
-              << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  geometric_t half_fov;
-  if (perspective.has_halffov()) {
-    if (perspective.halffov() <= 0.0 || perspective.halffov() >= 90.0) {
-      std::cerr << "ERROR: Out of range value for parameter: halffov"
-                << std::endl;
-      exit(EXIT_FAILURE);
-    }
-
-    half_fov = static_cast<geometric_t>(perspective.halffov() *
-                                        (std::numbers::pi / 180.0));
-  } else {
-    half_fov = static_cast<geometric_t>(perspective.fov() *
-                                        (std::numbers::pi / 360.0));
-  }
+  geometric_t half_fov =
+      static_cast<geometric_t>(perspective.fov() * (std::numbers::pi / 360.0));
 
   return [aspect_ratio, half_fov, focus_distance = perspective.focaldistance(),
           lens_radius = perspective.lensradius(),

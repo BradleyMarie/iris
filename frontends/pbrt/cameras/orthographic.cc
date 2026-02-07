@@ -11,17 +11,16 @@
 #include "frontends/pbrt/matrix_manager.h"
 #include "iris/camera.h"
 #include "iris/cameras/orthographic_camera.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace cameras {
 
 using ::iris::cameras::OrthographicCamera;
-using ::pbrt_proto::v3::Camera;
 
 std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
-MakeOrthographic(const Camera::Orthographic& orthographic,
+MakeOrthographic(const pbrt_proto::OrthographicCamera& orthographic,
                  const MatrixManager::Transformation& transformation) {
   std::optional<geometric_t> aspect_ratio;
   if (orthographic.has_frameaspectratio()) {

@@ -9,14 +9,14 @@
 
 #include "frontends/pbrt/matrix_manager.h"
 #include "iris/camera.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace cameras {
 
 std::function<std::unique_ptr<Camera>(const std::pair<size_t, size_t>&)>
-MakeOrthographic(const pbrt_proto::v3::Camera::Orthographic& orthographic,
+MakeOrthographic(const pbrt_proto::OrthographicCamera& orthographic,
                  const MatrixManager::Transformation& transformation);
 
 }  // namespace cameras
