@@ -8,6 +8,7 @@
 #include <optional>
 #include <utility>
 
+#include "frontends/pbrt/defaults.h"
 #include "frontends/pbrt/matrix_manager.h"
 #include "iris/camera.h"
 #include "iris/cameras/orthographic_camera.h"
@@ -22,15 +23,19 @@ using ::iris::cameras::OrthographicCamera;
 std::function<std::unique_ptr<iris::Camera>(const std::pair<size_t, size_t>&)>
 MakeOrthographic(const pbrt_proto::OrthographicCamera& orthographic,
                  const MatrixManager::Transformation& transformation) {
+  pbrt_proto::OrthographicCamera with_defaults =
+      Defaults().cameras().orthographic();
+  with_defaults.MergeFrom(orthographic);
+
   std::optional<geometric_t> aspect_ratio;
-  if (orthographic.has_frameaspectratio()) {
-    if (orthographic.frameaspectratio() <= 0.0) {
+  if (with_defaults.has_frameaspectratio()) {
+    if (with_defaults.frameaspectratio() <= 0.0) {
       std::cerr << "ERROR: Out of range value for parameter: frameaspectratio"
                 << std::endl;
       exit(EXIT_FAILURE);
     }
 
-    aspect_ratio = orthographic.frameaspectratio();
+    aspect_ratio = with_defaults.frameaspectratio();
   }
 
   return [aspect_ratio,

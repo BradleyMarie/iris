@@ -13,6 +13,7 @@ cc_library(
     srcs = ["orthographic.cc"],
     hdrs = ["orthographic.h"],
     deps = [
+        "//frontends/pbrt:defaults",
         "//frontends/pbrt:matrix_manager",
         "//iris:camera",
         "//iris/cameras:orthographic_camera",
@@ -63,6 +64,7 @@ cc_library(
     srcs = ["perspective.cc"],
     hdrs = ["perspective.h"],
     deps = [
+        "//frontends/pbrt:defaults",
         "//frontends/pbrt:matrix_manager",
         "//iris:camera",
         "//iris/cameras:pinhole_camera",
