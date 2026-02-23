@@ -15,7 +15,7 @@
 #include "iris/file/png_writer.h"
 #include "iris/file/tga_writer.h"
 #include "iris/framebuffer.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -25,12 +25,12 @@ using ::iris::file::WriteExr;
 using ::iris::file::WritePfm;
 using ::iris::file::WritePng;
 using ::iris::file::WriteTga;
-using ::pbrt_proto::v3::Film;
+using ::pbrt_proto::RgbFilm;
 
 constexpr int32_t kMaxImageDimensionSize = 16384u;
 
-std::unique_ptr<FilmResult> MakeImage(const Film::Image& image) {
-  Film::Image with_defaults = Defaults().films().image();
+std::unique_ptr<FilmResult> MakeImage(const RgbFilm& image) {
+  RgbFilm with_defaults = Defaults().films().image();
   with_defaults.MergeFrom(image);
 
   if (with_defaults.cropwindow().x_min() < 0.0 ||

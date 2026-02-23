@@ -6,18 +6,18 @@
 
 #include "frontends/pbrt/film/result.h"
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace film {
 namespace {
 
-using ::pbrt_proto::v3::Film;
+using ::pbrt_proto::RgbFilm;
 using ::testing::ExitedWithCode;
 
 TEST(Image, Empty) {
-  Film::Image image;
+  RgbFilm image;
 
   std::unique_ptr<FilmResult> result = MakeImage(image);
   ASSERT_TRUE(result);
@@ -34,7 +34,7 @@ TEST(Image, Empty) {
 }
 
 TEST(Image, NegativeCropWindow0) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(-1.0);
   image.mutable_cropwindow()->set_x_max(1.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -45,7 +45,7 @@ TEST(Image, NegativeCropWindow0) {
 }
 
 TEST(Image, NegativeCropWindow1) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(-1.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -56,7 +56,7 @@ TEST(Image, NegativeCropWindow1) {
 }
 
 TEST(Image, NegativeCropWindow2) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(1.0);
   image.mutable_cropwindow()->set_y_min(-1.0);
@@ -67,7 +67,7 @@ TEST(Image, NegativeCropWindow2) {
 }
 
 TEST(Image, NegativeCropWindow3) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(1.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -78,7 +78,7 @@ TEST(Image, NegativeCropWindow3) {
 }
 
 TEST(Image, TooLargeCropWindow0) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(2.0);
   image.mutable_cropwindow()->set_x_max(1.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -89,7 +89,7 @@ TEST(Image, TooLargeCropWindow0) {
 }
 
 TEST(Image, TooLargeCropWindow1) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(2.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -100,7 +100,7 @@ TEST(Image, TooLargeCropWindow1) {
 }
 
 TEST(Image, TooLargeCropWindow2) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(1.0);
   image.mutable_cropwindow()->set_y_min(2.0);
@@ -111,7 +111,7 @@ TEST(Image, TooLargeCropWindow2) {
 }
 
 TEST(Image, TooLargeCropWindow3) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(1.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -122,7 +122,7 @@ TEST(Image, TooLargeCropWindow3) {
 }
 
 TEST(Image, BadCropWindow0) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(0.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -133,7 +133,7 @@ TEST(Image, BadCropWindow0) {
 }
 
 TEST(Image, BadCropWindow1) {
-  Film::Image image;
+  RgbFilm image;
   image.mutable_cropwindow()->set_x_min(0.0);
   image.mutable_cropwindow()->set_x_max(1.0);
   image.mutable_cropwindow()->set_y_min(0.0);
@@ -144,7 +144,7 @@ TEST(Image, BadCropWindow1) {
 }
 
 TEST(Image, Diagonal) {
-  Film::Image image;
+  RgbFilm image;
   image.set_diagonal(0.0);
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
@@ -152,7 +152,7 @@ TEST(Image, Diagonal) {
 }
 
 TEST(Image, MaxSampleLuminance) {
-  Film::Image image;
+  RgbFilm image;
   image.set_maxsampleluminance(0.0);
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
@@ -160,7 +160,7 @@ TEST(Image, MaxSampleLuminance) {
 }
 
 TEST(Image, Scale) {
-  Film::Image image;
+  RgbFilm image;
   image.set_scale(0.0);
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
@@ -168,7 +168,7 @@ TEST(Image, Scale) {
 }
 
 TEST(Image, XResolutionZero) {
-  Film::Image image;
+  RgbFilm image;
   image.set_xresolution(0);
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
@@ -176,7 +176,7 @@ TEST(Image, XResolutionZero) {
 }
 
 TEST(Image, XResolutionTooLarge) {
-  Film::Image image;
+  RgbFilm image;
   image.set_xresolution(16385);
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
@@ -184,7 +184,7 @@ TEST(Image, XResolutionTooLarge) {
 }
 
 TEST(Image, YResolutionZero) {
-  Film::Image image;
+  RgbFilm image;
   image.set_yresolution(0);
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
@@ -192,7 +192,7 @@ TEST(Image, YResolutionZero) {
 }
 
 TEST(Image, YResolutionTooLarge) {
-  Film::Image image;
+  RgbFilm image;
   image.set_yresolution(16385);
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
@@ -200,7 +200,7 @@ TEST(Image, YResolutionTooLarge) {
 }
 
 TEST(Image, BadExtension) {
-  Film::Image image;
+  RgbFilm image;
   image.set_filename("image.txt");
 
   EXPECT_EXIT(MakeImage(image), ExitedWithCode(EXIT_FAILURE),
