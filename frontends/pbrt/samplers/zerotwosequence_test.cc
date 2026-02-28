@@ -1,18 +1,18 @@
 #include "frontends/pbrt/samplers/zerotwosequence.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace samplers {
 namespace {
 
-using ::pbrt_proto::v3::Sampler;
+using ::pbrt_proto::ZeroTwoSequenceSampler;
 using ::testing::ExitedWithCode;
 
 TEST(ZeroTwoSequence, Empty) {
-  Sampler::ZeroTwoSequence zerotwosequence;
+  ZeroTwoSequenceSampler zerotwosequence;
 
   EXPECT_TRUE(MakeZeroTwoSequence(zerotwosequence));
 }

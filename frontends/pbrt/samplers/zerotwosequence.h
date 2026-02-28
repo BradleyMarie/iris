@@ -4,14 +4,14 @@
 #include <memory>
 
 #include "iris/image_sampler.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace samplers {
 
 std::unique_ptr<ImageSampler> MakeZeroTwoSequence(
-    const pbrt_proto::v3::Sampler::ZeroTwoSequence& zerotwosequence);
+    const pbrt_proto::ZeroTwoSequenceSampler& zerotwosequence);
 
 }  // namespace samplers
 }  // namespace pbrt_frontend

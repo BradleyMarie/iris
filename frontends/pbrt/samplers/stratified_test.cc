@@ -3,24 +3,24 @@
 #include <cstdlib>
 
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace samplers {
 namespace {
 
-using ::pbrt_proto::v3::Sampler;
+using ::pbrt_proto::StratifiedSampler;
 using ::testing::ExitedWithCode;
 
 TEST(Stratified, Empty) {
-  Sampler::Stratified stratified;
+  StratifiedSampler stratified;
 
   EXPECT_TRUE(MakeStratified(stratified));
 }
 
 TEST(Stratified, TooHighXSamples) {
-  Sampler::Stratified stratified;
+  StratifiedSampler stratified;
   stratified.set_xsamples(80000);
 
   EXPECT_EXIT(MakeStratified(stratified), ExitedWithCode(EXIT_FAILURE),
@@ -28,7 +28,7 @@ TEST(Stratified, TooHighXSamples) {
 }
 
 TEST(Stratified, TooHighYSamples) {
-  Sampler::Stratified stratified;
+  StratifiedSampler stratified;
   stratified.set_ysamples(80000);
 
   EXPECT_EXIT(MakeStratified(stratified), ExitedWithCode(EXIT_FAILURE),

@@ -4,7 +4,7 @@
 
 #include "iris/image_sampler.h"
 #include "iris/image_samplers/sobol_image_sampler.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -12,9 +12,9 @@ namespace samplers {
 
 using ::iris::image_samplers::MakeSobolImageSampler;
 using ::iris::image_samplers::SobolScrambler;
-using ::pbrt_proto::v3::Sampler;
+using ::pbrt_proto::SobolSampler;
 
-std::unique_ptr<ImageSampler> MakeSobol(const Sampler::Sobol& sobol) {
+std::unique_ptr<ImageSampler> MakeSobol(const SobolSampler& sobol) {
   return MakeSobolImageSampler(sobol.pixelsamples(), SobolScrambler::FastOwen);
 }
 

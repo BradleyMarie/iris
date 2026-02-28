@@ -28,5 +28,5 @@ bazel_dep(name = "pbrt_proto")
 git_override(
     module_name = "pbrt_proto",
     remote = "https://github.com/bradleymarie/pbrt_proto.git",
-    commit = "a8017d96ad09fed3e90acd632ae3ff8291534d16",
+    commit = "455f9e51da2d991397f342b521c689621646cf32",
 )

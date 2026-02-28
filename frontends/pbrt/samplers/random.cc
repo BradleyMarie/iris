@@ -4,16 +4,16 @@
 
 #include "iris/image_sampler.h"
 #include "iris/image_samplers/random_image_sampler.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace samplers {
 
 using ::iris::image_samplers::MakeRandomImageSampler;
-using ::pbrt_proto::v3::Sampler;
+using ::pbrt_proto::IndependentSampler;
 
-std::unique_ptr<ImageSampler> MakeRandom(const Sampler::Random& random) {
+std::unique_ptr<ImageSampler> MakeRandom(const IndependentSampler& random) {
   return MakeRandomImageSampler(random.pixelsamples());
 }
 
