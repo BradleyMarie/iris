@@ -18,12 +18,11 @@ namespace pbrt_frontend {
 namespace area_lights {
 
 using ::iris::emissive_materials::MakeConstantEmissiveMaterial;
-using ::pbrt_proto::DiffuseAreaLightSourceV1;
+using ::pbrt_proto::DiffuseAreaLightSource;
 
 std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
-    const DiffuseAreaLightSourceV1& diffuse,
-    SpectrumManager& spectrum_manager) {
-  DiffuseAreaLightSourceV1 with_defaults =
+    const DiffuseAreaLightSource& diffuse, SpectrumManager& spectrum_manager) {
+  DiffuseAreaLightSource with_defaults =
       Defaults().area_light_sources().diffuse();
   with_defaults.MergeFrom(diffuse);
 

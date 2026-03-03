@@ -6,19 +6,19 @@
 #include "iris/lights/point_light.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace lights {
 
 using ::iris::lights::MakePointLight;
-using ::pbrt_proto::v3::LightSource;
+using ::pbrt_proto::PointLightSource;
 
-ReferenceCounted<Light> MakePoint(const LightSource::Point& point,
+ReferenceCounted<Light> MakePoint(const PointLightSource& point,
                                   const Matrix& model_to_world,
                                   SpectrumManager& spectrum_manager) {
-  LightSource::Point with_defaults = Defaults().light_sources().point();
+  PointLightSource with_defaults = Defaults().light_sources().point();
   with_defaults.MergeFrom(point);
 
   ReferenceCounted<Spectrum> i =

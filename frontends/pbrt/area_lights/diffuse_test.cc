@@ -12,12 +12,12 @@ namespace area_lights {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::DiffuseAreaLightSourceV1;
+using ::pbrt_proto::DiffuseAreaLightSource;
 using ::testing::ExitedWithCode;
 
 TEST(Diffuse, Empty) {
   TestSpectrumManager spectrum_manager;
-  DiffuseAreaLightSourceV1 diffuse;
+  DiffuseAreaLightSource diffuse;
 
   auto [front, back] = MakeDiffuse(diffuse, spectrum_manager);
   EXPECT_TRUE(front);
@@ -26,7 +26,7 @@ TEST(Diffuse, Empty) {
 
 TEST(Diffuse, TooHighSamples) {
   TestSpectrumManager spectrum_manager;
-  DiffuseAreaLightSourceV1 diffuse;
+  DiffuseAreaLightSource diffuse;
   diffuse.set_samples(256);
 
   EXPECT_EXIT(MakeDiffuse(diffuse, spectrum_manager),
@@ -36,7 +36,7 @@ TEST(Diffuse, TooHighSamples) {
 
 TEST(Diffuse, TwoSided) {
   TestSpectrumManager spectrum_manager;
-  DiffuseAreaLightSourceV1 diffuse;
+  DiffuseAreaLightSource diffuse;
   diffuse.set_twosided(true);
 
   auto [front, back] = MakeDiffuse(diffuse, spectrum_manager);

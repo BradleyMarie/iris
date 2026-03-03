@@ -5,6 +5,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/matrix.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -12,14 +13,14 @@ namespace lights {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::LightSource;
+using ::pbrt_proto::InfiniteLightSource;
 using ::testing::ExitedWithCode;
 
 TEST(Infinite, Empty) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
-  LightSource::Infinite infinite;
+  InfiniteLightSource infinite;
 
   EXPECT_TRUE(MakeInfinite(infinite, std::filesystem::current_path(),
                            model_to_world, spectrum_manager));
@@ -29,8 +30,8 @@ TEST(Infinite, BadFiletype) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
-  LightSource::Infinite infinite;
-  infinite.set_mapname("frontends/pbrt/lights/test_data/image.txt");
+  InfiniteLightSource infinite;
+  infinite.set_filename("frontends/pbrt/lights/test_data/image.txt");
 
   EXPECT_EXIT(MakeInfinite(infinite, std::filesystem::current_path(),
                            model_to_world, spectrum_manager),
@@ -42,8 +43,8 @@ TEST(Infinite, NoExtension) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
-  LightSource::Infinite infinite;
-  infinite.set_mapname("frontends/pbrt/lights/test_data/image");
+  InfiniteLightSource infinite;
+  infinite.set_filename("frontends/pbrt/lights/test_data/image");
 
   EXPECT_EXIT(MakeInfinite(infinite, std::filesystem::current_path(),
                            model_to_world, spectrum_manager),
@@ -55,8 +56,8 @@ TEST(Infinite, AllSpecifiedEXR) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
-  LightSource::Infinite infinite;
-  infinite.set_mapname("frontends/pbrt/lights/test_data/image.exr");
+  InfiniteLightSource infinite;
+  infinite.set_filename("frontends/pbrt/lights/test_data/image.exr");
 
   EXPECT_TRUE(MakeInfinite(infinite, std::filesystem::current_path(),
                            model_to_world, spectrum_manager));
@@ -66,8 +67,8 @@ TEST(Infinite, AllSpecifiedPNG) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
-  LightSource::Infinite infinite;
-  infinite.set_mapname("frontends/pbrt/lights/test_data/image.png");
+  InfiniteLightSource infinite;
+  infinite.set_filename("frontends/pbrt/lights/test_data/image.png");
 
   EXPECT_TRUE(MakeInfinite(infinite, std::filesystem::current_path(),
                            model_to_world, spectrum_manager));

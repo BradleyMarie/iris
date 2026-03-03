@@ -6,7 +6,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/matrix.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -14,14 +14,14 @@ namespace lights {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::LightSource;
+using ::pbrt_proto::DistantLightSource;
 using ::testing::ExitedWithCode;
 
 TEST(Distant, Empty) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
-  LightSource::Distant distant;
+  DistantLightSource distant;
 
   EXPECT_TRUE(MakeDistant(distant, model_to_world, spectrum_manager));
 }
@@ -30,7 +30,7 @@ TEST(Distant, SamePoint) {
   Matrix model_to_world = Matrix::Identity();
   TestSpectrumManager spectrum_manager;
 
-  LightSource::Distant distant;
+  DistantLightSource distant;
   distant.mutable_to()->set_x(1.0);
   distant.mutable_to()->set_y(1.0);
   distant.mutable_to()->set_z(1.0);

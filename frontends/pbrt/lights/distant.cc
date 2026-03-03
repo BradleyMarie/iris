@@ -9,19 +9,19 @@
 #include "iris/lights/directional_light.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace lights {
 
 using ::iris::lights::MakeDirectionalLight;
-using ::pbrt_proto::v3::LightSource;
+using ::pbrt_proto::DistantLightSource;
 
-ReferenceCounted<Light> MakeDistant(const LightSource::Distant& distant,
+ReferenceCounted<Light> MakeDistant(const DistantLightSource& distant,
                                     const Matrix& model_to_world,
                                     SpectrumManager& spectrum_manager) {
-  LightSource::Distant with_defaults = Defaults().light_sources().distant();
+  DistantLightSource with_defaults = Defaults().light_sources().distant();
   with_defaults.MergeFrom(distant);
 
   if (with_defaults.to().x() == with_defaults.from().x() &&

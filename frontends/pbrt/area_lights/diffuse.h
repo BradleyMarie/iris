@@ -13,7 +13,7 @@ namespace pbrt_frontend {
 namespace area_lights {
 
 std::array<ReferenceCounted<EmissiveMaterial>, 2> MakeDiffuse(
-    const pbrt_proto::DiffuseAreaLightSourceV1& diffuse,
+    const pbrt_proto::DiffuseAreaLightSource& diffuse,
     SpectrumManager& spectrum_manager);
 
 }  // namespace area_lights

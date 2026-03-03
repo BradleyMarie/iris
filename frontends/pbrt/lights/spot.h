@@ -5,14 +5,14 @@
 #include "iris/light.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace lights {
 
 ReferenceCounted<Light> MakeSpot(
-    const pbrt_proto::v3::LightSource::Spot& distant,
+    const pbrt_proto::SpotLightSource& distant,
     const Matrix& model_to_world, SpectrumManager& spectrum_manager);
 
 }  // namespace lights

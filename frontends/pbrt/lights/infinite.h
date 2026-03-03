@@ -5,14 +5,14 @@
 #include "iris/environmental_light.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace lights {
 
 ReferenceCounted<EnvironmentalLight> MakeInfinite(
-    const pbrt_proto::v3::LightSource::Infinite& infinite,
+    const pbrt_proto::InfiniteLightSource& infinite,
     const std::filesystem::path& search_root, const Matrix& model_to_world,
     SpectrumManager& spectrum_manager);
 

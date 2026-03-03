@@ -10,7 +10,7 @@
 #include "iris/environmental_lights/image_environmental_light.h"
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 
@@ -19,13 +19,13 @@ namespace pbrt_frontend {
 namespace lights {
 
 using ::iris::environmental_lights::MakeImageEnvironmentalLight;
-using ::pbrt_proto::v3::LightSource;
+using ::pbrt_proto::InfiniteLightSource;
 
 ReferenceCounted<EnvironmentalLight> MakeInfinite(
-    const pbrt_proto::v3::LightSource::Infinite& infinite,
+    const InfiniteLightSource& infinite,
     const std::filesystem::path& search_root, const Matrix& model_to_world,
     SpectrumManager& spectrum_manager) {
-  LightSource::Infinite with_defaults = Defaults().light_sources().infinite();
+  InfiniteLightSource with_defaults = Defaults().light_sources().infinite();
   with_defaults.MergeFrom(infinite);
 
   ReferenceCounted<Spectrum> l =
@@ -49,14 +49,14 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
 
   std::vector<std::pair<ReferenceCounted<Spectrum>, visual>> spectra_and_luma;
   std::pair<size_t, size_t> size;
-  if (with_defaults.has_mapname()) {
-    std::filesystem::path filename = with_defaults.mapname();
+  if (with_defaults.has_filename()) {
+    std::filesystem::path filename = with_defaults.filename();
     if (filename.is_relative()) {
       filename = search_root / filename;
     }
 
     if (!std::filesystem::is_regular_file(filename)) {
-      std::cerr << "ERROR: Could not find file: " << with_defaults.mapname()
+      std::cerr << "ERROR: Could not find file: " << with_defaults.filename()
                 << std::endl;
       exit(EXIT_FAILURE);
     }
