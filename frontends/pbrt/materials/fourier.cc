@@ -15,6 +15,7 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "libfbsdf/readers/standard_bsdf_reader.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -25,20 +26,20 @@ namespace {
 using ::iris::materials::MakeFourierMaterial;
 using ::libfbsdf::ReadFromStandardBsdf;
 using ::libfbsdf::ReadFromStandardBsdfResult;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::MeasuredFourierMaterial;
 using ::pbrt_proto::v3::Shape;
 
 }  // namespace
 
-MaterialResult MakeFourier(const Material::Fourier& fourier,
+MaterialResult MakeFourier(const MeasuredFourierMaterial& fourier,
                            const Shape::MaterialOverrides& overrides,
                            const std::filesystem::path& search_root,
                            TextureManager& texture_manager,
                            SpectrumManager& spectrum_manager) {
-  Material::Fourier with_defaults = fourier;
+  MeasuredFourierMaterial with_defaults = fourier;
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  std::filesystem::path path = with_defaults.bsdffile();
+  std::filesystem::path path = with_defaults.filename();
   if (path.is_relative()) {
     path = search_root / path;
   }
@@ -66,7 +67,7 @@ MaterialResult MakeFourier(const Material::Fourier& fourier,
     exit(EXIT_FAILURE);
   }
 
-  ReferenceCounted<iris::Material> front_material, back_material;
+  ReferenceCounted<Material> front_material, back_material;
   if (!result->r_coefficients.empty() && !result->b_coefficients.empty()) {
     front_material = MakeFourierMaterial(
         spectrum_manager.AllocateReflector(static_cast<visual_t>(1.0),

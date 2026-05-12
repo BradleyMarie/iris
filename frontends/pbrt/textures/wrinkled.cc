@@ -8,18 +8,18 @@
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
 #include "iris/textures/wrinkled_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 using ::iris::textures::MakeWrinkledTexture;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
+using ::pbrt_proto::WrinkledFloatTexture;
+using ::pbrt_proto::WrinkledSpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeWrinkled(
-    const FloatTexture::Wrinkled& wrinkled, TextureManager& texture_manager,
+    const WrinkledFloatTexture& wrinkled, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeWrinkledTexture(world_to_texture,
                              std::min(255u, wrinkled.octaves()),
@@ -27,7 +27,7 @@ ReferenceCounted<iris::textures::FloatTexture> MakeWrinkled(
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeWrinkled(
-    const SpectrumTexture::Wrinkled& wrinkled, TextureManager& texture_manager,
+    const WrinkledSpectrumTexture& wrinkled, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeWrinkledTexture(
       world_to_texture, std::min(255u, wrinkled.octaves()),

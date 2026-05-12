@@ -5,18 +5,18 @@
 #include "iris/reference_counted.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 ReferenceCounted<iris::textures::FloatTexture> MakeConstant(
-    const pbrt_proto::v3::FloatTexture::Constant& constant,
+    const pbrt_proto::ConstantFloatTexture& constant,
     TextureManager& texture_manager);
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeConstant(
-    const pbrt_proto::v3::SpectrumTexture::Constant& constant,
+    const pbrt_proto::ConstantSpectrumTexture& constant,
     TextureManager& texture_manager);
 
 }  // namespace textures

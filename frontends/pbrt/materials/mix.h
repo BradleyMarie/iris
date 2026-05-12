@@ -4,6 +4,7 @@
 #include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/result.h"
 #include "frontends/pbrt/texture_manager.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -11,7 +12,7 @@ namespace pbrt_frontend {
 namespace materials {
 
 MaterialResult MakeMix(
-    const pbrt_proto::v3::Material::Mix& mix,
+    const pbrt_proto::MixMaterial& mix,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     const MaterialManager& material_manager, TextureManager& texture_manager);
 

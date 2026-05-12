@@ -53,6 +53,7 @@ cc_library(
         "//iris:material",
         "//iris:normal_map",
         "//iris:reference_counted",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -67,6 +68,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -86,6 +88,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris/materials:fourier_material",
         "@libfbsdf//libfbsdf/readers:standard_bsdf_reader",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -100,6 +103,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -117,6 +121,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:glass_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -131,6 +136,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -148,6 +154,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:matte_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -162,6 +169,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -195,6 +203,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -212,6 +221,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:mirror_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -226,6 +236,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -245,6 +256,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:mix_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -261,6 +273,7 @@ cc_test(
         "//iris/materials:mock_material",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -286,6 +299,7 @@ cc_library(
         "//frontends/pbrt:material_manager",
         "//frontends/pbrt:spectrum_manager",
         "//frontends/pbrt:texture_manager",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -302,6 +316,7 @@ cc_test(
         "//iris/materials:mock_material",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -320,6 +335,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris/materials:plastic_material",
         "@abseil-cpp//absl/flags:flag",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -334,6 +350,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -362,6 +379,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:substrate_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -376,6 +394,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -393,6 +412,7 @@ cc_library(
         "//iris:normal_map",
         "//iris:reference_counted",
         "//iris/materials:translucent_material",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -407,6 +427,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -439,6 +460,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )

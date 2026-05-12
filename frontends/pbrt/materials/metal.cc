@@ -12,6 +12,7 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -21,9 +22,9 @@ namespace {
 
 using ::iris::materials::MakeMetalMaterial;
 using ::pbrt_proto::FloatTextureParameter;
+using ::pbrt_proto::MetalMaterial;
 using ::pbrt_proto::Spectrum;
 using ::pbrt_proto::SpectrumTextureParameter;
-using ::pbrt_proto::v3::Material;
 using ::pbrt_proto::v3::Shape;
 
 constexpr visual kDefaultEtaConductor = 1.0;
@@ -63,11 +64,11 @@ Spectrum ToSpectrum(const SpectrumTextureParameter& parameter) {
 
 }  // namespace
 
-MaterialResult MakeMetal(const Material::Metal& metal,
+MaterialResult MakeMetal(const MetalMaterial& metal,
                          const Shape::MaterialOverrides& overrides,
                          TextureManager& texture_manager,
                          SpectrumManager& spectrum_manager) {
-  Material::Metal with_defaults = Defaults().materials().metal();
+  MetalMaterial with_defaults = Defaults().materials().metal();
   with_defaults.MergeFrom(metal);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
@@ -81,7 +82,7 @@ MaterialResult MakeMetal(const Material::Metal& metal,
     *with_defaults.mutable_vroughness() = with_defaults.roughness();
   }
 
-  ReferenceCounted<iris::Material> material = MakeMetalMaterial(
+  ReferenceCounted<Material> material = MakeMetalMaterial(
       texture_manager.AllocateFloatTexture(kDefaultEtaConductor),
       spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.eta())),
       spectrum_manager.AllocateSpectrum(ToSpectrum(with_defaults.k())),

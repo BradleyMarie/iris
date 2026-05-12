@@ -6,19 +6,19 @@
 #include "iris/reference_counted.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 ReferenceCounted<iris::textures::FloatTexture> MakePtex(
-    const pbrt_proto::v3::FloatTexture::Ptex& ptex, ImageManager& image_manager,
+    const pbrt_proto::PtexFloatTexture& ptex, ImageManager& image_manager,
     TextureManager& texture_manager);
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakePtex(
-    const pbrt_proto::v3::SpectrumTexture::Ptex& ptex,
-    ImageManager& image_manager, TextureManager& texture_manager);
+    const pbrt_proto::PtexSpectrumTexture& ptex, ImageManager& image_manager,
+    TextureManager& texture_manager);
 
 }  // namespace textures
 }  // namespace pbrt_frontend

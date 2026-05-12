@@ -7,6 +7,7 @@
 #include "iris/materials/mirror_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -14,17 +15,17 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeMirrorMaterial;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::MirrorMaterial;
 using ::pbrt_proto::v3::Shape;
 
-MaterialResult MakeMirror(const Material::Mirror& mirror,
+MaterialResult MakeMirror(const MirrorMaterial& mirror,
                           const Shape::MaterialOverrides& overrides,
                           TextureManager& texture_manager) {
-  Material::Mirror with_defaults = Defaults().materials().mirror();
+  MirrorMaterial with_defaults = Defaults().materials().mirror();
   with_defaults.MergeFrom(mirror);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  ReferenceCounted<iris::Material> material = MakeMirrorMaterial(
+  ReferenceCounted<Material> material = MakeMirrorMaterial(
       texture_manager.AllocateReflectorTexture(with_defaults.kr()));
 
   return MaterialResult{{material, material},

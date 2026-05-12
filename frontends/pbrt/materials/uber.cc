@@ -8,6 +8,7 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -16,15 +17,15 @@ namespace materials {
 
 using ::iris::materials::MakeUberMaterial;
 using ::pbrt_proto::FloatTextureParameter;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::UberMaterial;
 using ::pbrt_proto::v3::Shape;
 
 constexpr visual kDefaultEtaIncident = 1.0;
 
-MaterialResult MakeUber(const Material::Uber& uber,
+MaterialResult MakeUber(const UberMaterial& uber,
                         const Shape::MaterialOverrides& overrides,
                         TextureManager& texture_manager) {
-  Material::Uber with_defaults = Defaults().materials().uber();
+  UberMaterial with_defaults = Defaults().materials().uber();
   with_defaults.MergeFrom(uber);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 

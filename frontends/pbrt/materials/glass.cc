@@ -7,6 +7,7 @@
 #include "iris/materials/glass_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -14,15 +15,15 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeGlassMaterial;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::GlassMaterial;
 using ::pbrt_proto::v3::Shape;
 
 constexpr visual kDefaultEtaFront = 1.0;
 
-MaterialResult MakeGlass(const Material::Glass& glass,
+MaterialResult MakeGlass(const GlassMaterial& glass,
                          const Shape::MaterialOverrides& overrides,
                          TextureManager& texture_manager) {
-  Material::Glass with_defaults = Defaults().materials().glass();
+  GlassMaterial with_defaults = Defaults().materials().glass();
   with_defaults.MergeFrom(glass);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 

@@ -137,22 +137,6 @@ TEST(ParseFloatTexture, ImageMap) {
               "ERROR: Missing required image parameter: filename");
 }
 
-TEST(ParseFloatTexture, Marble) {
-  TestSpectrumManager spectrum_manager;
-  TextureManager texture_manager(spectrum_manager);
-  ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
-
-  FloatTexture float_texture;
-  float_texture.set_name("A");
-  float_texture.mutable_marble();
-
-  ParseFloatTexture(float_texture, image_manager, texture_manager,
-                    Matrix::Identity());
-  EXPECT_EXIT(texture_manager.GetReflectorTexture("A"),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: No spectrum texture defined with name: \"A\"");
-}
-
 TEST(ParseFloatTexture, Mix) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);

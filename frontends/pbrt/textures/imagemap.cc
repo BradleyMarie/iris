@@ -17,7 +17,6 @@
 #include "iris/textures/reflector_texture.h"
 #include "iris/textures/scaled_texture.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -28,14 +27,14 @@ using ::iris::textures::MakeBorderedImageTexture;
 using ::iris::textures::MakeClampedImageTexture;
 using ::iris::textures::MakeRepeatedImageTexture;
 using ::iris::textures::MakeScaledTexture;
+using ::pbrt_proto::ImageMapFloatTexture;
+using ::pbrt_proto::ImageMapSpectrumTexture;
 using ::pbrt_proto::ImageWrap;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
-    const FloatTexture::ImageMap& imagemap, ImageManager& image_manager,
+    const ImageMapFloatTexture& imagemap, ImageManager& image_manager,
     TextureManager& texture_manager) {
-  FloatTexture::ImageMap with_defaults = Defaults().float_textures().imagemap();
+  ImageMapFloatTexture with_defaults = Defaults().float_textures().imagemap();
   with_defaults.MergeFrom(imagemap);
 
   if (!std::isfinite(with_defaults.maxanisotropy()) ||
@@ -147,9 +146,9 @@ ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
-    const SpectrumTexture::ImageMap& imagemap, ImageManager& image_manager,
+    const ImageMapSpectrumTexture& imagemap, ImageManager& image_manager,
     TextureManager& texture_manager) {
-  SpectrumTexture::ImageMap with_defaults =
+  ImageMapSpectrumTexture with_defaults =
       Defaults().spectrum_textures().imagemap();
   with_defaults.MergeFrom(imagemap);
 

@@ -2,6 +2,7 @@
 #define _IRIS_REFERENCE_COUNTED_
 
 #include <concepts>
+#include <functional>
 #include <type_traits>
 
 #include "iris/reference_countable.h"

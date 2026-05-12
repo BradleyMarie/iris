@@ -18,7 +18,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -31,7 +31,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -48,7 +48,7 @@ cc_library(
         "//iris/textures:fbm_texture",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -62,7 +62,7 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -80,7 +80,6 @@ cc_library(
         "//iris/textures:reflector_texture",
         "//iris/textures:scaled_texture",
         "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -101,7 +100,7 @@ cc_test(
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -117,7 +116,6 @@ cc_library(
         "//iris/textures:marble_texture",
         "//iris/textures:reflector_texture",
         "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -131,7 +129,7 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -146,7 +144,7 @@ cc_library(
         "//iris/textures:float_texture",
         "//iris/textures:mixed_texture",
         "//iris/textures:reflector_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -159,7 +157,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -199,7 +197,7 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -217,7 +215,6 @@ cc_library(
         "//iris/textures:reflector_texture",
         "//third_party/disney/ptex",
         "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
 
@@ -233,7 +230,7 @@ cc_test(
         "//third_party/disney/ptex",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -248,7 +245,7 @@ cc_library(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:scaled_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -261,7 +258,7 @@ cc_test(
         "//frontends/pbrt/spectrum_managers:test_spectrum_manager",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -277,7 +274,7 @@ cc_library(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:windy_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -291,7 +288,7 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -307,7 +304,7 @@ cc_library(
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
         "//iris/textures:wrinkled_texture",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -321,6 +318,6 @@ cc_test(
         "//iris:matrix",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )

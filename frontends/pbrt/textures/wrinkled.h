@@ -6,18 +6,18 @@
 #include "iris/reference_counted.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 ReferenceCounted<iris::textures::FloatTexture> MakeWrinkled(
-    const pbrt_proto::v3::FloatTexture::Wrinkled& wrinkled,
+    const pbrt_proto::WrinkledFloatTexture& wrinkled,
     TextureManager& texture_manager, const Matrix& world_to_texture);
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeWrinkled(
-    const pbrt_proto::v3::SpectrumTexture::Wrinkled& wrinkled,
+    const pbrt_proto::WrinkledSpectrumTexture& wrinkled,
     TextureManager& texture_manager, const Matrix& world_to_texture);
 
 }  // namespace textures

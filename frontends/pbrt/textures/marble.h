@@ -5,14 +5,14 @@
 #include "iris/matrix.h"
 #include "iris/reference_counted.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeMarble(
-    const pbrt_proto::v3::SpectrumTexture::Marble& wrinkled,
+    const pbrt_proto::MarbleSpectrumTexture& wrinkled,
     TextureManager& texture_manager, const Matrix& world_to_texture);
 
 }  // namespace textures

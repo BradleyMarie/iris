@@ -4,6 +4,7 @@
 #include "frontends/pbrt/materials/result.h"
 #include "frontends/pbrt/spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -11,7 +12,7 @@ namespace pbrt_frontend {
 namespace materials {
 
 MaterialResult MakeMetal(
-    const pbrt_proto::v3::Material::Metal& metal,
+    const pbrt_proto::MetalMaterial& metal,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     TextureManager& texture_manager, SpectrumManager& spectrum_manager);
 

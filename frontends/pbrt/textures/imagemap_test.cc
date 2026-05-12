@@ -9,7 +9,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
 namespace iris {
@@ -19,8 +19,8 @@ namespace {
 
 using ::bazel::tools::cpp::runfiles::Runfiles;
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
+using ::pbrt_proto::ImageMapFloatTexture;
+using ::pbrt_proto::ImageMapSpectrumTexture;
 using ::testing::ExitedWithCode;
 
 std::string RunfilePath(const std::string& path) {
@@ -33,7 +33,7 @@ TEST(FloatImageMap, Empty) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
               ExitedWithCode(EXIT_FAILURE),
@@ -45,7 +45,7 @@ TEST(FloatImageMap, InfiniteMaxAnisotropy) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -58,7 +58,7 @@ TEST(FloatImageMap, NegativeMaxAnisotropy) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_maxanisotropy(-1.0);
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -71,7 +71,7 @@ TEST(FloatImageMap, Scale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -84,7 +84,7 @@ TEST(FloatImageMap, InfiniteUDelta) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_udelta(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -97,7 +97,7 @@ TEST(FloatImageMap, InfiniteUScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_uscale(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -110,7 +110,7 @@ TEST(FloatImageMap, ZeroUScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_uscale(0.0);
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -123,7 +123,7 @@ TEST(FloatImageMap, InfiniteVDelta) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_vdelta(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -136,7 +136,7 @@ TEST(FloatImageMap, InfiniteVScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_vscale(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -149,7 +149,7 @@ TEST(FloatImageMap, ZeroVScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_vscale(0.0);
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -162,7 +162,7 @@ TEST(FloatImageMap, EsrSucceeds) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_filename(RunfilePath("image.exr"));
 
   EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
@@ -173,7 +173,7 @@ TEST(FloatImageMap, PngSucceeds) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_filename(RunfilePath("image.png"));
 
   EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
@@ -184,7 +184,7 @@ TEST(FloatImageMap, NoExtension) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_filename(RunfilePath("image"));
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -197,7 +197,7 @@ TEST(FloatImageMap, BadExtension) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::ImageMap imagemap;
+  ImageMapFloatTexture imagemap;
   imagemap.set_filename(RunfilePath("image.txt"));
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -210,7 +210,7 @@ TEST(SpectrumImageMap, Empty) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
               ExitedWithCode(EXIT_FAILURE),
@@ -222,7 +222,7 @@ TEST(SpectrumImageMap, InfiniteMaxAnisotropy) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -235,7 +235,7 @@ TEST(SpectrumImageMap, NegativeMaxAnisotropy) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_maxanisotropy(-1.0);
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -248,7 +248,7 @@ TEST(SpectrumImageMap, Scale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_maxanisotropy(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -261,7 +261,7 @@ TEST(SpectrumImageMap, InfiniteUDelta) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_udelta(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -274,7 +274,7 @@ TEST(SpectrumImageMap, InfiniteUScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_uscale(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -287,7 +287,7 @@ TEST(SpectrumImageMap, ZeroUScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_uscale(0.0);
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -300,7 +300,7 @@ TEST(SpectrumImageMap, InfiniteVDelta) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_vdelta(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -313,7 +313,7 @@ TEST(SpectrumImageMap, InfiniteVScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_vscale(std::numeric_limits<double>::infinity());
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -326,7 +326,7 @@ TEST(SpectrumImageMap, ZeroVScale) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_vscale(0.0);
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -339,7 +339,7 @@ TEST(SpectrumImageMap, ExrSucceeds) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_filename(RunfilePath("image.exr"));
 
   EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
@@ -350,7 +350,7 @@ TEST(SpectrumImageMap, PngSucceeds) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_filename(RunfilePath("image.png"));
 
   EXPECT_TRUE(MakeImageMap(imagemap, image_manager, texture_manager));
@@ -361,7 +361,7 @@ TEST(SpectrumImageMap, NoExtension) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_filename(RunfilePath("image"));
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),
@@ -374,7 +374,7 @@ TEST(SpectrumImageMap, BadExtension) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::ImageMap imagemap;
+  ImageMapSpectrumTexture imagemap;
   imagemap.set_filename(RunfilePath("image.txt"));
 
   EXPECT_EXIT(MakeImageMap(imagemap, image_manager, texture_manager),

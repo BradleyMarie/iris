@@ -8,6 +8,7 @@
 #include "iris/material.h"
 #include "iris/materials/mix_material.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -16,11 +17,12 @@ namespace materials {
 namespace {
 
 using ::iris::materials::MakeMixMaterial;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::MatteMaterial;
+using ::pbrt_proto::MixMaterial;
 using ::pbrt_proto::v3::Shape;
 
 MaterialResult MakeMixedMaterial(
-    const std::string& named_material, const pbrt_proto::v3::Material::Mix& mix,
+    const std::string& named_material, const pbrt_proto::MixMaterial& mix,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     const MaterialManager& material_manager, TextureManager& texture_manager) {
   if (const auto* existing_material = material_manager.Get(named_material);
@@ -28,7 +30,7 @@ MaterialResult MakeMixedMaterial(
     return existing_material->second;
   }
 
-  Material::Matte matte;
+  MatteMaterial matte;
   matte.MergeFromString(mix.SerializeAsString());
 
   return MakeMatte(matte, overrides, texture_manager);
@@ -37,10 +39,10 @@ MaterialResult MakeMixedMaterial(
 }  // namespace
 
 MaterialResult MakeMix(
-    const pbrt_proto::v3::Material::Mix& mix,
+    const pbrt_proto::MixMaterial& mix,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     const MaterialManager& material_manager, TextureManager& texture_manager) {
-  Material::Mix with_defaults = Defaults().materials().mix();
+  MixMaterial with_defaults = Defaults().materials().mix();
   with_defaults.MergeFrom(mix);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 

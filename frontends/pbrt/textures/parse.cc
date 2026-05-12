@@ -62,8 +62,6 @@ void ParseFloatTexture(const FloatTexture& float_texture,
       result = textures::MakeImageMap(float_texture.imagemap(), image_manager,
                                       texture_manager);
       break;
-    case FloatTexture::kMarble:
-      return;
     case FloatTexture::kMix:
       result = textures::MakeMix(float_texture.mix(), texture_manager);
       break;

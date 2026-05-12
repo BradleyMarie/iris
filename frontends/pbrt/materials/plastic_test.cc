@@ -4,6 +4,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -12,7 +13,7 @@ namespace materials {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::PlasticMaterial;
 using ::pbrt_proto::v3::Shape;
 
 TEST(MakePlastic, Empty) {
@@ -23,7 +24,7 @@ TEST(MakePlastic, Empty) {
       texture_manager.AllocateFloatTexture(1.0);
   texture_manager.Put("bump", bump);
 
-  Material::Plastic plastic;
+  PlasticMaterial plastic;
   plastic.mutable_bumpmap()->set_float_texture_name("bump");
 
   MaterialResult result = MakePlastic(

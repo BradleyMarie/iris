@@ -4,7 +4,7 @@
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/matrix.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -12,13 +12,13 @@ namespace textures {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::SpectrumTexture;
+using ::pbrt_proto::MarbleSpectrumTexture;
 
 TEST(Marble, SpectrumTexture) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  SpectrumTexture::Marble marble;
+  MarbleSpectrumTexture marble;
   EXPECT_TRUE(MakeMarble(marble, texture_manager, Matrix::Identity()));
 }
 

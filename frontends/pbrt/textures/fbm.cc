@@ -9,29 +9,29 @@
 #include "iris/textures/fbm_texture.h"
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 using ::iris::textures::MakeFbmTexture;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
+using ::pbrt_proto::FBmFloatTexture;
+using ::pbrt_proto::FBmSpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeFbm(
-    const FloatTexture::FBm& wrinkled, TextureManager& texture_manager,
+    const FBmFloatTexture& fbm, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
-  return MakeFbmTexture(world_to_texture, std::min(255u, wrinkled.octaves()),
-                        static_cast<visual_t>(wrinkled.roughness()));
+  return MakeFbmTexture(world_to_texture, std::min(255u, fbm.octaves()),
+                        static_cast<visual_t>(fbm.roughness()));
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeFbm(
-    const SpectrumTexture::FBm& wrinkled, TextureManager& texture_manager,
+    const FBmSpectrumTexture& fbm, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeFbmTexture(
-      world_to_texture, std::min(255u, wrinkled.octaves()),
-      static_cast<visual_t>(wrinkled.roughness()),
+      world_to_texture, std::min(255u, fbm.octaves()),
+      static_cast<visual_t>(fbm.roughness()),
       texture_manager.AllocateReflectorTexture(static_cast<visual>(1.0)));
 }
 

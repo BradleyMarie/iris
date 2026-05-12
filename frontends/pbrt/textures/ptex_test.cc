@@ -6,7 +6,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -14,8 +14,8 @@ namespace textures {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
+using ::pbrt_proto::PtexFloatTexture;
+using ::pbrt_proto::PtexSpectrumTexture;
 using ::testing::ExitedWithCode;
 
 TEST(Ptex, FloatTexture) {
@@ -23,7 +23,7 @@ TEST(Ptex, FloatTexture) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  FloatTexture::Ptex ptex;
+  PtexFloatTexture ptex;
   EXPECT_EXIT(MakePtex(ptex, image_manager, texture_manager),
               ExitedWithCode(EXIT_FAILURE), "ERROR: Failed to open ptex file");
 }
@@ -33,7 +33,7 @@ TEST(Ptex, SpectrumTexture) {
   TextureManager texture_manager(spectrum_manager);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  SpectrumTexture::Ptex ptex;
+  PtexSpectrumTexture ptex;
   EXPECT_EXIT(MakePtex(ptex, image_manager, texture_manager),
               ExitedWithCode(EXIT_FAILURE), "ERROR: Failed to open ptex file");
 }

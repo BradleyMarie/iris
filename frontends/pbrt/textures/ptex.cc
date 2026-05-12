@@ -11,7 +11,6 @@
 #include "iris/textures/ptex_texture.h"
 #include "iris/textures/reflector_texture.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/v3/v3.pb.h"
 #include "third_party/disney/ptex/Ptexture.h"
 
 namespace iris {
@@ -20,9 +19,9 @@ namespace textures {
 namespace {
 
 using ::iris::textures::MakePtexTexture;
+using ::pbrt_proto::PtexFloatTexture;
+using ::pbrt_proto::PtexSpectrumTexture;
 using ::pbrt_proto::Spectrum;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
 
 static class ErrorReporter : public PtexErrorHandler {
  private:
@@ -54,7 +53,7 @@ std::shared_ptr<Ptex::PtexCache> GetTextureCache() {
 }  // namespace
 
 ReferenceCounted<iris::textures::FloatTexture> MakePtex(
-    const FloatTexture::Ptex& ptex, ImageManager& image_manager,
+    const PtexFloatTexture& ptex, ImageManager& image_manager,
     TextureManager& texture_manager) {
   std::shared_ptr<Ptex::PtexCache> cache = GetTextureCache();
 
@@ -87,7 +86,7 @@ ReferenceCounted<iris::textures::FloatTexture> MakePtex(
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakePtex(
-    const SpectrumTexture::Ptex& ptex, ImageManager& image_manager,
+    const PtexSpectrumTexture& ptex, ImageManager& image_manager,
     TextureManager& texture_manager) {
   std::shared_ptr<Ptex::PtexCache> cache = GetTextureCache();
 

@@ -10,19 +10,20 @@
 #include "iris/material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace materials {
 
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::DisneyMaterial;
 using ::pbrt_proto::v3::Shape;
 
-MaterialResult MakeDisney(const Material::Disney& disney,
+MaterialResult MakeDisney(const DisneyMaterial& disney,
                           const Shape::MaterialOverrides& overrides,
                           TextureManager& texture_manager) {
-  Material::Disney with_defaults = Defaults().materials().disney();
+  DisneyMaterial with_defaults = Defaults().materials().disney();
   with_defaults.MergeFrom(disney);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 

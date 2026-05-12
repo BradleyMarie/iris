@@ -6,6 +6,7 @@
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/materials/mock_material.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -15,7 +16,7 @@ namespace {
 
 using ::iris::materials::MockMaterial;
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::MixMaterial;
 using ::pbrt_proto::v3::Shape;
 
 TEST(MakeMix, NotNamed) {
@@ -23,7 +24,7 @@ TEST(MakeMix, NotNamed) {
   TextureManager texture_manager(spectrum_manager);
   MaterialManager material_manager;
 
-  Material::Mix mix;
+  MixMaterial mix;
   mix.set_namedmaterial1("a");
   mix.set_namedmaterial2("a");
 
@@ -44,9 +45,9 @@ TEST(MakeMix, Empty) {
   MaterialResult a;
   a.materials[0] = MakeReferenceCounted<MockMaterial>();
   a.materials[1] = MakeReferenceCounted<MockMaterial>();
-  material_manager.Put("a", {Material::default_instance(), a});
+  material_manager.Put("a", {pbrt_proto::v3::Material::default_instance(), a});
 
-  Material::Mix mix;
+  MixMaterial mix;
   mix.set_namedmaterial1("a");
   mix.set_namedmaterial2("a");
 

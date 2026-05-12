@@ -6,24 +6,24 @@
 #include "iris/textures/float_texture.h"
 #include "iris/textures/reflector_texture.h"
 #include "iris/textures/windy_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 using ::iris::textures::MakeWindyTexture;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
+using ::pbrt_proto::WindyFloatTexture;
+using ::pbrt_proto::WindySpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeWindy(
-    const FloatTexture::Windy& windy, TextureManager& texture_manager,
+    const WindyFloatTexture& windy, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeWindyTexture(world_to_texture);
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeWindy(
-    const SpectrumTexture::Windy& windy, TextureManager& texture_manager,
+    const WindySpectrumTexture& windy, TextureManager& texture_manager,
     const Matrix& world_to_texture) {
   return MakeWindyTexture(
       world_to_texture,

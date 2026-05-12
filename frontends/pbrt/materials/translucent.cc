@@ -7,6 +7,7 @@
 #include "iris/materials/translucent_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -14,16 +15,16 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeTranslucentMaterial;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::TranslucentMaterial;
 using ::pbrt_proto::v3::Shape;
 
 constexpr visual kDefaultEtaIncident = 1.0;
 constexpr visual kDefaultEtaTransmitted = 1.5;
 
-MaterialResult MakeTranslucent(const Material::Translucent& translucent,
+MaterialResult MakeTranslucent(const TranslucentMaterial& translucent,
                                const Shape::MaterialOverrides& overrides,
                                TextureManager& texture_manager) {
-  Material::Translucent with_defaults = Defaults().materials().translucent();
+  TranslucentMaterial with_defaults = Defaults().materials().translucent();
   with_defaults.MergeFrom(translucent);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 

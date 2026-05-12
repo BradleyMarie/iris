@@ -7,6 +7,7 @@
 #include "iris/materials/matte_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -14,17 +15,17 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeMatteMaterial;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::MatteMaterial;
 using ::pbrt_proto::v3::Shape;
 
-MaterialResult MakeMatte(const Material::Matte& matte,
+MaterialResult MakeMatte(const MatteMaterial& matte,
                          const Shape::MaterialOverrides& overrides,
                          TextureManager& texture_manager) {
-  Material::Matte with_defaults = Defaults().materials().matte();
+  MatteMaterial with_defaults = Defaults().materials().matte();
   with_defaults.MergeFrom(matte);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
-  ReferenceCounted<iris::Material> material = MakeMatteMaterial(
+  ReferenceCounted<Material> material = MakeMatteMaterial(
       texture_manager.AllocateReflectorTexture(with_defaults.kd()),
       texture_manager.AllocateFloatTexture(with_defaults.sigma()));
 

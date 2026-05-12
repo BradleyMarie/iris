@@ -6,6 +6,7 @@
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "frontends/pbrt/texture_manager.h"
 #include "googletest/include/gtest/gtest.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -14,7 +15,7 @@ namespace materials {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::DisneyMaterial;
 using ::pbrt_proto::v3::Shape;
 using ::testing::ExitedWithCode;
 
@@ -26,7 +27,7 @@ TEST(MakeDisney, Empty) {
       texture_manager.AllocateFloatTexture(1.0);
   texture_manager.Put("bump", bump);
 
-  Material::Disney disney;
+  DisneyMaterial disney;
   disney.mutable_bumpmap()->set_float_texture_name("bump");
 
   EXPECT_EXIT(MakeDisney(disney, Shape::MaterialOverrides::default_instance(),

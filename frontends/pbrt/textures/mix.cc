@@ -6,19 +6,19 @@
 #include "iris/textures/float_texture.h"
 #include "iris/textures/mixed_texture.h"
 #include "iris/textures/reflector_texture.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace textures {
 
 using ::iris::textures::MakeMixedTexture;
-using ::pbrt_proto::v3::FloatTexture;
-using ::pbrt_proto::v3::SpectrumTexture;
+using ::pbrt_proto::MixFloatTexture;
+using ::pbrt_proto::MixSpectrumTexture;
 
 ReferenceCounted<iris::textures::FloatTexture> MakeMix(
-    const FloatTexture::Mix& mix, TextureManager& texture_manager) {
-  FloatTexture::Mix with_defaults = Defaults().float_textures().mix();
+    const MixFloatTexture& mix, TextureManager& texture_manager) {
+  MixFloatTexture with_defaults = Defaults().float_textures().mix();
   with_defaults.MergeFrom(mix);
 
   return MakeMixedTexture(
@@ -28,8 +28,8 @@ ReferenceCounted<iris::textures::FloatTexture> MakeMix(
 }
 
 ReferenceCounted<iris::textures::ReflectorTexture> MakeMix(
-    const SpectrumTexture::Mix& mix, TextureManager& texture_manager) {
-  SpectrumTexture::Mix with_defaults = Defaults().spectrum_textures().mix();
+    const MixSpectrumTexture& mix, TextureManager& texture_manager) {
+  MixSpectrumTexture with_defaults = Defaults().spectrum_textures().mix();
   with_defaults.MergeFrom(mix);
 
   return MakeMixedTexture(

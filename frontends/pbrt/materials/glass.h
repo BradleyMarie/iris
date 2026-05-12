@@ -3,6 +3,7 @@
 
 #include "frontends/pbrt/materials/result.h"
 #include "frontends/pbrt/texture_manager.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -10,7 +11,7 @@ namespace pbrt_frontend {
 namespace materials {
 
 MaterialResult MakeGlass(
-    const pbrt_proto::v3::Material::Glass& glass,
+    const pbrt_proto::GlassMaterial& glass,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     TextureManager& texture_manager);
 

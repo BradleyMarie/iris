@@ -12,6 +12,7 @@
 #include "iris/materials/plastic_material.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 ABSL_FLAG(bool, reverse_plastic_eta, true,
@@ -23,16 +24,16 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakePlasticMaterial;
-using ::pbrt_proto::v3::Material;
+using ::pbrt_proto::PlasticMaterial;
 using ::pbrt_proto::v3::Shape;
 
 constexpr visual kDefaultEtaFront = 1.0;
 constexpr visual kDefaultEtaBack = 1.5;
 
-MaterialResult MakePlastic(const Material::Plastic& plastic,
+MaterialResult MakePlastic(const PlasticMaterial& plastic,
                            const Shape::MaterialOverrides& overrides,
                            TextureManager& texture_manager) {
-  Material::Plastic with_defaults = Defaults().materials().plastic();
+  PlasticMaterial with_defaults = Defaults().materials().plastic();
   with_defaults.MergeFrom(plastic);
   with_defaults.MergeFromString(overrides.SerializeAsString());
 
