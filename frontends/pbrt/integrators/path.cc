@@ -3,11 +3,14 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <memory>
 
+#include "frontends/pbrt/integrators/result.h"
 #include "iris/integrators/path_integrator.h"
 #include "iris/light_scene.h"
 #include "iris/light_scenes/one_light_scene.h"
 #include "iris/light_scenes/power_light_scene.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -16,12 +19,12 @@ namespace integrators {
 using ::iris::integrators::MakePathIntegrator;
 using ::iris::light_scenes::MakeOneLightSceneBuilder;
 using ::iris::light_scenes::MakePowerLightSceneBuilder;
-using ::pbrt_proto::v3::Integrator;
 
 constexpr visual kMaximumContinueProbability = 0.95;
 constexpr uint8_t kMinBounces = 3;
 
-std::unique_ptr<IntegratorResult> MakePath(const Integrator::Path& path) {
+std::unique_ptr<IntegratorResult> MakePath(
+    const pbrt_proto::PathIntegrator& path) {
   if (path.maxdepth() > std::numeric_limits<uint8_t>::max()) {
     std::cerr << "ERROR: Out of range value for parameter: maxdepth"
               << std::endl;
@@ -51,13 +54,13 @@ std::unique_ptr<IntegratorResult> MakePath(const Integrator::Path& path) {
   }
 
   std::unique_ptr<LightScene::Builder> light_scene_builder;
-  switch (path.lightsamplestrategy()) {
-    case Integrator::SPATIAL:
+  switch (path.lightsampler()) {
+    case pbrt_proto::BVH:
       // TODO: Implement
-    case Integrator::POWER:
+    case pbrt_proto::POWER:
       light_scene_builder = MakePowerLightSceneBuilder();
       break;
-    case Integrator::UNIFORM:
+    case pbrt_proto::UNIFORM:
       light_scene_builder = MakeOneLightSceneBuilder();
       break;
   }

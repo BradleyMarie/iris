@@ -1,5 +1,7 @@
 #include "frontends/pbrt/integrators/parse.h"
 
+#include <memory>
+
 #include "frontends/pbrt/integrators/path.h"
 #include "frontends/pbrt/integrators/result.h"
 #include "pbrt_proto/v3/v3.pb.h"

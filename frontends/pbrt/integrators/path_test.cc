@@ -1,25 +1,27 @@
 #include "frontends/pbrt/integrators/path.h"
 
 #include <cstdint>
+#include <memory>
 
+#include "frontends/pbrt/integrators/result.h"
 #include "googletest/include/gtest/gtest.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace integrators {
 namespace {
 
-using ::pbrt_proto::v3::Integrator;
+using ::pbrt_proto::PathIntegrator;
 using ::testing::ExitedWithCode;
 
 TEST(Path, Empty) {
-  Integrator::Path path;
+  PathIntegrator path;
   EXPECT_TRUE(MakePath(path));
 }
 
 TEST(Path, MaxDepthTooHigh) {
-  Integrator::Path path;
+  PathIntegrator path;
   path.set_maxdepth(256);
 
   EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
@@ -27,7 +29,7 @@ TEST(Path, MaxDepthTooHigh) {
 }
 
 TEST(Path, NegativeRrthreshold) {
-  Integrator::Path path;
+  PathIntegrator path;
   path.set_rrthreshold(-1.0);
 
   EXPECT_EXIT(MakePath(path), ExitedWithCode(EXIT_FAILURE),
@@ -35,7 +37,7 @@ TEST(Path, NegativeRrthreshold) {
 }
 
 TEST(Path, InvalidPixelboundsX) {
-  Integrator::Path path;
+  PathIntegrator path;
   path.mutable_pixelbounds()->set_x_min(1);
   path.mutable_pixelbounds()->set_x_max(0);
   path.mutable_pixelbounds()->set_y_min(0);
@@ -46,7 +48,7 @@ TEST(Path, InvalidPixelboundsX) {
 }
 
 TEST(Path, InvalidPixelboundsY) {
-  Integrator::Path path;
+  PathIntegrator path;
   path.mutable_pixelbounds()->set_x_min(0);
   path.mutable_pixelbounds()->set_x_max(1);
   path.mutable_pixelbounds()->set_y_min(1);
