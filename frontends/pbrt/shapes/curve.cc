@@ -14,7 +14,6 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -23,17 +22,17 @@ namespace {
 
 using ::iris::geometry::MakeCylindricalCubicBezierCurve;
 using ::iris::geometry::MakeFlatCubicBezierCurve;
-using ::pbrt_proto::v3::Shape;
+using ::pbrt_proto::CurveShape;
 
 Point Lerp(const Point& p0, const Point& p1, geometric_t t) {
   return Point(std::lerp(p0.x, p1.x, t), std::lerp(p0.y, p1.y, t),
                std::lerp(p0.z, p1.z, t));
 }
 
-std::array<Point, 4> ComputeCubicSegment(Shape::Curve::Basis basis,
+std::array<Point, 4> ComputeCubicSegment(CurveShape::Basis basis,
                                          std::span<const Point> points,
                                          size_t segment) {
-  if (basis == Shape::Curve::BEZIER) {
+  if (basis == CurveShape::BEZIER) {
     return {points[segment * 3u + 0], points[segment * 3u + 1],
             points[segment * 3u + 2], points[segment * 3u + 3]};
   }
@@ -57,7 +56,7 @@ std::array<Point, 4> ComputeCubicSegment(Shape::Curve::Basis basis,
 }  // namespace
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
-    const Shape::Curve& curve, const Matrix& model_to_world,
+    const CurveShape& curve, const Matrix& model_to_world,
     const ReferenceCounted<Material>& front_material,
     const ReferenceCounted<Material>& back_material,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
@@ -70,7 +69,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
     exit(EXIT_FAILURE);
   }
 
-  if (curve.type() == Shape::Curve::RIBBON) {
+  if (curve.type() == CurveShape::RIBBON) {
     std::cerr << "ERROR: Unsupported value for parameter: type" << std::endl;
     exit(EXIT_FAILURE);
   }
@@ -103,10 +102,10 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
 
   int degree = 0;
   switch (curve.degree()) {
-    case Shape::Curve::THREE:
+    case CurveShape::THREE:
       degree = 3;
       break;
-    case Shape::Curve::FOUR:
+    case CurveShape::TWO:
       std::cerr << "ERROR: Unsupported value for parameter: degree"
                 << std::endl;
       exit(EXIT_FAILURE);
@@ -115,7 +114,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
 
   size_t num_segments = 0;
   switch (curve.basis()) {
-    case Shape::Curve::BEZIER:
+    case CurveShape::BEZIER:
       if (curve.p_size() >= curve.degree() + 1 &&
           (curve.p_size() - degree - 1) % degree == 0) {
         num_segments = static_cast<size_t>((curve.p_size() - 1) / degree);
@@ -124,7 +123,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
                   << std::endl;
       }
       break;
-    case Shape::Curve::BSPLINE:
+    case CurveShape::BSPLINE:
       if (curve.p_size() > 3) {
         num_segments = static_cast<size_t>(curve.p_size() - degree);
       } else {
@@ -146,19 +145,19 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
 
     std::vector<ReferenceCounted<Geometry>> segments;
     switch (curve.type()) {
-      case Shape::Curve::FLAT:
+      case CurveShape::FLAT:
         segments = MakeFlatCubicBezierCurve(
             control_points, splits_per_segment,
             std::lerp(start_width, end_width, start_u),
             std::lerp(start_width, end_width, end_u), start_u, end_u,
             front_material, front_normal_map);
         break;
-      case Shape::Curve::CYLINDER:
+      case CurveShape::CYLINDER:
         segments = MakeCylindricalCubicBezierCurve(
             control_points, splits_per_segment, start_width, end_width, start_u,
             end_u, front_material, front_normal_map);
         break;
-      case Shape::Curve::RIBBON:
+      case CurveShape::RIBBON:
         break;
     }
 

@@ -17,17 +17,16 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
 
 using ::iris::geometry::AllocateTriangleMesh;
-using ::pbrt_proto::v3::Shape;
+using ::pbrt_proto::TriangleMeshShape;
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
-    const Shape::TriangleMesh& trianglemesh, const Matrix& model_to_world,
+    const TriangleMeshShape& trianglemesh, const Matrix& model_to_world,
     const ReferenceCounted<Material>& front_material,
     const ReferenceCounted<Material>& back_material,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
@@ -35,7 +34,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
     const ReferenceCounted<NormalMap>& front_normal_map,
     const ReferenceCounted<NormalMap>& back_normal_map,
     TextureManager& texture_manager, bool reversed_orientation) {
-  Shape::TriangleMesh with_defaults = Defaults().shapes().trianglemesh();
+  TriangleMeshShape with_defaults = Defaults().shapes().trianglemesh();
   with_defaults.MergeFrom(trianglemesh);
 
   if (with_defaults.n_size() != 0 &&

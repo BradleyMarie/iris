@@ -10,18 +10,17 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
 namespace {
 
-using ::pbrt_proto::v3::Shape;
+using ::pbrt_proto::CurveShape;
 using ::testing::ExitedWithCode;
 
 TEST(MakeCurve, Empty) {
-  Shape::Curve curve;
+  CurveShape curve;
 
   EXPECT_EXIT(
       MakeCurve(curve, Matrix::Identity(), ReferenceCounted<Material>(),
@@ -34,12 +33,12 @@ TEST(MakeCurve, Empty) {
 }
 
 TEST(MakeCurve, RibbonUnsupported) {
-  Shape::Curve curve;
+  CurveShape curve;
   curve.add_p();
   curve.add_p();
   curve.add_p();
   curve.add_p();
-  curve.set_type(Shape::Curve::RIBBON);
+  curve.set_type(CurveShape::RIBBON);
 
   EXPECT_EXIT(
       MakeCurve(curve, Matrix::Identity(), ReferenceCounted<Material>(),
@@ -52,7 +51,7 @@ TEST(MakeCurve, RibbonUnsupported) {
 }
 
 TEST(MakeCurve, SplitDepthTooLow) {
-  Shape::Curve curve;
+  CurveShape curve;
   curve.add_p();
   curve.add_p();
   curve.add_p();
@@ -70,7 +69,7 @@ TEST(MakeCurve, SplitDepthTooLow) {
 }
 
 TEST(MakeCurve, SplitDepthTooHigh) {
-  Shape::Curve curve;
+  CurveShape curve;
   curve.add_p();
   curve.add_p();
   curve.add_p();
@@ -88,7 +87,7 @@ TEST(MakeCurve, SplitDepthTooHigh) {
 }
 
 TEST(MakeCurve, Valid) {
-  Shape::Curve curve;
+  CurveShape curve;
   pbrt_proto::Point& p0 = *curve.add_p();
   p0.set_x(0.0);
   p0.set_y(0.0);

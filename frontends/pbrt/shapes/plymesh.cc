@@ -15,7 +15,7 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "plyodine/readers/triangle_mesh_reader.h"
 
 namespace iris {
@@ -25,7 +25,7 @@ namespace {
 
 using ::iris::geometry::AllocateTriangleMesh;
 using ::iris::textures::MaskTexture;
-using ::pbrt_proto::v3::Shape;
+using ::pbrt_proto::PlyMeshShape;
 
 class TriangleMeshReader final
     : public plyodine::TriangleMeshReader<geometric, geometric, geometric,
@@ -75,7 +75,7 @@ class TriangleMeshReader final
 }  // namespace
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
-    const pbrt_proto::v3::Shape::PlyMesh& plymesh, const Matrix& model_to_world,
+    const PlyMeshShape& plymesh, const Matrix& model_to_world,
     const ReferenceCounted<Material>& front_material,
     const ReferenceCounted<Material>& back_material,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
@@ -84,7 +84,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
     const ReferenceCounted<NormalMap>& back_normal_map,
     const std::filesystem::path& search_root, TextureManager& texture_manager,
     bool reversed_orientation) {
-  Shape::PlyMesh with_defaults = Defaults().shapes().plymesh();
+  PlyMeshShape with_defaults = Defaults().shapes().plymesh();
   with_defaults.MergeFrom(plymesh);
 
   std::filesystem::path path = with_defaults.filename();

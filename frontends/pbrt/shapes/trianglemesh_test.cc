@@ -9,7 +9,6 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -17,14 +16,14 @@ namespace shapes {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::Shape;
+using ::pbrt_proto::TriangleMeshShape;
 using ::testing::ExitedWithCode;
 
 TEST(MakeTriangleMesh, Empty) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
 
   auto result = MakeTriangleMesh(
       trianglemesh, Matrix::Identity(), ReferenceCounted<Material>(),
@@ -38,7 +37,7 @@ TEST(MakeTriangleMesh, InvalidNormalCount) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_n();
 
   EXPECT_EXIT(
@@ -55,7 +54,7 @@ TEST(MakeTriangleMesh, InvalidUvCount) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_uv();
 
   EXPECT_EXIT(
@@ -72,7 +71,7 @@ TEST(MakeTriangleMesh, IndexTooNegativeV0) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_p();
   trianglemesh.add_indices()->set_v0(-1);
 
@@ -90,7 +89,7 @@ TEST(MakeTriangleMesh, IndexTooHighV0) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_p();
   trianglemesh.add_indices()->set_v0(1);
 
@@ -108,7 +107,7 @@ TEST(MakeTriangleMesh, IndexTooNegativeV1) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_p();
   trianglemesh.add_indices()->set_v1(-1);
 
@@ -126,7 +125,7 @@ TEST(MakeTriangleMesh, IndexTooHighV1) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_p();
   trianglemesh.add_indices()->set_v1(1);
 
@@ -144,7 +143,7 @@ TEST(MakeTriangleMesh, IndexTooNegativeV2) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_p();
   trianglemesh.add_indices()->set_v2(-1);
 
@@ -162,7 +161,7 @@ TEST(MakeTriangleMesh, IndexTooHighV2) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   trianglemesh.add_p();
   trianglemesh.add_indices()->set_v2(1);
 
@@ -180,7 +179,7 @@ TEST(MakeTriangleMesh, Succeeds) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::TriangleMesh trianglemesh;
+  TriangleMeshShape trianglemesh;
   pbrt_proto::Point& v0 = *trianglemesh.add_p();
   v0.set_x(0.0);
   v0.set_y(0.0);
@@ -196,8 +195,7 @@ TEST(MakeTriangleMesh, Succeeds) {
   v2.set_y(1.0);
   v2.set_z(0.0);
 
-  pbrt_proto::v3::Shape::TriangleMesh::VertexIndices& indices =
-      *trianglemesh.add_indices();
+  pbrt_proto::VertexIndices& indices = *trianglemesh.add_indices();
   indices.set_v0(0);
   indices.set_v1(1);
   indices.set_v2(2);

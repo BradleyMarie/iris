@@ -39,7 +39,7 @@ cc_library(
     deps = [
         "//iris:image_sampler",
         "//iris/image_samplers:sobol_image_sampler",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 
@@ -50,7 +50,7 @@ cc_test(
         ":maxmindist",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
-        "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
+        "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )
 

@@ -11,14 +11,14 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
-    const pbrt_proto::v3::Shape::TriangleMesh& trianglemesh,
+    const pbrt_proto::TriangleMeshShape& trianglemesh,
     const Matrix& model_to_world,
     const ReferenceCounted<Material>& front_material,
     const ReferenceCounted<Material>& back_material,

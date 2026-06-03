@@ -7,18 +7,18 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
 namespace {
 
-using ::pbrt_proto::v3::Shape;
+using ::pbrt_proto::SphereShape;
 using ::testing::ExitedWithCode;
 
 TEST(MakeSphere, Empty) {
-  Shape::Sphere sphere;
+  SphereShape sphere;
 
   auto result = MakeSphere(
       sphere, Matrix::Identity(), ReferenceCounted<Material>(),
@@ -29,7 +29,7 @@ TEST(MakeSphere, Empty) {
 }
 
 TEST(MakeSphere, BadRadius) {
-  Shape::Sphere sphere;
+  SphereShape sphere;
   sphere.set_radius(-1.0);
 
   EXPECT_EXIT(
@@ -43,7 +43,7 @@ TEST(MakeSphere, BadRadius) {
 }
 
 TEST(MakeSphere, ZeroRadius) {
-  Shape::Sphere sphere;
+  SphereShape sphere;
   sphere.set_radius(0.0);
 
   auto result = MakeSphere(

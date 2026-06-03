@@ -11,7 +11,7 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 #include "tools/cpp/runfiles/runfiles.h"
 
 namespace iris {
@@ -21,7 +21,7 @@ namespace {
 
 using ::bazel::tools::cpp::runfiles::Runfiles;
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::v3::Shape;
+using ::pbrt_proto::PlyMeshShape;
 using ::testing::ExitedWithCode;
 
 std::string RawRunfilePath(const std::string& path) {
@@ -34,7 +34,7 @@ TEST(MakePlyMesh, BadFileName) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::PlyMesh plymesh;
+  PlyMeshShape plymesh;
 
   EXPECT_EXIT(
       MakePlyMesh(plymesh, Matrix::Identity(), ReferenceCounted<Material>(),
@@ -51,7 +51,7 @@ TEST(MakePlyMesh, BadFile) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::PlyMesh plymesh;
+  PlyMeshShape plymesh;
   plymesh.set_filename(RawRunfilePath("empty.ply"));
 
   EXPECT_EXIT(
@@ -70,7 +70,7 @@ TEST(MakePlyMesh, Triangles) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  Shape::PlyMesh plymesh;
+  PlyMeshShape plymesh;
   plymesh.set_filename(RawRunfilePath("triangles.ply"));
 
   auto result = MakePlyMesh(

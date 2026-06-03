@@ -10,14 +10,14 @@
 #include "iris/matrix.h"
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
-#include "pbrt_proto/v3/v3.pb.h"
+#include "pbrt_proto/pbrt.pb.h"
 
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
 
 std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeCurve(
-    const pbrt_proto::v3::Shape::Curve& curve, const Matrix& model_to_world,
+    const pbrt_proto::CurveShape& curve, const Matrix& model_to_world,
     const ReferenceCounted<Material>& front_material,
     const ReferenceCounted<Material>& back_material,
     const ReferenceCounted<EmissiveMaterial>& front_emissive_material,
