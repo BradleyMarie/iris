@@ -13,6 +13,7 @@
 namespace iris {
 namespace pbrt_frontend {
 namespace materials {
+namespace {
 
 using ::iris::materials::MakeGlassMaterial;
 using ::iris::textures::FloatTexture;
@@ -20,6 +21,14 @@ using ::pbrt_proto::DielectricMaterial;
 using ::pbrt_proto::v3::Shape;
 
 constexpr visual kDefaultEtaFront = 1.0;
+
+void UnsupportedEta() {
+  std::cerr << "ERROR: Unsupported 'glass' Material paramater value: eta"
+            << std::endl;
+  exit(EXIT_FAILURE);
+}
+
+}  // namespace
 
 MaterialResult MakeGlass(const DielectricMaterial& glass,
                          const Shape::MaterialOverrides& overrides,
@@ -42,14 +51,12 @@ MaterialResult MakeGlass(const DielectricMaterial& glass,
         case pbrt_proto::Spectrum::SPECTRUM_TYPE_NOT_SET:
           break;
         default:
-          std::cerr << "ERROR: Unsupported eta type" << std::endl;
-          exit(EXIT_FAILURE);
+          UnsupportedEta();
           break;
       }
       break;
     case DielectricMaterial::kEtaFloatTextureName:
-      eta = texture_manager.GetFloatTexture(
-          with_defaults.eta_float_texture_name());
+      UnsupportedEta();
       break;
     case DielectricMaterial::ETA_TYPE_NOT_SET:
       break;
