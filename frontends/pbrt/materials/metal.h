@@ -12,7 +12,7 @@ namespace pbrt_frontend {
 namespace materials {
 
 MaterialResult MakeMetal(
-    const pbrt_proto::MetalMaterial& metal,
+    const pbrt_proto::ConductorMaterial& metal,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     TextureManager& texture_manager, SpectrumManager& spectrum_manager);
 

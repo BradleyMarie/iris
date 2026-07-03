@@ -23,7 +23,10 @@ MaterialResult MakeMirror(const MirrorMaterial& mirror,
                           TextureManager& texture_manager) {
   MirrorMaterial with_defaults = Defaults().materials().mirror();
   with_defaults.MergeFrom(mirror);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   ReferenceCounted<Material> material = MakeMirrorMaterial(
       texture_manager.AllocateReflectorTexture(with_defaults.kr()));

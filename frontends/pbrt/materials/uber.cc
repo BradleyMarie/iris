@@ -8,7 +8,6 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -27,7 +26,10 @@ MaterialResult MakeUber(const UberMaterial& uber,
                         TextureManager& texture_manager) {
   UberMaterial with_defaults = Defaults().materials().uber();
   with_defaults.MergeFrom(uber);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   if (with_defaults.uroughness().float_texture_parameter_type_case() ==
       FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {

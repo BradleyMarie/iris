@@ -13,7 +13,7 @@ namespace materials {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::MetalMaterial;
+using ::pbrt_proto::ConductorMaterial;
 using ::pbrt_proto::v3::Shape;
 using ::testing::ExitedWithCode;
 
@@ -25,8 +25,8 @@ TEST(MakeMetal, Empty) {
       texture_manager.AllocateFloatTexture(1.0);
   texture_manager.Put("bump", bump);
 
-  MetalMaterial metal;
-  metal.mutable_bumpmap()->set_float_texture_name("bump");
+  ConductorMaterial metal;
+  metal.mutable_displacement()->set_float_texture_name("bump");
 
   MaterialResult result =
       MakeMetal(metal, Shape::MaterialOverrides::default_instance(),
@@ -41,7 +41,7 @@ TEST(MakeMetal, KTextureNotSupported) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  MetalMaterial metal;
+  ConductorMaterial metal;
   metal.mutable_k()->set_spectrum_texture_name("tex");
 
   EXPECT_EXIT(MakeMetal(metal, Shape::MaterialOverrides::default_instance(),
@@ -55,7 +55,7 @@ TEST(MakeMetal, EtaTextureNotSupported) {
   TestSpectrumManager spectrum_manager;
   TextureManager texture_manager(spectrum_manager);
 
-  MetalMaterial metal;
+  ConductorMaterial metal;
   metal.mutable_eta()->set_spectrum_texture_name("tex");
 
   EXPECT_EXIT(MakeMetal(metal, Shape::MaterialOverrides::default_instance(),

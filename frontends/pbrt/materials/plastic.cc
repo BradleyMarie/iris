@@ -35,7 +35,10 @@ MaterialResult MakePlastic(const PlasticMaterial& plastic,
                            TextureManager& texture_manager) {
   PlasticMaterial with_defaults = Defaults().materials().plastic();
   with_defaults.MergeFrom(plastic);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   visual eta_front = kDefaultEtaFront;
   visual eta_back = kDefaultEtaBack;

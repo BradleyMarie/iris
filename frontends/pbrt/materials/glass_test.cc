@@ -13,7 +13,7 @@ namespace materials {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::GlassMaterial;
+using ::pbrt_proto::DielectricMaterial;
 using ::pbrt_proto::v3::Shape;
 
 TEST(MakeGlass, Empty) {
@@ -24,8 +24,8 @@ TEST(MakeGlass, Empty) {
       texture_manager.AllocateFloatTexture(1.0);
   texture_manager.Put("bump", bump);
 
-  GlassMaterial glass;
-  glass.mutable_bumpmap()->set_float_texture_name("bump");
+  DielectricMaterial glass;
+  glass.mutable_displacement()->set_float_texture_name("bump");
 
   MaterialResult result = MakeGlass(
       glass, Shape::MaterialOverrides::default_instance(), texture_manager);

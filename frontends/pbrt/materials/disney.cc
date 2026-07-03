@@ -25,7 +25,10 @@ MaterialResult MakeDisney(const DisneyMaterial& disney,
                           TextureManager& texture_manager) {
   DisneyMaterial with_defaults = Defaults().materials().disney();
   with_defaults.MergeFrom(disney);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   std::cerr << "ERROR: Unsupported Material type: disney" << std::endl;
   exit(EXIT_FAILURE);

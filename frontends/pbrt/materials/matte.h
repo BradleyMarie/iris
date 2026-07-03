@@ -11,7 +11,7 @@ namespace pbrt_frontend {
 namespace materials {
 
 MaterialResult MakeMatte(
-    const pbrt_proto::MatteMaterial& matte,
+    const pbrt_proto::DiffuseMaterial& matte,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     TextureManager& texture_manager);
 

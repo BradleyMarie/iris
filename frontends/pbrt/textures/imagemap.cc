@@ -134,6 +134,10 @@ ReferenceCounted<iris::textures::FloatTexture> MakeImageMap(
           static_cast<visual>(with_defaults.udelta()),
           static_cast<visual>(with_defaults.vdelta()));
       break;
+    case ImageWrap::OCTAHEDRALSPHERE:
+      std::cerr << "ERROR: Unsupported image wrap: OCTAHEDRAL" << std::endl;
+      exit(EXIT_FAILURE);
+      break;
   };
 
   if (with_defaults.scale() != static_cast<visual_t>(1.0)) {
@@ -248,6 +252,10 @@ ReferenceCounted<iris::textures::ReflectorTexture> MakeImageMap(
           static_cast<visual>(with_defaults.vscale()),
           static_cast<visual>(with_defaults.udelta()),
           static_cast<visual>(with_defaults.vdelta()));
+      break;
+    case ImageWrap::OCTAHEDRALSPHERE:
+      std::cerr << "ERROR: Unsupported image wrap: OCTAHEDRAL" << std::endl;
+      exit(EXIT_FAILURE);
       break;
   };
 

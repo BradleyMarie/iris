@@ -127,6 +127,8 @@ TextureManager::AllocateReflectorTexture(
       *spectrum.mutable_xyz_spectrum() = parameter.xyz_spectrum();
       result = AllocateReflectorTexture(spectrum);
       break;
+    case SpectrumTextureParameter::kNamedSpectrum:
+      ABSL_FALLTHROUGH_INTENDED;
     case SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET:
       break;
   }

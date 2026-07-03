@@ -23,7 +23,10 @@ MaterialResult MakeSubstrate(const SubstrateMaterial& substrate,
                              TextureManager& texture_manager) {
   SubstrateMaterial with_defaults = Defaults().materials().substrate();
   with_defaults.MergeFrom(substrate);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   ReferenceCounted<Material> material = MakeSubstrateMaterial(
       texture_manager.AllocateReflectorTexture(with_defaults.kd()),

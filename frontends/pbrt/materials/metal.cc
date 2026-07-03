@@ -12,7 +12,6 @@
 #include "iris/normal_map.h"
 #include "iris/reference_counted.h"
 #include "pbrt_proto/pbrt.pb.h"
-#include "pbrt_proto/pbrt.pb.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
 namespace iris {
@@ -21,8 +20,8 @@ namespace materials {
 namespace {
 
 using ::iris::materials::MakeMetalMaterial;
+using ::pbrt_proto::ConductorMaterial;
 using ::pbrt_proto::FloatTextureParameter;
-using ::pbrt_proto::MetalMaterial;
 using ::pbrt_proto::Spectrum;
 using ::pbrt_proto::SpectrumTextureParameter;
 using ::pbrt_proto::v3::Shape;
@@ -56,6 +55,10 @@ Spectrum ToSpectrum(const SpectrumTextureParameter& parameter) {
                    "metal Material"
                 << std::endl;
       exit(EXIT_FAILURE);
+    case SpectrumTextureParameter::kNamedSpectrum:
+      std::cerr << "ERROR: Named spectrum texture parameters are unimplemented"
+                << std::endl;
+      exit(EXIT_FAILURE);
     case SpectrumTextureParameter::SPECTRUM_TEXTURE_PARAMETER_TYPE_NOT_SET:
       break;
   }
@@ -64,13 +67,16 @@ Spectrum ToSpectrum(const SpectrumTextureParameter& parameter) {
 
 }  // namespace
 
-MaterialResult MakeMetal(const MetalMaterial& metal,
+MaterialResult MakeMetal(const ConductorMaterial& metal,
                          const Shape::MaterialOverrides& overrides,
                          TextureManager& texture_manager,
                          SpectrumManager& spectrum_manager) {
-  MetalMaterial with_defaults = Defaults().materials().metal();
+  ConductorMaterial with_defaults = Defaults().materials().metal();
   with_defaults.MergeFrom(metal);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   if (with_defaults.uroughness().float_texture_parameter_type_case() ==
       FloatTextureParameter::FLOAT_TEXTURE_PARAMETER_TYPE_NOT_SET) {
@@ -90,8 +96,9 @@ MaterialResult MakeMetal(const MetalMaterial& metal,
       texture_manager.AllocateFloatTexture(with_defaults.vroughness()),
       with_defaults.remaproughness());
 
-  return MaterialResult{{material, material},
-                        MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
+  return MaterialResult{
+      {material, material},
+      MakeBumpMap(with_defaults.displacement(), texture_manager)};
 }
 
 }  // namespace materials

@@ -26,7 +26,10 @@ MaterialResult MakeTranslucent(const TranslucentMaterial& translucent,
                                TextureManager& texture_manager) {
   TranslucentMaterial with_defaults = Defaults().materials().translucent();
   with_defaults.MergeFrom(translucent);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   return MaterialResult{
       {MakeTranslucentMaterial(

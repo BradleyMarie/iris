@@ -14,7 +14,7 @@ bazel_dep(name = "libfbsdf")
 git_override(
     module_name = "libfbsdf",
     remote = "https://github.com/bradleymarie/libfbsdf.git",
-    commit = "9ea59f661f49e84cd27c34c700b7f87b17e07378",
+    commit = "c214c65c5000b6cfe4e4ff9ce440012ee4450386",
 )
 
 bazel_dep(name = "libspd")
@@ -28,5 +28,5 @@ bazel_dep(name = "pbrt_proto")
 git_override(
     module_name = "pbrt_proto",
     remote = "https://github.com/bradleymarie/pbrt_proto.git",
-    commit = "a5082945ad64a5fb81788351de2ed6c22c153209",
+    commit = "f7ebbae122c8fd98f49218e6a7428a4ded4446cd",
 )

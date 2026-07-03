@@ -17,7 +17,7 @@ namespace materials {
 namespace {
 
 using ::iris::materials::MakeMixMaterial;
-using ::pbrt_proto::MatteMaterial;
+using ::pbrt_proto::DiffuseMaterial;
 using ::pbrt_proto::MixMaterial;
 using ::pbrt_proto::v3::Shape;
 
@@ -30,8 +30,11 @@ MaterialResult MakeMixedMaterial(
     return existing_material->second;
   }
 
-  MatteMaterial matte;
-  matte.MergeFromString(mix.SerializeAsString());
+  DiffuseMaterial matte;
+  if (!matte.MergeFromString(mix.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   return MakeMatte(matte, overrides, texture_manager);
 }
@@ -44,7 +47,10 @@ MaterialResult MakeMix(
     const MaterialManager& material_manager, TextureManager& texture_manager) {
   MixMaterial with_defaults = Defaults().materials().mix();
   with_defaults.MergeFrom(mix);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   MaterialResult material1 =
       MakeMixedMaterial(with_defaults.namedmaterial1(), mix, overrides,

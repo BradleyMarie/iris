@@ -11,7 +11,7 @@ namespace pbrt_frontend {
 namespace materials {
 
 MaterialResult MakeGlass(
-    const pbrt_proto::GlassMaterial& glass,
+    const pbrt_proto::DielectricMaterial& glass,
     const pbrt_proto::v3::Shape::MaterialOverrides& overrides,
     TextureManager& texture_manager);
 

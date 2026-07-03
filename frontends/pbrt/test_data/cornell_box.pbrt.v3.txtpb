@@ -128,7 +128,7 @@ directives {
     name: "white"
     material {
       matte {
-        Kd {
+        reflectance {
           sampled_spectrum {
             samples {
               wavelength: 400
@@ -492,7 +492,7 @@ directives {
 directives {
   material {
     matte {
-      Kd {
+      reflectance {
         sampled_spectrum {
           samples {
             wavelength: 400

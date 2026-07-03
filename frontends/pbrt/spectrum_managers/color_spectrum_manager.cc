@@ -287,6 +287,8 @@ ReferenceCounted<Reflector> ColorSpectrumManager::AllocateReflector(
       result = MakeColorReflector(ToReflectorColor(
           FromFile(search_root_, spectrum.sampled_spectrum_filename(), true)));
       break;
+    case Spectrum::kNamedSpectrum:
+      ABSL_FALLTHROUGH_INTENDED;
     case Spectrum::SPECTRUM_TYPE_NOT_SET:
       break;
   }

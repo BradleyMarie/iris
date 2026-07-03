@@ -37,9 +37,12 @@ MaterialResult MakeFourier(const MeasuredFourierMaterial& fourier,
                            TextureManager& texture_manager,
                            SpectrumManager& spectrum_manager) {
   MeasuredFourierMaterial with_defaults = fourier;
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
-  std::filesystem::path path = with_defaults.filename();
+  std::filesystem::path path = with_defaults.bsdffile();
   if (path.is_relative()) {
     path = search_root / path;
   }

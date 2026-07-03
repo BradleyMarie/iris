@@ -13,7 +13,7 @@ namespace materials {
 namespace {
 
 using ::iris::pbrt_frontend::spectrum_managers::TestSpectrumManager;
-using ::pbrt_proto::MatteMaterial;
+using ::pbrt_proto::DiffuseMaterial;
 using ::pbrt_proto::v3::Shape;
 
 TEST(MakeMatte, Empty) {
@@ -24,8 +24,8 @@ TEST(MakeMatte, Empty) {
       texture_manager.AllocateFloatTexture(1.0);
   texture_manager.Put("bump", bump);
 
-  MatteMaterial matte;
-  matte.mutable_bumpmap()->set_float_texture_name("bump");
+  DiffuseMaterial matte;
+  matte.mutable_displacement()->set_float_texture_name("bump");
 
   MaterialResult result = MakeMatte(
       matte, Shape::MaterialOverrides::default_instance(), texture_manager);

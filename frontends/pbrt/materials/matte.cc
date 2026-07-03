@@ -15,22 +15,26 @@ namespace pbrt_frontend {
 namespace materials {
 
 using ::iris::materials::MakeMatteMaterial;
-using ::pbrt_proto::MatteMaterial;
+using ::pbrt_proto::DiffuseMaterial;
 using ::pbrt_proto::v3::Shape;
 
-MaterialResult MakeMatte(const MatteMaterial& matte,
+MaterialResult MakeMatte(const DiffuseMaterial& matte,
                          const Shape::MaterialOverrides& overrides,
                          TextureManager& texture_manager) {
-  MatteMaterial with_defaults = Defaults().materials().matte();
+  DiffuseMaterial with_defaults = Defaults().materials().matte();
   with_defaults.MergeFrom(matte);
-  with_defaults.MergeFromString(overrides.SerializeAsString());
+  if (!with_defaults.MergeFromString(overrides.SerializeAsString())) {
+    std::cerr << "ERROR: Malformed material overrides" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   ReferenceCounted<Material> material = MakeMatteMaterial(
-      texture_manager.AllocateReflectorTexture(with_defaults.kd()),
+      texture_manager.AllocateReflectorTexture(with_defaults.reflectance()),
       texture_manager.AllocateFloatTexture(with_defaults.sigma()));
 
-  return MaterialResult{{material, material},
-                        MakeBumpMap(with_defaults.bumpmap(), texture_manager)};
+  return MaterialResult{
+      {material, material},
+      MakeBumpMap(with_defaults.displacement(), texture_manager)};
 }
 
 }  // namespace materials

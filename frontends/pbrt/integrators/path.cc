@@ -55,12 +55,12 @@ std::unique_ptr<IntegratorResult> MakePath(
 
   std::unique_ptr<LightScene::Builder> light_scene_builder;
   switch (path.lightsampler()) {
-    case pbrt_proto::BVH:
+    case pbrt_proto::LightSampler::BVH:
       // TODO: Implement
-    case pbrt_proto::POWER:
+    case pbrt_proto::LightSampler::POWER:
       light_scene_builder = MakePowerLightSceneBuilder();
       break;
-    case pbrt_proto::UNIFORM:
+    case pbrt_proto::LightSampler::UNIFORM:
       light_scene_builder = MakeOneLightSceneBuilder();
       break;
   }
