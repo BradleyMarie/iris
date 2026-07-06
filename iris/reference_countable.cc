@@ -7,12 +7,12 @@
 namespace iris {
 
 void ReferenceCountable::Increment() noexcept {
-  auto old_value = reference_count_.fetch_add(1u, std::memory_order_relaxed);
+  auto old_value = reference_count_.fetch_add(1u);
   assert(old_value != std::numeric_limits<reference_count_t>::max());
 }
 
 bool ReferenceCountable::Decrement() noexcept {
-  auto old_value = reference_count_.fetch_sub(1u, std::memory_order_relaxed);
+  auto old_value = reference_count_.fetch_sub(1u);
   assert(old_value != 0);
   return old_value == 1;
 }
