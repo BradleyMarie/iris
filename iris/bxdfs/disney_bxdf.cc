@@ -1,6 +1,7 @@
 #include "iris/bxdfs/disney_bxdf.h"
 
 #include <numbers>
+#include <numeric>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
@@ -19,7 +20,126 @@ namespace {
 using ::iris::bxdfs::internal::AbsCosTheta;
 using ::iris::bxdfs::internal::CosineSampleHemisphere;
 using ::iris::bxdfs::internal::HalfAngle;
+using ::iris::bxdfs::internal::Reflect;
 using ::iris::bxdfs::internal::SchlickWeight;
+
+static inline visual_t FresnelSchlick(visual_t r0, visual_t cos_theta) {
+  return std::lerp(r0, static_cast<visual_t>(1.0), SchlickWeight(cos_theta));
+}
+
+static inline visual_t Gtr1(visual_t cos_theta, visual_t alpha) {
+  visual_t alpha_squared = alpha * alpha;
+  visual_t inverse_alpha_squared = alpha_squared - static_cast<visual_t>(1.0);
+  visual_t cos_theta_squared = cos_theta * cos_theta;
+  return inverse_alpha_squared /
+         ((static_cast<visual_t>(1.0) +
+           inverse_alpha_squared * cos_theta_squared) *
+          std::numbers::pi_v<visual_t> * std::log(alpha_squared));
+}
+
+static inline visual_t SmithGgxG1(visual_t cos_theta, visual_t alpha) {
+  visual_t alpha_squared = alpha * alpha;
+  visual_t cos_theta_squared = cos_theta * cos_theta;
+  return static_cast<visual_t>(2.0) /
+         (cos_theta + sqrt(alpha_squared + cos_theta_squared -
+                           alpha_squared * cos_theta_squared));
+}
+
+static inline Vector SphericalDirection(geometric_t sin_theta,
+                                        geometric_t cos_theta,
+                                        geometric_t phi) {
+  return Vector(sin_theta * std::cos(phi), cos_theta * std::sin(phi),
+                cos_theta);
+}
+
+class DisneyClearcoatBrdf final : public internal::DiffuseBxdf {
+ public:
+  DisneyClearcoatBrdf(visual_t weight, visual_t alpha) noexcept
+      : weight_(weight), alpha_(alpha) {}
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override;
+
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override;
+
+  const Reflector* ReflectanceDiffuse(
+      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+      SpectralAllocator& allocator) const override;
+
+ private:
+  visual_t weight_;
+  visual_t alpha_;
+};
+
+std::optional<Vector> DisneyClearcoatBrdf::SampleDiffuse(
+    const Vector& incoming, const Vector& surface_normal,
+    Sampler& sampler) const {
+  // TODO: Move this to VNDF sampling
+  if (incoming.z == static_cast<geometric>(0.0)) {
+    return std::nullopt;
+  }
+
+  visual_t alpha_squared = alpha_ * alpha_;
+  visual_t cos_theta = std::sqrt(std::max(
+      static_cast<visual_t>(0.0),
+      (static_cast<visual_t>(1.0) -
+       std::pow(alpha_squared, static_cast<visual_t>(1.0) - sampler.Next())) /
+          (static_cast<visual_t>(1.0) - alpha_squared)));
+  visual_t sin_theta =
+      std::sqrt(std::max(static_cast<visual_t>(0.0),
+                         static_cast<visual_t>(1.0) - cos_theta * cos_theta));
+  visual_t phi = static_cast<visual_t>(2.0) * std::numbers::pi_v<visual_t> *
+                 sampler.Next();
+
+  Vector sampled = SphericalDirection(sin_theta, cos_theta, phi);
+  Vector half_angle =
+      std::signbit(incoming.z) == std::signbit(sampled.z) ? sampled : -sampled;
+
+  return Reflect(incoming, half_angle);
+}
+
+visual_t DisneyClearcoatBrdf::PdfDiffuse(const Vector& incoming,
+                                         const Vector& outgoing,
+                                         const Vector& surface_normal,
+                                         Hemisphere hemisphere) const {
+  if (hemisphere != Hemisphere::BRDF) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  std::optional<Vector> half_angle = HalfAngle(incoming, outgoing);
+  if (!half_angle) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  visual_t cos_theta = AbsCosTheta(*half_angle);
+  return Gtr1(cos_theta, alpha_) * cos_theta /
+         (static_cast<visual_t>(4.0) * DotProduct(incoming, *half_angle));
+}
+
+const Reflector* DisneyClearcoatBrdf::ReflectanceDiffuse(
+    const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+    SpectralAllocator& allocator) const {
+  if (hemisphere != Hemisphere::BRDF) {
+    return nullptr;
+  }
+
+  std::optional<Vector> half_angle = HalfAngle(incoming, outgoing);
+  if (!half_angle) {
+    return nullptr;
+  }
+
+  visual_t weight = static_cast<visual_t>(0.25) * weight_;
+  weight *= Gtr1(AbsCosTheta(*half_angle), alpha_);
+  weight *= FresnelSchlick(static_cast<visual_t>(0.04),
+                           DotProduct(incoming, outgoing));
+  weight *= SmithGgxG1(AbsCosTheta(incoming), static_cast<visual_t>(0.25));
+  weight *= SmithGgxG1(AbsCosTheta(outgoing), static_cast<visual_t>(0.25));
+
+  return allocator.Scale(allocator.Invert(nullptr), weight);
+}
 
 class DisneyDiffuseBrdf final : public internal::DiffuseBxdf {
  public:
@@ -274,6 +394,13 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
 }
 
 }  // namespace
+
+const Bxdf* MakeDisneyClearcoatBrdf(BxdfAllocator& bxdf_allocator,
+                                    visual_t weight, visual_t gloss) {
+  return &bxdf_allocator.Allocate<DisneyClearcoatBrdf>(
+      weight, std::lerp(static_cast<visual_t>(0.001),
+                        static_cast<visual_t>(0.1), gloss));
+}
 
 const Bxdf* MakeDisneyDiffuseBrdf(BxdfAllocator& bxdf_allocator,
                                   const Reflector* color) {

@@ -18,6 +18,113 @@ using ::iris::testing::GetBxdfAllocator;
 using ::testing::_;
 using ::testing::Return;
 
+TEST(DisneyClearcoatBrdfTest, SampleDiffuseZeroZ) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  MockRandom rng;
+  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler(rng);
+
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  EXPECT_FALSE(bxdf->SampleDiffuse(Vector(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0),
+                                   sampler));
+}
+
+TEST(DisneyClearcoatBrdfTest, SampleDiffuseAligned) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
+
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->x, 0.0, 0.001);
+  EXPECT_NEAR(result->y, 0.0, 0.001);
+  EXPECT_NEAR(result->z, 1.0, 0.001);
+}
+
+TEST(DisneyClearcoatBrdfTest, SampleDiffuseUnaligned) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  MockRandom rng;
+  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
+  Sampler sampler(rng);
+
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  std::optional<Vector> result = bxdf->SampleDiffuse(
+      Vector(0.0, 0.0, -1.0), Vector(0.0, 0.0, -1.0), sampler);
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->x, 0.0, 0.001);
+  EXPECT_NEAR(result->y, 0.0, 0.001);
+  EXPECT_NEAR(result->z, -1.0, 0.001);
+}
+
+TEST(DisneyClearcoatBrdfTest, PdfDiffuseTransmitted) {
+  MockReflector reflector;
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  EXPECT_EQ(0.0,
+            bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                             Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF));
+}
+
+TEST(DisneyClearcoatBrdfTest, PdfDiffuseReflected) {
+  MockReflector reflector;
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  visual_t pdf =
+      bxdf->PdfDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                       Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF);
+  EXPECT_NEAR(pdf, 5.212082, 0.001);
+}
+
+TEST(DisneyClearcoatBrdfTest, ReflectanceBtdf) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
+      testing::GetSpectralAllocator()));
+}
+
+TEST(DisneyClearcoatBrdfTest, ReflectanceTransmitted) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
+      testing::GetSpectralAllocator()));
+}
+
+TEST(DisneyClearcoatBrdfTest, ReflectanceNoHalfAngle) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
+      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF,
+      testing::GetSpectralAllocator()));
+}
+
+TEST(DisneyClearcoatBrdfTest, Reflectance) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
+  const Reflector* result = bxdf->ReflectanceDiffuse(
+      Vector(0.8660254, 0.0, 0.5), Vector(0.0, 0.0, 1.0),
+      Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
+
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(result->Reflectance(1.0), 0.0070698, 0.0001);
+}
+
 TEST(DisneyDiffuseBrdfTest, NullReflector) {
   EXPECT_FALSE(MakeDisneyDiffuseBrdf(GetBxdfAllocator(), nullptr));
 }

@@ -8,6 +8,9 @@
 namespace iris {
 namespace bxdfs {
 
+const Bxdf* MakeDisneyClearcoatBrdf(BxdfAllocator& bxdf_allocator,
+                                    visual_t weight, visual_t gloss);
+
 const Bxdf* MakeDisneyDiffuseBrdf(BxdfAllocator& bxdf_allocator,
                                   const Reflector* color);
 
