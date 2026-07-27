@@ -9,10 +9,13 @@ namespace iris {
 namespace bxdfs {
 
 const Bxdf* MakeDisneyDiffuseBrdf(BxdfAllocator& bxdf_allocator,
-                                  const Reflector* reflector);
+                                  const Reflector* color);
+
+const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,
+                                const Reflector* color);
 
 const Bxdf* MakeDisneySubsurfaceBrdf(BxdfAllocator& bxdf_allocator,
-                                     const Reflector* reflector,
+                                     const Reflector* color,
                                      visual_t roughness);
 
 }  // namespace bxdfs

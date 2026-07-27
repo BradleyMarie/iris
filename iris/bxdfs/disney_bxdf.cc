@@ -18,8 +18,7 @@ namespace {
 
 class DisneyDiffuseBrdf final : public internal::DiffuseBxdf {
  public:
-  DisneyDiffuseBrdf(const Reflector& reflector) noexcept
-      : reflector_(reflector) {}
+  DisneyDiffuseBrdf(const Reflector& color) noexcept : color_(color) {}
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -34,7 +33,7 @@ class DisneyDiffuseBrdf final : public internal::DiffuseBxdf {
       SpectralAllocator& allocator) const override;
 
  private:
-  const Reflector& reflector_;
+  const Reflector& color_;
 };
 
 std::optional<Vector> DisneyDiffuseBrdf::SampleDiffuse(
@@ -71,14 +70,12 @@ const Reflector* DisneyDiffuseBrdf::ReflectanceDiffuse(
        static_cast<visual_t>(0.5) *
            internal::SchlickWeight(internal::AbsCosTheta(outgoing)));
 
-  return allocator.Scale(&reflector_,
-                         std::numbers::inv_pi_v<visual_t> * weight);
+  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * weight);
 }
 
-class DisneySubsurfaceBrdf final : public internal::DiffuseBxdf {
+class DisneySheenBrdf final : public internal::DiffuseBxdf {
  public:
-  DisneySubsurfaceBrdf(const Reflector& reflector, visual_t roughness) noexcept
-      : reflector_(reflector), roughness_squared_(roughness * roughness) {}
+  DisneySheenBrdf(const Reflector& color) noexcept : color_(color) {}
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -93,7 +90,66 @@ class DisneySubsurfaceBrdf final : public internal::DiffuseBxdf {
       SpectralAllocator& allocator) const override;
 
  private:
-  const Reflector& reflector_;
+  const Reflector& color_;
+};
+
+std::optional<Vector> DisneySheenBrdf::SampleDiffuse(
+    const Vector& incoming, const Vector& surface_normal,
+    Sampler& sampler) const {
+  Vector outgoing = internal::CosineSampleHemisphere(incoming.z, sampler);
+  return outgoing.AlignWith(surface_normal);
+}
+
+visual_t DisneySheenBrdf::PdfDiffuse(const Vector& incoming,
+                                     const Vector& outgoing,
+                                     const Vector& surface_normal,
+                                     Hemisphere hemisphere) const {
+  if (hemisphere != Hemisphere::BRDF) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  return std::abs(static_cast<visual_t>(outgoing.z) *
+                  std::numbers::inv_pi_v<visual_t>);
+}
+
+const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
+    const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+    SpectralAllocator& allocator) const {
+  if (hemisphere != Hemisphere::BRDF) {
+    return nullptr;
+  }
+
+  std::optional<Vector> half_angle = internal::HalfAngle(incoming, outgoing);
+  if (!half_angle) {
+    return nullptr;
+  }
+
+  visual_t cos_theta_half_angle =
+      static_cast<visual_t>(DotProduct(outgoing, *half_angle));
+
+  return allocator.Scale(&color_,
+                         internal::SchlickWeight(cos_theta_half_angle));
+}
+
+class DisneySubsurfaceBrdf final : public internal::DiffuseBxdf {
+ public:
+  DisneySubsurfaceBrdf(const Reflector& color, visual_t roughness) noexcept
+      : color_(color), roughness_squared_(roughness * roughness) {}
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override;
+
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override;
+
+  const Reflector* ReflectanceDiffuse(
+      const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
+      SpectralAllocator& allocator) const override;
+
+ private:
+  const Reflector& color_;
   visual_t roughness_squared_;
 };
 
@@ -144,29 +200,37 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
                static_cast<visual_t>(0.5)) +
        static_cast<visual_t>(0.5));
 
-  return allocator.Scale(&reflector_,
-                         std::numbers::inv_pi_v<visual_t> * ss_weight);
+  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * ss_weight);
 }
 
 }  // namespace
 
 const Bxdf* MakeDisneyDiffuseBrdf(BxdfAllocator& bxdf_allocator,
-                                  const Reflector* reflector) {
-  if (!reflector) {
+                                  const Reflector* color) {
+  if (!color) {
     return nullptr;
   }
 
-  return &bxdf_allocator.Allocate<DisneyDiffuseBrdf>(*reflector);
+  return &bxdf_allocator.Allocate<DisneyDiffuseBrdf>(*color);
+}
+
+const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,
+                                const Reflector* color) {
+  if (!color) {
+    return nullptr;
+  }
+
+  return &bxdf_allocator.Allocate<DisneySheenBrdf>(*color);
 }
 
 const Bxdf* MakeDisneySubsurfaceBrdf(BxdfAllocator& bxdf_allocator,
-                                     const Reflector* reflector,
+                                     const Reflector* color,
                                      visual_t roughness) {
-  if (!reflector) {
+  if (!color) {
     return nullptr;
   }
 
-  return &bxdf_allocator.Allocate<DisneySubsurfaceBrdf>(*reflector, roughness);
+  return &bxdf_allocator.Allocate<DisneySubsurfaceBrdf>(*color, roughness);
 }
 
 }  // namespace bxdfs
