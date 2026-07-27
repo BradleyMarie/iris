@@ -11,6 +11,10 @@ namespace bxdfs {
 const Bxdf* MakeDisneyDiffuseBrdf(BxdfAllocator& bxdf_allocator,
                                   const Reflector* color);
 
+const Bxdf* MakeDisneyDiffuseRetroBrdf(BxdfAllocator& bxdf_allocator,
+                                       const Reflector* color,
+                                       visual_t roughness);
+
 const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,
                                 const Reflector* color);
 
