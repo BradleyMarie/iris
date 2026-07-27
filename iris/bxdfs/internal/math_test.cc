@@ -71,6 +71,14 @@ TEST(Math, CosDPhi) {
               0.001);
 }
 
+TEST(Math, SchlickWeight) {
+  EXPECT_EQ(1.0, SchlickWeight(-1.0));
+  EXPECT_EQ(1.0, SchlickWeight(0.0));
+  EXPECT_EQ(0.0, SchlickWeight(1.0));
+  EXPECT_EQ(0.0, SchlickWeight(2.0));
+  EXPECT_EQ(0.03125, SchlickWeight(0.5));
+}
+
 TEST(Math, Reflect) {
   EXPECT_FALSE(Reflect(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0)));
   Vector vector = Normalize(Vector(-1.0, -1.0, 1.0));

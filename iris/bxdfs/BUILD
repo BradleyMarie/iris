@@ -101,6 +101,37 @@ cc_test(
 )
 
 cc_library(
+    name = "disney_bxdf",
+    srcs = ["disney_bxdf.cc"],
+    hdrs = ["disney_bxdf.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:vector",
+        "//iris/bxdfs/internal:diffuse_bxdf",
+        "//iris/bxdfs/internal:math",
+    ],
+)
+
+cc_test(
+    name = "disney_bxdf_test",
+    srcs = ["disney_bxdf_test.cc"],
+    deps = [
+        ":disney_bxdf",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "fourier_bxdf",
     srcs = ["fourier_bxdf.cc"],
     hdrs = ["fourier_bxdf.h"],

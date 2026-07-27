@@ -84,6 +84,13 @@ static inline geometric_t CosDPhi(const Vector& v0, const Vector& v1) {
                     static_cast<geometric_t>(1.0));
 }
 
+static inline visual_t SchlickWeight(geometric_t cos_theta) {
+  visual_t m =
+      std::clamp(static_cast<visual_t>(1.0) - static_cast<visual_t>(cos_theta),
+                 static_cast<visual_t>(0.0), static_cast<visual_t>(1.0));
+  return m * m * m * m * m;
+}
+
 static inline std::optional<Vector> HalfAngle(const Vector& v0,
                                               const Vector& v1) {
   Vector half_angle = v0 + v1;
