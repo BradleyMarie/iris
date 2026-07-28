@@ -10,7 +10,7 @@ namespace internal {
 
 class MicrofacetDistribution {
  public:
-  visual_t G(const Vector& incoming, const Vector& outgoing) const;
+  virtual visual_t G(const Vector& incoming, const Vector& outgoing) const;
   visual_t G1(const Vector& vector) const;
   visual_t Pdf(const Vector& incoming, const Vector& half_angle) const;
 
@@ -20,7 +20,7 @@ class MicrofacetDistribution {
                         geometric_t v) const = 0;
 };
 
-class TrowbridgeReitzDistribution final : public MicrofacetDistribution {
+class TrowbridgeReitzDistribution : public MicrofacetDistribution {
  public:
   TrowbridgeReitzDistribution(geometric_t roughness_or_alpha_x,
                               geometric_t roughness_or_alpha_y,
@@ -29,13 +29,21 @@ class TrowbridgeReitzDistribution final : public MicrofacetDistribution {
   TrowbridgeReitzDistribution(geometric_t roughness_or_alpha,
                               bool is_roughness = true);
 
-  visual_t D(const Vector& vector) const override;
-  visual_t Lambda(const Vector& vector) const override;
+  visual_t D(const Vector& vector) const override final;
+  visual_t Lambda(const Vector& vector) const override final;
   Vector Sample(const Vector& incoming, geometric_t u,
-                geometric_t v) const override;
+                geometric_t v) const override final;
 
  private:
   geometric_t alpha_x_, alpha_y_;
+};
+
+class DisneyDistribution : public TrowbridgeReitzDistribution {
+ public:
+  DisneyDistribution(geometric_t alpha_x, geometric_t alpha_y)
+      : TrowbridgeReitzDistribution(alpha_x, alpha_y, false) {}
+
+  visual_t G(const Vector& incoming, const Vector& outgoing) const override;
 };
 
 }  // namespace internal

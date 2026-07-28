@@ -126,6 +126,13 @@ TEST(TrowbridgeReitzDistribution, SampleAlpha) {
   EXPECT_NEAR(-0.600636, sample3.z, 0.001);
 }
 
+TEST(DisneyDistribution, G) {
+  DisneyDistribution distribution(1.0, 1.0);
+  Vector incoming = Normalize(Vector(0.5, 0.5, 1.0));
+  Vector outgoing = Normalize(Vector(-0.5, 0.5, 1.0));
+  EXPECT_NEAR(distribution.G(incoming, outgoing), 0.80816, 0.001);
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace bxdfs

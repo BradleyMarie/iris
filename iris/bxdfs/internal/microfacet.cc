@@ -150,6 +150,11 @@ Vector TrowbridgeReitzDistribution::Sample(const Vector& incoming,
   return Normalize(normal);
 }
 
+visual_t DisneyDistribution::G(const Vector& incoming,
+                               const Vector& outgoing) const {
+  return G1(incoming) * G1(outgoing);
+}
+
 }  // namespace internal
 }  // namespace bxdfs
 }  // namespace iris
