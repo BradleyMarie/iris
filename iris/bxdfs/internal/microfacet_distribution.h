@@ -1,5 +1,5 @@
-#ifndef _IRIS_BXDFS_INTERNAL_MICROFACET_
-#define _IRIS_BXDFS_INTERNAL_MICROFACET_
+#ifndef _IRIS_BXDFS_INTERNAL_MICROFACET_DISTRIBUTION_
+#define _IRIS_BXDFS_INTERNAL_MICROFACET_DISTRIBUTION_
 
 #include "iris/float.h"
 #include "iris/vector.h"
@@ -50,4 +50,4 @@ class DisneyDistribution : public TrowbridgeReitzDistribution {
 }  // namespace bxdfs
 }  // namespace iris
 
-#endif  // _IRIS_BXDFS_INTERNAL_MICROFACET_
+#endif  // _IRIS_BXDFS_INTERNAL_MICROFACET_DISTRIBUTION_

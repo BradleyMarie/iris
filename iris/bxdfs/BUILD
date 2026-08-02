@@ -22,7 +22,7 @@ cc_library(
         "//iris:vector",
         "//iris/bxdfs/internal:diffuse_bxdf",
         "//iris/bxdfs/internal:math",
-        "//iris/bxdfs/internal:microfacet",
+        "//iris/bxdfs/internal:microfacet_distribution",
     ],
 )
 
@@ -197,13 +197,10 @@ cc_library(
         "//iris:bxdf_allocator",
         "//iris:float",
         "//iris:reflector",
-        "//iris:sampler",
-        "//iris:spectral_allocator",
-        "//iris:spectrum",
-        "//iris:vector",
         "//iris/bxdfs/internal:diffuse_bxdf",
-        "//iris/bxdfs/internal:math",
-        "//iris/bxdfs/internal:microfacet",
+        "//iris/bxdfs/internal:fresnel",
+        "//iris/bxdfs/internal:microfacet_bxdf",
+        "//iris/bxdfs/internal:microfacet_distribution",
     ],
 )
 

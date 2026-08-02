@@ -1,4 +1,4 @@
-#include "iris/bxdfs/internal/microfacet.h"
+#include "iris/bxdfs/internal/microfacet_distribution.h"
 
 #include <algorithm>
 #include <cmath>

@@ -110,6 +110,20 @@ TEST(Math, HalfAngle) {
   EXPECT_EQ(*half_angle, Normalize(Vector(0.0, 1.0, 1.0)));
 }
 
+TEST(Math, WeightedHalfAngleZeroVector) {
+  EXPECT_FALSE(
+      WeightedHalfAngle(Vector(1.0, 0.0, 0.0), Vector(-1.0, 0.0, 0.0), 1.0));
+}
+
+TEST(Math, WeightedHalfAngle) {
+  std::optional<Vector> weighted =
+      WeightedHalfAngle(Vector(0.0, 0.0, 1.0), Vector(0.0, 1.0, 0.0), 1.5);
+  ASSERT_TRUE(weighted);
+  EXPECT_NEAR(weighted->x, 0.00000, 0.0001);
+  EXPECT_NEAR(weighted->y, 0.83205, 0.0001);
+  EXPECT_NEAR(weighted->z, 0.55470, 0.0001);
+}
+
 TEST(FesnelDielectricReflectance, Refracted) {
   EXPECT_NEAR(0.04, FesnelDielectricReflectance(1.0, 1.0, 1.5), 0.0001);
 }

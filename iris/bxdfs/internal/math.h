@@ -134,6 +134,21 @@ static inline std::optional<Vector> Refract(
          (vector * relative_refractive_index);
 }
 
+static inline std::optional<Vector> WeightedHalfAngle(
+    const Vector& incoming, const Vector& outgoing,
+    geometric_t refractive_ratio) {
+  geometric_t x = incoming.x + outgoing.x * refractive_ratio;
+  geometric_t y = incoming.y + outgoing.y * refractive_ratio;
+  geometric_t z = incoming.z + outgoing.z * refractive_ratio;
+
+  Vector weighted_half_angle(x, y, z);
+  if (weighted_half_angle.IsZero()) {
+    return std::nullopt;
+  }
+
+  return Normalize(weighted_half_angle);
+}
+
 visual_t FesnelDielectricReflectance(visual_t cos_theta_incident,
                                      visual_t eta_incident,
                                      visual_t eta_transmission);

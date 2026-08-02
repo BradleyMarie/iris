@@ -7,7 +7,7 @@
 #include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/internal/diffuse_bxdf.h"
 #include "iris/bxdfs/internal/math.h"
-#include "iris/bxdfs/internal/microfacet.h"
+#include "iris/bxdfs/internal/microfacet_distribution.h"
 #include "iris/float.h"
 #include "iris/reflector.h"
 #include "iris/sampler.h"

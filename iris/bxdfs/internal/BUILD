@@ -57,9 +57,78 @@ cc_test(
 )
 
 cc_library(
-    name = "microfacet",
-    srcs = ["microfacet.cc"],
-    hdrs = ["microfacet.h"],
+    name = "fresnel",
+    srcs = ["fresnel.cc"],
+    hdrs = ["fresnel.h"],
+    deps = [
+        ":math",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:vector",
+    ],
+)
+
+cc_test(
+    name = "fresnel_test",
+    srcs = ["fresnel_test.cc"],
+    deps = [
+        ":fresnel",
+        "//iris/random:mock_random",
+        "//iris/reflectors:mock_reflector",
+        "//iris/spectra:mock_spectrum",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "microfacet_bxdf",
+    hdrs = ["microfacet_bxdf.h"],
+    deps = [
+        ":diffuse_bxdf",
+        ":fresnel",
+        ":math",
+        ":microfacet_distribution",
+        "//iris:bxdf",
+        "//iris:float",
+        "//iris:reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:vector",
+    ],
+)
+
+cc_test(
+    name = "microfacet_bxdf_test",
+    srcs = ["microfacet_bxdf_test.cc"],
+    deps = [
+        ":fresnel",
+        ":microfacet_bxdf",
+        ":microfacet_distribution",
+        "//iris:bxdf",
+        "//iris:float",
+        "//iris/random:mock_random",
+        "//iris:reflector",
+        "//iris/reflectors:mock_reflector",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:vector",
+        "//iris/testing:spectral_allocator",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "microfacet_distribution",
+    srcs = ["microfacet_distribution.cc"],
+    hdrs = ["microfacet_distribution.h"],
     deps = [
         ":math",
         "//iris:float",
@@ -68,10 +137,10 @@ cc_library(
 )
 
 cc_test(
-    name = "microfacet_test",
-    srcs = ["microfacet_test.cc"],
+    name = "microfacet_distribution_test",
+    srcs = ["microfacet_distribution_test.cc"],
     deps = [
-        ":microfacet",
+        ":microfacet_distribution",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
