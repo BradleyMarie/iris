@@ -78,8 +78,7 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
           for (int y = 0; y < ny; y++) {
             for (int x = 0; x < nx; x++) {
               visual_t grey =
-                  static_cast<visual_t>(
-                      values[num_channels * (ny - y - 1) * nx + x]) /
+                  static_cast<visual_t>(values[num_channels * y * nx + x]) /
                   static_cast<visual_t>(65535.0);
 
               visual_t luma_value;
@@ -95,18 +94,15 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
         } else {
           for (int y = 0; y < ny; y++) {
             for (int x = 0; x < nx; x++) {
-              visual_t r =
-                  static_cast<visual_t>(
-                      values[num_channels * ((ny - y - 1) * nx + x) + 0]) /
-                  static_cast<visual_t>(65535.0);
-              visual_t g =
-                  static_cast<visual_t>(
-                      values[num_channels * ((ny - y - 1) * nx + x) + 1]) /
-                  static_cast<visual_t>(65535.0);
-              visual_t b =
-                  static_cast<visual_t>(
-                      values[num_channels * ((ny - y - 1) * nx + x) + 2]) /
-                  static_cast<visual_t>(65535.0);
+              visual_t r = static_cast<visual_t>(
+                               values[num_channels * (y * nx + x) + 0]) /
+                           static_cast<visual_t>(65535.0);
+              visual_t g = static_cast<visual_t>(
+                               values[num_channels * (y * nx + x) + 1]) /
+                           static_cast<visual_t>(65535.0);
+              visual_t b = static_cast<visual_t>(
+                               values[num_channels * (y * nx + x) + 2]) /
+                           static_cast<visual_t>(65535.0);
 
               visual_t luma_value;
               ReferenceCounted<Spectrum> pixel_spectrum =
@@ -137,9 +133,9 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
         if (num_channels == 1 || num_channels == 2) {
           for (int y = 0; y < ny; y++) {
             for (int x = 0; x < nx; x++) {
-              visual_t v = static_cast<visual_t>(
-                               values[num_channels * ((ny - y - 1) * nx + x)]) /
-                           static_cast<visual_t>(255.0);
+              visual_t v =
+                  static_cast<visual_t>(values[num_channels * (y * nx + x)]) /
+                  static_cast<visual_t>(255.0);
 
               visual_t luma_value;
               ReferenceCounted<Spectrum> pixel_spectrum =
@@ -154,18 +150,15 @@ ReferenceCounted<EnvironmentalLight> MakeInfinite(
         } else {
           for (int y = 0; y < ny; y++) {
             for (int x = 0; x < nx; x++) {
-              visual_t r =
-                  static_cast<visual_t>(
-                      values[num_channels * ((ny - y - 1) * nx + x) + 0]) /
-                  static_cast<visual_t>(255.0);
-              visual_t g =
-                  static_cast<visual_t>(
-                      values[num_channels * ((ny - y - 1) * nx + x) + 1]) /
-                  static_cast<visual_t>(255.0);
-              visual_t b =
-                  static_cast<visual_t>(
-                      values[num_channels * ((ny - y - 1) * nx + x) + 2]) /
-                  static_cast<visual_t>(255.0);
+              visual_t r = static_cast<visual_t>(
+                               values[num_channels * (y * nx + x) + 0]) /
+                           static_cast<visual_t>(255.0);
+              visual_t g = static_cast<visual_t>(
+                               values[num_channels * (y * nx + x) + 1]) /
+                           static_cast<visual_t>(255.0);
+              visual_t b = static_cast<visual_t>(
+                               values[num_channels * (y * nx + x) + 2]) /
+                           static_cast<visual_t>(255.0);
 
               visual_t luma_value;
               ReferenceCounted<Spectrum> pixel_spectrum =
