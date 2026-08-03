@@ -14,9 +14,9 @@ namespace internal {
 const Reflector* FresnelDielectric::AttenuateReflectance(
     const Reflector& reflectance, visual_t cos_theta_incident,
     SpectralAllocator& allocator) const {
-  geometric_t eta_incident =
+  visual_t eta_incident =
       std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
-  geometric_t eta_transmitted =
+  visual_t eta_transmitted =
       std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
   visual_t fresnel_reflectance = FesnelDielectricReflectance(
       cos_theta_incident, eta_incident, eta_transmitted);
@@ -26,9 +26,9 @@ const Reflector* FresnelDielectric::AttenuateReflectance(
 const Reflector* FresnelDielectric::AttenuateTransmittance(
     const Reflector& transmittance, visual_t cos_theta_incident,
     SpectralAllocator& allocator) const {
-  geometric_t eta_incident =
+  visual_t eta_incident =
       std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
-  geometric_t eta_transmitted =
+  visual_t eta_transmitted =
       std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
   visual_t fresnel_reflectance = FesnelDielectricReflectance(
       cos_theta_incident, eta_incident, eta_transmitted);
@@ -59,6 +59,37 @@ const Reflector* FresnelConductor::AttenuateTransmittance(
 bool FresnelConductor::IsValid() const {
   return std::isfinite(eta_dielectric_) &&
          eta_dielectric_ >= static_cast<visual_t>(1.0);
+}
+
+const Reflector* DisneyFresnel::AttenuateReflectance(
+    const Reflector& reflectance, visual_t cos_theta_incident,
+    SpectralAllocator& allocator) const {
+  visual_t eta_incident =
+      std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
+  visual_t eta_transmitted =
+      std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
+
+  const Reflector* fresnel_dielectric = allocator.Scale(
+      &reflectance, FesnelDielectricReflectance(cos_theta_incident,
+                                                eta_incident, eta_transmitted));
+  const Reflector* fresnel_metallic =
+      allocator.Lerp(metallic_reflectance_, allocator.Invert(nullptr),
+                     SchlickWeight(cos_theta_incident));
+
+  return allocator.Lerp(fresnel_dielectric, fresnel_metallic, metallic_);
+}
+
+const Reflector* DisneyFresnel::AttenuateTransmittance(
+    const Reflector& transmittance, visual_t cos_theta_incident,
+    SpectralAllocator& allocator) const {
+  return nullptr;
+}
+
+bool DisneyFresnel::IsValid() const {
+  return std::isfinite(eta_front_) &&
+         eta_front_ >= static_cast<visual_t>(1.0) && std::isfinite(eta_back_) &&
+         eta_back_ >= static_cast<visual_t>(1.0) && std::isfinite(metallic_) &&
+         metallic_ >= static_cast<visual_t>(0.0);
 }
 
 }  // namespace internal

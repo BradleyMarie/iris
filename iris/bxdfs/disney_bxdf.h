@@ -18,6 +18,11 @@ const Bxdf* MakeDisneyDiffuseRetroBrdf(BxdfAllocator& bxdf_allocator,
                                        const Reflector* color,
                                        visual_t roughness);
 
+const Bxdf* MakeDisneyMicrofacetBrdf(
+    BxdfAllocator& bxdf_allocator, const Reflector* color,
+    const Reflector* specular_tint, visual_t metallic, geometric_t eta_front,
+    geometric_t eta_back, geometric_t anisotropic, geometric_t roughness);
+
 const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,
                                 const Reflector* color);
 

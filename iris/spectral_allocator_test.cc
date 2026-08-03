@@ -259,6 +259,71 @@ TEST(SpectralAllocator, ReflectorUnboundedScale) {
   EXPECT_EQ(1.0, allocator.UnboundedScale(&reflector, 2.0)->Reflectance(1.0));
 }
 
+#ifdef NDEBUG
+TEST(SpectralAllocator, LerpMinusInfinity) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector0;
+  MockReflector reflector1;
+  EXPECT_EQ(&reflector0,
+            allocator.Lerp(&reflector0, &reflector1,
+                           -std::numeric_limits<visual_t>::infinity()));
+}
+
+TEST(SpectralAllocator, LerpPlusInfinity) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector0;
+  MockReflector reflector1;
+  EXPECT_EQ(&reflector1,
+            allocator.Lerp(&reflector0, &reflector1,
+                           std::numeric_limits<visual_t>::infinity()));
+}
+
+TEST(SpectralAllocator, LerpNaN) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector0;
+  MockReflector reflector1;
+  EXPECT_EQ(nullptr,
+            allocator.Lerp(&reflector0, &reflector1,
+                           std::numeric_limits<visual_t>::quiet_NaN()));
+}
+#endif  // NDEBUG
+
+TEST(SpectralAllocator, LerpZeroInterpolant) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector0;
+  MockReflector reflector1;
+  EXPECT_EQ(&reflector0, allocator.Lerp(&reflector0, &reflector1, 0.0));
+}
+
+TEST(SpectralAllocator, LerpOneInterpolant) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector0;
+  MockReflector reflector1;
+  EXPECT_EQ(&reflector1, allocator.Lerp(&reflector0, &reflector1, 1.0));
+}
+
+TEST(SpectralAllocator, LerpHalfInterpolant) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector0;
+  EXPECT_CALL(reflector0, Reflectance(1.0)).WillOnce(Return(0.25));
+  MockReflector reflector1;
+  EXPECT_CALL(reflector1, Reflectance(1.0)).WillOnce(Return(0.75));
+  EXPECT_EQ(0.5,
+            allocator.Lerp(&reflector0, &reflector1, 0.5)->Reflectance(1.0));
+}
+
 TEST(SpectralAllocator, FresnelConductorNullptr) {
   Arena arena;
   SpectralAllocator allocator(arena);

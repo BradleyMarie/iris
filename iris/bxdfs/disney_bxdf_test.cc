@@ -502,6 +502,21 @@ TEST(DisneySubsurfaceBrdfTest, Reflectance) {
   EXPECT_NEAR(result->Reflectance(1.0), 0.1989, 0.001);
 }
 
+TEST(DisneyMicrofacetBrdfTest, Parameters) {
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, nullptr,
+                                        0.0, 0.5, 1.0, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, nullptr,
+                                        0.0, 1.5, 0.5, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, nullptr,
+                                        -0.5, 1.5, 1.0, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, nullptr,
+                                        0.0, 1.5, 1.0, -0.5, 0.5));
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, nullptr,
+                                        0.0, 1.5, 1.0, 0.0, -0.5));
+  EXPECT_TRUE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, nullptr,
+                                       0.0, 1.5, 1.0, 0.0, 0.5));
+}
+
 }  // namespace
 }  // namespace bxdfs
 }  // namespace iris

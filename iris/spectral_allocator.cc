@@ -390,6 +390,24 @@ const Reflector* SpectralAllocator::Scale(const Reflector* reflector,
   return &arena_.Allocate<ScaledReflectors>(*reflector, *attenuation);
 }
 
+const Reflector* SpectralAllocator::Lerp(const Reflector* reflector0,
+                                         const Reflector* reflector1,
+                                         visual_t interpolant) {
+  assert(std::isfinite(interpolant) && interpolant >= 0.0 &&
+         interpolant <= 1.0);
+
+  if (std::isnan(interpolant)) {
+    return nullptr;
+  }
+
+  interpolant = std::clamp(interpolant, static_cast<visual_t>(0.0),
+                           static_cast<visual_t>(1.0));
+  reflector0 = Scale(reflector0, static_cast<visual_t>(1.0) - interpolant);
+  reflector1 = Scale(reflector1, interpolant);
+
+  return Add(reflector0, reflector1);
+}
+
 const Reflector* SpectralAllocator::Invert(const Reflector* reflector) {
   static const PerfectReflector perfect_reflector;
 

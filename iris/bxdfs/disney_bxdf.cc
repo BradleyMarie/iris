@@ -1,14 +1,20 @@
 #include "iris/bxdfs/disney_bxdf.h"
 
+#include <algorithm>
 #include <numbers>
 #include <numeric>
 
 #include "iris/bxdf.h"
 #include "iris/bxdf_allocator.h"
 #include "iris/bxdfs/internal/diffuse_bxdf.h"
+#include "iris/bxdfs/internal/fresnel.h"
 #include "iris/bxdfs/internal/math.h"
+#include "iris/bxdfs/internal/microfacet_bxdf.h"
+#include "iris/bxdfs/internal/microfacet_distribution.h"
 #include "iris/float.h"
+#include "iris/reference_counted.h"
 #include "iris/reflector.h"
+#include "iris/reflectors/uniform_reflector.h"
 #include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
 #include "iris/vector.h"
@@ -19,9 +25,16 @@ namespace {
 
 using ::iris::bxdfs::internal::AbsCosTheta;
 using ::iris::bxdfs::internal::CosineSampleHemisphere;
+using ::iris::bxdfs::internal::DisneyDistribution;
+using ::iris::bxdfs::internal::DisneyFresnel;
 using ::iris::bxdfs::internal::HalfAngle;
+using ::iris::bxdfs::internal::MicrofacetBrdf;
 using ::iris::bxdfs::internal::Reflect;
 using ::iris::bxdfs::internal::SchlickWeight;
+using ::iris::reflectors::CreateUniformReflector;
+
+static const ReferenceCounted<Reflector> kPerfectReflector =
+    CreateUniformReflector(static_cast<visual_t>(1.0));
 
 static inline visual_t FresnelSchlick(visual_t r0, visual_t cos_theta) {
   return std::lerp(r0, static_cast<visual_t>(1.0), SchlickWeight(cos_theta));
@@ -419,6 +432,37 @@ const Bxdf* MakeDisneyDiffuseRetroBrdf(BxdfAllocator& bxdf_allocator,
   }
 
   return &bxdf_allocator.Allocate<DisneyDiffuseRetroBrdf>(*color, roughness);
+}
+
+const Bxdf* MakeDisneyMicrofacetBrdf(
+    BxdfAllocator& bxdf_allocator, const Reflector* color,
+    const Reflector* specular_tint, visual_t metallic, geometric_t eta_front,
+    geometric_t eta_back, geometric_t anisotropic, geometric_t roughness) {
+  // TODO: Handle specular_tint
+  DisneyFresnel fresnel(nullptr, metallic, eta_front, eta_back);
+  if (!fresnel.IsValid()) {
+    return nullptr;
+  }
+
+  if (!std::isfinite(anisotropic) ||
+      anisotropic < static_cast<geometric_t>(0.0) ||
+      !std::isfinite(roughness) || roughness < static_cast<geometric_t>(0.0)) {
+    return nullptr;
+  }
+
+  geometric_t aspect_ratio =
+      std::sqrt(static_cast<geometric_t>(1.0) -
+                std::max(static_cast<geometric_t>(1.0), anisotropic) *
+                    static_cast<geometric_t>(0.9));
+  geometric_t alpha_x = std::max(static_cast<geometric_t>(0.001),
+                                 (roughness * roughness) / aspect_ratio);
+  geometric_t alpha_y = std::max(static_cast<geometric_t>(0.001),
+                                 (roughness * roughness) * aspect_ratio);
+
+  return &bxdf_allocator
+              .Allocate<MicrofacetBrdf<DisneyDistribution, DisneyFresnel>>(
+                  *kPerfectReflector, DisneyDistribution(alpha_x, alpha_y),
+                  fresnel);
 }
 
 const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,

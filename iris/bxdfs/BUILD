@@ -108,12 +108,17 @@ cc_library(
         "//iris:bxdf",
         "//iris:bxdf_allocator",
         "//iris:float",
+        "//iris:reference_counted",
         "//iris:reflector",
         "//iris:sampler",
         "//iris:spectral_allocator",
         "//iris:vector",
         "//iris/bxdfs/internal:diffuse_bxdf",
+        "//iris/bxdfs/internal:fresnel",
         "//iris/bxdfs/internal:math",
+        "//iris/bxdfs/internal:microfacet_bxdf",
+        "//iris/bxdfs/internal:microfacet_distribution",
+        "//iris/reflectors:uniform_reflector",
     ],
 )
 
