@@ -9,6 +9,45 @@ package(
 )
 
 cc_library(
+    name = "disney_material",
+    srcs = ["disney_material.cc"],
+    hdrs = ["disney_material.h"],
+    deps = [
+        "//iris:bxdf",
+        "//iris:bxdf_allocator",
+        "//iris:float",
+        "//iris:material",
+        "//iris:reference_counted",
+        "//iris:reflector",
+        "//iris:spectral_allocator",
+        "//iris:texture_coordinates",
+        "//iris/bxdfs:composite_bxdf",
+        "//iris/bxdfs:disney_bxdf",
+        "//iris/bxdfs:lambertian_bxdf",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+    ],
+)
+
+cc_test(
+    name = "disney_material_test",
+    srcs = ["disney_material_test.cc"],
+    deps = [
+        ":disney_material",
+        "//iris:point",
+        "//iris/reflectors:mock_reflector",
+        "//iris/testing:bxdf_allocator",
+        "//iris/testing:spectral_allocator",
+        "//iris/textures:constant_texture",
+        "//iris/textures:float_texture",
+        "//iris/textures:reflector_texture",
+        "//iris/textures:test_util",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_library(
     name = "fourier_material",
     srcs = ["fourier_material.cc"],
     hdrs = ["fourier_material.h"],

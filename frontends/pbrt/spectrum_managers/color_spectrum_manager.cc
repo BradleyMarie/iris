@@ -237,6 +237,11 @@ ReferenceCounted<iris::Spectrum> ColorSpectrumManager::AllocateSpectrum(
           FromFile(search_root_, spectrum.sampled_spectrum_filename(), false),
           all_sampled_spectra_are_reflective_));
       break;
+    case Spectrum::kNamedSpectrum:
+      std::cerr << "ERROR: Named spectra are not supported by iris"
+                << std::endl;
+      exit(EXIT_FAILURE);
+      break;
     case Spectrum::SPECTRUM_TYPE_NOT_SET:
       break;
   }

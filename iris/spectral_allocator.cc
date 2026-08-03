@@ -160,6 +160,22 @@ class InvertedReflector final : public Reflector {
   const Reflector& reflector_;
 };
 
+class SqrtReflector final : public Reflector {
+ public:
+  SqrtReflector(const Reflector& reflector) : reflector_(reflector) {}
+
+  visual_t Reflectance(visual_t wavelength) const override {
+    visual_t reflectance = reflector_.Reflectance(wavelength);
+    assert(std::isfinite(reflectance) &&
+           reflectance >= static_cast<visual_t>(0.0));
+
+    return std::sqrt(std::max(static_cast<visual_t>(0.0), reflectance));
+  }
+
+ private:
+  const Reflector& reflector_;
+};
+
 class UnboundedScaledReflector final : public Reflector {
  public:
   UnboundedScaledReflector(const Reflector& reflector, visual_t scalar)
@@ -420,6 +436,14 @@ const Reflector* SpectralAllocator::Invert(const Reflector* reflector) {
   }
 
   return &arena_.Allocate<InvertedReflector>(*reflector);
+}
+
+const Reflector* SpectralAllocator::Sqrt(const Reflector* reflector) {
+  if (!reflector) {
+    return nullptr;
+  }
+
+  return &arena_.Allocate<SqrtReflector>(*reflector);
 }
 
 const Reflector* SpectralAllocator::UnboundedAdd(const Reflector* addend0,

@@ -30,10 +30,12 @@ TEST(MakeDisney, Empty) {
   DisneyMaterial disney;
   disney.mutable_bumpmap()->set_float_texture_name("bump");
 
-  EXPECT_EXIT(MakeDisney(disney, Shape::MaterialOverrides::default_instance(),
-                         texture_manager),
-              ExitedWithCode(EXIT_FAILURE),
-              "ERROR: Unsupported Material type: disney");
+  MaterialResult result = MakeDisney(
+      disney, Shape::MaterialOverrides::default_instance(), texture_manager);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
+  EXPECT_TRUE(result.bumpmaps[0]);
+  EXPECT_TRUE(result.bumpmaps[1]);
 }
 
 }  // namespace

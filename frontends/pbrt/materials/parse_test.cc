@@ -46,11 +46,14 @@ TEST(ParseMaterial, Disney) {
   Material material;
   material.mutable_disney();
 
-  EXPECT_EXIT(
+  MaterialResult result =
       ParseMaterial(material, Shape::MaterialOverrides::default_instance(),
                     std::filesystem::current_path(), material_manager,
-                    texture_manager, spectrum_manager),
-      ExitedWithCode(EXIT_FAILURE), "ERROR: Unsupported Material type: disney");
+                    texture_manager, spectrum_manager);
+  EXPECT_TRUE(result.materials[0]);
+  EXPECT_TRUE(result.materials[1]);
+  EXPECT_FALSE(result.bumpmaps[0]);
+  EXPECT_FALSE(result.bumpmaps[1]);
 }
 
 TEST(ParseMaterial, Fourier) {

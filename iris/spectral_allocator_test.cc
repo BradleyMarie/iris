@@ -194,6 +194,24 @@ TEST(SpectralAllocator, Invert) {
   EXPECT_EQ(0.25, allocator.Invert(&reflector)->Reflectance(1.0));
 }
 
+TEST(SpectralAllocator, SqrtNullptr) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  EXPECT_EQ(nullptr, allocator.Sqrt(static_cast<const Reflector*>(nullptr)));
+}
+
+TEST(SpectralAllocator, Sqrt) {
+  Arena arena;
+  SpectralAllocator allocator(arena);
+
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(1.0))
+      .Times(1)
+      .WillRepeatedly(Return(0.25));
+  EXPECT_EQ(0.5, allocator.Sqrt(&reflector)->Reflectance(1.0));
+}
+
 TEST(SpectralAllocator, ReflectorUnboundedAddNullptr) {
   Arena arena;
   SpectralAllocator allocator(arena);

@@ -53,6 +53,7 @@ cc_library(
         "//iris:material",
         "//iris:normal_map",
         "//iris:reference_counted",
+        "//iris/materials:disney_material",
         "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
