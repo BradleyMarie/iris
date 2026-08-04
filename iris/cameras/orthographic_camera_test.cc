@@ -8,13 +8,13 @@ namespace {
 
 TEST(OrthographicCameraTest, HasLens) {
   OrthographicCamera camera(Matrix::Identity(),
-                            std::array<geometric_t, 2>({1.0, 1.0}));
+                            std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}));
   EXPECT_FALSE(camera.HasLens());
 }
 
 TEST(OrthographicCameraTest, NoTransform) {
   OrthographicCamera camera(Matrix::Identity(),
-                            std::array<geometric_t, 2>({1.0, 1.0}));
+                            std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}));
 
   RayDifferential top_left =
       camera.Compute({0.0, 0.0}, {0.0, 0.0}, std::nullopt);
@@ -48,7 +48,7 @@ TEST(OrthographicCameraTest, NoTransform) {
 TEST(OrthographicCameraTest, Transformed) {
   OrthographicCamera camera(
       Matrix::Translation(1.0, 2.0, 3.0).value().Inverse(),
-      std::array<geometric_t, 2>({0.5, 0.5}));
+      std::array<geometric_t, 4>({-0.5, 0.5, -0.5, 0.5}));
 
   RayDifferential top_left =
       camera.Compute({0.0, 0.0}, {0.0, 0.0}, std::nullopt);
@@ -82,7 +82,7 @@ TEST(OrthographicCameraTest, Transformed) {
 TEST(OrthographicCameraTest, Derivatives) {
   OrthographicCamera camera(
       Matrix::Translation(1.0, 2.0, 3.0).value().Inverse(),
-      std::array<geometric_t, 2>({0.5, 0.5}));
+      std::array<geometric_t, 4>({-0.5, 0.5, -0.5, 0.5}));
 
   std::array<geometric_t, 2> derivatives({1.0, 1.0});
   RayDifferential top_left =

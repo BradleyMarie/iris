@@ -14,9 +14,8 @@ namespace cameras {
 
 class OrthographicCamera final : public Camera {
  public:
-  OrthographicCamera(
-      const Matrix& world_to_camera,
-      const std::array<geometric_t, 2>& half_frame_size) noexcept;
+  OrthographicCamera(const Matrix& world_to_camera,
+                     const std::array<geometric_t, 4>& screen_bounds) noexcept;
 
   RayDifferential Compute(
       const std::array<geometric_t, 2>& image_uv,
@@ -26,7 +25,7 @@ class OrthographicCamera final : public Camera {
 
  private:
   const Matrix world_to_camera_;
-  const std::array<geometric_t, 2> half_frame_size_;
+  const std::array<geometric_t, 4> screen_bounds_;
 };
 
 }  // namespace cameras

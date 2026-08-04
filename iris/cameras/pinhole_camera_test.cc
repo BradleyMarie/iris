@@ -10,14 +10,14 @@ namespace {
 
 TEST(PinholeCameraTest, HasLens) {
   PinholeCamera camera(Matrix::Identity(),
-                       std::array<geometric_t, 2>({1.0, 1.0}),
+                       std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}),
                        std::numbers::pi / 4.0);
   EXPECT_FALSE(camera.HasLens());
 }
 
 TEST(PinholeCameraTest, FourCorners) {
   PinholeCamera camera(Matrix::Identity(),
-                       std::array<geometric_t, 2>({1.0, 1.0}),
+                       std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}),
                        std::numbers::pi / 4.0);
 
   RayDifferential top_left =
@@ -51,7 +51,7 @@ TEST(PinholeCameraTest, FourCorners) {
 
 TEST(PinholeCameraTest, Center) {
   PinholeCamera camera(Matrix::Identity(),
-                       std::array<geometric_t, 2>({1.0, 1.0}),
+                       std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}),
                        std::numbers::pi / 4.0);
   RayDifferential ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, std::nullopt);
   EXPECT_EQ(Point(0.0, 0.0, 0.0), ray.origin);
@@ -62,7 +62,7 @@ TEST(PinholeCameraTest, Center) {
 
 TEST(PinholeCameraTest, ScaledCenter) {
   PinholeCamera camera(Matrix::Scalar(2.0, 1.0, 2.0).value().Inverse(),
-                       std::array<geometric_t, 2>({1.0, 1.0}),
+                       std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}),
                        std::numbers::pi / 4.0);
   RayDifferential ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, std::nullopt);
   EXPECT_EQ(Point(0.0, 0.0, 0.0), ray.origin);
@@ -73,7 +73,7 @@ TEST(PinholeCameraTest, ScaledCenter) {
 
 TEST(PinholeCameraTest, TranslatedCenter) {
   PinholeCamera camera(Matrix::Translation(1.0, 2.0, 3.0).value().Inverse(),
-                       std::array<geometric_t, 2>({1.0, 1.0}),
+                       std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}),
                        std::numbers::pi / 4.0);
   RayDifferential ray = camera.Compute({0.5, 0.5}, {0.5, 0.5}, std::nullopt);
   EXPECT_EQ(Point(1.0, 2.0, 3.0), ray.origin);
@@ -84,7 +84,7 @@ TEST(PinholeCameraTest, TranslatedCenter) {
 
 TEST(PinholeCameraTest, Differentials) {
   PinholeCamera camera(Matrix::Identity(),
-                       std::array<geometric_t, 2>({1.0, 1.0}),
+                       std::array<geometric_t, 4>({-1.0, 1.0, -1.0, 1.0}),
                        std::numbers::pi / 4.0);
 
   std::array<geometric_t, 2> derivatives({1.0, 1.0});

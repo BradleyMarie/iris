@@ -16,7 +16,7 @@ namespace cameras {
 class PinholeCamera final : public Camera {
  public:
   PinholeCamera(const Matrix& world_to_camera,
-                const std::array<geometric_t, 2>& half_frame_size,
+                const std::array<geometric_t, 4>& frame_bounds,
                 geometric_t half_fov) noexcept;
 
   RayDifferential Compute(
@@ -27,7 +27,7 @@ class PinholeCamera final : public Camera {
 
  private:
   const Matrix world_to_camera_;
-  const std::array<geometric_t, 2> half_frame_size_;
+  const std::array<geometric_t, 4> frame_bounds_;
   const geometric_t image_plane_distance_;
 };
 

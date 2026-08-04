@@ -7,14 +7,16 @@ namespace iris {
 namespace cameras {
 
 PinholeCamera::PinholeCamera(const Matrix& world_to_camera,
-                             const std::array<geometric_t, 2>& half_frame_size,
+                             const std::array<geometric_t, 4>& frame_bounds,
                              geometric_t half_fov) noexcept
     : world_to_camera_(world_to_camera),
-      half_frame_size_(half_frame_size),
-      image_plane_distance_(std::min(half_frame_size[0], half_frame_size[1]) /
+      frame_bounds_(frame_bounds),
+      image_plane_distance_(static_cast<geometric_t>(1.0) /
                             std::tan(half_fov)) {
-  assert(std::isfinite(half_frame_size[0]) && 0.0 < half_frame_size[0]);
-  assert(std::isfinite(half_frame_size[1]) && 0.0 < half_frame_size[1]);
+  assert(std::isfinite(frame_bounds[0]));
+  assert(std::isfinite(frame_bounds[1]));
+  assert(std::isfinite(frame_bounds[3]));
+  assert(std::isfinite(frame_bounds[4]));
   assert(std::isfinite(std::tan(half_fov)) && 0.0 < std::tan(half_fov));
 }
 
@@ -24,19 +26,19 @@ RayDifferential PinholeCamera::Compute(
     const std::optional<std::array<geometric_t, 2>>& lens_uv) const {
   Point origin(0.0, 0.0, 0.0);
   Vector base_direction(
-      std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),
-      std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv[1]),
+      std::lerp(frame_bounds_[0], frame_bounds_[1], image_uv[0]),
+      std::lerp(frame_bounds_[3], frame_bounds_[2], image_uv[1]),
       image_plane_distance_);
   Ray base = world_to_camera_.InverseMultiply(Ray(origin, base_direction));
 
   Vector dx_direction(
-      std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv_dxdy[0]),
+      std::lerp(frame_bounds_[0], frame_bounds_[1], image_uv_dxdy[0]),
       base_direction.y, base_direction.z);
   Ray dx = world_to_camera_.InverseMultiply(Ray(origin, dx_direction));
 
   Vector dy_direction(
       base_direction.x,
-      std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv_dxdy[1]),
+      std::lerp(frame_bounds_[3], frame_bounds_[2], image_uv_dxdy[1]),
       base_direction.z);
   Ray dy = world_to_camera_.InverseMultiply(Ray(origin, dy_direction));
 

@@ -64,18 +64,19 @@ Vector Direction(const Point& on_image_plane, const Point& on_lens,
 
 }  // namespace
 
-ThinLensCamera::ThinLensCamera(
-    const Matrix& world_to_camera,
-    const std::array<geometric_t, 2>& half_frame_size, geometric_t half_fov,
-    geometric_t lens_radius, geometric_t focus_distance) noexcept
+ThinLensCamera::ThinLensCamera(const Matrix& world_to_camera,
+                               const std::array<geometric_t, 4>& frame_bounds,
+                               geometric_t half_fov, geometric_t lens_radius,
+                               geometric_t focus_distance) noexcept
     : world_to_camera_(world_to_camera),
-      half_frame_size_(half_frame_size),
-      image_plane_distance_(std::min(half_frame_size[0], half_frame_size[1]) /
-                            std::tan(half_fov)),
+      frame_bounds_(frame_bounds),
+      image_plane_distance_(static_cast<geometric_t>(1.0) / std::tan(half_fov)),
       lens_radius_(lens_radius),
       focus_distance_(focus_distance) {
-  assert(std::isfinite(half_frame_size[0]) && 0.0 < half_frame_size[0]);
-  assert(std::isfinite(half_frame_size[1]) && 0.0 < half_frame_size[1]);
+  assert(std::isfinite(frame_bounds[0]));
+  assert(std::isfinite(frame_bounds[1]));
+  assert(std::isfinite(frame_bounds[3]));
+  assert(std::isfinite(frame_bounds[4]));
   assert(std::isfinite(std::tan(half_fov)) && 0.0 < std::tan(half_fov));
   assert(std::isfinite(lens_radius) && 0.0 < lens_radius);
   assert(std::isfinite(focus_distance) && 0.0 < focus_distance);
@@ -88,21 +89,21 @@ RayDifferential ThinLensCamera::Compute(
   Point origin = SampleLens(*lens_uv, lens_radius_);
 
   Point on_image_plane(
-      std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv[0]),
-      std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv[1]),
+      std::lerp(frame_bounds_[0], frame_bounds_[1], image_uv[0]),
+      std::lerp(frame_bounds_[3], frame_bounds_[2], image_uv[1]),
       image_plane_distance_);
   Ray base = world_to_camera_.InverseMultiply(
       Ray(origin, Direction(on_image_plane, origin, focus_distance_)));
 
   Point on_image_plane_dx(
-      std::lerp(-half_frame_size_[0], half_frame_size_[0], image_uv_dxdy[0]),
+      std::lerp(frame_bounds_[0], frame_bounds_[1], image_uv_dxdy[0]),
       on_image_plane.y, on_image_plane.z);
   Ray dx = world_to_camera_.InverseMultiply(
       Ray(origin, Direction(on_image_plane_dx, origin, focus_distance_)));
 
   Point on_image_plane_dy(
       on_image_plane.x,
-      std::lerp(half_frame_size_[1], -half_frame_size_[1], image_uv_dxdy[1]),
+      std::lerp(frame_bounds_[3], frame_bounds_[2], image_uv_dxdy[1]),
       on_image_plane.z);
   Ray dy = world_to_camera_.InverseMultiply(
       Ray(origin, Direction(on_image_plane_dy, origin, focus_distance_)));
