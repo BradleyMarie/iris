@@ -53,10 +53,10 @@ static inline visual_t Gtr1(visual_t cos_theta, visual_t alpha) {
           std::numbers::pi_v<visual_t> * std::log(alpha_squared));
 }
 
-static inline visual_t SmithGgxG1(visual_t cos_theta, visual_t alpha) {
+static inline visual_t SmithGGgxG1(visual_t cos_theta, visual_t alpha) {
   visual_t alpha_squared = alpha * alpha;
   visual_t cos_theta_squared = cos_theta * cos_theta;
-  return static_cast<visual_t>(2.0) /
+  return static_cast<visual_t>(1.0) /
          (cos_theta + sqrt(alpha_squared + cos_theta_squared -
                            alpha_squared * cos_theta_squared));
 }
@@ -151,8 +151,8 @@ const Reflector* DisneyClearcoatBrdf::ReflectanceDiffuse(
   weight *= Gtr1(AbsCosTheta(*half_angle), alpha_);
   weight *= FresnelSchlick(static_cast<visual_t>(0.04),
                            DotProduct(incoming, outgoing));
-  weight *= SmithGgxG1(AbsCosTheta(incoming), static_cast<visual_t>(0.25));
-  weight *= SmithGgxG1(AbsCosTheta(outgoing), static_cast<visual_t>(0.25));
+  weight *= SmithGGgxG1(AbsCosTheta(incoming), static_cast<visual_t>(0.25));
+  weight *= SmithGGgxG1(AbsCosTheta(outgoing), static_cast<visual_t>(0.25));
 
   return allocator.Scale(allocator.Invert(nullptr), weight);
 }
