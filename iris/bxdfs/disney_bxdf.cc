@@ -456,7 +456,7 @@ const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,
                                 visual_t sheen_tint) {
   // TODO: Handle sheen_tint
   if (!color || !std::isfinite(sheen) || sheen <= static_cast<visual_t>(0.0) ||
-      !std::isfinite(sheen_tint) || sheen_tint <= static_cast<visual_t>(0.0)) {
+      !std::isfinite(sheen_tint) || sheen_tint < static_cast<visual_t>(0.0)) {
     return nullptr;
   }
 
