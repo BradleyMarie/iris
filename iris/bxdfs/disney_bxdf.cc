@@ -204,13 +204,13 @@ const Reflector* DisneyDiffuseBrdf::ReflectanceDiffuse(
     return nullptr;
   }
 
-  visual_t weight =
-      (static_cast<visual_t>(1.0) -
-       static_cast<visual_t>(0.5) * SchlickWeight(AbsCosTheta(incoming))) *
-      (static_cast<visual_t>(1.0) -
-       static_cast<visual_t>(0.5) * SchlickWeight(AbsCosTheta(outgoing)));
+  visual_t fl = SchlickWeight(AbsCosTheta(outgoing));
+  visual_t fv = SchlickWeight(AbsCosTheta(incoming));
+  visual_t fd = std::numbers::inv_pi_v<visual_t> *
+                (static_cast<visual_t>(1.0) - static_cast<visual_t>(0.5) * fl) *
+                (static_cast<visual_t>(1.0) - static_cast<visual_t>(0.5) * fv);
 
-  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * weight);
+  return allocator.Scale(&color_, fd);
 }
 
 class DisneyDiffuseRetroBrdf final : public DisneyBrdfBase {
@@ -239,20 +239,15 @@ const Reflector* DisneyDiffuseRetroBrdf::ReflectanceDiffuse(
     return nullptr;
   }
 
-  visual_t f_incoming = SchlickWeight(AbsCosTheta(incoming));
-  visual_t f_outgoing = SchlickWeight(AbsCosTheta(outgoing));
-
-  visual_t cos_theta_half_angle =
+  visual_t fv = SchlickWeight(AbsCosTheta(incoming));
+  visual_t fl = SchlickWeight(AbsCosTheta(outgoing));
+  visual_t cos_theta_d =
       static_cast<visual_t>(DotProduct(outgoing, *half_angle));
-  visual_t retro_weight = static_cast<visual_t>(2.0) * roughness_ *
-                          cos_theta_half_angle * cos_theta_half_angle;
+  visual_t rr =
+      static_cast<visual_t>(2.0) * roughness_ * cos_theta_d * cos_theta_d;
+  rr *= (rr - static_cast<visual_t>(1.0)) * fv * fl + fv + fl;
 
-  retro_weight *=
-      (retro_weight - static_cast<visual_t>(1.0)) * f_outgoing * f_incoming +
-      f_outgoing + f_incoming;
-
-  return allocator.Scale(&color_,
-                         std::numbers::inv_pi_v<visual_t> * retro_weight);
+  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * rr);
 }
 
 class DisneySheenBrdf final : public DisneyBrdfBase {
@@ -281,16 +276,17 @@ const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
     return nullptr;
   }
 
-  visual_t cos_theta_half_angle =
+  visual_t cos_theta_d =
       static_cast<visual_t>(DotProduct(outgoing, *half_angle));
+  visual_t fh = SchlickWeight(cos_theta_d);
 
-  return allocator.Scale(&color_, sheen_ * SchlickWeight(cos_theta_half_angle));
+  return allocator.Scale(&color_, sheen_ * fh);
 }
 
 class DisneySubsurfaceBrdf final : public DisneyBrdfBase {
  public:
   DisneySubsurfaceBrdf(const Reflector& color, visual_t roughness) noexcept
-      : color_(color), roughness_squared_(roughness * roughness) {}
+      : color_(color), roughness_(roughness) {}
 
   const Reflector* ReflectanceDiffuse(
       const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -298,7 +294,7 @@ class DisneySubsurfaceBrdf final : public DisneyBrdfBase {
 
  private:
   const Reflector& color_;
-  visual_t roughness_squared_;
+  visual_t roughness_;
 };
 
 const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
@@ -313,22 +309,20 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
     return nullptr;
   }
 
-  visual_t cos_theta_half_angle =
+  visual_t cos_theta_d =
       static_cast<visual_t>(DotProduct(outgoing, *half_angle));
-  visual_t f_ss90 =
-      cos_theta_half_angle * cos_theta_half_angle * roughness_squared_;
+  visual_t f_ss90 = cos_theta_d * cos_theta_d * roughness_;
   visual_t f_ss = std::lerp(SchlickWeight(AbsCosTheta(incoming)),
                             static_cast<visual_t>(1.0), f_ss90) *
                   std::lerp(SchlickWeight(AbsCosTheta(outgoing)),
                             static_cast<visual_t>(1.0), f_ss90);
-  visual_t ss_weight =
-      static_cast<visual_t>(1.25) *
-      (f_ss * (static_cast<visual_t>(1.0) /
-                   (AbsCosTheta(outgoing) + AbsCosTheta(incoming)) -
-               static_cast<visual_t>(0.5)) +
-       static_cast<visual_t>(0.5));
+  visual_t ss = static_cast<visual_t>(1.25) *
+                (f_ss * (static_cast<visual_t>(1.0) /
+                             (AbsCosTheta(outgoing) + AbsCosTheta(incoming)) -
+                         static_cast<visual_t>(0.5)) +
+                 static_cast<visual_t>(0.5));
 
-  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * ss_weight);
+  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * ss);
 }
 
 geometric_t ComputeAspectRatio(geometric_t anisotropic) {

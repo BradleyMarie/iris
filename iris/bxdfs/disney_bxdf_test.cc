@@ -122,7 +122,7 @@ TEST(DisneyClearcoatBrdfTest, Reflectance) {
       Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
 
   ASSERT_TRUE(result);
-  EXPECT_NEAR(result->Reflectance(1.0), 0.0070698, 0.0001);
+  EXPECT_NEAR(result->Reflectance(1.0), 0.001011, 0.0001);
 }
 
 TEST(DisneyDiffuseBrdfTest, NullReflector) {

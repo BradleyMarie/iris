@@ -150,7 +150,7 @@ const Bxdf* DisneyMaterial::Evaluate(
         bxdf_allocator,
         spectral_allocator.Scale(
             color, diffuse_weight *
-                       static_cast<visual_t>(1.0 - diffuse_transmission) *
+                       (static_cast<visual_t>(1.0) - diffuse_transmission) *
                        (static_cast<visual_t>(1.0) - flatness)));
   } else {
     const Spectrum* scatter_distance = nullptr;
@@ -256,7 +256,7 @@ const Bxdf* DisneyMaterial::Evaluate(
                                  specular_transmission),
         eta_front, eta_back, anisotropic, roughness);
   } else {
-    specular_btdf = MakeDisneyThinMicrofacetBtdf(
+    specular_btdf = MakeDisneyMicrofacetBtdf(
         bxdf_allocator,
         spectral_allocator.Scale(spectral_allocator.Sqrt(color),
                                  specular_transmission),
