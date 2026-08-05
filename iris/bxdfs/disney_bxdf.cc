@@ -413,7 +413,7 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
 
 geometric_t ComputeAspectRatio(geometric_t anisotropic) {
   return std::sqrt(static_cast<geometric_t>(1.0) -
-                   std::max(static_cast<geometric_t>(1.0), anisotropic) *
+                   std::min(static_cast<geometric_t>(1.0), anisotropic) *
                        static_cast<geometric_t>(0.9));
 }
 
