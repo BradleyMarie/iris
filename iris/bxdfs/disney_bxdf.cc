@@ -64,6 +64,38 @@ static inline Vector SphericalDirection(geometric_t sin_theta,
                 cos_theta);
 }
 
+class DisneyBrdfBase : public internal::DiffuseBxdf {
+ public:
+  DisneyBrdfBase() {}
+
+  std::optional<Vector> SampleDiffuse(const Vector& incoming,
+                                      const Vector& surface_normal,
+                                      Sampler& sampler) const override final;
+
+  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
+                      const Vector& surface_normal,
+                      Hemisphere hemisphere) const override final;
+};
+
+std::optional<Vector> DisneyBrdfBase::SampleDiffuse(
+    const Vector& incoming, const Vector& surface_normal,
+    Sampler& sampler) const {
+  Vector outgoing = CosineSampleHemisphere(incoming.z, sampler);
+  return outgoing.AlignWith(surface_normal);
+}
+
+visual_t DisneyBrdfBase::PdfDiffuse(const Vector& incoming,
+                                    const Vector& outgoing,
+                                    const Vector& surface_normal,
+                                    Hemisphere hemisphere) const {
+  if (hemisphere != Hemisphere::BRDF) {
+    return static_cast<visual_t>(0.0);
+  }
+
+  return std::abs(static_cast<visual_t>(outgoing.z) *
+                  std::numbers::inv_pi_v<visual_t>);
+}
+
 class DisneyClearcoatBrdf final : public internal::DiffuseBxdf {
  public:
   DisneyClearcoatBrdf(visual_t clearcoat, visual_t alpha) noexcept
@@ -153,17 +185,9 @@ const Reflector* DisneyClearcoatBrdf::ReflectanceDiffuse(
   return allocator.Scale(allocator.Invert(nullptr), weight);
 }
 
-class DisneyDiffuseBrdf final : public internal::DiffuseBxdf {
+class DisneyDiffuseBrdf final : public DisneyBrdfBase {
  public:
   DisneyDiffuseBrdf(const Reflector& color) noexcept : color_(color) {}
-
-  std::optional<Vector> SampleDiffuse(const Vector& incoming,
-                                      const Vector& surface_normal,
-                                      Sampler& sampler) const override;
-
-  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
-                      const Vector& surface_normal,
-                      Hemisphere hemisphere) const override;
 
   const Reflector* ReflectanceDiffuse(
       const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -172,25 +196,6 @@ class DisneyDiffuseBrdf final : public internal::DiffuseBxdf {
  private:
   const Reflector& color_;
 };
-
-std::optional<Vector> DisneyDiffuseBrdf::SampleDiffuse(
-    const Vector& incoming, const Vector& surface_normal,
-    Sampler& sampler) const {
-  Vector outgoing = CosineSampleHemisphere(incoming.z, sampler);
-  return outgoing.AlignWith(surface_normal);
-}
-
-visual_t DisneyDiffuseBrdf::PdfDiffuse(const Vector& incoming,
-                                       const Vector& outgoing,
-                                       const Vector& surface_normal,
-                                       Hemisphere hemisphere) const {
-  if (hemisphere != Hemisphere::BRDF) {
-    return static_cast<visual_t>(0.0);
-  }
-
-  return std::abs(static_cast<visual_t>(outgoing.z) *
-                  std::numbers::inv_pi_v<visual_t>);
-}
 
 const Reflector* DisneyDiffuseBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -208,18 +213,10 @@ const Reflector* DisneyDiffuseBrdf::ReflectanceDiffuse(
   return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * weight);
 }
 
-class DisneyDiffuseRetroBrdf final : public internal::DiffuseBxdf {
+class DisneyDiffuseRetroBrdf final : public DisneyBrdfBase {
  public:
   DisneyDiffuseRetroBrdf(const Reflector& color, visual_t roughness) noexcept
       : color_(color), roughness_(roughness) {}
-
-  std::optional<Vector> SampleDiffuse(const Vector& incoming,
-                                      const Vector& surface_normal,
-                                      Sampler& sampler) const override;
-
-  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
-                      const Vector& surface_normal,
-                      Hemisphere hemisphere) const override;
 
   const Reflector* ReflectanceDiffuse(
       const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -229,25 +226,6 @@ class DisneyDiffuseRetroBrdf final : public internal::DiffuseBxdf {
   const Reflector& color_;
   visual_t roughness_;
 };
-
-std::optional<Vector> DisneyDiffuseRetroBrdf::SampleDiffuse(
-    const Vector& incoming, const Vector& surface_normal,
-    Sampler& sampler) const {
-  Vector outgoing = CosineSampleHemisphere(incoming.z, sampler);
-  return outgoing.AlignWith(surface_normal);
-}
-
-visual_t DisneyDiffuseRetroBrdf::PdfDiffuse(const Vector& incoming,
-                                            const Vector& outgoing,
-                                            const Vector& surface_normal,
-                                            Hemisphere hemisphere) const {
-  if (hemisphere != Hemisphere::BRDF) {
-    return static_cast<visual_t>(0.0);
-  }
-
-  return std::abs(static_cast<visual_t>(outgoing.z) *
-                  std::numbers::inv_pi_v<visual_t>);
-}
 
 const Reflector* DisneyDiffuseRetroBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -277,18 +255,10 @@ const Reflector* DisneyDiffuseRetroBrdf::ReflectanceDiffuse(
                          std::numbers::inv_pi_v<visual_t> * retro_weight);
 }
 
-class DisneySheenBrdf final : public internal::DiffuseBxdf {
+class DisneySheenBrdf final : public DisneyBrdfBase {
  public:
   DisneySheenBrdf(const Reflector& color, visual_t sheen) noexcept
       : color_(color), sheen_(sheen) {}
-
-  std::optional<Vector> SampleDiffuse(const Vector& incoming,
-                                      const Vector& surface_normal,
-                                      Sampler& sampler) const override;
-
-  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
-                      const Vector& surface_normal,
-                      Hemisphere hemisphere) const override;
 
   const Reflector* ReflectanceDiffuse(
       const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -298,25 +268,6 @@ class DisneySheenBrdf final : public internal::DiffuseBxdf {
   const Reflector& color_;
   visual_t sheen_;
 };
-
-std::optional<Vector> DisneySheenBrdf::SampleDiffuse(
-    const Vector& incoming, const Vector& surface_normal,
-    Sampler& sampler) const {
-  Vector outgoing = CosineSampleHemisphere(incoming.z, sampler);
-  return outgoing.AlignWith(surface_normal);
-}
-
-visual_t DisneySheenBrdf::PdfDiffuse(const Vector& incoming,
-                                     const Vector& outgoing,
-                                     const Vector& surface_normal,
-                                     Hemisphere hemisphere) const {
-  if (hemisphere != Hemisphere::BRDF) {
-    return static_cast<visual_t>(0.0);
-  }
-
-  return std::abs(static_cast<visual_t>(outgoing.z) *
-                  std::numbers::inv_pi_v<visual_t>);
-}
 
 const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -336,18 +287,10 @@ const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
   return allocator.Scale(&color_, sheen_ * SchlickWeight(cos_theta_half_angle));
 }
 
-class DisneySubsurfaceBrdf final : public internal::DiffuseBxdf {
+class DisneySubsurfaceBrdf final : public DisneyBrdfBase {
  public:
   DisneySubsurfaceBrdf(const Reflector& color, visual_t roughness) noexcept
       : color_(color), roughness_squared_(roughness * roughness) {}
-
-  std::optional<Vector> SampleDiffuse(const Vector& incoming,
-                                      const Vector& surface_normal,
-                                      Sampler& sampler) const override;
-
-  visual_t PdfDiffuse(const Vector& incoming, const Vector& outgoing,
-                      const Vector& surface_normal,
-                      Hemisphere hemisphere) const override;
 
   const Reflector* ReflectanceDiffuse(
       const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
@@ -357,25 +300,6 @@ class DisneySubsurfaceBrdf final : public internal::DiffuseBxdf {
   const Reflector& color_;
   visual_t roughness_squared_;
 };
-
-std::optional<Vector> DisneySubsurfaceBrdf::SampleDiffuse(
-    const Vector& incoming, const Vector& surface_normal,
-    Sampler& sampler) const {
-  Vector outgoing = CosineSampleHemisphere(incoming.z, sampler);
-  return outgoing.AlignWith(surface_normal);
-}
-
-visual_t DisneySubsurfaceBrdf::PdfDiffuse(const Vector& incoming,
-                                          const Vector& outgoing,
-                                          const Vector& surface_normal,
-                                          Hemisphere hemisphere) const {
-  if (hemisphere != Hemisphere::BRDF) {
-    return static_cast<visual_t>(0.0);
-  }
-
-  return std::abs(static_cast<visual_t>(outgoing.z) *
-                  std::numbers::inv_pi_v<visual_t>);
-}
 
 const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
     const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
