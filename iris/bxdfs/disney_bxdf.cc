@@ -432,8 +432,8 @@ DisneyDistribution MakeDisneyDistribution(geometric_t anisotropic,
 const Bxdf* MakeDisneyClearcoatBrdf(BxdfAllocator& bxdf_allocator,
                                     visual_t weight, visual_t gloss) {
   return &bxdf_allocator.Allocate<DisneyClearcoatBrdf>(
-      weight, std::lerp(static_cast<visual_t>(0.001),
-                        static_cast<visual_t>(0.1), gloss));
+      weight, std::lerp(static_cast<visual_t>(0.1),
+                        static_cast<visual_t>(0.001), gloss));
 }
 
 const Bxdf* MakeDisneyDiffuseBrdf(BxdfAllocator& bxdf_allocator,
