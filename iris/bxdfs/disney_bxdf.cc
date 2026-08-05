@@ -39,10 +39,6 @@ using ::iris::reflectors::CreateUniformReflector;
 static const ReferenceCounted<Reflector> kPerfectReflector =
     CreateUniformReflector(static_cast<visual_t>(1.0));
 
-static inline visual_t FresnelSchlick(visual_t r0, visual_t cos_theta) {
-  return std::lerp(r0, static_cast<visual_t>(1.0), SchlickWeight(cos_theta));
-}
-
 static inline visual_t Gtr1(visual_t cos_theta, visual_t alpha) {
   visual_t alpha_squared = alpha * alpha;
   visual_t inverse_alpha_squared = alpha_squared - static_cast<visual_t>(1.0);
@@ -70,8 +66,8 @@ static inline Vector SphericalDirection(geometric_t sin_theta,
 
 class DisneyClearcoatBrdf final : public internal::DiffuseBxdf {
  public:
-  DisneyClearcoatBrdf(visual_t weight, visual_t alpha) noexcept
-      : weight_(weight), alpha_(alpha) {}
+  DisneyClearcoatBrdf(visual_t clearcoat, visual_t alpha) noexcept
+      : clearcoat_(clearcoat), alpha_(alpha) {}
 
   std::optional<Vector> SampleDiffuse(const Vector& incoming,
                                       const Vector& surface_normal,
@@ -86,7 +82,7 @@ class DisneyClearcoatBrdf final : public internal::DiffuseBxdf {
       SpectralAllocator& allocator) const override;
 
  private:
-  visual_t weight_;
+  visual_t clearcoat_;
   visual_t alpha_;
 };
 
@@ -147,10 +143,10 @@ const Reflector* DisneyClearcoatBrdf::ReflectanceDiffuse(
     return nullptr;
   }
 
-  visual_t weight = static_cast<visual_t>(0.25) * weight_;
+  visual_t weight = static_cast<visual_t>(0.25) * clearcoat_;
   weight *= Gtr1(AbsCosTheta(*half_angle), alpha_);
-  weight *= FresnelSchlick(static_cast<visual_t>(0.04),
-                           DotProduct(incoming, outgoing));
+  weight *= std::lerp(static_cast<visual_t>(0.04), static_cast<visual_t>(1.0),
+                      SchlickWeight(DotProduct(*half_angle, outgoing)));
   weight *= SmithGGgxG1(AbsCosTheta(incoming), static_cast<visual_t>(0.25));
   weight *= SmithGGgxG1(AbsCosTheta(outgoing), static_cast<visual_t>(0.25));
 
