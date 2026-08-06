@@ -153,9 +153,14 @@ visual_t DisneyClearcoatBrdf::PdfDiffuse(const Vector& incoming,
     return static_cast<visual_t>(0.0);
   }
 
+  visual_t dp = DotProduct(incoming, *half_angle);
+  if (dp == static_cast<visual_t>(0.0)) {
+    return static_cast<visual_t>(0.0);
+  }
+
   visual_t cos_theta = AbsCosTheta(*half_angle);
   return Gtr1(cos_theta, alpha_) * cos_theta /
-         (static_cast<visual_t>(4.0) * DotProduct(incoming, *half_angle));
+         (static_cast<visual_t>(4.0) * dp);
 }
 
 const Reflector* DisneyClearcoatBrdf::ReflectanceDiffuse(
@@ -299,6 +304,13 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
     return nullptr;
   }
 
+  visual_t cos_theta_incoming = AbsCosTheta(incoming);
+  visual_t cos_theta_outgoing = AbsCosTheta(outgoing);
+  if (cos_theta_incoming == static_cast<visual_t>(0.0) &&
+      cos_theta_outgoing == static_cast<visual_t>(0.0)) {
+    return nullptr;
+  }
+
   std::optional<Vector> half_angle = HalfAngle(incoming, outgoing);
   if (!half_angle) {
     return nullptr;
@@ -313,7 +325,7 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
                             SchlickWeight(AbsCosTheta(outgoing)));
   visual_t ss = static_cast<visual_t>(1.25) *
                 (f_ss * (static_cast<visual_t>(1.0) /
-                             (AbsCosTheta(outgoing) + AbsCosTheta(incoming)) -
+                             (cos_theta_incoming + cos_theta_outgoing) -
                          static_cast<visual_t>(0.5)) +
                  static_cast<visual_t>(0.5));
 

@@ -111,7 +111,7 @@ const Bxdf* DisneyMaterial::Evaluate(
   visual_t specular = static_cast<visual_t>(0.0);
   visual_t diffuse = non_metallic;
   if (specular_transmission_) {
-    visual_t specular = specular_transmission_->Evaluate(texture_coordinates);
+    specular = specular_transmission_->Evaluate(texture_coordinates);
     diffuse *= static_cast<visual_t>(1.0) - specular;
     specular *= non_metallic;
   }
@@ -215,43 +215,41 @@ const Bxdf* DisneyMaterial::Evaluate(
       bxdf_allocator, spectral_allocator.Scale(color, diffuse), roughness);
 
   //
-  // Lambertian BTDF
+  // Diffuse BSDF
   //
 
-  const Bxdf* lambertian_btdf = nullptr;
+  const Bxdf* diffuse_brdf = nullptr;
+  const Bxdf* diffuse_btdf = nullptr;
+  const Bxdf* subsurface_brdf = nullptr;
   if (thin_) {
     visual_t diffuse_transmission = static_cast<visual_t>(0.0);
+    visual_t diffuse_reflection = diffuse;
     if (diffuse_transmission_) {
       diffuse_transmission =
           diffuse_transmission_->Evaluate(texture_coordinates) *
           static_cast<visual_t>(0.5);
-      diffuse *= static_cast<visual_t>(1.0) - diffuse_transmission;
+      diffuse_reflection *= static_cast<visual_t>(1.0) - diffuse_transmission;
+      diffuse_transmission *= diffuse;
     }
 
-    lambertian_btdf = MakeLambertianBtdf(
+    diffuse_btdf = MakeLambertianBtdf(
         bxdf_allocator, spectral_allocator.Scale(color, diffuse_transmission));
-  }
 
-  //
-  // Diffuse BRDF and Subsurface
-  //
-
-  const Bxdf* diffuse_brdf = nullptr;
-  const Bxdf* subsurface_brdf = nullptr;
-  if (thin_) {
     visual_t flatness = static_cast<visual_t>(0.0);
     if (flatness_) {
       flatness = flatness_->Evaluate(texture_coordinates);
     }
 
     subsurface_brdf = MakeDisneySubsurfaceBrdf(
-        bxdf_allocator, spectral_allocator.Scale(color, diffuse * flatness),
+        bxdf_allocator,
+        spectral_allocator.Scale(color, diffuse_reflection * flatness),
         roughness);
 
     diffuse_brdf = MakeDisneyDiffuseBrdf(
         bxdf_allocator,
         spectral_allocator.Scale(
-            color, diffuse * (static_cast<visual_t>(1.0) - flatness)));
+            color,
+            diffuse_reflection * (static_cast<visual_t>(1.0) - flatness)));
   } else {
     const Spectrum* scatter_distance = nullptr;
     if (scatter_distance_) {
@@ -271,10 +269,9 @@ const Bxdf* DisneyMaterial::Evaluate(
   // Assemble Result
   //
 
-  return MakeCompositeBxdf(bxdf_allocator, clearcoat_bxdf, metallic_bxdf,
-                           specular_btdf, sheen_brdf, microfacet_brdf,
-                           retro_brdf, lambertian_btdf, diffuse_brdf,
-                           subsurface_brdf);
+  return MakeCompositeBxdf(
+      bxdf_allocator, clearcoat_bxdf, metallic_bxdf, specular_btdf, sheen_brdf,
+      microfacet_brdf, retro_brdf, diffuse_brdf, diffuse_btdf, subsurface_brdf);
 }
 
 }  // namespace
