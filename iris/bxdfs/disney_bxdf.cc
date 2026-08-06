@@ -33,6 +33,7 @@ using ::iris::bxdfs::internal::MicrofacetBrdf;
 using ::iris::bxdfs::internal::MicrofacetBtdf;
 using ::iris::bxdfs::internal::Reflect;
 using ::iris::bxdfs::internal::SchlickWeight;
+using ::iris::bxdfs::internal::SphericalDirection;
 using ::iris::bxdfs::internal::TrowbridgeReitzDistribution;
 using ::iris::reflectors::CreateUniformReflector;
 
@@ -52,16 +53,10 @@ static inline visual_t Gtr1(visual_t cos_theta, visual_t alpha) {
 static inline visual_t SmithGGgxG1(visual_t cos_theta, visual_t alpha) {
   visual_t alpha_squared = alpha * alpha;
   visual_t cos_theta_squared = cos_theta * cos_theta;
+  // Numerator is set to 1 instead of 2 to save a divide by 4 in the caller
   return static_cast<visual_t>(1.0) /
          (cos_theta + sqrt(alpha_squared + cos_theta_squared -
                            alpha_squared * cos_theta_squared));
-}
-
-static inline Vector SphericalDirection(geometric_t sin_theta,
-                                        geometric_t cos_theta,
-                                        geometric_t phi) {
-  return Vector(sin_theta * std::cos(phi), cos_theta * std::sin(phi),
-                cos_theta);
 }
 
 class DisneyBrdfBase : public internal::DiffuseBxdf {
@@ -175,12 +170,12 @@ const Reflector* DisneyClearcoatBrdf::ReflectanceDiffuse(
     return nullptr;
   }
 
-  visual_t weight = static_cast<visual_t>(0.25) * clearcoat_;
-  weight *= Gtr1(AbsCosTheta(*half_angle), alpha_);
+  visual_t weight = Gtr1(AbsCosTheta(*half_angle), alpha_);
   weight *= std::lerp(static_cast<visual_t>(0.04), static_cast<visual_t>(1.0),
                       SchlickWeight(DotProduct(*half_angle, outgoing)));
   weight *= SmithGGgxG1(AbsCosTheta(incoming), static_cast<visual_t>(0.25));
   weight *= SmithGGgxG1(AbsCosTheta(outgoing), static_cast<visual_t>(0.25));
+  weight *= clearcoat_;
 
   return allocator.Scale(allocator.Invert(nullptr), weight);
 }
@@ -312,10 +307,10 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
   visual_t cos_theta_d =
       static_cast<visual_t>(DotProduct(outgoing, *half_angle));
   visual_t f_ss90 = cos_theta_d * cos_theta_d * roughness_;
-  visual_t f_ss = std::lerp(SchlickWeight(AbsCosTheta(incoming)),
-                            static_cast<visual_t>(1.0), f_ss90) *
-                  std::lerp(SchlickWeight(AbsCosTheta(outgoing)),
-                            static_cast<visual_t>(1.0), f_ss90);
+  visual_t f_ss = std::lerp(static_cast<visual_t>(1.0), f_ss90,
+                            SchlickWeight(AbsCosTheta(incoming))) *
+                  std::lerp(static_cast<visual_t>(1.0), f_ss90,
+                            SchlickWeight(AbsCosTheta(outgoing)));
   visual_t ss = static_cast<visual_t>(1.25) *
                 (f_ss * (static_cast<visual_t>(1.0) /
                              (AbsCosTheta(outgoing) + AbsCosTheta(incoming)) -
@@ -344,10 +339,12 @@ DisneyDistribution MakeDisneyDistribution(geometric_t anisotropic,
 }  // namespace
 
 const Bxdf* MakeDisneyClearcoatBrdf(BxdfAllocator& bxdf_allocator,
-                                    visual_t weight, visual_t gloss) {
+                                    visual_t clearcoat, visual_t gloss) {
   return &bxdf_allocator.Allocate<DisneyClearcoatBrdf>(
-      weight, std::lerp(static_cast<visual_t>(0.1),
-                        static_cast<visual_t>(0.001), gloss));
+      static_cast<visual_t>(0.25) *
+          clearcoat,  // clearcoat is normalized to [0, 0.25]
+      std::lerp(static_cast<visual_t>(0.1), static_cast<visual_t>(0.001),
+                gloss));
 }
 
 const Bxdf* MakeDisneyDiffuseBrdf(BxdfAllocator& bxdf_allocator,

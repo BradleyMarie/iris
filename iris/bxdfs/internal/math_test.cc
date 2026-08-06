@@ -58,6 +58,13 @@ TEST(Math, SinCosSquaredPhi) {
   EXPECT_NEAR(0.8660 * 0.8660, sin_cos.second, 0.001);
 }
 
+TEST(Math, SphericalDirection) {
+  Vector result = SphericalDirection(0.5, 0.86602540378, 1.0471975512);
+  EXPECT_NEAR(result.x, 0.25, 0.0001);
+  EXPECT_NEAR(result.y, 0.43301270189, 0.0001);
+  EXPECT_NEAR(result.z, 0.86602540378, 0.0001);
+}
+
 TEST(Math, CosDPhi) {
   EXPECT_NEAR(1.0, CosDPhi(Vector(1.0, 1.0, 2.0), Vector(1.0, 1.0, 2.0)),
               0.001);

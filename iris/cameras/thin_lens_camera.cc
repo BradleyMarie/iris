@@ -75,8 +75,8 @@ ThinLensCamera::ThinLensCamera(const Matrix& world_to_camera,
       focus_distance_(focus_distance) {
   assert(std::isfinite(frame_bounds[0]));
   assert(std::isfinite(frame_bounds[1]));
+  assert(std::isfinite(frame_bounds[2]));
   assert(std::isfinite(frame_bounds[3]));
-  assert(std::isfinite(frame_bounds[4]));
   assert(std::isfinite(std::tan(half_fov)) && 0.0 < std::tan(half_fov));
   assert(std::isfinite(lens_radius) && 0.0 < lens_radius);
   assert(std::isfinite(focus_distance) && 0.0 < focus_distance);

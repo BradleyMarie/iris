@@ -251,9 +251,7 @@ const Bxdf* DisneyMaterial::Evaluate(
   const Bxdf* specular_btdf = nullptr;
   if (thin_) {
     specular_btdf = MakeDisneyThinMicrofacetBtdf(
-        bxdf_allocator,
-        spectral_allocator.Scale(spectral_allocator.Sqrt(color),
-                                 specular_transmission),
+        bxdf_allocator, spectral_allocator.Scale(color, specular_transmission),
         eta_front, eta_back, anisotropic, roughness);
   } else {
     specular_btdf = MakeDisneyMicrofacetBtdf(

@@ -554,7 +554,7 @@ TEST(DisneySubsurfaceBrdfTest, Reflectance) {
       bxdf->ReflectanceDiffuse(incoming, outgoing, Bxdf::Hemisphere::BRDF,
                                testing::GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_NEAR(result->Reflectance(1.0), 0.1989, 0.001);
+  EXPECT_NEAR(result->Reflectance(1.0), 0.2330088, 0.001);
 }
 
 }  // namespace

@@ -69,6 +69,13 @@ static inline std::pair<geometric_t, geometric_t> SinCosSquaredPhi(
   return result;
 }
 
+static inline Vector SphericalDirection(geometric_t sin_theta,
+                                        geometric_t cos_theta,
+                                        geometric_t phi) {
+  return Vector(sin_theta * std::cos(phi), sin_theta * std::sin(phi),
+                cos_theta);
+}
+
 static inline geometric_t CosDPhi(const Vector& v0, const Vector& v1) {
   geometric_t v0_length_squared_xy = v0.x * v0.x + v0.y * v0.y;
   geometric_t v1_length_squared_xy = v1.x * v1.x + v1.y * v1.y;
