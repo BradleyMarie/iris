@@ -20,7 +20,7 @@ const Reflector* FresnelDielectric::AttenuateReflectance(
       std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
   visual_t fresnel_reflectance = FesnelDielectricReflectance(
       cos_theta_incident, eta_incident, eta_transmitted);
-  return allocator.Scale(&reflectance, fresnel_reflectance);
+  return allocator.Scale(&reflectance, fresnel_reflectance * weight_);
 }
 
 const Reflector* FresnelDielectric::AttenuateTransmittance(
@@ -32,14 +32,16 @@ const Reflector* FresnelDielectric::AttenuateTransmittance(
       std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
   visual_t fresnel_reflectance = FesnelDielectricReflectance(
       cos_theta_incident, eta_incident, eta_transmitted);
-  return allocator.Scale(&transmittance,
-                         static_cast<visual_t>(1.0) - fresnel_reflectance);
+  return allocator.Scale(
+      &transmittance,
+      (static_cast<visual_t>(1.0) - fresnel_reflectance) * weight_);
 }
 
 bool FresnelDielectric::IsValid() const {
   return std::isfinite(eta_front_) &&
          eta_front_ >= static_cast<visual_t>(1.0) && std::isfinite(eta_back_) &&
-         eta_back_ >= static_cast<visual_t>(1.0);
+         eta_back_ >= static_cast<visual_t>(1.0) && std::isfinite(weight_) &&
+         weight_ > static_cast<visual_t>(0.0);
 }
 
 const Reflector* FresnelConductor::AttenuateReflectance(
@@ -61,36 +63,20 @@ bool FresnelConductor::IsValid() const {
          eta_dielectric_ >= static_cast<visual_t>(1.0);
 }
 
-const Reflector* DisneyFresnel::AttenuateReflectance(
+const Reflector* SchlickFresnel::AttenuateReflectance(
     const Reflector& reflectance, visual_t cos_theta_incident,
     SpectralAllocator& allocator) const {
-  visual_t eta_incident =
-      std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
-  visual_t eta_transmitted =
-      std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
-
-  const Reflector* fresnel_dielectric = allocator.Scale(
-      &reflectance, FesnelDielectricReflectance(cos_theta_incident,
-                                                eta_incident, eta_transmitted));
-  const Reflector* fresnel_metallic =
-      allocator.Lerp(metallic_reflectance_, allocator.Invert(nullptr),
-                     SchlickWeight(cos_theta_incident));
-
-  return allocator.Lerp(fresnel_dielectric, fresnel_metallic, metallic_);
+  return allocator.Lerp(&reflectance, allocator.Invert(nullptr),
+                        SchlickWeight(cos_theta_incident));
 }
 
-const Reflector* DisneyFresnel::AttenuateTransmittance(
+const Reflector* SchlickFresnel::AttenuateTransmittance(
     const Reflector& transmittance, visual_t cos_theta_incident,
     SpectralAllocator& allocator) const {
   return nullptr;
 }
 
-bool DisneyFresnel::IsValid() const {
-  return std::isfinite(eta_front_) &&
-         eta_front_ >= static_cast<visual_t>(1.0) && std::isfinite(eta_back_) &&
-         eta_back_ >= static_cast<visual_t>(1.0) && std::isfinite(metallic_) &&
-         metallic_ >= static_cast<visual_t>(0.0);
-}
+bool SchlickFresnel::IsValid() const { return true; }
 
 }  // namespace internal
 }  // namespace bxdfs

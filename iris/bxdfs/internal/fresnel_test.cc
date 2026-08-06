@@ -84,76 +84,28 @@ TEST(FresnelConductor, AttenuateTransmittance) {
   EXPECT_EQ(nullptr, result);
 }
 
-TEST(DisneyFresnel, IsValid) {
-  EXPECT_TRUE(DisneyFresnel(nullptr, 1.0, 1.0, 1.0).IsValid());
-  EXPECT_FALSE(DisneyFresnel(nullptr, 1.0, 0.5, 1.5).IsValid());
-  EXPECT_FALSE(DisneyFresnel(nullptr, 1.0, 1.0, 0.9).IsValid());
-  EXPECT_FALSE(DisneyFresnel(nullptr, -0.1, 1.0, 1.5).IsValid());
+TEST(SchlickFresnel, IsValid) {
+  SchlickFresnel fresnel;
+  EXPECT_TRUE(fresnel.IsValid());
 }
 
-TEST(DisneyFresnel, AttenuateReflectanceZeroMetallic) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillRepeatedly(Return(1.0));
-
-  DisneyFresnel fresnel(&reflector, 0.0, 1.0, 1.5);
-  const Reflector* result =
-      fresnel.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_NEAR(0.0891, result->Reflectance(1.0), 0.001);
-}
-
-TEST(DisneyFresnel, AttenuateReflectanceFullMetallic) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillRepeatedly(Return(1.0));
-
-  DisneyFresnel fresnel(&reflector, 1.0, 1.0, 1.5);
-  const Reflector* result =
-      fresnel.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_NEAR(1.0, result->Reflectance(1.0), 0.001);
-}
-
-TEST(DisneyFresnel, AttenuateReflectanceGrazingIncidence) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillRepeatedly(Return(1.0));
-
-  DisneyFresnel fresnel(&reflector, 0.5, 1.0, 1.5);
-  const Reflector* result =
-      fresnel.AttenuateReflectance(reflector, 0.0, GetSpectralAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_NEAR(1.0, result->Reflectance(1.0), 0.001);
-}
-
-TEST(DisneyFresnel, AttenuateReflectanceNormalIncidence) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillRepeatedly(Return(1.0));
-
-  DisneyFresnel fresnel(&reflector, 0.5, 1.0, 1.5);
-  const Reflector* result =
-      fresnel.AttenuateReflectance(reflector, 1.0, GetSpectralAllocator());
-  ASSERT_TRUE(result);
-  EXPECT_NEAR(0.5200, result->Reflectance(1.0), 0.001);
-}
-
-TEST(DisneyFresnel, AttenuateReflectanceBlendAll) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillRepeatedly(Return(1.0));
-
-  DisneyFresnel fresnel_zero(&reflector, 0.5, 1.0, 1.5);
-  const Reflector* result_zero =
-      fresnel_zero.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
-  ASSERT_TRUE(result_zero);
-  EXPECT_NEAR(0.5445, result_zero->Reflectance(1.0), 0.001);
-}
-
-TEST(DisneyFresnel, AttenuateTransmittance) {
+TEST(SchlickFresnel, AttenuateTransmittance) {
   MockReflector transmittance;
-  EXPECT_CALL(transmittance, Reflectance(1.0)).WillRepeatedly(Return(1.0));
-
-  DisneyFresnel fresnel(nullptr, 0.5, 1.0, 1.5);
+  SchlickFresnel fresnel;
   const Reflector* result = fresnel.AttenuateTransmittance(
-      transmittance, 0.5, GetSpectralAllocator());
+      transmittance, 1.0, GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
+}
+
+TEST(SchlickFresnel, AttenuateReflectance) {
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(1.0)).WillRepeatedly(Return(0.5));
+
+  SchlickFresnel fresnel;
+  const Reflector* result =
+      fresnel.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(0.515625, result->Reflectance(1.0), 0.001);
 }
 
 }  // namespace

@@ -302,51 +302,63 @@ TEST(DisneyDiffuseRetroBrdfTest, Reflectance) {
   EXPECT_NEAR(result->Reflectance(1.0), 0.6366197, 0.001);
 }
 
+TEST(DisneyMetallicBrdfTest, Parameters) {
+  MockReflector reflector;
+  EXPECT_FALSE(MakeDisneyMetallicBrdf(GetBxdfAllocator(), nullptr, 1.0, 2.0));
+  EXPECT_FALSE(
+      MakeDisneyMetallicBrdf(GetBxdfAllocator(), &reflector, -1.0, 1.5));
+  EXPECT_FALSE(
+      MakeDisneyMetallicBrdf(GetBxdfAllocator(), &reflector, 1.0, -1.5));
+  EXPECT_TRUE(MakeDisneyMetallicBrdf(GetBxdfAllocator(), &reflector, 1.0, 1.5));
+}
+
 TEST(DisneyMicrofacetBrdfTest, Parameters) {
   EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 0.0, 0.0,
-                                        0.5, 1.0, 0.0, 0.5));
-  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 0.0, 0.0,
-                                        1.5, 0.5, 0.0, 0.5));
-  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 0.0, -0.5,
                                         1.5, 1.0, 0.0, 0.5));
-  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 0.0, 0.0,
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 1.0, -0.5,
+                                        1.5, 1.0, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.0,
+                                        0.5, 1.0, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.0,
+                                        1.5, 0.5, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.0,
                                         1.5, 1.0, -0.5, 0.5));
-  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 0.0, 0.0,
+  EXPECT_FALSE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.0,
                                         1.5, 1.0, 0.0, -0.5));
-  EXPECT_TRUE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 0.0, 0.0,
+  EXPECT_TRUE(MakeDisneyMicrofacetBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.0,
                                        1.5, 1.0, 0.0, 0.5));
 }
 
-TEST(DisneyMicrofacetBtdfTest, Parameters) {
+TEST(DisneySpecularBtdfTest, Parameters) {
   MockReflector reflector;
-  EXPECT_FALSE(MakeDisneyMicrofacetBtdf(GetBxdfAllocator(), nullptr, 1.0, 2.0,
-                                        0.0, 0.5));
-  EXPECT_FALSE(MakeDisneyMicrofacetBtdf(GetBxdfAllocator(), &reflector, -1.0,
-                                        1.5, 1.0, 2.0));
-  EXPECT_FALSE(MakeDisneyMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0,
-                                        -1.5, 1.0, 2.0));
-  EXPECT_FALSE(MakeDisneyMicrofacetBtdf(GetBxdfAllocator(), &reflector, 0.5,
-                                        1.5, 1.0, 2.0));
-  EXPECT_FALSE(MakeDisneyMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0,
-                                        0.5, 1.0, 2.0));
-  EXPECT_TRUE(MakeDisneyMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.5,
-                                       1.0, 2.0));
+  EXPECT_FALSE(
+      MakeDisneySpecularBtdf(GetBxdfAllocator(), nullptr, 1.0, 2.0, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneySpecularBtdf(GetBxdfAllocator(), &reflector, -1.0, 1.5,
+                                      1.0, 2.0));
+  EXPECT_FALSE(MakeDisneySpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, -1.5,
+                                      1.0, 2.0));
+  EXPECT_FALSE(MakeDisneySpecularBtdf(GetBxdfAllocator(), &reflector, 0.5, 1.5,
+                                      1.0, 2.0));
+  EXPECT_FALSE(MakeDisneySpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 0.5,
+                                      1.0, 2.0));
+  EXPECT_TRUE(MakeDisneySpecularBtdf(GetBxdfAllocator(), &reflector, 1.0, 1.5,
+                                     1.0, 2.0));
 }
 
-TEST(DisneyThinMicrofacetBtdfTest, NullColor) {
+TEST(DisneyThinSpecularBtdfTest, NullColor) {
   MockReflector reflector;
-  EXPECT_FALSE(MakeDisneyThinMicrofacetBtdf(GetBxdfAllocator(), nullptr, 1.0,
-                                            2.0, 0.0, 0.5));
-  EXPECT_FALSE(MakeDisneyThinMicrofacetBtdf(GetBxdfAllocator(), &reflector,
-                                            -1.0, 1.5, 1.0, 2.0));
-  EXPECT_FALSE(MakeDisneyThinMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0,
-                                            -1.5, 1.0, 2.0));
-  EXPECT_FALSE(MakeDisneyThinMicrofacetBtdf(GetBxdfAllocator(), &reflector, 0.5,
-                                            1.5, 1.0, 2.0));
-  EXPECT_FALSE(MakeDisneyThinMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0,
-                                            0.5, 1.0, 2.0));
-  EXPECT_TRUE(MakeDisneyThinMicrofacetBtdf(GetBxdfAllocator(), &reflector, 1.0,
-                                           1.5, 1.0, 2.0));
+  EXPECT_FALSE(MakeDisneyThinSpecularBtdf(GetBxdfAllocator(), nullptr, 1.0, 2.0,
+                                          0.0, 0.5));
+  EXPECT_FALSE(MakeDisneyThinSpecularBtdf(GetBxdfAllocator(), &reflector, -1.0,
+                                          1.5, 1.0, 2.0));
+  EXPECT_FALSE(MakeDisneyThinSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0,
+                                          -1.5, 1.0, 2.0));
+  EXPECT_FALSE(MakeDisneyThinSpecularBtdf(GetBxdfAllocator(), &reflector, 0.5,
+                                          1.5, 1.0, 2.0));
+  EXPECT_FALSE(MakeDisneyThinSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0,
+                                          0.5, 1.0, 2.0));
+  EXPECT_TRUE(MakeDisneyThinSpecularBtdf(GetBxdfAllocator(), &reflector, 1.0,
+                                         1.5, 1.0, 2.0));
 }
 
 TEST(DisneySheenBrdfTest, NullReflector) {

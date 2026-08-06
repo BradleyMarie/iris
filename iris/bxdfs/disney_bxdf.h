@@ -18,27 +18,32 @@ const Bxdf* MakeDisneyDiffuseRetroBrdf(BxdfAllocator& bxdf_allocator,
                                        const Reflector* color,
                                        visual_t roughness);
 
-const Bxdf* MakeDisneyMicrofacetBtdf(BxdfAllocator& bxdf_allocator,
-                                     const Reflector* color,
-                                     geometric_t eta_incident,
-                                     geometric_t eta_transmitted,
-                                     geometric_t anisotropic,
-                                     geometric_t roughness);
-
-const Bxdf* MakeDisneyThinMicrofacetBtdf(BxdfAllocator& bxdf_allocator,
-                                         const Reflector* color,
-                                         geometric_t eta_incident,
-                                         geometric_t eta_transmitted,
-                                         geometric_t anisotropic,
-                                         geometric_t roughness);
+const Bxdf* MakeDisneyMetallicBrdf(BxdfAllocator& bxdf_allocator,
+                                   const Reflector* color,
+                                   geometric_t anisotropic,
+                                   geometric_t roughness);
 
 const Bxdf* MakeDisneyMicrofacetBrdf(BxdfAllocator& bxdf_allocator,
-                                     const Reflector* color,
-                                     visual_t specular_tint, visual_t metallic,
+                                     const Reflector* color, visual_t weight,
+                                     visual_t specular_tint,
                                      geometric_t eta_incident,
                                      geometric_t eta_transmitted,
                                      geometric_t anisotropic,
                                      geometric_t roughness);
+
+const Bxdf* MakeDisneySpecularBtdf(BxdfAllocator& bxdf_allocator,
+                                   const Reflector* color,
+                                   geometric_t eta_incident,
+                                   geometric_t eta_transmitted,
+                                   geometric_t anisotropic,
+                                   geometric_t roughness);
+
+const Bxdf* MakeDisneyThinSpecularBtdf(BxdfAllocator& bxdf_allocator,
+                                       const Reflector* color,
+                                       geometric_t eta_incident,
+                                       geometric_t eta_transmitted,
+                                       geometric_t anisotropic,
+                                       geometric_t roughness);
 
 const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,
                                 const Reflector* color, visual_t sheen,
