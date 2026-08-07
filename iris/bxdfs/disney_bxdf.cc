@@ -11,6 +11,7 @@
 #include "iris/bxdfs/internal/math.h"
 #include "iris/bxdfs/internal/microfacet_bxdf.h"
 #include "iris/bxdfs/internal/microfacet_distribution.h"
+#include "iris/color.h"
 #include "iris/float.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
@@ -252,16 +253,18 @@ const Reflector* DisneyDiffuseRetroBrdf::ReflectanceDiffuse(
 
 class DisneySheenBrdf final : public DisneyBrdfBase {
  public:
-  DisneySheenBrdf(const Reflector& color, visual_t sheen) noexcept
-      : color_(color), sheen_(sheen) {}
+  DisneySheenBrdf(const Reflector* color, visual_t sheen,
+                  visual_t sheen_tint) noexcept
+      : color_(color), sheen_(sheen), sheen_tint_(sheen_tint) {}
 
   const Reflector* ReflectanceDiffuse(
       const Vector& incoming, const Vector& outgoing, Hemisphere hemisphere,
       SpectralAllocator& allocator) const override;
 
  private:
-  const Reflector& color_;
+  const Reflector* color_;
   visual_t sheen_;
+  visual_t sheen_tint_;
 };
 
 const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
@@ -270,6 +273,24 @@ const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
   if (hemisphere != Hemisphere::BRDF) {
     return nullptr;
   }
+
+  // TODO: Make this something SpectralAllocator can do
+  visual_t color_luma = static_cast<visual_t>(0.0);
+  if (color_) {
+    visual_t r = color_->Reflectance(static_cast<visual_t>(0.5));
+    visual_t g = color_->Reflectance(static_cast<visual_t>(1.5));
+    visual_t b = color_->Reflectance(static_cast<visual_t>(2.5));
+    color_luma = Color(r, g, b, Color::LINEAR_SRGB).Luma();
+  }
+
+  const Reflector* color_tint = kPerfectReflector.Get();
+  if (color_luma > static_cast<visual_t>(0.0)) {
+    color_tint =
+        allocator.Scale(color_, static_cast<visual_t>(1.0) / color_luma);
+  }
+
+  const Reflector* color_sheen =
+      allocator.Lerp(kPerfectReflector.Get(), color_tint, sheen_tint_);
 
   std::optional<Vector> half_angle = HalfAngle(incoming, outgoing);
   if (!half_angle) {
@@ -280,7 +301,7 @@ const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
       static_cast<visual_t>(DotProduct(outgoing, *half_angle));
   visual_t fh = SchlickWeight(cos_theta_d);
 
-  return allocator.Scale(&color_, sheen_ * fh);
+  return allocator.Scale(color_sheen, sheen_ * fh);
 }
 
 class DisneySubsurfaceBrdf final : public DisneyBrdfBase {
@@ -475,13 +496,12 @@ const Bxdf* MakeDisneyThinSpecularBtdf(BxdfAllocator& bxdf_allocator,
 const Bxdf* MakeDisneySheenBrdf(BxdfAllocator& bxdf_allocator,
                                 const Reflector* color, visual_t sheen,
                                 visual_t sheen_tint) {
-  // TODO: Handle sheen_tint
-  if (!color || !std::isfinite(sheen) || sheen <= static_cast<visual_t>(0.0) ||
+  if (!std::isfinite(sheen) || sheen <= static_cast<visual_t>(0.0) ||
       !std::isfinite(sheen_tint) || sheen_tint < static_cast<visual_t>(0.0)) {
     return nullptr;
   }
 
-  return &bxdf_allocator.Allocate<DisneySheenBrdf>(*kPerfectReflector, sheen);
+  return &bxdf_allocator.Allocate<DisneySheenBrdf>(color, sheen, sheen_tint);
 }
 
 const Bxdf* MakeDisneySubsurfaceBrdf(BxdfAllocator& bxdf_allocator,

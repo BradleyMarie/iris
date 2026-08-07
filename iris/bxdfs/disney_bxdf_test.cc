@@ -15,6 +15,7 @@ namespace {
 using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
+using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::Return;
 
@@ -87,9 +88,9 @@ TEST(DisneyClearcoatBrdfTest, ReflectanceBtdf) {
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
   const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneyClearcoatBrdfTest, ReflectanceTransmitted) {
@@ -97,9 +98,9 @@ TEST(DisneyClearcoatBrdfTest, ReflectanceTransmitted) {
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
   const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneyClearcoatBrdfTest, ReflectanceNoHalfAngle) {
@@ -107,9 +108,9 @@ TEST(DisneyClearcoatBrdfTest, ReflectanceNoHalfAngle) {
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
   const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
 TEST(DisneyClearcoatBrdfTest, Reflectance) {
@@ -119,7 +120,7 @@ TEST(DisneyClearcoatBrdfTest, Reflectance) {
   const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
   const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.8660254, 0.0, 0.5), Vector(0.0, 0.0, 1.0),
-      Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
+      Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
 
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->Reflectance(1.0), 0.001011, 0.0001);
@@ -181,9 +182,9 @@ TEST(DisneyDiffuseBrdfTest, ReflectanceBtdf) {
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
   const Bxdf* bxdf = MakeDisneyDiffuseBrdf(GetBxdfAllocator(), &reflector);
-  ASSERT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  ASSERT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneyDiffuseBrdfTest, ReflectanceTransmitted) {
@@ -191,9 +192,9 @@ TEST(DisneyDiffuseBrdfTest, ReflectanceTransmitted) {
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
 
   const Bxdf* bxdf = MakeDisneyDiffuseBrdf(GetBxdfAllocator(), &reflector);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneyDiffuseBrdfTest, Reflectance) {
@@ -203,7 +204,7 @@ TEST(DisneyDiffuseBrdfTest, Reflectance) {
   const Bxdf* bxdf = MakeDisneyDiffuseBrdf(GetBxdfAllocator(), &reflector);
   const Reflector* result = bxdf->ReflectanceDiffuse(
       Vector(0.8660254, 0.0, 0.5), Vector(0.0, 0.0, 1.0),
-      Bxdf::Hemisphere::BRDF, testing::GetSpectralAllocator());
+      Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
 
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->Reflectance(1.0), 0.313336, 0.0001);
@@ -270,9 +271,9 @@ TEST(DisneyDiffuseRetroBrdfTest, ReflectanceBtdf) {
 
   const Bxdf* bxdf =
       MakeDisneyDiffuseRetroBrdf(GetBxdfAllocator(), &reflector, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneyDiffuseRetroBrdfTest, ReflectanceNoHalfAngle) {
@@ -281,9 +282,9 @@ TEST(DisneyDiffuseRetroBrdfTest, ReflectanceNoHalfAngle) {
 
   const Bxdf* bxdf =
       MakeDisneyDiffuseRetroBrdf(GetBxdfAllocator(), &reflector, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
 TEST(DisneyDiffuseRetroBrdfTest, Reflectance) {
@@ -295,9 +296,8 @@ TEST(DisneyDiffuseRetroBrdfTest, Reflectance) {
 
   Vector incoming(1.0, 0.0, 0.0);
   Vector outgoing(1.0, 0.0, 0.0);
-  const Reflector* result =
-      bxdf->ReflectanceDiffuse(incoming, outgoing, Bxdf::Hemisphere::BRDF,
-                               testing::GetSpectralAllocator());
+  const Reflector* result = bxdf->ReflectanceDiffuse(
+      incoming, outgoing, Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->Reflectance(1.0), 0.6366197, 0.001);
 }
@@ -361,8 +361,10 @@ TEST(DisneyThinSpecularBtdfTest, NullColor) {
                                          1.5, 1.0, 2.0));
 }
 
-TEST(DisneySheenBrdfTest, NullReflector) {
-  EXPECT_FALSE(MakeDisneySheenBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.5));
+TEST(DisneySheenBrdfTest, Null) {
+  EXPECT_TRUE(MakeDisneySheenBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.5));
+  EXPECT_FALSE(MakeDisneySheenBrdf(GetBxdfAllocator(), nullptr, 0.0, 0.5));
+  EXPECT_FALSE(MakeDisneySheenBrdf(GetBxdfAllocator(), nullptr, 1.0, -0.5));
 }
 
 TEST(DisneySheenBrdfTest, SampleDiffuseAligned) {
@@ -422,9 +424,9 @@ TEST(DisneySheenBrdfTest, ReflectanceBtdf) {
 
   const Bxdf* bxdf =
       MakeDisneySheenBrdf(GetBxdfAllocator(), &reflector, 1.0, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneySheenBrdfTest, ReflectanceTransmitted) {
@@ -433,9 +435,9 @@ TEST(DisneySheenBrdfTest, ReflectanceTransmitted) {
 
   const Bxdf* bxdf =
       MakeDisneySheenBrdf(GetBxdfAllocator(), &reflector, 1.0, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneySheenBrdfTest, ReflectanceNoHalfAngle) {
@@ -444,9 +446,9 @@ TEST(DisneySheenBrdfTest, ReflectanceNoHalfAngle) {
 
   const Bxdf* bxdf =
       MakeDisneySheenBrdf(GetBxdfAllocator(), &reflector, 1.0, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
 TEST(DisneySheenBrdfTest, Reflectance) {
@@ -458,9 +460,8 @@ TEST(DisneySheenBrdfTest, Reflectance) {
 
   Vector incoming(0.8660254, 0.0, 0.5);
   Vector outgoing(-0.8660254, 0.0, 0.5);
-  const Reflector* result =
-      bxdf->ReflectanceDiffuse(incoming, outgoing, Bxdf::Hemisphere::BRDF,
-                               testing::GetSpectralAllocator());
+  const Reflector* result = bxdf->ReflectanceDiffuse(
+      incoming, outgoing, Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->Reflectance(1.0), 0.03125, 0.0001);
 }
@@ -526,9 +527,9 @@ TEST(DisneySubsurfaceBrdfTest, ReflectanceBtdf) {
 
   const Bxdf* bxdf =
       MakeDisneySubsurfaceBrdf(GetBxdfAllocator(), &reflector, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneySubsurfaceBrdfTest, ReflectanceTransmitted) {
@@ -537,9 +538,9 @@ TEST(DisneySubsurfaceBrdfTest, ReflectanceTransmitted) {
 
   const Bxdf* bxdf =
       MakeDisneySubsurfaceBrdf(GetBxdfAllocator(), &reflector, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BTDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BTDF, GetSpectralAllocator()));
 }
 
 TEST(DisneySubsurfaceBrdfTest, ReflectanceNoHalfAngle) {
@@ -548,9 +549,9 @@ TEST(DisneySubsurfaceBrdfTest, ReflectanceNoHalfAngle) {
 
   const Bxdf* bxdf =
       MakeDisneySubsurfaceBrdf(GetBxdfAllocator(), &reflector, 0.5);
-  EXPECT_FALSE(bxdf->ReflectanceDiffuse(
-      Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), Bxdf::Hemisphere::BRDF,
-      testing::GetSpectralAllocator()));
+  EXPECT_FALSE(
+      bxdf->ReflectanceDiffuse(Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0),
+                               Bxdf::Hemisphere::BRDF, GetSpectralAllocator()));
 }
 
 TEST(DisneySubsurfaceBrdfTest, Reflectance) {
@@ -562,9 +563,8 @@ TEST(DisneySubsurfaceBrdfTest, Reflectance) {
 
   Vector incoming(0.707106781, 0.0, 0.707106781);
   Vector outgoing(0.0, 0.0, -1.0);
-  const Reflector* result =
-      bxdf->ReflectanceDiffuse(incoming, outgoing, Bxdf::Hemisphere::BRDF,
-                               testing::GetSpectralAllocator());
+  const Reflector* result = bxdf->ReflectanceDiffuse(
+      incoming, outgoing, Bxdf::Hemisphere::BRDF, GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_NEAR(result->Reflectance(1.0), 0.2330088, 0.001);
 }

@@ -107,6 +107,7 @@ cc_library(
     deps = [
         "//iris:bxdf",
         "//iris:bxdf_allocator",
+        "//iris:color",
         "//iris:float",
         "//iris:reference_counted",
         "//iris:reflector",
