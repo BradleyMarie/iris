@@ -421,7 +421,7 @@ const Reflector* SpectralAllocator::Lerp(const Reflector* reflector0,
   reflector0 = Scale(reflector0, static_cast<visual_t>(1.0) - interpolant);
   reflector1 = Scale(reflector1, interpolant);
 
-  return Add(reflector0, reflector1);
+  return UnboundedAdd(reflector0, reflector1);
 }
 
 const Reflector* SpectralAllocator::Invert(const Reflector* reflector) {

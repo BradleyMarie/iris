@@ -283,14 +283,14 @@ const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
     color_luma = Color(r, g, b, Color::LINEAR_SRGB).Luma();
   }
 
-  const Reflector* color_tint = kPerfectReflector.Get();
+  const Reflector* color_tint = allocator.Invert(nullptr);
   if (color_luma > static_cast<visual_t>(0.0)) {
-    color_tint =
-        allocator.Scale(color_, static_cast<visual_t>(1.0) / color_luma);
+    color_tint = allocator.UnboundedScale(
+        color_, static_cast<visual_t>(1.0) / color_luma);
   }
 
   const Reflector* color_sheen =
-      allocator.Lerp(kPerfectReflector.Get(), color_tint, sheen_tint_);
+      allocator.Lerp(allocator.Invert(nullptr), color_tint, sheen_tint_);
 
   std::optional<Vector> half_angle = HalfAngle(incoming, outgoing);
   if (!half_angle) {
