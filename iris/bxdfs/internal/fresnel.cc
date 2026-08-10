@@ -71,29 +71,20 @@ const Reflector* DisneyFresnel::AttenuateReflectance(
       std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
 
   // TODO: Make this something SpectralAllocator can do
-  visual_t color_luma = static_cast<visual_t>(0.0);
+  visual_t inverse_luma = static_cast<visual_t>(1.0);
   if (color_) {
     visual_t r = color_->Reflectance(static_cast<visual_t>(0.5));
     visual_t g = color_->Reflectance(static_cast<visual_t>(1.5));
     visual_t b = color_->Reflectance(static_cast<visual_t>(2.5));
-    color_luma = Color(r, g, b, Color::LINEAR_SRGB).Luma();
-  }
-
-  const Reflector* schlick_dielectric_color = allocator.Invert(nullptr);
-  if (color_luma > static_cast<visual_t>(0.0)) {
-    schlick_dielectric_color =
-        allocator.Lerp(schlick_dielectric_color,
-                       allocator.UnboundedScale(
-                           color_, static_cast<visual_t>(1.0) / color_luma),
-                       specular_tint_);
+    visual_t luma = Color(r, g, b, Color::LINEAR_SRGB).Luma();
+    if (luma > static_cast<visual_t>(0.0)) {
+      inverse_luma /= luma;
+    }
   }
 
   visual_t schlick_r0 =
       (eta_transmitted - eta_incident) / (eta_transmitted + eta_incident);
   schlick_r0 *= schlick_r0;
-
-  schlick_dielectric_color =
-      allocator.Scale(schlick_dielectric_color, schlick_r0);
 
   visual_t fresnel_reflectance = FresnelDielectricReflectance(
       cos_theta_incident, eta_incident, eta_transmitted);
@@ -108,8 +99,9 @@ const Reflector* DisneyFresnel::AttenuateReflectance(
                       fresnel_reflectance * non_metallic *
                           (static_cast<visual_t>(1.0) - specular_tint_));
   const Reflector* schlick_dielectric = allocator.Scale(
-      allocator.Lerp(schlick_dielectric_color, allocator.Invert(nullptr),
-                     schlick_reflectance),
+      allocator.Lerp(
+          allocator.UnboundedScale(color_, schlick_r0 * inverse_luma),
+          allocator.Invert(nullptr), schlick_reflectance),
       non_metallic * specular_tint_);
 
   return allocator.UnboundedAdd(metallic, fresnel_dielectric,
