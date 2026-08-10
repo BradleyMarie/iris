@@ -27,12 +27,12 @@ namespace {
 using ::iris::bxdfs::internal::AbsCosTheta;
 using ::iris::bxdfs::internal::CosineSampleHemisphere;
 using ::iris::bxdfs::internal::DisneyDistribution;
+using ::iris::bxdfs::internal::DisneyFresnel;
 using ::iris::bxdfs::internal::FresnelDielectric;
 using ::iris::bxdfs::internal::HalfAngle;
 using ::iris::bxdfs::internal::MicrofacetBrdf;
 using ::iris::bxdfs::internal::MicrofacetBtdf;
 using ::iris::bxdfs::internal::Reflect;
-using ::iris::bxdfs::internal::SchlickFresnel;
 using ::iris::bxdfs::internal::SchlickWeight;
 using ::iris::bxdfs::internal::SphericalDirection;
 using ::iris::bxdfs::internal::TrowbridgeReitzDistribution;
@@ -399,29 +399,13 @@ const Bxdf* MakeDisneyDiffuseRetroBrdf(BxdfAllocator& bxdf_allocator,
   return &bxdf_allocator.Allocate<DisneyDiffuseRetroBrdf>(*color, roughness);
 }
 
-const Bxdf* MakeDisneyMetallicBrdf(BxdfAllocator& bxdf_allocator,
-                                   const Reflector* color,
+const Bxdf* MakeDisneySpecularBrdf(BxdfAllocator& bxdf_allocator,
+                                   const Reflector* color, visual_t metallic,
+                                   visual_t specular_tint,
+                                   geometric_t eta_incident,
+                                   geometric_t eta_transmitted,
                                    geometric_t anisotropic,
                                    geometric_t roughness) {
-  if (!color || !std::isfinite(anisotropic) ||
-      anisotropic < static_cast<geometric_t>(0.0) ||
-      !std::isfinite(roughness) || roughness < static_cast<geometric_t>(0.0)) {
-    return nullptr;
-  }
-
-  return &bxdf_allocator
-              .Allocate<MicrofacetBrdf<DisneyDistribution, SchlickFresnel>>(
-                  *color, MakeDisneyDistribution(anisotropic, roughness),
-                  SchlickFresnel());
-}
-
-const Bxdf* MakeDisneyMicrofacetBrdf(BxdfAllocator& bxdf_allocator,
-                                     const Reflector* color, visual_t weight,
-                                     visual_t specular_tint,
-                                     geometric_t eta_incident,
-                                     geometric_t eta_transmitted,
-                                     geometric_t anisotropic,
-                                     geometric_t roughness) {
   if (!std::isfinite(specular_tint) ||
       specular_tint < static_cast<geometric_t>(0.0) ||
       !std::isfinite(anisotropic) ||
@@ -430,14 +414,14 @@ const Bxdf* MakeDisneyMicrofacetBrdf(BxdfAllocator& bxdf_allocator,
     return nullptr;
   }
 
-  FresnelDielectric fresnel(eta_incident, eta_transmitted, weight);
+  DisneyFresnel fresnel(color, metallic, specular_tint, eta_incident,
+                        eta_transmitted);
   if (!fresnel.IsValid()) {
     return nullptr;
   }
 
-  // TODO: Handle specular_tint
   return &bxdf_allocator
-              .Allocate<MicrofacetBrdf<DisneyDistribution, FresnelDielectric>>(
+              .Allocate<MicrofacetBrdf<DisneyDistribution, DisneyFresnel>>(
                   *kPerfectReflector,
                   MakeDisneyDistribution(anisotropic, roughness), fresnel);
 }

@@ -16,6 +16,7 @@ using ::iris::internal::Arena;
 using ::iris::reflectors::MockReflector;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetSpectralAllocator;
+using ::testing::_;
 using ::testing::Return;
 
 TEST(FresnelDielectric, IsValid) {
@@ -84,28 +85,34 @@ TEST(FresnelConductor, AttenuateTransmittance) {
   EXPECT_EQ(nullptr, result);
 }
 
-TEST(SchlickFresnel, IsValid) {
-  SchlickFresnel fresnel;
-  EXPECT_TRUE(fresnel.IsValid());
+TEST(DisneyFresnel, IsValid) {
+  EXPECT_FALSE(DisneyFresnel(nullptr, -0.5, 0.5, 1.0, 1.5).IsValid());
+  EXPECT_FALSE(DisneyFresnel(nullptr, 0.5, -0.5, 1.0, 1.5).IsValid());
+  EXPECT_FALSE(DisneyFresnel(nullptr, 0.5, 0.5, -1.0, 1.5).IsValid());
+  EXPECT_FALSE(DisneyFresnel(nullptr, 0.5, 0.5, 1.0, -1.5).IsValid());
+  EXPECT_TRUE(DisneyFresnel(nullptr, 0.5, 0.5, 1.0, 1.5).IsValid());
 }
 
-TEST(SchlickFresnel, AttenuateTransmittance) {
+TEST(DisneyFresnel, AttenuateTransmittance) {
   MockReflector transmittance;
-  SchlickFresnel fresnel;
+  DisneyFresnel fresnel(nullptr, 0.5, 0.5, 1.0, 1.5);
   const Reflector* result = fresnel.AttenuateTransmittance(
       transmittance, 1.0, GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
 }
 
-TEST(SchlickFresnel, AttenuateReflectance) {
-  MockReflector reflector;
-  EXPECT_CALL(reflector, Reflectance(1.0)).WillRepeatedly(Return(0.5));
+TEST(DisneyFresnel, AttenuateReflectance) {
+  MockReflector color;
+  EXPECT_CALL(color, Reflectance(_)).WillRepeatedly(Return(0.5));
 
-  SchlickFresnel fresnel;
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  DisneyFresnel fresnel(&color, 0.5, 0.5, 1.0, 1.5);
   const Reflector* result =
       fresnel.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_NEAR(0.515625, result->Reflectance(1.0), 0.001);
+  EXPECT_NEAR(0.280421, result->Reflectance(1.0), 0.001);
 }
 
 }  // namespace

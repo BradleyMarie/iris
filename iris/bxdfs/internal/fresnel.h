@@ -24,9 +24,8 @@ class Fresnel {
 
 class FresnelDielectric final : public Fresnel {
  public:
-  FresnelDielectric(visual_t eta_front, visual_t eta_back,
-                    visual_t weight = static_cast<visual_t>(1.0))
-      : eta_front_(eta_front), eta_back_(eta_back), weight_(weight) {}
+  FresnelDielectric(visual_t eta_front, visual_t eta_back)
+      : eta_front_(eta_front), eta_back_(eta_back) {}
 
   const Reflector* AttenuateReflectance(
       const Reflector& reflectance, visual_t cos_theta_incident,
@@ -39,7 +38,6 @@ class FresnelDielectric final : public Fresnel {
  private:
   visual_t eta_front_;
   visual_t eta_back_;
-  visual_t weight_;
 };
 
 class FresnelConductor final : public Fresnel {
@@ -64,9 +62,15 @@ class FresnelConductor final : public Fresnel {
   const Spectrum* k_conductor_;
 };
 
-class SchlickFresnel final : public Fresnel {
+class DisneyFresnel final : public Fresnel {
  public:
-  SchlickFresnel() {}
+  DisneyFresnel(const Reflector* color, visual_t metallic,
+                visual_t specular_tint, visual_t eta_front, visual_t eta_back)
+      : color_(color),
+        metallic_(metallic),
+        specular_tint_(specular_tint),
+        eta_front_(eta_front),
+        eta_back_(eta_back) {}
 
   const Reflector* AttenuateReflectance(
       const Reflector& reflectance, visual_t cos_theta_incident,
@@ -75,6 +79,13 @@ class SchlickFresnel final : public Fresnel {
       const Reflector& transmittance, visual_t cos_theta_incident,
       SpectralAllocator& allocator) const override;
   bool IsValid() const override;
+
+ private:
+  const Reflector* color_;
+  visual_t metallic_;
+  visual_t specular_tint_;
+  visual_t eta_front_;
+  visual_t eta_back_;
 };
 
 }  // namespace internal

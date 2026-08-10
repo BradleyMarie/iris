@@ -24,9 +24,8 @@ using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MakeDisneyClearcoatBrdf;
 using ::iris::bxdfs::MakeDisneyDiffuseBrdf;
 using ::iris::bxdfs::MakeDisneyDiffuseRetroBrdf;
-using ::iris::bxdfs::MakeDisneyMetallicBrdf;
-using ::iris::bxdfs::MakeDisneyMicrofacetBrdf;
 using ::iris::bxdfs::MakeDisneySheenBrdf;
+using ::iris::bxdfs::MakeDisneySpecularBrdf;
 using ::iris::bxdfs::MakeDisneySpecularBtdf;
 using ::iris::bxdfs::MakeDisneySubsurfaceBrdf;
 using ::iris::bxdfs::MakeDisneyThinSpecularBtdf;
@@ -130,12 +129,27 @@ const Bxdf* DisneyMaterial::Evaluate(
     clearcoat_gloss = clearcoat_gloss_->Evaluate(texture_coordinates);
   }
 
-  const Bxdf* clearcoat_bxdf =
+  const Bxdf* clearcoat_brdf =
       MakeDisneyClearcoatBrdf(bxdf_allocator, clearcoat, clearcoat_gloss);
 
   //
-  // Metallic BRDF
+  // Specular BRDF
   //
+
+  visual_t specular_tint = static_cast<visual_t>(0.0);
+  if (specular_tint_) {
+    specular_tint = specular_tint_->Evaluate(texture_coordinates);
+  }
+
+  visual_t eta_front = static_cast<visual_t>(0.0);
+  if (eta_front_) {
+    eta_front = eta_front_->Evaluate(texture_coordinates);
+  }
+
+  visual_t eta_back = static_cast<visual_t>(0.0);
+  if (eta_back_) {
+    eta_back = eta_back_->Evaluate(texture_coordinates);
+  }
 
   visual_t anisotropic = static_cast<visual_t>(0.0);
   if (anisotropic_) {
@@ -147,23 +161,13 @@ const Bxdf* DisneyMaterial::Evaluate(
     roughness = roughness_->Evaluate(texture_coordinates);
   }
 
-  const Bxdf* metallic_bxdf = MakeDisneyMetallicBrdf(
-      bxdf_allocator, spectral_allocator.Scale(color, metallic), anisotropic,
-      roughness);
+  const Bxdf* specular_brdf =
+      MakeDisneySpecularBrdf(bxdf_allocator, color, metallic, specular_tint,
+                             eta_front, eta_back, anisotropic, roughness);
 
   //
   // Specular BTDF
   //
-
-  visual_t eta_front = static_cast<visual_t>(0.0);
-  if (eta_front_) {
-    eta_front = eta_front_->Evaluate(texture_coordinates);
-  }
-
-  visual_t eta_back = static_cast<visual_t>(0.0);
-  if (eta_back_) {
-    eta_back = eta_back_->Evaluate(texture_coordinates);
-  }
 
   const Bxdf* specular_btdf = nullptr;
   if (thin_) {
@@ -193,19 +197,6 @@ const Bxdf* DisneyMaterial::Evaluate(
 
   const Bxdf* sheen_brdf = MakeDisneySheenBrdf(
       bxdf_allocator, color, sheen * non_metallic, sheen_tint);
-
-  //
-  // Microfacet BRDF (affects all non-metallic lobes)
-  //
-
-  visual_t specular_tint = static_cast<visual_t>(0.0);
-  if (specular_tint_) {
-    specular_tint = specular_tint_->Evaluate(texture_coordinates);
-  }
-
-  const Bxdf* microfacet_brdf = MakeDisneyMicrofacetBrdf(
-      bxdf_allocator, color, non_metallic, specular_tint, eta_front, eta_back,
-      anisotropic, roughness);
 
   //
   // Retroreflective BRDF (affects all diffuse lobes)
@@ -269,9 +260,9 @@ const Bxdf* DisneyMaterial::Evaluate(
   // Assemble Result
   //
 
-  return MakeCompositeBxdf(
-      bxdf_allocator, clearcoat_bxdf, metallic_bxdf, specular_btdf, sheen_brdf,
-      microfacet_brdf, retro_brdf, diffuse_brdf, diffuse_btdf, subsurface_brdf);
+  return MakeCompositeBxdf(bxdf_allocator, clearcoat_brdf, specular_brdf,
+                           specular_btdf, sheen_brdf, retro_brdf, diffuse_brdf,
+                           diffuse_btdf, subsurface_brdf);
 }
 
 }  // namespace
