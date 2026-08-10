@@ -131,12 +131,12 @@ TEST(Math, WeightedHalfAngle) {
   EXPECT_NEAR(weighted->z, 0.55470, 0.0001);
 }
 
-TEST(FesnelDielectricReflectance, Refracted) {
-  EXPECT_NEAR(0.04, FesnelDielectricReflectance(1.0, 1.0, 1.5), 0.0001);
+TEST(FresnelDielectricReflectance, Refracted) {
+  EXPECT_NEAR(0.04, FresnelDielectricReflectance(1.0, 1.0, 1.5), 0.0001);
 }
 
-TEST(FesnelDielectricReflectance, TotalInternalReflection) {
-  EXPECT_EQ(1.0, FesnelDielectricReflectance(0.1, 1.5, 1.0));
+TEST(FresnelDielectricReflectance, TotalInternalReflection) {
+  EXPECT_EQ(1.0, FresnelDielectricReflectance(0.1, 1.5, 1.0));
 }
 
 TEST(CosineSampleHemisphere, CenterUp) {

@@ -112,7 +112,7 @@ TEST(DisneyFresnel, AttenuateReflectance) {
   const Reflector* result =
       fresnel.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_NEAR(0.280421, result->Reflectance(1.0), 0.001);
+  EXPECT_NEAR(0.297609, result->Reflectance(1.0), 0.001);
 }
 
 }  // namespace

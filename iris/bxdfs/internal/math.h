@@ -156,9 +156,9 @@ static inline std::optional<Vector> WeightedHalfAngle(
   return Normalize(weighted_half_angle);
 }
 
-visual_t FesnelDielectricReflectance(visual_t cos_theta_incident,
-                                     visual_t eta_incident,
-                                     visual_t eta_transmission);
+visual_t FresnelDielectricReflectance(visual_t cos_theta_incident,
+                                      visual_t eta_incident,
+                                      visual_t eta_transmission);
 
 Vector CosineSampleHemisphere(geometric incoming_z, Sampler& sampler);
 

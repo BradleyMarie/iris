@@ -18,7 +18,7 @@ namespace bxdfs {
 namespace {
 
 using ::iris::bxdfs::internal::CosTheta;
-using ::iris::bxdfs::internal::FesnelDielectricReflectance;
+using ::iris::bxdfs::internal::FresnelDielectricReflectance;
 using ::iris::bxdfs::internal::Refract;
 
 class SpecularDielectricBxdf final : public internal::SpecularBxdf {
@@ -152,7 +152,7 @@ std::optional<Bxdf::SpecularSample> SpecularDielectricBxdf::SampleSpecular(
     std::swap(eta_incident, eta_transmitted);
   }
 
-  visual_t fresnel_reflectance = FesnelDielectricReflectance(
+  visual_t fresnel_reflectance = FresnelDielectricReflectance(
       CosTheta(incoming), eta_incident, eta_transmitted);
   visual_t fresnel_transmittance =
       static_cast<visual_t>(1.0) - fresnel_reflectance;

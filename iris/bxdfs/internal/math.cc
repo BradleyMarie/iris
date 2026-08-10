@@ -17,9 +17,9 @@ const static geometric_t kMaxValue = std::nextafter(
 
 }  // namespace
 
-visual_t FesnelDielectricReflectance(visual_t cos_theta_incident,
-                                     visual_t eta_incident,
-                                     visual_t eta_transmission) {
+visual_t FresnelDielectricReflectance(visual_t cos_theta_incident,
+                                      visual_t eta_incident,
+                                      visual_t eta_transmission) {
   assert(cos_theta_incident >= static_cast<visual_t>(-1.0));
   assert(cos_theta_incident <= static_cast<visual_t>(1.0));
   assert(eta_incident >= static_cast<visual_t>(1.0));

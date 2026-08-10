@@ -19,7 +19,7 @@ const Reflector* FresnelDielectric::AttenuateReflectance(
       std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
   visual_t eta_transmitted =
       std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
-  visual_t fresnel_reflectance = FesnelDielectricReflectance(
+  visual_t fresnel_reflectance = FresnelDielectricReflectance(
       cos_theta_incident, eta_incident, eta_transmitted);
   return allocator.Scale(&reflectance, fresnel_reflectance);
 }
@@ -31,7 +31,7 @@ const Reflector* FresnelDielectric::AttenuateTransmittance(
       std::signbit(cos_theta_incident) ? eta_back_ : eta_front_;
   visual_t eta_transmitted =
       std::signbit(cos_theta_incident) ? eta_front_ : eta_back_;
-  visual_t fresnel_reflectance = FesnelDielectricReflectance(
+  visual_t fresnel_reflectance = FresnelDielectricReflectance(
       cos_theta_incident, eta_incident, eta_transmitted);
   return allocator.Scale(&transmittance,
                          (static_cast<visual_t>(1.0) - fresnel_reflectance));
@@ -88,14 +88,17 @@ const Reflector* DisneyFresnel::AttenuateReflectance(
                        specular_tint_);
   }
 
-  visual_t fresnel_reflectance = FesnelDielectricReflectance(
-      cos_theta_incident, eta_incident, eta_transmitted);
-  visual_t schlick_reflectance = SchlickWeight(cos_theta_incident);
-  visual_t non_metallic = static_cast<visual_t>(1.0) - metallic_;
-
   visual_t schlick_r0 =
       (eta_transmitted - eta_incident) / (eta_transmitted + eta_incident);
   schlick_r0 *= schlick_r0;
+
+  schlick_dielectric_color =
+      allocator.Scale(schlick_dielectric_color, schlick_r0);
+
+  visual_t fresnel_reflectance = FresnelDielectricReflectance(
+      cos_theta_incident, eta_incident, eta_transmitted);
+  visual_t schlick_reflectance = SchlickWeight(cos_theta_incident);
+  visual_t non_metallic = static_cast<visual_t>(1.0) - metallic_;
 
   const Reflector* metallic = allocator.Scale(
       allocator.Lerp(color_, allocator.Invert(nullptr), schlick_reflectance),
@@ -105,8 +108,9 @@ const Reflector* DisneyFresnel::AttenuateReflectance(
                       fresnel_reflectance * non_metallic *
                           (static_cast<visual_t>(1.0) - specular_tint_));
   const Reflector* schlick_dielectric = allocator.Scale(
-      schlick_dielectric_color,
-      schlick_reflectance * non_metallic * specular_tint_ * schlick_r0);
+      allocator.Lerp(schlick_dielectric_color, allocator.Invert(nullptr),
+                     schlick_reflectance),
+      non_metallic * specular_tint_);
 
   return allocator.UnboundedAdd(metallic, fresnel_dielectric,
                                 schlick_dielectric);
