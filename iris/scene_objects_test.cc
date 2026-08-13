@@ -100,14 +100,15 @@ TEST(SceneObjects, Build) {
   builder.Add(light1);
   builder.Add(light1);
 
-  builder.Add(geom0, matrix1);
-  builder.Add(geom0, matrix1);
-  builder.Add(geom1, matrix2);
-  builder.Add(geom1, matrix2);
-  builder.Add(geom2, matrix2);
-  builder.Add(geom2, matrix2);
-  builder.Add(geom3, matrix0);
-  builder.Add(geom3, matrix0);
+  builder.Add(geom0, matrix1, false);
+  builder.Add(geom0, matrix1, false);
+  builder.Add(geom1, matrix2, false);
+  builder.Add(geom1, matrix2, false);
+  builder.Add(geom2, matrix2, false);
+  builder.Add(geom2, matrix2, false);
+  builder.Add(geom3, matrix0, false);
+  builder.Add(geom3, matrix0, false);
+  builder.Add(geom3, matrix1, true);
 
   builder.Add(geom4);
   builder.Add(geom4);
@@ -127,10 +128,10 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(*scene_objects.GetGeometry(1).second,
             *scene_objects.GetGeometry(2).second);
   std::set<const Light*> built_lights = GetLights(scene_objects);
-  ASSERT_EQ(4u, built_lights.size());
+  ASSERT_EQ(5u, built_lights.size());
   built_lights.erase(light0.Get());
   built_lights.erase(light1.Get());
-  ASSERT_EQ(2u, built_lights.size());
+  ASSERT_EQ(3u, built_lights.size());
   EXPECT_EQ(environmental_light.Get(), scene_objects.GetEnvironmentalLight());
   EXPECT_EQ(kBounds, scene_objects.GetBounds());
 
@@ -164,19 +165,21 @@ TEST(SceneObjects, Build) {
   builder.Add(light1);
   builder.Add(light1);
 
-  builder.Add(geom0, matrix1);
-  builder.Add(geom0, matrix1);
-  builder.Add(geom1, matrix2);
-  builder.Add(geom1, matrix2);
-  builder.Add(geom2, matrix2);
-  builder.Add(geom2, matrix2);
-  builder.Add(geom3, matrix0);
-  builder.Add(geom3, matrix0);
+  builder.Add(geom0, matrix1, false);
+  builder.Add(geom0, matrix1, false);
+  builder.Add(geom1, matrix2, false);
+  builder.Add(geom1, matrix2, false);
+  builder.Add(geom2, matrix2, false);
+  builder.Add(geom2, matrix2, false);
+  builder.Add(geom3, matrix0, false);
+  builder.Add(geom3, matrix0, false);
+  builder.Add(geom3, matrix1, true);
+  builder.Add(geom3, matrix1, false);
 
   scene_objects = builder.Build();
   scene_objects.Reorder();  // No-op
 
-  ASSERT_EQ(4u, scene_objects.NumGeometry());
+  ASSERT_EQ(5u, scene_objects.NumGeometry());
   EXPECT_EQ(geom0.Get(), &scene_objects.GetGeometry(0).first);
   EXPECT_EQ(matrix1, *scene_objects.GetGeometry(0).second);
   EXPECT_EQ(geom1.Get(), &scene_objects.GetGeometry(1).first);
@@ -188,10 +191,10 @@ TEST(SceneObjects, Build) {
   EXPECT_EQ(*scene_objects.GetGeometry(1).second,
             *scene_objects.GetGeometry(2).second);
   built_lights = GetLights(scene_objects);
-  ASSERT_EQ(3u, built_lights.size());
+  ASSERT_EQ(4u, built_lights.size());
   built_lights.erase(light0.Get());
   built_lights.erase(light1.Get());
-  ASSERT_EQ(1u, built_lights.size());
+  ASSERT_EQ(2u, built_lights.size());
   EXPECT_EQ(nullptr, scene_objects.GetEnvironmentalLight());
   EXPECT_EQ(kBounds, scene_objects.GetBounds());
 

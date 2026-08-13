@@ -33,13 +33,15 @@ class SceneObjects final {
     Builder& operator=(Builder&&) = default;
 
     void Add(ReferenceCounted<Geometry> geometry,
-             const Matrix& matrix = iris::Matrix::Identity());
+             const Matrix& matrix = iris::Matrix::Identity(),
+             bool invisible = false);
     void Add(ReferenceCounted<Light> light);
     void Set(ReferenceCounted<EnvironmentalLight> environmental_light);
     SceneObjects Build();
 
    private:
-    std::map<std::pair<ReferenceCounted<Geometry>, const Matrix*>, size_t>
+    std::map<std::pair<ReferenceCounted<Geometry>, const Matrix*>,
+             std::pair<size_t, bool>>
         ordered_geometry_;
     std::map<ReferenceCounted<Light>, size_t> ordered_lights_;
     std::set<Matrix> matrices_;

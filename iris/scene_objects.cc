@@ -60,7 +60,7 @@ const Matrix* ToNullableMatrix(const Matrix& matrix) {
 }  // namespace
 
 void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
-                                const Matrix& matrix) {
+                                const Matrix& matrix, bool invisible) {
   const Matrix* model_to_world = ToNullableMatrix(matrix);
   if (!geometry) {
     return;
@@ -77,8 +77,12 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
     model_to_world = &*matrices_.insert(matrix).first;
   }
 
-  ordered_geometry_.try_emplace({std::move(geometry), model_to_world},
-                                ordered_geometry_.size());
+  auto [iterator, inserted] =
+      ordered_geometry_.try_emplace({std::move(geometry), model_to_world},
+                                    ordered_geometry_.size(), invisible);
+  if (!inserted && !invisible) {
+    iterator->second.second = false;
+  }
 }
 
 void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
@@ -96,19 +100,33 @@ void SceneObjects::Builder::Set(
 
 SceneObjects SceneObjects::Builder::Build() {
   std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>
-      sorted_geometry = ToVector(std::move(ordered_geometry_));
+      sorted_geometry(ordered_geometry_.size());
+  std::vector<bool> invisible(ordered_geometry_.size());
+  for (auto& [value, index] : ordered_geometry_) {
+    sorted_geometry[index.first] = std::move(value);
+    invisible[index.first] = index.second;
+  }
 
-  for (const auto& entry : sorted_geometry) {
+  size_t insert_index = 0;
+  for (size_t i = 0; i < sorted_geometry.size(); i++) {
+    std::pair<ReferenceCounted<Geometry>, const Matrix*>& entry =
+        sorted_geometry[i];
     for (face_t face : entry.first->GetFaces()) {
       if (!entry.first->GetEmissiveMaterial(face)) {
         continue;
       }
 
       ordered_lights_.try_emplace(
-          MakeAreaLight(std::cref(*entry.first), entry.second, face),
+          MakeAreaLight(entry.first, entry.second, face),
           ordered_lights_.size());
     }
+
+    if (!invisible[i]) {
+      std::swap(sorted_geometry[i], sorted_geometry[insert_index++]);
+    }
   }
+
+  sorted_geometry.resize(insert_index);
 
   if (environmental_light_) {
     ordered_lights_.try_emplace(

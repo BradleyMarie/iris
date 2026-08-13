@@ -42,10 +42,11 @@ using ::testing::Invoke;
 using ::testing::Ref;
 using ::testing::Return;
 
-std::unique_ptr<MockGeometry> MakeGeometry(
+ReferenceCounted<MockGeometry> MakeGeometry(
     const EmissiveMaterial* emissive_material,
     std::optional<visual_t> surface_area = std::optional<visual_t>(2.0)) {
-  std::unique_ptr<MockGeometry> geometry = std::make_unique<MockGeometry>();
+  ReferenceCounted<MockGeometry> geometry =
+      MakeReferenceCounted<MockGeometry>();
   EXPECT_CALL(*geometry, GetFaces())
       .WillRepeatedly(Return(std::vector<face_t>({1u, 2u})));
   EXPECT_CALL(*geometry, Trace(_, _, _, _, _))
@@ -71,10 +72,10 @@ TEST(AreaLightTest, AreaLightEmission) {
   MockEmissiveMaterial emissive_material;
   EXPECT_CALL(emissive_material, Evaluate(_, _)).WillOnce(Return(&spectrum));
 
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(_, _, _, _))
       .WillRepeatedly(Return(1.0));
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   ScopedSingleGeometryVisibilityTester(
       *geometry, nullptr, [&](iris::VisibilityTester& visibility_tester) {
@@ -88,8 +89,8 @@ TEST(AreaLightTest, AreaLightEmission) {
 TEST(AreaLightTest, AreaLightEmissionMisses) {
   MockEmissiveMaterial emissive_material;
 
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   EXPECT_EQ(nullptr,
             light->Emission(Ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0)),
@@ -101,10 +102,10 @@ TEST(AreaLightTest, AreaLightSampleRngFails) {
   MockSpectrum spectrum;
   MockEmissiveMaterial emissive_material;
 
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
   EXPECT_CALL(*geometry, SampleBySolidAngle(Point(0.0, 0.0, 0.0), _, _))
       .WillRepeatedly(Return(std::variant<std::monostate, Point, Vector>()));
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
@@ -122,10 +123,10 @@ TEST(AreaLightTest, AreaLightSampleNotVisible) {
   MockSpectrum spectrum;
   MockEmissiveMaterial emissive_material;
 
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
   EXPECT_CALL(*geometry, SampleBySolidAngle(Point(0.0, 0.0, 0.0), _, _))
       .WillRepeatedly(Return(Point(0.0, 0.0, 1.0)));
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
@@ -143,12 +144,12 @@ TEST(AreaLightTest, AreaLightSampleWorld) {
 
   EXPECT_CALL(emissive_material, Evaluate(_, _)).WillOnce(Return(&spectrum));
 
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
   EXPECT_CALL(*geometry, SampleBySolidAngle(Point(0.0, 0.0, 2.0), _, _))
       .WillRepeatedly(Return(Point(0.0, 0.0, 1.0)));
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(_, _, _, _))
       .WillRepeatedly(Return(1.0));
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
@@ -173,12 +174,12 @@ TEST(AreaLightTest, AreaLightSampleWithTransform) {
   EXPECT_CALL(emissive_material, Evaluate(_, _)).WillOnce(Return(&spectrum));
 
   Matrix transform = Matrix::Scalar(1.0, 1.0, -1.0).value();
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
   EXPECT_CALL(*geometry, SampleBySolidAngle(Point(0.0, 0.0, 2.0), _, _))
       .WillRepeatedly(Return(Point(0.0, 0.0, -1.0)));
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(_, _, _, _))
       .WillRepeatedly(Return(1.0));
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, &transform, 1);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, &transform, 1);
 
   MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
@@ -202,12 +203,12 @@ TEST(AreaLightTest, AreaLightSampleVector) {
 
   EXPECT_CALL(emissive_material, Evaluate(_, _)).WillOnce(Return(&spectrum));
 
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
   EXPECT_CALL(*geometry, SampleBySolidAngle(Point(0.0, 0.0, 2.0), _, _))
       .WillRepeatedly(Return(Vector(0.0, 0.0, -1.0)));
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(_, _, _, _))
       .WillRepeatedly(Return(1.0));
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   MockRandom random;
   EXPECT_CALL(random, DiscardGeometric(2));
@@ -232,9 +233,9 @@ TEST(AreaLightTest, PowerNoArea) {
   EXPECT_CALL(emissive_material, UnitPower(Ref(power_matcher)))
       .WillOnce(Return(3.0));
 
-  std::unique_ptr<MockGeometry> geometry =
+  ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(&emissive_material, std::nullopt);
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   EXPECT_NEAR(9.4248, light->Power(power_matcher, 1.0), 0.001);
 }
@@ -246,8 +247,8 @@ TEST(AreaLightTest, Power) {
   EXPECT_CALL(emissive_material, UnitPower(Ref(power_matcher)))
       .WillOnce(Return(3.0));
 
-  std::unique_ptr<MockGeometry> geometry = MakeGeometry(&emissive_material);
-  ReferenceCounted<Light> light = MakeAreaLight(*geometry, nullptr, 1);
+  ReferenceCounted<MockGeometry> geometry = MakeGeometry(&emissive_material);
+  ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1);
 
   EXPECT_NEAR(18.8495, light->Power(power_matcher, 1.0), 0.001);
 }
