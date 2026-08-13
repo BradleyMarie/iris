@@ -1,5 +1,7 @@
 #include "frontends/pbrt/shapes/trianglemesh.h"
 
+#include <tuple>
+
 #include "frontends/pbrt/spectrum_managers/test_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/emissive_material.h"
@@ -30,7 +32,8 @@ TEST(MakeTriangleMesh, Empty) {
       ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
       ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
       ReferenceCounted<NormalMap>(), texture_manager, false);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_TRUE(std::get<0>(result).empty());
+  EXPECT_FALSE(std::get<2>(result));
 }
 
 TEST(MakeTriangleMesh, InvalidNormalCount) {
@@ -205,7 +208,8 @@ TEST(MakeTriangleMesh, Succeeds) {
       ReferenceCounted<Material>(), ReferenceCounted<EmissiveMaterial>(),
       ReferenceCounted<EmissiveMaterial>(), ReferenceCounted<NormalMap>(),
       ReferenceCounted<NormalMap>(), texture_manager, false);
-  EXPECT_EQ(1u, result.first.size());
+  EXPECT_EQ(1u, std::get<0>(result).size());
+  EXPECT_FALSE(std::get<2>(result));
 }
 
 }  // namespace

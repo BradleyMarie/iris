@@ -3,7 +3,7 @@
 
 #include <array>
 #include <filesystem>
-#include <utility>
+#include <tuple>
 #include <vector>
 
 #include "frontends/pbrt/material_manager.h"
@@ -19,7 +19,7 @@
 namespace iris {
 namespace pbrt_frontend {
 
-std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
+std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool> ParseShape(
     const pbrt_proto::v3::Shape& shape, const Matrix& model_to_world,
     bool reverse_orientation, const pbrt_proto::v3::Material& material_proto,
     MaterialResult material,

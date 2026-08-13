@@ -2,7 +2,7 @@
 
 #include <cstdlib>
 #include <filesystem>
-#include <utility>
+#include <tuple>
 
 #include "frontends/pbrt/material_manager.h"
 #include "frontends/pbrt/materials/result.h"
@@ -37,7 +37,8 @@ TEST(ParseShape, Empty) {
       ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
                  {}, std::filesystem::current_path(), material_manager,
                  texture_manager, spectrum_manager);
-  EXPECT_TRUE(result.first.empty());
+  EXPECT_TRUE(std::get<0>(result).empty());
+  EXPECT_FALSE(std::get<2>(result));
 }
 
 TEST(ParseShape, Cone) {
@@ -202,7 +203,8 @@ TEST(ParseShape, Sphere) {
       ParseShape(shape, Matrix::Identity(), true, Material(), MaterialResult(),
                  {}, std::filesystem::current_path(), material_manager,
                  texture_manager, spectrum_manager);
-  EXPECT_FALSE(result.first.empty());
+  EXPECT_FALSE(std::get<0>(result).empty());
+  EXPECT_FALSE(std::get<2>(result));
 }
 
 TEST(ParseShape, TriangleMesh) {

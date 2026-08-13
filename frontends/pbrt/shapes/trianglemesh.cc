@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
-#include <utility>
+#include <tuple>
 #include <vector>
 
 #include "frontends/pbrt/defaults.h"
@@ -25,7 +25,8 @@ namespace shapes {
 using ::iris::geometry::AllocateTriangleMesh;
 using ::pbrt_proto::TriangleMeshShape;
 
-std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
+std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>
+MakeTriangleMesh(
     const TriangleMeshShape& trianglemesh, const Matrix& model_to_world,
     const ReferenceCounted<Material>& front_material,
     const ReferenceCounted<Material>& back_material,
@@ -52,8 +53,8 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
   }
 
   if (with_defaults.indices().empty()) {
-    return std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>(
-        {}, model_to_world);
+    return std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>(
+        {}, model_to_world, false);
   }
 
   uint32_t largest_index = 0u;
@@ -133,9 +134,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
 
   ReferenceCounted<textures::MaskTexture> alpha_mask =
       texture_manager.AllocateFloatTexture(with_defaults.alpha());
-  if (!alpha_mask) {
-    return std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix>(
-        {}, model_to_world);
+  if (!alpha_mask && !front_emissive_material && !back_emissive_material) {
+    return std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>(
+        {}, model_to_world, false);
   }
 
   if (!model_normals.empty()) {
@@ -171,7 +172,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
       front_emissive_material, back_emissive_material, front_normal_map,
       back_normal_map);
 
-  return std::make_pair(std::move(triangles), Matrix::Identity());
+  return std::make_tuple(
+      std::move(triangles), Matrix::Identity(),
+      !alpha_mask && (front_emissive_material || back_emissive_material));
 }
 
 }  // namespace shapes

@@ -1,7 +1,7 @@
 #ifndef _FRONTENDS_PBRT_SHAPE_TRIANGLEMESH_
 #define _FRONTENDS_PBRT_SHAPE_TRIANGLEMESH_
 
-#include <utility>
+#include <tuple>
 #include <vector>
 
 #include "frontends/pbrt/texture_manager.h"
@@ -17,7 +17,8 @@ namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
 
-std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakeTriangleMesh(
+std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>
+MakeTriangleMesh(
     const pbrt_proto::TriangleMeshShape& trianglemesh,
     const Matrix& model_to_world,
     const ReferenceCounted<Material>& front_material,

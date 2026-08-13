@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <filesystem>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -26,7 +27,12 @@ namespace pbrt_frontend {
 
 using ::pbrt_proto::v3::Shape;
 
-std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
+std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool> ToResult(
+    std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> as_pair) {
+  return {std::move(as_pair.first), as_pair.second, false};
+}
+
+std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool> ParseShape(
     const pbrt_proto::v3::Shape& shape, const Matrix& model_to_world,
     bool reverse_orientation, const pbrt_proto::v3::Material& material_proto,
     MaterialResult material,
@@ -46,19 +52,16 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
     std::swap(emissive_materials[0], emissive_materials[1]);
   }
 
-  std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> result(
-      {}, model_to_world);
   switch (shape.shape_type_case()) {
     case Shape::kCone:
       std::cerr << "ERROR: Unsupported Shape type: cone" << std::endl;
       exit(EXIT_FAILURE);
       break;
     case Shape::kCurve:
-      return shapes::MakeCurve(shape.curve(), model_to_world,
-                               material.materials[0], material.materials[1],
-                               emissive_materials[0], emissive_materials[1],
-                               material.bumpmaps[0], material.bumpmaps[1]);
-      break;
+      return ToResult(shapes::MakeCurve(
+          shape.curve(), model_to_world, material.materials[0],
+          material.materials[1], emissive_materials[0], emissive_materials[1],
+          material.bumpmaps[0], material.bumpmaps[1]));
     case Shape::kCylinder:
       std::cerr << "ERROR: Unsupported Shape type: cylinder" << std::endl;
       exit(EXIT_FAILURE);
@@ -88,16 +91,16 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
       exit(EXIT_FAILURE);
       break;
     case Shape::kPlymesh:
-      return shapes::MakePlyMesh(
+      return ToResult(shapes::MakePlyMesh(
           shape.plymesh(), model_to_world, material.materials[0],
           material.materials[1], emissive_materials[0], emissive_materials[1],
           material.bumpmaps[0], material.bumpmaps[1], search_root,
-          texture_manager, reverse_orientation);
+          texture_manager, reverse_orientation));
     case Shape::kSphere:
-      return shapes::MakeSphere(shape.sphere(), model_to_world,
-                                material.materials[0], material.materials[1],
-                                emissive_materials[0], emissive_materials[1],
-                                material.bumpmaps[0], material.bumpmaps[1]);
+      return ToResult(shapes::MakeSphere(
+          shape.sphere(), model_to_world, material.materials[0],
+          material.materials[1], emissive_materials[0], emissive_materials[1],
+          material.bumpmaps[0], material.bumpmaps[1]));
     case Shape::kTrianglemesh:
       return shapes::MakeTriangleMesh(
           shape.trianglemesh(), model_to_world, material.materials[0],
@@ -109,7 +112,7 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> ParseShape(
       break;
   }
 
-  return result;
+  return {{}, model_to_world, false};
 }
 
 }  // namespace pbrt_frontend
