@@ -23,14 +23,13 @@ class MaterialManager {
       const std::string& name) const;
 
   void Put(const std::string& name,
-           std::pair<pbrt_proto::v3::Material, MaterialResult> material) {
-    materials_.top()[name] = std::move(material);
-  }
+           std::pair<pbrt_proto::v3::Material, MaterialResult> material);
 
  private:
   std::stack<std::unordered_map<
       std::string, std::pair<pbrt_proto::v3::Material, MaterialResult>>>
       materials_;
+  size_t deferred_pushes_ = 0;
 };
 
 }  // namespace pbrt_frontend
