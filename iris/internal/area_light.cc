@@ -8,6 +8,7 @@
 #include "iris/geometry.h"
 #include "iris/hit_point.h"
 #include "iris/integer.h"
+#include "iris/internal/light_parameters.h"
 #include "iris/internal/visibility_tester.h"
 #include "iris/light.h"
 #include "iris/matrix.h"
@@ -24,7 +25,7 @@ namespace {
 class AreaLight final : public Light {
  public:
   AreaLight(ReferenceCounted<Geometry> geometry, const Matrix* model_to_world,
-            face_t face) noexcept;
+            face_t face, bool invisible) noexcept;
 
   std::optional<SampleResult> Sample(
       const HitPoint& hit_point, Sampler sampler,
@@ -59,8 +60,10 @@ std::optional<Vector> ToLight(
 }
 
 AreaLight::AreaLight(ReferenceCounted<Geometry> geometry,
-                     const Matrix* model_to_world, face_t face) noexcept
-    : geometry_(std::move(geometry)),
+                     const Matrix* model_to_world, face_t face,
+                     bool invisible) noexcept
+    : Light({invisible}),
+      geometry_(std::move(geometry)),
       model_to_world_(model_to_world),
       face_(face) {
   assert(geometry_);
@@ -130,10 +133,10 @@ visual_t AreaLight::Power(const PowerMatcher& power_matcher,
 }  // namespace
 
 ReferenceCounted<Light> MakeAreaLight(ReferenceCounted<Geometry> geometry,
-                                      const Matrix* model_to_world,
-                                      face_t face) {
+                                      const Matrix* model_to_world, face_t face,
+                                      bool invisible) {
   return MakeReferenceCounted<AreaLight>(std::move(geometry), model_to_world,
-                                         face);
+                                         face, invisible);
 }
 
 }  // namespace internal

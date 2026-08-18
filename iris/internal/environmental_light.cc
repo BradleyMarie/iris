@@ -7,6 +7,7 @@
 #include "iris/geometry.h"
 #include "iris/hit_point.h"
 #include "iris/integer.h"
+#include "iris/internal/light_parameters.h"
 #include "iris/light.h"
 #include "iris/matrix.h"
 #include "iris/power_matcher.h"
@@ -42,7 +43,7 @@ class EnvironmentalLight final : public Light {
 
 EnvironmentalLight::EnvironmentalLight(
     const iris::EnvironmentalLight& light) noexcept
-    : light_(light) {}
+    : Light({false}), light_(light) {}
 
 std::optional<Light::SampleResult> EnvironmentalLight::Sample(
     const HitPoint& hit_point, Sampler sampler, iris::VisibilityTester& tester,

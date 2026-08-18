@@ -146,3 +146,23 @@ cc_library(
         "//iris/internal:visibility_tester",
     ],
 )
+
+cc_library(
+    name = "visible_light",
+    testonly = True,
+    srcs = ["visible_light.cc"],
+    hdrs = ["visible_light.h"],
+    deps = [
+        "//iris:float",
+        "//iris:hit_point",
+        "//iris:light",
+        "//iris:power_matcher",
+        "//iris:ray",
+        "//iris:sampler",
+        "//iris:spectral_allocator",
+        "//iris:spectrum",
+        "//iris:visibility_tester",
+        "//iris/internal:light_parameters",
+        "@googletest//:gtest",
+    ],
+)

@@ -34,6 +34,11 @@ using ::testing::Ref;
 using ::testing::Return;
 using ::testing::SetArgPointee;
 
+TEST(EnvironmentalLightTest, IsInvisible) {
+  MockEnvironmentalLight environmental_light;
+  EXPECT_FALSE(MakeEnvironmentalLight(environmental_light)->IsInvisible());
+}
+
 TEST(EnvironmentalLightTest, EmissionFails) {
   MockEnvironmentalLight environmental_light;
   EXPECT_CALL(environmental_light, Emission(_, _, _)).WillOnce(Return(nullptr));

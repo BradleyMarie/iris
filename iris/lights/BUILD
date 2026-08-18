@@ -53,6 +53,7 @@ cc_test(
 
 cc_library(
     name = "mock_light",
+    testonly = True,
     hdrs = ["mock_light.h"],
     deps = [
         "//iris:float",

@@ -15,9 +15,14 @@
 #include "iris/visibility_tester.h"
 
 namespace iris {
+namespace internal {
+class LightParameters;
+};  // namespace internal
 
 class Light : public ReferenceCountable {
  public:
+  bool IsInvisible() const { return invisible_; }
+
   struct SampleResult {
     const Spectrum& emission;
     const Vector to_light;
@@ -37,6 +42,13 @@ class Light : public ReferenceCountable {
                          visual_t world_radius_squared) const = 0;
 
   virtual ~Light() {}
+
+ protected:
+  Light(const internal::LightParameters& parameters) noexcept;
+  Light() noexcept;
+
+ private:
+  bool invisible_;
 };
 
 }  // namespace iris

@@ -1,6 +1,8 @@
 #ifndef _IRIS_INTEGRATORS_INTERNAL_SAMPLE_DIRECT_LIGHTING_
 #define _IRIS_INTEGRATORS_INTERNAL_SAMPLE_DIRECT_LIGHTING_
 
+#include <optional>
+
 #include "iris/bsdf.h"
 #include "iris/float.h"
 #include "iris/light.h"
@@ -19,10 +21,10 @@ namespace internal {
 
 visual_t PowerHeuristic(visual_t sampled_pdf, visual_t computed_pdf);
 
-const Spectrum* DeltaLight(const Light::SampleResult& sample,
-                           const Ray& traced_ray,
-                           const RayTracer::SurfaceIntersection intersection,
-                           SpectralAllocator& allocator);
+const Spectrum* FromLightSampleOnly(
+    const std::optional<Light::SampleResult>& sample, const Ray& traced_ray,
+    const RayTracer::SurfaceIntersection intersection,
+    SpectralAllocator& allocator);
 
 const Spectrum* FromLightSample(
     const Light::SampleResult& sample, const Ray& traced_ray,

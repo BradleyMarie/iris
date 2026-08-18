@@ -19,6 +19,7 @@
 #include "iris/testing/light_sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
+#include "iris/testing/visible_light.h"
 #include "iris/vector.h"
 
 namespace iris {
@@ -27,9 +28,9 @@ namespace internal {
 namespace {
 
 using ::iris::bxdfs::MockBxdf;
-using ::iris::integrators::internal::internal::DeltaLight;
 using ::iris::integrators::internal::internal::FromBsdfSample;
 using ::iris::integrators::internal::internal::FromLightSample;
+using ::iris::integrators::internal::internal::FromLightSampleOnly;
 using ::iris::integrators::internal::internal::PowerHeuristic;
 using ::iris::lights::MockLight;
 using ::iris::random::MockRandom;
@@ -39,6 +40,7 @@ using ::iris::testing::GetAlwaysVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
 using ::iris::testing::LightSampleListEntry;
 using ::iris::testing::ScopedListLightSampler;
+using ::iris::testing::VisibleLight;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::NotNull;
@@ -50,7 +52,24 @@ TEST(PowerHeuristict, Test) {
   EXPECT_NEAR(0.2, PowerHeuristic(1.0, 2.0), 0.001);
 }
 
-TEST(DeltaLight, NoReflectance) {
+TEST(FromLightSampleOnly, NoSample) {
+  Vector to_light(1.0, 0.0, 0.0);
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, to_light, to_light),
+      HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0), to_light),
+      std::nullopt, to_light, to_light};
+
+  EXPECT_EQ(nullptr, FromLightSampleOnly(std::nullopt,
+                                         Ray(Point(0.0, 0.0, 0.0), to_light),
+                                         intersection, GetSpectralAllocator()));
+}
+
+TEST(FromLightSampleOnly, NoReflectance) {
   MockSpectrum spectrum;
   Vector to_light(1.0, 0.0, 0.0);
 
@@ -66,12 +85,12 @@ TEST(DeltaLight, NoReflectance) {
       HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0), to_light),
       std::nullopt, to_light, to_light};
 
-  EXPECT_EQ(nullptr,
-            DeltaLight(light_sample, Ray(Point(0.0, 0.0, 0.0), to_light),
-                       intersection, GetSpectralAllocator()));
+  EXPECT_EQ(nullptr, FromLightSampleOnly(light_sample,
+                                         Ray(Point(0.0, 0.0, 0.0), to_light),
+                                         intersection, GetSpectralAllocator()));
 }
 
-TEST(DeltaLight, WithReflectance) {
+TEST(FromLightSampleOnly, WithReflectanceNoPdf) {
   Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
 
   MockSpectrum spectrum;
@@ -100,10 +119,45 @@ TEST(DeltaLight, WithReflectance) {
                surface_normal),
       std::nullopt, surface_normal, surface_normal};
 
-  const Spectrum* result =
-      DeltaLight(light_sample, trace_ray, intersection, GetSpectralAllocator());
+  const Spectrum* result = FromLightSampleOnly(
+      light_sample, trace_ray, intersection, GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
   EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
+}
+
+TEST(FromLightSampleOnly, WithReflectanceWithPdf) {
+  Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
+
+  MockSpectrum spectrum;
+  EXPECT_CALL(spectrum, Intensity(_)).WillOnce(Return(1.0));
+
+  Vector to_light(0.0, 0.866025, 0.5);
+
+  Light::SampleResult light_sample{spectrum, to_light, 0.5};
+
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(1.0))
+      .WillOnce(Return(static_cast<visual_t>(0.25)));
+
+  MockBxdf bxdf;
+  EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
+      .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
+  EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _))
+      .WillOnce(Return(static_cast<visual_t>(100.0)));
+  EXPECT_CALL(bxdf, ReflectanceDiffuse(_, _, _, _))
+      .WillOnce(Return(&reflector));
+
+  Vector surface_normal(0.0, 0.0, 1.0);
+  RayTracer::RayTracer::SurfaceIntersection intersection{
+      Bsdf(bxdf, surface_normal, surface_normal),
+      HitPoint(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
+               surface_normal),
+      std::nullopt, surface_normal, surface_normal};
+
+  const Spectrum* result = FromLightSampleOnly(
+      light_sample, trace_ray, intersection, GetSpectralAllocator());
+  ASSERT_NE(nullptr, result);
+  EXPECT_NEAR(0.25, result->Intensity(1.0), 0.001);
 }
 
 TEST(FromLightSample, NoReflectance) {
@@ -113,7 +167,7 @@ TEST(FromLightSample, NoReflectance) {
 
   Vector to_light(0.0, 0.866025, 0.5);
 
-  Light::SampleResult light_sample{spectrum, to_light, std::nullopt};
+  Light::SampleResult light_sample{spectrum, to_light, 1.0};
 
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
@@ -317,7 +371,7 @@ TEST(EstimateDirectLighting, NoSamples) {
   EXPECT_CALL(bxdf, PdfDiffuse(_, _, _, _))
       .WillOnce(Return(static_cast<visual_t>(0.0)));
 
-  MockLight light;
+  VisibleLight light;
   EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(std::nullopt));
 
   MockRandom rng;
@@ -396,7 +450,7 @@ TEST(EstimateDirectLighting, DeltaLight) {
   EXPECT_NEAR(0.125, result->Intensity(1.0), 0.001);
 }
 
-TEST(EstimateDirectLighting, FullTest) {
+TEST(EstimateDirectLighting, VisibleLight) {
   Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
   HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0));
@@ -423,7 +477,7 @@ TEST(EstimateDirectLighting, FullTest) {
   MockSpectrum spectrum;
   Light::SampleResult light_sample{spectrum, to_light, 1.0};
 
-  MockLight light;
+  VisibleLight light;
   EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
   EXPECT_CALL(light, Emission(_, _, _, _))
       .WillOnce(DoAll(SetArgPointee<3, visual_t>(1.0), Return(&spectrum)));
@@ -496,7 +550,7 @@ TEST(SampleDirectLighting, OneZeroPdfSample) {
   });
 }
 
-TEST(SampleDirectLighting, OneDeltaLight) {
+TEST(SampleDirectLighting, OneFromLightSampleOnly) {
   Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
   HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0));
@@ -544,7 +598,7 @@ TEST(SampleDirectLighting, OneDeltaLight) {
   });
 }
 
-TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
+TEST(SampleDirectLighting, OneProbabilisticFromLightSampleOnly) {
   Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
   HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0));
@@ -592,7 +646,7 @@ TEST(SampleDirectLighting, OneProbabilisticDeltaLight) {
   });
 }
 
-TEST(SampleDirectLighting, TwoDeltaLights) {
+TEST(SampleDirectLighting, TwoFromLightSampleOnlys) {
   Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
   HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0));

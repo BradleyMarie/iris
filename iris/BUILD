@@ -397,6 +397,7 @@ cc_test(
 
 cc_library(
     name = "light",
+    srcs = ["light.cc"],
     hdrs = ["light.h"],
     visibility = ["//visibility:public"],
     deps = [
@@ -410,6 +411,28 @@ cc_library(
         ":spectrum",
         ":vector",
         ":visibility_tester",
+        "//iris/internal:light_parameters",
+    ],
+)
+
+cc_test(
+    name = "light_test",
+    srcs = ["light_test.cc"],
+    deps = [
+        ":float",
+        ":hit_point",
+        ":light",
+        ":power_matcher",
+        ":random",
+        ":ray",
+        ":reference_countable",
+        ":spectral_allocator",
+        ":spectrum",
+        ":vector",
+        ":visibility_tester",
+        "//iris/internal:light_parameters",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
     ],
 )
 

@@ -16,6 +16,7 @@ cc_library(
     srcs = ["area_light.cc"],
     hdrs = ["area_light.h"],
     deps = [
+        ":light_parameters",
         ":visibility_tester",
         "//iris:float",
         "//iris:geometry",
@@ -80,6 +81,7 @@ cc_library(
     srcs = ["environmental_light.cc"],
     hdrs = ["environmental_light.h"],
     deps = [
+        ":light_parameters",
         "//iris:environmental_light",
         "//iris:float",
         "//iris:geometry",
@@ -153,6 +155,11 @@ cc_library(
         "//iris:integer",
         "//iris:ray",
     ],
+)
+
+cc_library(
+    name = "light_parameters",
+    hdrs = ["light_parameters.h"],
 )
 
 cc_library(

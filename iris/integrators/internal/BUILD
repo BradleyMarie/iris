@@ -100,6 +100,7 @@ cc_test(
         "//iris/testing:light_sampler",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
+        "//iris/testing:visible_light",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

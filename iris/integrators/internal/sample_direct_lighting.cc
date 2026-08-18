@@ -27,20 +27,26 @@ visual_t PowerHeuristic(visual_t sampled_pdf, visual_t computed_pdf) {
   return sampled_pdf / (sampled_pdf + computed_pdf);
 }
 
-const Spectrum* DeltaLight(const Light::SampleResult& sample,
-                           const Ray& traced_ray,
-                           const RayTracer::SurfaceIntersection intersection,
-                           SpectralAllocator& allocator) {
+const Spectrum* FromLightSampleOnly(
+    const std::optional<Light::SampleResult>& sample, const Ray& traced_ray,
+    const RayTracer::SurfaceIntersection intersection,
+    SpectralAllocator& allocator) {
+  if (!sample) {
+    return nullptr;
+  }
+
   std::optional<Bsdf::ReflectanceResult> diffuse =
-      intersection.bsdf.Reflectance(traced_ray.direction, sample.to_light,
+      intersection.bsdf.Reflectance(traced_ray.direction, sample->to_light,
                                     allocator);
   if (!diffuse) {
     return nullptr;
   }
 
   visual_t falloff =
-      ClampedAbsDotProduct(intersection.shading_normal, sample.to_light);
-  const Spectrum* spectrum = allocator.Scale(&sample.emission, falloff);
+      ClampedAbsDotProduct(intersection.shading_normal, sample->to_light);
+  const Spectrum* spectrum = allocator.Scale(
+      &sample->emission,
+      falloff / sample->pdf.value_or(static_cast<visual_t>(1.0)));
   return allocator.Reflect(spectrum, &diffuse->reflector);
 }
 
@@ -97,14 +103,15 @@ const Spectrum* EstimateDirectLighting(
   std::optional<Light::SampleResult> light_sample =
       light.Sample(intersection.hit_point, std::move(light_sampler),
                    visibility_tester, allocator);
-  if (light_sample) {
-    if (!light_sample->pdf) {
-      return internal::DeltaLight(*light_sample, traced_ray, intersection,
-                                  allocator);
-    } else if (std::isnan(*light_sample->pdf) ||
-               *light_sample->pdf <= static_cast<visual_t>(0.0)) {
-      light_sample = std::nullopt;
-    }
+  if (light_sample && light_sample->pdf &&
+      (!std::isfinite(*light_sample->pdf) ||
+       *light_sample->pdf <= static_cast<visual_t>(0.0))) {
+    light_sample = std::nullopt;
+  }
+
+  if (light.IsInvisible()) {
+    return internal::FromLightSampleOnly(light_sample, traced_ray, intersection,
+                                         allocator);
   }
 
   const Spectrum* light_spectrum = nullptr;

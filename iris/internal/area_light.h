@@ -11,8 +11,8 @@ namespace iris {
 namespace internal {
 
 ReferenceCounted<Light> MakeAreaLight(ReferenceCounted<Geometry> geometry,
-                                      const Matrix* model_to_world,
-                                      face_t face);
+                                      const Matrix* model_to_world, face_t face,
+                                      bool invisible);
 
 }  // namespace internal
 }  // namespace iris

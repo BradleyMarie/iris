@@ -77,12 +77,10 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
     model_to_world = &*matrices_.insert(matrix).first;
   }
 
-  auto [iterator, inserted] =
+  auto [iterator, _] =
       ordered_geometry_.try_emplace({std::move(geometry), model_to_world},
                                     ordered_geometry_.size(), invisible);
-  if (!inserted && !invisible) {
-    iterator->second.second = false;
-  }
+  iterator->second.second &= invisible;
 }
 
 void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
@@ -117,7 +115,7 @@ SceneObjects SceneObjects::Builder::Build() {
       }
 
       ordered_lights_.try_emplace(
-          MakeAreaLight(entry.first, entry.second, face),
+          MakeAreaLight(entry.first, entry.second, face, invisible[i]),
           ordered_lights_.size());
     }
 
