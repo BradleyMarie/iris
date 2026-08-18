@@ -15,9 +15,35 @@ struct BoundingBox final {
    public:
     Builder();
 
-    void Add(const BoundingBox& bounds) noexcept;
-    void Add(const Point& point) noexcept;
-    void Reset() noexcept;
+    void Add(const BoundingBox& bounds) noexcept {
+      if (bounds.Empty()) {
+        return;
+      }
+
+      Add(bounds.lower);
+      Add(bounds.upper);
+    }
+
+    void Add(const Point& point) noexcept {
+      [[assume(!std::isnan(min_x_))]];
+      [[assume(!std::isnan(min_y_))]];
+      [[assume(!std::isnan(min_z_))]];
+      [[assume(!std::isnan(max_x_))]];
+      [[assume(!std::isnan(max_y_))]];
+      [[assume(!std::isnan(max_z_))]];
+      [[assume(std::isfinite(point.x))]];
+      [[assume(std::isfinite(point.y))]];
+      [[assume(std::isfinite(point.z))]];
+      min_x_ = (min_x_ < point.x) ? min_x_ : point.x;
+      min_y_ = (min_y_ < point.y) ? min_y_ : point.y;
+      min_z_ = (min_z_ < point.z) ? min_z_ : point.z;
+      max_x_ = (max_x_ < point.x) ? point.x : max_x_;
+      max_y_ = (max_y_ < point.y) ? point.y : max_y_;
+      max_z_ = (max_z_ < point.z) ? point.z : max_z_;
+      contains_points_ = true;
+    }
+
+    void Reset() noexcept { *this = Builder(); }
 
     BoundingBox Build() const noexcept;
 
