@@ -3,7 +3,6 @@
 #include <array>
 #include <cassert>
 #include <cmath>
-#include <cstring>
 #include <expected>
 #include <optional>
 
@@ -544,14 +543,6 @@ Matrix Matrix::Multiply(const Matrix& matrix) const {
 }
 
 Matrix Matrix::Inverse() const { return Matrix(i, m); }
-
-bool operator==(const Matrix& left, const Matrix& right) {
-  return std::memcmp(&left.m, &right.m, sizeof(left.m)) == 0;
-}
-
-bool operator<(const Matrix& left, const Matrix& right) {
-  return std::memcmp(&left.m, &right.m, sizeof(left.m)) < 0;
-}
 
 BoundingBox Matrix::Multiply(const BoundingBox& bounding_box) const {
   Point bottom0(bounding_box.lower.x, bounding_box.lower.y,

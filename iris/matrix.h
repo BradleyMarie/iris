@@ -86,8 +86,13 @@ class Matrix final {
   const bool swaps_handedness_;
 };
 
-bool operator==(const Matrix& left, const Matrix& right);
-bool operator<(const Matrix& left, const Matrix& right);
+static inline bool operator==(const Matrix& left, const Matrix& right) {
+  return left.m == right.m;
+}
+
+static inline auto operator<=>(const Matrix& left, const Matrix& right) {
+  return left.m <=> right.m;
+}
 
 inline Point Matrix::Multiply(const Point& point) const {
   geometric_t x =
