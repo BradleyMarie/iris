@@ -2,12 +2,11 @@
 
 #include <algorithm>
 #include <cassert>
-#include <map>
 #include <ranges>
-#include <string_view>
 #include <utility>
 #include <vector>
 
+#include "absl/hash/hash.h"
 #include "iris/bounding_box.h"
 #include "iris/environmental_light.h"
 #include "iris/geometry.h"
@@ -22,15 +21,6 @@ namespace {
 
 using ::iris::internal::MakeAreaLight;
 using ::iris::internal::MakeEnvironmentalLight;
-
-template <typename T>
-std::vector<T> ToVector(std::map<T, size_t> values) {
-  std::vector<T> result(values.size());
-  for (auto& [value, index] : values) {
-    result[index] = std::move(value);
-  }
-  return result;
-}
 
 template <typename T>
 void ReorderImpl(std::vector<T>& values, std::vector<size_t>& new_positions) {
@@ -62,9 +52,7 @@ const Matrix* ToNullableMatrix(const Matrix& matrix) {
 
 std::size_t SceneObjects::Builder::MatrixPtrHash::operator()(
     const Matrix* ptr) const {
-  std::string_view data = std::string_view(
-      reinterpret_cast<const char*>(ptr->m.data()), sizeof(ptr->m));
-  return std::hash<std::string_view>{}(data);
+  return absl::Hash<std::array<std::array<geometric, 4>, 4>>()(ptr->m);
 }
 
 bool SceneObjects::Builder::MatrixPtrEqual::operator()(
@@ -97,10 +85,15 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
     model_to_world = *iter;
   }
 
-  auto [iterator, _] =
-      ordered_geometry_.try_emplace({std::move(geometry), model_to_world},
-                                    ordered_geometry_.size(), invisible);
-  iterator->second.second &= invisible;
+  auto [iter, inserted] =
+      geometry_.try_emplace({geometry.Get(), model_to_world}, nullptr);
+  if (inserted) {
+    geometry_storage_.emplace_back(std::move(geometry), model_to_world,
+                                   invisible);
+    iter->second = &std::get<2>(geometry_storage_.back());
+  }
+
+  *iter->second &= invisible;
 }
 
 void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
@@ -108,7 +101,10 @@ void SceneObjects::Builder::Add(ReferenceCounted<Light> light) {
     return;
   }
 
-  ordered_lights_.try_emplace(std::move(light), ordered_lights_.size());
+  auto [_, inserted] = lights_.insert(light.Get());
+  if (inserted) {
+    light_storage_.push_back(std::move(light));
+  }
 }
 
 void SceneObjects::Builder::Set(
@@ -118,48 +114,38 @@ void SceneObjects::Builder::Set(
 
 SceneObjects SceneObjects::Builder::Build() {
   std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>
-      sorted_geometry(ordered_geometry_.size());
-  std::vector<bool> invisible(ordered_geometry_.size());
-  for (auto& [value, index] : ordered_geometry_) {
-    sorted_geometry[index.first] = std::move(value);
-    invisible[index.first] = index.second;
-  }
+      geometry_only;
+  geometry_only.reserve(geometry_storage_.size());
 
-  size_t insert_index = 0;
-  for (size_t i = 0; i < sorted_geometry.size(); i++) {
-    std::pair<ReferenceCounted<Geometry>, const Matrix*>& entry =
-        sorted_geometry[i];
-    for (face_t face : entry.first->GetFaces()) {
-      if (!entry.first->GetEmissiveMaterial(face)) {
+  for (auto& [geometry, model_to_world, invisible] : geometry_storage_) {
+    for (face_t face : geometry->GetFaces()) {
+      if (!geometry->GetEmissiveMaterial(face)) {
         continue;
       }
 
-      ordered_lights_.try_emplace(
-          MakeAreaLight(entry.first, entry.second, face, invisible[i]),
-          ordered_lights_.size());
+      light_storage_.push_back(
+          MakeAreaLight(geometry, model_to_world, face, invisible));
     }
 
-    if (!invisible[i]) {
-      std::swap(sorted_geometry[i], sorted_geometry[insert_index++]);
+    if (!invisible) {
+      geometry_only.emplace_back(std::move(geometry), model_to_world);
     }
   }
-
-  sorted_geometry.resize(insert_index);
 
   if (environmental_light_) {
-    ordered_lights_.try_emplace(
-        MakeEnvironmentalLight(std::cref(*environmental_light_)),
-        ordered_lights_.size());
+    light_storage_.push_back(
+        MakeEnvironmentalLight(std::cref(*environmental_light_)));
   }
 
-  SceneObjects result(std::move(sorted_geometry),
-                      ToVector(std::move(ordered_lights_)),
+  SceneObjects result(std::move(geometry_only), std::move(light_storage_),
                       std::move(matrix_storage_),
                       std::move(environmental_light_), bounds_builder_);
-  ordered_geometry_.clear();
-  ordered_lights_.clear();
   matrices_.clear();
   matrix_storage_.clear();
+  geometry_.clear();
+  geometry_storage_.clear();
+  lights_.clear();
+  light_storage_.clear();
   environmental_light_.Reset();
   bounds_builder_.Reset();
   return result;

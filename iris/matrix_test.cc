@@ -1017,10 +1017,10 @@ TEST(MatrixTest, Equals) {
 }
 
 TEST(MatrixTest, LessThan) {
-  Matrix left = Matrix::Scalar(2.0, 1.0, 1.0).value();
+  Matrix left = Matrix::Scalar(1.0, 1.0, 1.0).value();
   EXPECT_FALSE(left < left);
 
-  Matrix right = Matrix::Scalar(1.0, 1.0, 1.0).value();
+  Matrix right = Matrix::Scalar(2.0, 1.0, 1.0).value();
   EXPECT_FALSE(right < left);
   EXPECT_TRUE(left < right);
 }
