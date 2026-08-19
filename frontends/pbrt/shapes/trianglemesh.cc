@@ -21,9 +21,18 @@
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
+namespace {
 
 using ::iris::geometry::AllocateTriangleMesh;
 using ::pbrt_proto::TriangleMeshShape;
+
+Point ToPoint(const pbrt_proto::Point& p) { return Point(p.x(), p.y(), p.z()); }
+
+Vector ToVector(const pbrt_proto::Vector& v) {
+  return Vector(v.x(), v.y(), v.z());
+}
+
+}  // namespace
 
 std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>
 MakeTriangleMesh(
@@ -35,34 +44,31 @@ MakeTriangleMesh(
     const ReferenceCounted<NormalMap>& front_normal_map,
     const ReferenceCounted<NormalMap>& back_normal_map,
     TextureManager& texture_manager, bool reversed_orientation) {
-  TriangleMeshShape with_defaults = Defaults().shapes().trianglemesh();
-  with_defaults.MergeFrom(trianglemesh);
-
-  if (with_defaults.n_size() != 0 &&
-      with_defaults.n_size() != with_defaults.p_size()) {
+  if (trianglemesh.n_size() != 0 &&
+      trianglemesh.n_size() != trianglemesh.p_size()) {
     std::cerr << "ERROR: Invalid number of parameters in parameter list: N"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (with_defaults.uv_size() != 0 &&
-      with_defaults.uv_size() != with_defaults.p_size()) {
+  if (trianglemesh.uv_size() != 0 &&
+      trianglemesh.uv_size() != trianglemesh.p_size()) {
     std::cerr << "ERROR: Invalid number of parameters in parameter list: uv"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (with_defaults.indices().empty()) {
+  if (trianglemesh.indices().empty()) {
     return std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>(
         {}, model_to_world, false);
   }
 
   uint32_t largest_index = 0u;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices;
-  for (const auto& entry : with_defaults.indices()) {
-    if (entry.v0() >= static_cast<uint32_t>(with_defaults.p_size()) ||
-        entry.v1() >= static_cast<uint32_t>(with_defaults.p_size()) ||
-        entry.v2() >= static_cast<uint32_t>(with_defaults.p_size())) {
+  for (const auto& entry : trianglemesh.indices()) {
+    if (entry.v0() >= static_cast<uint32_t>(trianglemesh.p_size()) ||
+        entry.v1() >= static_cast<uint32_t>(trianglemesh.p_size()) ||
+        entry.v2() >= static_cast<uint32_t>(trianglemesh.p_size())) {
       std::cerr << "ERROR: Out of range value for parameter: indices"
                 << std::endl;
       exit(EXIT_FAILURE);
@@ -77,27 +83,28 @@ MakeTriangleMesh(
                          static_cast<uint32_t>(entry.v2()));
   }
 
-  if (!with_defaults.n().empty() &&
-      static_cast<uint32_t>(with_defaults.n().size()) < largest_index) {
+  if (!trianglemesh.n().empty() &&
+      static_cast<uint32_t>(trianglemesh.n().size()) < largest_index) {
     std::cerr << "ERROR: Too few values for parameter: n" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (!with_defaults.uv().empty() &&
-      static_cast<uint32_t>(with_defaults.uv().size()) < largest_index) {
+  if (!trianglemesh.uv().empty() &&
+      static_cast<uint32_t>(trianglemesh.uv().size()) < largest_index) {
     std::cerr << "ERROR: Too few values for parameter: uv" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  if (!with_defaults.faceindices().empty() &&
-      with_defaults.faceindices().size() < with_defaults.indices().size()) {
+  if (!trianglemesh.faceindices().empty() &&
+      trianglemesh.faceindices().size() < trianglemesh.indices().size()) {
     std::cerr << "ERROR: Too few values for parameter: faceindices"
               << std::endl;
     exit(EXIT_FAILURE);
   }
 
   std::vector<face_t> face_indices;
-  for (const auto& face_index : with_defaults.faceindices()) {
+  face_indices.reserve(trianglemesh.faceindices_size());
+  for (const auto& face_index : trianglemesh.faceindices()) {
     if (face_index < 0) {
       std::cerr << "ERROR: Out of range value for parameter: faceIndices"
                 << std::endl;
@@ -107,51 +114,47 @@ MakeTriangleMesh(
     face_indices.push_back(static_cast<face_t>(face_index));
   }
 
-  std::vector<Point> model_points;
   std::vector<Point> world_points;
-  for (const auto& p : with_defaults.p()) {
-    model_points.emplace_back(static_cast<geometric>(p.x()),
-                              static_cast<geometric>(p.y()),
-                              static_cast<geometric>(p.z()));
-    world_points.push_back(model_to_world.Multiply(model_points.back()));
+  world_points.reserve(trianglemesh.p_size());
+  for (const pbrt_proto::Point& p : trianglemesh.p()) {
+    Point model_point = ToPoint(p);
+    world_points.push_back(model_to_world.Multiply(model_point));
   }
 
-  std::vector<Vector> model_normals;
   std::vector<Vector> world_normals;
-  for (const auto& n : with_defaults.n()) {
-    model_normals.emplace_back(static_cast<geometric>(n.x()),
-                               static_cast<geometric>(n.y()),
-                               static_cast<geometric>(n.z()));
+  world_normals.reserve(trianglemesh.n_size());
+  for (const pbrt_proto::Vector& n : trianglemesh.n()) {
+    Vector model_normal = ToVector(n);
     world_normals.emplace_back(
-        model_to_world.InverseTransposeMultiply(model_normals.back()));
+        model_to_world.InverseTransposeMultiply(model_normal));
   }
 
   std::vector<std::pair<geometric, geometric>> uvs;
-  for (const auto& uv : with_defaults.uv()) {
+  uvs.reserve(trianglemesh.uv_size());
+  for (const auto& uv : trianglemesh.uv()) {
     uvs.emplace_back(static_cast<geometric>(uv.u()),
                      static_cast<geometric>(uv.v()));
   }
 
   ReferenceCounted<textures::MaskTexture> alpha_mask =
-      texture_manager.AllocateFloatTexture(with_defaults.alpha());
-  if (!alpha_mask && !front_emissive_material && !back_emissive_material) {
+      texture_manager.AllocateFloatTexture(trianglemesh.alpha());
+  if (trianglemesh.has_alpha() && !alpha_mask && !front_emissive_material &&
+      !back_emissive_material) {
     return std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>(
         {}, model_to_world, false);
   }
 
-  if (!model_normals.empty()) {
+  if (!world_normals.empty()) {
     for (std::tuple<uint32_t, uint32_t, uint32_t>& indices : indices) {
-      Vector surface_normal =
-          CrossProduct(model_points[std::get<1>(indices)] -
-                           model_points[std::get<0>(indices)],
-                       model_points[std::get<2>(indices)] -
-                           model_points[std::get<0>(indices)]);
+      Point p0 = ToPoint(trianglemesh.p(std::get<0>(indices)));
+      Point p1 = ToPoint(trianglemesh.p(std::get<1>(indices)));
+      Point p2 = ToPoint(trianglemesh.p(std::get<2>(indices)));
+      Vector surface_normal = CrossProduct(p1 - p0, p2 - p0);
 
-      geometric_t cumulative_dp =
-          DotProduct(surface_normal, model_normals[std::get<0>(indices)] +
-                                         model_normals[std::get<1>(indices)] +
-                                         model_normals[std::get<2>(indices)]);
-
+      Vector n0 = ToVector(trianglemesh.n(std::get<0>(indices)));
+      Vector n1 = ToVector(trianglemesh.n(std::get<1>(indices)));
+      Vector n2 = ToVector(trianglemesh.n(std::get<2>(indices)));
+      geometric_t cumulative_dp = DotProduct(surface_normal, n0 + n1 + n2);
       if (cumulative_dp < static_cast<geometric_t>(0.0)) {
         std::swap(std::get<1>(indices), std::get<2>(indices));
       }
