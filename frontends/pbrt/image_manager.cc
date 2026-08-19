@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "absl/container/flat_hash_map.h"
 #include "third_party/stb/stb_image.h"
 #include "third_party/tinyexr/tinyexr.h"
 
@@ -625,8 +626,9 @@ ImageManager::LoadReflectorImageFromSDR(const std::string& filename,
         }
       }
     } else {
-      std::unordered_map<uint32_t, ReferenceCounted<Reflector>>& reflector_map =
-          gamma_correct ? gamma_corrected_reflectors_ : reflectors_;
+      absl::flat_hash_map<uint32_t, ReferenceCounted<Reflector>>&
+          reflector_map =
+              gamma_correct ? gamma_corrected_reflectors_ : reflectors_;
       for (int y = 0; y < ny; y++) {
         for (int x = 0; x < nx; x++) {
           stbi_uc r = values[num_channels * ((ny - y - 1) * nx + x) + 0];

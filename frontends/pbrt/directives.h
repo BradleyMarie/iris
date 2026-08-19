@@ -6,6 +6,7 @@
 #include <optional>
 #include <set>
 
+#include "absl/container/flat_hash_set.h"
 #include "google/protobuf/arena.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
@@ -35,7 +36,7 @@ class Directives {
   };
 
   std::deque<State> state_;
-  std::set<std::filesystem::path> files_;
+  absl::flat_hash_set<std::filesystem::path> files_;
 };
 
 }  // namespace pbrt_frontend

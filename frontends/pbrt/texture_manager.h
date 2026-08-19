@@ -3,8 +3,8 @@
 
 #include <stack>
 #include <string>
-#include <unordered_map>
 
+#include "absl/container/flat_hash_map.h"
 #include "frontends/pbrt/spectrum_manager.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
@@ -49,16 +49,16 @@ class TextureManager {
            ReferenceCounted<textures::ReflectorTexture> texture);
 
  private:
-  std::unordered_map<visual, ReferenceCounted<textures::FloatTexture>>
+  absl::flat_hash_map<visual, ReferenceCounted<textures::FloatTexture>>
       constant_float_textures_;
-  std::unordered_map<const Reflector*,
-                     ReferenceCounted<textures::ReflectorTexture>>
+  absl::flat_hash_map<const Reflector*,
+                      ReferenceCounted<textures::ReflectorTexture>>
       constant_reflector_textures_;
-  std::stack<
-      std::unordered_map<std::string, ReferenceCounted<textures::FloatTexture>>>
+  std::stack<absl::flat_hash_map<std::string,
+                                 ReferenceCounted<textures::FloatTexture>>>
       float_textures_;
-  std::stack<std::unordered_map<std::string,
-                                ReferenceCounted<textures::ReflectorTexture>>>
+  std::stack<absl::flat_hash_map<std::string,
+                                 ReferenceCounted<textures::ReflectorTexture>>>
       reflector_textures_;
   SpectrumManager& spectrum_manager_;
 };

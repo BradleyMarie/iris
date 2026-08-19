@@ -3,9 +3,9 @@
 
 #include <stack>
 #include <string>
-#include <unordered_map>
 #include <utility>
 
+#include "absl/container/flat_hash_map.h"
 #include "iris/matrix.h"
 
 namespace iris {
@@ -67,7 +67,7 @@ class MatrixManager {
   std::stack<Transformation> transformation_stack_;
   std::stack<ActiveTransformation> active_transform_stack_;
   std::stack<PushPopReason> stack_manipulation_reasons_;
-  std::unordered_map<std::string, std::pair<Matrix, Matrix>> coord_systems_;
+  absl::flat_hash_map<std::string, std::pair<Matrix, Matrix>> coord_systems_;
 };
 
 }  // namespace pbrt_frontend

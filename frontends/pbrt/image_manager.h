@@ -4,8 +4,8 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
+#include "absl/container/flat_hash_map.h"
 #include "frontends/pbrt/spectrum_manager.h"
 #include "iris/reference_counted.h"
 #include "iris/reflector.h"
@@ -35,22 +35,22 @@ class ImageManager {
   LoadReflectorImageFromHDR(const std::string& filename, bool gamma_correct);
 
  private:
-  std::unordered_map<std::string, std::shared_ptr<textures::Image2D<visual>>>
+  absl::flat_hash_map<std::string, std::shared_ptr<textures::Image2D<visual>>>
       float_images_;
-  std::unordered_map<std::string, std::shared_ptr<textures::Image2D<visual>>>
+  absl::flat_hash_map<std::string, std::shared_ptr<textures::Image2D<visual>>>
       gamma_corrected_float_images_;
 
-  std::unordered_map<
+  absl::flat_hash_map<
       std::string,
       std::shared_ptr<textures::Image2D<ReferenceCounted<Reflector>>>>
       reflector_images_;
-  std::unordered_map<
+  absl::flat_hash_map<
       std::string,
       std::shared_ptr<textures::Image2D<ReferenceCounted<Reflector>>>>
       gamma_corrected_reflector_images_;
 
-  std::unordered_map<uint32_t, ReferenceCounted<Reflector>> reflectors_;
-  std::unordered_map<uint32_t, ReferenceCounted<Reflector>>
+  absl::flat_hash_map<uint32_t, ReferenceCounted<Reflector>> reflectors_;
+  absl::flat_hash_map<uint32_t, ReferenceCounted<Reflector>>
       gamma_corrected_reflectors_;
 
   std::filesystem::path search_root_;

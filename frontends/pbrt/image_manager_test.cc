@@ -2,9 +2,9 @@
 
 #include <filesystem>
 #include <memory>
-#include <set>
 #include <unordered_map>
 
+#include "absl/container/flat_hash_set.h"
 #include "frontends/pbrt/spectrum_managers/color_spectrum_manager.h"
 #include "googletest/include/gtest/gtest.h"
 #include "iris/reference_counted.h"
@@ -45,7 +45,7 @@ TEST(ImageManager, FloatImageSizesCorrect) {
   ColorSpectrumManager spectrum_manager(path, true);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  std::set<std::shared_ptr<Image2D<visual>>> images;
+  absl::flat_hash_set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadFloatImageFromSDR(
                       RawRunfilePath("g8.png"), true))
@@ -133,7 +133,8 @@ TEST(ImageManager, ReflectorImageSizesCorrect) {
   ColorSpectrumManager spectrum_manager(path, true);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
+  absl::flat_hash_set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>>
+      images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadReflectorImageFromSDR(
                       RawRunfilePath("g8.png"), true))
@@ -221,7 +222,7 @@ TEST(ImageManager, ReusesFloatImages) {
   ColorSpectrumManager spectrum_manager(path, true);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  std::set<std::shared_ptr<Image2D<visual>>> images;
+  absl::flat_hash_set<std::shared_ptr<Image2D<visual>>> images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadFloatImageFromSDR(
                       RawRunfilePath("g8.png"), true))
@@ -375,7 +376,8 @@ TEST(ImageManager, ReusesReflectorImages) {
   ColorSpectrumManager spectrum_manager(path, true);
   ImageManager image_manager(std::filesystem::current_path(), spectrum_manager);
 
-  std::set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>> images;
+  absl::flat_hash_set<std::shared_ptr<Image2D<ReferenceCounted<Reflector>>>>
+      images;
   EXPECT_TRUE(images
                   .emplace(image_manager.LoadReflectorImageFromSDR(
                       RawRunfilePath("g8.png"), true))

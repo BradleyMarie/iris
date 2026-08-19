@@ -3,9 +3,9 @@
 
 #include <stack>
 #include <string>
-#include <unordered_map>
 #include <utility>
 
+#include "absl/container/flat_hash_map.h"
 #include "frontends/pbrt/materials/result.h"
 #include "pbrt_proto/v3/v3.pb.h"
 
@@ -26,7 +26,7 @@ class MaterialManager {
            std::pair<pbrt_proto::v3::Material, MaterialResult> material);
 
  private:
-  std::stack<std::unordered_map<
+  std::stack<absl::flat_hash_map<
       std::string, std::pair<pbrt_proto::v3::Material, MaterialResult>>>
       materials_;
   size_t deferred_pushes_ = 0;

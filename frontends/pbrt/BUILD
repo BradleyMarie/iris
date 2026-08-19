@@ -51,6 +51,7 @@ cc_library(
     srcs = ["directives.cc"],
     hdrs = ["directives.h"],
     deps = [
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
         "@protobuf//:protobuf_lite",
     ],
@@ -116,6 +117,7 @@ cc_library(
         "//iris/textures:image_texture",
         "//third_party/stb:stb_image",
         "//third_party/tinyexr",
+        "@abseil-cpp//absl/container:flat_hash_map",
     ],
 )
 
@@ -139,6 +141,7 @@ cc_test(
         "//iris:reference_counted",
         "//iris:reflector",
         "//iris/textures:image_texture",
+        "@abseil-cpp//absl/container:flat_hash_set",
         "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
@@ -171,6 +174,7 @@ cc_library(
     hdrs = ["material_manager.h"],
     deps = [
         "//frontends/pbrt/materials:result",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
     ],
 )
@@ -194,6 +198,7 @@ cc_library(
     hdrs = ["matrix_manager.h"],
     deps = [
         "//iris:matrix",
+        "@abseil-cpp//absl/container:flat_hash_map",
     ],
 )
 
@@ -249,6 +254,7 @@ cc_library(
         "//iris:scene_objects",
         "//iris/geometry:bvh_aggregate",
         "//iris/scenes:bvh_scene",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:defaults_cc_proto",
         "@pbrt_proto//pbrt_proto/v3:v3_cc_proto",
@@ -338,6 +344,7 @@ cc_library(
         "//iris/textures:constant_texture",
         "//iris/textures:float_texture",
         "//iris/textures:reflector_texture",
+        "@abseil-cpp//absl/container:flat_hash_map",
         "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )

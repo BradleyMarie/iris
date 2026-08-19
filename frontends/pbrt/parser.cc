@@ -4,13 +4,14 @@
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <stack>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "frontends/pbrt/area_lights/parse.h"
 #include "frontends/pbrt/cameras/parse.h"
 #include "frontends/pbrt/defaults.h"
@@ -104,7 +105,7 @@ struct State {
   // Object Instancing
   std::vector<ReferenceCounted<Geometry>> current_instance;
   std::string current_instance_name;
-  std::unordered_map<std::string, ReferenceCounted<Geometry>> instances;
+  absl::flat_hash_map<std::string, ReferenceCounted<Geometry>> instances;
   bool build_instance = false;
 
   // Other State
@@ -153,8 +154,9 @@ void State::Shape(const pbrt_proto::v3::Shape& shape,
       search_root, material_manager, texture_manager, spectrum_manager);
 
   if (build_instance && !invisible) {
-    current_instance.insert(current_instance.end(), shapes.begin(),
-                            shapes.end());
+    current_instance.insert(current_instance.end(),
+                            std::make_move_iterator(shapes.begin()),
+                            std::make_move_iterator(shapes.end()));
   } else {
     for (auto& shape : shapes) {
       objects.Add(std::move(shape), model_to_world, invisible);
@@ -428,7 +430,7 @@ std::unique_ptr<ParsingResult> ParseDirective(
         exit(EXIT_FAILURE);
       }
 
-      state.instances[std::move(state.current_instance_name)] =
+      state.instances[state.current_instance_name] =
           AllocateBVHAggregate(std::move(state.current_instance));
       state.current_instance_name.clear();
       state.current_instance.clear();
