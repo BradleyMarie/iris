@@ -2,9 +2,7 @@
 #define _IRIS_GEOMETRY_TRIANGLE_MESH_
 
 #include <cstdint>
-#include <span>
 #include <tuple>
-#include <variant>
 #include <vector>
 
 #include "iris/emissive_material.h"
@@ -22,10 +20,10 @@ namespace iris {
 namespace geometry {
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
-    std::span<const Point> points,
-    std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
-    std::span<const face_t> face_indices, std::span<const Vector> normals,
-    std::span<const std::pair<geometric, geometric>> uv,
+    std::vector<Point> points,
+    std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices,
+    std::vector<face_t> face_indices, std::vector<Vector> normals,
+    std::vector<std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::MaskTexture> alpha_mask,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<Material> back_material,

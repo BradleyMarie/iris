@@ -172,8 +172,9 @@ std::pair<std::vector<ReferenceCounted<Geometry>>, Matrix> MakePlyMesh(
   }
 
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
-      reader.world_positions, reader.faces, {}, reader.world_normals,
-      reader.uvs, std::move(alpha_mask), front_material, back_material,
+      std::move(reader.world_positions), std::move(reader.faces), {},
+      std::move(reader.world_normals), std::move(reader.uvs),
+      std::move(alpha_mask), front_material, back_material,
       front_emissive_material, back_emissive_material, front_normal_map,
       back_normal_map);
 

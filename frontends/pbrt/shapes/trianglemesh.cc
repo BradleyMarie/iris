@@ -170,10 +170,10 @@ MakeTriangleMesh(
   }
 
   std::vector<ReferenceCounted<Geometry>> triangles = AllocateTriangleMesh(
-      world_points, indices, face_indices, world_normals, uvs,
-      std::move(alpha_mask), front_material, back_material,
-      front_emissive_material, back_emissive_material, front_normal_map,
-      back_normal_map);
+      std::move(world_points), std::move(indices), std::move(face_indices),
+      std::move(world_normals), std::move(uvs), std::move(alpha_mask),
+      front_material, back_material, front_emissive_material,
+      back_emissive_material, front_normal_map, back_normal_map);
 
   return std::make_tuple(
       std::move(triangles), Matrix::Identity(),

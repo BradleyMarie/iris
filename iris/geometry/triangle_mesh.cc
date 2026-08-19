@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <span>
 #include <tuple>
 #include <variant>
 #include <vector>
@@ -560,10 +559,10 @@ Hit* Triangle::Trace(const Ray& ray, geometric_t minimum_distance,
 }  // namespace
 
 std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
-    std::span<const Point> points,
-    std::span<const std::tuple<uint32_t, uint32_t, uint32_t>> indices,
-    std::span<const face_t> face_indices, std::span<const Vector> normals,
-    std::span<const std::pair<geometric, geometric>> uv,
+    std::vector<Point> points,
+    std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices,
+    std::vector<face_t> face_indices, std::vector<Vector> normals,
+    std::vector<std::pair<geometric, geometric>> uv,
     ReferenceCounted<textures::MaskTexture> alpha_mask,
     ReferenceCounted<Material> front_material,
     ReferenceCounted<Material> back_material,
@@ -573,9 +572,9 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     ReferenceCounted<NormalMap> back_normal_map) {
   std::shared_ptr<Triangle::SharedData> shared_data =
       std::make_shared<Triangle::SharedData>(Triangle::SharedData{
-          std::vector<Point>(points.begin(), points.end()),
-          std::vector<Vector>(normals.begin(), normals.end()),
-          std::vector<std::pair<geometric, geometric>>(uv.begin(), uv.end()),
+          std::move(points),
+          std::move(normals),
+          std::move(uv),
           std::move(alpha_mask),
           {std::move(front_material), std::move(back_material)},
           {std::move(front_emissive_material),
