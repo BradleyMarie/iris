@@ -4,6 +4,7 @@
 #include <cassert>
 #include <map>
 #include <ranges>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -59,6 +60,18 @@ const Matrix* ToNullableMatrix(const Matrix& matrix) {
 
 }  // namespace
 
+std::size_t SceneObjects::Builder::MatrixPtrHash::operator()(
+    const Matrix* ptr) const {
+  std::string_view data = std::string_view(
+      reinterpret_cast<const char*>(ptr->m.data()), sizeof(ptr->m));
+  return std::hash<std::string_view>{}(data);
+}
+
+bool SceneObjects::Builder::MatrixPtrEqual::operator()(
+    const Matrix* lhs, const Matrix* rhs) const {
+  return *lhs == *rhs;
+}
+
 void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
                                 const Matrix& matrix, bool invisible) {
   const Matrix* model_to_world = ToNullableMatrix(matrix);
@@ -74,7 +87,14 @@ void SceneObjects::Builder::Add(ReferenceCounted<Geometry> geometry,
   bounds_builder_.Add(bounds);
 
   if (model_to_world != nullptr) {
-    model_to_world = &*matrices_.insert(matrix).first;
+    matrix_storage_.push_back(*model_to_world);
+
+    auto [iter, inserted] = matrices_.insert(&matrix_storage_.back());
+    if (!inserted) {
+      matrix_storage_.pop_back();
+    }
+
+    model_to_world = *iter;
   }
 
   auto [iterator, _] =
@@ -132,12 +152,14 @@ SceneObjects SceneObjects::Builder::Build() {
         ordered_lights_.size());
   }
 
-  SceneObjects result(
-      std::move(sorted_geometry), ToVector(std::move(ordered_lights_)),
-      std::move(matrices_), std::move(environmental_light_), bounds_builder_);
+  SceneObjects result(std::move(sorted_geometry),
+                      ToVector(std::move(ordered_lights_)),
+                      std::move(matrix_storage_),
+                      std::move(environmental_light_), bounds_builder_);
   ordered_geometry_.clear();
   ordered_lights_.clear();
   matrices_.clear();
+  matrix_storage_.clear();
   environmental_light_.Reset();
   bounds_builder_.Reset();
   return result;

@@ -1,8 +1,9 @@
 #ifndef _IRIS_SCENE_OBJECTS_
 #define _IRIS_SCENE_OBJECTS_
 
+#include <deque>
 #include <map>
-#include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -40,11 +41,20 @@ class SceneObjects final {
     SceneObjects Build();
 
    private:
+    struct MatrixPtrHash {
+      std::size_t operator()(const Matrix* ptr) const;
+    };
+
+    struct MatrixPtrEqual {
+      bool operator()(const Matrix* lhs, const Matrix* rhs) const;
+    };
+
     std::map<std::pair<ReferenceCounted<Geometry>, const Matrix*>,
              std::pair<size_t, bool>>
         ordered_geometry_;
     std::map<ReferenceCounted<Light>, size_t> ordered_lights_;
-    std::set<Matrix> matrices_;
+    std::unordered_set<const Matrix*, MatrixPtrHash, MatrixPtrEqual> matrices_;
+    std::deque<Matrix> matrix_storage_;
     ReferenceCounted<EnvironmentalLight> environmental_light_;
     BoundingBox::Builder bounds_builder_;
 
@@ -85,7 +95,7 @@ class SceneObjects final {
   SceneObjects(std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>
                    geometry,
                std::vector<ReferenceCounted<Light>> lights,
-               std::set<Matrix> matrices,
+               std::deque<Matrix> matrices,
                ReferenceCounted<EnvironmentalLight> environmental_light,
                BoundingBox::Builder bounds) noexcept
       : geometry_(std::move(geometry)),
@@ -96,7 +106,7 @@ class SceneObjects final {
 
   std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>> geometry_;
   std::vector<ReferenceCounted<Light>> lights_;
-  std::set<Matrix> matrices_;
+  std::deque<Matrix> matrices_;
   ReferenceCounted<EnvironmentalLight> environmental_light_;
   BoundingBox::Builder bounds_;
 };
