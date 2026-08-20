@@ -374,7 +374,7 @@ TEST(BuildBVH, FullTwoGeometryOneEmpty) {
   EXPECT_EQ(1u, right_child.Geometry().second);
 
   ASSERT_EQ(3u, result.geometry_sort_order.size());
-  EXPECT_EQ(3u, result.geometry_sort_order[0]);
+  EXPECT_EQ(2u, result.geometry_sort_order[0]);
   EXPECT_EQ(1u, result.geometry_sort_order[1]);
   EXPECT_EQ(0u, result.geometry_sort_order[2]);
 }

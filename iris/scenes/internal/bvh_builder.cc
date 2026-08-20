@@ -334,7 +334,7 @@ BuildBVHResult BuildBVH(
   geometry_bounds.reserve(num_geometry);
   std::vector<size_t> geometry_order;
   geometry_order.reserve(num_geometry);
-  std::vector<size_t> geometry_sort_order(num_geometry, num_geometry);
+  std::vector<size_t> geometry_sort_order(num_geometry, num_geometry - 1);
   for (size_t i = 0; i < num_geometry; i++) {
     auto [geometry_ref, model_to_world] = geometry(i);
 
