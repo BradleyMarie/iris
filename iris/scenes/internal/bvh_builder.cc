@@ -1,5 +1,6 @@
 #include "iris/scenes/internal/bvh_builder.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -25,15 +26,108 @@ namespace internal {
 namespace internal {
 namespace {
 
+BoundingBox ComputeBounds(const std::vector<BoundingBox>& geometry_bounds,
+                          std::span<const size_t> indices) {
+  BoundingBox::Builder builder;
+  for (size_t index : indices) {
+    const BoundingBox& bounds = geometry_bounds[index];
+    builder.Add(bounds.lower);
+    builder.Add(bounds.upper);
+  }
+  return builder.Build();
+}
+
+BoundingBox ComputeCentroidBounds(
+    const std::vector<BoundingBox>& geometry_bounds,
+    std::span<const size_t> indices) {
+  BoundingBox::Builder builder;
+  for (size_t index : indices) {
+    builder.Add(geometry_bounds[index].Center());
+  }
+  return builder.Build();
+}
+
+struct BVHSplit {
+  BoundingBox::Builder bounds;
+  size_t num_shapes = 0;
+};
+
+template <typename InputIterator, typename OutputIterator>
+void ComputeCosts(InputIterator begin, InputIterator end,
+                  OutputIterator output) {
+  BoundingBox::Builder bounds_builder;
+  size_t cumulative_num_shapes = 0;
+
+  for (auto iter = begin; iter < end; ++iter) {
+    cumulative_num_shapes += iter->num_shapes;
+    bounds_builder.Add(iter->bounds.Build());
+    *output++ = bounds_builder.Build().SurfaceArea() *
+                static_cast<geometric_t>(cumulative_num_shapes);
+  }
+}
+
+std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeAboveCosts(
+    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits) {
+  std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
+  ComputeCosts(splits.rbegin(), splits.rend() - 1, result.rbegin());
+  return result;
+}
+
+std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
+    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits) {
+  std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
+  ComputeCosts(splits.begin(), splits.end() - 1, result.begin());
+  return result;
+}
+
+std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
+    const std::vector<BoundingBox>& geometry_bounds,
+    std::span<const size_t> indices, const BoundingBox& centroid_bounds,
+    Vector::Axis split_axis) {
+  assert(centroid_bounds.lower[split_axis] !=
+         centroid_bounds.upper[split_axis]);
+
+  geometric min = centroid_bounds.lower[split_axis];
+  geometric max = centroid_bounds.upper[split_axis];
+  geometric_t inv_range = static_cast<geometric>(1.0) / (max - min);
+
+  std::array<BVHSplit, kNumSplitsToEvaluate> result;
+  for (size_t index : indices) {
+    const BoundingBox& bounds = geometry_bounds[index];
+    geometric_t center = bounds.Center(split_axis);
+    geometric_t scaled_offset = (center - min) * inv_range;
+
+    size_t split_index =
+        static_cast<geometric_t>(kNumSplitsToEvaluate) * scaled_offset;
+    split_index = std::min(kNumSplitsToEvaluate - 1, split_index);
+
+    BVHSplit& split = result[split_index];
+    split.bounds.Add(bounds.lower);
+    split.bounds.Add(bounds.upper);
+    split.num_shapes += 1;
+  }
+
+  return result;
+}
+
+void MakeLeafNode(BVHNode& node, std::span<const size_t> indices,
+                  size_t& geometry_offset,
+                  std::span<size_t> geometry_sort_order) {
+  node.MakeLeafNode(geometry_offset, indices.size());
+  for (size_t index : indices) {
+    geometry_sort_order[index] = geometry_offset++;
+  }
+}
+
 struct WorkResult {
   WorkItem items[2];
   size_t num_items;
 };
 
-WorkResult MakeBVHNode(const WorkItem& work_item,
-                       const std::vector<BoundingBox>& geometry_bounds,
-                       AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
-                       std::span<size_t> geometry_sort_order) {
+WorkResult ProcessWorkItem(const WorkItem& work_item,
+                           const std::vector<BoundingBox>& geometry_bounds,
+                           AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
+                           std::span<size_t> geometry_sort_order) {
   assert(!work_item.left_indices.empty());
   assert(!work_item.right_indices.empty());
 
@@ -47,12 +141,12 @@ WorkResult MakeBVHNode(const WorkItem& work_item,
   bvh.emplace_back(ComputeBounds(geometry_bounds, work_item.right_indices));
 
   std::optional<WorkItem> left_work =
-      MakeBVHNode(work_item.left_indices, work_item.depth, geometry_bounds, bvh,
-                  left_index, geometry_offset, geometry_sort_order);
+      TryAddLeafNode(work_item.left_indices, work_item.depth, geometry_bounds,
+                     bvh, left_index, geometry_offset, geometry_sort_order);
 
   std::optional<WorkItem> right_work =
-      MakeBVHNode(work_item.right_indices, work_item.depth, geometry_bounds,
-                  bvh, right_index, geometry_offset, geometry_sort_order);
+      TryAddLeafNode(work_item.right_indices, work_item.depth, geometry_bounds,
+                     bvh, right_index, geometry_offset, geometry_sort_order);
 
   WorkResult result;
   result.num_items = 0u;
@@ -68,17 +162,17 @@ WorkResult MakeBVHNode(const WorkItem& work_item,
   return result;
 }
 
-void BuildBVH(const WorkItem& work_item,
-              const std::vector<BoundingBox>& geometry_bounds,
-              AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
-              std::span<size_t> geometry_sort_order) {
+void ProcessAllWorkItems(const WorkItem& work_item,
+                         const std::vector<BoundingBox>& geometry_bounds,
+                         AlignedVector<BVHNode>& bvh, size_t& geometry_offset,
+                         std::span<size_t> geometry_sort_order) {
   constexpr size_t kBvhBfsDepthLimit = 7u;
 
   std::deque<WorkItem> work_list = {work_item};
   while (!work_list.empty()) {
     WorkResult work_result =
-        MakeBVHNode(work_list.front(), geometry_bounds, bvh, geometry_offset,
-                    geometry_sort_order);
+        ProcessWorkItem(work_list.front(), geometry_bounds, bvh,
+                        geometry_offset, geometry_sort_order);
 
     if (work_result.num_items == 2) {
       geometric_t first_cost =
@@ -107,84 +201,7 @@ void BuildBVH(const WorkItem& work_item,
   }
 }
 
-template <typename InputIterator, typename OutputIterator>
-void ComputeCosts(InputIterator begin, InputIterator end,
-                  OutputIterator output) {
-  BoundingBox::Builder bounds_builder;
-  size_t cumulative_num_shapes = 0;
-
-  for (auto iter = begin; iter < end; ++iter) {
-    cumulative_num_shapes += iter->num_shapes;
-    bounds_builder.Add(iter->bounds.Build());
-    *output++ = bounds_builder.Build().SurfaceArea() *
-                static_cast<geometric_t>(cumulative_num_shapes);
-  }
-}
-
 }  // namespace
-
-BoundingBox ComputeBounds(const std::vector<BoundingBox>& geometry_bounds,
-                          std::span<const size_t> indices) {
-  BoundingBox::Builder builder;
-  for (size_t index : indices) {
-    builder.Add(geometry_bounds.at(index));
-  }
-  return builder.Build();
-}
-
-BoundingBox ComputeCentroidBounds(
-    const std::vector<BoundingBox>& geometry_bounds,
-    std::span<const size_t> indices) {
-  BoundingBox::Builder builder;
-  for (size_t index : indices) {
-    builder.Add(geometry_bounds.at(index).Center());
-  }
-  return builder.Build();
-}
-
-std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
-    const std::vector<BoundingBox>& geometry_bounds,
-    std::span<const size_t> indices, const BoundingBox& centroid_bounds,
-    Vector::Axis split_axis) {
-  assert(centroid_bounds.lower[split_axis] !=
-         centroid_bounds.upper[split_axis]);
-
-  geometric min = centroid_bounds.lower[split_axis];
-  geometric max = centroid_bounds.upper[split_axis];
-  geometric range = max - min;
-
-  std::array<BVHSplit, kNumSplitsToEvaluate> result;
-  for (size_t index : indices) {
-    geometric value = geometry_bounds.at(index).Center()[split_axis];
-    geometric_t offset = value - min;
-    geometric_t scaled_offset = offset / range;
-
-    size_t split_index =
-        static_cast<geometric_t>(kNumSplitsToEvaluate) * scaled_offset;
-    if (split_index == kNumSplitsToEvaluate) {
-      split_index = kNumSplitsToEvaluate - 1;
-    }
-
-    result.at(split_index).bounds.Add(geometry_bounds.at(index));
-    result.at(split_index).num_shapes += 1;
-  }
-
-  return result;
-}
-
-std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeAboveCosts(
-    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits) {
-  std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
-  ComputeCosts(splits.rbegin(), splits.rend() - 1, result.rbegin());
-  return result;
-}
-
-std::array<geometric_t, kNumSplitsToEvaluate - 1> ComputeBelowCosts(
-    const std::array<BVHSplit, kNumSplitsToEvaluate>& splits) {
-  std::array<geometric_t, kNumSplitsToEvaluate - 1> result;
-  ComputeCosts(splits.begin(), splits.end() - 1, result.begin());
-  return result;
-}
 
 std::optional<geometric_t> FindBestSplitOnAxis(
     const std::vector<BoundingBox>& geometry_bounds,
@@ -240,31 +257,7 @@ std::optional<geometric_t> FindBestSplitOnAxis(
                        static_cast<geometric_t>(kNumSplitsToEvaluate));
 }
 
-PartitionResult Partition(const std::vector<BoundingBox>& geometry_bounds,
-                          Vector::Axis split_axis, geometric_t split,
-                          std::span<size_t> indices) {
-  size_t insert_index = 0;
-
-  for (size_t i = 0; i < indices.size(); i++) {
-    if (geometry_bounds.at(indices[i]).Center()[split_axis] < split) {
-      std::swap(indices[i], indices[insert_index++]);
-    }
-  }
-
-  return {indices.subspan(insert_index, indices.size() - insert_index),
-          indices.subspan(0, insert_index)};
-}
-
-void MakeLeafNode(BVHNode& node, std::span<const size_t> indices,
-                  size_t& geometry_offset,
-                  std::span<size_t> geometry_sort_order) {
-  node.MakeLeafNode(geometry_offset, indices.size());
-  for (size_t index : indices) {
-    geometry_sort_order[index] = geometry_offset++;
-  }
-}
-
-std::optional<WorkItem> MakeBVHNode(
+std::optional<WorkItem> TryAddLeafNode(
     const std::span<size_t> indices, const size_t depth,
     const std::vector<BoundingBox>& geometry_bounds,
     AlignedVector<BVHNode>& bvh, size_t node_index, size_t& geometry_offset,
@@ -278,9 +271,7 @@ std::optional<WorkItem> MakeBVHNode(
   }
 
   BoundingBox centroid_bounds = ComputeCentroidBounds(geometry_bounds, indices);
-  Vector centroid_bounds_diagonal =
-      centroid_bounds.upper - centroid_bounds.lower;
-  Vector::Axis split_axis = centroid_bounds_diagonal.DominantAxis();
+  Vector::Axis split_axis = centroid_bounds.DominantAxis();
 
   if (centroid_bounds.lower[split_axis] == centroid_bounds.upper[split_axis]) {
     MakeLeafNode(bvh[node_index], indices, geometry_offset,
@@ -290,8 +281,8 @@ std::optional<WorkItem> MakeBVHNode(
 
   std::span<size_t> above_indices, below_indices;
   if (indices.size() == 2) {
-    geometric_t shape0 = geometry_bounds.at(indices[0]).Center()[split_axis];
-    geometric_t shape1 = geometry_bounds.at(indices[1]).Center()[split_axis];
+    geometric_t shape0 = geometry_bounds[indices[0]].Center(split_axis);
+    geometric_t shape1 = geometry_bounds[indices[1]].Center(split_axis);
 
     if (shape0 < shape1) {
       below_indices = indices.subspan(0, 1);
@@ -310,19 +301,22 @@ std::optional<WorkItem> MakeBVHNode(
       return std::nullopt;
     }
 
-    PartitionResult result =
-        Partition(geometry_bounds, split_axis, *split, indices);
-    if (result.above.empty() || result.below.empty()) {
-      // It's unclear how to write a unit test to exercise this branch; however,
-      // since FindBestSplitOnAxis has been observed returning splits that do
-      // not partition properly this branch is needed to cover that edge case.
+    std::span<size_t>::iterator above_start =
+        std::partition(indices.begin(), indices.end(), [&](size_t index) {
+          return split < geometry_bounds[index].Center(split_axis);
+        });
+
+    // It's unclear how to write a unit test to exercise this branch; however,
+    // since FindBestSplitOnAxis has been observed returning splits that do not
+    // partition properly this branch is needed to cover that edge case.
+    if (above_start == indices.begin() || above_start == indices.end()) {
       MakeLeafNode(bvh[node_index], indices, geometry_offset,
                    geometry_sort_order);
       return std::nullopt;
     }
 
-    below_indices = result.below;
-    above_indices = result.above;
+    below_indices = std::span<size_t>(indices.begin(), above_start);
+    above_indices = std::span<size_t>(above_start, indices.end());
   }
 
   return WorkItem{below_indices, above_indices, split_axis, node_index,
@@ -343,9 +337,15 @@ BuildBVHResult BuildBVH(
   std::vector<size_t> geometry_sort_order(num_geometry, num_geometry);
   for (size_t i = 0; i < num_geometry; i++) {
     auto [geometry_ref, model_to_world] = geometry(i);
+
     geometry_bounds.push_back(geometry_ref.ComputeBounds(model_to_world));
+    if (geometry_bounds.back().Empty()) {
+      continue;
+    }
+
+    world_bounds.Add(geometry_bounds.back().lower);
+    world_bounds.Add(geometry_bounds.back().upper);
     geometry_order.push_back(i);
-    world_bounds.Add(geometry_bounds.back());
   }
 
   AlignedVector<BVHNode> bvh = MakeAlignedVector<BVHNode>(for_scene);
@@ -355,11 +355,11 @@ BuildBVHResult BuildBVH(
     bvh.emplace_back(world_bounds.Build());  // Padding for cache alignment
 
     std::optional<internal::WorkItem> work_item =
-        internal::MakeBVHNode(geometry_order, 0u, geometry_bounds, bvh, 0u,
-                              geometry_offset, geometry_sort_order);
+        internal::TryAddLeafNode(geometry_order, 0u, geometry_bounds, bvh, 0u,
+                                 geometry_offset, geometry_sort_order);
     if (work_item) {
-      internal::BuildBVH(*work_item, geometry_bounds, bvh, geometry_offset,
-                         geometry_sort_order);
+      internal::ProcessAllWorkItems(*work_item, geometry_bounds, bvh,
+                                    geometry_offset, geometry_sort_order);
     }
   }
 

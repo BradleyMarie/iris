@@ -1,6 +1,7 @@
 #ifndef _IRIS_BOUNDING_BOX_
 #define _IRIS_BOUNDING_BOX_
 
+#include <limits>
 #include <optional>
 #include <span>
 
@@ -13,7 +14,14 @@ namespace iris {
 struct BoundingBox final {
   class Builder {
    public:
-    Builder();
+    Builder() noexcept
+        : min_x_(std::numeric_limits<geometric>::infinity()),
+          min_y_(std::numeric_limits<geometric>::infinity()),
+          min_z_(std::numeric_limits<geometric>::infinity()),
+          max_x_(-std::numeric_limits<geometric>::infinity()),
+          max_y_(-std::numeric_limits<geometric>::infinity()),
+          max_z_(-std::numeric_limits<geometric>::infinity()),
+          contains_points_(false) {}
 
     void Add(const BoundingBox& bounds) noexcept {
       if (bounds.Empty()) {
@@ -45,7 +53,14 @@ struct BoundingBox final {
 
     void Reset() noexcept { *this = Builder(); }
 
-    BoundingBox Build() const noexcept;
+    BoundingBox Build() const noexcept {
+      if (!contains_points_) {
+        return BoundingBox(Point(0.0, 0.0, 0.0));
+      }
+
+      return BoundingBox(Point(min_x_, min_y_, min_z_),
+                         Point(max_x_, max_y_, max_z_));
+    }
 
    private:
     geometric min_x_, min_y_, min_z_;
@@ -72,6 +87,17 @@ struct BoundingBox final {
     geometric y = static_cast<visual_t>(0.5) * (upper.y + lower.y);
     geometric z = static_cast<visual_t>(0.5) * (upper.z + lower.z);
     return Point(x, y, z);
+  }
+
+  geometric_t Center(Vector::Axis axis) const {
+    geometric min = lower[axis];
+    geometric max = upper[axis];
+    return static_cast<geometric_t>(0.5) * (max + min);
+  }
+
+  Vector::Axis DominantAxis() const {
+    Vector diagonal = upper - lower;
+    return diagonal.DominantAxis();
   }
 
   geometric_t SurfaceArea() const {

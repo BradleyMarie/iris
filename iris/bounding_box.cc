@@ -8,24 +8,6 @@
 
 namespace iris {
 
-BoundingBox::Builder::Builder()
-    : min_x_(std::numeric_limits<geometric>::infinity()),
-      min_y_(std::numeric_limits<geometric>::infinity()),
-      min_z_(std::numeric_limits<geometric>::infinity()),
-      max_x_(-std::numeric_limits<geometric>::infinity()),
-      max_y_(-std::numeric_limits<geometric>::infinity()),
-      max_z_(-std::numeric_limits<geometric>::infinity()),
-      contains_points_(false) {}
-
-BoundingBox BoundingBox::Builder::Build() const noexcept {
-  if (!contains_points_) {
-    return BoundingBox(Point(0.0, 0.0, 0.0));
-  }
-
-  return BoundingBox(Point(min_x_, min_y_, min_z_),
-                     Point(max_x_, max_y_, max_z_));
-}
-
 Point BoundingBox::Min(std::span<const Point> points) {
   if (points.empty()) {
     return Point(0.0, 0.0, 0.0);

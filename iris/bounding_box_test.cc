@@ -122,11 +122,27 @@ TEST(BoundingBoxTest, Empty) {
   EXPECT_FALSE(BoundingBox(Point(0.0, 1.0, 2.0), Point(1.0, 2.0, 3.0)).Empty());
 }
 
+TEST(BoundingBoxTest, CenterAxis) {
+  Point point0(0.0, 1.0, 2.0);
+  Point point1(2.0, 3.0, 4.0);
+  BoundingBox bounding_box(point0, point1);
+  EXPECT_EQ(1.0, bounding_box.Center(Vector::X_AXIS));
+  EXPECT_EQ(2.0, bounding_box.Center(Vector::Y_AXIS));
+  EXPECT_EQ(3.0, bounding_box.Center(Vector::Z_AXIS));
+}
+
 TEST(BoundingBoxTest, Center) {
   Point point0(0.0, 1.0, 2.0);
   Point point1(2.0, 3.0, 4.0);
   BoundingBox bounding_box(point0, point1);
   EXPECT_EQ(Point(1.0, 2.0, 3.0), bounding_box.Center());
+}
+
+TEST(BoundingBoxTest, DominantAxis) {
+  Point point0(0.0, 0.0, 0.0);
+  Point point1(1.0, 2.0, 3.0);
+  BoundingBox bounding_box(point0, point1);
+  EXPECT_EQ(Vector::Z_AXIS, bounding_box.DominantAxis());
 }
 
 TEST(BoundingBoxTest, SurfaceArea) {
