@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <tuple>
 #include <variant>
@@ -67,7 +66,26 @@ Point MaybeMultiply(const Matrix* model_to_world, const Point& point) {
 
 class Triangle final : public Geometry {
  public:
-  struct SharedData {
+  struct SharedData : public ReferenceCountable {
+    SharedData(std::vector<Point> points, std::vector<Vector> normals,
+               std::vector<std::pair<geometric, geometric>> uv,
+               ReferenceCounted<textures::MaskTexture> alpha_mask,
+               ReferenceCounted<Material> front_material,
+               ReferenceCounted<Material> back_material,
+               ReferenceCounted<EmissiveMaterial> front_emissive_materials,
+               ReferenceCounted<EmissiveMaterial> back_emissive_materials,
+               ReferenceCounted<NormalMap> front_normal_map,
+               ReferenceCounted<NormalMap> back_normal_map)
+        : points(std::move(points)),
+          normals(std::move(normals)),
+          uv(std::move(uv)),
+          alpha_mask(std::move(alpha_mask)),
+          materials{std::move(front_material), std::move(back_material)},
+          emissive_materials{std::move(front_emissive_materials),
+                             std::move(back_emissive_materials)},
+          normal_maps{std::move(front_normal_map), std::move(back_normal_map)} {
+    }
+
     std::vector<Point> points;
     std::vector<Vector> normals;
     std::vector<std::pair<geometric, geometric>> uv;
@@ -86,7 +104,7 @@ class Triangle final : public Geometry {
   static constexpr face_t kBackFace = 1u;
 
   Triangle(const std::tuple<uint32_t, uint32_t, uint32_t>& vertices,
-           std::shared_ptr<const SharedData> shared, face_t face_index) noexcept
+           ReferenceCounted<SharedData> shared, face_t face_index) noexcept
       : shared_(std::move(shared)),
         vertices_(vertices),
         face_index_(face_index) {}
@@ -141,7 +159,7 @@ class Triangle final : public Geometry {
       geometric_t b0, geometric_t b1, geometric_t b2) const;
   std::array<geometric_t, 2> UVCoordinates(const Point& point) const;
 
-  std::shared_ptr<const SharedData> shared_;
+  ReferenceCounted<SharedData> shared_;
   std::tuple<uint32_t, uint32_t, uint32_t> vertices_;
   face_t face_index_;
 };
@@ -570,18 +588,16 @@ std::vector<ReferenceCounted<Geometry>> AllocateTriangleMesh(
     ReferenceCounted<EmissiveMaterial> back_emissive_material,
     ReferenceCounted<NormalMap> front_normal_map,
     ReferenceCounted<NormalMap> back_normal_map) {
-  std::shared_ptr<Triangle::SharedData> shared_data =
-      std::make_shared<Triangle::SharedData>(Triangle::SharedData{
-          std::move(points),
-          std::move(normals),
-          std::move(uv),
-          std::move(alpha_mask),
-          {std::move(front_material), std::move(back_material)},
-          {std::move(front_emissive_material),
-           std::move(back_emissive_material)},
-          {std::move(front_normal_map), std::move(back_normal_map)}});
+  ReferenceCounted<Triangle::SharedData> shared_data =
+      MakeReferenceCounted<Triangle::SharedData>(
+          std::move(points), std::move(normals), std::move(uv),
+          std::move(alpha_mask), std::move(front_material),
+          std::move(back_material), std::move(front_emissive_material),
+          std::move(back_emissive_material), std::move(front_normal_map),
+          std::move(back_normal_map));
 
   std::vector<ReferenceCounted<Geometry>> result;
+  result.reserve(indices.size());
   for (size_t i = 0; i < indices.size(); i++) {
     const auto& [v0, v1, v2] = indices[i];
 
