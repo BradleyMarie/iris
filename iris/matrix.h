@@ -14,7 +14,7 @@
 
 namespace iris {
 
-class Matrix final {
+class alignas(16) Matrix final {
  public:
   Matrix(const Matrix& matrix) noexcept = default;
 
