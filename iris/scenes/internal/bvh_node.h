@@ -58,6 +58,8 @@ class BVHNode final {
   uint16_t axis_;
 };
 
+static_assert(sizeof(BVHNode) == 32 || sizeof(geometric) != 4);
+
 }  // namespace internal
 }  // namespace scenes
 }  // namespace iris
