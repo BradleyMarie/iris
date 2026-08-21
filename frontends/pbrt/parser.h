@@ -24,6 +24,7 @@ struct ParsingResult {
 
 struct Options {
   bool always_reflective = false;
+  bool deduplicate_geometry = true;
 };
 
 std::unique_ptr<ParsingResult> ParseScene(

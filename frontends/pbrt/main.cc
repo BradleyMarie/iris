@@ -56,6 +56,14 @@ ABSL_FLAG(bool, fast_exit, true,
           "optional cleanup steps. When memory profiling or running with a "
           "leak checker this flag should be switched to false.");
 
+ABSL_FLAG(bool, deduplicate_geometry, true,
+          "If true, a deduplication pass will be run over the geometry and "
+          "matrices in each scene before rendering. This may remove visual "
+          "artifacts and the improve cache efficiency rendering at the cost "
+          "of increased time to first pixel. For most scenes, the benefit is "
+          "very limited; however, this setting is left on by default since the "
+          "cost of the deduplication pass is relatively small.");
+
 #ifdef _XOPEN_SOURCE
 ABSL_FLAG(unsigned short, nice_increment, 19,
           "The number of steps to increment the nice value of iris.");
@@ -175,6 +183,7 @@ int main(int argc, char** argv) {
 
   Options options;
   options.always_reflective = absl::GetFlag(FLAGS_all_spectra_are_reflective);
+  options.deduplicate_geometry = absl::GetFlag(FLAGS_deduplicate_geometry);
 
   for (size_t render_index = 0;; render_index += 1) {
     std::unique_ptr<ParsingResult> result =

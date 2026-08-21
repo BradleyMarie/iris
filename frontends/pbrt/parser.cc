@@ -73,11 +73,12 @@ struct GraphicsState {
 
 struct State {
   State(Directives& directives, const std::filesystem::path& search_root,
-        bool always_reflective)
+        bool always_reflective, bool deduplicate_geometry)
       : spectrum_manager(search_root, always_reflective),
         texture_manager(spectrum_manager),
         image_manager(search_root, spectrum_manager),
-        directives_(directives) {
+        directives_(directives),
+        deduplicate_geometry_(deduplicate_geometry) {
     graphics.emplace();
     graphics.top().material.first = Defaults().default_material();
     graphics.top().material.second =
@@ -121,6 +122,7 @@ struct State {
 
  private:
   Directives& directives_;
+  bool deduplicate_geometry_;
 };
 
 void State::Include(const std::filesystem::path& search_root,
@@ -167,7 +169,7 @@ void State::Shape(const pbrt_proto::v3::Shape& shape,
 std::unique_ptr<ParsingResult> State::WorldEnd() {
   std::unique_ptr<Scene::Builder> scene_builder = MakeBVHSceneBuilder();
   Renderer renderer(*scene_builder, *integrator->light_scene_builder,
-                    objects.Build(), ColorPowerMatcher());
+                    objects.Build(deduplicate_geometry_), ColorPowerMatcher());
 
   Renderable renderable(
       std::move(renderer), camera(film->resolution), std::move(sampler),
@@ -619,7 +621,8 @@ std::unique_ptr<ParsingResult> ParseDirective(
 std::unique_ptr<ParsingResult> ParseScene(
     Directives& directives, const Options& options,
     const std::filesystem::path& search_root) {
-  State state(directives, search_root, options.always_reflective);
+  State state(directives, search_root, options.always_reflective,
+              options.deduplicate_geometry);
 
   directives.Include(Defaults().global_defaults(),
                      std::filesystem::current_path());

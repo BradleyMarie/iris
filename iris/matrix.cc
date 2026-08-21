@@ -6,6 +6,7 @@
 #include <expected>
 #include <optional>
 
+#include "absl/hash/hash.h"
 #include "iris/bounding_box.h"
 #include "iris/float.h"
 
@@ -159,7 +160,9 @@ Matrix::Matrix(const std::array<std::array<geometric, 4>, 4>& m,
                const std::array<std::array<geometric, 4>, 4>& i)
     : m(Normalize(m)),
       i(Normalize(i)),
-      swaps_handedness_(ComputeSwapsHandedness(m)) {
+      hash_code_(
+          absl::Hash<std::array<std::array<geometric, 4>, 4>>()(this->m)),
+      swaps_handedness_(ComputeSwapsHandedness(this->m)) {
   assert(std::isfinite(m[0][0]));
   assert(std::isfinite(m[0][1]));
   assert(std::isfinite(m[0][2]));

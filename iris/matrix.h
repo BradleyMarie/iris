@@ -67,6 +67,7 @@ class Matrix final {
 
   Matrix Inverse() const;
 
+  size_t HashCode() const { return hash_code_; }
   bool SwapsHandedness() const { return swaps_handedness_; }
 
   const std::array<geometric, 4>& operator[](size_t index) const {
@@ -83,6 +84,7 @@ class Matrix final {
 
  private:
   static const geometric_t rounding_error_[4];
+  const size_t hash_code_;
   const bool swaps_handedness_;
 };
 
@@ -395,5 +397,16 @@ inline Vector Matrix::TransposeMultiply(const Vector& vector) const {
 }
 
 }  // namespace iris
+
+namespace std {
+
+template <>
+struct hash<iris::Matrix> {
+  size_t operator()(const iris::Matrix& matrix) const {
+    return matrix.HashCode();
+  }
+};
+
+}  // namespace std
 
 #endif  // _IRIS_MATRIX_

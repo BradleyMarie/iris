@@ -2,11 +2,10 @@
 #define _IRIS_SCENE_OBJECTS_
 
 #include <deque>
+#include <span>
 #include <utility>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
-#include "absl/container/flat_hash_set.h"
 #include "iris/bounding_box.h"
 #include "iris/environmental_light.h"
 #include "iris/geometry.h"
@@ -38,28 +37,15 @@ class SceneObjects final {
              bool invisible = false);
     void Add(ReferenceCounted<Light> light);
     void Set(ReferenceCounted<EnvironmentalLight> environmental_light);
-    SceneObjects Build();
+    SceneObjects Build(bool deduplicate = true);
 
    private:
-    struct MatrixPtrHash {
-      std::size_t operator()(const Matrix* ptr) const;
-    };
-
-    struct MatrixPtrEqual {
-      bool operator()(const Matrix* lhs, const Matrix* rhs) const;
-    };
-
-    absl::flat_hash_set<const Matrix*, MatrixPtrHash, MatrixPtrEqual> matrices_;
-    std::deque<Matrix> matrix_storage_;
-
-    absl::flat_hash_map<std::pair<const Geometry*, const Matrix*>, bool*>
-        geometry_;
-    std::deque<std::tuple<ReferenceCounted<Geometry>, const Matrix*, bool>>
-        geometry_storage_;
-
-    absl::flat_hash_set<const Light*> lights_;
-    std::vector<ReferenceCounted<Light>> light_storage_;
-
+    std::deque<Matrix> matrices_;
+    std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>
+        visible_geometry_;
+    std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>
+        invisible_geometry_;
+    std::vector<ReferenceCounted<Light>> lights_;
     ReferenceCounted<EnvironmentalLight> environmental_light_;
     BoundingBox::Builder bounds_builder_;
 
@@ -93,8 +79,8 @@ class SceneObjects final {
     return environmental_light_.Get();
   }
 
-  void Reorder(std::vector<size_t> new_geometry_positions = {},
-               std::vector<size_t> new_light_positions = {}) noexcept;
+  void Reorder(std::span<const size_t> new_geometry_order = {},
+               std::span<const size_t> new_light_order = {}) noexcept;
 
  private:
   SceneObjects(std::vector<std::pair<ReferenceCounted<Geometry>, const Matrix*>>

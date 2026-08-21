@@ -49,7 +49,7 @@ std::unique_ptr<Scene> BVHScene::Builder::Build(
       BuildBVH([&scene_objects](
                    size_t index) { return scene_objects.GetGeometry(index); },
                scene_objects.NumGeometry(), /*for_scene=*/true);
-  scene_objects.Reorder(std::move(result.geometry_sort_order));
+  scene_objects.Reorder(result.geometry_sort_order);
 
   return std::make_unique<BVHScene>(scene_objects, std::move(result.bvh));
 }

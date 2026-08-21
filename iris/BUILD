@@ -543,6 +543,7 @@ cc_library(
         ":position_error",
         ":ray",
         ":vector",
+        "@abseil-cpp//absl/hash:hash",
     ],
 )
 
@@ -896,9 +897,7 @@ cc_library(
         ":reference_counted",
         "//iris/internal:area_light",
         "//iris/internal:environmental_light",
-        "@abseil-cpp//absl/container:flat_hash_map",
         "@abseil-cpp//absl/container:flat_hash_set",
-        "@abseil-cpp//absl/hash:hash",
     ],
 )
 
