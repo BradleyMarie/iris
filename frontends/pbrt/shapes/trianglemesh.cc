@@ -21,18 +21,9 @@
 namespace iris {
 namespace pbrt_frontend {
 namespace shapes {
-namespace {
 
 using ::iris::geometry::AllocateTriangleMesh;
 using ::pbrt_proto::TriangleMeshShape;
-
-Point ToPoint(const pbrt_proto::Point& p) { return Point(p.x(), p.y(), p.z()); }
-
-Vector ToVector(const pbrt_proto::Vector& v) {
-  return Vector(v.x(), v.y(), v.z());
-}
-
-}  // namespace
 
 std::tuple<std::vector<ReferenceCounted<Geometry>>, Matrix, bool>
 MakeTriangleMesh(
@@ -65,6 +56,7 @@ MakeTriangleMesh(
 
   uint32_t largest_index = 0u;
   std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> indices;
+  indices.reserve(trianglemesh.indices_size());
   for (const auto& entry : trianglemesh.indices()) {
     if (entry.v0() >= static_cast<uint32_t>(trianglemesh.p_size()) ||
         entry.v1() >= static_cast<uint32_t>(trianglemesh.p_size()) ||
@@ -111,22 +103,26 @@ MakeTriangleMesh(
       exit(EXIT_FAILURE);
     }
 
-    face_indices.push_back(static_cast<face_t>(face_index));
+    face_indices.emplace_back(static_cast<face_t>(face_index));
   }
 
+  std::vector<Point> model_points;
+  model_points.reserve(trianglemesh.p_size());
   std::vector<Point> world_points;
   world_points.reserve(trianglemesh.p_size());
   for (const pbrt_proto::Point& p : trianglemesh.p()) {
-    Point model_point = ToPoint(p);
-    world_points.push_back(model_to_world.Multiply(model_point));
+    model_points.emplace_back(p.x(), p.y(), p.z());
+    world_points.emplace_back(model_to_world.Multiply(model_points.back()));
   }
 
+  std::vector<Vector> model_normals;
+  model_normals.reserve(trianglemesh.n_size());
   std::vector<Vector> world_normals;
   world_normals.reserve(trianglemesh.n_size());
   for (const pbrt_proto::Vector& n : trianglemesh.n()) {
-    Vector model_normal = ToVector(n);
+    model_normals.emplace_back(n.x(), n.y(), n.z());
     world_normals.emplace_back(
-        model_to_world.InverseTransposeMultiply(model_normal));
+        model_to_world.InverseTransposeMultiply(model_normals.back()));
   }
 
   std::vector<std::pair<geometric, geometric>> uvs;
@@ -145,27 +141,24 @@ MakeTriangleMesh(
   }
 
   if (!world_normals.empty()) {
-    for (std::tuple<uint32_t, uint32_t, uint32_t>& indices : indices) {
-      Point p0 = ToPoint(trianglemesh.p(std::get<0>(indices)));
-      Point p1 = ToPoint(trianglemesh.p(std::get<1>(indices)));
-      Point p2 = ToPoint(trianglemesh.p(std::get<2>(indices)));
-      Vector surface_normal = CrossProduct(p1 - p0, p2 - p0);
+    for (auto [i0, i1, i2] : indices) {
+      Vector surface_normal = CrossProduct(model_points[i1] - model_points[i0],
+                                           model_points[i2] - model_points[i0]);
+      Vector aggregate_normal =
+          model_normals[i0] + model_normals[i1] + model_normals[i2];
 
-      Vector n0 = ToVector(trianglemesh.n(std::get<0>(indices)));
-      Vector n1 = ToVector(trianglemesh.n(std::get<1>(indices)));
-      Vector n2 = ToVector(trianglemesh.n(std::get<2>(indices)));
-      geometric_t cumulative_dp = DotProduct(surface_normal, n0 + n1 + n2);
+      geometric_t cumulative_dp = DotProduct(surface_normal, aggregate_normal);
       if (cumulative_dp < static_cast<geometric_t>(0.0)) {
-        std::swap(std::get<1>(indices), std::get<2>(indices));
+        std::swap(i1, i2);
       }
 
       if (model_to_world.SwapsHandedness() ^ reversed_orientation) {
-        std::swap(std::get<1>(indices), std::get<2>(indices));
+        std::swap(i1, i2);
       }
     }
   } else if (model_to_world.SwapsHandedness()) {
-    for (std::tuple<uint32_t, uint32_t, uint32_t>& indices : indices) {
-      std::swap(std::get<1>(indices), std::get<2>(indices));
+    for (auto [i0, i1, i2] : indices) {
+      std::swap(i1, i2);
     }
   }
 
