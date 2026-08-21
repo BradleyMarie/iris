@@ -15,30 +15,48 @@ struct BoundingBox final {
   class Builder {
    public:
     Builder() noexcept
-        : min_x_(std::numeric_limits<geometric>::infinity()),
-          min_y_(std::numeric_limits<geometric>::infinity()),
-          min_z_(std::numeric_limits<geometric>::infinity()),
-          max_x_(-std::numeric_limits<geometric>::infinity()),
-          max_y_(-std::numeric_limits<geometric>::infinity()),
-          max_z_(-std::numeric_limits<geometric>::infinity()),
-          contains_points_(false) {}
+        : min_x_(std::numeric_limits<geometric>::max()),
+          min_y_(std::numeric_limits<geometric>::max()),
+          min_z_(std::numeric_limits<geometric>::max()),
+          max_x_(std::numeric_limits<geometric>::lowest()),
+          max_y_(std::numeric_limits<geometric>::lowest()),
+          max_z_(std::numeric_limits<geometric>::lowest()) {}
+
+    void AddNotEmpty(const BoundingBox& bounds) noexcept {
+      [[assume(std::isfinite(min_x_))]];
+      [[assume(std::isfinite(min_y_))]];
+      [[assume(std::isfinite(min_z_))]];
+      [[assume(std::isfinite(max_x_))]];
+      [[assume(std::isfinite(max_y_))]];
+      [[assume(std::isfinite(max_z_))]];
+      [[assume(std::isfinite(bounds.lower.x))]];
+      [[assume(std::isfinite(bounds.lower.y))]];
+      [[assume(std::isfinite(bounds.lower.z))]];
+      [[assume(std::isfinite(bounds.upper.x))]];
+      [[assume(std::isfinite(bounds.upper.y))]];
+      [[assume(std::isfinite(bounds.upper.z))]];
+      min_x_ = (min_x_ < bounds.lower.x) ? min_x_ : bounds.lower.x;
+      min_y_ = (min_y_ < bounds.lower.y) ? min_y_ : bounds.lower.y;
+      min_z_ = (min_z_ < bounds.lower.z) ? min_z_ : bounds.lower.z;
+      max_x_ = (max_x_ < bounds.upper.x) ? bounds.upper.x : max_x_;
+      max_y_ = (max_y_ < bounds.upper.y) ? bounds.upper.y : max_y_;
+      max_z_ = (max_z_ < bounds.upper.z) ? bounds.upper.z : max_z_;
+      contains_points_ = true;
+    }
 
     void Add(const BoundingBox& bounds) noexcept {
-      if (bounds.Empty()) {
-        return;
+      if (!bounds.Empty()) {
+        AddNotEmpty(bounds);
       }
-
-      Add(bounds.lower);
-      Add(bounds.upper);
     }
 
     void Add(const Point& point) noexcept {
-      [[assume(!std::isnan(min_x_))]];
-      [[assume(!std::isnan(min_y_))]];
-      [[assume(!std::isnan(min_z_))]];
-      [[assume(!std::isnan(max_x_))]];
-      [[assume(!std::isnan(max_y_))]];
-      [[assume(!std::isnan(max_z_))]];
+      [[assume(std::isfinite(min_x_))]];
+      [[assume(std::isfinite(min_y_))]];
+      [[assume(std::isfinite(min_z_))]];
+      [[assume(std::isfinite(max_x_))]];
+      [[assume(std::isfinite(max_y_))]];
+      [[assume(std::isfinite(max_z_))]];
       [[assume(std::isfinite(point.x))]];
       [[assume(std::isfinite(point.y))]];
       [[assume(std::isfinite(point.z))]];
@@ -54,12 +72,15 @@ struct BoundingBox final {
     void Reset() noexcept { *this = Builder(); }
 
     BoundingBox Build() const noexcept {
-      if (!contains_points_) {
-        return BoundingBox(Point(0.0, 0.0, 0.0));
+      if (contains_points_) {
+        return BoundingBox(Point(min_x_, min_y_, min_z_),
+                           Point(max_x_, max_y_, max_z_));
       }
 
-      return BoundingBox(Point(min_x_, min_y_, min_z_),
-                         Point(max_x_, max_y_, max_z_));
+      return BoundingBox(
+          static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+          static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+          static_cast<geometric>(0.0), static_cast<geometric>(0.0));
     }
 
    private:
@@ -78,7 +99,13 @@ struct BoundingBox final {
   BoundingBox(const BoundingBox&) noexcept = default;
 
   bool Empty() const {
-    return (lower.x == upper.x) + (lower.y == upper.y) + (lower.z == upper.z) >=
+    [[assume(std::isfinite(lower.x))]];
+    [[assume(std::isfinite(lower.y))]];
+    [[assume(std::isfinite(lower.z))]];
+    [[assume(std::isfinite(upper.x))]];
+    [[assume(std::isfinite(upper.y))]];
+    [[assume(std::isfinite(upper.z))]];
+    return (lower.x >= upper.x) + (lower.y >= upper.y) + (lower.z >= upper.z) >=
            2;
   }
 
@@ -147,6 +174,10 @@ struct BoundingBox final {
   const Point upper;
 
  private:
+  BoundingBox(geometric min_x, geometric min_y, geometric min_z,
+              geometric max_x, geometric max_y, geometric max_z)
+      : lower(min_x, min_y, min_z), upper(max_x, max_y, max_z) {}
+
   static geometric_t Min(geometric_t v0, geometric_t v1) {
     return (v0 < v1) ? v0 : v1;
   }
