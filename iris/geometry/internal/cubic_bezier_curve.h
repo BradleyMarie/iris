@@ -19,7 +19,10 @@ class CubicBezierCurve {
         start_width_(start_width),
         end_width_(end_width) {}
 
-  BoundingBox ComputeBounds(const Matrix* matrix = nullptr) const;
+  BoundingBox ComputeBounds(const Matrix* matrix) const;
+  BoundingBox ComputeBounds(const Matrix& matrix) const;
+  BoundingBox ComputeBounds() const;
+
   geometric_t ComputeFlatness() const;
   Vector Diagonal() const;
 

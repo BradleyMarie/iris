@@ -115,6 +115,16 @@ TEST(BoundingBoxTest, CreateThreeArray) {
   EXPECT_EQ(Point(2.0, 2.0, 2.0), bounding_box.upper);
 }
 
+TEST(BoundingBoxTest, CreateFromPointAndRadius) {
+  Point lower(0.0, 1.0, 2.0);
+  Point center(1.0, 2.0, 3.0);
+  Point upper(2.0, 3.0, 4.0);
+  BoundingBox bounding_box(center, 1.0);
+
+  EXPECT_EQ(lower, bounding_box.lower);
+  EXPECT_EQ(upper, bounding_box.upper);
+}
+
 TEST(BoundingBoxTest, Empty) {
   EXPECT_TRUE(BoundingBox(Point(0.0, 1.0, 2.0), Point(0.0, 1.0, 2.0)).Empty());
   EXPECT_TRUE(BoundingBox(Point(0.0, 1.0, 2.0), Point(0.0, 1.0, 3.0)).Empty());

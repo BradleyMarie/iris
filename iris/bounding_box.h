@@ -1,6 +1,8 @@
 #ifndef _IRIS_BOUNDING_BOX_
 #define _IRIS_BOUNDING_BOX_
 
+#include <cmath>
+#include <concepts>
 #include <limits>
 #include <optional>
 #include <span>
@@ -95,6 +97,12 @@ struct BoundingBox final {
 
   explicit BoundingBox(std::span<const Point> points) noexcept
       : lower(Min(points)), upper(Max(points)) {}
+
+  explicit BoundingBox(const Point& point, std::floating_point auto radius)
+      : lower(point.x - std::abs(radius), point.y - std::abs(radius),
+              point.z - std::abs(radius)),
+        upper(point.x + std::abs(radius), point.y + std::abs(radius),
+              point.z + std::abs(radius)) {}
 
   BoundingBox(const BoundingBox&) noexcept = default;
 

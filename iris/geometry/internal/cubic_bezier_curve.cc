@@ -40,33 +40,27 @@ Point BlossomBezier(const Point points[4], geometric u0, geometric u1,
 }  // namespace
 
 BoundingBox CubicBezierCurve::ComputeBounds(const Matrix* transform) const {
+  return transform ? ComputeBounds(*transform) : ComputeBounds();
+}
+
+BoundingBox CubicBezierCurve::ComputeBounds(const Matrix& transform) const {
   geometric_t max_width = std::max(start_width_, end_width_);
 
   BoundingBox::Builder builder;
-  if (transform) {
-    Vector offsets[8] = {
-        Vector(max_width, max_width, max_width),
-        Vector(max_width, max_width, -max_width),
-        Vector(max_width, -max_width, max_width),
-        Vector(max_width, -max_width, -max_width),
-        Vector(-max_width, max_width, max_width),
-        Vector(-max_width, max_width, -max_width),
-        Vector(-max_width, -max_width, max_width),
-        Vector(-max_width, -max_width, -max_width),
-    };
+  for (const Point& point : points_) {
+    BoundingBox bounds(point, max_width);
+    builder.Add(transform.Multiply(bounds));
+  }
 
-    for (const Point& point : points_) {
-      for (const Vector& offset : offsets) {
-        Point offset_point = point + offset;
-        builder.Add(transform->Multiply(offset_point));
-      }
-    }
-  } else {
-    Vector offset(max_width, max_width, max_width);
-    for (const Point& point : points_) {
-      builder.Add(point + offset);
-      builder.Add(point - offset);
-    }
+  return builder.Build();
+}
+
+BoundingBox CubicBezierCurve::ComputeBounds() const {
+  geometric_t max_width = std::max(start_width_, end_width_);
+
+  BoundingBox::Builder builder;
+  for (const Point& point : points_) {
+    builder.AddNotEmpty(BoundingBox(point, max_width));
   }
 
   return builder.Build();

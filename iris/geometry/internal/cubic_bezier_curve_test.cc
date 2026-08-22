@@ -28,16 +28,33 @@ TEST(CubicBezierCurve, MaxWidth) {
   EXPECT_EQ(2.0, CubicBezierCurve(points, 2.0, 1.0).MaxWidth());
 }
 
-TEST(CubicBezierCurve, ComputeBounds) {
+TEST(CubicBezierCurve, ComputeBoundsMaybeTransformed) {
+  Point points[4] = {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                     Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
+
+  EXPECT_EQ(BoundingBox(Point(-1.0, -1.0, -1.0), Point(4.0, 2.0, 1.0)),
+            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(nullptr));
+
+  Matrix matrix = Matrix::Translation(1.0, 0.0, 0.0).value();
+  EXPECT_EQ(BoundingBox(Point(0.0, -1.0, -1.0), Point(5.0, 2.0, 1.0)),
+            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(&matrix));
+}
+
+TEST(CubicBezierCurve, ComputeBoundsTransformed) {
+  Point points[4] = {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
+                     Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
+
+  Matrix matrix = Matrix::Translation(1.0, 0.0, 0.0).value();
+  EXPECT_EQ(BoundingBox(Point(0.0, -1.0, -1.0), Point(5.0, 2.0, 1.0)),
+            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(matrix));
+}
+
+TEST(CubicBezierCurve, ComputeBoundsWorld) {
   Point points[4] = {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
                      Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
 
   EXPECT_EQ(BoundingBox(Point(-1.0, -1.0, -1.0), Point(4.0, 2.0, 1.0)),
             CubicBezierCurve(points, 0.0, 1.0).ComputeBounds());
-
-  Matrix matrix = Matrix::Translation(1.0, 0.0, 0.0).value();
-  EXPECT_EQ(BoundingBox(Point(0.0, -1.0, -1.0), Point(5.0, 2.0, 1.0)),
-            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(&matrix));
 }
 
 TEST(CubicBezierCurve, ComputeFlatness) {
