@@ -311,7 +311,8 @@ const Material* Curve::GetMaterial(face_t face) const {
 }
 
 BoundingBox Curve::ComputeBounds(const Matrix* model_to_world) const {
-  return shared_->curve.ComputeBounds(model_to_world);
+  CubicBezierCurve model_curve = shared_->curve.ExtractSegment(u0_, u1_);
+  return model_curve.ComputeBounds(model_to_world);
 }
 
 std::vector<ReferenceCounted<Geometry>> MakeCubicBezierCurve(
