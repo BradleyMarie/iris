@@ -5,6 +5,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <span>
 #include <utility>
@@ -67,7 +68,9 @@ struct CurveHit {
   geometric_t v;
 };
 
-std::optional<CurveHit> Trace(const CubicBezierCurve& curve, geometric_t u0,
+std::optional<CurveHit> Trace(const CubicBezierCurve& curve,
+                              geometric_t minimum_distance,
+                              geometric_t maximum_distance, geometric_t u0,
                               geometric_t u1) {
   if (curve[0].x * (curve[0].x - curve[1].x) -
           curve[0].y * (curve[1].y - curve[0].y) <
@@ -105,8 +108,7 @@ std::optional<CurveHit> Trace(const CubicBezierCurve& curve, geometric_t u0,
     return std::nullopt;
   }
 
-  // This could check the maximum distance as well
-  if (on_curve.z < static_cast<geometric_t>(0.0)) {
+  if (on_curve.z < minimum_distance || on_curve.z > maximum_distance) {
     return std::nullopt;
   }
 
@@ -123,37 +125,33 @@ std::optional<CurveHit> Trace(const CubicBezierCurve& curve, geometric_t u0,
 }
 
 std::optional<CurveHit> RecursiveTrace(const CubicBezierCurve& curve,
+                                       geometric_t minimum_distance,
+                                       geometric_t maximum_distance,
                                        geometric_t u0, geometric_t u1,
                                        int remaining_depth) {
-  static const Ray kRay(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
-
-  if (BoundingBox bounds = curve.ComputeBounds();
-      !bounds.Intersects(kRay, static_cast<geometric_t>(0.0),
-                         std::numeric_limits<geometric_t>::infinity())) {
+  if (!curve.MaybeIntersects(minimum_distance, maximum_distance)) {
     return std::nullopt;
   }
 
   if (remaining_depth == 0) {
-    return Trace(curve, u0, u1);
+    return Trace(curve, minimum_distance, maximum_distance, u0, u1);
   }
 
-  geometric_t midpoint = static_cast<geometric_t>(0.5) * (u0 + u1);
+  geometric_t midpoint = std::midpoint(u0, u1);
   auto [left, right] = curve.Subdivide();
 
-  std::optional<CurveHit> first_hit =
-      RecursiveTrace(left, u0, midpoint, remaining_depth - 1);
+  std::optional<CurveHit> result =
+      RecursiveTrace(left, minimum_distance, maximum_distance, u0, midpoint,
+                     remaining_depth - 1);
+
   std::optional<CurveHit> second_hit =
-      RecursiveTrace(right, midpoint, u1, remaining_depth - 1);
-
-  if (!first_hit) {
-    return second_hit;
+      RecursiveTrace(right, minimum_distance, maximum_distance, midpoint, u1,
+                     remaining_depth - 1);
+  if (second_hit && (!result || second_hit->distance < result->distance)) {
+    result = second_hit;
   }
 
-  if (!second_hit) {
-    return first_hit;
-  }
-
-  return first_hit->distance < second_hit->distance ? first_hit : second_hit;
+  return result;
 }
 
 Vector ComputeDpDv(const Ray& ray, const Vector& dp_du, geometric_t width,
@@ -220,6 +218,10 @@ Hit* Curve::Trace(const Ray& ray, geometric_t minimum_distance,
                   geometric_t maximum_distance, TraceMode trace_mode,
                   HitAllocator& hit_allocator) const {
   CubicBezierCurve model_curve = shared_->curve.ExtractSegment(u0_, u1_);
+  if (!model_curve.ComputeBounds().Intersects(ray, minimum_distance,
+                                              maximum_distance)) {
+    return nullptr;
+  }
 
   Vector maybe_dx =
       CrossProduct(ray.direction, model_curve[3] - model_curve[0]);
@@ -237,7 +239,8 @@ Hit* Curve::Trace(const Ray& ray, geometric_t minimum_distance,
   CubicBezierCurve local_curve = model_curve.InverseTransform(*transform);
 
   std::optional<CurveHit> hit =
-      RecursiveTrace(local_curve, u0_, u1_, ComputeMaxDepth(local_curve));
+      RecursiveTrace(local_curve, minimum_distance, maximum_distance, u0_, u1_,
+                     ComputeMaxDepth(local_curve));
   if (!hit) {
     return nullptr;
   }
@@ -249,8 +252,13 @@ Hit* Curve::Trace(const Ray& ray, geometric_t minimum_distance,
   Vector segment_dp_du = maybe_segment_dp_du.IsZero()
                              ? shared_->curve.Diagonal()
                              : maybe_segment_dp_du;
-  Vector dp_du = segment_dp_du / u_length;
-  Vector dp_dv = ComputeDpDv(ray, dp_du, hit->width, hit->v, shared_->cylinder);
+  Vector dp_du =
+      u_length != static_cast<geometric_t>(0.0)
+          ? segment_dp_du / u_length
+          : Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
+                   static_cast<geometric>(0.0));
+  Vector dp_dv =
+      ComputeDpDv(ray, segment_dp_du, hit->width, hit->v, shared_->cylinder);
 
   return &hit_allocator.Allocate(
       nullptr, hit->distance, hit->width, kFrontFace, kFrontFace,

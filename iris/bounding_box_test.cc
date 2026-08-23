@@ -28,12 +28,12 @@ TEST(BoundingBoxBuilderTest, TwoPoints) {
   EXPECT_EQ(point1, bounds.upper);
 }
 
-TEST(BoundingBoxBuilderTest, AddEmptyBounds) {
+TEST(BoundingBoxBuilderTest, AddIgnoreEmpty) {
   Point point0(0.0, 1.0, 2.0);
   Point point1(1.0, 2.0, 3.0);
   BoundingBox::Builder builder;
-  builder.Add(BoundingBox(point0, point0));
-  builder.Add(BoundingBox(point1, point1));
+  builder.AddIgnoreEmpty(BoundingBox(point0, point0));
+  builder.AddIgnoreEmpty(BoundingBox(point1, point1));
   EXPECT_TRUE(builder.Build().Empty());
 }
 
@@ -41,7 +41,7 @@ TEST(BoundingBoxBuilderTest, AddBounds) {
   Point point0(0.0, 1.0, 2.0);
   Point point1(1.0, 2.0, 3.0);
   BoundingBox::Builder builder;
-  builder.Add(BoundingBox(point0, point1));
+  builder.AddIgnoreEmpty(BoundingBox(point0, point1));
   BoundingBox bounds = builder.Build();
   EXPECT_EQ(point0, bounds.lower);
   EXPECT_EQ(point1, bounds.upper);

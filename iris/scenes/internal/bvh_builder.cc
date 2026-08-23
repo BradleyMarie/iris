@@ -30,7 +30,7 @@ BoundingBox ComputeBounds(const std::vector<BoundingBox>& geometry_bounds,
                           std::span<const size_t> indices) {
   BoundingBox::Builder builder;
   for (size_t index : indices) {
-    builder.AddNotEmpty(geometry_bounds[index]);
+    builder.Add(geometry_bounds[index]);
   }
   return builder.Build();
 }
@@ -58,7 +58,7 @@ void ComputeCosts(InputIterator begin, InputIterator end,
 
   for (auto iter = begin; iter < end; ++iter) {
     cumulative_num_shapes += iter->num_shapes;
-    bounds_builder.Add(iter->bounds.Build());
+    bounds_builder.AddIgnoreEmpty(iter->bounds.Build());
     *output++ = bounds_builder.Build().SurfaceArea() *
                 static_cast<geometric_t>(cumulative_num_shapes);
   }
@@ -100,7 +100,7 @@ std::array<BVHSplit, kNumSplitsToEvaluate> ComputeSplits(
     split_index = std::min(kNumSplitsToEvaluate - 1, split_index);
 
     BVHSplit& split = result[split_index];
-    split.bounds.AddNotEmpty(bounds);
+    split.bounds.Add(bounds);
     split.num_shapes += 1;
   }
 
@@ -336,7 +336,7 @@ BuildBVHResult BuildBVH(
     auto [geometry_ref, model_to_world] = geometry(i);
 
     geometry_bounds.push_back(geometry_ref.ComputeBounds(model_to_world));
-    world_bounds.Add(geometry_bounds.back());
+    world_bounds.AddIgnoreEmpty(geometry_bounds.back());
 
     if (!geometry_bounds.back().Empty()) {
       geometry_order.push_back(i);

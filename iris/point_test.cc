@@ -36,5 +36,11 @@ TEST(PointTest, Add) {
   EXPECT_EQ(Point(5.0, 6.0, 8.0), addend0 + addend1);
 }
 
+TEST(PointTest, Lerp) {
+  Point p0(0.0, 0.0, 0.0);
+  Point p1(1.0, 1.0, 1.0);
+  EXPECT_EQ(Point(0.5, 0.5, 0.5), Lerp(p0, p1, 0.5));
+}
+
 }  // namespace
 }  // namespace iris

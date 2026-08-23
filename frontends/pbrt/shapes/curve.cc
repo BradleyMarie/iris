@@ -24,11 +24,6 @@ using ::iris::geometry::MakeCylindricalCubicBezierCurve;
 using ::iris::geometry::MakeFlatCubicBezierCurve;
 using ::pbrt_proto::CurveShape;
 
-Point Lerp(const Point& p0, const Point& p1, geometric_t t) {
-  return Point(std::lerp(p0.x, p1.x, t), std::lerp(p0.y, p1.y, t),
-               std::lerp(p0.z, p1.z, t));
-}
-
 std::array<Point, 4> ComputeCubicSegment(CurveShape::Basis basis,
                                          std::span<const Point> points,
                                          size_t segment) {

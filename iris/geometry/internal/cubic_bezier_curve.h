@@ -23,6 +23,9 @@ class CubicBezierCurve {
   BoundingBox ComputeBounds(const Matrix& matrix) const;
   BoundingBox ComputeBounds() const;
 
+  bool MaybeIntersects(geometric_t minimum_distance,
+                       geometric_t maximum_distance) const;
+
   geometric_t ComputeFlatness() const;
   Vector Diagonal() const;
 

@@ -24,7 +24,7 @@ struct BoundingBox final {
           max_y_(std::numeric_limits<geometric>::lowest()),
           max_z_(std::numeric_limits<geometric>::lowest()) {}
 
-    void AddNotEmpty(const BoundingBox& bounds) noexcept {
+    void Add(const BoundingBox& bounds) noexcept {
       [[assume(std::isfinite(min_x_))]];
       [[assume(std::isfinite(min_y_))]];
       [[assume(std::isfinite(min_z_))]];
@@ -46,9 +46,9 @@ struct BoundingBox final {
       contains_points_ = true;
     }
 
-    void Add(const BoundingBox& bounds) noexcept {
+    void AddIgnoreEmpty(const BoundingBox& bounds) noexcept {
       if (!bounds.Empty()) {
-        AddNotEmpty(bounds);
+        Add(bounds);
       }
     }
 

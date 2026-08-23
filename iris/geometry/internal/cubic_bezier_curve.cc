@@ -1,8 +1,7 @@
 #include "iris/geometry/internal/cubic_bezier_curve.h"
 
-#include <algorithm>
 #include <cmath>
-#include <expected>
+#include <numeric>
 #include <utility>
 
 #include "iris/bounding_box.h"
@@ -15,9 +14,24 @@ namespace iris {
 namespace geometry {
 namespace {
 
-Point Lerp(const Point& p0, const Point& p1, geometric_t t) {
-  return Point(std::lerp(p0.x, p1.x, t), std::lerp(p0.y, p1.y, t),
-               std::lerp(p0.z, p1.z, t));
+geometric Min(geometric v1, geometric v2, geometric v3, geometric v4) {
+  [[assume(std::isfinite(v1))]];
+  [[assume(std::isfinite(v2))]];
+  [[assume(std::isfinite(v3))]];
+  [[assume(std::isfinite(v4))]];
+  geometric result = std::min(v1, v2);
+  result = std::min(result, v3);
+  return std::min(result, v4);
+}
+
+geometric Max(geometric v1, geometric v2, geometric v3, geometric v4) {
+  [[assume(std::isfinite(v1))]];
+  [[assume(std::isfinite(v2))]];
+  [[assume(std::isfinite(v3))]];
+  [[assume(std::isfinite(v4))]];
+  geometric result = std::max(v1, v2);
+  result = std::max(result, v3);
+  return std::max(result, v4);
 }
 
 Point Sum(const Point& p0, const Point& p1) {
@@ -44,11 +58,15 @@ BoundingBox CubicBezierCurve::ComputeBounds(const Matrix* transform) const {
 }
 
 BoundingBox CubicBezierCurve::ComputeBounds(const Matrix& transform) const {
-  geometric_t max_width = std::max(start_width_, end_width_);
-
   BoundingBox::Builder builder;
+
+  geometric_t index = static_cast<geometric_t>(0.0);
   for (const Point& point : points_) {
-    BoundingBox bounds(point, max_width);
+    geometric_t width = std::lerp(start_width_, end_width_,
+                                  index / static_cast<geometric_t>(3.0));
+    index += static_cast<geometric_t>(1.0);
+
+    BoundingBox bounds(point, width);
     builder.Add(transform.Multiply(bounds));
   }
 
@@ -56,14 +74,55 @@ BoundingBox CubicBezierCurve::ComputeBounds(const Matrix& transform) const {
 }
 
 BoundingBox CubicBezierCurve::ComputeBounds() const {
-  geometric_t max_width = std::max(start_width_, end_width_);
-
   BoundingBox::Builder builder;
+
+  geometric_t index = static_cast<geometric_t>(0.0);
   for (const Point& point : points_) {
-    builder.AddNotEmpty(BoundingBox(point, max_width));
+    geometric_t width = std::lerp(start_width_, end_width_,
+                                  index / static_cast<geometric_t>(3.0));
+    index += static_cast<geometric_t>(1.0);
+
+    builder.Add(BoundingBox(point, width));
   }
 
   return builder.Build();
+}
+
+bool CubicBezierCurve::MaybeIntersects(geometric_t minimum_distance,
+                                       geometric_t maximum_distance) const {
+  geometric_t half_width = static_cast<geometric_t>(0.5) * MaxWidth();
+
+  geometric max_y = Max(points_[0].y, points_[1].y, points_[2].y, points_[3].y);
+  if (max_y + half_width < static_cast<geometric_t>(0.0)) {
+    return false;
+  }
+
+  geometric min_y = Min(points_[0].y, points_[1].y, points_[2].y, points_[3].y);
+  if (min_y - half_width > static_cast<geometric_t>(0.0)) {
+    return false;
+  }
+
+  geometric max_x = Max(points_[0].x, points_[1].x, points_[2].x, points_[3].x);
+  if (max_x + half_width < static_cast<geometric_t>(0.0)) {
+    return false;
+  }
+
+  geometric min_x = Min(points_[0].x, points_[1].x, points_[2].x, points_[3].x);
+  if (min_x - half_width > static_cast<geometric_t>(0.0)) {
+    return false;
+  }
+
+  geometric max_z = Max(points_[0].z, points_[1].z, points_[2].z, points_[3].z);
+  if (max_z + half_width < minimum_distance) {
+    return false;
+  }
+
+  geometric min_z = Min(points_[0].z, points_[1].z, points_[2].z, points_[3].z);
+  if (min_z - half_width > maximum_distance) {
+    return false;
+  }
+
+  return true;
 }
 
 geometric_t CubicBezierCurve::ComputeFlatness() const {
@@ -155,9 +214,7 @@ std::pair<CubicBezierCurve, CubicBezierCurve> CubicBezierCurve::Subdivide()
                          points_[3] * static_cast<geometric_t>(0.5)),
                      points_[3]};
 
-  geometric_t middle_width =
-      static_cast<geometric_t>(0.5) * (start_width_ + end_width_);
-
+  geometric_t middle_width = std::midpoint(start_width_, end_width_);
   return std::make_pair(CubicBezierCurve(points, start_width_, middle_width),
                         CubicBezierCurve(points + 3, middle_width, end_width_));
 }

@@ -33,11 +33,11 @@ TEST(CubicBezierCurve, ComputeBoundsMaybeTransformed) {
                      Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
 
   EXPECT_EQ(BoundingBox(Point(-1.0, -1.0, -1.0), Point(4.0, 2.0, 1.0)),
-            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(nullptr));
+            CubicBezierCurve(points, 1.0, 1.0).ComputeBounds(nullptr));
 
   Matrix matrix = Matrix::Translation(1.0, 0.0, 0.0).value();
   EXPECT_EQ(BoundingBox(Point(0.0, -1.0, -1.0), Point(5.0, 2.0, 1.0)),
-            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(&matrix));
+            CubicBezierCurve(points, 1.0, 1.0).ComputeBounds(&matrix));
 }
 
 TEST(CubicBezierCurve, ComputeBoundsTransformed) {
@@ -45,16 +45,26 @@ TEST(CubicBezierCurve, ComputeBoundsTransformed) {
                      Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
 
   Matrix matrix = Matrix::Translation(1.0, 0.0, 0.0).value();
-  EXPECT_EQ(BoundingBox(Point(0.0, -1.0, -1.0), Point(5.0, 2.0, 1.0)),
-            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(matrix));
+  BoundingBox bounds = CubicBezierCurve(points, 0.0, 1.0).ComputeBounds(matrix);
+  EXPECT_EQ(1.0, bounds.lower.x);
+  EXPECT_NEAR(-2.0 / 3.00, bounds.lower.y, 0.001);
+  EXPECT_EQ(-1.0, bounds.lower.z);
+  EXPECT_EQ(5.0, bounds.upper.x);
+  EXPECT_EQ(2.0, bounds.upper.y);
+  EXPECT_EQ(1.0, bounds.upper.z);
 }
 
 TEST(CubicBezierCurve, ComputeBoundsWorld) {
   Point points[4] = {Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
                      Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
 
-  EXPECT_EQ(BoundingBox(Point(-1.0, -1.0, -1.0), Point(4.0, 2.0, 1.0)),
-            CubicBezierCurve(points, 0.0, 1.0).ComputeBounds());
+  BoundingBox bounds = CubicBezierCurve(points, 0.0, 1.0).ComputeBounds();
+  EXPECT_EQ(0.0, bounds.lower.x);
+  EXPECT_NEAR(-2.0 / 3.00, bounds.lower.y, 0.001);
+  EXPECT_EQ(-1.0, bounds.lower.z);
+  EXPECT_EQ(4.0, bounds.upper.x);
+  EXPECT_EQ(2.0, bounds.upper.y);
+  EXPECT_EQ(1.0, bounds.upper.z);
 }
 
 TEST(CubicBezierCurve, ComputeFlatness) {
@@ -62,6 +72,55 @@ TEST(CubicBezierCurve, ComputeFlatness) {
                      Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)};
 
   EXPECT_EQ(2.0, CubicBezierCurve(points, 0.0, 1.0).ComputeFlatness());
+}
+
+TEST(MaybeIntersects, FailsMaxYCheck) {
+  Point points[4] = {Point(0.0, -10.0, 5.0), Point(0.0, -8.0, 5.0),
+                     Point(0.0, -6.0, 5.0), Point(0.0, -5.0, 5.0)};
+  CubicBezierCurve curve(points, 2.0, 2.0);
+  EXPECT_FALSE(curve.MaybeIntersects(0.0, 10.0));
+}
+
+TEST(MaybeIntersects, FailsMinYCheck) {
+  Point points[4] = {Point(0.0, 5.0, 5.0), Point(0.0, 6.0, 5.0),
+                     Point(0.0, 8.0, 5.0), Point(0.0, 10.0, 5.0)};
+  CubicBezierCurve curve(points, 2.0, 2.0);
+  EXPECT_FALSE(curve.MaybeIntersects(0.0, 10.0));
+}
+
+TEST(MaybeIntersects, FailsMaxXCheck) {
+  Point points[4] = {Point(-10.0, 0.0, 5.0), Point(-8.0, 0.0, 5.0),
+                     Point(-6.0, 0.0, 5.0), Point(-5.0, 0.0, 5.0)};
+  CubicBezierCurve curve(points, 2.0, 2.0);
+  EXPECT_FALSE(curve.MaybeIntersects(0.0, 10.0));
+}
+
+TEST(MaybeIntersects, FailsMinXCheck) {
+  Point points[4] = {Point(5.0, 0.0, 5.0), Point(6.0, 0.0, 5.0),
+                     Point(8.0, 0.0, 5.0), Point(10.0, 0.0, 5.0)};
+  CubicBezierCurve curve(points, 2.0, 2.0);
+  EXPECT_FALSE(curve.MaybeIntersects(0.0, 10.0));
+}
+
+TEST(MaybeIntersects, FailsMinZCheck) {
+  Point points[4] = {Point(0.0, 0.0, 0.0), Point(0.0, 0.0, 1.0),
+                     Point(0.0, 0.0, 1.5), Point(0.0, 0.0, 2.0)};
+  CubicBezierCurve curve(points, 2.0, 2.0);
+  EXPECT_FALSE(curve.MaybeIntersects(5.0, 10.0));
+}
+
+TEST(MaybeIntersects, FailsMaxZCheck) {
+  Point points[4] = {Point(0.0, 0.0, 15.0), Point(0.0, 0.0, 16.0),
+                     Point(0.0, 0.0, 18.0), Point(0.0, 0.0, 20.0)};
+  CubicBezierCurve curve(points, 2.0, 2.0);
+  EXPECT_FALSE(curve.MaybeIntersects(0.0, 10.0));
+}
+
+TEST(MaybeIntersects, Succeeds) {
+  Point points[4] = {Point(-0.5, -0.5, 2.0), Point(0.0, 0.0, 4.0),
+                     Point(0.2, 0.2, 6.0), Point(0.5, 0.5, 8.0)};
+  CubicBezierCurve curve(points, 2.0, 2.0);
+  EXPECT_TRUE(curve.MaybeIntersects(1.0, 10.0));
 }
 
 TEST(CubicBezierCurve, Diagonal) {
@@ -152,7 +211,7 @@ TEST(CubicBezierCurve, InverseTransform) {
 
   Matrix transform = Matrix::Translation(1.0, 0.0, 0.0).value();
   EXPECT_EQ(BoundingBox(Point(-2.0, -1.0, -1.0), Point(3.0, 2.0, 1.0)),
-            CubicBezierCurve(points, 0.0, 1.0)
+            CubicBezierCurve(points, 1.0, 1.0)
                 .InverseTransform(transform)
                 .ComputeBounds());
 }

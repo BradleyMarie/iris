@@ -51,7 +51,7 @@ static const ReferenceCounted<NormalMap> front_normal_map =
 ReferenceCounted<Geometry> MakeCubicBezierCurve() {
   return MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
                                    Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                                  1, 0.25, 0.5, 0.0, 1.0, front_material,
+                                  1, 0.5, 0.5, 0.0, 1.0, front_material,
                                   front_normal_map)
       .front();
 }
@@ -74,15 +74,27 @@ TEST(CubicBezierCurve, Null) {
                   .empty());
 }
 
-TEST(Curve, MissesCompletely) {
+TEST(Curve, BelowMinimum) {
   ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
 
-  Point origin(0.0, 0.0, 100.0);
+  Point origin(0.0, 0.0, 1.0);
   Vector direction(0.0, 0.0, 1.0);
   Ray ray(origin, direction);
 
   HitAllocator hit_allocator = MakeHitAllocator(ray);
-  Hit* hit = curve->TraceAllHits(hit_allocator);
+  Hit* hit = curve->TraceOneHit(hit_allocator, 0.0, 100.0, false);
+  EXPECT_EQ(nullptr, hit);
+}
+
+TEST(Curve, AboveMaximum) {
+  ReferenceCounted<Geometry> curve = MakeCubicBezierCurve();
+
+  Point origin(0.0, 0.0, -101.0);
+  Vector direction(0.0, 0.0, 1.0);
+  Ray ray(origin, direction);
+
+  HitAllocator hit_allocator = MakeHitAllocator(ray);
+  Hit* hit = curve->TraceOneHit(hit_allocator, 0.0, 100.0, false);
   EXPECT_EQ(nullptr, hit);
 }
 
@@ -108,8 +120,8 @@ TEST(Curve, Hits) {
   EXPECT_NEAR(3.0000, data->dp_du.x, 0.001);
   EXPECT_NEAR(2.5721, data->dp_du.y, 0.001);
   EXPECT_NEAR(0.0000, data->dp_du.z, 0.001);
-  EXPECT_NEAR(0.3374, data->dp_dv.x, 0.001);
-  EXPECT_NEAR(-0.3936, data->dp_dv.y, 0.001);
+  EXPECT_NEAR(0.65089, data->dp_dv.x, 0.001);
+  EXPECT_NEAR(-0.7591, data->dp_dv.y, 0.001);
   EXPECT_NEAR(0.0000, data->dp_dv.z, 0.001);
 }
 

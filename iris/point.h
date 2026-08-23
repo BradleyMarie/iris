@@ -1,6 +1,8 @@
 #ifndef _IRIS_POINT_
 #define _IRIS_POINT_
 
+#include <concepts>
+
 #include "iris/float.h"
 #include "iris/vector.h"
 
@@ -57,6 +59,11 @@ static inline Point operator*(T scalar, const Point& point)
   requires std::is_floating_point<T>::value
 {
   return point * scalar;
+}
+
+static inline Point Lerp(const Point& p0, const Point& p1,
+                         std::floating_point auto t) {
+  return p0 + (p1 - p0) * t;
 }
 
 }  // namespace iris
