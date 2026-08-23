@@ -62,7 +62,8 @@ BoundingBox CubicBezierCurve::ComputeBounds(const Matrix& transform) const {
 
   geometric_t index = static_cast<geometric_t>(0.0);
   for (const Point& point : points_) {
-    geometric_t width = std::lerp(start_width_, end_width_,
+    geometric_t width = std::lerp(static_cast<geometric_t>(0.5) * start_width_,
+                                  static_cast<geometric_t>(0.5) * end_width_,
                                   index / static_cast<geometric_t>(3.0));
     index += static_cast<geometric_t>(1.0);
 
@@ -78,7 +79,8 @@ BoundingBox CubicBezierCurve::ComputeBounds() const {
 
   geometric_t index = static_cast<geometric_t>(0.0);
   for (const Point& point : points_) {
-    geometric_t width = std::lerp(start_width_, end_width_,
+    geometric_t width = std::lerp(static_cast<geometric_t>(0.5) * start_width_,
+                                  static_cast<geometric_t>(0.5) * end_width_,
                                   index / static_cast<geometric_t>(3.0));
     index += static_cast<geometric_t>(1.0);
 

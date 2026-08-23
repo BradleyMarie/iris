@@ -51,7 +51,7 @@ static const ReferenceCounted<NormalMap> front_normal_map =
 ReferenceCounted<Geometry> MakeCubicBezierCurve() {
   return MakeFlatCubicBezierCurve({Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 0.0),
                                    Point(2.0, 0.0, 0.0), Point(3.0, 1.0, 0.0)},
-                                  1, 0.5, 0.5, 0.0, 1.0, front_material,
+                                  1, 1.0, 1.0, 0.0, 1.0, front_material,
                                   front_normal_map)
       .front();
 }
@@ -120,8 +120,8 @@ TEST(Curve, Hits) {
   EXPECT_NEAR(3.0000, data->dp_du.x, 0.001);
   EXPECT_NEAR(2.5721, data->dp_du.y, 0.001);
   EXPECT_NEAR(0.0000, data->dp_du.z, 0.001);
-  EXPECT_NEAR(0.65089, data->dp_dv.x, 0.001);
-  EXPECT_NEAR(-0.7591, data->dp_dv.y, 0.001);
+  EXPECT_NEAR(1.30178, data->dp_dv.x, 0.001);
+  EXPECT_NEAR(-1.5183, data->dp_dv.y, 0.001);
   EXPECT_NEAR(0.0000, data->dp_dv.z, 0.001);
 }
 
