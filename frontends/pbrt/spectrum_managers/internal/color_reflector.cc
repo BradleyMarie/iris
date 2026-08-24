@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
+#include <cmath>
 
 #include "iris/color.h"
 #include "iris/float.h"
@@ -16,7 +18,11 @@ namespace {
 
 class ColorReflector final : public Reflector {
  public:
-  ColorReflector(visual r, visual g, visual b) noexcept : values_({r, g, b}) {}
+  ColorReflector(visual r, visual g, visual b) noexcept : values_({r, g, b}) {
+    assert(std::isfinite(r));
+    assert(std::isfinite(g));
+    assert(std::isfinite(b));
+  }
 
   visual_t Reflectance(visual_t wavelength) const override;
 

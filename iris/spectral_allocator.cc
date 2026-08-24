@@ -24,7 +24,10 @@ class SumSpectrum final : public Spectrum {
     visual_t addend1 = addend1_.Intensity(wavelength);
     assert(std::isfinite(addend1) && addend1 >= static_cast<visual_t>(0.0));
 
-    return addend0 + addend1;
+    visual_t sum = addend0 + addend1;
+    assert(std::isfinite(sum) && sum >= static_cast<visual_t>(0.0));
+
+    return sum;
   }
 
  private:
@@ -43,7 +46,10 @@ class ScaledSpectrum final : public Spectrum {
     visual_t intensity = spectrum_.Intensity(wavelength);
     assert(std::isfinite(intensity) && intensity >= static_cast<visual_t>(0.0));
 
-    return intensity * scalar_;
+    visual_t product = intensity * scalar_;
+    assert(std::isfinite(product) && product >= static_cast<visual_t>(0.0));
+
+    return product;
   }
 
  private:
@@ -64,7 +70,10 @@ class ReflectedSpectrum final : public Spectrum {
     assert(std::isfinite(reflectance) &&
            reflectance >= static_cast<visual_t>(0.0));
 
-    return intensity * reflectance;
+    visual_t product = intensity * reflectance;
+    assert(std::isfinite(product) && product >= static_cast<visual_t>(0.0));
+
+    return product;
   }
 
  private:
@@ -86,7 +95,11 @@ class SumReflector final : public Reflector {
     assert(std::isfinite(reflectance1) &&
            reflectance1 >= static_cast<visual_t>(0.0));
 
-    return std::min(static_cast<visual_t>(1.0), reflectance0 + reflectance1);
+    visual_t sum =
+        std::min(static_cast<visual_t>(1.0), reflectance0 + reflectance1);
+    assert(std::isfinite(sum) && sum >= static_cast<visual_t>(0.0));
+
+    return sum;
   }
 
  private:
@@ -106,7 +119,10 @@ class ScaledReflector final : public Reflector {
     assert(std::isfinite(reflectance) &&
            reflectance >= static_cast<visual_t>(0.0));
 
-    return reflectance * scalar_;
+    visual_t product = reflectance * scalar_;
+    assert(std::isfinite(product) && product >= static_cast<visual_t>(0.0));
+
+    return product;
   }
 
  private:
@@ -128,7 +144,10 @@ class ScaledReflectors final : public Reflector {
     assert(std::isfinite(attenuation) &&
            attenuation >= static_cast<visual_t>(0.0));
 
-    return reflectance * attenuation;
+    visual_t product = reflectance * attenuation;
+    assert(std::isfinite(product) && product >= static_cast<visual_t>(0.0));
+
+    return product;
   }
 
  private:
@@ -152,8 +171,11 @@ class InvertedReflector final : public Reflector {
     assert(std::isfinite(reflectance) &&
            reflectance >= static_cast<visual_t>(0.0));
 
-    return std::max(static_cast<visual_t>(0.0),
-                    static_cast<visual_t>(1.0) - reflectance);
+    visual_t inverse = std::max(static_cast<visual_t>(0.0),
+                                static_cast<visual_t>(1.0) - reflectance);
+    assert(std::isfinite(inverse) && inverse >= static_cast<visual_t>(0.0));
+
+    return inverse;
   }
 
  private:
@@ -169,7 +191,11 @@ class SqrtReflector final : public Reflector {
     assert(std::isfinite(reflectance) &&
            reflectance >= static_cast<visual_t>(0.0));
 
-    return std::sqrt(std::max(static_cast<visual_t>(0.0), reflectance));
+    visual_t result =
+        std::sqrt(std::max(static_cast<visual_t>(0.0), reflectance));
+    assert(std::isfinite(result) && result >= static_cast<visual_t>(0.0));
+
+    return result;
   }
 
  private:
@@ -188,7 +214,10 @@ class UnboundedScaledReflector final : public Reflector {
     assert(std::isfinite(reflectance) &&
            reflectance >= static_cast<visual_t>(0.0));
 
-    return reflectance * scalar_;
+    visual_t product = reflectance * scalar_;
+    assert(std::isfinite(product) && product >= static_cast<visual_t>(0.0));
+
+    return product;
   }
 
  private:
@@ -211,7 +240,10 @@ class UnboundedScaledReflectors final : public Reflector {
     assert(std::isfinite(attenuation) &&
            attenuation >= static_cast<visual_t>(0.0));
 
-    return reflectance * attenuation;
+    visual_t product = reflectance * attenuation;
+    assert(std::isfinite(product) && product >= static_cast<visual_t>(0.0));
+
+    return product;
   }
 
  private:
@@ -231,7 +263,10 @@ class UnboundedSumReflector final : public Reflector {
     visual_t addend1 = addend1_.Reflectance(wavelength);
     assert(std::isfinite(addend1) && addend1 >= static_cast<visual_t>(0.0));
 
-    return addend0 + addend1;
+    visual_t sum = addend0 + addend1;
+    assert(std::isfinite(sum) && sum >= static_cast<visual_t>(0.0));
+
+    return sum;
   }
 
  private:
