@@ -14,7 +14,7 @@
 
 namespace iris {
 
-class alignas(16) Matrix final {
+class Matrix final {
  public:
   Matrix(const Matrix& matrix) noexcept = default;
 
@@ -79,8 +79,8 @@ class alignas(16) Matrix final {
          const std::array<std::array<geometric, 4>, 4>& i);
 
  public:
-  const std::array<std::array<geometric, 4>, 4> m;
-  const std::array<std::array<geometric, 4>, 4> i;
+  alignas(16) const std::array<std::array<geometric, 4>, 4> m;
+  alignas(16) const std::array<std::array<geometric, 4>, 4> i;
 
  private:
   static const geometric_t rounding_error_[4];

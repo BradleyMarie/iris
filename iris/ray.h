@@ -8,7 +8,7 @@
 
 namespace iris {
 
-class alignas(16) Ray {
+class Ray {
  public:
   Ray(const Point& origin, const Vector& direction) noexcept
       : origin(origin), direction(direction) {}
@@ -21,16 +21,8 @@ class alignas(16) Ray {
     return origin + direction * distance;
   }
 
-  const Point origin;
-
- private:
-  const geometric pad0 = static_cast<visual_t>(1.0);
-
- public:
-  const Vector direction;
-
- private:
-  const geometric pad1 = static_cast<visual_t>(0.0);
+  alignas(16) const Point origin;
+  alignas(16) const Vector direction;
 };
 
 static inline Ray Normalize(const Ray& ray) {
