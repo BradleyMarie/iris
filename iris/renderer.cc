@@ -124,13 +124,13 @@ void RenderChunk(
             assert(std::isfinite(sample_components[0]) &&
                    sample_components[0] >= static_cast<visual_t>(0.0));
             assert(std::isfinite(sample_components[1]) &&
-                   sample_components[0] >= static_cast<visual_t>(0.0));
+                   sample_components[1] >= static_cast<visual_t>(0.0));
             assert(std::isfinite(sample_components[2]) &&
-                   sample_components[0] >= static_cast<visual_t>(0.0));
+                   sample_components[2] >= static_cast<visual_t>(0.0));
 
             if (std::isfinite(sample_components[0]) &&
-                std::isfinite(sample_components[0]) &&
-                std::isfinite(sample_components[0])) {
+                std::isfinite(sample_components[1]) &&
+                std::isfinite(sample_components[2])) {
               sample_components[0] =
                   std::max(static_cast<visual_t>(0.0), sample_components[0]);
               sample_components[1] =
