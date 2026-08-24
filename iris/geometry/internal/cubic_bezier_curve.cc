@@ -14,24 +14,12 @@ namespace iris {
 namespace geometry {
 namespace {
 
-geometric Min(geometric v1, geometric v2, geometric v3, geometric v4) {
-  [[assume(std::isfinite(v1))]];
-  [[assume(std::isfinite(v2))]];
-  [[assume(std::isfinite(v3))]];
-  [[assume(std::isfinite(v4))]];
-  geometric result = std::min(v1, v2);
-  result = std::min(result, v3);
-  return std::min(result, v4);
-}
-
-geometric Max(geometric v1, geometric v2, geometric v3, geometric v4) {
-  [[assume(std::isfinite(v1))]];
-  [[assume(std::isfinite(v2))]];
-  [[assume(std::isfinite(v3))]];
-  [[assume(std::isfinite(v4))]];
-  geometric result = std::max(v1, v2);
-  result = std::max(result, v3);
-  return std::max(result, v4);
+Point BlossomBezier(const Point points[4], geometric u0, geometric u1,
+                    geometric u2) {
+  Point a[3] = {Lerp(points[0], points[1], u0), Lerp(points[1], points[2], u0),
+                Lerp(points[2], points[3], u0)};
+  Point b[2] = {Lerp(a[0], a[1], u1), Lerp(a[1], a[2], u1)};
+  return Lerp(b[0], b[1], u2);
 }
 
 Point Sum(const Point& p0, const Point& p1) {
@@ -43,15 +31,18 @@ Point Sum(const T& first, const T& second, const Rest&... rest) {
   return Sum(Sum(first, second), rest...);
 }
 
-Point BlossomBezier(const Point points[4], geometric u0, geometric u1,
-                    geometric u2) {
-  Point a[3] = {Lerp(points[0], points[1], u0), Lerp(points[1], points[2], u0),
-                Lerp(points[2], points[3], u0)};
-  Point b[2] = {Lerp(a[0], a[1], u1), Lerp(a[1], a[2], u1)};
-  return Lerp(b[0], b[1], u2);
-}
-
 }  // namespace
+
+CubicBezierCurve::CubicBezierCurve(const Point points[4],
+                                   geometric half_start_width,
+                                   geometric half_end_width)
+    : points_{points[0], points[1], points[2], points[3]},
+      half_widths_{half_start_width,
+                   std::lerp(half_start_width, half_end_width,
+                             static_cast<geometric>(1.0 / 3.0)),
+                   std::lerp(half_start_width, half_end_width,
+                             static_cast<geometric>(2.0 / 3.0)),
+                   half_end_width} {}
 
 BoundingBox CubicBezierCurve::ComputeBounds(const Matrix* transform) const {
   return transform ? ComputeBounds(*transform) : ComputeBounds();
@@ -60,14 +51,8 @@ BoundingBox CubicBezierCurve::ComputeBounds(const Matrix* transform) const {
 BoundingBox CubicBezierCurve::ComputeBounds(const Matrix& transform) const {
   BoundingBox::Builder builder;
 
-  geometric_t index = static_cast<geometric_t>(0.0);
-  for (const Point& point : points_) {
-    geometric_t width = std::lerp(static_cast<geometric_t>(0.5) * start_width_,
-                                  static_cast<geometric_t>(0.5) * end_width_,
-                                  index / static_cast<geometric_t>(3.0));
-    index += static_cast<geometric_t>(1.0);
-
-    BoundingBox bounds(point, width);
+  for (size_t index = 0; index < 4; index++) {
+    BoundingBox bounds(points_[index], half_widths_[index]);
     builder.Add(transform.Multiply(bounds));
   }
 
@@ -77,14 +62,9 @@ BoundingBox CubicBezierCurve::ComputeBounds(const Matrix& transform) const {
 BoundingBox CubicBezierCurve::ComputeBounds() const {
   BoundingBox::Builder builder;
 
-  geometric_t index = static_cast<geometric_t>(0.0);
-  for (const Point& point : points_) {
-    geometric_t width = std::lerp(static_cast<geometric_t>(0.5) * start_width_,
-                                  static_cast<geometric_t>(0.5) * end_width_,
-                                  index / static_cast<geometric_t>(3.0));
-    index += static_cast<geometric_t>(1.0);
-
-    builder.Add(BoundingBox(point, width));
+  for (size_t index = 0; index < 4; index++) {
+    BoundingBox bounds(points_[index], half_widths_[index]);
+    builder.Add(bounds);
   }
 
   return builder.Build();
@@ -92,39 +72,14 @@ BoundingBox CubicBezierCurve::ComputeBounds() const {
 
 bool CubicBezierCurve::MaybeIntersects(geometric_t minimum_distance,
                                        geometric_t maximum_distance) const {
-  geometric_t half_width = static_cast<geometric_t>(0.5) * MaxWidth();
-
-  geometric max_y = Max(points_[0].y, points_[1].y, points_[2].y, points_[3].y);
-  if (max_y + half_width < static_cast<geometric_t>(0.0)) {
-    return false;
-  }
-
-  geometric min_y = Min(points_[0].y, points_[1].y, points_[2].y, points_[3].y);
-  if (min_y - half_width > static_cast<geometric_t>(0.0)) {
-    return false;
-  }
-
-  geometric max_x = Max(points_[0].x, points_[1].x, points_[2].x, points_[3].x);
-  if (max_x + half_width < static_cast<geometric_t>(0.0)) {
-    return false;
-  }
-
-  geometric min_x = Min(points_[0].x, points_[1].x, points_[2].x, points_[3].x);
-  if (min_x - half_width > static_cast<geometric_t>(0.0)) {
-    return false;
-  }
-
-  geometric max_z = Max(points_[0].z, points_[1].z, points_[2].z, points_[3].z);
-  if (max_z + half_width < minimum_distance) {
-    return false;
-  }
-
-  geometric min_z = Min(points_[0].z, points_[1].z, points_[2].z, points_[3].z);
-  if (min_z - half_width > maximum_distance) {
-    return false;
-  }
-
-  return true;
+  BoundingBox bounds = ComputeBounds();
+  bool intersects = bounds.upper.y > static_cast<geometric_t>(0.0) &&
+                    bounds.lower.y < static_cast<geometric_t>(0.0) &&
+                    bounds.upper.x > static_cast<geometric_t>(0.0) &&
+                    bounds.lower.x < static_cast<geometric_t>(0.0) &&
+                    bounds.upper.z > minimum_distance &&
+                    bounds.lower.z < maximum_distance;
+  return intersects;
 }
 
 geometric_t CubicBezierCurve::ComputeFlatness() const {
@@ -173,7 +128,7 @@ std::pair<Point, geometric_t> CubicBezierCurve::Evaluate(
   }
 
   return std::make_pair(Lerp(b[0], b[1], u),
-                        std::lerp(start_width_, end_width_, u));
+                        std::lerp(half_widths_[0], half_widths_[3], u));
 }
 
 Vector CubicBezierCurve::EvaluateDerivative(geometric_t u) const {
@@ -193,8 +148,9 @@ CubicBezierCurve CubicBezierCurve::ExtractSegment(geometric_t start,
       BlossomBezier(points_, end, end, end),
   };
 
-  return CubicBezierCurve(points, std::lerp(start_width_, end_width_, start),
-                          std::lerp(start_width_, end_width_, end));
+  return CubicBezierCurve(points,
+                          std::lerp(half_widths_[0], half_widths_[3], start),
+                          std::lerp(half_widths_[0], half_widths_[3], end));
 }
 
 std::pair<CubicBezierCurve, CubicBezierCurve> CubicBezierCurve::Subdivide()
@@ -216,9 +172,10 @@ std::pair<CubicBezierCurve, CubicBezierCurve> CubicBezierCurve::Subdivide()
                          points_[3] * static_cast<geometric_t>(0.5)),
                      points_[3]};
 
-  geometric_t middle_width = std::midpoint(start_width_, end_width_);
-  return std::make_pair(CubicBezierCurve(points, start_width_, middle_width),
-                        CubicBezierCurve(points + 3, middle_width, end_width_));
+  geometric_t middle_width = std::midpoint(half_widths_[0], half_widths_[3]);
+  return std::make_pair(
+      CubicBezierCurve(points, half_widths_[0], middle_width),
+      CubicBezierCurve(points + 3, middle_width, half_widths_[3]));
 }
 
 CubicBezierCurve CubicBezierCurve::InverseTransform(
@@ -230,7 +187,7 @@ CubicBezierCurve CubicBezierCurve::InverseTransform(
       transform.InverseMultiply(points_[3]),
   };
 
-  return CubicBezierCurve(points, start_width_, end_width_);
+  return CubicBezierCurve(points, half_widths_[0], half_widths_[3]);
 }
 
 }  // namespace geometry

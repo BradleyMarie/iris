@@ -13,11 +13,8 @@ namespace geometry {
 
 class CubicBezierCurve {
  public:
-  CubicBezierCurve(const Point points[4], geometric start_width,
-                   geometric end_width)
-      : points_{points[0], points[1], points[2], points[3]},
-        start_width_(start_width),
-        end_width_(end_width) {}
+  CubicBezierCurve(const Point points[4], geometric half_start_width,
+                   geometric half_end_width);
 
   BoundingBox ComputeBounds(const Matrix* matrix) const;
   BoundingBox ComputeBounds(const Matrix& matrix) const;
@@ -40,16 +37,16 @@ class CubicBezierCurve {
 
   CubicBezierCurve InverseTransform(const Matrix& transform) const;
 
-  geometric MaxWidth() const {
-    return start_width_ > end_width_ ? start_width_ : end_width_;
+  geometric MaxHalfWidth() const {
+    return half_widths_[0] > half_widths_[3] ? half_widths_[0]
+                                             : half_widths_[3];
   }
 
-  const Point& operator[](size_t index) const { return points_[index]; }
+  Point operator[](size_t index) const { return points_[index]; }
 
  private:
-  Point points_[4];
-  geometric start_width_;
-  geometric end_width_;
+  alignas(16) Point points_[4];
+  geometric half_widths_[4];
 };
 
 }  // namespace geometry

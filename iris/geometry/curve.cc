@@ -36,11 +36,11 @@ namespace {
 
 static const geometric_t kLnToLog4 = 1.0 / std::log(4.0);
 static const geometric_t k6Sqrt2 = std::sqrt(36.0 * 2.0);
-static const geometric_t kEpsilonFactor = 8.0 * 0.05;
+static const geometric_t kEpsilonFactor = 4.0 * 0.05;
 
 size_t ComputeMaxDepth(const CubicBezierCurve& curve) {
   geometric_t numerator = k6Sqrt2 * curve.ComputeFlatness();
-  geometric_t denominator = kEpsilonFactor * curve.MaxWidth();
+  geometric_t denominator = kEpsilonFactor * curve.MaxHalfWidth();
 
   geometric_t num_refinement_steps =
       std::log(numerator / denominator) * kLnToLog4;
@@ -99,12 +99,11 @@ std::optional<CurveHit> Trace(const CubicBezierCurve& curve,
   w = std::min(static_cast<geometric_t>(1.0), w);
 
   geometric_t deriv_x, deriv_y;
-  auto [on_curve, width] = curve.Evaluate(w, &deriv_x, &deriv_y);
+  auto [on_curve, half_width] = curve.Evaluate(w, &deriv_x, &deriv_y);
 
   geometric_t distance_to_on_curve_squared =
       on_curve.x * on_curve.x + on_curve.y * on_curve.y;
-  if (distance_to_on_curve_squared >
-      width * width * static_cast<geometric_t>(0.25)) {
+  if (distance_to_on_curve_squared > half_width * half_width) {
     return std::nullopt;
   }
 
@@ -114,14 +113,13 @@ std::optional<CurveHit> Trace(const CubicBezierCurve& curve,
 
   geometric_t u = std::lerp(u0, u1, w);
 
-  geometric_t distance_to_on_curve = std::sqrt(distance_to_on_curve_squared);
-  geometric_t edge_func = deriv_x * -on_curve.y + on_curve.x * deriv_y;
-  geometric_t v =
-      (edge_func > static_cast<geometric_t>(0.0))
-          ? static_cast<geometric_t>(0.5) + distance_to_on_curve / width
-          : static_cast<geometric_t>(0.5) - distance_to_on_curve / width;
+  geometric_t distance_to_on_curve =
+      std::copysign(std::sqrt(distance_to_on_curve_squared) / half_width,
+                    deriv_x * -on_curve.y + on_curve.x * deriv_y);
+  geometric_t v = static_cast<geometric_t>(0.5) * distance_to_on_curve +
+                  static_cast<geometric_t>(0.5);
 
-  return CurveHit{on_curve.z, static_cast<geometric_t>(2.0) * width, u, v};
+  return CurveHit{on_curve.z, static_cast<geometric_t>(4.0) * half_width, u, v};
 }
 
 std::optional<CurveHit> RecursiveTrace(const CubicBezierCurve& curve,
@@ -337,15 +335,17 @@ std::vector<ReferenceCounted<Geometry>> MakeCubicBezierCurve(
 
   start_width = std::max(static_cast<geometric>(0.0), start_width);
   end_width = std::max(static_cast<geometric>(0.0), end_width);
-
   if (start_width == static_cast<geometric>(0.0) &&
       end_width == static_cast<geometric>(0.0)) {
     return result;
   }
 
-  std::shared_ptr<Shared> shared = std::make_shared<Shared>(Shared{
-      CubicBezierCurve(control_points.data(), start_width, end_width), u_start,
-      u_end, std::move(front_material), std::move(front_normal_map), cylinder});
+  std::shared_ptr<Shared> shared = std::make_shared<Shared>(
+      Shared{CubicBezierCurve(control_points.data(),
+                              static_cast<geometric>(0.5) * start_width,
+                              static_cast<geometric>(0.5) * end_width),
+             u_start, u_end, std::move(front_material),
+             std::move(front_normal_map), cylinder});
 
   for (uint64_t i = 0; i < num_segments; i++) {
     geometric start =
