@@ -183,7 +183,7 @@ const Reflector* DisneyClearcoatBrdf::ReflectanceDiffuse(
   weight *= SmithGGgxG1(AbsCosTheta(outgoing), static_cast<visual_t>(0.25));
   weight *= clearcoat_;
 
-  return allocator.Scale(allocator.Invert(nullptr), weight);
+  return allocator.UnboundedScale(allocator.Invert(nullptr), weight);
 }
 
 class DisneyDiffuseBrdf final : public DisneyBrdfBase {
@@ -211,7 +211,7 @@ const Reflector* DisneyDiffuseBrdf::ReflectanceDiffuse(
                 (static_cast<visual_t>(1.0) - static_cast<visual_t>(0.5) * fl) *
                 (static_cast<visual_t>(1.0) - static_cast<visual_t>(0.5) * fv);
 
-  return allocator.Scale(&color_, fd);
+  return allocator.UnboundedScale(&color_, fd);
 }
 
 class DisneyDiffuseRetroBrdf final : public DisneyBrdfBase {
@@ -246,9 +246,10 @@ const Reflector* DisneyDiffuseRetroBrdf::ReflectanceDiffuse(
       static_cast<visual_t>(DotProduct(outgoing, *half_angle));
   visual_t rr =
       static_cast<visual_t>(2.0) * roughness_ * cos_theta_d * cos_theta_d;
-  rr *= (rr - static_cast<visual_t>(1.0)) * fv * fl + fv + fl;
+  rr *= fl + fv + fl * fv * (rr - static_cast<visual_t>(1.0));
 
-  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * rr);
+  return allocator.UnboundedScale(&color_,
+                                  std::numbers::inv_pi_v<visual_t> * rr);
 }
 
 class DisneySheenBrdf final : public DisneyBrdfBase {
@@ -301,7 +302,7 @@ const Reflector* DisneySheenBrdf::ReflectanceDiffuse(
       static_cast<visual_t>(DotProduct(outgoing, *half_angle));
   visual_t fh = SchlickWeight(cos_theta_d);
 
-  return allocator.Scale(color_sheen, sheen_ * fh);
+  return allocator.UnboundedScale(color_sheen, sheen_ * fh);
 }
 
 class DisneySubsurfaceBrdf final : public DisneyBrdfBase {
@@ -350,7 +351,8 @@ const Reflector* DisneySubsurfaceBrdf::ReflectanceDiffuse(
                          static_cast<visual_t>(0.5)) +
                  static_cast<visual_t>(0.5));
 
-  return allocator.Scale(&color_, std::numbers::inv_pi_v<visual_t> * ss);
+  return allocator.UnboundedScale(&color_,
+                                  std::numbers::inv_pi_v<visual_t> * ss);
 }
 
 geometric_t ComputeAspectRatio(geometric_t anisotropic) {
