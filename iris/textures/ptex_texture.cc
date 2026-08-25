@@ -67,16 +67,17 @@ visual_t PtexFloatTexture::Evaluate(
   int num_channels = texture->numChannels();
   assert(num_channels == 1 || num_channels == 3);
 
-  Ptex::PtexFilter::Options opts(Ptex::PtexFilter::FilterType::f_bspline);
-  Ptex::PtexFilter* filter = Ptex::PtexFilter::getFilter(texture, opts);
-  assert(filter != nullptr);
-
   float results[3];
-  filter->eval(results, /*firstchan=*/0, num_channels, coordinates.face_index,
-               coordinates.uv[0], coordinates.uv[1], coordinates.du_dx,
-               coordinates.dv_dx, coordinates.du_dy, coordinates.dv_dy);
-  filter->release();
+  PtexFilter::eval(
+      texture, PtexFilter::Options(PtexFilter::FilterType::f_bspline), results,
+      /*firstchan=*/0, num_channels, coordinates.face_index, coordinates.uv[0],
+      coordinates.uv[1], coordinates.du_dx, coordinates.dv_dx,
+      coordinates.du_dy, coordinates.dv_dy);
   texture->release();
+
+  results[0] = std::clamp(results[0], 0.0f, 1.0f);
+  results[1] = std::clamp(results[1], 0.0f, 1.0f);
+  results[2] = std::clamp(results[2], 0.0f, 1.0f);
 
   if (gamma_ != 1.0f) {
     for (int i = 0; i < num_channels; ++i) {
@@ -117,16 +118,17 @@ const Reflector* PtexReflectorTexture::Evaluate(
   int num_channels = texture->numChannels();
   assert(num_channels == 1 || num_channels == 3);
 
-  Ptex::PtexFilter::Options opts(Ptex::PtexFilter::FilterType::f_bspline);
-  Ptex::PtexFilter* filter = Ptex::PtexFilter::getFilter(texture, opts);
-  assert(filter != nullptr);
-
   float results[3];
-  filter->eval(results, /*firstchan=*/0, num_channels, coordinates.face_index,
-               coordinates.uv[0], coordinates.uv[1], coordinates.du_dx,
-               coordinates.dv_dx, coordinates.du_dy, coordinates.dv_dy);
-  filter->release();
+  PtexFilter::eval(
+      texture, PtexFilter::Options(PtexFilter::FilterType::f_bspline), results,
+      /*firstchan=*/0, num_channels, coordinates.face_index, coordinates.uv[0],
+      coordinates.uv[1], coordinates.du_dx, coordinates.dv_dx,
+      coordinates.du_dy, coordinates.dv_dy);
   texture->release();
+
+  results[0] = std::clamp(results[0], 0.0f, 1.0f);
+  results[1] = std::clamp(results[1], 0.0f, 1.0f);
+  results[2] = std::clamp(results[2], 0.0f, 1.0f);
 
   if (gamma_ != 1.0f) {
     for (int i = 0; i < num_channels; ++i) {
