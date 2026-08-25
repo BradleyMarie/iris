@@ -109,7 +109,7 @@ namespace {
     void ConvertArrayClamped(DST* dst, SRC* src, int numChannels, float scale, float round=0)
     {
         for (int i = 0; i < numChannels; i++)
-            dst[i] = DST(PtexUtils::clamp(src[i], 0.0f, 1.0f) * scale + round);
+            dst[i] = DST(std::clamp(src[i], 0.0f, 1.0f) * scale + round);
     }
 
     template<typename DST, typename SRC>
@@ -174,7 +174,7 @@ namespace {
         for (T* dstend = dst + nchan; dst != dstend; dst++) {
             // for each row
             T* drow = dst;
-            for (const T* rowend = src + sstride*vw; src != rowend;
+            for (const T* rowend = src + size_t(sstride)*vw; src != rowend;
                  src += sstride, drow += dstride) {
                 // copy each pixel across the row
                 T* dp = drow;
@@ -211,7 +211,7 @@ namespace {
         for (const T* srcend = src + nchan; src != srcend; src++) {
             // for each row
             const T* srow = src;
-            for (const T* rowend = srow + sstride*vw; srow != rowend;
+            for (const T* rowend = srow + size_t(sstride)*vw; srow != rowend;
                  srow += sstride, dst += dstride) {
                 // copy each pixel across the row
                 const T* sp = srow;
@@ -240,7 +240,7 @@ void deinterleave(const void* src, int sstride, int uw, int vw,
 
 namespace {
     template<typename T>
-    void encodeDifference(T* data, int size)
+    void encodeDifference(T* data, size_t size)
     {
         size /= (int)sizeof(T);
         T* p = static_cast<T*>(data), * end = p + size, tmp, prev = 0;
@@ -248,7 +248,7 @@ namespace {
     }
 }
 
-void encodeDifference(void* data, int size, DataType dt)
+void encodeDifference(void* data, size_t size, DataType dt)
 {
     switch (dt) {
     case dt_uint8:    encodeDifference(static_cast<uint8_t*>(data), size); break;
@@ -260,15 +260,15 @@ void encodeDifference(void* data, int size, DataType dt)
 
 namespace {
     template<typename T>
-    void decodeDifference(T* data, int size)
+    void decodeDifference(T* data, size_t size)
     {
-        size /= (int)sizeof(T);
+        size /= sizeof(T);
         T* p = static_cast<T*>(data), * end = p + size, prev = 0;
         while (p != end) { *p = T(*p + prev); prev = *p++; }
     }
 }
 
-void decodeDifference(void* data, int size, DataType dt)
+void decodeDifference(void* data, size_t size, DataType dt)
 {
     switch (dt) {
     case dt_uint8:    decodeDifference(static_cast<uint8_t*>(data), size); break;
@@ -288,7 +288,7 @@ namespace {
         int rowlen = uw*nchan;
         int srowskip = 2*sstride - rowlen;
         int drowskip = dstride - rowlen/2;
-        for (const T* end = src + vw*sstride; src != end;
+        for (const T* end = src + size_t(vw)*sstride; src != end;
              src += srowskip, dst += drowskip)
             for (const T* rowend = src + rowlen; src != rowend; src += nchan)
                 for (const T* pixend = src+nchan; src != pixend; src++)
@@ -322,7 +322,7 @@ namespace {
         int rowlen = uw*nchan;
         int srowskip = sstride - rowlen;
         int drowskip = dstride - rowlen/2;
-        for (const T* end = src + vw*sstride; src != end;
+        for (const T* end = src + size_t(vw)*sstride; src != end;
              src += srowskip, dst += drowskip)
             for (const T* rowend = src + rowlen; src != rowend; src += nchan)
                 for (const T* pixend = src+nchan; src != pixend; src++)
@@ -356,7 +356,7 @@ namespace {
         int rowlen = uw*nchan;
         int srowskip = 2*sstride - rowlen;
         int drowskip = dstride - rowlen;
-        for (const T* end = src + vw*sstride; src != end;
+        for (const T* end = src + size_t(vw)*sstride; src != end;
              src += srowskip, dst += drowskip)
             for (const T* rowend = src + rowlen; src != rowend; src++)
                 *dst++ = T(halve(src[0] + src[sstride]));
@@ -393,9 +393,9 @@ namespace {
         const T* src2 = src + (w-1) * sstride + rowlen - nchan;
         int srowinc2 = -2*sstride - nchan;
         int srowskip = 2*sstride - rowlen;
-        int srowskip2 = w*sstride - 2 * nchan;
+        size_t srowskip2 = size_t(w)*sstride - 2 * nchan;
         int drowskip = dstride - rowlen/2;
-        for (const T* end = src + w*sstride; src != end;
+        for (const T* end = src + size_t(w)*sstride; src != end;
              src += srowskip, src2 += srowskip2, dst += drowskip)
             for (const T* rowend = src + rowlen; src != rowend; src += nchan, src2 += srowinc2)
                 for (const T* pixend = src+nchan; src != pixend; src++, src2++)
@@ -430,7 +430,7 @@ void fill(const void* src, void* dst, int dstride,
 
     // fill remaining rows from first row
     ptr = (char*) dst + dstride;
-    end = (char*) dst + vres*dstride;
+    end = (char*) dst + size_t(vres)*dstride;
     for (; ptr != end; ptr += dstride) memcpy(ptr, dst, rowlen);
 }
 
@@ -441,12 +441,12 @@ void copy(const void* src, int sstride, void* dst, int dstride,
     // regular non-tiled case
     if (sstride == rowlen && dstride == rowlen) {
         // packed case - copy in single block
-        memcpy(dst, src, vres*rowlen);
+        memcpy(dst, src, size_t(vres)*rowlen);
     } else {
         // copy a row at a time
         const char* sptr = (const char*) src;
         char* dptr = (char*) dst;
-        for (const char* end = sptr + vres*sstride; sptr != end;) {
+        for (const char* end = sptr + size_t(vres)*sstride; sptr != end;) {
             memcpy(dptr, sptr, rowlen);
             dptr += dstride;
             sptr += sstride;
@@ -514,7 +514,7 @@ namespace {
         for (const T* end = src + vw*sstride; src != end; src += rowskip)
             for (const T* rowend = src + rowlen; src != rowend;)
                 for (int i = 0; i < nchan; i++) buff[i] += (float)*src++;
-        float scale = 1.0f/(float)(uw*vw);
+        float scale = 1.0f/(float)(size_t(uw)*vw);
         for (int i = 0; i < nchan; i++) dst[i] = T(buff[i]*scale);
     }
 }
@@ -543,8 +543,8 @@ namespace {
         {
             const Ptex::FaceInfo& f1 = faces[faceid1];
             const Ptex::FaceInfo& f2 = faces[faceid2];
-            int min1 = f1.isConstant() ? 1 : PtexUtils::min(f1.res.ulog2, f1.res.vlog2);
-            int min2 = f2.isConstant() ? 1 : PtexUtils::min(f2.res.ulog2, f2.res.vlog2);
+            int min1 = f1.isConstant() ? 1 : std::min(f1.res.ulog2, f1.res.vlog2);
+            int min2 = f2.isConstant() ? 1 : std::min(f2.res.ulog2, f2.res.vlog2);
             return min1 > min2;
         }
     };

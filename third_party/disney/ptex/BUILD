@@ -37,6 +37,6 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "@zlib",
+        "@libdeflate",
     ],
 )

@@ -58,24 +58,21 @@ void PtexTriangleFilter::eval(float* result, int firstChan, int nChannels,
     _ntxchan = _tx->numChannels();
     _dt = _tx->dataType();
     _firstChanOffset = firstChan*DataSize(_dt);
-    _nchan = PtexUtils::min(nChannels, _ntxchan-firstChan);
+    _nchan = std::min(nChannels, _ntxchan-firstChan);
 
     // get face info
     const FaceInfo& f = _tx->getFaceInfo(faceid);
 
     // if neighborhood is constant, just return constant value of face
     if (f.isNeighborhoodConstant()) {
-        PtexPtr<PtexFaceData> data ( _tx->getData(faceid, 0) );
-        if (data) {
-            char* d = (char*) data->getData() + _firstChanOffset;
-            Ptex::ConvertToFloat(result, d, _dt, _nchan);
-        }
+        char* d = (char*) _tx->getConstantData(faceid) + _firstChanOffset;
+        Ptex::ConvertToFloat(result, d, _dt, _nchan);
         return;
     }
 
     // clamp u and v
-    u = PtexUtils::clamp(u, 0.0f, 1.0f);
-    v = PtexUtils::clamp(v, 0.0f, 1.0f);
+    u = std::clamp(u, 0.0f, 1.0f);
+    v = std::clamp(v, 0.0f, 1.0f);
 
     // build kernel
     PtexTriangleKernel k;
@@ -132,7 +129,7 @@ void PtexTriangleFilter::buildKernel(PtexTriangleKernel& k, float u, float v,
 
     // add blur
     float b_b = 0.25f * blur * blur;
-    float b = PtexUtils::max(b_b, PtexUtils::max(b_e, b_t));
+    float b = std::max(b_b, std::max(b_e, b_t));
     Ac += b;
     Cc += b;
 
@@ -140,7 +137,7 @@ void PtexTriangleFilter::buildKernel(PtexTriangleKernel& k, float u, float v,
     float m = sqrtf(2.0f*(Ac*Cc - 0.25f*Bc*Bc) / (Ac + Cc + X));
 
     // choose desired resolution
-    int reslog2 = PtexUtils::max(0, PtexUtils::calcResFromWidth(2.0f*m));
+    int reslog2 = std::max(0, PtexUtils::calcResFromWidth(2.0f*m));
 
     // convert back to triangular domain
     A = float(4/3.0) * Ac;
@@ -154,9 +151,9 @@ void PtexTriangleFilter::buildKernel(PtexTriangleKernel& k, float u, float v,
     C *= scale;
 
     // find u,v,w extents
-    float uw = PtexUtils::min(sqrtf(C), 1.0f);
-    float vw = PtexUtils::min(sqrtf(A), 1.0f);
-    float ww = PtexUtils::min(sqrtf(A-B+C), 1.0f);
+    float uw = std::min(sqrtf(C), 1.0f);
+    float vw = std::min(sqrtf(A), 1.0f);
+    float ww = std::min(sqrtf(A-B+C), 1.0f);
 
     // init kernel
     float w = 1.0f - u - v;
@@ -208,6 +205,20 @@ void PtexTriangleFilter::apply(PtexTriangleKernel& k, int faceid, const Ptex::Fa
     k.getIterators(keven, kodd);
     if (!keven.valid && !kodd.valid) return;
 
+    if (f.isConstant() || k.res.ulog2 == 0) {
+        // texture is constant or kernel wants it to be
+        char* data = (char*)_tx->getConstantData(faceid) +_firstChanOffset;
+        if (keven.valid) {
+            keven.applyConst(_result, data, _dt, _nchan);
+            _weight += keven.weight;
+        }
+        if (kodd.valid) {
+            kodd.applyConst(_result, data, _dt, _nchan);
+            _weight += kodd.weight;
+        }
+        return;
+    }
+
     // get face data, and apply
     PtexPtr<PtexFaceData> dh ( _tx->getData(faceid, k.res) );
     if (!dh) return;
@@ -234,14 +245,14 @@ void PtexTriangleFilter::applyIter(PtexTriangleKernelIter& k, PtexFaceData* dh)
         for (int tilev = k.v1 / tileresv, tilevEnd = (k.v2-1) / tileresv; tilev <= tilevEnd; tilev++) {
             int vOffset = tilev * tileresv;
             kt.v = k.v - (float)vOffset;
-            kt.v1 = PtexUtils::max(0, k.v1 - vOffset);
-            kt.v2 = PtexUtils::min(k.v2 - vOffset, tileresv);
+            kt.v1 = std::max(0, k.v1 - vOffset);
+            kt.v2 = std::min(k.v2 - vOffset, tileresv);
             for (int tileu = k.u1 / tileresu, tileuEnd = (k.u2-1) / tileresu; tileu <= tileuEnd; tileu++) {
                 int uOffset = tileu * tileresu;
                 int wOffset = wOffsetBase - uOffset - vOffset;
                 kt.u = k.u - (float)uOffset;
-                kt.u1 = PtexUtils::max(0, k.u1 - uOffset);
-                kt.u2 = PtexUtils::min(k.u2 - uOffset, tileresu);
+                kt.u1 = std::max(0, k.u1 - uOffset);
+                kt.u2 = std::min(k.u2 - uOffset, tileresu);
                 kt.w1 = k.w1 - wOffset;
                 kt.w2 = k.w2 - wOffset;
                 PtexPtr<PtexFaceData> th ( dh->getTile(tilev * ntilesu + tileu) );

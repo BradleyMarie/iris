@@ -171,18 +171,18 @@ class PtexTriangleKernel {
 
     void clampRes(Res fres)
     {
-        res.ulog2 = PtexUtils::min(res.ulog2, fres.ulog2);
+        res.ulog2 = std::min(res.ulog2, fres.ulog2);
         res.vlog2 = res.ulog2;
     }
 
     void clampExtent()
     {
-        u1 = PtexUtils::max(u1, 0.0f);
-        v1 = PtexUtils::max(v1, 0.0f);
-        w1 = PtexUtils::max(w1, 0.0f);
-        u2 = PtexUtils::min(u2, 1.0f-(v1+w1));
-        v2 = PtexUtils::min(v2, 1.0f-(w1+u1));
-        w2 = PtexUtils::min(w2, 1.0f-(u1+v1));
+        u1 = std::max(u1, 0.0f);
+        v1 = std::max(v1, 0.0f);
+        w1 = std::max(w1, 0.0f);
+        u2 = std::min(u2, 1.0f-(v1+w1));
+        v2 = std::min(v2, 1.0f-(w1+u1));
+        w2 = std::min(w2, 1.0f-(u1+v1));
     }
 
     void getIterators(PtexTriangleKernelIter& ke, PtexTriangleKernelIter& ko)
@@ -199,12 +199,12 @@ class PtexTriangleKernel {
         float scale = (float)ke.rowlen;
         ke.u = u * scale - float(1/3.0);
         ke.v = v * scale - float(1/3.0);
-        ke.u1 = int(PtexUtils::ceil(u1 * scale - float(1/3.0)));
-        ke.v1 = int(PtexUtils::ceil(v1 * scale - float(1/3.0)));
-        ke.w1 = int(PtexUtils::ceil(w1 * scale - float(1/3.0)));
-        ke.u2 = int(PtexUtils::ceil(u2 * scale - float(1/3.0)));
-        ke.v2 = int(PtexUtils::ceil(v2 * scale - float(1/3.0)));
-        ke.w2 = int(PtexUtils::ceil(w2 * scale - float(1/3.0)));
+        ke.u1 = int(std::ceil(u1 * scale - float(1/3.0)));
+        ke.v1 = int(std::ceil(v1 * scale - float(1/3.0)));
+        ke.w1 = int(std::ceil(w1 * scale - float(1/3.0)));
+        ke.u2 = int(std::ceil(u2 * scale - float(1/3.0)));
+        ke.v2 = int(std::ceil(v2 * scale - float(1/3.0)));
+        ke.w2 = int(std::ceil(w2 * scale - float(1/3.0)));
         ke.A = Ak; ke.B = Bk; ke.C = Ck;
         ke.valid = (ke.u2 > ke.u1 && ke.v2 > ke.v1 && ke.w2 > ke.w1);
         ke.weight = 0;
@@ -214,12 +214,12 @@ class PtexTriangleKernel {
         ko.wscale = ke.wscale;
         ko.u = (1.0f-v) * scale - float(1/3.0);
         ko.v = (1.0f-u) * scale - float(1/3.0);
-        ko.u1 = int(PtexUtils::ceil((1.0f-v2) * scale - float(1/3.0)));
-        ko.v1 = int(PtexUtils::ceil((1.0f-u2) * scale - float(1/3.0)));
-        ko.w1 = int(PtexUtils::ceil((-w2) * scale - float(1/3.0)));
-        ko.u2 = int(PtexUtils::ceil((1.0f-v1) * scale - float(1/3.0)));
-        ko.v2 = int(PtexUtils::ceil((1.0f-u1) * scale - float(1/3.0)));
-        ko.w2 = int(PtexUtils::ceil((-w1) * scale - float(1/3.0)));
+        ko.u1 = int(std::ceil((1.0f-v2) * scale - float(1/3.0)));
+        ko.v1 = int(std::ceil((1.0f-u2) * scale - float(1/3.0)));
+        ko.w1 = int(std::ceil((-w2) * scale - float(1/3.0)));
+        ko.u2 = int(std::ceil((1.0f-v1) * scale - float(1/3.0)));
+        ko.v2 = int(std::ceil((1.0f-u1) * scale - float(1/3.0)));
+        ko.w2 = int(std::ceil((-w1) * scale - float(1/3.0)));
         ko.A = Ck; ko.B = Bk; ko.C = Ak;
         ko.valid = (ko.u2 > ko.u1 && ko.v2 > ko.v1 && ko.w2 > ko.w1);
         ko.weight = 0;

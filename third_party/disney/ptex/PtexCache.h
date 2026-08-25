@@ -136,15 +136,28 @@ public:
     ~PtexCachedReader() {}
 
     void ref() {
+        // Note: a negative ref count indicates the texture is locked, e.g. for pruning or purging.
+        // This should happen rarely, and only for a brief instant, but when it does we must wait
+        // for the ref count to become non-negative again. We do so by making CompareAndSwap fail
+        // when the old value is negative.
         while (1) {
-            int32_t oldCount = _refCount;
-            if (oldCount >= 0 && AtomicCompareAndSwap(&_refCount, oldCount, oldCount+1))
+            int32_t oldCount = std::max(0, int32_t(_refCount));
+            int32_t newCount = oldCount+1;
+            if (AtomicCompareAndSwap(&_refCount, oldCount, newCount))
                 return;
         }
     }
 
     int32_t unref() {
-        return AtomicDecrement(&_refCount);
+        int32_t newCount = AtomicDecrement(&_refCount);
+        if (newCount < 0) {
+            // A negative ref count here indicates an application error. The negative ref count also
+            // means the texture is now inadvertently locked. Set an error state, unlock the
+            // texture.
+            setError("PtexTexture Error: unref() called with refCount <= 0");
+            unlock();
+        }
+        return newCount;
     }
 
     virtual void release();
@@ -273,8 +286,8 @@ private:
 
     bool findFile(const char*& filename, std::string& buffer, Ptex::String& error);
     void processMru();
-    void pruneFiles();
-    void pruneData();
+    void pruneFilesIfNeeded();
+    void pruneDataIfNeeded();
     size_t _maxFiles;
     size_t _maxMem;
     PtexInputHandler* _io;
@@ -288,10 +301,10 @@ private:
     volatile size_t _filesOpen; CACHE_LINE_PAD(_filesOpen,size_t);
     Mutex _mruLock; CACHE_LINE_PAD(_mruLock,Mutex);
 
-    static const int numMruFiles = 50;
+    static constexpr int maxMruFiles = 50;
     struct MruList {
         volatile int next;
-        PtexCachedReader* volatile files[numMruFiles];
+        PtexCachedReader* volatile files[maxMruFiles];
     };
     MruList _mruLists[2];
     MruList* volatile _mruList;

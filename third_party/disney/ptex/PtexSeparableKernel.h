@@ -407,7 +407,7 @@ class PtexSeparableKernel {
         }
 
         // truncate excess samples in longer dimension
-        uw = vw = PtexUtils::min(uw, vw);
+        uw = vw = std::min(uw, vw);
 
         // combine corresponding u and v samples and compute new kernel weight
         float newWeight = 0;

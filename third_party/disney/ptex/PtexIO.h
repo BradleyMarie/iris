@@ -69,8 +69,8 @@ struct ExtHeader {
     uint32_t lmdheaderzipsize;
     uint32_t lmdheadermemsize;
     uint64_t lmddatasize;
-    uint64_t editdatasize;
-    uint64_t editdatapos;
+    uint64_t obsolete;
+    uint64_t obsolete2;
 };
 struct LevelInfo {
     uint64_t leveldatasize;
@@ -81,23 +81,18 @@ struct LevelInfo {
 enum Encoding { enc_constant, enc_zipped, enc_diffzipped, enc_tiled };
 struct FaceDataHeader {
     uint32_t data; // bits 0..29 = blocksize, bits 30..31 = encoding
-    uint32_t blocksize() const { return data & 0x3fffffff; }
+    static constexpr uint32_t blocksizeMax = 0x3fffffff;
+    uint32_t blocksize() const { return data & blocksizeMax; }
     Encoding encoding() const { return Encoding((data >> 30) & 0x3); }
     uint32_t& val() { return *(uint32_t*) this; }
     const uint32_t& val() const { return *(const uint32_t*) this; }
-    void set(uint32_t blocksizeArg, Encoding encodingArg)
-    { data = (blocksizeArg & 0x3fffffff) | ((encodingArg & 0x3) << 30); }
+    void set(size_t blocksizeArg, Encoding encodingArg) {
+        data = uint32_t(std::min(blocksizeArg, size_t(blocksizeMax)) | ((encodingArg & 0x3) << 30));
+    }
+    // if a face size is >= blocksizeMax, it is considered a "large face" and
+    // its size will be stored in a separate large-face header
+    bool isLargeFace() const { return blocksize() == blocksizeMax; }
     FaceDataHeader() : data(0) {}
-};
-enum EditType { et_editfacedata, et_editmetadata };
-struct EditFaceDataHeader {
-    uint32_t faceid;
-    FaceInfo faceinfo;
-    FaceDataHeader fdh;
-};
-struct EditMetaDataHeader {
-    uint32_t metadatazipsize;
-    uint32_t metadatamemsize;
 };
 #pragma pack(pop)
 
@@ -106,14 +101,12 @@ const int HeaderSize = sizeof(Header);
 const int ExtHeaderSize = sizeof(ExtHeader);
 const int LevelInfoSize = sizeof(LevelInfo);
 const int FaceDataHeaderSize = sizeof(FaceDataHeader);
-const int EditFaceDataHeaderSize = sizeof(EditFaceDataHeader);
-const int EditMetaDataHeaderSize = sizeof(EditMetaDataHeader);
 
 // these constants can be tuned for performance
-const int IBuffSize = 8192;         // default input buffer size
-const int BlockSize = 16384;        // target block size for file I/O
+const int IBuffSize = 65536;        // default input buffer size
+const int BlockSize = 65536;        // target block size for file I/O
 const int TileSize  = 65536;        // target tile size (uncompressed)
-const int AllocaMax = 16384;        // max size for using alloca
+const int AllocaMax = 65536;        // max size for using alloca
 const int MetaDataThreshold = 1024; // cutoff for large meta data
 
 inline bool LittleEndian() {

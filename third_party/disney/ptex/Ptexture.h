@@ -178,8 +178,11 @@ struct Res {
     /// Resolution as a single 16-bit integer value.
     uint16_t val() const { return uint16_t(ulog2 | (vlog2<<8)); }
 
-    /// Total size of specified texture in texels (u * v).
+    /// Total size of specified texture in texels (u * v). (deprecated, use size64)
     int size() const { return u() * v(); }
+
+    /// Total size of specified texture in texels (u * v), allowing arbitrarily large textures.
+    size_t size64() const { return size_t(u()) * v(); }
 
     /// Comparison operator.
     bool operator==(const Res& r) const { return r.ulog2 == ulog2 && r.vlog2 == vlog2; }
@@ -264,8 +267,8 @@ struct FaceInfo {
     /// Determine if neighborhood of face is constant (by checking a flag).
     bool isNeighborhoodConstant() const { return (flags & flag_nbconstant) != 0; }
 
-    /// Determine if face has edits in the file (by checking a flag).
-    bool hasEdits() const { return (flags & flag_hasedits) != 0; }
+    /// Obsolete (returns false).
+    bool hasEdits() const { return false; }
 
     /// Determine if face is a subface (by checking a flag).
     bool isSubface() const { return (flags & flag_subface) != 0; }
@@ -279,7 +282,7 @@ struct FaceInfo {
     { adjedges = (uint8_t)((e0&3) | ((e1&3)<<2) | ((e2&3)<<4) | ((e3&3)<<6)); }
 
     /// Flag bit values (for internal use).
-    enum { flag_constant = 1, flag_hasedits = 2, flag_nbconstant = 4, flag_subface = 8 };
+    enum { flag_constant = 1, flag_obsolete = 2, flag_nbconstant = 4, flag_subface = 8 };
 };
 
 
@@ -521,7 +524,7 @@ class PtexTexture {
     /** Number of faces stored in file. */
     virtual int numFaces() = 0;
 
-    /** True if the file has edit blocks.  See PtexWriter for more details. */
+    /** Obsolete (returns false). */
     virtual bool hasEdits() = 0;
 
     /** True if the file has mipmaps.  See PtexWriter for more details. */
@@ -606,6 +609,12 @@ class PtexTexture {
     virtual void getPixel(int faceid, int u, int v,
                           float* result, int firstchan, int nchannels,
                           Ptex::Res res) = 0;
+
+    /** Access the constant (or average) data value for a given face.
+        The returned value is a pointer to the stored data and must
+        be cast to the appropriate type.
+     */
+    virtual void* getConstantData(int faceid) = 0;
 };
 
 
@@ -831,20 +840,23 @@ class PtexWriter {
 
     /** Open an existing texture file for writing.
 
-        If the incremental param is specified as true, then data
-        values written to the file are appended to the file as "edit
-        blocks".  This is the fastest way to write data to the file, but
-        edit blocks are slower to read back, and they have no mipmaps so
-        filtering can be inefficient.
-
-        If incremental is false, then the edits are applied to the
-        file and the entire file is regenerated on close as if it were
-        written all at once with open().
-
         If the file doesn't exist it will be created and written as if
         open() were used.  If the file exists, the mesh type, data
         type, number of channels, alpha channel, and number of faces
         must agree with those stored in the file.
+     */
+    PTEXAPI
+    static PtexWriter* edit(const char* path,
+                            Ptex::MeshType mt, Ptex::DataType dt,
+                            int nchannels, int alphachan, int nfaces,
+                            Ptex::String& error, bool genmipmaps=true);
+
+    /** Open an existing texture file for writing. (deprecated)
+
+        The incremental parameter is no longer used. The file will be written
+        as non-incremental regardless of the value of the parameter. The version
+        of PtexWriter::edit without the incremental parameter should be called
+        instead.
      */
     PTEXAPI
     static PtexWriter* edit(const char* path, bool incremental,
@@ -852,13 +864,7 @@ class PtexWriter {
                             int nchannels, int alphachan, int nfaces,
                             Ptex::String& error, bool genmipmaps=true);
 
-    /** Apply edits to a file.
-
-        If a file has pending edits, the edits will be applied and the
-        file will be regenerated with no edits.  This is equivalent to
-        calling edit() with incremental set to false.  The advantage
-        is that the file attributes such as mesh type, data type,
-        etc., don't need to be known in advance.
+    /** Obsolete (returns true).
      */
     PTEXAPI
     static bool applyEdits(const char* path, Ptex::String& error);
@@ -913,8 +919,8 @@ class PtexWriter {
         constant. */
     virtual bool writeConstantFace(int faceid, const Ptex::FaceInfo& info, const void* data) = 0;
 
-    /** Close the file.  This operation can take some time if mipmaps are being generated or if there
-        are many edit blocks.  If an error occurs while writing, false is returned and an error string
+    /** Close the file.  This operation can take some time if mipmaps are being generated.
+        If an error occurs while writing, false is returned and an error string
         is written into the error parameter. */
     virtual bool close(Ptex::String& error) = 0;
 
@@ -966,14 +972,43 @@ class PtexFilter {
             filter(filter_), lerp(lerp_), sharpness(sharpness_), noedgeblend(noedgeblend_) {}
     };
 
-    /* Construct a filter for the given texture.
+
+    /* Evaluate a texture using specified filter options
+
+        The filter region is a parallelogram centered at the given
+        (u,v) coordinate with sides defined by two vectors [uw1, vw1]
+        and [uw2, vw2].  For an axis-aligned rectangle, the vectors
+        are [uw, 0] and [0, vw].  See \link filterfootprint Filter
+        Footprint \endlink for details.
+
+        @param tx Texture to evaluate
+        @param opts Filter options
+        @param result Buffer to hold filter result.  Must be large enough to hold nchannels worth of data.
+        @param firstchan First channel to evaluate [0..tx->numChannels()-1]
+        @param nchannels Number of channels to evaluate
+        @param faceid Face index [0..tx->numFaces()-1]
+        @param u U coordinate, normalized [0..1]
+        @param v V coordinate, normalized [0..1]
+        @param uw1 U filter width 1, normalized [0..1]
+        @param vw1 V filter width 1, normalized [0..1]
+        @param uw2 U filter width 2, normalized [0..1]
+        @param vw2 V filter width 2, normalized [0..1]
+        @param width scale factor for filter width
+        @param blur amount to add to filter width [0..1]
+    */
+    PTEXAPI static void eval(PtexTexture* tx, const Options& opts,
+                             float* result, int firstchan, int nchannels,
+                             int faceid, float u, float v, float uw1, float vw1, float uw2, float vw2,
+                             float width=1, float blur=0);
+
+    /* Construct a filter for the given texture. Deprecated. (use static eval method)
     */
     PTEXAPI static PtexFilter* getFilter(PtexTexture* tx, const Options& opts);
 
     /** Release resources held by this pointer (pointer becomes invalid). */
     virtual void release() = 0;
 
-    /** Apply filter to a ptex data file.
+    /** Apply filter to a ptex data file. Deprecated. (use static eval method)
 
         The filter region is a parallelogram centered at the given
         (u,v) coordinate with sides defined by two vectors [uw1, vw1]

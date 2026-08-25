@@ -36,7 +36,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 #include <stdio.h>
-#include <zlib.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -46,6 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #include "PtexUtils.h"
 
 #include "PtexHashMap.h"
+
+struct libdeflate_decompressor;
 
 PTEX_NAMESPACE_BEGIN
 
@@ -95,7 +96,7 @@ public:
     virtual int alphaChannel() { return _header.alphachan; }
     virtual int numChannels() { return _header.nchannels; }
     virtual int numFaces() { return _header.nfaces; }
-    virtual bool hasEdits() { return _hasEdits; }
+    virtual bool hasEdits() { return false; }
     virtual bool hasMipMaps() { return _header.nlevels > 1; }
 
     virtual PtexMetaData* getMetaData();
@@ -104,11 +105,13 @@ public:
     virtual void getData(int faceid, void* buffer, int stride, Res res);
     virtual PtexFaceData* getData(int faceid);
     virtual PtexFaceData* getData(int faceid, Res res);
+    virtual void* getConstantData(int faceid) final { return _constdata + faceid * _pixelsize; }
     virtual void getPixel(int faceid, int u, int v,
 			  float* result, int firstchan, int nchannels);
     virtual void getPixel(int faceid, int u, int v,
 			  float* result, int firstchan, int nchannels,
 			  Ptex::Res res);
+    void getCompressedData(int faceid, int level, FaceDataHeader& fdh, std::vector<std::byte>& data);
 
     DataType datatype() const { return DataType(_header.datatype); }
     int nchannels() const { return _header.nchannels; }
@@ -356,6 +359,7 @@ public:
         virtual Ptex::Res tileRes() { return 0; }
         virtual PtexFaceData* getTile(int) { return 0; }
 
+    protected:
         void* _data;
         int _pixelsize;
     };
@@ -542,15 +546,24 @@ public:
 
 
 protected:
-    void setError(const char* error)
+    void setError(const char* error, bool ioError = false)
     {
         std::string msg = error;
         msg += " PtexFile: ";
         msg += _path;
         msg += "\n";
+        if (ioError) {
+            msg += _io->lastError();
+            msg += "\n";
+        }
         if (_err) _err->reportError(msg.c_str());
         else std::cerr << msg;
         _ok = 0;
+    }
+
+    void setIOError(const char* error)
+    {
+        setError(error, true);
     }
 
     FilePos tell() { return _pos; }
@@ -566,7 +579,7 @@ protected:
 
     void closeFP();
     bool reopenFP();
-    bool readBlock(void* data, int size, bool reportError=true);
+    bool readBlock(void* data, int size);
     bool readZipBlock(void* data, int zipsize, int unzipsize);
     Level* getLevel(int levelid)
     {
@@ -575,7 +588,6 @@ protected:
         return level;
     }
 
-    uint8_t* getConstData() { return _constdata; }
     FaceData* getFace(int levelid, Level* level, int faceid, Res res)
     {
         FaceData*& face = level->faces[faceid];
@@ -592,20 +604,13 @@ protected:
     void readMetaData();
     void readMetaDataBlock(MetaData* metadata, FilePos pos, int zipsize, int memsize, size_t& metaDataMemUsed);
     void readLargeMetaDataHeaders(MetaData* metadata, FilePos pos, int zipsize, int memsize, size_t& metaDataMemUsed);
-    void readEditData();
-    void readEditFaceData();
-    void readEditMetaData();
 
     FaceData* errorData(bool deleteOnRelease=false)
     {
         return new ErrorFace(&_errorPixel[0], _pixelsize, deleteOnRelease);
     }
 
-    PtexFaceData* __attribute__((noinline)) constData(int faceid) {
-        return new ConstDataPtr(getConstData() + faceid * _pixelsize, _pixelsize);
-    }
-
-    void computeOffsets(FilePos pos, int noffsets, const FaceDataHeader* fdh, FilePos* offsets)
+    void computeFaceTileOffsets(FilePos pos, int noffsets, const FaceDataHeader* fdh, FilePos* offsets)
     {
         FilePos* end = offsets + noffsets;
         while (offsets != end) { *offsets++ = pos; pos += fdh->blocksize(); fdh++; }
@@ -657,33 +662,15 @@ protected:
     FilePos _metadatapos;
     FilePos _lmdheaderpos;
     FilePos _lmddatapos;
-    FilePos _editdatapos;
     int _pixelsize;                   // size of a pixel in bytes
     uint8_t* _constdata;              // constant pixel value per face
     MetaData* _metadata;              // meta data (read on demand)
-    bool _hasEdits;                   // has edit blocks
 
     std::vector<FaceInfo> _faceinfo;   // per-face header info
     std::vector<uint32_t> _rfaceids;   // faceids sorted in reduction order
     std::vector<LevelInfo> _levelinfo; // per-level header info
     std::vector<FilePos> _levelpos;    // file position of each level's data
     std::vector<Level*> _levels;              // level data (read on demand)
-
-    struct MetaEdit
-    {
-        FilePos pos;
-        int zipsize;
-        int memsize;
-    };
-    std::vector<MetaEdit> _metaedits;
-
-    struct FaceEdit
-    {
-        FilePos pos;
-        int faceid;
-        FaceDataHeader fdh;
-    };
-    std::vector<FaceEdit> _faceedits;
 
     class ReductionKey {
         int64_t _val;
@@ -702,12 +689,12 @@ protected:
             _val = key._val;
         }
 
-        bool matches(const ReductionKey& key) volatile
+        bool matches(const ReductionKey& key) const volatile
         {
             return _val == key._val;
         }
-        bool isEmpty() volatile { return _val==-1; }
-        uint32_t hash() volatile
+        bool isEmpty() const volatile { return _val==-1; }
+        uint32_t hash() const volatile
         {
             return uint32_t(_val);
         }
@@ -716,7 +703,7 @@ protected:
     ReductionMap _reductions;
     std::vector<char> _errorPixel; // referenced by errorData()
 
-    z_stream_s _zstream;
+    libdeflate_decompressor* _decompressor;
     size_t _baseMemUsed;
     volatile size_t _memUsed;
     volatile size_t _opens;

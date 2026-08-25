@@ -53,36 +53,33 @@ void PtexSeparableFilter::eval(float* result, int firstChan, int nChannels,
     if (!_tx || nChannels <= 0) return;
     if (faceid < 0 || faceid >= _tx->numFaces()) return;
     _firstChanOffset = firstChan*DataSize(_dt);
-    _nchan = PtexUtils::min(nChannels, _ntxchan-firstChan);
+    _nchan = std::min(nChannels, _ntxchan-firstChan);
 
     // get face info
     const FaceInfo& f = _tx->getFaceInfo(faceid);
 
     // if neighborhood is constant, just return constant value of face
     if (f.isNeighborhoodConstant()) {
-        PtexPtr<PtexFaceData> data ( _tx->getData(faceid, 0) );
-        if (data) {
-            char* d = (char*) data->getData() + _firstChanOffset;
-            Ptex::ConvertToFloat(result, d, _dt, _nchan);
-        }
+        char* d = (char*) _tx->getConstantData(faceid) + _firstChanOffset;
+        Ptex::ConvertToFloat(result, d, _dt, _nchan);
         return;
     }
 
     // find filter width as bounding box of vectors w1 and w2
-    float uw = PtexUtils::abs(uw1) + PtexUtils::abs(uw2), vw = PtexUtils::abs(vw1) + PtexUtils::abs(vw2);
+    float uw = std::abs(uw1) + std::abs(uw2), vw = std::abs(vw1) + std::abs(vw2);
 
     // handle border modes
     bool return_black = false;
 
     switch (_uMode) {
-    case m_clamp: u = PtexUtils::clamp(u, 0.0f, 1.0f); break;
-    case m_periodic: u = u-PtexUtils::floor(u); break;
+    case m_clamp: u = std::clamp(u, 0.0f, 1.0f); break;
+    case m_periodic: u = u-std::floor(u); break;
     case m_black: if (u <= -1.0f || u >= 2.0f) return_black = true; break;
     }
 
     switch (_vMode) {
-    case m_clamp: v = PtexUtils::clamp(v, 0.0f, 1.0f); break;
-    case m_periodic: v = v-PtexUtils::floor(v); break;
+    case m_clamp: v = std::clamp(v, 0.0f, 1.0f); break;
+    case m_periodic: v = v-std::floor(v); break;
     case m_black: if (v <= -1.0f || v >= 2.0f) return_black = true; break;
     }
 
@@ -352,9 +349,18 @@ void PtexSeparableFilter::apply(PtexSeparableKernel& k, int faceid, const Ptex::
 
     if (k.uw <= 0 || k.vw <= 0) return;
 
+    if (f.isConstant() ||
+        ( (k.res.ulog2 == 0 || f.res.ulog2 == 0) &&
+          (k.res.vlog2 == 0 || f.res.vlog2 == 0) ))
+    {
+        // texture is constant, or kernel will be after downresing to texture res
+        k.applyConst(_result, (char*)_tx->getConstantData(faceid) +_firstChanOffset, _dt, _nchan);
+        return;
+    }
+
     // downres kernel if needed
-    while (k.res.u() > f.res.u()) k.downresU();
-    while (k.res.v() > f.res.v()) k.downresV();
+    while (k.res.ulog2 > f.res.ulog2) k.downresU();
+    while (k.res.vlog2 > f.res.vlog2) k.downresV();
 
     // get face data, and apply
     PtexPtr<PtexFaceData> dh ( _tx->getData(faceid, k.res) );
@@ -380,12 +386,12 @@ void PtexSeparableFilter::apply(PtexSeparableKernel& k, int faceid, const Ptex::
         for (int v = k.v, vw = k.vw; vw > 0; vw -= kt.vw, v += kt.vw) {
             int tilev = v / tileresv;
             kt.v = v % tileresv;
-            kt.vw = PtexUtils::min(vw, tileresv - kt.v);
+            kt.vw = std::min(vw, tileresv - kt.v);
             kt.kv = k.kv + v - k.v;
             for (int u = k.u, uw = k.uw; uw > 0; uw -= kt.uw, u += kt.uw) {
                 int tileu = u / tileresu;
                 kt.u = u % tileresu;
-                kt.uw = PtexUtils::min(uw, tileresu - kt.u);
+                kt.uw = std::min(uw, tileresu - kt.u);
                 kt.ku = k.ku + u - k.u;
                 PtexPtr<PtexFaceData> th ( dh->getTile(tilev * ntilesu + tileu) );
                 if (th) {

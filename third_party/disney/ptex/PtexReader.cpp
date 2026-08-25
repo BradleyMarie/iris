@@ -38,6 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #include <sstream>
 #include <stdio.h>
 
+#include <libdeflate.h>
+
 #include "Ptexture.h"
 #include "PtexUtils.h"
 #include "PtexReader.h"
@@ -80,13 +82,12 @@ PtexReader::PtexReader(bool premultiply, PtexInputHandler* io, PtexErrorHandler*
       _pixelsize(0),
       _constdata(0),
       _metadata(0),
-      _hasEdits(false),
       _baseMemUsed(sizeof(*this)),
       _memUsed(_baseMemUsed),
       _opens(0),
       _blockReads(0)
 {
-    memset(&_zstream, 0, sizeof(_zstream));
+    _decompressor = libdeflate_alloc_decompressor();
 }
 
 
@@ -99,6 +100,7 @@ PtexReader::~PtexReader()
     for (std::vector<Level*>::iterator i = _levels.begin(); i != _levels.end(); ++i) {
         if (*i) delete *i;
     }
+    libdeflate_free_decompressor(_decompressor);
 }
 
 void PtexReader::prune()
@@ -122,8 +124,6 @@ void PtexReader::purge()
     std::vector<LevelInfo>().swap(_levelinfo);
     std::vector<FilePos>().swap(_levelpos);
     std::vector<Level*>().swap(_levels);
-    std::vector<MetaEdit>().swap(_metaedits);
-    std::vector<FaceEdit>().swap(_faceedits);
     closeFP();
 
     // reset initial state
@@ -187,7 +187,7 @@ bool PtexReader::open(const char* pathArg, Ptex::String& error)
 
     // read extended header
     memset(&_extheader, 0, sizeof(_extheader));
-    readBlock(&_extheader, PtexUtils::min(uint32_t(ExtHeaderSize), _header.extheadersize));
+    readBlock(&_extheader, std::min(uint32_t(ExtHeaderSize), _header.extheadersize));
 
     // compute offsets of various blocks
     FilePos pos = HeaderSize + _header.extheadersize;
@@ -200,15 +200,10 @@ bool PtexReader::open(const char* pathArg, Ptex::String& error)
     _lmdheaderpos = pos;  pos += _extheader.lmdheaderzipsize;
     _lmddatapos = pos;    pos += _extheader.lmddatasize;
 
-    // edit data may not start immediately if additional sections have been added
-    // use value from extheader if present (and > pos)
-    _editdatapos = PtexUtils::max(FilePos(_extheader.editdatapos), pos);
-
     // read basic file info
     readFaceInfo();
     readConstData();
     readLevelInfo();
-    readEditData();
     _baseMemUsed = _memUsed;
 
     // restore error handler
@@ -241,7 +236,6 @@ void PtexReader::closeFP()
         _io->close(_fp);
         _fp = 0;
     }
-    inflateEnd(&_zstream);
 }
 
 
@@ -252,7 +246,7 @@ bool PtexReader::reopenFP()
     // we assume this is called lazily in a scope where readlock is already held
     _fp = _io->open(_path.c_str());
     if (!_fp) {
-        setError("Can't reopen");
+        setIOError("Can't reopen");
         return false;
     }
     _pos = 0;
@@ -260,7 +254,7 @@ bool PtexReader::reopenFP()
     ExtHeader extheaderval;
     readBlock(&headerval, HeaderSize);
     memset(&extheaderval, 0, sizeof(extheaderval));
-    readBlock(&extheaderval, PtexUtils::min(uint32_t(ExtHeaderSize), headerval.extheadersize));
+    readBlock(&extheaderval, std::min(uint32_t(ExtHeaderSize), headerval.extheadersize));
     if (0 != memcmp(&headerval, &_header, sizeof(headerval)) ||
         0 != memcmp(&extheaderval, &_extheader, sizeof(extheaderval)))
     {
@@ -408,11 +402,6 @@ void PtexReader::readMetaData()
         readLargeMetaDataHeaders(newmeta, _lmdheaderpos,
                                  _extheader.lmdheaderzipsize, _extheader.lmdheadermemsize, metaDataMemUsed);
 
-    // read meta data edits
-    for (size_t i = 0, size = _metaedits.size(); i < size; i++)
-        readMetaDataBlock(newmeta, _metaedits[i].pos,
-                          _metaedits[i].zipsize, _metaedits[i].memsize, metaDataMemUsed);
-
     // store meta data
     AtomicStore(&_metadata, newmeta);
     increaseMemUsed(newmeta->selfDataSize() + metaDataMemUsed);
@@ -473,87 +462,8 @@ void PtexReader::readLargeMetaDataHeaders(MetaData* metadata, FilePos pos, int z
     if (useNew) delete [] buff;
 }
 
-void PtexReader::readEditData()
-{
-    // determine file range to scan for edits
-    FilePos pos = FilePos(_editdatapos), endpos;
-    if (_extheader.editdatapos > 0) {
-        // newer files record the edit data position and size in the extheader
-        // note: position will be non-zero even if size is zero
-        endpos = FilePos(pos + _extheader.editdatasize);
-    }
-    else {
-        // must have an older file, just read until EOF
-        endpos = FilePos((uint64_t)-1);
-    }
 
-    while (pos < endpos) {
-        seek(pos);
-        // read the edit data header
-        uint8_t edittype = et_editmetadata;
-        uint32_t editsize;
-        if (!readBlock(&edittype, sizeof(edittype), /*reporterror*/ false)) break;
-        if (!readBlock(&editsize, sizeof(editsize), /*reporterror*/ false)) break;
-        if (!editsize) break;
-        _hasEdits = true;
-        pos = tell() + editsize;
-        switch (edittype) {
-        case et_editfacedata:   readEditFaceData(); break;
-        case et_editmetadata:   readEditMetaData(); break;
-        }
-    }
-    increaseMemUsed(sizeof(_faceedits[0]) * _faceedits.capacity() +
-                    sizeof(_metaedits[0]) * _metaedits.capacity());
-}
-
-
-void PtexReader::readEditFaceData()
-{
-    // read header
-    EditFaceDataHeader efdh;
-    if (!readBlock(&efdh, EditFaceDataHeaderSize)) return;
-
-    // update face info
-    int faceid = efdh.faceid;
-    if (faceid < 0 || size_t(faceid) >= _header.nfaces) return;
-    FaceInfo& f = _faceinfo[faceid];
-    f = efdh.faceinfo;
-    f.flags |= FaceInfo::flag_hasedits;
-
-    // read const value now
-    uint8_t* constdata = _constdata + _pixelsize * faceid;
-    if (!readBlock(constdata, _pixelsize)) return;
-    if (_premultiply && _header.hasAlpha())
-        PtexUtils::multalpha(constdata, 1, datatype(),
-                             _header.nchannels, _header.alphachan);
-
-    // update header info for remaining data
-    if (!f.isConstant()) {
-        _faceedits.push_back(FaceEdit());
-        FaceEdit& e = _faceedits.back();
-        e.pos = tell();
-        e.faceid = faceid;
-        e.fdh = efdh.fdh;
-    }
-}
-
-
-void PtexReader::readEditMetaData()
-{
-    // read header
-    EditMetaDataHeader emdh;
-    if (!readBlock(&emdh, EditMetaDataHeaderSize)) return;
-
-    // record header info for later
-    _metaedits.push_back(MetaEdit());
-    MetaEdit& e = _metaedits.back();
-    e.pos = tell();
-    e.zipsize = emdh.metadatazipsize;
-    e.memsize = emdh.metadatamemsize;
-}
-
-
-bool PtexReader::readBlock(void* data, int size, bool reporterror)
+bool PtexReader::readBlock(void* data, int size)
 {
     assert(_fp && size >= 0);
     if (!_fp || size < 0) return false;
@@ -562,41 +472,27 @@ bool PtexReader::readBlock(void* data, int size, bool reporterror)
         _pos += size;
         return true;
     }
-    if (reporterror)
-        setError("PtexReader error: read failed (EOF)");
+    setIOError("PtexReader error: read failed");
     return false;
 }
 
 
 bool PtexReader::readZipBlock(void* data, int zipsize, int unzipsize)
 {
-    if (zipsize < 0 || unzipsize < 0) return false;
-    if (!_zstream.state) {
-        inflateInit(&_zstream);
+    if (!_ok || zipsize < 0 || unzipsize < 0) return false;
+    std::vector<std::byte> compressedBuffer(zipsize);
+    if (!readBlock(compressedBuffer.data(), compressedBuffer.size())) {
+        return false;
     }
-
-    void* buff = alloca(BlockSize);
-    _zstream.next_out = (Bytef*) data;
-    _zstream.avail_out = unzipsize;
-
-    while (1) {
-        int size = (zipsize < BlockSize) ? zipsize : BlockSize;
-        zipsize -= size;
-        if (!readBlock(buff, size)) break;
-        _zstream.next_in = (Bytef*) buff;
-        _zstream.avail_in = size;
-        int zresult = inflate(&_zstream, zipsize ? Z_NO_FLUSH : Z_FINISH);
-        if (zresult == Z_STREAM_END) break;
-        if (zresult != Z_OK) {
-            setError("PtexReader error: unzip failed, file corrupt");
-            inflateReset(&_zstream);
-            return 0;
-        }
+    size_t bytesDecompressed{0};
+    if (libdeflate_zlib_decompress(_decompressor, compressedBuffer.data(), compressedBuffer.size(),
+                                   data, unzipsize, &bytesDecompressed) != 0 ||
+        bytesDecompressed != size_t(unzipsize))
+    {
+        setError("PtexReader error: unzip failed, file corrupt");
+        return false;
     }
-
-    int total = (int)_zstream.total_out;
-    inflateReset(&_zstream);
-    return total == unzipsize;
+    return true;
 }
 
 
@@ -613,16 +509,44 @@ void PtexReader::readLevel(int levelid, Level*& level)
 
     // keep new level local until finished
     Level* newlevel = new Level(l.nfaces);
+
+    // read level header
     seek(_levelpos[levelid]);
     readZipBlock(&newlevel->fdh[0], l.levelheadersize, FaceDataHeaderSize * l.nfaces);
-    computeOffsets(tell(), l.nfaces, &newlevel->fdh[0], &newlevel->offsets[0]);
 
-    // apply edits (if any) to level 0
-    if (levelid == 0) {
-        for (size_t i = 0, size = _faceedits.size(); i < size; i++) {
-            FaceEdit& e = _faceedits[i];
-            newlevel->fdh[e.faceid] = e.fdh;
-            newlevel->offsets[e.faceid] = e.pos;
+    // compute face offsets
+    std::vector<uint32_t> largeFaces;
+    FilePos offset = tell();
+    for (uint32_t f = 0; f < l.nfaces; f++) {
+        newlevel->offsets[f] = offset;
+        if (!newlevel->fdh[f].isLargeFace()) {
+            offset += newlevel->fdh[f].blocksize();
+        } else {
+            // large faces have a 64-bit size, stored after the level header
+            largeFaces.push_back(f);
+        }
+    }
+
+    // update offsets to account for large faces
+    if (!largeFaces.empty()) {
+        int nlarge = int(largeFaces.size());
+        // read large face header (64-bit sizes of large faces)
+        std::vector<size_t> largeFaceHeader(nlarge);
+        size_t largeFaceHeaderSize = sizeof(size_t) * nlarge;
+        readBlock(largeFaceHeader.data(), largeFaceHeaderSize);
+
+        // update offsets
+        size_t extraOffset = largeFaceHeaderSize;
+        uint32_t f = 0;
+        for (int i = 0; i < nlarge; i++) {
+            uint32_t lf = largeFaces[i];
+            while (f <= lf) {
+                newlevel->offsets[f++] += extraOffset;
+            }
+            extraOffset += largeFaceHeader[i];
+        }
+        while (f < l.nfaces) {
+            newlevel->offsets[f++] += extraOffset;
         }
     }
 
@@ -681,7 +605,7 @@ void PtexReader::readFaceData(FilePos pos, FaceDataHeader fdh, Res res, int leve
             newface = tf;
             newMemUsed = tf->memUsed();
             readZipBlock(&tf->_fdh[0], tileheadersize, FaceDataHeaderSize * tf->_ntiles);
-            computeOffsets(tell(), tf->_ntiles, &tf->_fdh[0], &tf->_offsets[0]);
+            computeFaceTileOffsets(tell(), tf->_ntiles, &tf->_fdh[0], &tf->_offsets[0]);
         }
         break;
     case enc_zipped:
@@ -780,7 +704,7 @@ PtexFaceData* PtexReader::getData(int faceid)
 
     FaceInfo& fi = _faceinfo[faceid];
     if (fi.isConstant() || fi.res == 0) {
-        return constData(faceid);
+        return new ConstDataPtr(getConstantData(faceid), _pixelsize);
     }
 
     // get level zero (full) res face
@@ -798,7 +722,7 @@ PtexFaceData* PtexReader::getData(int faceid, Res res)
 
     FaceInfo& fi = _faceinfo[faceid];
     if (fi.isConstant() || res == 0) {
-        return constData(faceid);
+        return new ConstDataPtr(getConstantData(faceid), _pixelsize);
     }
 
     // determine how many reduction levels are needed
@@ -811,9 +735,9 @@ PtexFaceData* PtexReader::getData(int faceid, Res res)
         return face;
     }
 
-    if (redu == redv && !fi.hasEdits()) {
+    if (redu == redv) {
         // reduction is symmetric and non-negative
-        // and face has no edits => access data from reduction level (if present)
+        // => access data from reduction level (if present)
         int levelid = redu;
         if (size_t(levelid) < _levels.size()) {
             Level* level = getLevel(levelid);
@@ -904,13 +828,19 @@ void PtexReader::getPixel(int faceid, int u, int v,
     memset(result, 0, sizeof(*result)*nchannelsArg);
 
     // clip nchannels against actual number available
-    nchannelsArg = PtexUtils::min(nchannelsArg, _header.nchannels-firstchan);
+    nchannelsArg = std::min(nchannelsArg, _header.nchannels-firstchan);
     if (nchannelsArg <= 0) return;
 
     // get raw pixel data
-    PtexPtr<PtexFaceData> data ( getData(faceid) );
-    void* pixel = alloca(_pixelsize);
-    data->getPixel(u, v, pixel);
+    void* pixel;
+    if (faceid >= 0 && size_t(faceid) < _header.nfaces && _faceinfo[faceid].isConstant()) {
+        pixel = getConstantData(faceid);
+    }
+    else {
+        PtexPtr<PtexFaceData> data ( getData(faceid) );
+        pixel = alloca(_pixelsize);
+        data->getPixel(u, v, pixel);
+    }
 
     // adjust for firstchan offset
     int datasize = DataSize(datatype());
@@ -929,16 +859,22 @@ void PtexReader::getPixel(int faceid, int u, int v,
                           float* result, int firstchan, int nchannelsArg,
                           Ptex::Res res)
 {
-    memset(result, 0, nchannelsArg);
+    memset(result, 0, sizeof(*result)*nchannelsArg);
 
     // clip nchannels against actual number available
-    nchannelsArg = PtexUtils::min(nchannelsArg, _header.nchannels-firstchan);
+    nchannelsArg = std::min(nchannelsArg, _header.nchannels-firstchan);
     if (nchannelsArg <= 0) return;
 
     // get raw pixel data
-    PtexPtr<PtexFaceData> data ( getData(faceid, res) );
-    void* pixel = alloca(_pixelsize);
-    data->getPixel(u, v, pixel);
+    void* pixel;
+    if (faceid >= 0 && size_t(faceid) < _header.nfaces && _faceinfo[faceid].isConstant()) {
+        pixel = getConstantData(faceid);
+    }
+    else {
+        PtexPtr<PtexFaceData> data ( getData(faceid, res) );
+        pixel = alloca(_pixelsize);
+        data->getPixel(u, v, pixel);
+    }
 
     // adjust for firstchan offset
     int datasize = DataSize(datatype());
@@ -953,6 +889,46 @@ void PtexReader::getPixel(int faceid, int u, int v,
 }
 
 
+void PtexReader::getCompressedData(int faceid, int levelid, FaceDataHeader& fdh, std::vector<std::byte>& data)
+{
+    if (!_ok || faceid < 0 || size_t(faceid) >= _header.nfaces || size_t(levelid) >= _levels.size()) {
+        return;
+    }
+
+    Level* level = getLevel(levelid);
+    int rfaceid = levelid == 0 ? faceid : _rfaceids[faceid];
+    fdh = level->fdh[rfaceid];
+    FilePos offset = level->offsets[rfaceid];
+    size_t size{0};
+    if (!fdh.isLargeFace()) {
+        size = fdh.blocksize();
+    } else if (fdh.encoding() == enc_tiled) {
+        // read tiled face header
+        seek(offset);
+        FaceInfo& fi = _faceinfo[faceid];
+        Res level_res(fi.res.ulog2 - levelid, fi.res.vlog2 - levelid);
+        Res tileres;
+        readBlock(&tileres, sizeof(tileres));
+        uint32_t tileheadersize;
+        readBlock(&tileheadersize, sizeof(tileheadersize));
+        int ntiles = level_res.ntiles(tileres);
+        std::vector<FaceDataHeader> tiledFace_fdh(ntiles);
+        readZipBlock(&tiledFace_fdh[0], tileheadersize, FaceDataHeaderSize * ntiles);
+
+        // sum total size of header and tiles
+        size = sizeof(tileres) + sizeof(tileheadersize) + tileheadersize;
+        for (auto fdh : tiledFace_fdh) {
+            size += fdh.blocksize();
+        }
+    }
+
+    // read compressed face data
+    seek(offset);
+    data.resize(size);
+    readBlock(data.data(), size);
+}
+
+
 PtexReader::FaceData*
 PtexReader::PackedFace::reduce(PtexReader* r, Res newres, PtexUtils::ReduceFn reducefn,
                                size_t& newMemUsed)
@@ -960,7 +936,7 @@ PtexReader::PackedFace::reduce(PtexReader* r, Res newres, PtexUtils::ReduceFn re
     // allocate a new face and reduce image
     DataType dt = r->datatype();
     int nchan = r->nchannels();
-    int memsize = _pixelsize * newres.size();
+    int memsize = _pixelsize * newres.size64();
     PackedFace* pf = new PackedFace(newres, _pixelsize, memsize);
     newMemUsed = sizeof(PackedFace) + memsize;
     // reduce and copy into new face
@@ -1046,7 +1022,7 @@ PtexReader::TiledFaceBase::reduce(PtexReader* r, Res newres, PtexUtils::ReduceFn
             int dstride = sstride * _ntilesu;
             int dstepv = dstride * tilevres - sstride*(_ntilesu-1);
 
-            char* tmp = new char [_ntiles * _tileres.size() * _pixelsize];
+            char* tmp = new char [_ntiles * _tileres.size64() * _pixelsize];
             char* tmpptr = tmp;
             for (int i = 0; i < _ntiles;) {
                 PtexFaceData* tile = tiles[i];
@@ -1060,7 +1036,7 @@ PtexReader::TiledFaceBase::reduce(PtexReader* r, Res newres, PtexUtils::ReduceFn
             }
 
             // allocate a new packed face
-            int memsize = _pixelsize * newres.size();
+            int memsize = _pixelsize * newres.size64();
             newface = new PackedFace(newres, _pixelsize, memsize);
             newMemUsed = sizeof(PackedFace) + memsize;
             // reduce and copy into new face
@@ -1071,7 +1047,7 @@ PtexReader::TiledFaceBase::reduce(PtexReader* r, Res newres, PtexUtils::ReduceFn
         }
         else {
             // allocate a new packed face
-            int memsize = _pixelsize * newres.size();
+            int memsize = _pixelsize * newres.size64();
             newface = new PackedFace(newres, _pixelsize, memsize);
             newMemUsed = sizeof(PackedFace) + memsize;
 
@@ -1157,7 +1133,7 @@ PtexFaceData* PtexReader::TiledReducedFace::getTile(int tile)
     }
     else {
         // allocate a new packed face for the tile
-        int memsize = _pixelsize*_tileres.size();
+        int memsize = _pixelsize*_tileres.size64();
         newface = new PackedFace(_tileres, _pixelsize, memsize);
         newMemUsed = sizeof(PackedFace) + memsize;
 

@@ -56,8 +56,8 @@ class PtexPointFilter : public PtexFilter
         if (faceid < 0 || faceid >= _tx->numFaces()) return;
         const FaceInfo& f = _tx->getFaceInfo(faceid);
         int resu = f.res.u(), resv = f.res.v();
-        int ui = PtexUtils::clamp(int(u*(float)resu), 0, resu-1);
-        int vi = PtexUtils::clamp(int(v*(float)resv), 0, resv-1);
+        int ui = std::clamp(int(u*(float)resu), 0, resu-1);
+        int vi = std::clamp(int(v*(float)resv), 0, resv-1);
         _tx->getPixel(faceid, ui, vi, result, firstchan, nchannels);
     }
 
@@ -83,8 +83,8 @@ class PtexPointFilterTri : public PtexFilter
         int res = f.res.u();
         int resm1 = res - 1;
         float ut = u * (float)res, vt = v * (float)res;
-        int ui = PtexUtils::clamp(int(ut), 0, resm1);
-        int vi = PtexUtils::clamp(int(vt), 0, resm1);
+        int ui = std::clamp(int(ut), 0, resm1);
+        int vi = std::clamp(int(vt), 0, resm1);
         float uf = ut - (float)ui, vf = vt - (float)vi;
 
         if (uf + vf <= 1.0f) {
@@ -134,7 +134,7 @@ class PtexWidth4Filter : public PtexSeparableFilter
     {
         // 2-unit (x in -1..1) cubic hermite kernel
         // this produces a blur roughly 1.5 times that of the 4-unit b-spline kernel
-        x = PtexUtils::abs(x);
+        x = std::abs(x);
         return x < 1.0f ? (2.0f*x-3.0f)*x*x+1.0f : 0.0f;
     }
 
@@ -144,11 +144,11 @@ class PtexWidth4Filter : public PtexSeparableFilter
         // build 1 axis (note: "u" labels may repesent either u or v axis)
 
         // clamp filter width to no smaller than a texel
-        uw = PtexUtils::max(uw, PtexUtils::reciprocalPow2(f_ureslog2));
+        uw = std::max(uw, PtexUtils::reciprocalPow2(f_ureslog2));
 
         // compute desired texture res based on filter width
         k_ureslog2 = (int8_t)PtexUtils::calcResFromWidth(uw);
-        int resu = 1 << PtexUtils::max(0, (int)k_ureslog2);
+        int resu = 1 << k_ureslog2;
         float uwlo = 1.0f/(float)resu; // smallest filter width for this res
 
         // compute lerp weights (amount to blend towards next-lower res)
@@ -160,7 +160,7 @@ class PtexWidth4Filter : public PtexSeparableFilter
             if (uw < .5f) {
                 k_ureslog2 = 2;
                 float upix = u * 4.0f - 0.5f;
-                int u1 = int(PtexUtils::ceil(upix - 2)), u2 = int(PtexUtils::ceil(upix + 2));
+                int u1 = int(std::ceil(upix - 2)), u2 = int(std::ceil(upix + 2));
                 u1 = u1 & ~1;       // round down to even pair
                 u2 = (u2 + 1) & ~1; // round up to even pair
                 k_u = u1;
@@ -180,7 +180,7 @@ class PtexWidth4Filter : public PtexSeparableFilter
             else if (uw < 1) {
                 k_ureslog2 = 1;
                 float upix = u * 2.0f - 0.5f;
-                k_u = int(PtexUtils::floor(u - .5f))*2;
+                k_u = int(std::floor(u - .5f))*2;
                 k_uw = 4;
                 float x1 = (float)k_u-upix;
                 for (int i = 0; i < k_uw; i+=2) {
@@ -200,7 +200,7 @@ class PtexWidth4Filter : public PtexSeparableFilter
                 k_ureslog2 = 0;
                 float upix = u - .5f;
                 k_uw = 2;
-                float ui = PtexUtils::floor(upix);
+                float ui = std::floor(upix);
                 k_u = int(ui);
                 ku[0] = blur(upix-ui);
                 ku[1] = 1-ku[0];
@@ -215,7 +215,7 @@ class PtexWidth4Filter : public PtexSeparableFilter
         // find integer pixel extent: [u,v] +/- [2*uw,2*vw]
         // (kernel width is 4 times filter width)
         float dupix = 2.0f*uwpix;
-        int u1 = int(PtexUtils::ceil(upix - dupix)), u2 = int(PtexUtils::ceil(upix + dupix));
+        int u1 = int(std::ceil(upix - dupix)), u2 = int(std::ceil(upix + dupix));
 
         if (lerp2) {
             // lerp kernel weights towards next-lower res
@@ -277,7 +277,7 @@ class PtexBicubicFilter : public PtexWidth4Filter
  private:
     static float kernelFn(float x, const float* c)
     {
-        x = PtexUtils::abs(x);
+        x = std::abs(x);
         if (x < 1.0f)      return (c[0]*x + c[1])*x*x + c[2];
         else if (x < 2.0f) return ((c[3]*x + c[4])*x + c[5])*x + c[6];
         else               return 0.0f;
@@ -319,12 +319,12 @@ class PtexBoxFilter : public PtexSeparableFilter
                              Res faceRes)
     {
         // clamp filter width to no larger than 1.0
-        uw = PtexUtils::min(uw, 1.0f);
-        vw = PtexUtils::min(vw, 1.0f);
+        uw = std::min(uw, 1.0f);
+        vw = std::min(vw, 1.0f);
 
         // clamp filter width to no smaller than a texel
-        uw = PtexUtils::max(uw, PtexUtils::reciprocalPow2(faceRes.ulog2));
-        vw = PtexUtils::max(vw, PtexUtils::reciprocalPow2(faceRes.vlog2));
+        uw = std::max(uw, PtexUtils::reciprocalPow2(faceRes.ulog2));
+        vw = std::max(vw, PtexUtils::reciprocalPow2(faceRes.vlog2));
 
         // compute desired texture res based on filter width
         uint8_t ureslog2 = (uint8_t)PtexUtils::calcResFromWidth(uw);
@@ -342,8 +342,8 @@ class PtexBoxFilter : public PtexSeparableFilter
         // (box is 1 unit wide for a 1 unit filter period)
         float u1 = u - 0.5f*uw, u2 = u + 0.5f*uw;
         float v1 = v - 0.5f*vw, v2 = v + 0.5f*vw;
-        float u1floor = PtexUtils::floor(u1), u2ceil = PtexUtils::ceil(u2);
-        float v1floor = PtexUtils::floor(v1), v2ceil = PtexUtils::ceil(v2);
+        float u1floor = std::floor(u1), u2ceil = std::ceil(u2);
+        float v1floor = std::floor(v1), v2ceil = std::ceil(v2);
         k.u = int(u1floor);
         k.v = int(v1floor);
         k.uw = int(u2ceil)-k.u;
@@ -383,12 +383,12 @@ class PtexBilinearFilter : public PtexSeparableFilter
                              Res faceRes)
     {
         // clamp filter width to no larger than 1.0
-        uw = PtexUtils::min(uw, 1.0f);
-        vw = PtexUtils::min(vw, 1.0f);
+        uw = std::min(uw, 1.0f);
+        vw = std::min(vw, 1.0f);
 
         // clamp filter width to no smaller than a texel
-        uw = PtexUtils::max(uw, PtexUtils::reciprocalPow2(faceRes.ulog2));
-        vw = PtexUtils::max(vw, PtexUtils::reciprocalPow2(faceRes.vlog2));
+        uw = std::max(uw, PtexUtils::reciprocalPow2(faceRes.ulog2));
+        vw = std::max(vw, PtexUtils::reciprocalPow2(faceRes.vlog2));
 
         uint8_t ureslog2 = (uint8_t)PtexUtils::calcResFromWidth(uw);
         uint8_t vreslog2 = (uint8_t)PtexUtils::calcResFromWidth(vw);
@@ -399,8 +399,8 @@ class PtexBilinearFilter : public PtexSeparableFilter
         float upix = u * (float)k.res.u() - 0.5f;
         float vpix = v * (float)k.res.v() - 0.5f;
 
-        float ufloor = PtexUtils::floor(upix);
-        float vfloor = PtexUtils::floor(vpix);
+        float ufloor = std::floor(upix);
+        float vfloor = std::floor(vpix);
         k.u = int(ufloor);
         k.v = int(vfloor);
         k.uw = 2;
@@ -441,6 +441,35 @@ PtexFilter* PtexFilter::getFilter(PtexTexture* tex, const PtexFilter::Options& o
         break;
     }
     return 0;
+}
+
+void PtexFilter::eval(PtexTexture* tx, const Options& opts,
+                      float* result, int firstchan, int nchannels,
+                      int faceid, float u, float v, float uw1, float vw1, float uw2, float vw2,
+                      float width, float blur)
+{
+    switch (tx->meshType()) {
+    case Ptex::mt_quad:
+        switch (opts.filter) {
+            case f_point:       PtexPointFilter(tx).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            case f_bilinear:    PtexBilinearFilter(tx, opts).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            default:
+            case f_box:         PtexBoxFilter(tx, opts).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            case f_gaussian:    PtexGaussianFilter(tx, opts).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            case f_bicubic:     PtexBicubicFilter(tx, opts, opts.sharpness).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            case f_bspline:     PtexBicubicFilter(tx, opts, 0.f).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            case f_catmullrom:  PtexBicubicFilter(tx, opts, 1.f).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            case f_mitchell:    PtexBicubicFilter(tx, opts, 2.f/3.f).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+        }
+        break;
+
+    case Ptex::mt_triangle:
+        switch (opts.filter) {
+            case f_point:       PtexPointFilterTri(tx).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+            default:            PtexTriangleFilter(tx, opts).eval(result, firstchan, nchannels, faceid, u, v, uw1, vw1, uw2, vw2, width, blur); break;
+        }
+        break;
+    }
 }
 
 PTEX_NAMESPACE_END

@@ -56,8 +56,8 @@ namespace {
         float DDQ = 2.0f*k.A;
         for (int vi = k.v1; vi != k.v2; vi++) {
             int xw = k.rowlen - vi;
-            int x1 = PtexUtils::max(k.u1, xw-k.w2);
-            int x2 = PtexUtils::min(k.u2, xw-k.w1);
+            int x1 = std::max(k.u1, xw-k.w2);
+            int x2 = std::min(k.u2, xw-k.w1);
             float U = (float)x1 - k.u;
             float V = (float)vi - k.v;
             float DQ = k.A*(2.0f*U+1.0f)+k.B*V;
@@ -83,8 +83,8 @@ namespace {
         float DDQ = 2.0f*k.A;
         for (int vi = k.v1; vi != k.v2; vi++) {
             int xw = k.rowlen - vi;
-            int x1 = PtexUtils::max(k.u1, xw-k.w2);
-            int x2 = PtexUtils::min(k.u2, xw-k.w1);
+            int x1 = std::max(k.u1, xw-k.w2);
+            int x2 = std::min(k.u2, xw-k.w1);
             float U = (float)x1 - k.u;
             float V = (float)vi - k.v;
             float DQ = k.A*(2.0f*U+1.0f)+k.B*V;
@@ -110,8 +110,8 @@ namespace {
         float DDQ = 2.0f*k.A;
         for (int vi = k.v1; vi != k.v2; vi++) {
             int xw = k.rowlen - vi;
-            int x1 = PtexUtils::max(k.u1, xw-k.w2);
-            int x2 = PtexUtils::min(k.u2, xw-k.w1);
+            int x1 = std::max(k.u1, xw-k.w2);
+            int x2 = std::min(k.u2, xw-k.w1);
             float U = (float)x1 - k.u;
             float V = (float)vi - k.v;
             float DQ = k.A*(2.0f*U+1.0f)+k.B*V;
@@ -156,8 +156,8 @@ void PtexTriangleKernelIter::applyConst(float* dst, void* data, DataType dt, int
     float DDQ = 2.0f*A;
     for (int vi = v1; vi != v2; vi++) {
         int xw = rowlen - vi;
-        int x1 = PtexUtils::max(u1, xw-w2);
-        int x2 = PtexUtils::min(u2, xw-w1);
+        int x1 = std::max(u1, xw-w2);
+        int x2 = std::min(u2, xw-w1);
         float U = (float)x1 - u;
         float V = (float)vi - v;
         float DQ = A*(2.0f*U+1.0f)+B*V;

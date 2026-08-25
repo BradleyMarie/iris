@@ -36,7 +36,9 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
+#include <algorithm>
 #include <cmath>
+#include <cstring>
 #include "PtexExports.h"
 #include "Ptexture.h"
 #include "PtexHalf.h"
@@ -49,6 +51,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
 PTEX_NAMESPACE_BEGIN
 namespace PtexUtils {
+
+// (keeping these as aliases for code outside of the Ptex library that might have been using them)
+using std::abs;
+using std::min;
+using std::max;
+using std::clamp;
+using std::floor;
+using std::ceil;
 
 inline bool isPowerOfTwo(int x)
 {
@@ -92,11 +102,9 @@ inline uint32_t ceil_log2(uint32_t x)
 inline float reciprocalPow2(int power)
 {
     // 1.0/pow(2,power)
-    union {
-        float f;
-        int32_t i;
-    };
-    i = (127-power)<<23;
+    int32_t i = (127-power)<<23;
+    float f;
+    memcpy(&f, &i, sizeof(f));
     return f;
 }
 
@@ -104,11 +112,8 @@ inline int calcResFromWidth(float w)
 {
     // read exponent directly from float32 representation
     // equiv to ceil(log2(1.0/w)) but much faster and no error
-    union {
-        float wf;
-        int32_t wi;
-    };
-    wf = w;
+    int32_t wi;
+    memcpy(&wi, &w, sizeof(wi));
     int result = 127 - ((wi >> 23) & 0xff);
     return result;
 }
@@ -129,29 +134,6 @@ inline float qsmoothstep(float x, float a, float b)
     x = (x - a)/(b - a);
     return x*x*x * (10 + x * (-15 + x*6));
 }
-
-template<typename T>
-inline T abs(T x) { return x > 0 ? x : -x; }
-
-inline float abs(float x)
-{
-    union {
-        float f;
-        int32_t i;
-    };
-    f = x;
-    i &= 0x7fffffff;
-    return f;
-}
-
-template<typename T>
-inline T min(T a, T b) { return a < b ? a : b; }
-
-template<typename T>
-inline T max(T a, T b) { return a > b ? a : b; }
-
-template<typename T>
-inline T clamp(T x, T lo, T hi) { return min(max(x,lo),hi); }
 
 template<typename T>
 inline T halve(T val) { return T(val>>1); }
@@ -177,10 +159,10 @@ void deinterleave(const void* src, int sstride, int ures, int vres,
                   void* dst, int dstride, DataType dt, int nchannels);
 
 PTEXAPI
-void encodeDifference(void* data, int size, DataType dt);
+void encodeDifference(void* data, size_t size, DataType dt);
 
 PTEXAPI
-void decodeDifference(void* data, int size, DataType dt);
+void decodeDifference(void* data, size_t size, DataType dt);
 
 typedef void ReduceFn(const void* src, int sstride, int ures, int vres,
                       void* dst, int dstride, DataType dt, int nchannels);
@@ -282,22 +264,6 @@ inline void applyConst(float weight, float* dst, void* data, Ptex::DataType dt, 
     ApplyConstFn fn = applyConstFunctions[((unsigned)nChan<=4)*nChan*4 + dt];
     fn(weight, dst, data, nChan);
 }
-
-#ifdef __SSE4_1__
-inline float floor(float f) {
-    float result;
-    _mm_store_ss(&result, _mm_round_ps(_mm_set1_ps(f), (_MM_FROUND_NO_EXC | _MM_FROUND_TO_NEG_INF)));
-    return result;
-}
-inline float ceil(float f) {
-    float result;
-    _mm_store_ss(&result, _mm_round_ps(_mm_set1_ps(f), (_MM_FROUND_NO_EXC | _MM_FROUND_TO_POS_INF)));
-    return result;
-}
-#else
-using std::floor;
-using std::ceil;
-#endif
 
 } // end namespace Utils
 

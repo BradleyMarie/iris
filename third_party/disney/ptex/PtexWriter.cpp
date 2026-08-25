@@ -33,30 +33,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
-/* Ptex writer classes:
-
-   PtexIncrWriter implements "incremental" mode and simply appends
-   "edit" blocks to the end of the file.
-
-   PtexMainWriter implements both writing from scratch and updating
-   an existing file, either to add data or to "roll up" previous
-   incremental edits.
-
-   Because the various headers (faceinfo, levelinfo, etc.) are
-   variable-length and precede the data, and because the data size
-   is not known until it is compressed and written, all data
-   are written to a temp file and then copied at the end to the
-   final location.  This happens during the "finish" phase.
-
-   Each time a texture is written to the file, a reduction of the
-   texture is also generated and stored.  These reductions are stored
-   in a temporary form and recalled later as the resolution levels are
-   generated.
-
-   The final reduction for each face is averaged and stored in the
-   const data block.
-*/
-
 #include "PtexPlatform.h"
 #include <errno.h>
 #include <signal.h>
@@ -70,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
     #include <unistd.h>
     #include <stddef.h>
 #endif
+#include <libdeflate.h>
 
 #include "Ptexture.h"
 #include "PtexUtils.h"
@@ -78,54 +55,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 PTEX_NAMESPACE_BEGIN
 
 namespace {
-
-    FILE* OpenTempFile(std::string& tmppath)
-    {
-        static Mutex lock;
-        AutoMutex locker(lock);
-
-        // choose temp dir
-        static std::string tmpdir;
-        static int initialized = 0;
-        if (!initialized) {
-            initialized = 1;
-#ifdef PTEX_PLATFORM_WINDOWS
-            // use GetTempPath API (first call determines length of result)
-            DWORD result = ::GetTempPath(0, (LPTSTR) L"");
-            if (result > 0) {
-                std::vector<TCHAR> tempPath(result + 1);
-                result = ::GetTempPath(static_cast<DWORD>(tempPath.size()), &tempPath[0]);
-                if (result > 0 && result <= tempPath.size())
-                    tmpdir = std::string(tempPath.begin(),
-                                         tempPath.begin() + static_cast<std::size_t>(result));
-                else
-                    tmpdir = ".";
-            }
-#else
-            // try $TEMP or $TMP, use /tmp as last resort
-            const char* t = getenv("TEMP");
-            if (!t) t = getenv("TMP");
-            if (!t) t = "/tmp";
-            tmpdir = t;
-#endif
-        }
-
-        // build temp path
-
-#ifdef PTEX_PLATFORM_WINDOWS
-        // use process id and counter to make unique filename
-        std::stringstream s;
-        static int count = 0;
-        s << tmpdir << "/" << "PtexTmp" << _getpid() << "_" << ++count;
-        tmppath = s.str();
-        return fopen((char*) tmppath.c_str(), "wb+");
-#else
-        // use mkstemp to open unique file
-        tmppath = tmpdir + "/PtexTmpXXXXXX";
-        int fd = mkstemp(&tmppath[0]);
-        return fdopen(fd, "w+");
-#endif
-    }
 
     std::string fileError(const char* message, const char* path)
     {
@@ -187,7 +116,7 @@ PtexWriter* PtexWriter::open(const char* path,
 }
 
 
-PtexWriter* PtexWriter::edit(const char* path, bool incremental,
+PtexWriter* PtexWriter::edit(const char* path,
                              Ptex::MeshType mt, Ptex::DataType dt,
                              int nchannels, int alphachan, int nfaces,
                              Ptex::String& error, bool genmipmaps)
@@ -201,39 +130,31 @@ PtexWriter* PtexWriter::edit(const char* path, bool incremental,
         error = fileError("Can't open ptex file for update: ", path).c_str();
     }
 
-    PtexWriterBase* w = 0;
-    // use incremental writer iff incremental mode requested and file exists
-    if (incremental && fp) {
-        w = new PtexIncrWriter(path, fp, mt, dt, nchannels, alphachan, nfaces);
-    }
-    // otherwise use main writer
-    else {
-        PtexTexture* tex = 0;
-        if (fp) {
-            // got an existing file, close and reopen with PtexReader
-            fclose(fp);
+    PtexTexture* tex = 0;
+    if (fp) {
+        // got an existing file, close and reopen with PtexReader
+        fclose(fp);
 
-            // open reader for existing file
-            tex = PtexTexture::open(path, error);
-            if (!tex) return 0;
+        // open reader for existing file
+        tex = PtexTexture::open(path, error);
+        if (!tex) return 0;
 
-            // make sure header matches
-            bool headerMatch = (mt == tex->meshType() &&
-                                dt == tex->dataType() &&
-                                nchannels == tex->numChannels() &&
-                                alphachan == tex->alphaChannel() &&
-                                nfaces == tex->numFaces());
-            if (!headerMatch) {
-                std::stringstream str;
-                str << "PtexWriter::edit error: header doesn't match existing file, "
-                    << "conversions not currently supported";
-                error = str.str().c_str();
-                return 0;
-            }
+        // make sure header matches
+        bool headerMatch = (mt == tex->meshType() &&
+                            dt == tex->dataType() &&
+                            nchannels == tex->numChannels() &&
+                            alphachan == tex->alphaChannel() &&
+                            nfaces == tex->numFaces());
+        if (!headerMatch) {
+            std::stringstream str;
+            str << "PtexWriter::edit error: header doesn't match existing file, "
+                << "conversions not supported";
+            error = str.str().c_str();
+            return 0;
         }
-        w = new PtexMainWriter(path, tex, mt, dt, nchannels, alphachan,
-                               nfaces, genmipmaps);
     }
+    PtexMainWriter* w = new PtexMainWriter(path, tex, mt, dt, nchannels, alphachan,
+                                           nfaces, genmipmaps);
 
     if (!w->ok(error)) {
         w->release();
@@ -242,95 +163,33 @@ PtexWriter* PtexWriter::edit(const char* path, bool incremental,
     return w;
 }
 
-
-bool PtexWriter::applyEdits(const char* path, Ptex::String& error)
+PtexWriter* PtexWriter::edit(const char* path, bool /*incremental*/,
+                             Ptex::MeshType mt, Ptex::DataType dt,
+                             int nchannels, int alphachan, int nfaces,
+                             Ptex::String& error, bool genmipmaps)
 {
-    // open reader for existing file
-    PtexTexture* tex = PtexTexture::open(path, error);
-    if (!tex) return 0;
+    // This function is deprecated
+    return edit(path, mt, dt, nchannels, alphachan, nfaces, error, genmipmaps);
+}
 
-    // see if we have any edits to apply
-    if (tex->hasEdits()) {
-        // create non-incremental writer
-        PtexPtr<PtexWriter> w(new PtexMainWriter(path, tex, tex->meshType(), tex->dataType(),
-                                                 tex->numChannels(), tex->alphaChannel(), tex->numFaces(),
-                                                 tex->hasMipMaps()));
-        // close to rebuild file
-        if (!w->close(error)) return 0;
-    }
+bool PtexWriter::applyEdits(const char*, Ptex::String&)
+{
+    // This function is obsolete
     return 1;
 }
 
 
-PtexWriterBase::PtexWriterBase(const char* path,
-                               Ptex::MeshType mt, Ptex::DataType dt,
-                               int nchannels, int alphachan, int nfaces,
-                               bool compress)
-    : _ok(true),
-      _path(path),
-      _tilefp(0)
-{
-    memset(&_header, 0, sizeof(_header));
-    _header.magic = Magic;
-    _header.version = PtexFileMajorVersion;
-    _header.minorversion = PtexFileMinorVersion;
-    _header.meshtype = mt;
-    _header.datatype = dt;
-    _header.alphachan = alphachan;
-    _header.nchannels = (uint16_t)nchannels;
-    _header.nfaces = nfaces;
-    _header.nlevels = 0;
-    _header.extheadersize = sizeof(_extheader);
-    _pixelSize = _header.pixelSize();
-
-    memset(&_extheader, 0, sizeof(_extheader));
-
-    if (mt == mt_triangle)
-        _reduceFn = &PtexUtils::reduceTri;
-    else
-        _reduceFn = &PtexUtils::reduce;
-
-    memset(&_zstream, 0, sizeof(_zstream));
-    deflateInit(&_zstream, compress ? Z_DEFAULT_COMPRESSION : 0);
-
-    // create temp file for writing tiles
-    // (must compress each tile before assembling a tiled face)
-    _tilefp = OpenTempFile(_tilepath);
-    if (!_tilefp) {
-        setError(fileError("Error creating temp file: ", _tilepath.c_str()));
-    }
-}
-
-
-void PtexWriterBase::release()
+void PtexMainWriter::release()
 {
     Ptex::String error;
     // close writer if app didn't, and report error if any
-    if (_tilefp && !close(error))
+    if (!close(error))
         std::cerr << error.c_str() << std::endl;
     delete this;
 }
 
-PtexWriterBase::~PtexWriterBase()
-{
-    deflateEnd(&_zstream);
-}
 
-
-bool PtexWriterBase::close(Ptex::String& error)
-{
-    if (_ok) finish();
-    if (!_ok) getError(error);
-    if (_tilefp) {
-        fclose(_tilefp);
-        unlink(_tilepath.c_str());
-        _tilefp = 0;
-    }
-    return _ok;
-}
-
-
-bool PtexWriterBase::storeFaceInfo(int faceid, FaceInfo& f, const FaceInfo& src, int flags)
+bool PtexMainWriter::storeFaceInfo(int faceid, FaceInfo& f, const FaceInfo& src, int flags)
 {
     if (faceid < 0 || size_t(faceid) >= _header.nfaces) {
         setError("PtexWriter error: faceid out of range");
@@ -362,43 +221,43 @@ bool PtexWriterBase::storeFaceInfo(int faceid, FaceInfo& f, const FaceInfo& src,
 }
 
 
-void PtexWriterBase::writeMeta(const char* key, const char* value)
+void PtexMainWriter::writeMeta(const char* key, const char* value)
 {
     addMetaData(key, mdt_string, value, int(strlen(value)+1));
 }
 
 
-void PtexWriterBase::writeMeta(const char* key, const int8_t* value, int count)
+void PtexMainWriter::writeMeta(const char* key, const int8_t* value, int count)
 {
     addMetaData(key, mdt_int8, value, count);
 }
 
 
-void PtexWriterBase::writeMeta(const char* key, const int16_t* value, int count)
+void PtexMainWriter::writeMeta(const char* key, const int16_t* value, int count)
 {
     addMetaData(key, mdt_int16, value, count*(int)sizeof(int16_t));
 }
 
 
-void PtexWriterBase::writeMeta(const char* key, const int32_t* value, int count)
+void PtexMainWriter::writeMeta(const char* key, const int32_t* value, int count)
 {
     addMetaData(key, mdt_int32, value, count*(int)sizeof(int32_t));
 }
 
 
-void PtexWriterBase::writeMeta(const char* key, const float* value, int count)
+void PtexMainWriter::writeMeta(const char* key, const float* value, int count)
 {
     addMetaData(key, mdt_float, value, count*(int)sizeof(float));
 }
 
 
-void PtexWriterBase::writeMeta(const char* key, const double* value, int count)
+void PtexMainWriter::writeMeta(const char* key, const double* value, int count)
 {
     addMetaData(key, mdt_double, value, count*(int)sizeof(double));
 }
 
 
-void PtexWriterBase::writeMeta(PtexMetaData* data)
+void PtexMainWriter::writeMeta(PtexMetaData* data)
 {
     int nkeys = data->numKeys();
     for (int i = 0; i < nkeys; i++) {
@@ -454,7 +313,7 @@ void PtexWriterBase::writeMeta(PtexMetaData* data)
 }
 
 
-void PtexWriterBase::addMetaData(const char* key, MetaDataType t,
+void PtexMainWriter::addMetaData(const char* key, MetaDataType t,
                                  const void* value, int size)
 {
     if (strlen(key) > 255) {
@@ -488,19 +347,7 @@ void PtexWriterBase::addMetaData(const char* key, MetaDataType t,
 }
 
 
-int PtexWriterBase::writeBlank(FILE* fp, int size)
-{
-    if (!_ok) return 0;
-    static char zeros[BlockSize] = {0};
-    int remain = size;
-    while (remain > 0) {
-        remain -= writeBlock(fp, zeros, remain < BlockSize ? remain : BlockSize);
-    }
-    return size;
-}
-
-
-int PtexWriterBase::writeBlock(FILE* fp, const void* data, int size)
+size_t PtexMainWriter::writeBlock(FILE* fp, const void* data, size_t size)
 {
     if (!_ok) return 0;
     if (!fwrite(data, size, 1, fp)) {
@@ -511,70 +358,51 @@ int PtexWriterBase::writeBlock(FILE* fp, const void* data, int size)
 }
 
 
-int PtexWriterBase::writeZipBlock(FILE* fp, const void* data, int size, bool finishArg)
+void PtexMainWriter::addToDataBlock(std::vector<std::byte>& dataBlock, const void* data, size_t size)
 {
-    if (!_ok) return 0;
-    void* buff = alloca(BlockSize);
-    _zstream.next_in = (Bytef*) const_cast<void*>(data);
-    _zstream.avail_in = size;
-
-    while (1) {
-        _zstream.next_out = (Bytef*)buff;
-        _zstream.avail_out = BlockSize;
-        int zresult = deflate(&_zstream, finishArg ? Z_FINISH : Z_NO_FLUSH);
-        int sizeval = BlockSize - _zstream.avail_out;
-        if (sizeval > 0) writeBlock(fp, buff, sizeval);
-        if (zresult == Z_STREAM_END) break;
-        if (zresult != Z_OK) {
-            setError("PtexWriter error: data compression internal error");
-            break;
-        }
-        if (!finishArg && _zstream.avail_out != 0)
-            // waiting for more input
-            break;
-    }
-
-    if (!finishArg) return 0;
-
-    int total = (int)_zstream.total_out;
-    deflateReset(&_zstream);
-    return total;
+    size_t previousSize = dataBlock.size();
+    dataBlock.resize(previousSize+size);
+    memcpy(dataBlock.data() + previousSize, data, size);
 }
 
 
-int PtexWriterBase::readBlock(FILE* fp, void* data, int size)
+libdeflate_compressor* PtexMainWriter::getCompressor()
 {
-    if (!fread(data, size, 1, fp)) {
-        setError("PtexWriter error: temp file read failed");
-        return 0;
+    AutoMutex lock(_compressorMutex);
+    libdeflate_compressor* compressor;
+    if (!_compressors.empty()) {
+        compressor = _compressors.back();
+        _compressors.pop_back();
+    } else {
+        const int compressionLevel = 4;
+        compressor = libdeflate_alloc_compressor(compressionLevel);
     }
-    return size;
+    return compressor;
 }
 
 
-int PtexWriterBase::copyBlock(FILE* dst, FILE* src, FilePos pos, int size)
+void PtexMainWriter::releaseCompressor(libdeflate_compressor* compressor)
 {
-    if (size <= 0) return 0;
-    fseeko(src, pos, SEEK_SET);
-    int remain = size;
-    void* buff = alloca(BlockSize);
-    while (remain) {
-        int nbytes = remain < BlockSize ? remain : BlockSize;
-        if (!fread(buff, nbytes, 1, src)) {
-            setError("PtexWriter error: temp file read failed");
-            return 0;
-        }
-        if (!writeBlock(dst, buff, nbytes)) break;
-        remain -= nbytes;
-    }
-    return size;
+    AutoMutex lock(_compressorMutex);
+    _compressors.push_back(compressor);
 }
 
 
-Ptex::Res PtexWriterBase::calcTileRes(Res faceres)
+void PtexMainWriter::compressDataBlock(libdeflate_compressor* compressor, std::vector<std::byte>& compressedData, const void* data, size_t size)
+{
+    compressedData.resize(libdeflate_zlib_compress_bound(compressor, size));
+    int compressedSize = int(libdeflate_zlib_compress(compressor, data, size, compressedData.data(), compressedData.size()));
+    if (!compressedSize) {
+        setError("PtexWriter error: compression failed");
+    }
+    compressedData.resize(compressedSize);
+}
+
+
+Ptex::Res PtexMainWriter::calcTileRes(Res faceres)
 {
     // desired number of tiles = floor(log2(facesize / tilesize))
-    int facesize = faceres.size() * _pixelSize;
+    size_t facesize = faceres.size64() * _pixelSize;
     int ntileslog2 = PtexUtils::floor_log2(facesize/TileSize);
     if (ntileslog2 == 0) return faceres;
 
@@ -587,171 +415,150 @@ Ptex::Res PtexWriterBase::calcTileRes(Res faceres)
     // choose u and v sizes for roughly square result (u ~= v ~= n/2)
     // and make sure tile isn't larger than face
     Res tileres;
-    tileres.ulog2 = (int8_t)PtexUtils::min(int((n+1)/2), int(faceres.ulog2));
-    tileres.vlog2 = (int8_t)PtexUtils::min(int(n - tileres.ulog2), int(faceres.vlog2));
+    tileres.ulog2 = (int8_t)std::min(int((n+1)/2), int(faceres.ulog2));
+    tileres.vlog2 = (int8_t)std::min(int(n - tileres.ulog2), int(faceres.vlog2));
     return tileres;
 }
 
 
-void PtexWriterBase::writeConstFaceBlock(FILE* fp, const void* data,
-                                         FaceDataHeader& fdh)
+void PtexMainWriter::compressFaceDataBlock(libdeflate_compressor* compressor, std::vector<std::byte>& compressedData, FaceDataHeader& fdh,
+                                           Res res, const void* uncompressedData, int stride)
 {
-    // write a single const face data block
-    // record level data for face and output the one pixel value
-    fdh.set(_pixelSize, enc_constant);
-    writeBlock(fp, data, _pixelSize);
-}
+    // compress a single face data block; could be a whole face or just a tile
 
-
-void PtexWriterBase::writeFaceBlock(FILE* fp, const void* data, int stride,
-                                    Res res, FaceDataHeader& fdh)
-{
-    // write a single face data block
-    // copy to temp buffer, and deinterleave
+    // first, copy to temp buffer, and deinterleave
     int ures = res.u(), vres = res.v();
-    int blockSize = ures*vres*_pixelSize;
-    bool useNew = blockSize > AllocaMax;
-    char* buff = useNew ? new char [blockSize] : (char*)alloca(blockSize);
-    PtexUtils::deinterleave(data, stride, ures, vres, buff,
+    size_t tempSize = ures*vres*_pixelSize;
+    std::vector<std::byte> temp(tempSize);
+    PtexUtils::deinterleave(uncompressedData, stride, ures, vres, temp.data(),
                             ures*DataSize(datatype()),
                             datatype(), _header.nchannels);
 
     // difference if needed
     bool diff = (datatype() == dt_uint8 ||
                  datatype() == dt_uint16);
-    if (diff) PtexUtils::encodeDifference(buff, blockSize, datatype());
+    if (diff) PtexUtils::encodeDifference(temp.data(), tempSize, datatype());
 
-    // compress and stream data to file, and record size in header
-    int zippedsize = writeZipBlock(fp, buff, blockSize);
+    // compress
+    compressDataBlock(compressor, compressedData, temp.data(), tempSize);
 
     // record compressed size and encoding in data header
-    fdh.set(zippedsize, diff ? enc_diffzipped : enc_zipped);
-    if (useNew) delete [] buff;
+    fdh.set(compressedData.size(), diff ? enc_diffzipped : enc_zipped);
 }
 
 
-void PtexWriterBase::writeFaceData(FILE* fp, const void* data, int stride,
-                                   Res res, FaceDataHeader& fdh)
+void PtexMainWriter::compressFaceData(libdeflate_compressor* compressor, std::vector<std::byte>& compressedData, FaceDataHeader& fdh,
+                                      Res res, const void* uncompressedData)
 {
     // determine whether to break into tiles
-    Res tileres = calcTileRes(res);
-    int ntilesu = res.ntilesu(tileres);
-    int ntilesv = res.ntilesv(tileres);
-    int ntiles = ntilesu * ntilesv;
+    int stride = res.u() * _pixelSize;
+    Res tileRes = calcTileRes(res);
+    size_t ntilesu = res.ntilesu(tileRes);
+    size_t ntilesv = res.ntilesv(tileRes);
+    size_t ntiles = ntilesu * ntilesv;
     if (ntiles == 1) {
-        // write single block
-        writeFaceBlock(fp, data, stride, res, fdh);
+        // output single block
+        compressFaceDataBlock(compressor, compressedData, fdh, res, uncompressedData, stride);
     } else {
-        // write tiles to tilefp temp file
-        rewind(_tilefp);
-
-        // alloc tile header
+        // alloc tiles
+        std::vector<std::vector<std::byte>> tiles(ntiles);
         std::vector<FaceDataHeader> tileHeader(ntiles);
-        int tileures = tileres.u();
-        int tilevres = tileres.v();
-        int tileustride = tileures*_pixelSize;
-        int tilevstride = tilevres*stride;
+        size_t tileures = tileRes.u();
+        size_t tilevres = tileRes.v();
+        size_t tileustride = tileures*_pixelSize;
+        size_t tilevstride = tilevres*stride;
 
-        // output tiles
-        FaceDataHeader* tdh = &tileHeader[0];
-        int datasize = 0;
-        const char* rowp = (const char*) data;
-        const char* rowpend = rowp + ntilesv * tilevstride;
+        // compress tiles
+        std::vector<std::byte>* tile = tiles.data();
+        FaceDataHeader* tdh = tileHeader.data();
+        const std::byte* rowp = reinterpret_cast<const std::byte*>(uncompressedData);
+        const std::byte* rowpend = rowp + ntilesv * tilevstride;
         for (; rowp != rowpend; rowp += tilevstride) {
-            const char* p = rowp;
-            const char* pend = p + ntilesu * tileustride;
-            for (; p != pend; tdh++, p += tileustride) {
+            const std::byte* p = rowp;
+            const std::byte* pend = p + ntilesu * tileustride;
+            for (; p != pend; tile++, tdh++, p += tileustride) {
                 // determine if tile is constant
-                if (PtexUtils::isConstant(p, stride, tileures, tilevres, _pixelSize))
-                    writeConstFaceBlock(_tilefp, p, *tdh);
-                else
-                    writeFaceBlock(_tilefp, p, stride, tileres, *tdh);
-                datasize += tdh->blocksize();
+                if (PtexUtils::isConstant(p, stride, tileures, tilevres, _pixelSize)) {
+                    // output a const tile
+                    tile->assign(p, p + _pixelSize);
+                    tdh->set(_pixelSize, enc_constant);
+                } else {
+                    // output a compressed tile
+                    compressFaceDataBlock(compressor, *tile, *tdh, tileRes, p, stride);
+                }
             }
         }
 
-        // output compressed tile header
-        uint32_t tileheadersize = writeZipBlock(_tilefp, &tileHeader[0],
-                                                int(sizeof(FaceDataHeader)*tileHeader.size()));
+        // compress tile header
+        std::vector<std::byte> compressedTileHeader;
+        compressDataBlock(compressor, compressedTileHeader, reinterpret_cast<std::byte*>(tileHeader.data()),
+                          ntiles * sizeof(FaceDataHeader));
+        uint32_t compressedTileHeaderSize = compressedTileHeader.size();
 
+        size_t totalSize = sizeof(tileRes) + sizeof(compressedTileHeaderSize) + compressedTileHeaderSize;
+        for (auto& tile : tiles) {
+            totalSize += tile.size();
+        }
+        compressedData.reserve(totalSize);
+        addToDataBlock(compressedData, &tileRes, sizeof(tileRes));
+        addToDataBlock(compressedData, &compressedTileHeaderSize, sizeof(compressedTileHeaderSize));
+        addToDataBlock(compressedData, compressedTileHeader.data(), compressedTileHeaderSize);
+        for (auto& tile : tiles) {
+            addToDataBlock(compressedData, tile.data(), tile.size());
+        }
 
-        // output tile data pre-header
-        int totalsize = 0;
-        totalsize += writeBlock(fp, &tileres, sizeof(Res));
-        totalsize += writeBlock(fp, &tileheadersize, sizeof(tileheadersize));
-
-        // copy compressed tile header from temp file
-        totalsize += copyBlock(fp, _tilefp, datasize, tileheadersize);
-
-        // copy tile data from temp file
-        totalsize += copyBlock(fp, _tilefp, 0, datasize);
-
-        fdh.set(totalsize, enc_tiled);
+        fdh.set(totalSize, enc_tiled);
     }
 }
 
 
-void PtexWriterBase::writeReduction(FILE* fp, const void* data, int stride, Res res)
-{
-    // reduce and write to file
-    Ptex::Res newres((int8_t)(res.ulog2-1), (int8_t)(res.vlog2-1));
-    int buffsize = newres.size() * _pixelSize;
-    bool useNew = buffsize > AllocaMax;
-    char* buff = useNew ? new char [buffsize] : (char*)alloca(buffsize);
-
-    int dstride = newres.u() * _pixelSize;
-    _reduceFn(data, stride, res.u(), res.v(), buff, dstride, datatype(), _header.nchannels);
-    writeBlock(fp, buff, buffsize);
-
-    if (useNew) delete [] buff;
-}
-
-
-
-int PtexWriterBase::writeMetaDataBlock(FILE* fp, MetaEntry& val)
+void PtexMainWriter::addToMetaDataBlock(std::vector<std::byte>& metaDataBlock, const MetaEntry& val)
 {
     uint8_t keysize = uint8_t(val.key.size()+1);
     uint8_t datatype = val.datatype;
     uint32_t datasize = uint32_t(val.data.size());
-    writeZipBlock(fp, &keysize, sizeof(keysize), false);
-    writeZipBlock(fp, val.key.c_str(), keysize, false);
-    writeZipBlock(fp, &datatype, sizeof(datatype), false);
-    writeZipBlock(fp, &datasize, sizeof(datasize), false);
-    writeZipBlock(fp, &val.data[0], datasize, false);
-    int memsize = int(sizeof(keysize) + (size_t)keysize + sizeof(datatype)
-                   + sizeof(datasize) + datasize);
-    return memsize;
+    addToDataBlock(metaDataBlock, &keysize, sizeof(keysize));
+    addToDataBlock(metaDataBlock, val.key.c_str(), keysize);
+    addToDataBlock(metaDataBlock, &datatype, sizeof(datatype));
+    addToDataBlock(metaDataBlock, &datasize, sizeof(datasize));
+    addToDataBlock(metaDataBlock, &val.data[0], datasize);
 }
 
 
 PtexMainWriter::PtexMainWriter(const char* path, PtexTexture* tex,
                                Ptex::MeshType mt, Ptex::DataType dt,
                                int nchannels, int alphachan, int nfaces, bool genmipmaps)
-    : PtexWriterBase(path, mt, dt, nchannels, alphachan, nfaces,
-                     /* compress */ true),
-      _hasNewData(false),
+    : _ok(true),
+      _path(path),
       _genmipmaps(genmipmaps),
       _reader(0)
 {
-    _tmpfp = OpenTempFile(_tmppath);
-    if (!_tmpfp) {
-        setError(fileError("Error creating temp file: ", _tmppath.c_str()));
-        return;
-    }
+    memset(&_header, 0, sizeof(_header));
+    _header.magic = Magic;
+    _header.version = PtexFileMajorVersion;
+    _header.minorversion = PtexFileMinorVersion;
+    _header.meshtype = mt;
+    _header.datatype = dt;
+    _header.alphachan = alphachan;
+    _header.nchannels = (uint16_t)nchannels;
+    _header.nfaces = nfaces;
+    _header.extheadersize = sizeof(_extheader);
+    _pixelSize = _header.pixelSize();
+
+    memset(&_extheader, 0, sizeof(_extheader));
+
+    if (mt == mt_triangle)
+        _reduceFn = &PtexUtils::reduceTri;
+    else
+        _reduceFn = &PtexUtils::reduce;
 
     // data will be written to a ".new" path and then renamed to final location
     _newpath = path; _newpath += ".new";
 
-    _levels.reserve(20);
-    _levels.resize(1);
-
     // init faceinfo and set flags to -1 to mark as uninitialized
     _faceinfo.resize(nfaces);
     for (int i = 0; i < nfaces; i++) _faceinfo[i].flags = uint8_t(-1);
-
-    _levels.front().pos.resize(nfaces);
-    _levels.front().fdh.resize(nfaces);
-    _rpos.resize(nfaces);
+    _faces.resize(nfaces);
     _constdata.resize(nfaces*_pixelSize);
 
     if (tex) {
@@ -768,99 +575,120 @@ PtexMainWriter::PtexMainWriter(const char* path, PtexTexture* tex,
         // copy meta data from existing file
         PtexPtr<PtexMetaData> meta ( _reader->getMetaData() );
         writeMeta(meta);
-
-        // see if we have any edits
-        _hasNewData = _reader->hasEdits();
     }
 }
 
 
 PtexMainWriter::~PtexMainWriter()
 {
+    for (libdeflate_compressor* compressor : _compressors) {
+        libdeflate_free_compressor(compressor);
+    }
     if (_reader) _reader->release();
 }
 
 
 bool PtexMainWriter::close(Ptex::String& error)
 {
-    // closing base writer will write all pending data via finish() method
-    // and will close _fp (which in this case is on the temp disk)
-    bool result = PtexWriterBase::close(error);
+    if (_ok) finish();
     if (_reader) {
+        if (!_reader->ok()) {
+            _ok = false;
+        }
         _reader->release();
         _reader = 0;
     }
-    if (_tmpfp) {
-        fclose(_tmpfp);
-        unlink(_tmppath.c_str());
-        _tmpfp = 0;
-    }
-    if (result && _hasNewData) {
+    if (_ok) {
         // rename temppath into final location
         unlink(_path.c_str());
         if (rename(_newpath.c_str(), _path.c_str()) == -1) {
-            error = fileError("Can't write to ptex file: ", _path.c_str()).c_str();
+            setError(fileError("Can't write to ptex file: ", _path.c_str()).c_str());
             unlink(_newpath.c_str());
-            result = false;
         }
     }
-    return result;
+    if (!_ok) getError(error);
+    return _ok;
 }
 
 bool PtexMainWriter::writeFace(int faceid, const FaceInfo& f, const void* data, int stride)
 {
-    if (!_ok) return 0;
+    if (!_ok) return false;
+
+    FaceRec& face = _faces[faceid];
+    AutoMutex lock(face.mutex);
+
+    // reset face data in case it was written previously
+    face.faceData.clear();
+    face.fdh.clear();
 
     // auto-compute stride
     if (stride == 0) stride = f.res.u()*_pixelSize;
 
     // handle constant case
-    if (PtexUtils::isConstant(data, stride, f.res.u(), f.res.v(), _pixelSize))
+    if (PtexUtils::isConstant(data, stride, f.res.u(), f.res.v(), _pixelSize)) {
         return writeConstantFace(faceid, f, data);
+    }
 
     // non-constant case, ...
 
     // check and store face info
-    if (!storeFaceInfo(faceid, _faceinfo[faceid], f)) return 0;
+    if (!storeFaceInfo(faceid, _faceinfo[faceid], f)) return false;
 
-    // record position of current face
-    _levels.front().pos[faceid] = ftello(_tmpfp);
+    // determine how many mipmap levels for face
+    int nlevels = 1;
+    if (_genmipmaps) {
+        nlevels += std::max(0, std::min(f.res.ulog2, f.res.vlog2) - MinReductionLog2);
+    }
+    face.faceData.resize(nlevels);
+    face.fdh.resize(nlevels);
 
-    // write face data
-    writeFaceData(_tmpfp, data, stride, f.res, _levels.front().fdh[faceid]);
-    if (!_ok) return 0;
+    // copy data into face level 0
+    Ptex::Res res = f.res;
+    size_t rowlen = res.u() * _pixelSize, nrows = res.v();
+    face.faceData[0].resize(rowlen * nrows);
+    PtexUtils::copy(data, stride, face.faceData[0].data(), rowlen, nrows, rowlen);
+    data = face.faceData[0].data();
+    stride = rowlen;
 
-    // premultiply (if needed) before making reductions; use temp copy of data
-    uint8_t* temp = 0;
+    // premultiply into temp copy (if needed)
+    std::vector<std::byte> premultData;
     if (_header.hasAlpha()) {
-        // first copy to temp buffer
-        int rowlen = f.res.u() * _pixelSize, nrows = f.res.v();
-        temp = new uint8_t [rowlen * nrows];
-        PtexUtils::copy(data, stride, temp, rowlen, nrows, rowlen);
-
-        // multiply alpha
-        PtexUtils::multalpha(temp, f.res.size(), datatype(), _header.nchannels,
+        // copy to temp buffer, and premultiply alpha
+        premultData = face.faceData[0];
+        PtexUtils::multalpha(premultData.data(), res.size64(), datatype(), _header.nchannels,
                              _header.alphachan);
-
-        // override source buffer
-        data = temp;
-        stride = rowlen;
+        data = premultData.data();
     }
 
-    // generate first reduction (if needed)
-    if (_genmipmaps &&
-        (f.res.ulog2 > MinReductionLog2 && f.res.vlog2 > MinReductionLog2))
-    {
-        _rpos[faceid] = ftello(_tmpfp);
-        writeReduction(_tmpfp, data, stride, f.res);
-    }
-    else {
-        storeConstValue(faceid, data, stride, f.res);
+    // generate reductions (as needed)
+    libdeflate_compressor* compressor = getCompressor();
+    for (int level = 1; level < nlevels; level++) {
+        Ptex::Res nextres((int8_t)(res.ulog2-1), (int8_t)(res.vlog2-1));
+        face.faceData[level].resize(nextres.size64() * _pixelSize);
+        int dstride = nextres.u() * _pixelSize;
+        _reduceFn(data, stride, res.u(), res.v(), face.faceData[level].data(), dstride, datatype(), _header.nchannels);
+        data = face.faceData[level].data();
+        stride = dstride;
+        res = nextres;
     }
 
-    if (temp) delete [] temp;
-    _hasNewData = true;
-    return 1;
+    // compute and store constant value from last level (note: level 0 would be more accurate, but slower)
+    storeConstValue(faceid, data, stride, res);
+
+    // free premultData (if allocated) as it is no longer needed
+    premultData.clear();
+    premultData.shrink_to_fit();
+
+    // compress face data for each level
+    for (int level = 0; level < nlevels; level++) {
+        Ptex::Res res((int8_t)(f.res.ulog2-level), (int8_t)(f.res.vlog2-level));
+        std::vector<std::byte> compressedData;
+        compressFaceData(compressor, compressedData, face.fdh[level], res, face.faceData[level].data());
+        face.faceData[level] = std::move(compressedData);
+    }
+    releaseCompressor(compressor);
+
+    return true;
 }
 
 
@@ -873,7 +701,6 @@ bool PtexMainWriter::writeConstantFace(int faceid, const FaceInfo& f, const void
 
     // store face value in constant block
     memcpy(&_constdata[faceid*_pixelSize], data, _pixelSize);
-    _hasNewData = true;
     return 1;
 }
 
@@ -882,7 +709,7 @@ bool PtexMainWriter::writeConstantFace(int faceid, const FaceInfo& f, const void
 void PtexMainWriter::storeConstValue(int faceid, const void* data, int stride, Res res)
 {
     // compute average value and store in _constdata block
-    uint8_t* constdata = &_constdata[faceid*_pixelSize];
+    std::byte* constdata = &_constdata[faceid*_pixelSize];
     PtexUtils::average(data, stride, res.u(), res.v(), constdata,
                        datatype(), _header.nchannels);
     if (_header.hasAlpha())
@@ -893,48 +720,161 @@ void PtexMainWriter::storeConstValue(int faceid, const void* data, int stride, R
 
 void PtexMainWriter::finish()
 {
-    // do nothing if there's no new data to write
-    if (!_hasNewData) return;
-
+    uint32_t nfaces = _header.nfaces;
     // copy missing faces from _reader
     if (_reader) {
-        for (int i = 0, nfaces = _header.nfaces; i < nfaces; i++) {
-            if (_faceinfo[i].flags == uint8_t(-1)) {
-                // copy face data
-                const Ptex::FaceInfo& info = _reader->getFaceInfo(i);
-                int size = _pixelSize * info.res.size();
+        for (uint32_t faceid = 0; faceid < nfaces; faceid++) {
+            if (_faceinfo[faceid].flags == uint8_t(-1)) {
+                // copy constant data
+                memcpy(&_constdata[faceid*_pixelSize], _reader->getConstantData(faceid), _pixelSize);
+
+                // update faceinfo and copy face data
+                const Ptex::FaceInfo& info = _reader->getFaceInfo(faceid);
                 if (info.isConstant()) {
-                    PtexPtr<PtexFaceData> data ( _reader->getData(i) );
-                    if (data) {
-                        writeConstantFace(i, info, data->getData());
-                    }
-                } else {
+                    storeFaceInfo(faceid, _faceinfo[faceid], info, FaceInfo::flag_constant);
+                } else if (_genmipmaps && !_reader->hasMipMaps()) {
+                    // read uncompressed data and generate mipmaps
+                    size_t size = _pixelSize * info.res.size64();
                     char* data = new char [size];
-                    _reader->getData(i, data, 0);
-                    writeFace(i, info, data, 0);
+                    _reader->getData(faceid, data, 0);
+                    writeFace(faceid, info, data, 0);
                     delete [] data;
+                } else {
+                    // read compressed data, including mipmaps if any
+                    FaceRec& face = _faces[faceid];
+                    storeFaceInfo(faceid, _faceinfo[faceid], info);
+                    int nlevels = 1;
+                    if (_genmipmaps) {
+                        nlevels += std::max(0, std::min(info.res.ulog2, info.res.vlog2) - MinReductionLog2);
+                    }
+                    face.fdh.resize(nlevels);
+                    face.faceData.resize(nlevels);
+                    for (int level = 0; level < nlevels; level++) {
+                        _reader->getCompressedData(faceid, level, face.fdh[level], face.faceData[level]);
+                    }
                 }
             }
         }
     }
     else {
         // just flag missing faces as constant (black)
-        for (int i = 0, nfaces = _header.nfaces; i < nfaces; i++) {
-            if (_faceinfo[i].flags == uint8_t(-1))
-                _faceinfo[i].flags = FaceInfo::flag_constant;
+        for (uint32_t faceid = 0; faceid < nfaces; faceid++) {
+            if (_faceinfo[faceid].flags == uint8_t(-1))
+                _faceinfo[faceid].flags = FaceInfo::flag_constant;
         }
     }
 
-    // write reductions to tmp file
-    if (_genmipmaps)
-        generateReductions();
+    // generate "rfaceids", reduction faceids, which are faceids reordered by decreasing smaller dimension
+    if (_genmipmaps) {
+        _rfaceids.resize(nfaces);
+        _faceids_r.resize(nfaces);
+        PtexUtils::genRfaceids(&_faceinfo[0], nfaces, &_rfaceids[0], &_faceids_r[0]);
+    }
 
     // flag faces w/ constant neighborhoods
     flagConstantNeighorhoods();
 
-    // update header
-    _header.nlevels = uint16_t(_levels.size());
-    _header.nfaces = uint32_t(_faceinfo.size());
+    // compress face info block
+    std::vector<std::byte> compressedFaceInfo;
+    libdeflate_compressor* compressor = getCompressor();
+    compressDataBlock(compressor, compressedFaceInfo, _faceinfo.data(), _faceinfo.size()*sizeof(FaceInfo));
+
+    // compress const data block
+    std::vector<std::byte> compressedConstData;
+    compressDataBlock(compressor, compressedConstData, _constdata.data(), _constdata.size());
+
+    // create level info and compress level headers
+    std::vector<LevelInfo> levelInfo(1);
+    for (auto& face : _faces) {
+        size_t nlevelsThisFace = face.faceData.size();
+        if (nlevelsThisFace > levelInfo.size()) {
+            levelInfo.resize(nlevelsThisFace);
+        }
+        for (size_t level = 0; level < nlevelsThisFace; level++) {
+            levelInfo[level].leveldatasize += face.faceData[level].size();
+            levelInfo[level].nfaces++;
+        }
+    }
+    levelInfo[0].nfaces = _header.nfaces; // constant faces weren't counted in the loop above, but level 0 needs them
+
+    int nlevels = int(levelInfo.size());
+
+    // gather fdh for faces in each level into LevelInfo, and compress level data headers
+    std::vector<std::vector<std::byte>> compressedLevelDataHeaders(nlevels);
+    std::vector<std::vector<size_t>> largeFaceHeaders(nlevels);
+    size_t totalLevelDataSize = 0;
+    for (int level = 0; level < nlevels; level++) {
+        uint32_t nfacesThisLevel = levelInfo[level].nfaces;
+        std::vector<FaceDataHeader> levelDataHeader(nfacesThisLevel);
+        for (uint32_t f = 0; f < nfacesThisLevel; f++) {
+            uint32_t faceId = level==0? f : _faceids_r[f];
+            if (_faces[faceId].fdh.size() > size_t(level)) {
+                levelDataHeader[f] = _faces[faceId].fdh[level];
+                if (levelDataHeader[f].isLargeFace()) {
+                    // large faces have a compressed size too big for the fdh; store in largeFaceHeader
+                    largeFaceHeaders[level].push_back(_faces[faceId].faceData[level].size());
+                }
+            }
+        }
+        compressDataBlock(compressor, compressedLevelDataHeaders[level], levelDataHeader.data(), nfacesThisLevel * sizeof(FaceDataHeader));
+        levelInfo[level].levelheadersize = uint32_t(compressedLevelDataHeaders[level].size());
+        levelInfo[level].leveldatasize += levelInfo[level].levelheadersize + sizeof(size_t) * largeFaceHeaders[level].size();
+        totalLevelDataSize += levelInfo[level].leveldatasize;
+    }
+
+    // compress meta data
+    std::vector<MetaEntry*> lmdEntries; // large meta data items
+    std::vector<std::byte> metaData, compressedMetaData;
+    for (size_t i = 0, n = _metadata.size(); i < n; i++) {
+        MetaEntry& e = _metadata[i];
+        if (e.data.size() > MetaDataThreshold) {
+            // skip large items, but record for later
+            lmdEntries.push_back(&e);
+        } else {
+            // add small item to meta data block
+            addToMetaDataBlock(metaData, e);
+        }
+    }
+    if (!metaData.empty()) {
+        compressDataBlock(compressor, compressedMetaData, metaData.data(), metaData.size());
+    }
+
+    // compress large meta data
+    size_t nLmd = lmdEntries.size();
+    std::vector<std::byte> lmdHeader, compressedLmdHeader;
+    std::vector<std::vector<std::byte>> compressedLargeMetaData(nLmd);
+    if (nLmd > 0) {
+        // compress lmd data items
+        for (size_t i = 0; i < nLmd; i++) {
+            MetaEntry* e= lmdEntries[i];
+            compressDataBlock(compressor, compressedLargeMetaData[i], &e->data[0], e->data.size());
+
+            uint8_t keysize = uint8_t(e->key.size()+1);
+            uint8_t datatype = e->datatype;
+            uint32_t datasize = (uint32_t)e->data.size();
+            uint32_t zipsize = (uint32_t)compressedLargeMetaData[i].size();
+
+            addToDataBlock(lmdHeader, &keysize, sizeof(keysize));
+            addToDataBlock(lmdHeader, e->key.c_str(), keysize);
+            addToDataBlock(lmdHeader, &datatype, sizeof(datatype));
+            addToDataBlock(lmdHeader, &datasize, sizeof(datasize));
+            addToDataBlock(lmdHeader, &zipsize, sizeof(zipsize));
+        }
+        compressDataBlock(compressor, compressedLmdHeader, lmdHeader.data(), lmdHeader.size());
+    }
+    releaseCompressor(compressor);
+    compressor = nullptr;
+
+    // init header
+    _header.nlevels = nlevels;
+    _header.faceinfosize = compressedFaceInfo.size();
+    _header.constdatasize = compressedConstData.size();
+    _header.levelinfosize = LevelInfoSize * nlevels;
+    _header.leveldatasize = totalLevelDataSize;
+    _header.metadatamemsize = uint32_t(metaData.size());
+    _header.metadatazipsize = uint32_t(compressedMetaData.size());
+    _extheader.lmdheadermemsize = lmdHeader.size();
+    _extheader.lmdheaderzipsize = compressedLmdHeader.size();
 
     // create new file
     FILE* newfp = fopen(_newpath.c_str(), "wb+");
@@ -943,56 +883,55 @@ void PtexMainWriter::finish()
         return;
     }
 
-    // write blank header (to fill in later)
-    writeBlank(newfp, HeaderSize);
-    writeBlank(newfp, ExtHeaderSize);
-
-    // write compressed face info block
-    _header.faceinfosize = writeZipBlock(newfp, &_faceinfo[0],
-                                         (int)sizeof(FaceInfo)*_header.nfaces);
-
-    // write compressed const data block
-    _header.constdatasize = writeZipBlock(newfp, &_constdata[0], int(_constdata.size()));
-
-    // write blank level info block (to fill in later)
-    FilePos levelInfoPos = ftello(newfp);
-    writeBlank(newfp, LevelInfoSize * _header.nlevels);
-
-    // write level data blocks (and record level info)
-    std::vector<LevelInfo> levelinfo(_header.nlevels);
-    for (int li = 0; li < _header.nlevels; li++)
-    {
-        LevelInfo& info = levelinfo[li];
-        LevelRec& level = _levels[li];
-        int nfaces = int(level.fdh.size());
-        info.nfaces = nfaces;
-        // output compressed level data header
-        info.levelheadersize = writeZipBlock(newfp, &level.fdh[0],
-                                             (int)sizeof(FaceDataHeader)*nfaces);
-        info.leveldatasize = info.levelheadersize;
-        // copy level data from tmp file
-        for (int fi = 0; fi < nfaces; fi++)
-            info.leveldatasize += copyBlock(newfp, _tmpfp, level.pos[fi],
-                                            level.fdh[fi].blocksize());
-        _header.leveldatasize += info.leveldatasize;
-    }
-    rewind(_tmpfp);
-
-    // write meta data (if any)
-    if (!_metadata.empty())
-        writeMetaData(newfp);
-
-    // update extheader for edit data position
-    _extheader.editdatapos = ftello(newfp);
-
-    // rewrite level info block
-    fseeko(newfp, levelInfoPos, SEEK_SET);
-    _header.levelinfosize = writeBlock(newfp, &levelinfo[0], LevelInfoSize*_header.nlevels);
-
-    // rewrite header
-    fseeko(newfp, 0, SEEK_SET);
+    // write header
     writeBlock(newfp, &_header, HeaderSize);
     writeBlock(newfp, &_extheader, ExtHeaderSize);
+
+    // write face info block
+    writeBlock(newfp, compressedFaceInfo.data(), compressedFaceInfo.size());
+
+    // write const data block
+    writeBlock(newfp, compressedConstData.data(), compressedConstData.size());
+
+    // write level info block
+    writeBlock(newfp, &levelInfo[0], LevelInfoSize * nlevels);
+
+    // write level data blocks
+    for (int level = 0; level < nlevels; level++) {
+        // write level data header
+        writeBlock(newfp, compressedLevelDataHeaders[level].data(), compressedLevelDataHeaders[level].size());
+
+        // write large face header, if present
+        if (!largeFaceHeaders[level].empty()) {
+            writeBlock(newfp, largeFaceHeaders[level].data(), sizeof(size_t) * largeFaceHeaders[level].size());
+        }
+
+        // write compressed face data for faces in level
+        uint32_t nfacesThisLevel = levelInfo[level].nfaces;
+        for (uint32_t rfaceId = 0; rfaceId < nfacesThisLevel; rfaceId++) {
+            uint32_t faceId = level==0? rfaceId : _faceids_r[rfaceId];
+            if (_faces[faceId].faceData.size() > size_t(level)) {
+                writeBlock(newfp, _faces[faceId].faceData[level].data(), _faces[faceId].faceData[level].size());
+            }
+        }
+    }
+
+    // write meta data
+    if (!compressedMetaData.empty()) {
+        writeBlock(newfp, compressedMetaData.data(), compressedMetaData.size());
+    }
+
+    // write compatibility barrier
+    uint64_t compatibilityBarrier = 0;
+    writeBlock(newfp, &compatibilityBarrier, sizeof(compatibilityBarrier));
+
+    // write large meta data
+    if (!compressedLmdHeader.empty()) {
+        writeBlock(newfp, compressedLmdHeader.data(), compressedLmdHeader.size());
+        for (auto& lmd : compressedLargeMetaData) {
+            writeBlock(newfp, lmd.data(), lmd.size());
+        }
+    }
     fclose(newfp);
 }
 
@@ -1003,7 +942,7 @@ void PtexMainWriter::flagConstantNeighorhoods()
     for (int faceid = 0, n = int(_faceinfo.size()); faceid < n; faceid++) {
         FaceInfo& f = _faceinfo[faceid];
         if (!f.isConstant()) continue;
-        uint8_t* constdata = &_constdata[faceid*_pixelSize];
+        std::byte* constdata = &_constdata[faceid*_pixelSize];
 
         // check to see if neighborhood is constant
         bool isConst = true;
@@ -1079,346 +1018,5 @@ void PtexMainWriter::flagConstantNeighorhoods()
     }
 }
 
-
-void PtexMainWriter::generateReductions()
-{
-    // first generate "rfaceids", reduction faceids,
-    // which are faceids reordered by decreasing smaller dimension
-    int nfaces = _header.nfaces;
-    _rfaceids.resize(nfaces);
-    _faceids_r.resize(nfaces);
-    PtexUtils::genRfaceids(&_faceinfo[0], nfaces, &_rfaceids[0], &_faceids_r[0]);
-
-    // determine how many faces in each level, and resize _levels
-    // traverse in reverse rfaceid order to find number of faces
-    // larger than cutoff size of each level
-    for (int rfaceid = nfaces-1, cutoffres = MinReductionLog2; rfaceid >= 0; rfaceid--) {
-        int faceid = _faceids_r[rfaceid];
-        FaceInfo& face = _faceinfo[faceid];
-        Res res = face.res;
-        int min = face.isConstant() ? 1 : PtexUtils::min(res.ulog2, res.vlog2);
-        while (min > cutoffres) {
-            // i == last face for current level
-            int size = rfaceid+1;
-            _levels.push_back(LevelRec());
-            LevelRec& level = _levels.back();
-            level.pos.resize(size);
-            level.fdh.resize(size);
-            cutoffres++;
-        }
-    }
-
-    // generate and cache reductions (including const data)
-    // first, find largest face and allocate tmp buffer
-    int buffsize = 0;
-    for (int i = 0; i < nfaces; i++)
-        buffsize = PtexUtils::max(buffsize, _faceinfo[i].res.size());
-    buffsize *= _pixelSize;
-    char* buff = new char [buffsize];
-
-    int nlevels = int(_levels.size());
-    for (int i = 1; i < nlevels; i++) {
-        LevelRec& level = _levels[i];
-        int nextsize = (i+1 < nlevels)? int(_levels[i+1].fdh.size()) : 0;
-        for (int rfaceid = 0, size = int(level.fdh.size()); rfaceid < size; rfaceid++) {
-            // output current reduction for face (previously generated)
-            int faceid = _faceids_r[rfaceid];
-            Res res = _faceinfo[faceid].res;
-            res.ulog2 = (int8_t)(res.ulog2 - i);
-            res.vlog2 = (int8_t)(res.vlog2 - i);
-            int stride = res.u() * _pixelSize;
-            int blocksize = res.size() * _pixelSize;
-            fseeko(_tmpfp, _rpos[faceid], SEEK_SET);
-            readBlock(_tmpfp, buff, blocksize);
-            fseeko(_tmpfp, 0, SEEK_END);
-            level.pos[rfaceid] = ftello(_tmpfp);
-            writeFaceData(_tmpfp, buff, stride, res, level.fdh[rfaceid]);
-            if (!_ok) return;
-
-            // write a new reduction if needed for next level
-            if (rfaceid < nextsize) {
-                fseeko(_tmpfp, _rpos[faceid], SEEK_SET);
-                writeReduction(_tmpfp, buff, stride, res);
-            }
-            else {
-                // the last reduction for each face is its constant value
-                storeConstValue(faceid, buff, stride, res);
-            }
-        }
-    }
-    fseeko(_tmpfp, 0, SEEK_END);
-    delete [] buff;
-}
-
-
-void PtexMainWriter::writeMetaData(FILE* fp)
-{
-    std::vector<MetaEntry*> lmdEntries; // large meta data items
-
-    // write small meta data items in a single zip block
-    for (int i = 0, n = (int)_metadata.size(); i < n; i++) {
-        MetaEntry& e = _metadata[i];
-#ifndef PTEX_NO_LARGE_METADATA_BLOCKS
-        if (int(e.data.size()) > MetaDataThreshold) {
-            // skip large items, but record for later
-            lmdEntries.push_back(&e);
-        }
-        else
-#endif
-    {
-            // add small item to zip block
-            _header.metadatamemsize += writeMetaDataBlock(fp, e);
-        }
-    }
-    if (_header.metadatamemsize) {
-        // finish zip block
-        _header.metadatazipsize = writeZipBlock(fp, 0, 0, /*finish*/ true);
-    }
-
-    // write compatibility barrier
-    writeBlank(fp, sizeof(uint64_t));
-
-    // write large items as separate blocks
-    int nLmd = (int)lmdEntries.size();
-    if (nLmd > 0) {
-        // write data records to tmp file and accumulate zip sizes for lmd header
-        std::vector<FilePos> lmdoffset(nLmd);
-        std::vector<uint32_t> lmdzipsize(nLmd);
-        for (int i = 0; i < nLmd; i++) {
-            MetaEntry* e= lmdEntries[i];
-            lmdoffset[i] = ftello(_tmpfp);
-            lmdzipsize[i] = writeZipBlock(_tmpfp, &e->data[0], (int)e->data.size());
-        }
-
-        // write lmd header records as single zip block
-        for (int i = 0; i < nLmd; i++) {
-            MetaEntry* e = lmdEntries[i];
-            uint8_t keysize = uint8_t(e->key.size()+1);
-            uint8_t datatype = e->datatype;
-            uint32_t datasize = (uint32_t)e->data.size();
-            uint32_t zipsize = lmdzipsize[i];
-
-            writeZipBlock(fp, &keysize, sizeof(keysize), false);
-            writeZipBlock(fp, e->key.c_str(), keysize, false);
-            writeZipBlock(fp, &datatype, sizeof(datatype), false);
-            writeZipBlock(fp, &datasize, sizeof(datasize), false);
-            writeZipBlock(fp, &zipsize, sizeof(zipsize), false);
-            _extheader.lmdheadermemsize +=
-                (uint32_t)(sizeof(keysize) + (size_t)keysize + sizeof(datatype) +
-                           sizeof(datasize) + sizeof(zipsize));
-        }
-        _extheader.lmdheaderzipsize = writeZipBlock(fp, 0, 0, /*finish*/ true);
-
-        // copy data records
-        for (int i = 0; i < nLmd; i++) {
-            _extheader.lmddatasize +=
-                copyBlock(fp, _tmpfp, lmdoffset[i], lmdzipsize[i]);
-        }
-    }
-}
-
-
-PtexIncrWriter::PtexIncrWriter(const char* path, FILE* fp,
-                               Ptex::MeshType mt, Ptex::DataType dt,
-                               int nchannels, int alphachan, int nfaces)
-    : PtexWriterBase(path, mt, dt, nchannels, alphachan, nfaces,
-                     /* compress */ false),
-      _fp(fp)
-{
-    // note: incremental saves are not compressed (see compress flag above)
-    // to improve save time in the case where in incremental save is followed by
-    // a full save (which ultimately it always should be).  With a compressed
-    // incremental save, the data would be compressed twice and decompressed once
-    // on every save vs. just compressing once.
-
-    // make sure existing header matches
-    if (!fread(&_header, HeaderSize, 1, fp) || _header.magic != Magic) {
-        std::stringstream str;
-        str << "Not a ptex file: " << path;
-        setError(str.str());
-        return;
-    }
-
-    bool headerMatch = (mt == _header.meshtype &&
-                        dt == datatype() &&
-                        nchannels == _header.nchannels &&
-                        alphachan == int(_header.alphachan) &&
-                        nfaces == int(_header.nfaces));
-    if (!headerMatch) {
-        std::stringstream str;
-        str << "PtexWriter::edit error: header doesn't match existing file, "
-            << "conversions not currently supported";
-        setError(str.str());
-        return;
-    }
-
-    // read extended header
-    memset(&_extheader, 0, sizeof(_extheader));
-    if (!fread(&_extheader, PtexUtils::min(uint32_t(ExtHeaderSize), _header.extheadersize), 1, fp)) {
-        std::stringstream str;
-        str << "Error reading extended header: " << path;
-        setError(str.str());
-        return;
-    }
-
-    // seek to end of file to append
-    fseeko(_fp, 0, SEEK_END);
-}
-
-
-PtexIncrWriter::~PtexIncrWriter()
-{
-}
-
-
-bool PtexIncrWriter::writeFace(int faceid, const FaceInfo& f, const void* data, int stride)
-{
-    if (stride == 0) stride = f.res.u()*_pixelSize;
-
-    // handle constant case
-    if (PtexUtils::isConstant(data, stride, f.res.u(), f.res.v(), _pixelSize))
-        return writeConstantFace(faceid, f, data);
-
-    // init headers
-    uint8_t edittype = et_editfacedata;
-    uint32_t editsize;
-    EditFaceDataHeader efdh;
-    efdh.faceid = faceid;
-
-    // check and store face info
-    if (!storeFaceInfo(faceid, efdh.faceinfo, f))
-        return 0;
-
-    // record position and skip headers
-    FilePos pos = ftello(_fp);
-    writeBlank(_fp, sizeof(edittype) + sizeof(editsize) + sizeof(efdh));
-
-    // must compute constant (average) val first
-    uint8_t* constval = new uint8_t [_pixelSize];
-
-    if (_header.hasAlpha()) {
-        // must premult alpha before averaging
-        // first copy to temp buffer
-        int rowlen = f.res.u() * _pixelSize, nrows = f.res.v();
-        uint8_t* temp = new uint8_t [rowlen * nrows];
-        PtexUtils::copy(data, stride, temp, rowlen, nrows, rowlen);
-
-        // multiply alpha
-        PtexUtils::multalpha(temp, f.res.size(), datatype(), _header.nchannels,
-                             _header.alphachan);
-        // average
-        PtexUtils::average(temp, rowlen, f.res.u(), f.res.v(), constval,
-                           datatype(), _header.nchannels);
-        // unmult alpha
-        PtexUtils::divalpha(constval, 1, datatype(), _header.nchannels,
-                            _header.alphachan);
-        delete [] temp;
-    }
-    else {
-        // average
-        PtexUtils::average(data, stride, f.res.u(), f.res.v(), constval,
-                           datatype(), _header.nchannels);
-    }
-    // write const val
-    writeBlock(_fp, constval, _pixelSize);
-    delete [] constval;
-
-    // write face data
-    writeFaceData(_fp, data, stride, f.res, efdh.fdh);
-
-    // update editsize in header
-    editsize = (uint32_t)(sizeof(efdh) + (size_t)_pixelSize + efdh.fdh.blocksize());
-
-    // rewind and write headers
-    fseeko(_fp, pos, SEEK_SET);
-    writeBlock(_fp, &edittype, sizeof(edittype));
-    writeBlock(_fp, &editsize, sizeof(editsize));
-    writeBlock(_fp, &efdh, sizeof(efdh));
-    fseeko(_fp, 0, SEEK_END);
-    return 1;
-}
-
-
-bool PtexIncrWriter::writeConstantFace(int faceid, const FaceInfo& f, const void* data)
-{
-    // init headers
-    uint8_t edittype = et_editfacedata;
-    uint32_t editsize;
-    EditFaceDataHeader efdh;
-    efdh.faceid = faceid;
-    efdh.fdh.set(0, enc_constant);
-    editsize = (uint32_t)sizeof(efdh) + _pixelSize;
-
-    // check and store face info
-    if (!storeFaceInfo(faceid, efdh.faceinfo, f, FaceInfo::flag_constant))
-        return 0;
-
-    // write headers
-    writeBlock(_fp, &edittype, sizeof(edittype));
-    writeBlock(_fp, &editsize, sizeof(editsize));
-    writeBlock(_fp, &efdh, sizeof(efdh));
-    // write data
-    writeBlock(_fp, data, _pixelSize);
-    return 1;
-}
-
-
-void PtexIncrWriter::writeMetaDataEdit()
-{
-    // init headers
-    uint8_t edittype = et_editmetadata;
-    uint32_t editsize;
-    EditMetaDataHeader emdh;
-    emdh.metadatazipsize = 0;
-    emdh.metadatamemsize = 0;
-
-    // record position and skip headers
-    FilePos pos = ftello(_fp);
-    writeBlank(_fp, sizeof(edittype) + sizeof(editsize) + sizeof(emdh));
-
-    // write meta data
-    for (size_t i = 0, n = _metadata.size(); i < n; i++) {
-        MetaEntry& e = _metadata[i];
-        emdh.metadatamemsize += writeMetaDataBlock(_fp, e);
-    }
-    // finish zip block
-    emdh.metadatazipsize = writeZipBlock(_fp, 0, 0, /*finish*/ true);
-
-    // update headers
-    editsize = (uint32_t)(sizeof(emdh) + emdh.metadatazipsize);
-
-    // rewind and write headers
-    fseeko(_fp, pos, SEEK_SET);
-    writeBlock(_fp, &edittype, sizeof(edittype));
-    writeBlock(_fp, &editsize, sizeof(editsize));
-    writeBlock(_fp, &emdh, sizeof(emdh));
-    fseeko(_fp, 0, SEEK_END);
-}
-
-
-bool PtexIncrWriter::close(Ptex::String& error)
-{
-    // closing base writer will write all pending data via finish() method
-    bool result = PtexWriterBase::close(error);
-    if (_fp) {
-        fclose(_fp);
-        _fp = 0;
-    }
-    return result;
-}
-
-
-void PtexIncrWriter::finish()
-{
-    // write meta data edit block (if any)
-    if (!_metadata.empty()) writeMetaDataEdit();
-
-    // rewrite extheader for updated editdatasize
-    if (_extheader.editdatapos) {
-        _extheader.editdatasize = uint64_t(ftello(_fp)) - _extheader.editdatapos;
-        fseeko(_fp, HeaderSize, SEEK_SET);
-        fwrite(&_extheader, PtexUtils::min(uint32_t(ExtHeaderSize), _header.extheadersize), 1, _fp);
-    }
-}
 
 PTEX_NAMESPACE_END

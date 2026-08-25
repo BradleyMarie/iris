@@ -55,6 +55,7 @@ class PtexTriangleFilter : public PtexFilter
                       int faceid, float u, float v,
                       float uw1, float vw1, float uw2, float vw2,
                       float width, float blur);
+    virtual ~PtexTriangleFilter() {}
 
  protected:
     void buildKernel(PtexTriangleKernel& k, float u, float v,
@@ -65,8 +66,6 @@ class PtexTriangleFilter : public PtexFilter
     void applyAcrossEdge(PtexTriangleKernel& k, const Ptex::FaceInfo& f, int eid);
     void apply(PtexTriangleKernel& k, int faceid, const Ptex::FaceInfo& f);
     void applyIter(PtexTriangleKernelIter& k, PtexFaceData* dh);
-
-    virtual ~PtexTriangleFilter() {}
 
     PtexTexture* _tx;           // texture being evaluated
     Options _options;           // options

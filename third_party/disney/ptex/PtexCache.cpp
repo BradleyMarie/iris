@@ -82,6 +82,10 @@ PTEX_NAMESPACE_BEGIN
 
 void PtexCachedReader::release()
 {
+    // Unref the texture, and log the texture as recently used if the ref count becomes 0.  Note: If
+    // the ref is negative after unref is called, it means the unref'd texture was not previously in
+    // use which is an application error. In this case, the texture was presumably already logged as
+    // recently used and we shouldn't log it again.
     if (0 == unref()) {
         _cache->logRecentlyUsed(this);
     }
@@ -123,7 +127,6 @@ PtexTexture* PtexReaderCache::get(const char* filename, Ptex::String& error)
     // lookup reader in map
     StringKey key(filename);
     PtexCachedReader* reader = _files.get(key);
-    bool isNew = false;
 
     if (reader) {
         if (!reader->ok()) return 0;
@@ -134,23 +137,6 @@ PtexTexture* PtexReaderCache::get(const char* filename, Ptex::String& error)
         reader->ref();
     } else {
         reader = new PtexCachedReader(_premultiply, _io, _err, this);
-        isNew = true;
-    }
-
-    bool needOpen = reader->needToOpen();
-    if (needOpen) {
-        std::string buffer;
-        const char* pathToOpen = filename;
-        // search for the file (unless we have an I/O handler)
-        if (_io || findFile(pathToOpen, buffer, error)) {
-            reader->open(pathToOpen, error);
-        } else {
-            // flag reader as invalid so we don't try to open it again on next lookup
-            reader->invalidate();
-        }
-    }
-
-    if (isNew) {
         size_t newMemUsed = 0;
         PtexCachedReader* newreader = reader;
         reader = _files.tryInsert(key, reader, newMemUsed);
@@ -162,13 +148,23 @@ PtexTexture* PtexReaderCache::get(const char* filename, Ptex::String& error)
         }
     }
 
+    if (reader->needToOpen()) {
+        std::string buffer;
+        const char* pathToOpen = filename;
+        // search for the file (unless we have an I/O handler)
+        if (_io || findFile(pathToOpen, buffer, error)) {
+            if (reader->open(pathToOpen, error)) {
+                reader->logOpen();
+            }
+        } else {
+            // flag reader as invalid so we don't try to open it again on next lookup
+            reader->invalidate();
+        }
+    }
+
     if (!reader->ok()) {
         reader->unref();
         return 0;
-    }
-
-    if (needOpen) {
-        reader->logOpen();
     }
 
     return reader;
@@ -190,13 +186,14 @@ void PtexReaderCache::logRecentlyUsed(PtexCachedReader* reader)
     while (1) {
         MruList* mruList = _mruList;
         int slot = AtomicIncrement(&mruList->next)-1;
-        if (slot < numMruFiles) {
+        if (slot < maxMruFiles) {
             mruList->files[slot] = reader;
+            processMru();
             return;
         }
         // no mru slot available, process mru list and try again
         do processMru();
-        while (_mruList->next >= numMruFiles);
+        while (_mruList->next >= maxMruFiles);
     }
 }
 
@@ -205,7 +202,9 @@ void PtexReaderCache::processMru()
     // use a non-blocking lock so we can proceed as soon as space has been freed in the mru list
     // (which happens almost immediately in the processMru thread that has the lock)
     if (!_mruLock.trylock()) return;
-    if (_mruList->next < numMruFiles) {
+
+    if (!_mruList->next) {
+        // nothing to do
         _mruLock.unlock();
         return;
     }
@@ -217,7 +216,8 @@ void PtexReaderCache::processMru()
 
     // extract relevant stats and add to open/active list
     size_t memUsedChange = 0, filesOpenChange = 0;
-    for (int i = 0; i < numMruFiles; ++i) {
+    int numFilesToProcess = std::min(int(mruList->next), maxMruFiles);
+    for (int i = 0; i < numFilesToProcess; ++i) {
         PtexCachedReader* reader;
         do { reader = mruList->files[i]; } while (!reader); // loop on (unlikely) race condition
         mruList->files[i] = 0;
@@ -237,50 +237,55 @@ void PtexReaderCache::processMru()
     AtomicStore(&mruList->next, 0);
     adjustMemUsed(memUsedChange);
     adjustFilesOpen(filesOpenChange);
-
-    bool shouldPruneFiles = _filesOpen > _maxFiles;
-    bool shouldPruneData = _maxMem && _memUsed > _maxMem;
-
-    if (shouldPruneFiles) {
-        pruneFiles();
-    }
-    if (shouldPruneData) {
-        pruneData();
-    }
     _mruLock.unlock();
+
+    pruneFilesIfNeeded();
+    if (_maxMem) {
+        pruneDataIfNeeded();
+    }
 }
 
 
-void PtexReaderCache::pruneFiles()
+void PtexReaderCache::pruneFilesIfNeeded()
 {
-    size_t numToClose = _filesOpen - _maxFiles;
-    if (numToClose > 0) {
-        while (numToClose) {
-            PtexCachedReader* reader = _openFiles.pop();
-            if (!reader) { _filesOpen = 0; break; }
-            if (reader->tryClose()) {
-                numToClose -= 1;
-                _filesOpen -= 1;
-            }
+    while (_filesOpen > _maxFiles) {
+        // close one file not currently in use, and then check again
+        _mruLock.lock();
+        PtexCachedReader* reader = _openFiles.pop();
+        _mruLock.unlock();
+
+        if (!reader) {
+            // no inactive open file available to close
+            break;
+        }
+        if (reader->tryClose()) {
+            _filesOpen = _filesOpen - 1;
         }
     }
 }
 
 
-void PtexReaderCache::pruneData()
+void PtexReaderCache::pruneDataIfNeeded()
 {
     size_t memUsedChangeTotal = 0;
-    size_t memUsed = _memUsed;
-    while (memUsed + memUsedChangeTotal > _maxMem) {
+    while (_memUsed > _maxMem) {
+        // prune one texture not currently in use, and then check again
+        _mruLock.lock();
         PtexCachedReader* reader = _activeFiles.pop();
-        if (!reader) break;
+        _mruLock.unlock();
+        if (!reader) {
+            // no inactive texture available to prune
+            break;
+        }
         size_t memUsedChange;
         if (reader->tryPrune(memUsedChange)) {
             // Note: after clearing, memUsedChange is negative
             memUsedChangeTotal += memUsedChange;
         }
     }
-    adjustMemUsed(memUsedChangeTotal);
+    if (memUsedChangeTotal) {
+        adjustMemUsed(memUsedChangeTotal);
+    }
 }
 
 

@@ -41,30 +41,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #define PtexHashMap_h
 
 #include <vector>
+#include <string>
 #include "PtexPlatform.h"
 #include "PtexMutex.h"
 
 PTEX_NAMESPACE_BEGIN
-
-inline uint32_t memHash(const char* val, int len)
-{
-    int len64 = len & ~7;
-    uint64_t val64[4]; val64[0] = 0;
-    memcpy(&val64[0], &val[len64], len & 7);
-    uint64_t hashval[4] = {0,0,0,0};
-    hashval[0] = val64[0]*16777619;
-
-    for (int i = 0; i+32 <= len64; i+=32) {
-        for (int j = 0; j < 4; ++j) {
-            memcpy(&val64[j], &val[i+j*8], 8);
-            hashval[j] = (hashval[j]*16777619) ^ val64[j];
-        }
-    }
-    hashval[0] = (hashval[0]*16777619) ^ hashval[1];
-    hashval[2] = (hashval[2]*16777619) ^ hashval[3];
-    hashval[0] = (hashval[0]*16777619) ^ hashval[2];
-    return uint32_t(hashval[0]);
-}
 
 inline bool memCompare(const char* a, const char* b, int len)
 {
@@ -82,20 +63,20 @@ inline bool memCompare(const char* a, const char* b, int len)
 class StringKey
 {
     const char* volatile _val;
-    uint32_t volatile _len;
+    uint16_t volatile _len;
+    uint16_t volatile _ownsVal;
     uint32_t volatile _hash;
-    bool volatile _ownsVal;
 
     void operator=(const StringKey& key); // disallow
     StringKey(const StringKey& key); // disallow
 
 public:
-    StringKey() : _val(0), _len(0), _hash(0), _ownsVal(false) {}
+    StringKey() : _val(0), _len(0), _ownsVal(false), _hash(0) {}
     StringKey(const char* val)
     {
         _val = val;
-        _len = uint32_t(strlen(val));
-        _hash = memHash(_val, _len);
+        _len = uint16_t(strlen(val));
+        _hash = uint32_t(std::hash<std::string_view>{}(std::string_view(_val, _len)));
         _ownsVal = false;
     }
 
@@ -120,14 +101,14 @@ public:
         key._ownsVal = false;
     }
 
-    bool matches(const StringKey& key) volatile
+    bool matches(const StringKey& key) const volatile
     {
         return key._hash == _hash && key._len == _len && _val && 0 == memCompare(key._val, _val, _len);
     }
 
-    bool isEmpty() volatile { return _val==0; }
+    bool isEmpty() const volatile { return _val==0; }
 
-    uint32_t hash() volatile
+    uint32_t hash() const volatile
     {
         return _hash;
     }
@@ -142,14 +123,21 @@ public:
     IntKey(int val) : _val(val) {}
     void copy(volatile IntKey& key) volatile { _val = key._val; }
     void move(volatile IntKey& key) volatile { _val = key._val; }
-    bool matches(const IntKey& key) volatile { return _val == key._val; }
-    bool isEmpty() volatile { return _val==0; }
-    uint32_t hash() volatile { return (_val*7919) & ~0xf;  }
+    bool matches(const IntKey& key) const volatile { return _val == key._val; }
+    bool isEmpty() volatile const { return _val==0; }
+    uint32_t hash() volatile const { return (_val*7919) & ~0xf;  }
 };
 
 template <typename Key, typename Value>
 class PtexHashMap
 {
+    // a table is a TableHeader followed in memory by an array of Entry records
+
+    struct TableHeader {
+        uint32_t numEntries;
+        uint32_t size;
+    };
+
     class Entry {
         Entry(const Entry&); // disallow
         void operator=(const Entry&); // disallow
@@ -164,21 +152,25 @@ class PtexHashMap
 
     void initContents()
     {
-        _numEntries = 16;
-        _size = 0;
-        _entries = new Entry[_numEntries];
+        size_t memUsed;
+        _table = allocTable(16, memUsed);
     }
 
     void deleteContents()
     {
-        for (uint32_t i = 0; i < _numEntries; ++i) {
-            if (_entries[i].value) delete _entries[i].value;
+        TableHeader* header;
+        Entry* entries;
+        getTable(_table, header, entries);
+
+        for (uint32_t i = 0; i < header->numEntries; ++i) {
+            entries[i].key.~Key();
+            if (entries[i].value) delete entries[i].value;
         }
-        delete [] _entries;
-        for (size_t i = 0; i < _oldEntries.size(); ++i) {
-            delete [] _oldEntries[i];
+        free(_table);
+        for (size_t i = 0; i < _oldTables.size(); ++i) {
+            free(_oldTables[i]);
         }
-        std::vector<Entry*>().swap(_oldEntries);
+        std::vector<void*>().swap(_oldTables);
     }
 
 public:
@@ -198,17 +190,21 @@ public:
         initContents();
     }
 
-    uint32_t size() const { return _size; }
+    uint32_t size() const {
+        return ((TableHeader*)_table)->size;
+    }
 
-    Value get(Key& key)
+    Value get(Key& key) const
     {
-        uint32_t mask = _numEntries-1;
-        Entry* entries = getEntries();
+        const TableHeader* header;
+        const Entry* entries;
+        getTable(_table, header, entries);
+        uint32_t mask = header->numEntries-1;
         uint32_t hash = key.hash();
 
         Value result = 0;
         for (uint32_t i = hash;; ++i) {
-            Entry& e = entries[i & mask];
+            const Entry& e = entries[i & mask];
             if (e.key.matches(key)) {
                 result = e.value;
                 break;
@@ -223,8 +219,11 @@ public:
 
     Value tryInsert(Key& key, Value value, size_t& newMemUsed)
     {
-        Entry* entries = lockEntriesAndGrowIfNeeded(newMemUsed);
-        uint32_t mask = _numEntries-1;
+        void* table = lockTableAndGrowIfNeeded(newMemUsed);
+        TableHeader* header;
+        Entry* entries;
+        getTable(table, header, entries);
+        uint32_t mask = header->numEntries-1;
         uint32_t hash = key.hash();
 
         Value result = 0;
@@ -232,8 +231,8 @@ public:
             Entry& e = entries[i & mask];
             if (e.value == 0) {
                 e.value = value;
-                _size += 1;
-                PtexMemoryFence();
+                ++header->size;
+                PtexMemoryFence(); // must write key after value
                 e.key.copy(key);
                 result = e.value;
                 break;
@@ -244,65 +243,88 @@ public:
                 break;
             }
         }
-        unlockEntries(entries);
+        unlockTable(table);
         return result;
     }
 
     template <typename Fn>
-    void foreach(Fn& fn)
+    void foreach(Fn& fn) const
     {
-        Entry* entries = getEntries();
-        for (uint32_t i = 0; i < _numEntries; ++i) {
+        const TableHeader* header;
+        const Entry* entries;
+        getTable(_table, header, entries);
+        for (uint32_t i = 0; i < header->numEntries; ++i) {
             Value v = entries[i].value;
             if (v) fn(v);
         }
     }
 
 private:
-    Entry* getEntries()
+    void* allocTable(int32_t numEntries, size_t& memsize)
     {
-        while (1) {
-            Entry* entries = _entries;
-            if (entries) return entries;
+        memsize = sizeof(TableHeader) + sizeof(Entry) * numEntries;
+        void* table = malloc(memsize);
+        memset(table, 0, memsize);
+        TableHeader* header = new (table) TableHeader;
+        header->numEntries = numEntries;
+        header->size = 0;
+        Entry* entries = (Entry*)((char*)table + sizeof(TableHeader));
+        for (int32_t i = 0; i < numEntries; ++i)
+        {
+            new (&entries[i]) Entry();
         }
+        return table;
     }
 
-    Entry* lockEntries()
+    static void getTable(const void* table, const TableHeader*& header, const Entry*& entries)
     {
-        while (1) {
-            Entry* entries = _entries;
-            if (entries && AtomicCompareAndSwap(&_entries, entries, (Entry*)0)) {
-                return entries;
-            }
+        header = (const TableHeader*) table;
+        entries = (const Entry*)((const char*)table + sizeof(TableHeader));
+    }
+
+    static void getTable(void* table, TableHeader*& header, Entry*& entries)
+    {
+        header = (TableHeader*) table;
+        entries = (Entry*)((char*)table + sizeof(TableHeader));
+    }
+
+    void unlockTable(void* table)
+    {
+        _table = table;
+        _lock.unlock();
+    }
+
+    void* lockTableAndGrowIfNeeded(size_t& newMemUsed)
+    {
+        _lock.lock();
+        void* table = _table;
+        TableHeader* header;
+        Entry* entries;
+        getTable(table, header, entries);
+
+        if (header->size*2 >= header->numEntries) {
+            table = grow(table, newMemUsed);
         }
+        return table;
     }
 
-    void unlockEntries(Entry* entries)
+    void* grow(void* oldTable, size_t& newMemUsed)
     {
-        AtomicStore(&_entries, entries);
-    }
+        TableHeader* oldHeader;
+        Entry* oldEntries;
+        getTable(oldTable, oldHeader, oldEntries);
 
-    Entry* lockEntriesAndGrowIfNeeded(size_t& newMemUsed)
-    {
-        Entry* entries = lockEntries();
-        if (_size*2 >= _numEntries) {
-            entries = grow(entries, newMemUsed);
-        }
-        return entries;
-    }
-
-    Entry* grow(Entry* oldEntries, size_t& newMemUsed)
-    {
-        _oldEntries.push_back(oldEntries);
-        uint32_t numNewEntries = _numEntries*2;
-        Entry* entries = new Entry[numNewEntries];
-        newMemUsed = numNewEntries * sizeof(Entry);
-        uint32_t mask = numNewEntries-1;
-        for (uint32_t oldIndex = 0; oldIndex < _numEntries; ++oldIndex) {
+        _oldTables.push_back(oldTable);
+        void* newTable = allocTable(oldHeader->numEntries*2, newMemUsed);
+        TableHeader* newHeader;
+        Entry* newEntries;
+        getTable(newTable, newHeader, newEntries);
+        uint32_t mask = newHeader->numEntries-1;
+        for (uint32_t oldIndex = 0; oldIndex < oldHeader->numEntries; ++oldIndex) {
             Entry& oldEntry = oldEntries[oldIndex];
             if (oldEntry.value) {
                 for (int newIndex = oldEntry.key.hash();; ++newIndex) {
-                    Entry& newEntry = entries[newIndex&mask];
+                    Entry& newEntry = newEntries[newIndex&mask];
                     if (!newEntry.value) {
                         newEntry.key.move(oldEntry.key);
                         newEntry.value = oldEntry.value;
@@ -311,14 +333,13 @@ private:
                 }
             }
         }
-        _numEntries = numNewEntries;
-        return entries;
+        newHeader->size = oldHeader->size;
+        return newTable;
     }
 
-    Entry* volatile _entries;
-    uint32_t volatile _numEntries;
-    uint32_t volatile _size;
-    std::vector<Entry*> _oldEntries;
+    void* _table;
+    Mutex _lock;
+    std::vector<void*> _oldTables;
 };
 
 PTEX_NAMESPACE_END
