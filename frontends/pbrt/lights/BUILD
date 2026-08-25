@@ -48,7 +48,7 @@ cc_library(
         "//iris:reference_counted",
         "//iris/environmental_lights:image_environmental_light",
         "//third_party/stb:stb_image",
-        "//third_party/tinyexr",
+        "@openexr",
         "@pbrt_proto//pbrt_proto:pbrt_cc_proto",
     ],
 )

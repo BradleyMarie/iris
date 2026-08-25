@@ -1,5 +1,8 @@
 #include "iris/file/exr_writer.h"
 
+#include <OpenEXR/ImfIO.h>
+#include <OpenEXR/ImfRgbaFile.h>
+
 #include <limits>
 #include <ostream>
 #include <sstream>
@@ -7,15 +10,32 @@
 
 #include "iris/color.h"
 #include "iris/framebuffer.h"
-#include "third_party/tinyexr/tinyexr.h"
 
 namespace iris {
 namespace file {
+namespace {
+
+class OStreamWrapper : public Imf::OStream {
+ public:
+  OStreamWrapper(std::ostream& stream)
+      : Imf::OStream("std::ostream"), stream_(stream) {}
+
+  void write(const char c[], int n) override { stream_.write(c, n); }
+  uint64_t tellp() override { return static_cast<uint64_t>(stream_.tellp()); }
+  void seekp(uint64_t pos) override {
+    stream_.seekp(static_cast<std::streamoff>(pos));
+  }
+
+ private:
+  std::ostream& stream_;
+};
+
+}  // namespace
 
 bool WriteExr(const Framebuffer& framebuffer, std::ostream& output) {
   auto [size_y, size_x] = framebuffer.Size();
 
-  std::vector<float> image;
+  std::vector<Imf::Rgba> image;
   for (size_t y = 0; y < size_y; y++) {
     for (size_t x = 0; x < size_x; x++) {
       Color color = framebuffer.Get(y, x);
@@ -25,30 +45,17 @@ bool WriteExr(const Framebuffer& framebuffer, std::ostream& output) {
       // These primaries and whitepoint are also shared by linear SRGB.
       Color rgb_color = color.ConvertTo(Color::LINEAR_SRGB);
 
-      image.push_back(static_cast<float>(rgb_color.r));
-      image.push_back(static_cast<float>(rgb_color.g));
-      image.push_back(static_cast<float>(rgb_color.b));
+      image.emplace_back(half(rgb_color.r), half(rgb_color.g),
+                         half(rgb_color.b), /*a=*/half(1.0));
     }
   }
 
-  if (std::numeric_limits<int>::max() < size_x ||
-      std::numeric_limits<int>::max() < size_y) {
-    return false;
-  }
+  OStreamWrapper stream_wrapper(output);
+  Imf::RgbaOutputFile file(stream_wrapper, Imf::Header(size_x, size_y),
+                           Imf::WRITE_RGBA);
 
-  unsigned char* buffer;
-  int bytes_written =
-      SaveEXRToMemory(image.data(), /*width=*/static_cast<int>(size_x),
-                      /*height=*/static_cast<int>(size_y), /*components=*/3,
-                      /*save_as_fp16=*/1, /*buffer=*/&buffer, /*err=*/nullptr);
-  if (bytes_written < 0) {
-    return false;
-  }
-
-  output.write(reinterpret_cast<const char*>(buffer),
-               static_cast<std::streamsize>(bytes_written));
-
-  free(buffer);
+  file.setFrameBuffer(image.data(), 1, size_x);
+  file.writePixels(size_y);
 
   return output.good();
 }

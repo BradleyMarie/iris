@@ -15,7 +15,7 @@ cc_library(
     deps = [
         "//iris:color",
         "//iris:framebuffer",
-        "//third_party/tinyexr",
+        "@openexr",
     ],
 )
 

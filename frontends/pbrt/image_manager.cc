@@ -1,5 +1,8 @@
 #include "frontends/pbrt/image_manager.h"
 
+#include <ImfArray.h>
+#include <ImfRgbaFile.h>
+
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
@@ -8,7 +11,6 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "third_party/stb/stb_image.h"
-#include "third_party/tinyexr/tinyexr.h"
 
 namespace iris {
 namespace pbrt_frontend {
@@ -672,39 +674,45 @@ ImageManager::LoadFloatImageFromHDR(const std::string& filename,
   int nx, ny;
   std::vector<visual> float_values;
   if (path.extension() == ".exr") {
-    float* values;
-    const char* error_message;
-    int error =
-        LoadEXR(&values, &nx, &ny, path.native().c_str(), &error_message);
-    if (error < 0) {
-      std::cerr << "ERROR: Image loading failed with error: " << error_message
+    try {
+      Imf::RgbaInputFile file(path.string().c_str());
+      Imath::Box2i dw = file.dataWindow();
+      nx = dw.max.x - dw.min.x + 1;
+      ny = dw.max.y - dw.min.y + 1;
+
+      Imf::Array2D<Imf::Rgba> pixels(ny, nx);
+      file.setFrameBuffer(&pixels[0][0] - dw.min.x - dw.min.y * nx, 1, nx);
+      file.readPixels(dw.min.y, dw.max.y);
+
+      float_values.reserve(nx * ny);
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          // Retain vertical flipping: (ny - y - 1)
+          const Imf::Rgba& p = pixels[ny - y - 1][x];
+          float r = std::max(0.0f, static_cast<float>(p.r));
+          float g = std::max(0.0f, static_cast<float>(p.g));
+          float b = std::max(0.0f, static_cast<float>(p.b));
+
+          if (gamma_correct) {
+            r = GammaCorrect(r);
+            g = GammaCorrect(g);
+            b = GammaCorrect(b);
+          }
+
+          r = std::min(1.0f, r);
+          g = std::min(1.0f, g);
+          b = std::min(1.0f, b);
+
+          float_values.push_back(
+              std::min(static_cast<visual>(1.0),
+                       spectrum_manager_.ComputeLuma(r, g, b)));
+        }
+      }
+    } catch (const std::exception& e) {
+      std::cerr << "ERROR: Image loading failed with error: " << e.what()
                 << std::endl;
       exit(EXIT_FAILURE);
     }
-
-    float_values.reserve(nx * ny);
-    for (int y = 0; y < ny; y++) {
-      for (int x = 0; x < nx; x++) {
-        float r = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 0]);
-        float g = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 1]);
-        float b = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 2]);
-
-        if (gamma_correct) {
-          r = GammaCorrect(r);
-          g = GammaCorrect(g);
-          b = GammaCorrect(b);
-        }
-
-        r = std::min(1.0f, r);
-        g = std::min(1.0f, g);
-        b = std::min(1.0f, b);
-
-        float_values.push_back(std::min(
-            static_cast<visual>(1.0), spectrum_manager_.ComputeLuma(r, g, b)));
-      }
-    }
-
-    stbi_image_free(values);
   } else {
     std::cerr << "ERROR: Unsupported HDR file format: " << path.extension()
               << std::endl;
@@ -733,39 +741,44 @@ ImageManager::LoadReflectorImageFromHDR(const std::string& filename,
   int nx, ny;
   std::vector<ReferenceCounted<Reflector>> reflector_values;
   if (path.extension() == ".exr") {
-    float* values;
-    const char* error_message;
-    int error =
-        LoadEXR(&values, &nx, &ny, path.native().c_str(), &error_message);
-    if (error < 0) {
-      std::cerr << "ERROR: Image loading failed with error: " << error_message
+    try {
+      Imf::RgbaInputFile file(path.string().c_str());
+      Imath::Box2i dw = file.dataWindow();
+      nx = dw.max.x - dw.min.x + 1;
+      ny = dw.max.y - dw.min.y + 1;
+
+      Imf::Array2D<Imf::Rgba> pixels(ny, nx);
+      file.setFrameBuffer(&pixels[0][0] - dw.min.x - dw.min.y * nx, 1, nx);
+      file.readPixels(dw.min.y, dw.max.y);
+
+      reflector_values.reserve(nx * ny);
+      for (int y = 0; y < ny; y++) {
+        for (int x = 0; x < nx; x++) {
+          // Account for the vertical flipping in the original code: ny - y - 1
+          const Imf::Rgba& p = pixels[ny - y - 1][x];
+          float r = std::max(0.0f, static_cast<float>(p.r));
+          float g = std::max(0.0f, static_cast<float>(p.g));
+          float b = std::max(0.0f, static_cast<float>(p.b));
+
+          if (gamma_correct) {
+            r = GammaCorrect(r);
+            g = GammaCorrect(g);
+            b = GammaCorrect(b);
+          }
+
+          r = std::min(1.0f, r);
+          g = std::min(1.0f, g);
+          b = std::min(1.0f, b);
+
+          reflector_values.push_back(
+              spectrum_manager_.AllocateReflector(r, g, b));
+        }
+      }
+    } catch (const std::exception& e) {
+      std::cerr << "ERROR: Image loading failed with error: " << e.what()
                 << std::endl;
       exit(EXIT_FAILURE);
     }
-
-    reflector_values.reserve(nx * ny);
-    for (int y = 0; y < ny; y++) {
-      for (int x = 0; x < nx; x++) {
-        float r = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 0]);
-        float g = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 1]);
-        float b = std::max(0.0f, values[4 * ((ny - y - 1) * nx + x) + 2]);
-
-        if (gamma_correct) {
-          r = GammaCorrect(r);
-          g = GammaCorrect(g);
-          b = GammaCorrect(b);
-        }
-
-        r = std::min(1.0f, r);
-        g = std::min(1.0f, g);
-        b = std::min(1.0f, b);
-
-        reflector_values.push_back(
-            spectrum_manager_.AllocateReflector(r, g, b));
-      }
-    }
-
-    stbi_image_free(values);
   } else {
     std::cerr << "ERROR: Unsupported HDR file format: " << path.extension()
               << std::endl;

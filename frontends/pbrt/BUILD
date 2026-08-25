@@ -116,8 +116,8 @@ cc_library(
         "//iris:reflector",
         "//iris/textures:image_texture",
         "//third_party/stb:stb_image",
-        "//third_party/tinyexr",
         "@abseil-cpp//absl/container:flat_hash_map",
+        "@openexr",
     ],
 )
 
