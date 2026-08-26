@@ -30,8 +30,11 @@ class UVFloatTexture : public FloatTexture {
 
   visual_t Evaluate(
       const TextureCoordinates& coordinates) const final override {
-    return NestedEvaluate(
-        coordinates.Scale(u_scale_, v_scale_, u_offset_, v_offset_));
+    const Vector p_offset(static_cast<geometric>(0.0),
+                          static_cast<geometric>(0.0),
+                          static_cast<geometric>(0.0));
+    TextureCoordinates scaled = coordinates.Scale(u_scale_, v_scale_);
+    return NestedEvaluate(scaled.Offset(p_offset, u_offset_, v_offset_));
   }
 
  protected:
@@ -61,8 +64,12 @@ class UVReflectorTexture : public ReflectorTexture {
 
   const Reflector* Evaluate(const TextureCoordinates& coordinates,
                             SpectralAllocator& allocator) const final override {
-    return NestedEvaluate(
-        coordinates.Scale(u_scale_, v_scale_, u_offset_, v_offset_), allocator);
+    const Vector p_offset(static_cast<geometric>(0.0),
+                          static_cast<geometric>(0.0),
+                          static_cast<geometric>(0.0));
+    TextureCoordinates scaled = coordinates.Scale(u_scale_, v_scale_);
+    return NestedEvaluate(scaled.Offset(p_offset, u_offset_, v_offset_),
+                          allocator);
   }
 
  protected:

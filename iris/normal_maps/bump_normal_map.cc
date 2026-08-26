@@ -25,33 +25,17 @@ Vector ComputeNormal(const ReferenceCounted<FloatTexture>& bump_map,
 
   geometric_t displacement0 = 0.0;
   if (du != static_cast<geometric_t>(0.0)) {
-    TextureCoordinates texture_coordinates_du{
-        texture_coordinates.p + dp_du * du,
-        texture_coordinates.dp_dx,
-        texture_coordinates.dp_dy,
-        {texture_coordinates.uv[0] + du, texture_coordinates.uv[1]},
-        texture_coordinates.du_dx,
-        texture_coordinates.du_dy,
-        texture_coordinates.dv_dx,
-        texture_coordinates.du_dy};
-
-    displacement0 = bump_map->Evaluate(texture_coordinates_du) - displacement;
+    TextureCoordinates offset_coordinates =
+        texture_coordinates.Offset(dp_du, du, static_cast<geometric_t>(0.0));
+    displacement0 = bump_map->Evaluate(offset_coordinates) - displacement;
     displacement0 /= du;
   }
 
   geometric_t displacement1 = 0.0;
   if (dv != static_cast<geometric_t>(0.0)) {
-    TextureCoordinates texture_coordinates_dv{
-        texture_coordinates.p + dp_dv * dv,
-        texture_coordinates.dp_dx,
-        texture_coordinates.dp_dy,
-        {texture_coordinates.uv[0], texture_coordinates.uv[1] + dv},
-        texture_coordinates.du_dx,
-        texture_coordinates.du_dy,
-        texture_coordinates.dv_dx,
-        texture_coordinates.du_dy};
-
-    displacement1 = bump_map->Evaluate(texture_coordinates_dv) - displacement;
+    TextureCoordinates offset_coordinates =
+        texture_coordinates.Offset(dp_dv, static_cast<geometric_t>(0.0), dv);
+    displacement1 = bump_map->Evaluate(offset_coordinates) - displacement;
     displacement1 /= dv;
   }
 

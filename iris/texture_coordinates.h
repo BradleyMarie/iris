@@ -24,8 +24,9 @@ struct TextureCoordinates final {
 
   const face_t face_index;
 
-  TextureCoordinates Scale(geometric u_scale, geometric v_scale,
-                           geometric u_offset, geometric v_offset) const;
+  TextureCoordinates Offset(const Vector& p_offset, geometric_t u_offset,
+                            geometric_t v_offset) const;
+  TextureCoordinates Scale(geometric u_scale, geometric v_scale) const;
 };
 
 }  // namespace iris
