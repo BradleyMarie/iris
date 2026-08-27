@@ -19,7 +19,6 @@ namespace {
 
 using ::iris::geometry::MockBasicGeometry;
 using ::testing::_;
-using ::testing::Invoke;
 
 static const Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));
 
@@ -29,14 +28,14 @@ std::unique_ptr<MockBasicGeometry> MakeMockGeometry(
   std::unique_ptr<MockBasicGeometry> result =
       std::make_unique<MockBasicGeometry>();
   EXPECT_CALL(*result, Trace(transformed_ray, _, _, _, _))
-      .WillRepeatedly(Invoke(
-          [distance, error, is_chiral](
-              const Ray& trace_ray, geometric_t minimum_distance,
-              geometric_t maximum_distance, Geometry::TraceMode trace_mode,
-              HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, distance, error, 2, 3,
-                                           is_chiral);
-          }));
+      .WillRepeatedly([distance, error, is_chiral](
+                          const Ray& trace_ray, geometric_t minimum_distance,
+                          geometric_t maximum_distance,
+                          Geometry::TraceMode trace_mode,
+                          HitAllocator& hit_allocator) {
+        return &hit_allocator.Allocate(nullptr, distance, error, 2, 3,
+                                       is_chiral);
+      });
   return result;
 }
 

@@ -145,9 +145,9 @@ TEST(LowDiscrepancyImageSamplerTest, TwoSamples) {
 
 TEST(LowDiscrepancyImageSamplerTest, Replicate) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
-  EXPECT_CALL(*sequence, Duplicate()).WillOnce(testing::Invoke([]() {
+  EXPECT_CALL(*sequence, Duplicate()).WillOnce([]() {
     return std::make_unique<MockLowDiscrepancySequence>();
-  }));
+  });
   LowDiscrepancyImageSampler sampler(std::move(sequence), 2);
   EXPECT_TRUE(sampler.Replicate());
 }

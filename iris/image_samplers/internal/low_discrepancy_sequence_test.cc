@@ -10,7 +10,6 @@ namespace image_samplers {
 namespace internal {
 namespace {
 
-using ::testing::Invoke;
 using ::testing::Return;
 
 TEST(LowDiscrepancySequenceTest, NextIndex) {

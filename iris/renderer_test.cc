@@ -41,7 +41,6 @@ using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
 using ::testing::InSequence;
-using ::testing::Invoke;
 using ::testing::Return;
 
 void RunTestBody(
@@ -77,80 +76,75 @@ void RunTestBody(
   size_t chunks = 64;
 
   MockRandomBitstream rng;
-  EXPECT_CALL(rng, Replicate()).Times(chunks).WillRepeatedly(Invoke([]() {
+  EXPECT_CALL(rng, Replicate()).Times(chunks).WillRepeatedly([]() {
     return std::make_unique<MockRandomBitstream>();
-  }));
+  });
 
   size_t sampler_index = 0;
   MockImageSampler image_sampler;
-  EXPECT_CALL(image_sampler, Replicate())
-      .Times(chunks)
-      .WillRepeatedly(Invoke([&]() {
-        std::unique_ptr<MockImageSampler> result =
-            std::make_unique<MockImageSampler>();
+  EXPECT_CALL(image_sampler, Replicate()).Times(chunks).WillRepeatedly([&]() {
+    std::unique_ptr<MockImageSampler> result =
+        std::make_unique<MockImageSampler>();
 
-        if (sampler_index % 2 == 0) {
-          {
-            InSequence s;
+    if (sampler_index % 2 == 0) {
+      {
+        InSequence s;
 
-            for (size_t i = 0; i < 32; i++) {
-              if (skip_pixel_callback &&
-                  skip_pixel_callback({sampler_index / 2, i},
-                                      image_dimensions)) {
-                continue;
-              }
-
-              EXPECT_CALL(*result,
-                          StartPixel(std::make_pair(static_cast<size_t>(32),
-                                                    static_cast<size_t>(33)),
-                                     std::make_pair(
-                                         static_cast<size_t>(sampler_index / 2),
-                                         static_cast<size_t>(i)),
-                                     _));
-              EXPECT_CALL(*result, NextSample(_, _))
-                  .Times(samples_per_pixel)
-                  .WillRepeatedly(Return(ImageSampler::Sample{
-                      {0.0, 0.0},
-                      {1.0, 1.0},
-                      std::nullopt,
-                      static_cast<visual_t>(1.0) /
-                          static_cast<visual_t>(samples_per_pixel),
-                      rng}));
-              EXPECT_CALL(*result, NextSample(_, _))
-                  .WillOnce(Return(std::nullopt));
-            }
+        for (size_t i = 0; i < 32; i++) {
+          if (skip_pixel_callback &&
+              skip_pixel_callback({sampler_index / 2, i}, image_dimensions)) {
+            continue;
           }
-        } else {
-          if (!skip_pixel_callback ||
-              !skip_pixel_callback({sampler_index / 2, 32}, image_dimensions)) {
-            EXPECT_CALL(*result,
-                        StartPixel(std::make_pair(static_cast<size_t>(32),
-                                                  static_cast<size_t>(33)),
-                                   std::make_pair(
-                                       static_cast<size_t>(sampler_index / 2),
-                                       static_cast<size_t>(32)),
-                                   _));
-            {
-              InSequence s;
-              EXPECT_CALL(*result, NextSample(_, _))
-                  .Times(samples_per_pixel)
-                  .WillRepeatedly(Return(ImageSampler::Sample{
-                      {0.0, 0.0},
-                      {1.0, 1.0},
-                      std::nullopt,
-                      static_cast<visual_t>(1.0) /
-                          static_cast<visual_t>(samples_per_pixel),
-                      rng}));
-              EXPECT_CALL(*result, NextSample(_, _))
-                  .WillOnce(Return(std::nullopt));
-            }
-          }
+
+          EXPECT_CALL(
+              *result,
+              StartPixel(std::make_pair(static_cast<size_t>(32),
+                                        static_cast<size_t>(33)),
+                         std::make_pair(static_cast<size_t>(sampler_index / 2),
+                                        static_cast<size_t>(i)),
+                         _));
+          EXPECT_CALL(*result, NextSample(_, _))
+              .Times(samples_per_pixel)
+              .WillRepeatedly(Return(ImageSampler::Sample{
+                  {0.0, 0.0},
+                  {1.0, 1.0},
+                  std::nullopt,
+                  static_cast<visual_t>(1.0) /
+                      static_cast<visual_t>(samples_per_pixel),
+                  rng}));
+          EXPECT_CALL(*result, NextSample(_, _)).WillOnce(Return(std::nullopt));
         }
+      }
+    } else {
+      if (!skip_pixel_callback ||
+          !skip_pixel_callback({sampler_index / 2, 32}, image_dimensions)) {
+        EXPECT_CALL(
+            *result,
+            StartPixel(std::make_pair(static_cast<size_t>(32),
+                                      static_cast<size_t>(33)),
+                       std::make_pair(static_cast<size_t>(sampler_index / 2),
+                                      static_cast<size_t>(32)),
+                       _));
+        {
+          InSequence s;
+          EXPECT_CALL(*result, NextSample(_, _))
+              .Times(samples_per_pixel)
+              .WillRepeatedly(Return(ImageSampler::Sample{
+                  {0.0, 0.0},
+                  {1.0, 1.0},
+                  std::nullopt,
+                  static_cast<visual_t>(1.0) /
+                      static_cast<visual_t>(samples_per_pixel),
+                  rng}));
+          EXPECT_CALL(*result, NextSample(_, _)).WillOnce(Return(std::nullopt));
+        }
+      }
+    }
 
-        sampler_index += 1;
+    sampler_index += 1;
 
-        return result;
-      }));
+    return result;
+  });
 
   MockCamera camera;
   EXPECT_CALL(camera, HasLens())
@@ -165,13 +159,13 @@ void RunTestBody(
   MockIntegrator integrator;
   EXPECT_CALL(integrator, Duplicate())
       .Times(actual_num_threads)
-      .WillRepeatedly(Invoke([&]() {
+      .WillRepeatedly([&]() {
         std::unique_ptr<MockIntegrator> result =
             std::make_unique<MockIntegrator>();
         EXPECT_CALL(*result, Integrate(trace_ray, _, _, _, _, _, _))
             .WillRepeatedly(Return(&spectrum));
         return result;
-      }));
+      });
 
   Color color(1.0, 1.0, 1.0, Color::CIE_XYZ);
   MockColorMatcher color_matcher;

@@ -38,7 +38,6 @@ using ::iris::testing::GetNeverVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
 using ::iris::testing::ScopedSingleGeometryVisibilityTester;
 using ::testing::_;
-using ::testing::Invoke;
 using ::testing::Ref;
 using ::testing::Return;
 
@@ -50,12 +49,12 @@ ReferenceCounted<MockGeometry> MakeGeometry(
   EXPECT_CALL(*geometry, GetFaces())
       .WillRepeatedly(Return(std::vector<face_t>({1u, 2u})));
   EXPECT_CALL(*geometry, Trace(_, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1u, 2u, false);
-      }));
+      });
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(_, _, _, _))
       .WillRepeatedly(Return(std::nullopt));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))

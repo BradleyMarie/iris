@@ -22,7 +22,6 @@ namespace {
 using ::iris::geometry::MockBasicGeometry;
 using ::iris::scenes::MakeListSceneBuilder;
 using ::testing::_;
-using ::testing::Invoke;
 using ::testing::Return;
 
 TEST(TraceClosestHit, NoGeometry) {
@@ -42,12 +41,12 @@ TEST(TraceClosestHit, WithGeometry) {
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, Trace(ray, 0.0, 2.0, Geometry::CLOSEST_HIT, _))
-      .WillOnce(Invoke([&](const Ray& trace_ray, geometric_t minimum_distance,
-                           geometric_t maximum_distance,
-                           Geometry::TraceMode trace_mode,
-                           HitAllocator& hit_allocator) {
+      .WillOnce([&](const Ray& trace_ray, geometric_t minimum_distance,
+                    geometric_t maximum_distance,
+                    Geometry::TraceMode trace_mode,
+                    HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3, false);
-      }));
+      });
 
   const Geometry* geometry_ptr = geometry.Get();
 
@@ -86,12 +85,12 @@ TEST(TraceAnyHit, WithGeometry) {
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, Trace(ray, 0.0, 2.0, Geometry::ANY_HIT, _))
-      .WillOnce(Invoke([&](const Ray& trace_ray, geometric_t minimum_distance,
-                           geometric_t maximum_distance,
-                           Geometry::TraceMode trace_mode,
-                           HitAllocator& hit_allocator) {
+      .WillOnce([&](const Ray& trace_ray, geometric_t minimum_distance,
+                    geometric_t maximum_distance,
+                    Geometry::TraceMode trace_mode,
+                    HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3, false);
-      }));
+      });
 
   const Geometry* geometry_ptr = geometry.Get();
 
@@ -121,12 +120,12 @@ TEST(TraceBoth, WithGeometry) {
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, Trace(ray, 0.0, 2.0, _, _))
-      .WillRepeatedly(Invoke(
-          [&](const Ray& trace_ray, geometric_t minimum_distance,
-              geometric_t maximum_distance, Geometry::TraceMode trace_mode,
-              HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3, false);
-          }));
+      .WillRepeatedly([&](const Ray& trace_ray, geometric_t minimum_distance,
+                          geometric_t maximum_distance,
+                          Geometry::TraceMode trace_mode,
+                          HitAllocator& hit_allocator) {
+        return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2, 3, false);
+      });
 
   const Geometry* geometry_ptr = geometry.Get();
 

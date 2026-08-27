@@ -18,7 +18,6 @@ using ::iris::light_scenes::MockLightScene;
 using ::iris::lights::MockLight;
 using ::iris::random::MockRandom;
 using ::testing::_;
-using ::testing::Invoke;
 
 TEST(LightSamplerTest, Sample) {
   std::unique_ptr<Light> light = std::make_unique<MockLight>();
@@ -28,12 +27,12 @@ TEST(LightSamplerTest, Sample) {
 
   MockLightScene scene;
   EXPECT_CALL(scene, Sample(Point(1.0, 1.0, 1.0), _, _))
-      .WillOnce(Invoke([&](const Point& hit_point, Random& rng,
-                           LightSampleAllocator& allocator) {
+      .WillOnce([&](const Point& hit_point, Random& rng,
+                    LightSampleAllocator& allocator) {
         EXPECT_EQ(random.get(), &rng);
         EXPECT_EQ(&allocator, &allocator);
         return &allocator.Allocate(*light, static_cast<visual_t>(2.0));
-      }));
+      });
 
   LightSampler sampler(scene, *random, allocator);
 

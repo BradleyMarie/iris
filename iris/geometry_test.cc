@@ -22,7 +22,6 @@ namespace {
 using ::iris::geometry::MockBasicGeometry;
 using ::iris::random::MockRandom;
 using ::testing::_;
-using ::testing::Invoke;
 
 TEST(GeometryTest, TraceAllHits) {
   Ray ray(Point(0.0, 0.0, 0.0), Vector(1.0, 1.0, 1.0));

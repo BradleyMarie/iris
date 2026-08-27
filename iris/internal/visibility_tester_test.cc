@@ -41,7 +41,6 @@ using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
 using ::testing::InSequence;
-using ::testing::Invoke;
 using ::testing::IsFalse;
 using ::testing::NotNull;
 using ::testing::Return;
@@ -54,9 +53,9 @@ std::unique_ptr<EmissiveMaterial> MakeEmissiveMaterial(
   std::unique_ptr<MockEmissiveMaterial> result =
       std::make_unique<MockEmissiveMaterial>();
   EXPECT_CALL(*result, Evaluate(_, _))
-      .WillRepeatedly(Invoke([expected_hit_point, expected_uv, spectrum](
-                                 const TextureCoordinates& texture_coordinates,
-                                 SpectralAllocator& spectral_allocator) {
+      .WillRepeatedly([expected_hit_point, expected_uv, spectrum](
+                          const TextureCoordinates& texture_coordinates,
+                          SpectralAllocator& spectral_allocator) {
         EXPECT_EQ(expected_hit_point, texture_coordinates.p);
         EXPECT_EQ(Vector(0.0, 0.0, 0.0), texture_coordinates.dp_dx);
         EXPECT_EQ(Vector(0.0, 0.0, 0.0), texture_coordinates.dp_dy);
@@ -67,7 +66,7 @@ std::unique_ptr<EmissiveMaterial> MakeEmissiveMaterial(
         EXPECT_EQ(0.0, texture_coordinates.dv_dx);
         EXPECT_EQ(0.0, texture_coordinates.dv_dy);
         return spectrum;
-      }));
+      });
   return result;
 }
 
@@ -78,10 +77,9 @@ TEST(VisibilityTesterTest, MissesGeometry) {
   ReferenceCounted<MockBasicGeometry> geometry =
       MakeReferenceCounted<MockBasicGeometry>();
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                          geometric_t maximum_distance,
-                          Geometry::TraceMode trace_mode,
-                          HitAllocator& hit_allocator) { return nullptr; }));
+      .WillOnce([](const Ray& ray, geometric_t minimum_distance,
+                   geometric_t maximum_distance, Geometry::TraceMode trace_mode,
+                   HitAllocator& hit_allocator) { return nullptr; });
 
   SceneObjects::Builder builder;
 
@@ -102,12 +100,11 @@ TEST(VisibilityTesterTest, WrongFace) {
   ReferenceCounted<MockBasicGeometry> geometry =
       MakeReferenceCounted<MockBasicGeometry>();
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                          geometric_t maximum_distance,
-                          Geometry::TraceMode trace_mode,
-                          HitAllocator& hit_allocator) {
+      .WillOnce([](const Ray& ray, geometric_t minimum_distance,
+                   geometric_t maximum_distance, Geometry::TraceMode trace_mode,
+                   HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 4u, 5u, false, g_data);
-      }));
+      });
 
   SceneObjects::Builder builder;
 
@@ -128,12 +125,12 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
 
   ReferenceCounted<MockGeometry> scene_geometry =
       MakeReferenceCounted<MockGeometry>();
@@ -145,12 +142,12 @@ TEST(VisibilityTesterTest, SceneTraceWrongGeometry) {
   EXPECT_CALL(*scene_geometry, GetEmissiveMaterial(_))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*scene_geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, false, g_data);
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(scene_geometry));
@@ -180,21 +177,21 @@ TEST(VisibilityTesterTest, SceneTraceWrongMatrix) {
   {
     InSequence sequence;
     EXPECT_CALL(*geometry, Trace(_, _, _, _, _))
-        .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                            geometric_t maximum_distance,
-                            Geometry::TraceMode trace_mode,
-                            HitAllocator& hit_allocator) {
+        .WillOnce([](const Ray& ray, geometric_t minimum_distance,
+                     geometric_t maximum_distance,
+                     Geometry::TraceMode trace_mode,
+                     HitAllocator& hit_allocator) {
           return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, false,
                                          g_data);
-        }));
+        });
     EXPECT_CALL(*geometry, Trace(_, _, _, _, _))
-        .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                            geometric_t maximum_distance,
-                            Geometry::TraceMode trace_mode,
-                            HitAllocator& hit_allocator) {
+        .WillOnce([](const Ray& ray, geometric_t minimum_distance,
+                     geometric_t maximum_distance,
+                     Geometry::TraceMode trace_mode,
+                     HitAllocator& hit_allocator) {
           return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 1, 2, false,
                                          g_data);
-        }));
+        });
   }
   const Geometry* geometry_ptr = geometry.Get();
 
@@ -227,21 +224,21 @@ TEST(VisibilityTesterTest, SceneTraceWrongFace) {
   {
     InSequence sequence;
     EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-        .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                            geometric_t maximum_distance,
-                            Geometry::TraceMode trace_mode,
-                            HitAllocator& hit_allocator) {
+        .WillOnce([](const Ray& ray, geometric_t minimum_distance,
+                     geometric_t maximum_distance,
+                     Geometry::TraceMode trace_mode,
+                     HitAllocator& hit_allocator) {
           return &hit_allocator.Allocate(nullptr, 0.75, 0.0, 1, 2, false,
                                          g_data);
-        }));
+        });
     EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-        .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                            geometric_t maximum_distance,
-                            Geometry::TraceMode trace_mode,
-                            HitAllocator& hit_allocator) {
+        .WillOnce([](const Ray& ray, geometric_t minimum_distance,
+                     geometric_t maximum_distance,
+                     Geometry::TraceMode trace_mode,
+                     HitAllocator& hit_allocator) {
           return &hit_allocator.Allocate(nullptr, 0.5, 0.0, 3, 4, false,
                                          g_data);
-        }));
+        });
   }
   const Geometry* geometry_ptr = geometry.Get();
 
@@ -273,21 +270,20 @@ TEST(VisibilityTesterTest, NoEmissiveMaterial) {
   EXPECT_CALL(*geometry, GetEmissiveMaterial(_))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
@@ -318,25 +314,24 @@ TEST(VisibilityTesterTest, NoSpectrum) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   const Geometry* geometry_ptr = geometry.Get();
 
   SceneObjects::Builder builder;
@@ -368,25 +363,24 @@ TEST(VisibilityTesterTest, NoPdf) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))
       .WillOnce(Return(std::nullopt));
@@ -421,25 +415,24 @@ TEST(VisibilityTesterTest, NegativePdf) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))
       .WillOnce(Return(static_cast<visual_t>(-1.0)));
@@ -469,25 +462,24 @@ TEST(VisibilityTesterTest, Succeeds) {
   ReferenceCounted<MockGeometry> geometry =
       MakeReferenceCounted<MockGeometry>();
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))
       .WillOnce(Return(1.0));
@@ -523,25 +515,24 @@ TEST(VisibilityTesterTest, SceneTraceMissSucceeds) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))
       .WillOnce(Return(1.0));
@@ -580,25 +571,24 @@ TEST(VisibilityTesterTest, SucceedsWithPdf) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))
       .WillOnce(Return(2.0));
@@ -638,25 +628,24 @@ TEST(VisibilityTesterTest, SucceedsWithTransformWithPdf) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(0.5, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(0.5, 0.0, 0.0)))
       .WillOnce(Return(2.0));
@@ -697,25 +686,24 @@ TEST(VisibilityTesterTest, SucceedsWithCoordinates) {
   EXPECT_CALL(*geometry, GetFaces())
       .WillOnce(Return(std::vector<face_t>({1, 2})));
   EXPECT_CALL(*geometry, Trace(model_ray, _, _, _, _))
-      .WillRepeatedly(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                                geometric_t maximum_distance,
-                                Geometry::TraceMode trace_mode,
-                                HitAllocator& hit_allocator) {
+      .WillRepeatedly([](const Ray& ray, geometric_t minimum_distance,
+                         geometric_t maximum_distance,
+                         Geometry::TraceMode trace_mode,
+                         HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 1, 2, false, g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, GetEmissiveMaterial(1u))
       .WillRepeatedly(Return(emissive_material.get()));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(2u))
       .WillRepeatedly(Return(nullptr));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 0.0, 0.0), IsFalse(), 1u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{face, {0.5, 0.5}};
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return Geometry::TextureCoordinates{face, {0.5, 0.5}};
+      });
   EXPECT_CALL(*geometry, ComputePdfBySolidAngle(Point(0.0, 0.0, 0.0), 1u, _,
                                                 Point(1.0, 0.0, 0.0)))
       .WillOnce(Return(2.0));

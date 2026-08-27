@@ -4,7 +4,6 @@
 #include <array>
 #include <cmath>
 #include <limits>
-#include <memory>
 #include <numeric>
 #include <optional>
 #include <span>
@@ -52,7 +51,17 @@ size_t ComputeMaxDepth(const CubicBezierCurve& curve) {
   return num_refinement_steps + static_cast<geometric_t>(0.5);
 }
 
-struct Shared {
+struct Shared : public ReferenceCountable {
+  Shared(CubicBezierCurve curve, geometric u_start, geometric u_end,
+         ReferenceCounted<Material> materials,
+         ReferenceCounted<NormalMap> normal_maps, bool cylinder)
+      : curve(curve),
+        u_start(u_start),
+        u_end(u_end),
+        materials{std::move(materials)},
+        normal_maps{std::move(normal_maps)},
+        cylinder(cylinder) {}
+
   CubicBezierCurve curve;
   geometric u_start;
   geometric u_end;
@@ -181,7 +190,7 @@ class Curve final : public Geometry {
     geometric_t v;
   };
 
-  Curve(std::shared_ptr<Shared> shared, geometric u0, geometric u1)
+  Curve(ReferenceCounted<Shared> shared, geometric u0, geometric u1)
       : shared_(std::move(shared)), u0_(u0), u1_(u1) {}
 
   Vector ComputeSurfaceNormal(const Point& hit_point, face_t face,
@@ -207,7 +216,7 @@ class Curve final : public Geometry {
              geometric_t maximum_distance, TraceMode trace_mode,
              HitAllocator& hit_allocator) const override;
 
-  std::shared_ptr<Shared> shared_;
+  ReferenceCounted<Shared> shared_;
   geometric u0_;
   geometric u1_;
 };
@@ -340,12 +349,12 @@ std::vector<ReferenceCounted<Geometry>> MakeCubicBezierCurve(
     return result;
   }
 
-  std::shared_ptr<Shared> shared = std::make_shared<Shared>(
-      Shared{CubicBezierCurve(control_points.data(),
-                              static_cast<geometric>(0.5) * start_width,
-                              static_cast<geometric>(0.5) * end_width),
-             u_start, u_end, std::move(front_material),
-             std::move(front_normal_map), cylinder});
+  ReferenceCounted<Shared> shared = MakeReferenceCounted<Shared>(
+      CubicBezierCurve(control_points.data(),
+                       static_cast<geometric>(0.5) * start_width,
+                       static_cast<geometric>(0.5) * end_width),
+      u_start, u_end, std::move(front_material), std::move(front_normal_map),
+      cylinder);
 
   for (uint64_t i = 0; i < num_segments; i++) {
     geometric start =

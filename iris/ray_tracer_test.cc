@@ -49,7 +49,6 @@ using ::iris::normal_maps::MockNormalMap;
 using ::iris::scenes::MakeListSceneBuilder;
 using ::iris::spectra::MockSpectrum;
 using ::testing::_;
-using ::testing::Invoke;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::Return;
@@ -99,25 +98,24 @@ void MakeBasicGeometryImpl(ReferenceCounted<MockBasicGeometry> geometry,
   EXPECT_CALL(*geometry, GetFaces())
       .WillRepeatedly(Return(std::vector<face_t>({1})));
   EXPECT_CALL(*geometry, Trace(expected_ray, _, _, _, _))
-      .WillOnce(Invoke([](const Ray& ray, geometric_t minimum_distance,
-                          geometric_t maximum_distance,
-                          Geometry::TraceMode trace_mode,
-                          HitAllocator& hit_allocator) {
+      .WillOnce([](const Ray& ray, geometric_t minimum_distance,
+                   geometric_t maximum_distance, Geometry::TraceMode trace_mode,
+                   HitAllocator& hit_allocator) {
         return &hit_allocator.Allocate(nullptr, 1.0, 0.0, 2u, 3u, false,
                                        g_data);
-      }));
+      });
   EXPECT_CALL(*geometry, ComputeHitPoint(expected_ray, 1.0, _))
-      .WillOnce(Invoke([](const Ray& ray, const geometric_t distance,
-                          const void* additional_data) {
+      .WillOnce([](const Ray& ray, const geometric_t distance,
+                   const void* additional_data) {
         return Geometry::ComputeHitPointResult{ray.Endpoint(1.0),
                                                PositionError(0.0, 0.0, 0.0)};
-      }));
+      });
   EXPECT_CALL(*geometry, ComputeSurfaceNormal(expected_hit_point, 2u, _))
-      .WillRepeatedly(Invoke(
+      .WillRepeatedly(
           [](const Point& hit_point, face_t face, const void* additional_data) {
             EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
             return Vector(-2.0, 0.0, 0.0);
-          }));
+          });
 }
 
 ReferenceCounted<MockBasicGeometry> MakeBasicGeometry(
@@ -149,17 +147,17 @@ std::unique_ptr<Material> MakeMaterial(const Point& expected_hit_point,
 
   std::unique_ptr<MockMaterial> material = std::make_unique<MockMaterial>();
   EXPECT_CALL(*material, Evaluate(_, _, _))
-      .WillOnce(Invoke(
-          [expected_hit_point, expected_uv, bxdf = std::move(bxdf)](
-              const TextureCoordinates& texture_coordinates,
-              SpectralAllocator& spectral_allocator, BxdfAllocator& allocator) {
-            EXPECT_NEAR(expected_hit_point.x, texture_coordinates.p.x, 0.001);
-            EXPECT_NEAR(expected_hit_point.y, texture_coordinates.p.y, 0.001);
-            EXPECT_NEAR(expected_hit_point.z, texture_coordinates.p.z, 0.001);
-            EXPECT_NEAR(expected_uv[0], texture_coordinates.uv[0], 0.001);
-            EXPECT_NEAR(expected_uv[1], texture_coordinates.uv[1], 0.001);
-            return bxdf.get();
-          }));
+      .WillOnce([expected_hit_point, expected_uv, bxdf = std::move(bxdf)](
+                    const TextureCoordinates& texture_coordinates,
+                    SpectralAllocator& spectral_allocator,
+                    BxdfAllocator& allocator) {
+        EXPECT_NEAR(expected_hit_point.x, texture_coordinates.p.x, 0.001);
+        EXPECT_NEAR(expected_hit_point.y, texture_coordinates.p.y, 0.001);
+        EXPECT_NEAR(expected_hit_point.z, texture_coordinates.p.z, 0.001);
+        EXPECT_NEAR(expected_uv[0], texture_coordinates.uv[0], 0.001);
+        EXPECT_NEAR(expected_uv[1], texture_coordinates.uv[1], 0.001);
+        return bxdf.get();
+      });
 
   return material;
 }
@@ -227,8 +225,8 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
   std::unique_ptr<MockSpectrum> spectrum = std::make_unique<MockSpectrum>();
   MockEmissiveMaterial emissive_material;
   EXPECT_CALL(emissive_material, Evaluate(_, _))
-      .WillOnce(Invoke([&](const TextureCoordinates& texture_coordinates,
-                           SpectralAllocator& spectral_allocator) {
+      .WillOnce([&](const TextureCoordinates& texture_coordinates,
+                    SpectralAllocator& spectral_allocator) {
         EXPECT_EQ(0.0, texture_coordinates.uv[0]);
         EXPECT_EQ(0.0, texture_coordinates.uv[1]);
         EXPECT_EQ(0.0, texture_coordinates.du_dx);
@@ -236,7 +234,7 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
         EXPECT_EQ(0.0, texture_coordinates.dv_dx);
         EXPECT_EQ(0.0, texture_coordinates.dv_dy);
         return spectrum.get();
-      }));
+      });
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), nullptr, &emissive_material);
@@ -245,13 +243,12 @@ TEST(RayTracerTest, WithEmissiveMaterial) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -280,13 +277,12 @@ TEST(RayTracerTest, WithNestedEmissiveMaterial) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, GetMaterial(2u)).WillOnce(Return(nullptr));
   EXPECT_CALL(*geometry, GetEmissiveMaterial(_)).Times(0);
 
@@ -318,19 +314,18 @@ TEST(RayTracerTest, Minimal) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{std::nullopt, std::nullopt,
                                                     nullptr};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -367,19 +362,18 @@ TEST(RayTracerTest, WithTextureCoordinates) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{face, {1.0, 1.0}};
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return Geometry::TextureCoordinates{face, {1.0, 1.0}};
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{std::nullopt, std::nullopt,
                                                     nullptr};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -416,19 +410,18 @@ TEST(RayTracerTest, WithMaterial) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{std::nullopt, std::nullopt,
                                                     nullptr};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -465,19 +458,18 @@ TEST(RayTracerTest, WithIdentityNormal) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{Vector(-1.0, 0.0, 0.0),
                                                     std::nullopt, nullptr};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -514,19 +506,18 @@ TEST(RayTracerTest, WithNormal) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{Vector(-1.0, -1.0, 0.0),
                                                     std::nullopt, nullptr};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -558,7 +549,7 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsFalse(), Vector(-1.0, 0.0, 0.0)))
-      .WillOnce(Invoke(
+      .WillOnce(
           [&](const TextureCoordinates& texture_coordinates,
               const std::optional<NormalMap::Differentials>& differentials,
               const Vector& surface_normal) {
@@ -569,7 +560,7 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
             EXPECT_EQ(0.0, texture_coordinates.dv_dx);
             EXPECT_EQ(0.0, texture_coordinates.dv_dy);
             return surface_normal;
-          }));
+          });
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
@@ -578,19 +569,18 @@ TEST(RayTracerTest, WithIdentityNormalMap) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{std::nullopt, std::nullopt,
                                                     &normal_map};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -622,7 +612,7 @@ TEST(RayTracerTest, WithNormalMap) {
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsFalse(), Vector(-1.0, 0.0, 0.0)))
-      .WillOnce(Invoke(
+      .WillOnce(
           [&](const TextureCoordinates& texture_coordinates,
               const std::optional<NormalMap::Differentials>& differentials,
               const Vector& surface_normal) {
@@ -633,7 +623,7 @@ TEST(RayTracerTest, WithNormalMap) {
             EXPECT_EQ(0.0, texture_coordinates.dv_dx);
             EXPECT_EQ(0.0, texture_coordinates.dv_dy);
             return Vector(-1.0, -1.0, 0.0);
-          }));
+          });
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(1.0, 1.0, 1.0), material.get(), nullptr);
@@ -642,19 +632,18 @@ TEST(RayTracerTest, WithNormalMap) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(1.0, 1.0, 1.0), IsFalse(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return std::nullopt;
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return std::nullopt;
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{std::nullopt, std::nullopt,
                                                     &normal_map};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -686,7 +675,7 @@ TEST(RayTracerTest, WithXYDifferentials) {
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
-      .WillOnce(Invoke(
+      .WillOnce(
           [&](const TextureCoordinates& texture_coordinates,
               const std::optional<NormalMap::Differentials>& differentials,
               const Vector& surface_normal) {
@@ -696,7 +685,7 @@ TEST(RayTracerTest, WithXYDifferentials) {
             EXPECT_EQ(Vector(0.0, 0.0, 1.0), differentials->dp.first);
             EXPECT_EQ(Vector(0.0, 1.0, 0.0), differentials->dp.second);
             return Vector(-1.0, 0.0, 0.0);
-          }));
+          });
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
@@ -705,20 +694,19 @@ TEST(RayTracerTest, WithXYDifferentials) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(2.0, 0.0, 0.0), IsTrue(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
-                                                0.0,  0.0,        1.0};
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                            0.0,  0.0,        1.0};
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{std::nullopt, std::nullopt,
                                                     &normal_map};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -756,7 +744,7 @@ TEST(RayTracerTest, WithUVDifferentials) {
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
-      .WillOnce(Invoke(
+      .WillOnce(
           [&](const TextureCoordinates& texture_coordinates,
               const std::optional<NormalMap::Differentials>& differentials,
               const Vector& surface_normal) {
@@ -766,7 +754,7 @@ TEST(RayTracerTest, WithUVDifferentials) {
             EXPECT_EQ(Vector(1.0, 0.0, 1.0), differentials->dp.first);
             EXPECT_EQ(Vector(1.0, 1.0, 0.0), differentials->dp.second);
             return Vector(-1.0, 0.0, 0.0);
-          }));
+          });
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
@@ -775,22 +763,21 @@ TEST(RayTracerTest, WithUVDifferentials) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(2.0, 0.0, 0.0), IsTrue(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
-                                                0.0,  0.0,        1.0};
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                            0.0,  0.0,        1.0};
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{
             std::nullopt,
             {{Vector(1.0, 0.0, 1.0), Vector(1.0, 1.0, 0.0)}},
             &normal_map};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -828,7 +815,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
-      .WillOnce(Invoke(
+      .WillOnce(
           [&](const TextureCoordinates& texture_coordinates,
               const std::optional<NormalMap::Differentials>& differentials,
               const Vector& surface_normal) {
@@ -842,7 +829,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
             EXPECT_NEAR(1.0, differentials->dp.second.y, 0.001);
             EXPECT_NEAR(0.0, differentials->dp.second.z, 0.001);
             return Vector(-1.0, 0.0, 0.0);
-          }));
+          });
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
@@ -851,20 +838,19 @@ TEST(RayTracerTest, WithNormalAndXYDifferentialsNoRotation) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(2.0, 0.0, 0.0), IsTrue(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
-                                                0.0,  0.0,        1.0};
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                            0.0,  0.0,        1.0};
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{Vector(-1.0, 0.0, 0.0),
                                                     std::nullopt, &normal_map};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -903,7 +889,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map,
               Evaluate(_, IsTrue(), Normalize(Vector(-1.0, -1.0, -1.0))))
-      .WillOnce(Invoke(
+      .WillOnce(
           [&](const TextureCoordinates& texture_coordinates,
               const std::optional<NormalMap::Differentials>& differentials,
               const Vector& surface_normal) {
@@ -917,7 +903,7 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
             EXPECT_NEAR(+0.78867506, differentials->dp.second.y, 0.001);
             EXPECT_NEAR(-0.21132481, differentials->dp.second.z, 0.001);
             return Vector(-1.0, 0.0, 0.0);
-          }));
+          });
 
   ReferenceCounted<MockGeometry> geometry =
       MakeGeometry(ray, Point(2.0, 0.0, 0.0), material.get(), nullptr);
@@ -926,20 +912,19 @@ TEST(RayTracerTest, WithNormalAndXYDifferentials) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry,
               ComputeTextureCoordinates(Point(2.0, 0.0, 0.0), IsTrue(), 2u, _))
-      .WillOnce(
-          Invoke([](const Point& hit_point,
-                    const std::optional<Geometry::Differentials>& differentials,
-                    face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
-                                                0.0,  0.0,        1.0};
-          }));
+      .WillOnce([](const Point& hit_point,
+                   const std::optional<Geometry::Differentials>& differentials,
+                   face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                            0.0,  0.0,        1.0};
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{Vector(-1.0, -1.0, -1.0),
                                                     std::nullopt, &normal_map};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry));
@@ -991,7 +976,7 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
 
   MockNormalMap normal_map;
   EXPECT_CALL(normal_map, Evaluate(_, IsTrue(), Vector(-1.0, 0.0, 0.0)))
-      .WillOnce(Invoke(
+      .WillOnce(
           [&](const TextureCoordinates& texture_coordinates,
               const std::optional<NormalMap::Differentials>& differentials,
               const Vector& surface_normal) {
@@ -1001,7 +986,7 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
             EXPECT_EQ(Vector(2.0, 0.0, 2.0), differentials->dp.first);
             EXPECT_EQ(Vector(2.0, 2.0, 0.0), differentials->dp.second);
             return Vector(-1.0, 0.0, 0.0);
-          }));
+          });
 
   ReferenceCounted<MockGeometry> geometry = MakeGeometry(
       model_ray, expected_model_hit_point, material.get(), nullptr);
@@ -1010,22 +995,21 @@ TEST(RayTracerTest, WithUVDifferentialsWithTransform) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(expected_model_hit_point,
                                                    IsTrue(), 2u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
-                                                0.0,  0.0,        1.0};
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                            0.0,  0.0,        1.0};
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{
             std::nullopt,
             {{Vector(1.0, 0.0, 1.0), Vector(1.0, 1.0, 0.0)}},
             &normal_map};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry), model_to_world);
@@ -1081,22 +1065,21 @@ TEST(RayTracerTest, WithTransform) {
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, ComputeTextureCoordinates(expected_model_hit_point,
                                                    IsTrue(), 2u, _))
-      .WillOnce(Invoke(
-          [&](const Point& hit_point,
-              const std::optional<Geometry::Differentials>& differentials,
-              face_t face, const void* additional_data) {
-            EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
-            EXPECT_EQ(expected_model_dx_hit_point, differentials->dx);
-            EXPECT_EQ(expected_model_dy_hit_point, differentials->dy);
-            return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
-                                                0.0,  0.0,        1.0};
-          }));
+      .WillOnce([&](const Point& hit_point,
+                    const std::optional<Geometry::Differentials>& differentials,
+                    face_t face, const void* additional_data) {
+        EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
+        EXPECT_EQ(expected_model_dx_hit_point, differentials->dx);
+        EXPECT_EQ(expected_model_dy_hit_point, differentials->dy);
+        return Geometry::TextureCoordinates{face, {1.0, 1.0}, 1.0,
+                                            0.0,  0.0,        1.0};
+      });
   EXPECT_CALL(*geometry, ComputeShadingNormal(2u, _))
-      .WillOnce(Invoke([&](face_t face, const void* additional_data) {
+      .WillOnce([&](face_t face, const void* additional_data) {
         EXPECT_EQ(g_data, *static_cast<const uint32_t*>(additional_data));
         return Geometry::ComputeShadingNormalResult{std::nullopt, std::nullopt,
                                                     nullptr};
-      }));
+      });
 
   SceneObjects::Builder builder;
   builder.Add(std::move(geometry), model_to_world);

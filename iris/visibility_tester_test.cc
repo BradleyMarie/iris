@@ -21,7 +21,6 @@ namespace {
 
 using ::iris::geometry::MockBasicGeometry;
 using ::testing::_;
-using ::testing::Invoke;
 using ::testing::Return;
 
 TEST(VisibilityTesterTest, NoGeometry) {
@@ -45,13 +44,13 @@ TEST(VisibilityTesterTest, WithGeometry) {
       .WillOnce(
           Return(BoundingBox(Point(0.0, 0.0, 0.0), Point(0.0, 1.0, 2.0))));
   EXPECT_CALL(*geometry, Trace(ray, _, _, Geometry::ANY_HIT, _))
-      .WillRepeatedly(Invoke(
-          [&](const Ray& trace_ray, geometric_t minimum_distance,
-              geometric_t maximum_distance, Geometry::TraceMode trace_mode,
-              HitAllocator& hit_allocator) {
-            return &hit_allocator.Allocate(
-                nullptr, 1.0, static_cast<geometric_t>(0.0), 2, 3, false);
-          }));
+      .WillRepeatedly([&](const Ray& trace_ray, geometric_t minimum_distance,
+                          geometric_t maximum_distance,
+                          Geometry::TraceMode trace_mode,
+                          HitAllocator& hit_allocator) {
+        return &hit_allocator.Allocate(
+            nullptr, 1.0, static_cast<geometric_t>(0.0), 2, 3, false);
+      });
 
   SceneObjects::Builder builder;
   builder.Add(geometry);
