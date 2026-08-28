@@ -19,6 +19,10 @@ using ::iris::testing::GetSpectralAllocator;
 using ::testing::_;
 using ::testing::Return;
 
+TEST(MakeDisneyClearcoatBrdf, Null) {
+  EXPECT_FALSE(MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 0.0, 0.5));
+}
+
 TEST(DisneyClearcoatBrdfTest, SampleDiffuseZeroZ) {
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));

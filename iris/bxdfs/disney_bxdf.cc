@@ -375,6 +375,10 @@ DisneyDistribution MakeDisneyDistribution(geometric_t anisotropic,
 
 const Bxdf* MakeDisneyClearcoatBrdf(BxdfAllocator& bxdf_allocator,
                                     visual_t clearcoat, visual_t gloss) {
+  if (clearcoat <= static_cast<visual_t>(0.0)) {
+    return nullptr;
+  }
+
   return &bxdf_allocator.Allocate<DisneyClearcoatBrdf>(
       static_cast<visual_t>(0.25) *
           clearcoat,  // clearcoat is normalized to [0, 0.25]
