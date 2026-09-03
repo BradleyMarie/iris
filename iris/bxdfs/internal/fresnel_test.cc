@@ -85,6 +85,34 @@ TEST(FresnelConductor, AttenuateTransmittance) {
   EXPECT_EQ(nullptr, result);
 }
 
+TEST(SchlickFresnel, IsValid) {
+  EXPECT_FALSE(SchlickFresnel(nullptr, -1.0).IsValid());
+  EXPECT_FALSE(SchlickFresnel(nullptr, 0.0).IsValid());
+  EXPECT_TRUE(SchlickFresnel(nullptr, 1.0).IsValid());
+}
+
+TEST(SchlickFresnel, AttenuateTransmittance) {
+  MockReflector transmittance;
+  SchlickFresnel fresnel(nullptr, 1.0);
+  const Reflector* result = fresnel.AttenuateTransmittance(
+      transmittance, 1.0, GetSpectralAllocator());
+  EXPECT_EQ(nullptr, result);
+}
+
+TEST(SchlickFresnel, AttenuateReflectance) {
+  MockReflector color;
+  EXPECT_CALL(color, Reflectance(_)).WillRepeatedly(Return(0.5));
+
+  MockReflector reflector;
+  EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
+
+  SchlickFresnel fresnel(&color, 0.7);
+  const Reflector* result =
+      fresnel.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
+  ASSERT_TRUE(result);
+  EXPECT_NEAR(0.3609375, result->Reflectance(1.0), 0.001);
+}
+
 TEST(DisneyFresnel, IsValid) {
   EXPECT_FALSE(DisneyFresnel(nullptr, -0.5, 0.5, 1.0, 1.5).IsValid());
   EXPECT_FALSE(DisneyFresnel(nullptr, 0.5, -0.5, 1.0, 1.5).IsValid());

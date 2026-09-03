@@ -62,6 +62,24 @@ bool FresnelConductor::IsValid() const {
          eta_dielectric_ >= static_cast<visual_t>(1.0);
 }
 
+const Reflector* SchlickFresnel::AttenuateReflectance(
+    const Reflector& reflectance, visual_t cos_theta_incident,
+    SpectralAllocator& allocator) const {
+  const Reflector* unscaled =
+      allocator.Lerp(color_, &reflectance, SchlickWeight(cos_theta_incident));
+  return allocator.Scale(unscaled, scalar_);
+}
+
+const Reflector* SchlickFresnel::AttenuateTransmittance(
+    const Reflector& transmittance, visual_t cos_theta_incident,
+    SpectralAllocator& allocator) const {
+  return nullptr;
+}
+
+bool SchlickFresnel::IsValid() const {
+  return std::isfinite(scalar_) && scalar_ > static_cast<visual_t>(0.0);
+}
+
 const Reflector* DisneyFresnel::AttenuateReflectance(
     const Reflector& reflectance, visual_t cos_theta_incident,
     SpectralAllocator& allocator) const {

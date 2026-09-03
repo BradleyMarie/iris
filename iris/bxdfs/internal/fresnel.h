@@ -62,6 +62,25 @@ class FresnelConductor final : public Fresnel {
   const Spectrum* k_conductor_;
 };
 
+class SchlickFresnel final : public Fresnel {
+ public:
+  SchlickFresnel(const Reflector* color,
+                 visual_t scalar = static_cast<visual_t>(1.0))
+      : color_(color), scalar_(scalar) {}
+
+  const Reflector* AttenuateReflectance(
+      const Reflector& reflectance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override;
+  const Reflector* AttenuateTransmittance(
+      const Reflector& transmittance, visual_t cos_theta_incident,
+      SpectralAllocator& allocator) const override;
+  bool IsValid() const override;
+
+ private:
+  const Reflector* color_;
+  visual_t scalar_;
+};
+
 class DisneyFresnel final : public Fresnel {
  public:
   DisneyFresnel(const Reflector* color, visual_t metallic,
