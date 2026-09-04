@@ -24,6 +24,7 @@ using ::iris::bxdfs::MakeCompositeBxdf;
 using ::iris::bxdfs::MakeDisneyClearcoatBrdf;
 using ::iris::bxdfs::MakeDisneyDiffuseBrdf;
 using ::iris::bxdfs::MakeDisneyDiffuseRetroBrdf;
+using ::iris::bxdfs::MakeDisneyMetallicBrdf;
 using ::iris::bxdfs::MakeDisneySheenBrdf;
 using ::iris::bxdfs::MakeDisneySpecularBrdf;
 using ::iris::bxdfs::MakeDisneySpecularBtdf;
@@ -133,6 +134,23 @@ const Bxdf* DisneyMaterial::Evaluate(
       MakeDisneyClearcoatBrdf(bxdf_allocator, clearcoat, clearcoat_gloss);
 
   //
+  // Metallic BRDF
+  //
+
+  visual_t anisotropic = static_cast<visual_t>(0.0);
+  if (anisotropic_) {
+    anisotropic = anisotropic_->Evaluate(texture_coordinates);
+  }
+
+  visual_t roughness = static_cast<visual_t>(0.0);
+  if (roughness_) {
+    roughness = roughness_->Evaluate(texture_coordinates);
+  }
+
+  const Bxdf* metallic_brdf = MakeDisneyMetallicBrdf(
+      bxdf_allocator, color, metallic, anisotropic, roughness);
+
+  //
   // Specular BRDF
   //
 
@@ -149,16 +167,6 @@ const Bxdf* DisneyMaterial::Evaluate(
   visual_t eta_back = static_cast<visual_t>(0.0);
   if (eta_back_) {
     eta_back = eta_back_->Evaluate(texture_coordinates);
-  }
-
-  visual_t anisotropic = static_cast<visual_t>(0.0);
-  if (anisotropic_) {
-    anisotropic = anisotropic_->Evaluate(texture_coordinates);
-  }
-
-  visual_t roughness = static_cast<visual_t>(0.0);
-  if (roughness_) {
-    roughness = roughness_->Evaluate(texture_coordinates);
   }
 
   const Bxdf* specular_brdf =
@@ -258,9 +266,9 @@ const Bxdf* DisneyMaterial::Evaluate(
   // Assemble Result
   //
 
-  return MakeCompositeBxdf(bxdf_allocator, clearcoat_brdf, specular_brdf,
-                           specular_btdf, sheen_brdf, retro_brdf, diffuse_brdf,
-                           subsurface_brdf, diffuse_btdf);
+  return MakeCompositeBxdf(bxdf_allocator, clearcoat_brdf, metallic_brdf,
+                           specular_brdf, specular_btdf, sheen_brdf, retro_brdf,
+                           diffuse_brdf, subsurface_brdf, diffuse_btdf);
 }
 
 }  // namespace

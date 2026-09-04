@@ -33,6 +33,7 @@ using ::iris::bxdfs::internal::HalfAngle;
 using ::iris::bxdfs::internal::MicrofacetBrdf;
 using ::iris::bxdfs::internal::MicrofacetBtdf;
 using ::iris::bxdfs::internal::Reflect;
+using ::iris::bxdfs::internal::SchlickFresnel;
 using ::iris::bxdfs::internal::SchlickWeight;
 using ::iris::bxdfs::internal::SphericalDirection;
 using ::iris::bxdfs::internal::TrowbridgeReitzDistribution;
@@ -403,6 +404,21 @@ const Bxdf* MakeDisneyDiffuseRetroBrdf(BxdfAllocator& bxdf_allocator,
   }
 
   return &bxdf_allocator.Allocate<DisneyDiffuseRetroBrdf>(*color, roughness);
+}
+
+const Bxdf* MakeDisneyMetallicBrdf(BxdfAllocator& bxdf_allocator,
+                                   const Reflector* color, visual_t metallic,
+                                   geometric_t anisotropic,
+                                   geometric_t roughness) {
+  SchlickFresnel fresnel(color, metallic);
+  if (!fresnel.IsValid()) {
+    return nullptr;
+  }
+
+  return &bxdf_allocator
+              .Allocate<MicrofacetBrdf<DisneyDistribution, SchlickFresnel>>(
+                  *kPerfectReflector,
+                  MakeDisneyDistribution(anisotropic, roughness), fresnel);
 }
 
 const Bxdf* MakeDisneySpecularBrdf(BxdfAllocator& bxdf_allocator,

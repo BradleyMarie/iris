@@ -91,14 +91,6 @@ TEST(SchlickFresnel, IsValid) {
   EXPECT_TRUE(SchlickFresnel(nullptr, 1.0).IsValid());
 }
 
-TEST(SchlickFresnel, AttenuateTransmittance) {
-  MockReflector transmittance;
-  SchlickFresnel fresnel(nullptr, 1.0);
-  const Reflector* result = fresnel.AttenuateTransmittance(
-      transmittance, 1.0, GetSpectralAllocator());
-  EXPECT_EQ(nullptr, result);
-}
-
 TEST(SchlickFresnel, AttenuateReflectance) {
   MockReflector color;
   EXPECT_CALL(color, Reflectance(_)).WillRepeatedly(Return(0.5));
@@ -113,20 +105,20 @@ TEST(SchlickFresnel, AttenuateReflectance) {
   EXPECT_NEAR(0.3609375, result->Reflectance(1.0), 0.001);
 }
 
+TEST(SchlickFresnel, AttenuateTransmittance) {
+  MockReflector transmittance;
+  SchlickFresnel fresnel(nullptr, 1.0);
+  const Reflector* result = fresnel.AttenuateTransmittance(
+      transmittance, 1.0, GetSpectralAllocator());
+  EXPECT_EQ(nullptr, result);
+}
+
 TEST(DisneyFresnel, IsValid) {
   EXPECT_FALSE(DisneyFresnel(nullptr, -0.5, 0.5, 1.0, 1.5).IsValid());
   EXPECT_FALSE(DisneyFresnel(nullptr, 0.5, -0.5, 1.0, 1.5).IsValid());
   EXPECT_FALSE(DisneyFresnel(nullptr, 0.5, 0.5, -1.0, 1.5).IsValid());
   EXPECT_FALSE(DisneyFresnel(nullptr, 0.5, 0.5, 1.0, -1.5).IsValid());
   EXPECT_TRUE(DisneyFresnel(nullptr, 0.5, 0.5, 1.0, 1.5).IsValid());
-}
-
-TEST(DisneyFresnel, AttenuateTransmittance) {
-  MockReflector transmittance;
-  DisneyFresnel fresnel(nullptr, 0.5, 0.5, 1.0, 1.5);
-  const Reflector* result = fresnel.AttenuateTransmittance(
-      transmittance, 1.0, GetSpectralAllocator());
-  EXPECT_EQ(nullptr, result);
 }
 
 TEST(DisneyFresnel, AttenuateReflectance) {
@@ -140,7 +132,15 @@ TEST(DisneyFresnel, AttenuateReflectance) {
   const Reflector* result =
       fresnel.AttenuateReflectance(reflector, 0.5, GetSpectralAllocator());
   ASSERT_TRUE(result);
-  EXPECT_NEAR(0.297609, result->Reflectance(1.0), 0.001);
+  EXPECT_NEAR(0.03979, result->Reflectance(1.0), 0.001);
+}
+
+TEST(DisneyFresnel, AttenuateTransmittance) {
+  MockReflector transmittance;
+  DisneyFresnel fresnel(nullptr, 0.5, 0.5, 1.0, 1.5);
+  const Reflector* result = fresnel.AttenuateTransmittance(
+      transmittance, 1.0, GetSpectralAllocator());
+  EXPECT_EQ(nullptr, result);
 }
 
 }  // namespace

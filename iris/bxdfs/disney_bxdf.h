@@ -18,6 +18,11 @@ const Bxdf* MakeDisneyDiffuseRetroBrdf(BxdfAllocator& bxdf_allocator,
                                        const Reflector* color,
                                        visual_t roughness);
 
+const Bxdf* MakeDisneyMetallicBrdf(BxdfAllocator& bxdf_allocator,
+                                   const Reflector* color, visual_t metallic,
+                                   geometric_t anisotropic,
+                                   geometric_t roughness);
+
 const Bxdf* MakeDisneySpecularBrdf(BxdfAllocator& bxdf_allocator,
                                    const Reflector* color, visual_t metallic,
                                    visual_t specular_tint,

@@ -306,6 +306,15 @@ TEST(DisneyDiffuseRetroBrdfTest, Reflectance) {
   EXPECT_NEAR(result->Reflectance(1.0), 0.6366197, 0.001);
 }
 
+TEST(DisneyMetallicBrdfTest, Parameters) {
+  EXPECT_FALSE(
+      MakeDisneyMetallicBrdf(GetBxdfAllocator(), nullptr, -0.5, 0.0, 1.5));
+  EXPECT_FALSE(
+      MakeDisneyMetallicBrdf(GetBxdfAllocator(), nullptr, 0.0, 0.5, 1.5));
+  EXPECT_TRUE(
+      MakeDisneyMetallicBrdf(GetBxdfAllocator(), nullptr, 1.0, 0.0, 1.5));
+}
+
 TEST(DisneySpecularBrdfTest, Parameters) {
   EXPECT_FALSE(MakeDisneySpecularBrdf(GetBxdfAllocator(), nullptr, -0.5, 0.0,
                                       1.5, 1.0, 0.0, 0.5));
