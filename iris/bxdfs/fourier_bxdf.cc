@@ -359,9 +359,11 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
   Vector actual_incoming = Incoming(incoming);
   geometric mu_incoming = CosTheta(actual_incoming);
 
+  auto [u0, u1] = sampler.NextLinear2D();
+
   std::optional<geometric_t> mu_outgoing =
       SampleCatmullRom2D(elevational_samples_, coefficient_extents_,
-                         y_coefficients_, cdf_, mu_incoming, sampler.Next());
+                         y_coefficients_, cdf_, mu_incoming, u0);
   if (!mu_outgoing) {
     return std::nullopt;
   }
@@ -405,7 +407,7 @@ std::optional<Vector> FourierBxdf::SampleDiffuse(const Vector& incoming,
         gSampleCoefficients[coeff].first / static_cast<visual_t>(coeff);
   }
 
-  geometric_t phi_outgoing = SamplePhi(gSampleCoefficients, sampler.Next());
+  geometric_t phi_outgoing = SamplePhi(gSampleCoefficients, u1);
   geometric_t sin_squared_theta_outgoing =
       std::max(static_cast<geometric_t>(0.0),
                static_cast<geometric_t>(1.0) - *mu_outgoing * *mu_outgoing);

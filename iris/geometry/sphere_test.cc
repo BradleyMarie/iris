@@ -298,16 +298,24 @@ TEST(Sphere, SampleBySolidAngle) {
   ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
   MockRandom rng0;
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  Sampler sampler0(rng0);
+  {
+    InSequence s;
+    EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.5));
+    EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.5));
+  }
 
+  Sampler sampler0(rng0);
   EXPECT_TRUE(std::holds_alternative<std::monostate>(
       sphere->SampleBySolidAngle(Point(0.0, 0.0, 3.0), FRONT_FACE, sampler0)));
 
   MockRandom rng1;
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  Sampler sampler1(rng1);
+  {
+    InSequence s;
+    EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.5));
+    EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.5));
+  }
 
+  Sampler sampler1(rng1);
   EXPECT_TRUE(std::holds_alternative<std::monostate>(
       sphere->SampleBySolidAngle(Point(0.0, 0.0, 0.0), BACK_FACE, sampler1)));
 

@@ -49,7 +49,7 @@ class CompositeBxdf final : public Bxdf {
       const Vector& incoming, const std::optional<Differentials>& differentials,
       const Vector& surface_normal, Sampler& sampler,
       SpectralAllocator& allocator) const override {
-    size_t index = sampler.NextIndex(bxdfs_.size());
+    size_t index = sampler.NextIndex1D(bxdfs_.size());
 
     auto sample = bxdfs_[index]->Sample(incoming, differentials, surface_normal,
                                         sampler, allocator);
@@ -68,7 +68,7 @@ class CompositeBxdf final : public Bxdf {
       return std::nullopt;
     }
 
-    size_t index = sampler.NextIndex(num_diffuse_bxdfs_);
+    size_t index = sampler.NextIndex1D(num_diffuse_bxdfs_);
     return bxdfs_[index]->SampleDiffuse(incoming, surface_normal, sampler);
   }
 

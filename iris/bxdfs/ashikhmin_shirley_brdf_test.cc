@@ -21,6 +21,7 @@ using ::testing::Return;
 
 TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
   MockRandom rng;
+  EXPECT_CALL(rng, NextIndex(2)).WillRepeatedly(Return(0));
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.25));
   Sampler sampler(rng);
 
@@ -31,13 +32,14 @@ TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
   std::optional<Vector> sample = bxdf->SampleDiffuse(
       Normalize(Vector(1.0, 1.0, 1.0)), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
-  EXPECT_NEAR(sample->x, -0.60902, 0.001);
-  EXPECT_NEAR(sample->y, -0.60914, 0.001);
-  EXPECT_NEAR(sample->z, 0.50797, 0.001);
+  EXPECT_NEAR(sample->x, -0.59565, 0.001);
+  EXPECT_NEAR(sample->y, -0.59572, 0.001);
+  EXPECT_NEAR(sample->z, 0.53880, 0.001);
 }
 
 TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {
   MockRandom rng;
+  EXPECT_CALL(rng, NextIndex(2)).WillRepeatedly(Return(1));
   EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.51));
   Sampler sampler(rng);
 
@@ -48,9 +50,9 @@ TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {
   std::optional<Vector> sample = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
   ASSERT_TRUE(sample);
-  EXPECT_NEAR(sample->x, -0.9598, 0.001);
-  EXPECT_NEAR(sample->y, 0.01570, 0.001);
-  EXPECT_NEAR(sample->z, 0.27999, 0.001);
+  EXPECT_NEAR(sample->x, 0.01414, 0.001);
+  EXPECT_NEAR(sample->y, 0.01414, 0.001);
+  EXPECT_NEAR(sample->z, 0.99979, 0.001);
 }
 
 TEST(AshikhminShirleyBrdf, PdfBTDF) {

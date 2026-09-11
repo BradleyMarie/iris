@@ -46,7 +46,7 @@ Distribution1D::Distribution1D(std::vector<visual> values)
 
 geometric_t Distribution1D::SampleContinuous(Sampler& sampler, visual_t* pdf,
                                              size_t* offset) const {
-  geometric_t sample = sampler.Next();
+  geometric_t sample = sampler.NextLinear1D();
   auto iter =
       std::lower_bound(cdf_.begin() + 1, cdf_.end(),
                        static_cast<visual>(sample), std::less_equal<visual>());
@@ -83,8 +83,9 @@ visual_t Distribution1D::PdfContinuous(geometric_t sample) const {
 }
 
 size_t Distribution1D::SampleDiscrete(Sampler& sampler, visual_t* pdf) const {
-  auto iter = std::lower_bound(cdf_.begin() + 1, cdf_.end(), sampler.Next(),
-                               std::less_equal<visual>());
+  auto iter =
+      std::lower_bound(cdf_.begin() + 1, cdf_.end(), sampler.NextLinear1D(),
+                       std::less_equal<visual>());
   assert(iter != cdf_.end());
 
   size_t index = iter - cdf_.begin() - 1u;

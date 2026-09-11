@@ -160,7 +160,7 @@ std::optional<Bxdf::SpecularSample> SpecularDielectricBxdf::SampleSpecular(
   bool sample_brdf = reflectance_;
   visual_t pdf = static_cast<visual_t>(1.0);
   if (reflectance_ && transmittance_) {
-    sample_brdf = sampler.Next() < fresnel_reflectance;
+    sample_brdf = sampler.NextLinear1D() < fresnel_reflectance;
     pdf = sample_brdf ? fresnel_reflectance : fresnel_transmittance;
   }
 

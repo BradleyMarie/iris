@@ -62,13 +62,12 @@ const Reflector* SchlickFresnel(const Reflector* specular,
 std::optional<Vector> AshikhminShirleyBrdf::SampleDiffuse(
     const Vector& incoming, const Vector& surface_normal,
     Sampler& sampler) const {
-  if (sampler.NextIndex(2u)) {
+  if (sampler.NextIndex1D(2u)) {
     Vector outgoing = CosineSampleHemisphere(incoming.z, sampler);
     return outgoing.AlignWith(surface_normal);
   }
 
-  geometric_t u = sampler.Next();
-  geometric_t v = sampler.Next();
+  auto [u, v] = sampler.NextLinear2D();
   Vector half_angle = distribution_.Sample(incoming, u, v);
   return Reflect(incoming, half_angle);
 }

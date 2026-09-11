@@ -9,6 +9,7 @@
 #include "iris/float.h"
 #include "iris/image_sampler.h"
 #include "iris/image_samplers/internal/low_discrepancy_sequence.h"
+#include "iris/random.h"
 #include "iris/random_bitstream.h"
 
 namespace iris {
@@ -19,7 +20,8 @@ class LowDiscrepancyImageSampler final : public ImageSampler {
  public:
   LowDiscrepancyImageSampler(std::unique_ptr<LowDiscrepancySequence> sequence,
                              uint32_t desired_samples_per_pixel)
-      : sequence_(std::move(sequence)),
+      : rng_(*sequence),
+        sequence_(std::move(sequence)),
         desired_samples_per_pixel_(desired_samples_per_pixel),
         image_dimensions_(0, 0),
         pixel_(0, 0),
@@ -36,6 +38,25 @@ class LowDiscrepancyImageSampler final : public ImageSampler {
   std::unique_ptr<ImageSampler> Replicate() const override;
 
  private:
+  class LowDiscrepancyRandom final : public Random {
+   public:
+    LowDiscrepancyRandom(LowDiscrepancySequence& sequence)
+        : sequence_(sequence), rng_(nullptr) {}
+
+    // Random Interface
+    geometric NextGeometric() override;
+    void DiscardGeometric(size_t num_to_discard) override;
+    visual NextVisual() override;
+    size_t NextIndex(size_t size) override;
+
+    // Set RNG
+    void Set(RandomBitstream* rng);
+
+   private:
+    LowDiscrepancySequence& sequence_;
+    RandomBitstream* rng_;
+  } rng_;
+
   const std::unique_ptr<LowDiscrepancySequence> sequence_;
   const uint32_t desired_samples_per_pixel_;
   std::pair<size_t, size_t> image_dimensions_;

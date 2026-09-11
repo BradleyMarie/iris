@@ -7,26 +7,14 @@
 #include <utility>
 
 #include "iris/float.h"
-#include "iris/random.h"
 #include "iris/random_bitstream.h"
 
 namespace iris {
 namespace image_samplers {
 namespace internal {
 
-class LowDiscrepancySequence : public Random {
+class LowDiscrepancySequence {
  public:
-  // Random Interface
-  size_t NextIndex(size_t size) override final;
-  void DiscardIndex(size_t num_to_discard) override final;
-
-  geometric NextGeometric() override final;
-  void DiscardGeometric(size_t num_to_discard) override final;
-
-  visual NextVisual() override final;
-  void DiscardVisual(size_t num_to_discard) override final;
-
-  // LowDiscrepancySequence Interface
   virtual void Permute(RandomBitstream& rng) {}
 
   virtual bool Start(std::pair<size_t, size_t> image_dimensions,
@@ -39,6 +27,8 @@ class LowDiscrepancySequence : public Random {
   virtual visual_t SampleWeight(uint32_t desired_num_samples) const = 0;
 
   virtual std::unique_ptr<LowDiscrepancySequence> Duplicate() = 0;
+
+  virtual ~LowDiscrepancySequence() = default;
 };
 
 }  // namespace internal

@@ -1,7 +1,7 @@
 #ifndef _IRIS_SAMPLER_
 #define _IRIS_SAMPLER_
 
-#include <optional>
+#include <utility>
 
 #include "iris/float.h"
 #include "iris/random.h"
@@ -10,12 +10,14 @@ namespace iris {
 
 class Sampler {
  public:
-  Sampler(Random& rng) noexcept : rng_(rng), samples_(2) {}
+  Sampler(Random& rng) noexcept : rng_(rng), samples_1d_(2), samples_2d_(1) {}
 
   Sampler(Sampler&& from)
-      : rng_(from.rng_), next_(from.next_), samples_(from.samples_) {
-    from.samples_ = 0;
-    from.next_.reset();
+      : rng_(from.rng_),
+        samples_1d_(from.samples_1d_),
+        samples_2d_(from.samples_2d_) {
+    from.samples_1d_ = 0;
+    from.samples_2d_ = 0;
   }
 
   Sampler(const Sampler&) = delete;
@@ -23,20 +25,21 @@ class Sampler {
   Sampler& operator=(Sampler&& from) = delete;
 
   ~Sampler() {
-    if (samples_ != 0) {
-      rng_.DiscardGeometric(samples_);
+    if (samples_2d_) {
+      rng_.DiscardGeometric(2);
     }
   }
 
-  size_t NextIndex(size_t max);
-  geometric_t Next();
+  visual_t NextLinear1D();
+  size_t NextIndex1D(size_t max_value);
+
+  std::pair<geometric_t, geometric_t> NextLinear2D();
+  std::pair<geometric_t, geometric_t> NextPolar();
 
  private:
-  std::optional<geometric_t> NextImpl();
-
   Random& rng_;
-  std::optional<geometric_t> next_;
-  unsigned samples_;
+  unsigned samples_1d_;
+  unsigned samples_2d_;
 };
 
 }  // namespace iris

@@ -64,8 +64,8 @@ TEST(SpecularBxdfTest, SampleTransmittanceFront) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(1.0));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
@@ -87,8 +87,8 @@ TEST(SpecularBxdfTest, SampleTransmittanceBack) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(1.0));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
@@ -110,8 +110,8 @@ TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(1.0));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
@@ -161,8 +161,8 @@ TEST(SpecularBxdfTest, SampleReflectance) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.0));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
@@ -183,8 +183,8 @@ TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
   MockReflector reflector;
   MockReflector transmitter;
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.0));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,

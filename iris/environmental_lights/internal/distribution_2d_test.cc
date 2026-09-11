@@ -26,8 +26,8 @@ TEST(Distribution2D, Sample) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.125));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.5));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.125));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.5));
     Sampler sampler(rng);
 
     auto [u, v] = dist.Sample(sampler);
@@ -39,8 +39,8 @@ TEST(Distribution2D, Sample) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.75));
     Sampler sampler(rng);
 
     auto [u, v] = dist.Sample(sampler);
@@ -57,8 +57,8 @@ TEST(Distribution2D, SampleAll) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.125));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.5));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.125));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.5));
     Sampler sampler(rng);
 
     visual_t pdf;
@@ -74,8 +74,8 @@ TEST(Distribution2D, SampleAll) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.75));
     Sampler sampler(rng);
 
     visual_t pdf;

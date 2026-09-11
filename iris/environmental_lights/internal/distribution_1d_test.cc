@@ -22,16 +22,16 @@ TEST(Distribution1D, SampleContinuous) {
   Distribution1D dist(values);
 
   MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(1));
+  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
+  EXPECT_CALL(rng0, DiscardGeometric(2));
   Sampler sampler0(rng0);
 
   geometric_t value0 = dist.SampleContinuous(sampler0);
   EXPECT_EQ(0.25, value0);
 
   MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(1));
+  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
+  EXPECT_CALL(rng1, DiscardGeometric(2));
   Sampler sampler1(rng1);
 
   geometric_t value1 = dist.SampleContinuous(sampler1);
@@ -43,8 +43,8 @@ TEST(Distribution1D, SampleContinuousAll) {
   Distribution1D dist(values);
 
   MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(1));
+  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
+  EXPECT_CALL(rng0, DiscardGeometric(2));
   Sampler sampler0(rng0);
 
   visual_t pdf0;
@@ -55,8 +55,8 @@ TEST(Distribution1D, SampleContinuousAll) {
   EXPECT_EQ(1u, offset0);
 
   MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(1));
+  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
+  EXPECT_CALL(rng1, DiscardGeometric(2));
   Sampler sampler1(rng1);
 
   visual_t pdf1;
@@ -83,16 +83,16 @@ TEST(Distribution1D, SampleDiscrete) {
   Distribution1D dist(values);
 
   MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(1));
+  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
+  EXPECT_CALL(rng0, DiscardGeometric(2));
   Sampler sampler0(rng0);
 
   geometric_t value0 = dist.SampleDiscrete(sampler0);
   EXPECT_EQ(1u, value0);
 
   MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(1));
+  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
+  EXPECT_CALL(rng1, DiscardGeometric(2));
   Sampler sampler1(rng1);
 
   geometric_t value1 = dist.SampleDiscrete(sampler1);
@@ -104,8 +104,8 @@ TEST(Distribution1D, SampleDiscreteAll) {
   Distribution1D dist(values);
 
   MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(1));
+  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
+  EXPECT_CALL(rng0, DiscardGeometric(2));
   Sampler sampler0(rng0);
 
   visual_t pdf0;
@@ -114,8 +114,8 @@ TEST(Distribution1D, SampleDiscreteAll) {
   EXPECT_EQ(0.25, pdf0);
 
   MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(1));
+  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
+  EXPECT_CALL(rng1, DiscardGeometric(2));
   Sampler sampler1(rng1);
 
   visual_t pdf1;
@@ -140,8 +140,8 @@ TEST(Distribution1D, AllZeroSampleContinuous) {
   Distribution1D dist(values);
 
   MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.25));
-  EXPECT_CALL(rng0, DiscardGeometric(1));
+  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.25));
+  EXPECT_CALL(rng0, DiscardGeometric(2));
   Sampler sampler0(rng0);
 
   visual_t pdf0;
@@ -152,8 +152,8 @@ TEST(Distribution1D, AllZeroSampleContinuous) {
   EXPECT_EQ(1u, offset0);
 
   MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(1));
+  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
+  EXPECT_CALL(rng1, DiscardGeometric(2));
   Sampler sampler1(rng1);
 
   visual_t pdf1;
@@ -180,8 +180,8 @@ TEST(Distribution1D, AllZeroSampleDiscrete) {
   Distribution1D dist(values);
 
   MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.25));
-  EXPECT_CALL(rng0, DiscardGeometric(1));
+  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.25));
+  EXPECT_CALL(rng0, DiscardGeometric(2));
   Sampler sampler0(rng0);
 
   visual_t pdf0;
@@ -190,8 +190,8 @@ TEST(Distribution1D, AllZeroSampleDiscrete) {
   EXPECT_EQ(0.0, pdf0);
 
   MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(1));
+  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
+  EXPECT_CALL(rng1, DiscardGeometric(2));
   Sampler sampler1(rng1);
 
   visual_t pdf1;
@@ -219,8 +219,8 @@ TEST(Distribution1D, SampleContinuousWithZeroes) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.0));
-    EXPECT_CALL(rng, DiscardGeometric(1));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
+    EXPECT_CALL(rng, DiscardGeometric(2));
     Sampler sampler(rng);
 
     size_t offset;
@@ -233,8 +233,8 @@ TEST(Distribution1D, SampleContinuousWithZeroes) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, DiscardGeometric(1));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
+    EXPECT_CALL(rng, DiscardGeometric(2));
     Sampler sampler(rng);
 
     size_t offset;
@@ -247,8 +247,8 @@ TEST(Distribution1D, SampleContinuousWithZeroes) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.9999999));
-    EXPECT_CALL(rng, DiscardGeometric(1));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.9999999));
+    EXPECT_CALL(rng, DiscardGeometric(2));
     Sampler sampler(rng);
 
     size_t offset;
@@ -266,8 +266,8 @@ TEST(Distribution1D, SampleDiscreteWithZeroes) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.0));
-    EXPECT_CALL(rng, DiscardGeometric(1));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
+    EXPECT_CALL(rng, DiscardGeometric(2));
     Sampler sampler(rng);
 
     size_t sample = dist.SampleDiscrete(sampler);
@@ -278,8 +278,8 @@ TEST(Distribution1D, SampleDiscreteWithZeroes) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, DiscardGeometric(1));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
+    EXPECT_CALL(rng, DiscardGeometric(2));
     Sampler sampler(rng);
 
     size_t sample = dist.SampleDiscrete(sampler);
@@ -290,8 +290,8 @@ TEST(Distribution1D, SampleDiscreteWithZeroes) {
     InSequence sequence;
 
     MockRandom rng;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.9999999));
-    EXPECT_CALL(rng, DiscardGeometric(1));
+    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.9999999));
+    EXPECT_CALL(rng, DiscardGeometric(2));
     Sampler sampler(rng);
 
     size_t sample = dist.SampleDiscrete(sampler);

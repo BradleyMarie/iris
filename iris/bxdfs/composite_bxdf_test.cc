@@ -86,8 +86,8 @@ TEST(CompositeBxdfTest, SampleDiffuseNone) {
 
 TEST(CompositeBxdfTest, SampleDiffuse) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.55));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextIndex(2)).WillOnce(Return(1));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   MockBxdf bxdf0;
@@ -119,8 +119,8 @@ TEST(CompositeBxdfTest, SampleDiffuse) {
 
 TEST(CompositeBxdfTest, SampleAllDifuse) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextIndex(2)).WillOnce(Return(1));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   MockBxdf bxdf0;
@@ -147,8 +147,8 @@ TEST(CompositeBxdfTest, SampleAllDifuse) {
 
 TEST(CompositeBxdfTest, SampleAllSpecular) {
   MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
-  EXPECT_CALL(rng, DiscardGeometric(1));
+  EXPECT_CALL(rng, NextIndex(2)).WillOnce(Return(1));
+  EXPECT_CALL(rng, DiscardGeometric(2));
   Sampler sampler(rng);
 
   MockReflector reflector;

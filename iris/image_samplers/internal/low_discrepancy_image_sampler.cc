@@ -1,6 +1,8 @@
 #include "iris/image_samplers/internal/low_discrepancy_image_sampler.h"
 
+#undef NDEBUG  // Enable assertions at runtime
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -15,6 +17,31 @@
 namespace iris {
 namespace image_samplers {
 namespace internal {
+
+geometric LowDiscrepancyImageSampler::LowDiscrepancyRandom::NextGeometric() {
+  std::optional<geometric> next = sequence_.Next();
+  assert(next.has_value());
+  return *next;
+}
+
+void LowDiscrepancyImageSampler::LowDiscrepancyRandom::DiscardGeometric(
+    size_t num_to_discard) {
+  sequence_.Discard(num_to_discard);
+}
+
+visual LowDiscrepancyImageSampler::LowDiscrepancyRandom::NextVisual() {
+  return rng_->NextVisual();
+}
+
+size_t LowDiscrepancyImageSampler::LowDiscrepancyRandom::NextIndex(
+    size_t size) {
+  return rng_->NextIndex(size);
+}
+
+void LowDiscrepancyImageSampler::LowDiscrepancyRandom::Set(
+    RandomBitstream* rng) {
+  rng_ = rng;
+}
 
 void LowDiscrepancyImageSampler::StartPixel(
     std::pair<size_t, size_t> image_dimensions, std::pair<size_t, size_t> pixel,
@@ -56,8 +83,10 @@ std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
     return std::nullopt;
   }
 
-  geometric_t image_u = sequence_->NextGeometric();
-  geometric_t image_v = sequence_->NextGeometric();
+  rng_.Set(&rng);
+
+  geometric_t image_u = rng_.NextGeometric();
+  geometric_t image_v = rng_.NextGeometric();
   geometric_t image_u_dx = image_u + subpixel_size_x_;
   geometric_t image_v_dv = image_v + subpixel_size_y_;
   visual_t sample_weight = sequence_->SampleWeight(desired_samples_per_pixel_);
@@ -65,15 +94,15 @@ std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
 
   std::optional<std::array<geometric_t, 2>> lens_uv;
   if (sample_lens) {
-    lens_uv.emplace(std::array<geometric_t, 2>{sequence_->NextGeometric(),
-                                               sequence_->NextGeometric()});
+    lens_uv.emplace(
+        std::array<geometric_t, 2>{rng_.NextGeometric(), rng_.NextGeometric()});
   }
 
   return ImageSampler::Sample{{image_u, image_v},
                               {{image_u_dx, image_v_dv}},
                               lens_uv,
                               sample_weight,
-                              *sequence_};
+                              rng_};
 }
 
 std::unique_ptr<ImageSampler> LowDiscrepancyImageSampler::Replicate() const {

@@ -48,7 +48,7 @@ TEST(ImageEnvironmentalLight, SampleOne) {
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillRepeatedly(Return(0.25));
+  EXPECT_CALL(rng, NextVisual()).WillRepeatedly(Return(0.25));
   Sampler sampler(rng);
 
   std::optional<EnvironmentalLight::SampleResult> result =
@@ -72,7 +72,7 @@ TEST(ImageEnvironmentalLight, SampleTwo) {
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
   random::MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).WillRepeatedly(Return(0.75));
+  EXPECT_CALL(rng, NextVisual()).WillRepeatedly(Return(0.75));
   Sampler sampler(rng);
 
   std::optional<EnvironmentalLight::SampleResult> result =

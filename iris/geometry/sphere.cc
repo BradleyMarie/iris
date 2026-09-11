@@ -181,6 +181,7 @@ std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
   Vector to_center = center_ - origin;
   geometric_t distance_to_center_squared = DotProduct(to_center, to_center);
 
+  auto [u0, u1] = sampler.NextLinear2D();
   if (face == kFrontFace) {
     if (distance_to_center_squared < radius_squared_) {
       return std::variant<std::monostate, Point, Vector>();
@@ -196,13 +197,12 @@ std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
         std::sqrt(static_cast<geometric_t>(1.0) - sin_theta * sin_theta);
 
     geometric_t sampled_cos_theta =
-        std::lerp(cos_theta, static_cast<geometric_t>(1.0), sampler.Next());
+        std::lerp(cos_theta, static_cast<geometric_t>(1.0), u0);
     geometric_t sampled_sin_theta = std::sqrt(
         static_cast<geometric_t>(1.0) - sampled_cos_theta * sampled_cos_theta);
 
-    geometric_t sampled_phi =
-        std::lerp(-std::numbers::pi_v<geometric_t>,
-                  std::numbers::pi_v<geometric_t>, sampler.Next());
+    geometric_t sampled_phi = std::lerp(-std::numbers::pi_v<geometric_t>,
+                                        std::numbers::pi_v<geometric_t>, u1);
 
     return sampled_sin_theta *
                (std::cos(sampled_phi) * vx + std::sin(sampled_phi) * vy) +
@@ -213,9 +213,9 @@ std::variant<std::monostate, Point, Vector> Sphere::SampleBySolidAngle(
     return std::variant<std::monostate, Point, Vector>();
   }
 
-  geometric_t z = std::lerp(-radius_, radius_, sampler.Next());
+  geometric_t z = std::lerp(-radius_, radius_, u0);
   geometric_t phi = std::lerp(-std::numbers::pi_v<geometric_t>,
-                              std::numbers::pi_v<geometric_t>, sampler.Next());
+                              std::numbers::pi_v<geometric_t>, u1);
 
   geometric_t r = std::sqrt(
       std::max(static_cast<geometric_t>(0.0), radius_squared_ - z * z));

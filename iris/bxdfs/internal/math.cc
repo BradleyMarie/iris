@@ -56,34 +56,10 @@ visual_t FresnelDielectricReflectance(visual_t cos_theta_incident,
 }
 
 Vector CosineSampleHemisphere(geometric incoming_z, Sampler& sampler) {
-  geometric_t u = static_cast<geometric_t>(2.0) * sampler.Next() -
-                  static_cast<geometric_t>(1.0);
-  u = std::clamp(u, kMinValue, kMaxValue);
-
-  geometric_t v = static_cast<geometric_t>(2.0) * sampler.Next() -
-                  static_cast<geometric_t>(1.0);
-  v = std::clamp(v, kMinValue, kMaxValue);
-
-  if (u == static_cast<geometric_t>(0.0) &&
-      v == static_cast<geometric_t>(0.0)) {
-    return Vector(static_cast<geometric>(0.0), static_cast<geometric>(0.0),
-                  std::copysign(static_cast<geometric>(1.0), incoming_z));
-  }
-
-  geometric_t theta, radius;
-  if (std::abs(u) > std::abs(v)) {
-    radius = u;
-    theta = static_cast<geometric_t>(std::numbers::pi / 4.0) * (v / u);
-  } else {
-    radius = v;
-    theta = static_cast<geometric_t>(std::numbers::pi / 2.0) -
-            static_cast<geometric_t>(std::numbers::pi / 4.0) * (u / v);
-  }
-
+  auto [radius, theta] = sampler.NextPolar();
   geometric_t x = radius * std::cos(theta);
   geometric_t y = radius * std::sin(theta);
   geometric_t z = std::sqrt(static_cast<geometric_t>(1.0) - radius * radius);
-
   return Vector(x, y, std::copysign(z, incoming_z));
 }
 

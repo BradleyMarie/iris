@@ -375,9 +375,7 @@ std::optional<visual_t> Triangle::ComputeSurfaceArea(
 
 std::variant<std::monostate, Point, Vector> Triangle::SampleBySolidAngle(
     const Point& origin, face_t face, Sampler& sampler) const {
-  geometric_t u = sampler.Next();
-  geometric_t v = sampler.Next();
-
+  auto [u, v] = sampler.NextLinear2D();
   if (u + v > static_cast<geometric_t>(1.0)) {
     u = static_cast<geometric_t>(1.0) - u;
     v = static_cast<geometric_t>(1.0) - v;

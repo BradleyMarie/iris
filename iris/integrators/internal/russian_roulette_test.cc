@@ -17,7 +17,6 @@ using ::testing::Return;
 TEST(RussianRoulette, AboveThreshold) {
   MockRandom rng;
   EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
-  EXPECT_CALL(rng, DiscardVisual(1));
 
   RussianRoulette roulette(0.95, 100.0);
   EXPECT_NEAR(0.95, roulette.Evaluate(rng, 1.0).value(), 0.001);

@@ -60,8 +60,7 @@ std::optional<Vector> MicrofacetBrdf<M, F>::SampleDiffuse(
     return std::nullopt;
   }
 
-  geometric_t u = sampler.Next();
-  geometric_t v = sampler.Next();
+  auto [u, v] = sampler.NextLinear2D();
   Vector half_angle = distribution_.Sample(incoming, u, v);
 
   std::optional<Vector> outgoing = Reflect(incoming, half_angle);
@@ -176,8 +175,7 @@ std::optional<Vector> MicrofacetBtdf<M>::SampleDiffuse(
     return std::nullopt;
   }
 
-  geometric_t u = sampler.Next();
-  geometric_t v = sampler.Next();
+  auto [u, v] = sampler.NextLinear2D();
   Vector half_angle = distribution_.Sample(incoming, u, v);
   if (DotProduct(incoming, half_angle) < static_cast<geometric_t>(0.0)) {
     return std::nullopt;

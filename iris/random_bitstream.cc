@@ -1,5 +1,6 @@
 #include "iris/random_bitstream.h"
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <random>
@@ -24,16 +25,6 @@ class Generator {
 
 }  //  namespace
 
-size_t RandomBitstream::NextIndex(size_t size) {
-  Generator rng(*this);
-  std::uniform_int_distribution<size_t> distribution(0u, size);
-  return distribution(rng);
-}
-
-void RandomBitstream::DiscardIndex(size_t num_to_discard) {
-  // Do nothing
-}
-
 geometric RandomBitstream::NextGeometric() {
   Generator rng(*this);
   std::uniform_real_distribution<geometric> distribution(
@@ -52,8 +43,13 @@ visual RandomBitstream::NextVisual() {
   return distribution(rng);
 }
 
-void RandomBitstream::DiscardVisual(size_t num_to_discard) {
-  // Do nothing
+size_t RandomBitstream::NextIndex(size_t size) {
+  assert(size != 0);
+
+  Generator rng(*this);
+  std::uniform_int_distribution<size_t> distribution(static_cast<size_t>(0u),
+                                                     size - 1u);
+  return distribution(rng);
 }
 
 }  // namespace iris

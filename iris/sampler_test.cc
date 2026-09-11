@@ -9,6 +9,7 @@ namespace iris {
 namespace {
 
 using ::iris::random::MockRandom;
+using ::testing::InSequence;
 using ::testing::Return;
 
 TEST(Sampler, MoveConstruct) {
@@ -28,45 +29,48 @@ TEST(Sampler, NoSamples) {
   }
 }
 
-TEST(Sampler, OneSample) {
+TEST(Sampler, OneVisualSample) {
   MockRandom random;
-  EXPECT_CALL(random, NextGeometric());
-  EXPECT_CALL(random, DiscardGeometric(1));
+  EXPECT_CALL(random, NextVisual());
+  EXPECT_CALL(random, DiscardGeometric(2));
   {
     Sampler sampler(random);
-    sampler.Next();
+    sampler.NextLinear1D();
   }
 }
 
-TEST(Sampler, TwoSamples) {
+TEST(Sampler, OneIndexSample) {
+  MockRandom random;
+  EXPECT_CALL(random, NextIndex(1u));
+  EXPECT_CALL(random, DiscardGeometric(2));
+  {
+    Sampler sampler(random);
+    sampler.NextIndex1D(1u);
+  }
+}
+
+TEST(Sampler, NextLinear2D) {
   MockRandom random;
   EXPECT_CALL(random, NextGeometric()).Times(2);
   {
     Sampler sampler(random);
-    sampler.Next();
-    sampler.Next();
+    sampler.NextLinear2D();
   }
 }
 
-TEST(Sampler, TwoSamplesWithIndex) {
+TEST(Sampler, NextPolar) {
   MockRandom random;
-  EXPECT_CALL(random, NextGeometric()).Times(2);
   {
-    Sampler sampler(random);
-    sampler.NextIndex(2);
-    sampler.Next();
-    sampler.Next();
+    InSequence sequence;
+    EXPECT_CALL(random, NextGeometric()).WillOnce(Return(0.25));
+    EXPECT_CALL(random, NextGeometric()).WillOnce(Return(0.50));
   }
-}
 
-TEST(Sampler, NextIndex) {
-  MockRandom random;
-  EXPECT_CALL(random, NextGeometric()).WillOnce(Return(0.3));
-  EXPECT_CALL(random, DiscardGeometric(1));
   {
     Sampler sampler(random);
-    EXPECT_EQ(1u, sampler.NextIndex(4));
-    EXPECT_NEAR(0.2, sampler.Next(), 0.001);
+    auto [radius, theta] = sampler.NextPolar();
+    EXPECT_NEAR(-0.5, radius, 0.001);
+    EXPECT_NEAR(0.0, theta, 0.001);
   }
 }
 

@@ -123,17 +123,18 @@ std::optional<Vector> DisneyClearcoatBrdf::SampleDiffuse(
     return std::nullopt;
   }
 
+  auto [u0, u1] = sampler.NextLinear2D();
+
   visual_t alpha_squared = alpha_ * alpha_;
-  visual_t cos_theta = std::sqrt(std::max(
-      static_cast<visual_t>(0.0),
-      (static_cast<visual_t>(1.0) -
-       std::pow(alpha_squared, static_cast<visual_t>(1.0) - sampler.Next())) /
-          (static_cast<visual_t>(1.0) - alpha_squared)));
+  visual_t cos_theta = std::sqrt(
+      std::max(static_cast<visual_t>(0.0),
+               (static_cast<visual_t>(1.0) -
+                std::pow(alpha_squared, static_cast<visual_t>(1.0) - u0)) /
+                   (static_cast<visual_t>(1.0) - alpha_squared)));
   visual_t sin_theta =
       std::sqrt(std::max(static_cast<visual_t>(0.0),
                          static_cast<visual_t>(1.0) - cos_theta * cos_theta));
-  visual_t phi = static_cast<visual_t>(2.0) * std::numbers::pi_v<visual_t> *
-                 sampler.Next();
+  visual_t phi = static_cast<visual_t>(2.0) * std::numbers::pi_v<visual_t> * u1;
 
   Vector sampled = SphericalDirection(sin_theta, cos_theta, phi);
   Vector half_angle =

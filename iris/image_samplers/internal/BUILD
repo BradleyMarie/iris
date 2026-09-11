@@ -38,6 +38,7 @@ cc_library(
         ":low_discrepancy_sequence",
         "//iris:float",
         "//iris:image_sampler",
+        "//iris:random",
         "//iris:random_bitstream",
     ],
 )
@@ -56,23 +57,11 @@ cc_test(
 
 cc_library(
     name = "low_discrepancy_sequence",
-    srcs = ["low_discrepancy_sequence.cc"],
     hdrs = ["low_discrepancy_sequence.h"],
     deps = [
         "//iris:float",
         "//iris:random",
         "//iris:random_bitstream",
-    ],
-)
-
-cc_test(
-    name = "low_discrepancy_sequence_test",
-    srcs = ["low_discrepancy_sequence_test.cc"],
-    deps = [
-        ":low_discrepancy_sequence",
-        ":mock_low_discrepancy_sequence",
-        "@googletest//:gtest",
-        "@googletest//:gtest_main",
     ],
 )
 
