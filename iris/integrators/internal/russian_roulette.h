@@ -4,7 +4,7 @@
 #include <optional>
 
 #include "iris/float.h"
-#include "iris/random.h"
+#include "iris/sampler.h"
 
 namespace iris {
 namespace integrators {
@@ -15,7 +15,8 @@ class RussianRoulette final {
   RussianRoulette(visual_t maximum_continue_probability,
                   visual_t always_continue_path_throughput) noexcept;
 
-  std::optional<visual_t> Evaluate(Random& rng, visual_t path_throughput) const;
+  std::optional<visual_t> Evaluate(Sampler& sampler,
+                                   visual_t path_throughput) const;
 
  private:
   visual_t maximum_continue_probability_;

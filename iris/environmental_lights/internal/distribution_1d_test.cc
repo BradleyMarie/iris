@@ -5,35 +5,25 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/float.h"
-#include "iris/random/mock_random.h"
 #include "iris/sampler.h"
+#include "iris/testing/sampler.h"
 
 namespace iris {
 namespace environmental_lights {
 namespace internal {
 namespace {
 
-using ::iris::random::MockRandom;
-using ::testing::InSequence;
-using ::testing::Return;
+using ::iris::testing::MakeSampler;
 
 TEST(Distribution1D, SampleContinuous) {
   std::vector<visual> values = {1.0, 2.0, 3.0, 2.0};
   Distribution1D dist(values);
 
-  MockRandom rng0;
-  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  Sampler sampler0(rng0);
-
+  Sampler sampler0 = MakeSampler({0.125}, {});
   geometric_t value0 = dist.SampleContinuous(sampler0);
   EXPECT_EQ(0.25, value0);
 
-  MockRandom rng1;
-  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  Sampler sampler1(rng1);
-
+  Sampler sampler1 = MakeSampler({0.0625}, {});
   geometric_t value1 = dist.SampleContinuous(sampler1);
   EXPECT_EQ(0.125, value1);
 }
@@ -41,11 +31,7 @@ TEST(Distribution1D, SampleContinuous) {
 TEST(Distribution1D, SampleContinuousAll) {
   std::vector<visual> values = {1.0, 2.0, 3.0, 2.0};
   Distribution1D dist(values);
-
-  MockRandom rng0;
-  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  Sampler sampler0(rng0);
+  Sampler sampler0 = MakeSampler({0.125}, {});
 
   visual_t pdf0;
   size_t offset0;
@@ -54,11 +40,7 @@ TEST(Distribution1D, SampleContinuousAll) {
   EXPECT_EQ(1.0, pdf0);
   EXPECT_EQ(1u, offset0);
 
-  MockRandom rng1;
-  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  Sampler sampler1(rng1);
-
+  Sampler sampler1 = MakeSampler({0.0625}, {});
   visual_t pdf1;
   size_t offset1;
   geometric_t value1 = dist.SampleContinuous(sampler1, &pdf1, &offset1);
@@ -82,19 +64,11 @@ TEST(Distribution1D, SampleDiscrete) {
   std::vector<visual> values = {1.0, 2.0, 3.0, 2.0};
   Distribution1D dist(values);
 
-  MockRandom rng0;
-  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  Sampler sampler0(rng0);
-
+  Sampler sampler0 = MakeSampler({0.125}, {});
   geometric_t value0 = dist.SampleDiscrete(sampler0);
   EXPECT_EQ(1u, value0);
 
-  MockRandom rng1;
-  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  Sampler sampler1(rng1);
-
+  Sampler sampler1 = MakeSampler({0.0625}, {});
   geometric_t value1 = dist.SampleDiscrete(sampler1);
   EXPECT_EQ(0u, value1);
 }
@@ -103,21 +77,13 @@ TEST(Distribution1D, SampleDiscreteAll) {
   std::vector<visual> values = {1.0, 2.0, 3.0, 2.0};
   Distribution1D dist(values);
 
-  MockRandom rng0;
-  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.125));
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  Sampler sampler0(rng0);
-
+  Sampler sampler0 = MakeSampler({0.125}, {});
   visual_t pdf0;
   geometric_t value0 = dist.SampleDiscrete(sampler0, &pdf0);
   EXPECT_EQ(1u, value0);
   EXPECT_EQ(0.25, pdf0);
 
-  MockRandom rng1;
-  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  Sampler sampler1(rng1);
-
+  Sampler sampler1 = MakeSampler({0.0625}, {});
   visual_t pdf1;
   geometric_t value1 = dist.SampleDiscrete(sampler1, &pdf1);
   EXPECT_EQ(0u, value1);
@@ -139,11 +105,7 @@ TEST(Distribution1D, AllZeroSampleContinuous) {
   std::vector<visual> values = {0.0, 0.0, 0.0, 0.0};
   Distribution1D dist(values);
 
-  MockRandom rng0;
-  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.25));
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  Sampler sampler0(rng0);
-
+  Sampler sampler0 = MakeSampler({0.25}, {});
   visual_t pdf0;
   size_t offset0;
   geometric_t value0 = dist.SampleContinuous(sampler0, &pdf0, &offset0);
@@ -151,11 +113,7 @@ TEST(Distribution1D, AllZeroSampleContinuous) {
   EXPECT_EQ(0.0, pdf0);
   EXPECT_EQ(1u, offset0);
 
-  MockRandom rng1;
-  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  Sampler sampler1(rng1);
-
+  Sampler sampler1 = MakeSampler({0.0625}, {});
   visual_t pdf1;
   size_t offset1;
   geometric_t value1 = dist.SampleContinuous(sampler1, &pdf1, &offset1);
@@ -179,21 +137,13 @@ TEST(Distribution1D, AllZeroSampleDiscrete) {
   std::vector<visual> values = {0.0, 0.0, 0.0, 0.0};
   Distribution1D dist(values);
 
-  MockRandom rng0;
-  EXPECT_CALL(rng0, NextVisual()).WillOnce(Return(0.25));
-  EXPECT_CALL(rng0, DiscardGeometric(2));
-  Sampler sampler0(rng0);
-
+  Sampler sampler0 = MakeSampler({0.25}, {});
   visual_t pdf0;
   geometric_t value0 = dist.SampleDiscrete(sampler0, &pdf0);
   EXPECT_EQ(1u, value0);
   EXPECT_EQ(0.0, pdf0);
 
-  MockRandom rng1;
-  EXPECT_CALL(rng1, NextVisual()).WillOnce(Return(0.0625));
-  EXPECT_CALL(rng1, DiscardGeometric(2));
-  Sampler sampler1(rng1);
-
+  Sampler sampler1 = MakeSampler({0.0625}, {});
   visual_t pdf1;
   geometric_t value1 = dist.SampleDiscrete(sampler1, &pdf1);
   EXPECT_EQ(0u, value1);
@@ -215,88 +165,38 @@ TEST(Distribution1D, SampleContinuousWithZeroes) {
   std::vector<visual> values = {0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0};
   Distribution1D dist(values);
 
-  {
-    InSequence sequence;
+  Sampler sampler0 = MakeSampler({0.0}, {});
+  size_t offset;
+  geometric_t sample0 = dist.SampleContinuous(sampler0, nullptr, &offset);
+  EXPECT_EQ(0.125, sample0);
+  EXPECT_EQ(1u, offset);
 
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
-    EXPECT_CALL(rng, DiscardGeometric(2));
-    Sampler sampler(rng);
+  Sampler sampler1 = MakeSampler({0.25}, {});
+  geometric_t sample1 = dist.SampleContinuous(sampler1, nullptr, &offset);
+  EXPECT_EQ(0.375, sample1);
+  EXPECT_EQ(3u, offset);
 
-    size_t offset;
-    geometric_t sample = dist.SampleContinuous(sampler, nullptr, &offset);
-    EXPECT_EQ(0.125, sample);
-    EXPECT_EQ(1u, offset);
-  }
-
-  {
-    InSequence sequence;
-
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, DiscardGeometric(2));
-    Sampler sampler(rng);
-
-    size_t offset;
-    geometric_t sample = dist.SampleContinuous(sampler, nullptr, &offset);
-    EXPECT_EQ(0.375, sample);
-    EXPECT_EQ(3u, offset);
-  }
-
-  {
-    InSequence sequence;
-
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.9999999));
-    EXPECT_CALL(rng, DiscardGeometric(2));
-    Sampler sampler(rng);
-
-    size_t offset;
-    geometric_t sample = dist.SampleContinuous(sampler, nullptr, &offset);
-    EXPECT_NEAR(0.875, sample, 0.001);
-    EXPECT_EQ(6u, offset);
-  }
+  Sampler sampler2 = MakeSampler({0.9999999}, {});
+  geometric_t sample2 = dist.SampleContinuous(sampler2, nullptr, &offset);
+  EXPECT_NEAR(0.875, sample2, 0.001);
+  EXPECT_EQ(6u, offset);
 }
 
 TEST(Distribution1D, SampleDiscreteWithZeroes) {
   std::vector<visual> values = {0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0};
   Distribution1D dist(values);
 
-  {
-    InSequence sequence;
+  Sampler sampler0 = MakeSampler({0.0}, {});
+  size_t sample0 = dist.SampleDiscrete(sampler0);
+  EXPECT_EQ(1u, sample0);
 
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
-    EXPECT_CALL(rng, DiscardGeometric(2));
-    Sampler sampler(rng);
+  Sampler sampler1 = MakeSampler({0.25}, {});
+  size_t sample1 = dist.SampleDiscrete(sampler1);
+  EXPECT_EQ(3u, sample1);
 
-    size_t sample = dist.SampleDiscrete(sampler);
-    EXPECT_EQ(1u, sample);
-  }
-
-  {
-    InSequence sequence;
-
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, DiscardGeometric(2));
-    Sampler sampler(rng);
-
-    size_t sample = dist.SampleDiscrete(sampler);
-    EXPECT_EQ(3u, sample);
-  }
-
-  {
-    InSequence sequence;
-
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.9999999));
-    EXPECT_CALL(rng, DiscardGeometric(2));
-    Sampler sampler(rng);
-
-    size_t sample = dist.SampleDiscrete(sampler);
-    EXPECT_EQ(6u, sample);
-  }
+  Sampler sampler2 = MakeSampler({0.9999999}, {});
+  size_t sample2 = dist.SampleDiscrete(sampler2);
+  EXPECT_EQ(6u, sample2);
 }
 
 }  // namespace

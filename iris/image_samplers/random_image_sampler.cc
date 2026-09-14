@@ -86,7 +86,7 @@ std::optional<ImageSampler::Sample> RandomImageSampler::NextSample(
                               {{image_u_dx, image_v_dv}},
                               lens_uv,
                               sample_weight_,
-                              rng};
+                              nullptr};
 }
 
 std::unique_ptr<ImageSampler> RandomImageSampler::Replicate() const {

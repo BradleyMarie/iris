@@ -42,7 +42,7 @@ cc_library(
     hdrs = ["russian_roulette.h"],
     deps = [
         "//iris:float",
-        "//iris:random",
+        "//iris:sampler",
     ],
 )
 
@@ -52,7 +52,7 @@ cc_test(
     deps = [
         ":russian_roulette",
         "//iris:float",
-        "//iris/random:mock_random",
+        "//iris/testing:sampler",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -67,7 +67,6 @@ cc_library(
         "//iris:float",
         "//iris:light",
         "//iris:light_sampler",
-        "//iris:random",
         "//iris:ray",
         "//iris:ray_tracer",
         "//iris:sampler",
@@ -94,10 +93,10 @@ cc_test(
         "//iris:vector",
         "//iris/bxdfs:mock_bxdf",
         "//iris/lights:mock_light",
-        "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
         "//iris/spectra:mock_spectrum",
         "//iris/testing:light_sampler",
+        "//iris/testing:sampler",
         "//iris/testing:spectral_allocator",
         "//iris/testing:visibility_tester",
         "//iris/testing:visible_light",
@@ -135,8 +134,8 @@ cc_test(
         "//iris:sampler",
         "//iris:vector",
         "//iris/bxdfs:mock_bxdf",
-        "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/testing:sampler",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest",
         "@googletest//:gtest_main",

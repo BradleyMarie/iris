@@ -6,7 +6,7 @@
 #include "iris/light_sample_allocator.h"
 #include "iris/light_scene.h"
 #include "iris/point.h"
-#include "iris/random.h"
+#include "iris/sampler.h"
 
 namespace iris {
 namespace light_scenes {
@@ -14,7 +14,8 @@ namespace light_scenes {
 class MockLightScene final : public LightScene {
  public:
   MOCK_METHOD(LightSample*, Sample,
-              (const Point&, Random&, LightSampleAllocator&), (const override));
+              (const Point&, Sampler&, LightSampleAllocator&),
+              (const override));
 };
 
 }  // namespace light_scenes

@@ -4,19 +4,19 @@
 #include <variant>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
@@ -39,12 +39,9 @@ TEST(SpecularBxdfTest, Null) {
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceNoReflectance) {
-  MockReflector reflector;
-  MockReflector transmitter;
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
+  MockReflector transmitter;
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), nullptr,
                                                 &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
@@ -61,13 +58,10 @@ TEST(SpecularBxdfTest, SampleTransmittanceNoReflectance) {
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceFront) {
+  Sampler sampler = MakeSampler({1.0}, {});
+
   MockReflector reflector;
   MockReflector transmitter;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
-
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
                                                 &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
@@ -84,13 +78,10 @@ TEST(SpecularBxdfTest, SampleTransmittanceFront) {
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceBack) {
+  Sampler sampler = MakeSampler({1.0}, {});
+
   MockReflector reflector;
   MockReflector transmitter;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
-
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
                                                 &transmitter, 1.5, 1.0);
   auto result = std::get<Bxdf::SpecularSample>(
@@ -107,13 +98,10 @@ TEST(SpecularBxdfTest, SampleTransmittanceBack) {
 }
 
 TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
+  Sampler sampler = MakeSampler({1.0}, {});
+
   MockReflector reflector;
   MockReflector transmitter;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(1.0));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
-
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
                                                 &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(
@@ -137,12 +125,9 @@ TEST(SpecularBxdfTest, SampleTransmittanceWithDerivatives) {
 }
 
 TEST(SpecularBxdfTest, SampleReflectanceNoTransmittance) {
-  MockReflector reflector;
-  MockReflector transmitter;
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
+  MockReflector reflector;
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
                                                 nullptr, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
@@ -158,13 +143,10 @@ TEST(SpecularBxdfTest, SampleReflectanceNoTransmittance) {
 }
 
 TEST(SpecularBxdfTest, SampleReflectance) {
+  Sampler sampler = MakeSampler({0.0}, {});
+
   MockReflector reflector;
   MockReflector transmitter;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
-
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
                                                 &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(
@@ -180,13 +162,10 @@ TEST(SpecularBxdfTest, SampleReflectance) {
 }
 
 TEST(SpecularBxdfTest, SampleReflectanceWithDerivatives) {
+  Sampler sampler = MakeSampler({0.0}, {});
+
   MockReflector reflector;
   MockReflector transmitter;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.0));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
-
   const Bxdf* bxdf = MakeSpecularDielectricBxdf(GetBxdfAllocator(), &reflector,
                                                 &transmitter, 1.0, 1.5);
   auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(

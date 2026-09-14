@@ -22,7 +22,8 @@ class VisibleLight final : public Light {
   VisibleLight();
 
   MOCK_METHOD((std::optional<SampleResult>), Sample,
-              (const HitPoint&, Sampler, VisibilityTester&, SpectralAllocator&),
+              (const HitPoint&, Sampler&, VisibilityTester&,
+               SpectralAllocator&),
               (const override));
   MOCK_METHOD(const Spectrum*, Emission,
               (const Ray&, VisibilityTester&, SpectralAllocator&, visual_t*),

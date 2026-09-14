@@ -18,24 +18,10 @@ namespace iris {
 namespace image_samplers {
 namespace internal {
 
-geometric LowDiscrepancyImageSampler::LowDiscrepancyRandom::NextGeometric() {
+geometric LowDiscrepancyImageSampler::LowDiscrepancyRandom::Next() {
   std::optional<geometric> next = sequence_.Next();
   assert(next.has_value());
   return *next;
-}
-
-void LowDiscrepancyImageSampler::LowDiscrepancyRandom::DiscardGeometric(
-    size_t num_to_discard) {
-  sequence_.Discard(num_to_discard);
-}
-
-visual LowDiscrepancyImageSampler::LowDiscrepancyRandom::NextVisual() {
-  return rng_->NextVisual();
-}
-
-size_t LowDiscrepancyImageSampler::LowDiscrepancyRandom::NextIndex(
-    size_t size) {
-  return rng_->NextIndex(size);
 }
 
 void LowDiscrepancyImageSampler::LowDiscrepancyRandom::Set(
@@ -85,8 +71,8 @@ std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
 
   rng_.Set(&rng);
 
-  geometric_t image_u = rng_.NextGeometric();
-  geometric_t image_v = rng_.NextGeometric();
+  geometric_t image_u = rng_.Next();
+  geometric_t image_v = rng_.Next();
   geometric_t image_u_dx = image_u + subpixel_size_x_;
   geometric_t image_v_dv = image_v + subpixel_size_y_;
   visual_t sample_weight = sequence_->SampleWeight(desired_samples_per_pixel_);
@@ -94,15 +80,14 @@ std::optional<ImageSampler::Sample> LowDiscrepancyImageSampler::NextSample(
 
   std::optional<std::array<geometric_t, 2>> lens_uv;
   if (sample_lens) {
-    lens_uv.emplace(
-        std::array<geometric_t, 2>{rng_.NextGeometric(), rng_.NextGeometric()});
+    lens_uv.emplace(std::array<geometric_t, 2>{rng_.Next(), rng_.Next()});
   }
 
   return ImageSampler::Sample{{image_u, image_v},
                               {{image_u_dx, image_v_dv}},
                               lens_uv,
                               sample_weight,
-                              rng_};
+                              &rng_};
 }
 
 std::unique_ptr<ImageSampler> LowDiscrepancyImageSampler::Replicate() const {

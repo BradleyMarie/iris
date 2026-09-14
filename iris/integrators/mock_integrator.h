@@ -7,9 +7,9 @@
 #include "iris/albedo_matcher.h"
 #include "iris/integrator.h"
 #include "iris/light_sampler.h"
-#include "iris/random.h"
 #include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
+#include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
 #include "iris/visibility_tester.h"
@@ -22,7 +22,7 @@ class MockIntegrator final : public Integrator {
   MOCK_METHOD(const Spectrum*, Integrate,
               (RayDifferential, RayTracer&, LightSampler&, VisibilityTester&,
                const AlbedoMatcher& albedo_matcher, SpectralAllocator&,
-               Random&),
+               Sampler&),
               (override));
   MOCK_METHOD(std::unique_ptr<Integrator>, Duplicate, (), (const override));
 };

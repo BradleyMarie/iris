@@ -26,7 +26,7 @@ class PointLight final : public Light {
       : spectrum_(std::move(spectrum)), location_(location) {}
 
   std::optional<SampleResult> Sample(
-      const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
+      const HitPoint& hit_point, Sampler& sampler, VisibilityTester& tester,
       SpectralAllocator& allocator) const override;
 
   const Spectrum* Emission(const Ray& to_light, VisibilityTester& tester,
@@ -42,7 +42,7 @@ class PointLight final : public Light {
 };
 
 std::optional<Light::SampleResult> PointLight::Sample(
-    const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
+    const HitPoint& hit_point, Sampler& sampler, VisibilityTester& tester,
     SpectralAllocator& allocator) const {
   if (!spectrum_) {
     return std::nullopt;

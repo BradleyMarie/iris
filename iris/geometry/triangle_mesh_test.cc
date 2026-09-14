@@ -20,11 +20,11 @@
 #include "iris/normal_map.h"
 #include "iris/normal_maps/mock_normal_map.h"
 #include "iris/point.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/testing/hit_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/texture_coordinates.h"
 #include "iris/vector.h"
 
@@ -35,11 +35,11 @@ namespace {
 using ::iris::emissive_materials::MockEmissiveMaterial;
 using ::iris::materials::MockMaterial;
 using ::iris::normal_maps::MockNormalMap;
-using ::iris::random::MockRandom;
 using ::iris::testing::AdditionalData;
 using ::iris::testing::BackFace;
 using ::iris::testing::FrontFace;
 using ::iris::testing::MakeHitAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::InSequence;
 using ::testing::IsEmpty;
 using ::testing::Return;
@@ -819,63 +819,37 @@ TEST(Triangle, ComputeSurfaceArea) {
 TEST(Triangle, SampleBySolidAngle) {
   ReferenceCounted<Geometry> triangle = MakeSimpleTriangle();
 
-  MockRandom rng0;
-  EXPECT_CALL(rng0, NextGeometric()).WillRepeatedly(Return(0.0));
-
-  Sampler sampler0(rng0);
+  Sampler sampler0 = MakeSampler({}, {{0.0, 0.0}});
   std::variant<std::monostate, Point, Vector> sample0 =
       triangle->SampleBySolidAngle(Point(-1.0, -1.0, -1.0), FRONT_FACE,
                                    sampler0);
   EXPECT_EQ(Point(0.0, 0.0, 0.0), std::get<Point>(sample0));
 
-  MockRandom rng1;
-  EXPECT_CALL(rng1, NextGeometric()).WillRepeatedly(Return(1.0));
-
-  Sampler sampler1(rng1);
+  Sampler sampler1 = MakeSampler({}, {{1.0, 1.0}});
   std::variant<std::monostate, Point, Vector> sample1 =
       triangle->SampleBySolidAngle(Point(-1.0, -1.0, -1.0), FRONT_FACE,
                                    sampler1);
   EXPECT_EQ(Point(0.0, 0.0, 0.0), std::get<Point>(sample1));
 
-  MockRandom rng2;
-  {
-    InSequence s;
-    EXPECT_CALL(rng2, NextGeometric()).WillOnce(Return(1.0));
-    EXPECT_CALL(rng2, NextGeometric()).WillOnce(Return(0.0));
-  }
-
-  Sampler sampler2(rng2);
+  Sampler sampler2 = MakeSampler({}, {{1.0, 0.0}});
   std::variant<std::monostate, Point, Vector> sample2 =
       triangle->SampleBySolidAngle(Point(-1.0, -1.0, -1.0), FRONT_FACE,
                                    sampler2);
   EXPECT_EQ(Point(1.0, 0.0, 0.0), std::get<Point>(sample2));
 
-  MockRandom rng3;
-  {
-    InSequence s;
-    EXPECT_CALL(rng3, NextGeometric()).WillOnce(Return(0.0));
-    EXPECT_CALL(rng3, NextGeometric()).WillOnce(Return(1.0));
-  }
-
-  Sampler sampler3(rng3);
+  Sampler sampler3 = MakeSampler({}, {{0.0, 1.0}});
   std::variant<std::monostate, Point, Vector> sample3 =
       triangle->SampleBySolidAngle(Point(-1.0, -1.0, -1.0), FRONT_FACE,
                                    sampler3);
   EXPECT_EQ(Point(0.0, 1.0, 0.0), std::get<Point>(sample3));
 
-  MockRandom rng4;
-  EXPECT_CALL(rng4, NextGeometric()).WillRepeatedly(Return(0.25));
-
-  Sampler sampler4(rng4);
+  Sampler sampler4 = MakeSampler({}, {{0.25, 0.25}});
   std::variant<std::monostate, Point, Vector> sample4 =
       triangle->SampleBySolidAngle(Point(-1.0, -1.0, -1.0), FRONT_FACE,
                                    sampler4);
   EXPECT_EQ(Point(0.25, 0.25, 0.0), std::get<Point>(sample4));
 
-  MockRandom rng5;
-  EXPECT_CALL(rng5, NextGeometric()).WillRepeatedly(Return(0.75));
-
-  Sampler sampler5(rng5);
+  Sampler sampler5 = MakeSampler({}, {{0.75, 0.75}});
   std::variant<std::monostate, Point, Vector> sample5 =
       triangle->SampleBySolidAngle(Point(-1.0, -1.0, -1.0), FRONT_FACE,
                                    sampler5);

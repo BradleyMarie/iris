@@ -10,13 +10,13 @@
 #include "iris/light.h"
 #include "iris/lights/mock_light.h"
 #include "iris/position_error.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/ray_tracer.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/spectrum.h"
 #include "iris/testing/light_sampler.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
 #include "iris/testing/visible_light.h"
@@ -33,12 +33,12 @@ using ::iris::integrators::internal::internal::FromLightSample;
 using ::iris::integrators::internal::internal::FromLightSampleOnly;
 using ::iris::integrators::internal::internal::PowerHeuristic;
 using ::iris::lights::MockLight;
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetAlwaysVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
 using ::iris::testing::LightSampleListEntry;
+using ::iris::testing::MakeSampler;
 using ::iris::testing::ScopedListLightSampler;
 using ::iris::testing::VisibleLight;
 using ::testing::_;
@@ -374,11 +374,10 @@ TEST(EstimateDirectLighting, NoSamples) {
   VisibleLight light;
   EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(std::nullopt));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
-
+  Sampler bsdf_sampler = MakeSampler({}, {});
+  Sampler light_sampler = MakeSampler({}, {});
   const Spectrum* result = EstimateDirectLighting(
-      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      light, trace_ray, intersection, light_sampler, bsdf_sampler,
       GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_EQ(nullptr, result);
 }
@@ -398,12 +397,10 @@ TEST(EstimateDirectLighting, DeltaBsdf) {
       surface_normal, surface_normal};
 
   MockLight light;
-
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
-
+  Sampler bsdf_sampler = MakeSampler({}, {});
+  Sampler light_sampler = MakeSampler({}, {});
   const Spectrum* result = EstimateDirectLighting(
-      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      light, trace_ray, intersection, light_sampler, bsdf_sampler,
       GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_EQ(nullptr, result);
 }
@@ -436,11 +433,10 @@ TEST(EstimateDirectLighting, DeltaLight) {
   MockLight light;
   EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
-
+  Sampler bsdf_sampler = MakeSampler({}, {});
+  Sampler light_sampler = MakeSampler({}, {});
   const Spectrum* result = EstimateDirectLighting(
-      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      light, trace_ray, intersection, light_sampler, bsdf_sampler,
       GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
 
@@ -482,11 +478,10 @@ TEST(EstimateDirectLighting, VisibleLight) {
   EXPECT_CALL(light, Emission(_, _, _, _))
       .WillOnce(DoAll(SetArgPointee<3, visual_t>(1.0), Return(&spectrum)));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
-
+  Sampler bsdf_sampler = MakeSampler({}, {});
+  Sampler light_sampler = MakeSampler({}, {});
   const Spectrum* result = EstimateDirectLighting(
-      light, trace_ray, intersection, Sampler(rng), Sampler(rng),
+      light, trace_ray, intersection, light_sampler, bsdf_sampler,
       GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_NE(nullptr, result);
 
@@ -511,10 +506,10 @@ TEST(SampleDirectLighting, NoSamples) {
       Bsdf(bxdf, surface_normal, surface_normal), hit_point, std::nullopt,
       surface_normal, surface_normal};
 
-  MockRandom rng;
+  Sampler sampler = MakeSampler({0.0, 0.0, 0.0, 0.0}, {{0.0, 0.0}, {0.0, 0.0}});
 
   const Spectrum* result = SampleDirectLighting(
-      testing::GetEmptyLightSampler(), trace_ray, intersection, rng,
+      testing::GetEmptyLightSampler(), trace_ray, intersection, sampler,
       GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_EQ(result, nullptr);
 }
@@ -535,8 +530,7 @@ TEST(SampleDirectLighting, OneZeroPdfSample) {
 
   MockLight light;
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
+  Sampler sampler = MakeSampler({0.0, 0.0, 0.0, 0.0}, {{0.0, 0.0}, {0.0, 0.0}});
 
   LightSampleListEntry list[] = {
       {&light, static_cast<visual_t>(0.0)},
@@ -544,7 +538,7 @@ TEST(SampleDirectLighting, OneZeroPdfSample) {
 
   ScopedListLightSampler(list, [&](auto& light_sampler) {
     const Spectrum* result = SampleDirectLighting(
-        light_sampler, trace_ray, intersection, rng,
+        light_sampler, trace_ray, intersection, sampler,
         GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_EQ(nullptr, result);
   });
@@ -578,8 +572,7 @@ TEST(SampleDirectLighting, OneFromLightSampleOnly) {
   MockLight light;
   EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
+  Sampler sampler = MakeSampler({0.0, 0.0, 0.0, 0.0}, {{0.0, 0.0}, {0.0, 0.0}});
 
   LightSampleListEntry list[] = {
       {&light, std::nullopt},
@@ -587,7 +580,7 @@ TEST(SampleDirectLighting, OneFromLightSampleOnly) {
 
   ScopedListLightSampler(list, [&](auto& light_sampler) {
     const Spectrum* result = SampleDirectLighting(
-        light_sampler, trace_ray, intersection, rng,
+        light_sampler, trace_ray, intersection, sampler,
         GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 
@@ -626,8 +619,7 @@ TEST(SampleDirectLighting, OneProbabilisticFromLightSampleOnly) {
   MockLight light;
   EXPECT_CALL(light, Sample(_, _, _, _)).WillOnce(Return(light_sample));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(2);
+  Sampler sampler = MakeSampler({0.0, 0.0, 0.0, 0.0}, {{0.0, 0.0}, {0.0, 0.0}});
 
   LightSampleListEntry list[] = {
       {&light, static_cast<visual_t>(0.5)},
@@ -635,7 +627,7 @@ TEST(SampleDirectLighting, OneProbabilisticFromLightSampleOnly) {
 
   ScopedListLightSampler(list, [&](auto& light_sampler) {
     const Spectrum* result = SampleDirectLighting(
-        light_sampler, trace_ray, intersection, rng,
+        light_sampler, trace_ray, intersection, sampler,
         GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 
@@ -646,7 +638,7 @@ TEST(SampleDirectLighting, OneProbabilisticFromLightSampleOnly) {
   });
 }
 
-TEST(SampleDirectLighting, TwoFromLightSampleOnlys) {
+TEST(SampleDirectLighting, TwoFromLightSamplesOnly) {
   Ray trace_ray(Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0));
   HitPoint hit_point(trace_ray.Endpoint(1.0), PositionError(0.0, 0.0, 0.0),
                      Vector(0.0, 0.0, 1.0));
@@ -674,8 +666,9 @@ TEST(SampleDirectLighting, TwoFromLightSampleOnlys) {
   MockLight light;
   EXPECT_CALL(light, Sample(_, _, _, _)).WillRepeatedly(Return(light_sample));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(4);
+  Sampler sampler =
+      MakeSampler({0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                  {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}});
 
   LightSampleListEntry list[] = {
       {&light, std::nullopt},
@@ -684,7 +677,7 @@ TEST(SampleDirectLighting, TwoFromLightSampleOnlys) {
 
   ScopedListLightSampler(list, [&](auto& light_sampler) {
     const Spectrum* result = SampleDirectLighting(
-        light_sampler, trace_ray, intersection, rng,
+        light_sampler, trace_ray, intersection, sampler,
         GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
     ASSERT_NE(nullptr, result);
 

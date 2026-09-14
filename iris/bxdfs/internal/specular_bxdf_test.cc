@@ -2,8 +2,8 @@
 
 #include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
@@ -11,9 +11,9 @@ namespace bxdfs {
 namespace internal {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::FieldsAre;
@@ -38,9 +38,7 @@ TEST(SpecularBxdfTest, IsDiffuse) {
 }
 
 TEST(SpecularBxdfTest, Sample) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
   MockReflector reflector;
 
   MockSpecularBxdf bxdf;
@@ -58,9 +56,7 @@ TEST(SpecularBxdfTest, Sample) {
 }
 
 TEST(SpecularBxdfTest, SampleFails) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockSpecularBxdf bxdf;
   EXPECT_CALL(bxdf, SampleSpecular(Vector(0.0, 1.0, 0.0), Eq(std::nullopt),
@@ -73,9 +69,7 @@ TEST(SpecularBxdfTest, SampleFails) {
 }
 
 TEST(SpecularBxdfTest, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockSpecularBxdf bxdf;
   EXPECT_THAT(

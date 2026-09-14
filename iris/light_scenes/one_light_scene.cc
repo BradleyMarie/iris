@@ -9,7 +9,7 @@
 #include "iris/light_scene.h"
 #include "iris/point.h"
 #include "iris/power_matcher.h"
-#include "iris/random.h"
+#include "iris/sampler.h"
 #include "iris/scene_objects.h"
 
 namespace iris {
@@ -27,7 +27,7 @@ class OneLightScene final : public LightScene {
 
   OneLightScene(const SceneObjects& scene_objects) noexcept;
 
-  LightSample* Sample(const Point& hit_point, Random& rng,
+  LightSample* Sample(const Point& hit_point, Sampler& sampler,
                       LightSampleAllocator& allocator) const override;
 
  private:
@@ -47,7 +47,7 @@ OneLightScene::OneLightScene(const SceneObjects& scene_objects) noexcept
                ? std::optional<visual_t>(1.0 / scene_objects.NumLights())
                : std::nullopt) {}
 
-LightSample* OneLightScene::Sample(const Point& hit_point, Random& rng,
+LightSample* OneLightScene::Sample(const Point& hit_point, Sampler& sampler,
                                    LightSampleAllocator& allocator) const {
   if (scene_objects_.NumLights() == 0) {
     return nullptr;
@@ -55,7 +55,7 @@ LightSample* OneLightScene::Sample(const Point& hit_point, Random& rng,
 
   size_t index = 0;
   if (scene_objects_.NumLights() != 1) {
-    index = rng.NextIndex(scene_objects_.NumLights());
+    index = sampler.NextIndex1D(scene_objects_.NumLights());
   }
 
   return &allocator.Allocate(scene_objects_.GetLight(index), pdf_);

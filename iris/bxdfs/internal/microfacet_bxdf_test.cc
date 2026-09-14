@@ -8,12 +8,12 @@
 #include "iris/bxdfs/internal/fresnel.h"
 #include "iris/bxdfs/internal/microfacet_distribution.h"
 #include "iris/float.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflector.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/vector.h"
 
@@ -22,9 +22,9 @@ namespace bxdfs {
 namespace internal {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
@@ -62,8 +62,7 @@ typedef MicrofacetBrdf<TestMicrofacetDistribution, TestFresnel>
 typedef MicrofacetBtdf<TestMicrofacetDistribution> TestMicrofacetBtdf;
 
 TEST(TestMicrofacetBrdf, SampleDiffuseZero) {
-  MockRandom rng;
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockReflector reflector;
   TestMicrofacetBrdf bxdf(reflector, kDistribution, kFresnel);
@@ -74,9 +73,7 @@ TEST(TestMicrofacetBrdf, SampleDiffuseZero) {
 }
 
 TEST(TestMicrofacetBrdf, SampleDiffuseOppositeBxdfHemispheres) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(1.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{1.0, 1.0}});
 
   MockReflector reflector;
   TestMicrofacetBrdf bxdf(reflector, kDistribution, kFresnel);
@@ -87,9 +84,7 @@ TEST(TestMicrofacetBrdf, SampleDiffuseOppositeBxdfHemispheres) {
 }
 
 TEST(TestMicrofacetBrdf, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.5));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.5, 0.5}});
 
   MockReflector reflector;
   TestMicrofacetBrdf bxdf(reflector, kDistribution, kFresnel);
@@ -197,8 +192,7 @@ TEST(TestMicrofacetBrdf, Reflectance) {
 }
 
 TEST(TestMicrofacetBtdf, SampleDiffuseZero) {
-  MockRandom rng;
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockReflector reflector;
   TestMicrofacetBtdf bxdf(reflector, kDistribution, 1.0, 2.0);
@@ -209,9 +203,7 @@ TEST(TestMicrofacetBtdf, SampleDiffuseZero) {
 }
 
 TEST(TestMicrofacetBtdf, SampleDiffuseSameBxdfHemispheres) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(1.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{1.0, 1.0}});
 
   MockReflector reflector;
   TestMicrofacetBtdf bxdf(reflector, kDistribution, 1.0, 1.0);
@@ -225,9 +217,7 @@ TEST(TestMicrofacetBtdf, SampleDiffuseSameBxdfHemispheres) {
 }
 
 TEST(TestMicrofacetBtdf, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.75, 0.75}});
 
   MockReflector reflector;
   TestMicrofacetBtdf bxdf(reflector, kDistribution, 1.0, 2.0);

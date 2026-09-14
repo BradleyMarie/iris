@@ -8,11 +8,11 @@
 #include "iris/point.h"
 #include "iris/position_error.h"
 #include "iris/power_matchers/mock_power_matcher.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
 #include "iris/vector.h"
@@ -23,11 +23,11 @@ namespace {
 
 using ::iris::environmental_lights::MockEnvironmentalLight;
 using ::iris::power_matchers::MockPowerMatcher;
-using ::iris::random::MockRandom;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetAlwaysVisibleVisibilityTester;
 using ::iris::testing::GetNeverVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Ref;
@@ -89,14 +89,12 @@ TEST(EnvironmentalLightTest, SampleFails) {
 
   ReferenceCounted<Light> light = MakeEnvironmentalLight(environmental_light);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
-  EXPECT_FALSE(
-      light->Sample(HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
-                             Vector(1.0, 0.0, 0.0)),
-                    Sampler(random), GetNeverVisibleVisibilityTester(),
-                    GetSpectralAllocator()));
+  EXPECT_FALSE(light->Sample(
+      HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
+               Vector(1.0, 0.0, 0.0)),
+      sampler, GetNeverVisibleVisibilityTester(), GetSpectralAllocator()));
 }
 
 TEST(EnvironmentalLightTest, SampleNotVisible) {
@@ -109,14 +107,12 @@ TEST(EnvironmentalLightTest, SampleNotVisible) {
 
   ReferenceCounted<Light> light = MakeEnvironmentalLight(environmental_light);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
-  EXPECT_FALSE(
-      light->Sample(HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
-                             Vector(1.0, 0.0, 0.0)),
-                    Sampler(random), GetNeverVisibleVisibilityTester(),
-                    GetSpectralAllocator()));
+  EXPECT_FALSE(light->Sample(
+      HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
+               Vector(1.0, 0.0, 0.0)),
+      sampler, GetNeverVisibleVisibilityTester(), GetSpectralAllocator()));
 }
 
 TEST(EnvironmentalLightTest, SampleSucceeds) {
@@ -129,14 +125,12 @@ TEST(EnvironmentalLightTest, SampleSucceeds) {
 
   ReferenceCounted<Light> light = MakeEnvironmentalLight(environmental_light);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
-  std::optional<Light::SampleResult> result =
-      light->Sample(HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
-                             Vector(1.0, 0.0, 0.0)),
-                    Sampler(random), GetAlwaysVisibleVisibilityTester(),
-                    GetSpectralAllocator());
+  std::optional<Light::SampleResult> result = light->Sample(
+      HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
+               Vector(1.0, 0.0, 0.0)),
+      sampler, GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(&spectrum, &result->emission);
   EXPECT_EQ(Vector(1.0, 0.0, 0.0), result->to_light);

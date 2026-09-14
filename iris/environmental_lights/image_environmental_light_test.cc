@@ -2,8 +2,8 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/power_matchers/mock_power_matcher.h"
-#include "iris/random/mock_random.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
@@ -13,6 +13,7 @@ namespace {
 using ::iris::power_matchers::MockPowerMatcher;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
@@ -47,9 +48,7 @@ TEST(ImageEnvironmentalLight, SampleOne) {
   ReferenceCounted<EnvironmentalLight> light =
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
-  random::MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillRepeatedly(Return(0.25));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({0.25, 0.25}, {});
 
   std::optional<EnvironmentalLight::SampleResult> result =
       light->Sample(sampler, GetSpectralAllocator());
@@ -71,9 +70,7 @@ TEST(ImageEnvironmentalLight, SampleTwo) {
   ReferenceCounted<EnvironmentalLight> light =
       MakeImageEnvironmentalLight(spectra_and_luma, size, Matrix::Identity());
 
-  random::MockRandom rng;
-  EXPECT_CALL(rng, NextVisual()).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({0.75, 0.75}, {});
 
   std::optional<EnvironmentalLight::SampleResult> result =
       light->Sample(sampler, GetSpectralAllocator());

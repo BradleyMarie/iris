@@ -44,7 +44,7 @@ TEST(StraifiedImageSamplerTest, SampleNoLens) {
   EXPECT_NEAR(sample->image_uv[1] + 0.25, sample->image_uv_dxdy[1], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(sample->weight, 0.25);
-  EXPECT_EQ(&rng, &sample->rng);
+  EXPECT_FALSE(sample->rng);
 }
 
 TEST(StraifiedImageSamplerTest, SampleWithLens) {
@@ -52,6 +52,7 @@ TEST(StraifiedImageSamplerTest, SampleWithLens) {
       MakeStratifiedImageSampler(2, 2, false);
 
   MockRandomBitstream rng;
+  EXPECT_CALL(rng, Next()).WillRepeatedly(Return(0.5));
   sampler->StartPixel(std::make_pair(2, 2), std::make_pair(0, 1), rng);
 
   std::optional<ImageSampler::Sample> sample = sampler->NextSample(true, rng);
@@ -65,7 +66,7 @@ TEST(StraifiedImageSamplerTest, SampleWithLens) {
   EXPECT_NEAR(sample->image_uv[0] + 0.25, sample->image_uv_dxdy[0], 0.01);
   EXPECT_NEAR(sample->image_uv[1] + 0.25, sample->image_uv_dxdy[1], 0.01);
   EXPECT_EQ(sample->weight, 0.25);
-  EXPECT_EQ(&rng, &sample->rng);
+  EXPECT_FALSE(sample->rng);
 }
 
 TEST(StraifiedImageSamplerTest, SampleWithJitter) {
@@ -86,7 +87,7 @@ TEST(StraifiedImageSamplerTest, SampleWithJitter) {
   EXPECT_NEAR(sample->image_uv[1] + 0.25, sample->image_uv_dxdy[1], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(sample->weight, 0.25);
-  EXPECT_EQ(&rng, &sample->rng);
+  EXPECT_FALSE(sample->rng);
 }
 
 }  // namespace

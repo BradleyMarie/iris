@@ -1,15 +1,14 @@
 #include "iris/bxdfs/internal/math.h"
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
+#include "iris/testing/sampler.h"
 
 namespace iris {
 namespace bxdfs {
 namespace internal {
 namespace {
 
-using ::iris::random::MockRandom;
-using ::testing::Return;
+using ::iris::testing::MakeSampler;
 
 TEST(Math, CosTheta) { EXPECT_EQ(-0.5, CosTheta(Vector(0.8660, 0.0, -0.5))); }
 
@@ -140,30 +139,17 @@ TEST(FresnelDielectricReflectance, TotalInternalReflection) {
 }
 
 TEST(CosineSampleHemisphere, CenterUp) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.5));
-  Sampler sampler(rng);
-
+  Sampler sampler = MakeSampler({}, {{0.5, 0.5}});
   EXPECT_EQ(Vector(0, 0, 1), CosineSampleHemisphere(0.5, sampler));
 }
 
 TEST(CosineSampleHemisphere, CenterDown) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.5));
-  Sampler sampler(rng);
-
+  Sampler sampler = MakeSampler({}, {{0.5, 0.5}});
   EXPECT_EQ(Vector(0, 0, -1), CosineSampleHemisphere(-0.5, sampler));
 }
 
 TEST(CosineSampleHemisphere, FirstBiggerUp) {
-  MockRandom rng;
-  {
-    testing::InSequence sequence;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
-  }
-  Sampler sampler(rng);
-
+  Sampler sampler = MakeSampler({}, {{0.25, 0.75}});
   Vector result = CosineSampleHemisphere(0.5, sampler);
   EXPECT_NEAR(result.x, -0.3535533845424652, 0.0001);
   EXPECT_NEAR(result.y, 0.35355338454246521, 0.0001);
@@ -171,14 +157,7 @@ TEST(CosineSampleHemisphere, FirstBiggerUp) {
 }
 
 TEST(CosineSampleHemisphere, SecondBiggerUp) {
-  MockRandom rng;
-  {
-    testing::InSequence sequence;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-  }
-  Sampler sampler(rng);
-
+  Sampler sampler = MakeSampler({}, {{0.75, 0.25}});
   Vector result = CosineSampleHemisphere(0.5, sampler);
   EXPECT_NEAR(result.x, 0.3535533845424652, 0.0001);
   EXPECT_NEAR(result.y, -0.353553384542465, 0.0001);
@@ -186,14 +165,7 @@ TEST(CosineSampleHemisphere, SecondBiggerUp) {
 }
 
 TEST(CosineSampleHemisphere, FirstBiggerDown) {
-  MockRandom rng;
-  {
-    testing::InSequence sequence;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
-  }
-  Sampler sampler(rng);
-
+  Sampler sampler = MakeSampler({}, {{0.25, 0.75}});
   Vector result = CosineSampleHemisphere(-0.5, sampler);
   EXPECT_NEAR(result.x, -0.3535533845424652, 0.0001);
   EXPECT_NEAR(result.y, 0.35355338454246521, 0.0001);
@@ -201,14 +173,7 @@ TEST(CosineSampleHemisphere, FirstBiggerDown) {
 }
 
 TEST(CosineSampleHemisphere, SecondBiggerDown) {
-  MockRandom rng;
-  {
-    testing::InSequence sequence;
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.75));
-    EXPECT_CALL(rng, NextGeometric()).WillOnce(Return(0.25));
-  }
-  Sampler sampler(rng);
-
+  Sampler sampler = MakeSampler({}, {{0.75, 0.25}});
   Vector result = CosineSampleHemisphere(-0.5, sampler);
   EXPECT_NEAR(result.x, 0.35355338454246521, 0.0001);
   EXPECT_NEAR(result.y, -0.3535533845424652, 0.0001);

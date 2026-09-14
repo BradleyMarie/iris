@@ -8,9 +8,9 @@
 #include "iris/bxdfs/mock_bxdf.h"
 #include "iris/float.h"
 #include "iris/internal/arena.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/sampler.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/vector.h"
 
@@ -19,9 +19,9 @@ namespace {
 
 using ::iris::bxdfs::MockBxdf;
 using ::iris::internal::Arena;
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -55,12 +55,11 @@ TEST(BsdfTest, SampleIncomingZeroDP) {
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
   std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kInvalid, std::nullopt, Sampler(rng), GetSpectralAllocator());
+      bsdf.Sample(kInvalid, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -71,12 +70,11 @@ TEST(BsdfTest, SampleFails) {
   EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(std::monostate()));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -87,13 +85,12 @@ TEST(BsdfTest, SampleDiffuseFails) {
   EXPECT_CALL(bxdf, SampleDiffuse(kIncoming, kSurfaceNormal, _))
       .WillOnce(Return(std::nullopt));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
   std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, std::nullopt, Sampler(rng),
-                  GetSpectralAllocator(), /*diffuse_only=*/true);
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator(),
+                  /*diffuse_only=*/true);
   EXPECT_FALSE(result);
 }
 
@@ -104,12 +101,11 @@ TEST(BsdfTest, SampleOutgoingZeroDP) {
   EXPECT_CALL(bxdf, Sample(kIncoming, Eq(std::nullopt), kSurfaceNormal, _, _))
       .WillOnce(Return(Bxdf::DiffuseSample{kInvalid}));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -123,12 +119,11 @@ TEST(BsdfTest, SampleZeroPdf) {
                                Bxdf::Hemisphere::BTDF))
       .WillOnce(Return(static_cast<visual_t>(0.0)));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -142,12 +137,11 @@ TEST(BsdfTest, SampleNegativePdf) {
                                Bxdf::Hemisphere::BTDF))
       .WillOnce(Return(static_cast<visual_t>(-1.0)));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -164,12 +158,11 @@ TEST(BsdfTest, SampleNoReflector) {
                                        Bxdf::Hemisphere::BTDF, _))
       .WillOnce(Return(nullptr));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -188,12 +181,11 @@ TEST(BsdfTest, SampleAdjustByDiffusePdf) {
                                        Bxdf::Hemisphere::BTDF, _))
       .WillOnce(Return(&reflector));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<iris::Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<iris::Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
@@ -217,12 +209,11 @@ TEST(BsdfTest, SampleBtdf) {
                                        Bxdf::Hemisphere::BTDF, _))
       .WillOnce(Return(&reflector));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
@@ -246,12 +237,11 @@ TEST(BsdfTest, SampleBrdf) {
                                        Bxdf::Hemisphere::BRDF, _))
       .WillOnce(Return(&reflector));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
@@ -274,13 +264,12 @@ TEST(BsdfTest, SampleDiffuse) {
                                        Bxdf::Hemisphere::BRDF, _))
       .WillOnce(Return(&reflector));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
   std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, std::nullopt, Sampler(rng),
-                  GetSpectralAllocator(), /*diffuse_only=*/true);
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator(),
+                  /*diffuse_only=*/true);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
@@ -303,13 +292,12 @@ TEST(BsdfTest, SamplePartiallyDiffuse) {
                                        Bxdf::Hemisphere::BRDF, _))
       .WillOnce(Return(&reflector));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
   std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, std::nullopt, Sampler(rng),
-                  GetSpectralAllocator(), /*diffuse_only=*/true);
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator(),
+                  /*diffuse_only=*/true);
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBrdfOutgoing, result->direction);
@@ -333,13 +321,11 @@ TEST(BsdfTest, SampleWithInputDerivatives) {
                                        Bxdf::Hemisphere::BTDF, _))
       .WillOnce(Return(&reflector));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}}, Sampler(rng),
-                  GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
+      kTrueIncoming, {{kIncoming, kIncoming}}, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
@@ -362,13 +348,11 @@ TEST(BsdfTest, SampleSpecularInvalidPdf) {
                                             {{kBtdfOutgoing, kBtdfOutgoing}},
                                             0.0}));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}}, Sampler(rng),
-                  GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
+      kTrueIncoming, {{kIncoming, kIncoming}}, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -386,13 +370,11 @@ TEST(BsdfTest, SampleSpecularInvalidReflector) {
                                             {{kBtdfOutgoing, kBtdfOutgoing}},
                                             1.0}));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}}, Sampler(rng),
-                  GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
+      kTrueIncoming, {{kIncoming, kIncoming}}, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -410,13 +392,11 @@ TEST(BsdfTest, SampleSpecularWrongHemisphere) {
                                             {{kBtdfOutgoing, kBtdfOutgoing}},
                                             1.0}));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}}, Sampler(rng),
-                  GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
+      kTrueIncoming, {{kIncoming, kIncoming}}, sampler, GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
@@ -431,12 +411,11 @@ TEST(BsdfTest, SampleSpecularWithNoDifferentials) {
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
                                       &reflector, std::nullopt, 1.0, 2.0}));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
@@ -457,13 +436,11 @@ TEST(BsdfTest, SampleSpecularWithOnlyIncomingDifferentials) {
           Return(Bxdf::SpecularSample{Bxdf::Hemisphere::BTDF, kBtdfOutgoing,
                                       &reflector, std::nullopt, 1.0, 2.0}));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}}, Sampler(rng),
-                  GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
+      kTrueIncoming, {{kIncoming, kIncoming}}, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
@@ -487,13 +464,11 @@ TEST(BsdfTest, SampleSpecularWithDifferentials) {
                                             1.0,
                                             2.0}));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, kSurfaceNormal, kSurfaceNormal, true);
-  std::optional<Bsdf::SampleResult> result =
-      bsdf.Sample(kTrueIncoming, {{kIncoming, kIncoming}}, Sampler(rng),
-                  GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
+      kTrueIncoming, {{kIncoming, kIncoming}}, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);
@@ -653,12 +628,11 @@ TEST(BsdfTest, Normalize) {
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
       .WillOnce(DoAll(SetArgPointee<0>(1.0), Return(true)));
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   Bsdf bsdf(bxdf, Vector(0.0, 0.0, 2.0), Vector(0.0, 0.0, 2.0), true);
-  std::optional<Bsdf::SampleResult> result = bsdf.Sample(
-      kTrueIncoming, std::nullopt, Sampler(rng), GetSpectralAllocator());
+  std::optional<Bsdf::SampleResult> result =
+      bsdf.Sample(kTrueIncoming, std::nullopt, sampler, GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(&reflector, &result->reflector);
   EXPECT_EQ(kTrueBtdfOutgoing, result->direction);

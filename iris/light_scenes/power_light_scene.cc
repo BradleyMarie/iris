@@ -11,7 +11,7 @@
 #include "iris/light_scene.h"
 #include "iris/point.h"
 #include "iris/power_matcher.h"
-#include "iris/random.h"
+#include "iris/sampler.h"
 #include "iris/scene_objects.h"
 
 namespace iris {
@@ -30,7 +30,7 @@ class PowerLightScene final : public LightScene {
   PowerLightScene(const SceneObjects& scene_objects,
                   const PowerMatcher& power_matcher) noexcept;
 
-  LightSample* Sample(const Point& hit_point, Random& rng,
+  LightSample* Sample(const Point& hit_point, Sampler& sampler,
                       LightSampleAllocator& allocator) const override;
 
  private:
@@ -78,7 +78,7 @@ PowerLightScene::PowerLightScene(const SceneObjects& scene_objects,
   cdf_.back() = static_cast<visual_t>(1.0);
 }
 
-LightSample* PowerLightScene::Sample(const Point& hit_point, Random& rng,
+LightSample* PowerLightScene::Sample(const Point& hit_point, Sampler& sampler,
                                      LightSampleAllocator& allocator) const {
   if (scene_objects_.NumLights() == 0) {
     return nullptr;
@@ -88,7 +88,8 @@ LightSample* PowerLightScene::Sample(const Point& hit_point, Random& rng,
     return &allocator.Allocate(scene_objects_.GetLight(0), std::nullopt);
   }
 
-  auto iter = std::upper_bound(cdf_.begin(), cdf_.end(), rng.NextVisual());
+  auto iter =
+      std::upper_bound(cdf_.begin(), cdf_.end(), sampler.NextLinear1D());
   size_t index = iter - cdf_.begin();
 
   return &allocator.Allocate(scene_objects_.GetLight(index), pdf_[index]);

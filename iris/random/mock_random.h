@@ -10,16 +10,9 @@
 namespace iris {
 namespace random {
 
-class MockBasicRandom : public Random {
+class MockRandom : public Random {
  public:
-  MOCK_METHOD(geometric, NextGeometric, (), (override));
-  MOCK_METHOD(visual, NextVisual, (), (override));
-  MOCK_METHOD(size_t, NextIndex, (size_t), (override));
-};
-
-class MockRandom final : public MockBasicRandom {
- public:
-  MOCK_METHOD(void, DiscardGeometric, (size_t), (override));
+  MOCK_METHOD(geometric, Next, (), (override));
 };
 
 }  // namespace random

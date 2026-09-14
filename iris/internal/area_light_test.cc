@@ -15,11 +15,11 @@
 #include "iris/point.h"
 #include "iris/position_error.h"
 #include "iris/power_matchers/mock_power_matcher.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/spectra/mock_spectrum.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
 #include "iris/vector.h"
@@ -32,10 +32,10 @@ namespace {
 using ::iris::emissive_materials::MockEmissiveMaterial;
 using ::iris::geometry::MockGeometry;
 using ::iris::power_matchers::MockPowerMatcher;
-using ::iris::random::MockRandom;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetNeverVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::iris::testing::ScopedSingleGeometryVisibilityTester;
 using ::testing::_;
 using ::testing::Ref;
@@ -113,15 +113,14 @@ TEST(AreaLightTest, AreaLightSampleRngFails) {
       .WillRepeatedly(Return(std::variant<std::monostate, Point, Vector>()));
   ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1, false);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ScopedSingleGeometryVisibilityTester(
       *geometry, nullptr, [&](iris::VisibilityTester& visibility_tester) {
         EXPECT_FALSE(light->Sample(
             HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
                      Vector(1.0, 0.0, 0.0)),
-            Sampler(random), visibility_tester, GetSpectralAllocator()));
+            sampler, visibility_tester, GetSpectralAllocator()));
       });
 }
 
@@ -134,14 +133,12 @@ TEST(AreaLightTest, AreaLightSampleNotVisible) {
       .WillRepeatedly(Return(Point(0.0, 0.0, 1.0)));
   ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1, false);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
-  EXPECT_FALSE(
-      light->Sample(HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
-                             Vector(1.0, 0.0, 0.0)),
-                    Sampler(random), GetNeverVisibleVisibilityTester(),
-                    GetSpectralAllocator()));
+  EXPECT_FALSE(light->Sample(
+      HitPoint(Point(0.0, 0.0, 0.0), PositionError(0.0, 0.0, 0.0),
+               Vector(1.0, 0.0, 0.0)),
+      sampler, GetNeverVisibleVisibilityTester(), GetSpectralAllocator()));
 }
 
 TEST(AreaLightTest, AreaLightSampleWorld) {
@@ -157,15 +154,14 @@ TEST(AreaLightTest, AreaLightSampleWorld) {
       .WillRepeatedly(Return(1.0));
   ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1, false);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ScopedSingleGeometryVisibilityTester(
       *geometry, nullptr, [&](iris::VisibilityTester& visibility_tester) {
         std::optional<Light::SampleResult> result = light->Sample(
             HitPoint(Point(0.0, 0.0, 2.0), PositionError(0.0, 0.0, 0.0),
                      Vector(1.0, 0.0, 0.0)),
-            Sampler(random), visibility_tester, GetSpectralAllocator());
+            sampler, visibility_tester, GetSpectralAllocator());
         EXPECT_TRUE(result);
         EXPECT_EQ(&spectrum, &result->emission);
         EXPECT_EQ(1.0, result->pdf);
@@ -187,15 +183,14 @@ TEST(AreaLightTest, AreaLightSampleWithTransform) {
       .WillRepeatedly(Return(1.0));
   ReferenceCounted<Light> light = MakeAreaLight(geometry, &transform, 1, true);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ScopedSingleGeometryVisibilityTester(
       *geometry, &transform, [&](iris::VisibilityTester& visibility_tester) {
         std::optional<Light::SampleResult> result = light->Sample(
             HitPoint(Point(0.0, 0.0, -2.0), PositionError(0.0, 0.0, 0.0),
                      Vector(1.0, 0.0, 0.0)),
-            Sampler(random), visibility_tester, GetSpectralAllocator());
+            sampler, visibility_tester, GetSpectralAllocator());
         EXPECT_TRUE(result);
         EXPECT_EQ(&spectrum, &result->emission);
         EXPECT_EQ(1.0, result->pdf);
@@ -216,15 +211,14 @@ TEST(AreaLightTest, AreaLightSampleVector) {
       .WillRepeatedly(Return(1.0));
   ReferenceCounted<Light> light = MakeAreaLight(geometry, nullptr, 1, false);
 
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ScopedSingleGeometryVisibilityTester(
       *geometry, nullptr, [&](iris::VisibilityTester& visibility_tester) {
         std::optional<Light::SampleResult> result = light->Sample(
             HitPoint(Point(0.0, 0.0, 2.0), PositionError(0.0, 0.0, 0.0),
                      Vector(1.0, 0.0, 0.0)),
-            Sampler(random), visibility_tester, GetSpectralAllocator());
+            sampler, visibility_tester, GetSpectralAllocator());
         EXPECT_TRUE(result);
         EXPECT_EQ(&spectrum, &result->emission);
         EXPECT_EQ(1.0, result->pdf);

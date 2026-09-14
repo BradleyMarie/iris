@@ -74,9 +74,8 @@ cc_library(
         "//iris:light_scene",
         "//iris:point",
         "//iris:power_matcher",
-        "//iris:random",
+        "//iris:sampler",
         "//iris/internal:arena",
-        "//iris/random:mock_random",
     ],
 )
 
@@ -108,6 +107,18 @@ cc_library(
         "//iris:vector",
         "//iris/internal:arena",
         "//iris/internal:ray_tracer",
+    ],
+)
+
+cc_library(
+    name = "sampler",
+    testonly = True,
+    srcs = ["sampler.cc"],
+    hdrs = ["sampler.h"],
+    deps = [
+        "//iris:float",
+        "//iris:sampler",
+        "//iris/random_bitstreams:mock_random_bitstream",
     ],
 )
 

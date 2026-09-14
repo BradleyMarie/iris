@@ -11,12 +11,12 @@
 #include "iris/light.h"
 #include "iris/point.h"
 #include "iris/power_matchers/mock_power_matcher.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/spectrum.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
 
@@ -25,11 +25,11 @@ namespace lights {
 namespace {
 
 using ::iris::power_matchers::MockPowerMatcher;
-using ::iris::random::MockRandom;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetAlwaysVisibleVisibilityTester;
 using ::iris::testing::GetNeverVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::Ref;
 using ::testing::Return;
 
@@ -39,8 +39,7 @@ TEST(PointLightTest, Null) {
 }
 
 TEST(PointLightTest, SampleHits) {
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
@@ -50,8 +49,7 @@ TEST(PointLightTest, SampleHits) {
   std::optional<Light::SampleResult> result = light->Sample(
       HitPoint(Point(0.0, 0.0, -1.0), PositionError(0.0, 0.0, 0.0),
                Vector(1.0, 0.0, 0.0)),
-      Sampler(random), GetAlwaysVisibleVisibilityTester(),
-      GetSpectralAllocator());
+      sampler, GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_TRUE(result);
   EXPECT_EQ(spectrum.Get(), &result->emission);
   EXPECT_FALSE(result->pdf);
@@ -59,8 +57,7 @@ TEST(PointLightTest, SampleHits) {
 }
 
 TEST(PointLightTest, SampleMisses) {
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
@@ -70,8 +67,7 @@ TEST(PointLightTest, SampleMisses) {
   EXPECT_FALSE(light->Sample(
       HitPoint(Point(0.0, 0.0, -1.0), PositionError(0.0, 0.0, 0.0),
                Vector(1.0, 0.0, 0.0)),
-      Sampler(random), GetNeverVisibleVisibilityTester(),
-      GetSpectralAllocator()));
+      sampler, GetNeverVisibleVisibilityTester(), GetSpectralAllocator()));
 }
 
 TEST(PointLightTest, Emission) {

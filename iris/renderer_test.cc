@@ -111,7 +111,7 @@ void RunTestBody(
                   std::nullopt,
                   static_cast<visual_t>(1.0) /
                       static_cast<visual_t>(samples_per_pixel),
-                  rng}));
+                  nullptr}));
           EXPECT_CALL(*result, NextSample(_, _)).WillOnce(Return(std::nullopt));
         }
       }
@@ -135,7 +135,7 @@ void RunTestBody(
                   std::nullopt,
                   static_cast<visual_t>(1.0) /
                       static_cast<visual_t>(samples_per_pixel),
-                  rng}));
+                  nullptr}));
           EXPECT_CALL(*result, NextSample(_, _)).WillOnce(Return(std::nullopt));
         }
       }

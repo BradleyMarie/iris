@@ -23,7 +23,7 @@ class ImageSampler {
     const std::array<geometric_t, 2> image_uv_dxdy;
     const std::optional<std::array<geometric_t, 2>> lens_uv;
     const visual_t weight;
-    Random& rng;
+    Random* rng;
   };
 
   virtual std::optional<Sample> NextSample(bool sample_lens,

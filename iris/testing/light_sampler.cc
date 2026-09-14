@@ -13,8 +13,7 @@
 #include "iris/light_scene.h"
 #include "iris/point.h"
 #include "iris/power_matcher.h"
-#include "iris/random.h"
-#include "iris/random/mock_random.h"
+#include "iris/sampler.h"
 
 namespace iris {
 namespace testing {
@@ -22,7 +21,7 @@ namespace {
 
 class EmptyLightScene : public LightScene {
  public:
-  LightSample* Sample(const Point& hit_point, Random& rng,
+  LightSample* Sample(const Point& hit_point, Sampler& rng,
                       LightSampleAllocator& allocator) const override {
     return nullptr;
   }
@@ -33,7 +32,7 @@ class ListLightScene : public LightScene {
   ListLightScene(std::span<const LightSampleListEntry> sample_list)
       : sample_list_(sample_list) {}
 
-  LightSample* Sample(const Point& hit_point, Random& rng,
+  LightSample* Sample(const Point& hit_point, Sampler& rng,
                       LightSampleAllocator& allocator) const override {
     LightSample* result = nullptr;
     for (auto iter = sample_list_.rbegin(); iter != sample_list_.rend();
@@ -55,21 +54,18 @@ class ListLightScene : public LightScene {
 
 LightSampler& GetEmptyLightSampler() {
   static EmptyLightScene empty_scene;
-  static iris::random::MockRandom rng;
   thread_local internal::Arena arena;
   thread_local LightSampleAllocator light_sample_allocator(arena);
-  thread_local LightSampler light_sampler(empty_scene, rng,
-                                          light_sample_allocator);
+  thread_local LightSampler light_sampler(empty_scene, light_sample_allocator);
   return light_sampler;
 }
 
 void ScopedListLightSampler(std::span<const LightSampleListEntry> sample_list,
                             std::function<void(LightSampler&)> callback) {
-  static iris::random::MockRandom rng;
   internal::Arena arena;
   LightSampleAllocator light_sample_allocator(arena);
   ListLightScene scene(sample_list);
-  LightSampler light_sampler(scene, rng, light_sample_allocator);
+  LightSampler light_sampler(scene, light_sample_allocator);
   callback(light_sampler);
 }
 

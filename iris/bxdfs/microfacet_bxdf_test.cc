@@ -3,21 +3,21 @@
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
@@ -34,9 +34,7 @@ TEST(MicrofacetDielectricBrdf, Nullptr) {
 }
 
 TEST(MicrofacetDielectricBrdf, SampleDiffuseZero) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
@@ -47,9 +45,7 @@ TEST(MicrofacetDielectricBrdf, SampleDiffuseZero) {
 }
 
 TEST(MicrofacetDielectricBrdf, SampleDiffuseOppositeBxdfHemispheres) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(1.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{1.0, 1.0}});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
@@ -60,9 +56,7 @@ TEST(MicrofacetDielectricBrdf, SampleDiffuseOppositeBxdfHemispheres) {
 }
 
 TEST(MicrofacetDielectricBrdf, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.75, 0.75}});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeMicrofacetDielectricBrdf(
@@ -193,9 +187,7 @@ TEST(MicrofacetConductorBrdf, Nullptr) {
                                            true));
 }
 TEST(MicrofacetConductorBrdf, SampleDiffuseZero) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockReflector reflector;
   MockSpectrum conductor_eta;
@@ -209,9 +201,7 @@ TEST(MicrofacetConductorBrdf, SampleDiffuseZero) {
 }
 
 TEST(MicrofacetConductorBrdf, SampleDiffuseOppositeBxdfHemispheres) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.75, 0.75}});
 
   MockReflector reflector;
   MockSpectrum conductor_eta;
@@ -225,9 +215,7 @@ TEST(MicrofacetConductorBrdf, SampleDiffuseOppositeBxdfHemispheres) {
 }
 
 TEST(MicrofacetConductorBrdf, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.75, 0.75}});
 
   MockReflector reflector;
   MockSpectrum conductor_eta;
@@ -391,9 +379,7 @@ TEST(MicrofacetDielectricBtdf, Nullptr) {
 }
 
 TEST(MicrofacetDielectricBtdf, SampleDiffuseZero) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
@@ -404,9 +390,7 @@ TEST(MicrofacetDielectricBtdf, SampleDiffuseZero) {
 }
 
 TEST(MicrofacetDielectricBtdf, SampleDiffuseSameBxdfHemispheres) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(1.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{1.0, 1.0}});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(
@@ -417,9 +401,7 @@ TEST(MicrofacetDielectricBtdf, SampleDiffuseSameBxdfHemispheres) {
 }
 
 TEST(MicrofacetDielectricBtdf, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.75));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.75, 0.75}});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeMicrofacetDielectricBtdf(

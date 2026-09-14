@@ -40,13 +40,13 @@ const Spectrum* FromBsdfSample(
 
 const Spectrum* EstimateDirectLighting(
     const Light& light, const Ray& traced_ray,
-    const RayTracer::SurfaceIntersection intersection, Sampler bsdf_sampler,
-    Sampler light_sampler, VisibilityTester& visibility_tester,
+    const RayTracer::SurfaceIntersection intersection, Sampler& bsdf_sampler,
+    Sampler& light_sampler, VisibilityTester& visibility_tester,
     SpectralAllocator& allocator);
 
 const Spectrum* SampleDirectLighting(
     LightSampler& light_sampler, const Ray& traced_ray,
-    const RayTracer::SurfaceIntersection intersection, Random& rng,
+    const RayTracer::SurfaceIntersection intersection, Sampler& sampler,
     VisibilityTester& visibility_tester, SpectralAllocator& allocator);
 
 }  // namespace internal

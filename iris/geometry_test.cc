@@ -11,16 +11,16 @@
 #include "iris/hit_allocator.h"
 #include "iris/internal/hit_arena.h"
 #include "iris/point.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/sampler.h"
+#include "iris/testing/sampler.h"
 #include "iris/vector.h"
 
 namespace iris {
 namespace {
 
 using ::iris::geometry::MockBasicGeometry;
-using ::iris::random::MockRandom;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 
 TEST(GeometryTest, TraceAllHits) {
@@ -250,9 +250,7 @@ TEST(GeometryTest, GetEmissiveMaterial) {
 
 TEST(GeometryTest, SampleBySolidAngle) {
   MockBasicGeometry geom;
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
   EXPECT_TRUE(std::holds_alternative<std::monostate>(
       geom.SampleBySolidAngle(Point(0.0, 0.0, 0.0), 0, sampler)));
 }

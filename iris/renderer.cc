@@ -81,7 +81,8 @@ void RenderChunk(
       *maximum_sample_luminance <= static_cast<visual_t>(0.0)) {
     *maximum_sample_luminance = static_cast<visual_t>(0.0);
   }
-
+  std::vector<visual_t> visual_storage;
+  std::vector<std::pair<geometric_t, geometric_t>> geometric_storage;
   for (size_t chunk_index = chunk_counter.fetch_add(1);
        chunk_index < num_chunks; chunk_index = chunk_counter.fetch_add(1)) {
     size_t y = chunk_index % chunks.size();
@@ -111,12 +112,12 @@ void RenderChunk(
           RayDifferential ray = camera.Compute(image_sample->image_uv,
                                                image_sample->image_uv_dxdy,
                                                image_sample->lens_uv);
-
-          LightSampler light_sampler(light_scene, image_sample->rng,
-                                     light_sample_allocator);
+          LightSampler light_sampler(light_scene, light_sample_allocator);
+          Sampler sampler(*chunk.rng, image_sample->rng, visual_storage,
+                          geometric_storage);
           const Spectrum* spectrum = integrator->Integrate(
               ray, ray_tracer, light_sampler, visibility_tester, albedo_matcher,
-              spectral_allocator, image_sample->rng);
+              spectral_allocator, sampler);
 
           if (spectrum) {
             std::array<visual_t, 3UL> sample_components =

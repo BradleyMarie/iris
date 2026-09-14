@@ -3,27 +3,24 @@
 #include <cmath>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
 TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextIndex(2)).WillRepeatedly(Return(0));
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.25));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({0.25}, {{0.25, 0.25}});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,
@@ -38,10 +35,7 @@ TEST(AshikhminShirleyBrdf, SampleDiffuseMicrofacet) {
 }
 
 TEST(AshikhminShirleyBrdf, SampleDiffuseLambertian) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextIndex(2)).WillRepeatedly(Return(1));
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.51));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({0.75}, {{0.51, 0.51}});
 
   MockReflector reflector;
   const Bxdf* bxdf = MakeAshikhminShirleyBrdf(GetBxdfAllocator(), &reflector,

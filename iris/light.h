@@ -30,7 +30,7 @@ class Light : public ReferenceCountable {
   };
 
   virtual std::optional<SampleResult> Sample(
-      const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
+      const HitPoint& hit_point, Sampler& sampler, VisibilityTester& tester,
       SpectralAllocator& allocator) const = 0;
 
   virtual const Spectrum* Emission(const Ray& to_light,

@@ -3,19 +3,19 @@
 #include <numbers>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
@@ -24,12 +24,10 @@ TEST(MakeDisneyClearcoatBrdf, Null) {
 }
 
 TEST(DisneyClearcoatBrdfTest, SampleDiffuseZeroZ) {
+  Sampler sampler = MakeSampler({}, {});
+
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
-
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
   EXPECT_FALSE(bxdf->SampleDiffuse(Vector(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0),
@@ -37,12 +35,10 @@ TEST(DisneyClearcoatBrdfTest, SampleDiffuseZeroZ) {
 }
 
 TEST(DisneyClearcoatBrdfTest, SampleDiffuseAligned) {
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
+
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
-
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -54,12 +50,10 @@ TEST(DisneyClearcoatBrdfTest, SampleDiffuseAligned) {
 }
 
 TEST(DisneyClearcoatBrdfTest, SampleDiffuseUnaligned) {
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
+
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(_)).WillRepeatedly(Return(1.0));
-
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
 
   const Bxdf* bxdf = MakeDisneyClearcoatBrdf(GetBxdfAllocator(), 1.0, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -135,11 +129,9 @@ TEST(DisneyDiffuseBrdfTest, NullReflector) {
 }
 
 TEST(DisneyDiffuseBrdfTest, SampleDiffuseAligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf = MakeDisneyDiffuseBrdf(GetBxdfAllocator(), &reflector);
   std::optional<Vector> result = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
@@ -151,9 +143,7 @@ TEST(DisneyDiffuseBrdfTest, SampleDiffuseAligned) {
 
 TEST(DisneyDiffuseBrdfTest, SampleDiffuseUnaligned) {
   MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
   const Bxdf* bxdf = MakeDisneyDiffuseBrdf(GetBxdfAllocator(), &reflector);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -219,11 +209,9 @@ TEST(DisneyDiffuseRetroBrdfTest, NullReflector) {
 }
 
 TEST(DisneyDiffuseRetroBrdfTest, SampleDiffuseAligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf =
       MakeDisneyDiffuseRetroBrdf(GetBxdfAllocator(), &reflector, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -235,11 +223,9 @@ TEST(DisneyDiffuseRetroBrdfTest, SampleDiffuseAligned) {
 }
 
 TEST(DisneyDiffuseRetroBrdfTest, SampleDiffuseUnaligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf =
       MakeDisneyDiffuseRetroBrdf(GetBxdfAllocator(), &reflector, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -371,11 +357,9 @@ TEST(DisneySheenBrdfTest, Null) {
 }
 
 TEST(DisneySheenBrdfTest, SampleDiffuseAligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf =
       MakeDisneySheenBrdf(GetBxdfAllocator(), &reflector, 1.0, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -387,11 +371,9 @@ TEST(DisneySheenBrdfTest, SampleDiffuseAligned) {
 }
 
 TEST(DisneySheenBrdfTest, SampleDiffuseUnaligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf =
       MakeDisneySheenBrdf(GetBxdfAllocator(), &reflector, 1.0, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -474,11 +456,9 @@ TEST(DisneySubsurfaceBrdfTest, NullReflector) {
 }
 
 TEST(DisneySubsurfaceBrdfTest, SampleDiffuseAligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf =
       MakeDisneySubsurfaceBrdf(GetBxdfAllocator(), &reflector, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(
@@ -490,11 +470,9 @@ TEST(DisneySubsurfaceBrdfTest, SampleDiffuseAligned) {
 }
 
 TEST(DisneySubsurfaceBrdfTest, SampleDiffuseUnaligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf =
       MakeDisneySubsurfaceBrdf(GetBxdfAllocator(), &reflector, 0.5);
   std::optional<Vector> result = bxdf->SampleDiffuse(

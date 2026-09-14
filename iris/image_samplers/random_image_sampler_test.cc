@@ -37,7 +37,7 @@ TEST(RandomImageSamplerTest, SampleNoLens) {
   EXPECT_NEAR(sample->image_uv[1] + 0.5, sample->image_uv_dxdy[1], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(sample->weight, 1.0);
-  EXPECT_EQ(&rng, &sample->rng);
+  EXPECT_FALSE(sample->rng);
 
   EXPECT_FALSE(sampler->NextSample(false, rng).has_value());
 }
@@ -64,7 +64,7 @@ TEST(RandomImageSamplerTest, SampleWithLens) {
   EXPECT_NEAR(sample->image_uv[0] + 0.5, sample->image_uv_dxdy[0], 0.01);
   EXPECT_NEAR(sample->image_uv[1] + 0.5, sample->image_uv_dxdy[1], 0.01);
   EXPECT_EQ(sample->weight, 1.0);
-  EXPECT_EQ(&rng, &sample->rng);
+  EXPECT_FALSE(sample->rng);
 
   EXPECT_FALSE(sampler->NextSample(true, rng).has_value());
 }

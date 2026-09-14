@@ -43,13 +43,7 @@ class LowDiscrepancyImageSampler final : public ImageSampler {
     LowDiscrepancyRandom(LowDiscrepancySequence& sequence)
         : sequence_(sequence), rng_(nullptr) {}
 
-    // Random Interface
-    geometric NextGeometric() override;
-    void DiscardGeometric(size_t num_to_discard) override;
-    visual NextVisual() override;
-    size_t NextIndex(size_t size) override;
-
-    // Set RNG
+    geometric Next() override;
     void Set(RandomBitstream* rng);
 
    private:

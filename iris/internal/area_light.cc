@@ -28,7 +28,7 @@ class AreaLight final : public Light {
             face_t face, bool invisible) noexcept;
 
   std::optional<SampleResult> Sample(
-      const HitPoint& hit_point, Sampler sampler,
+      const HitPoint& hit_point, Sampler& sampler,
       iris::VisibilityTester& tester,
       SpectralAllocator& allocator) const override;
 
@@ -70,7 +70,7 @@ AreaLight::AreaLight(ReferenceCounted<Geometry> geometry,
 }
 
 std::optional<Light::SampleResult> AreaLight::Sample(
-    const HitPoint& hit_point, Sampler sampler, iris::VisibilityTester& tester,
+    const HitPoint& hit_point, Sampler& sampler, iris::VisibilityTester& tester,
     SpectralAllocator& allocator) const {
   Point model_origin =
       model_to_world_

@@ -103,7 +103,7 @@ std::optional<ImageSampler::Sample> StratifiedImageSampler::NextSample(
                               {{image_u_dx, image_v_dv}},
                               lens_uv,
                               sample_weight_,
-                              rng};
+                              nullptr};
 }
 
 std::unique_ptr<ImageSampler> StratifiedImageSampler::Replicate() const {

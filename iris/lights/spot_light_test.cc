@@ -11,12 +11,12 @@
 #include "iris/light.h"
 #include "iris/point.h"
 #include "iris/power_matchers/mock_power_matcher.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/spectra/mock_spectrum.h"
 #include "iris/spectrum.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/testing/visibility_tester.h"
 
@@ -25,11 +25,11 @@ namespace lights {
 namespace {
 
 using ::iris::power_matchers::MockPowerMatcher;
-using ::iris::random::MockRandom;
 using ::iris::spectra::MockSpectrum;
 using ::iris::testing::GetAlwaysVisibleVisibilityTester;
 using ::iris::testing::GetNeverVisibleVisibilityTester;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Ref;
 using ::testing::Return;
@@ -42,8 +42,7 @@ TEST(SpotLightTest, Null) {
 }
 
 TEST(SpotLightTest, SampleHitsNoFalloff) {
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
@@ -54,8 +53,7 @@ TEST(SpotLightTest, SampleHitsNoFalloff) {
   std::optional<Light::SampleResult> result = light->Sample(
       HitPoint(Point(0.0, 0.0, -1.0), PositionError(0.0, 0.0, 0.0),
                Vector(1.0, 0.0, 0.0)),
-      Sampler(random), GetAlwaysVisibleVisibilityTester(),
-      GetSpectralAllocator());
+      sampler, GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(spectrum.Get(), &result->emission);
   EXPECT_FALSE(result->pdf);
@@ -63,8 +61,7 @@ TEST(SpotLightTest, SampleHitsNoFalloff) {
 }
 
 TEST(SpotLightTest, SampleHitsWithFalloff) {
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
@@ -73,11 +70,10 @@ TEST(SpotLightTest, SampleHitsWithFalloff) {
   ReferenceCounted<Light> light = MakeSpotLight(
       Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0), 360.0, 0.0, spectrum);
 
-  std::optional<Light::SampleResult> result =
-      light->Sample(HitPoint(Point(0.0, 1.0, 0.0), PositionError(0.0, 0.0, 0.0),
-                             Vector(1.0, 0.0, 0.0)),
-                    Sampler(random), GetAlwaysVisibleVisibilityTester(),
-                    GetSpectralAllocator());
+  std::optional<Light::SampleResult> result = light->Sample(
+      HitPoint(Point(0.0, 1.0, 0.0), PositionError(0.0, 0.0, 0.0),
+               Vector(1.0, 0.0, 0.0)),
+      sampler, GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   ASSERT_TRUE(result);
   EXPECT_EQ(0.0625, result->emission.Intensity(1.0));
   EXPECT_FALSE(result->pdf);
@@ -85,8 +81,7 @@ TEST(SpotLightTest, SampleHitsWithFalloff) {
 }
 
 TEST(SpotLightTest, SampleHitsPastCutoff) {
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
@@ -94,28 +89,25 @@ TEST(SpotLightTest, SampleHitsPastCutoff) {
   ReferenceCounted<Light> light = MakeSpotLight(
       Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0), 30.0, 5.0, spectrum);
 
-  std::optional<Light::SampleResult> result =
-      light->Sample(HitPoint(Point(0.0, 1.0, 0.0), PositionError(0.0, 0.0, 0.0),
-                             Vector(1.0, 0.0, 0.0)),
-                    Sampler(random), GetAlwaysVisibleVisibilityTester(),
-                    GetSpectralAllocator());
+  std::optional<Light::SampleResult> result = light->Sample(
+      HitPoint(Point(0.0, 1.0, 0.0), PositionError(0.0, 0.0, 0.0),
+               Vector(1.0, 0.0, 0.0)),
+      sampler, GetAlwaysVisibleVisibilityTester(), GetSpectralAllocator());
   EXPECT_FALSE(result);
 }
 
 TEST(SpotLightTest, SampleMisses) {
-  MockRandom random;
-  EXPECT_CALL(random, DiscardGeometric(2));
+  Sampler sampler = MakeSampler({}, {});
 
   ReferenceCounted<MockSpectrum> spectrum =
       MakeReferenceCounted<MockSpectrum>();
 
   ReferenceCounted<Light> light = MakeSpotLight(
       Point(0.0, 0.0, 0.0), Vector(0.0, 0.0, 1.0), 360.0, 360.0, spectrum);
-  EXPECT_FALSE(
-      light->Sample(HitPoint(Point(0.0, 0.0, 2.0), PositionError(0.0, 0.0, 0.0),
-                             Vector(1.0, 0.0, 0.0)),
-                    Sampler(random), GetNeverVisibleVisibilityTester(),
-                    GetSpectralAllocator()));
+  EXPECT_FALSE(light->Sample(
+      HitPoint(Point(0.0, 0.0, 2.0), PositionError(0.0, 0.0, 0.0),
+               Vector(1.0, 0.0, 0.0)),
+      sampler, GetNeverVisibleVisibilityTester(), GetSpectralAllocator()));
 }
 
 TEST(SpotLightTest, Emission) {

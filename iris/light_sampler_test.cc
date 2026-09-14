@@ -9,34 +9,34 @@
 #include "iris/lights/mock_light.h"
 #include "iris/point.h"
 #include "iris/random.h"
-#include "iris/random/mock_random.h"
+#include "iris/testing/sampler.h"
 
 namespace iris {
 namespace {
 
 using ::iris::light_scenes::MockLightScene;
 using ::iris::lights::MockLight;
-using ::iris::random::MockRandom;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 
 TEST(LightSamplerTest, Sample) {
   std::unique_ptr<Light> light = std::make_unique<MockLight>();
-  std::unique_ptr<Random> random = std::make_unique<MockRandom>();
+  Sampler samp = MakeSampler({}, {});
   internal::Arena arena;
-  LightSampleAllocator allocator(arena);
+  LightSampleAllocator alloc(arena);
 
   MockLightScene scene;
   EXPECT_CALL(scene, Sample(Point(1.0, 1.0, 1.0), _, _))
-      .WillOnce([&](const Point& hit_point, Random& rng,
+      .WillOnce([&](const Point& hit_point, Sampler& sampler,
                     LightSampleAllocator& allocator) {
-        EXPECT_EQ(random.get(), &rng);
-        EXPECT_EQ(&allocator, &allocator);
+        EXPECT_EQ(&samp, &sampler);
+        EXPECT_EQ(&alloc, &allocator);
         return &allocator.Allocate(*light, static_cast<visual_t>(2.0));
       });
 
-  LightSampler sampler(scene, *random, allocator);
+  LightSampler sampler(scene, alloc);
 
-  const LightSample* sample = sampler.Sample(Point(1.0, 1.0, 1.0));
+  const LightSample* sample = sampler.Sample(Point(1.0, 1.0, 1.0), samp);
   ASSERT_NE(nullptr, sample);
   EXPECT_EQ(light.get(), &sample->light);
   EXPECT_EQ(2.0, sample->pdf);

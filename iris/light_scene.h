@@ -7,7 +7,7 @@
 #include "iris/light_sample_allocator.h"
 #include "iris/point.h"
 #include "iris/power_matcher.h"
-#include "iris/random.h"
+#include "iris/sampler.h"
 
 namespace iris {
 
@@ -24,7 +24,7 @@ class LightScene {
     virtual ~Builder() = default;
   };
 
-  virtual LightSample* Sample(const Point& hit_point, Random& rng,
+  virtual LightSample* Sample(const Point& hit_point, Sampler& sampler,
                               LightSampleAllocator& allocator) const = 0;
   virtual ~LightScene() {}
 };

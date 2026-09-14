@@ -5,24 +5,23 @@
 #include "iris/light_sample_allocator.h"
 #include "iris/light_scene.h"
 #include "iris/point.h"
-#include "iris/random.h"
+#include "iris/sampler.h"
 
 namespace iris {
 
 class LightSampler final {
  public:
-  LightSampler(const LightScene& scene, Random& rng,
+  LightSampler(const LightScene& scene,
                LightSampleAllocator& allocator) noexcept
-      : scene_(scene), rng_(rng), allocator_(allocator) {}
+      : scene_(scene), allocator_(allocator) {}
 
-  LightSample* Sample(const Point& hit_point);
+  LightSample* Sample(const Point& hit_point, Sampler& sampler);
 
  private:
   LightSampler(const LightSampler&) = delete;
   LightSampler& operator=(const LightSampler&) = delete;
 
   const LightScene& scene_;
-  Random& rng_;
   LightSampleAllocator& allocator_;
 };
 

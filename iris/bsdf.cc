@@ -138,7 +138,7 @@ bool Bsdf::IsDiffuse() const { return is_diffuse_; }
 
 std::optional<Bsdf::SampleResult> Bsdf::Sample(
     const Vector& incoming, const std::optional<Differentials>& differentials,
-    Sampler sampler, SpectralAllocator& allocator, bool diffuse_only) const {
+    Sampler& sampler, SpectralAllocator& allocator, bool diffuse_only) const {
   geometric_t dp_incoming = DotProduct(incoming, surface_normal_);
   if (dp_incoming == static_cast<geometric_t>(0.0)) {
     return std::nullopt;

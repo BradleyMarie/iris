@@ -11,11 +11,11 @@
 #include "iris/hit_point.h"
 #include "iris/point.h"
 #include "iris/position_error.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/sampler.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 #include "iris/vector.h"
 
@@ -25,9 +25,9 @@ namespace internal {
 namespace {
 
 using ::iris::bxdfs::MockBxdf;
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -46,8 +46,7 @@ static const Vector kOutgoing = Normalize(Vector(0.0, 0.0, -1.0));
 static const Vector kSurfaceNormal = Normalize(Vector(0.0, 0.0, -1.0));
 
 TEST(SampleIndirectLighting, NoSample) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
+  Sampler sampler = MakeSampler({0.0}, {{0.0, 0.0}});
 
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
@@ -64,7 +63,7 @@ TEST(SampleIndirectLighting, NoSample) {
   RayDifferential initial_ray(Ray(kOrigin, kDirection));
   RayDifferential actual_ray(Ray(kOrigin, kDirection));
 
-  EXPECT_FALSE(SampleIndirectLighting(intersection, Sampler(rng),
+  EXPECT_FALSE(SampleIndirectLighting(intersection, sampler,
                                       GetSpectralAllocator(), actual_ray));
   EXPECT_EQ(initial_ray, actual_ray);
 }
@@ -72,8 +71,7 @@ TEST(SampleIndirectLighting, NoSample) {
 TEST(SampleIndirectLighting, Sample) {
   MockReflector reflector;
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
+  Sampler sampler = MakeSampler({0.0}, {{0.0, 0.0}});
 
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
@@ -92,7 +90,7 @@ TEST(SampleIndirectLighting, Sample) {
 
   RayDifferential actual_ray(Ray(kOrigin, kDirection));
   std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
-      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
+      intersection, sampler, GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
 
@@ -110,8 +108,7 @@ TEST(SampleIndirectLighting, Sample) {
 TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
   MockReflector reflector;
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
+  Sampler sampler = MakeSampler({0.0}, {{0.0, 0.0}});
 
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
@@ -132,7 +129,7 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
                              Ray(kDxOrigin, kDirection),
                              Ray(kDyOrigin, kDirection));
   std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
-      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
+      intersection, sampler, GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
 
@@ -150,8 +147,7 @@ TEST(SampleIndirectLighting, SampleWithOnlyRayDifferentials) {
 TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
   MockReflector reflector;
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
+  Sampler sampler = MakeSampler({0.0}, {{0.0, 0.0}});
 
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
@@ -171,7 +167,7 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
 
   RayDifferential actual_ray(Ray(kOrigin, kDirection));
   std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
-      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
+      intersection, sampler, GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
   EXPECT_FALSE(indirect->differentials);
@@ -190,8 +186,7 @@ TEST(SampleIndirectLighting, SampleWithOnlyIntersection) {
 TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
   MockReflector reflector;
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
+  Sampler sampler = MakeSampler({0.0}, {{0.0, 0.0}});
 
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
@@ -213,7 +208,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
                              Ray(kDxOrigin, kDirection),
                              Ray(kDyOrigin, kDirection));
   std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
-      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
+      intersection, sampler, GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
   EXPECT_FALSE(indirect->differentials);
@@ -232,8 +227,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentialsNoneReturned) {
 TEST(SampleIndirectLighting, SampleWithDifferentials) {
   MockReflector reflector;
 
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
+  Sampler sampler = MakeSampler({0.0}, {{0.0, 0.0}});
 
   MockBxdf bxdf;
   EXPECT_CALL(bxdf, IsDiffuse(NotNull()))
@@ -256,7 +250,7 @@ TEST(SampleIndirectLighting, SampleWithDifferentials) {
                              Ray(kDxOrigin, kDirection),
                              Ray(kDyOrigin, kDirection));
   std::optional<Bsdf::SampleResult> indirect = SampleIndirectLighting(
-      intersection, Sampler(rng), GetSpectralAllocator(), actual_ray);
+      intersection, sampler, GetSpectralAllocator(), actual_ray);
   ASSERT_TRUE(indirect);
   EXPECT_EQ(&reflector, &indirect->reflector);
   EXPECT_TRUE(indirect->differentials);

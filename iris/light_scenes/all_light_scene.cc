@@ -8,7 +8,7 @@
 #include "iris/light_scene.h"
 #include "iris/point.h"
 #include "iris/power_matcher.h"
-#include "iris/random.h"
+#include "iris/sampler.h"
 #include "iris/scene_objects.h"
 
 namespace iris {
@@ -27,7 +27,7 @@ class AllLightScene final : public LightScene {
   AllLightScene(const SceneObjects& scene_objects) noexcept
       : scene_objects_(scene_objects) {}
 
-  LightSample* Sample(const Point& hit_point, Random& rng,
+  LightSample* Sample(const Point& hit_point, Sampler& sampler,
                       LightSampleAllocator& allocator) const override;
 
  private:
@@ -40,7 +40,7 @@ std::unique_ptr<LightScene> AllLightScene::Builder::Build(
   return std::make_unique<AllLightScene>(scene_objects);
 }
 
-LightSample* AllLightScene::Sample(const Point& hit_point, Random& rng,
+LightSample* AllLightScene::Sample(const Point& hit_point, Sampler& sampler,
                                    LightSampleAllocator& allocator) const {
   LightSample* next = nullptr;
   for (size_t i = 0; i < scene_objects_.NumLights(); i++) {

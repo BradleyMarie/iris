@@ -26,12 +26,13 @@ std::optional<Bsdf::Differentials> MakeDifferentials(
 }
 
 std::optional<Bsdf::SampleResult> SampleIndirectLighting(
-    const RayTracer::SurfaceIntersection& intersection, Sampler sampler,
+    const RayTracer::SurfaceIntersection& intersection, Sampler& sampler,
     SpectralAllocator& allocator, RayDifferential& trace_ray) {
   auto differentials = MakeDifferentials(trace_ray, intersection);
 
+  Sampler bsdf_sampler = sampler.Claim(1u, 1u);
   auto bsdf_sample = intersection.bsdf.Sample(
-      trace_ray.direction, differentials, std::move(sampler), allocator);
+      trace_ray.direction, differentials, bsdf_sampler, allocator);
 
   if (bsdf_sample) {
     if (differentials && bsdf_sample->differentials) {

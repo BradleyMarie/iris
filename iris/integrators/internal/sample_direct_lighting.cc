@@ -93,16 +93,15 @@ const Spectrum* FromBsdfSample(
 
 const Spectrum* EstimateDirectLighting(
     const Light& light, const Ray& traced_ray,
-    const RayTracer::SurfaceIntersection intersection, Sampler bsdf_sampler,
-    Sampler light_sampler, VisibilityTester& visibility_tester,
+    const RayTracer::SurfaceIntersection intersection, Sampler& bsdf_sampler,
+    Sampler& light_sampler, VisibilityTester& visibility_tester,
     SpectralAllocator& allocator) {
   if (!intersection.bsdf.IsDiffuse()) {
     return nullptr;
   }
 
-  std::optional<Light::SampleResult> light_sample =
-      light.Sample(intersection.hit_point, std::move(light_sampler),
-                   visibility_tester, allocator);
+  std::optional<Light::SampleResult> light_sample = light.Sample(
+      intersection.hit_point, light_sampler, visibility_tester, allocator);
   if (light_sample && light_sample->pdf &&
       (!std::isfinite(*light_sample->pdf) ||
        *light_sample->pdf <= static_cast<visual_t>(0.0))) {
@@ -121,7 +120,7 @@ const Spectrum* EstimateDirectLighting(
   }
 
   std::optional<Bsdf::SampleResult> bsdf_sample = intersection.bsdf.Sample(
-      traced_ray.direction, std::nullopt, std::move(bsdf_sampler), allocator,
+      traced_ray.direction, std::nullopt, bsdf_sampler, allocator,
       /*diffuse_only=*/true);
 
   const Spectrum* bsdf_spectrum = nullptr;
@@ -136,22 +135,23 @@ const Spectrum* EstimateDirectLighting(
 
 const Spectrum* SampleDirectLighting(
     LightSampler& light_sampler, const Ray& traced_ray,
-    const RayTracer::SurfaceIntersection intersection, Random& rng,
+    const RayTracer::SurfaceIntersection intersection, Sampler& sampler,
     VisibilityTester& visibility_tester, SpectralAllocator& allocator) {
-  const Spectrum* result = nullptr;
-  for (LightSample* light_samples =
-           light_sampler.Sample(intersection.hit_point.ApproximateLocation());
-       light_samples; light_samples = light_samples->next) {
-    Sampler bsdf_sampler(rng);
-    Sampler light_sampler(rng);
+  Sampler light_sample = sampler.Claim(1u, 0u);
 
+  const Spectrum* result = nullptr;
+  for (LightSample* light_samples = light_sampler.Sample(
+           intersection.hit_point.ApproximateLocation(), light_sample);
+       light_samples; light_samples = light_samples->next) {
+    Sampler bsdf_sampler = sampler.Claim(1u, 1u);
+    Sampler light_sampler = sampler.Claim(2u, 1u);
     if (light_samples->pdf && *light_samples->pdf <= 0.0) {
       continue;
     }
 
     const Spectrum* direct_light = EstimateDirectLighting(
-        light_samples->light, traced_ray, intersection, std::move(bsdf_sampler),
-        std::move(light_sampler), visibility_tester, allocator);
+        light_samples->light, traced_ray, intersection, bsdf_sampler,
+        light_sampler, visibility_tester, allocator);
 
     if (light_samples->pdf) {
       direct_light = allocator.Scale(

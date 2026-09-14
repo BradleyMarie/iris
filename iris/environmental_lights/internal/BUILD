@@ -25,7 +25,7 @@ cc_test(
         ":distribution_1d",
         "//iris:float",
         "//iris:sampler",
-        "//iris/random:mock_random",
+        "//iris/testing:sampler",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -48,8 +48,8 @@ cc_test(
     deps = [
         ":distribution_2d",
         "//iris:float",
-        "//iris:sampler",
         "//iris/random:mock_random",
+        "//iris/testing:sampler",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

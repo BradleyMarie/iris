@@ -36,7 +36,7 @@ class Bsdf final {
 
   std::optional<SampleResult> Sample(
       const Vector& incoming, const std::optional<Differentials>& differentials,
-      Sampler sampler, SpectralAllocator& allocator,
+      Sampler& sampler, SpectralAllocator& allocator,
       bool diffuse_only = false) const;
 
   struct ReflectanceResult {

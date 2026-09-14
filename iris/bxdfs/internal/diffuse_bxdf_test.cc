@@ -2,7 +2,7 @@
 
 #include "googlemock/include/gmock/gmock.h"
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
@@ -10,8 +10,8 @@ namespace bxdfs {
 namespace internal {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::FieldsAre;
 using ::testing::Ref;
 using ::testing::Return;
@@ -39,9 +39,7 @@ TEST(DiffuseBxdfTest, IsDiffuse) {
 }
 
 TEST(DiffuseBxdfTest, Sample) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockDiffuseBxdf bxdf;
   EXPECT_CALL(bxdf, SampleDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),
@@ -55,9 +53,7 @@ TEST(DiffuseBxdfTest, Sample) {
 }
 
 TEST(DiffuseBxdfTest, SampleFails) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockDiffuseBxdf bxdf;
   EXPECT_CALL(bxdf, SampleDiffuse(Vector(0.0, 1.0, 0.0), Vector(0.0, 0.0, 1.0),

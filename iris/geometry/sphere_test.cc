@@ -21,11 +21,11 @@
 #include "iris/normal_map.h"
 #include "iris/normal_maps/mock_normal_map.h"
 #include "iris/point.h"
-#include "iris/random/mock_random.h"
 #include "iris/ray.h"
 #include "iris/reference_counted.h"
 #include "iris/sampler.h"
 #include "iris/testing/hit_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/texture_coordinates.h"
 #include "iris/vector.h"
 
@@ -36,10 +36,10 @@ namespace {
 using ::iris::emissive_materials::MockEmissiveMaterial;
 using ::iris::materials::MockMaterial;
 using ::iris::normal_maps::MockNormalMap;
-using ::iris::random::MockRandom;
 using ::iris::testing::BackFace;
 using ::iris::testing::FrontFace;
 using ::iris::testing::MakeHitAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::InSequence;
 using ::testing::Return;
 
@@ -297,36 +297,15 @@ TEST(Sphere, ComputeSurfaceArea) {
 TEST(Sphere, SampleBySolidAngle) {
   ReferenceCounted<Geometry> sphere = MakeSimpleSphere();
 
-  MockRandom rng0;
-  {
-    InSequence s;
-    EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.5));
-    EXPECT_CALL(rng0, NextGeometric()).WillOnce(Return(0.5));
-  }
-
-  Sampler sampler0(rng0);
+  Sampler sampler0 = MakeSampler({}, {{0.5, 0.5}});
   EXPECT_TRUE(std::holds_alternative<std::monostate>(
       sphere->SampleBySolidAngle(Point(0.0, 0.0, 3.0), FRONT_FACE, sampler0)));
 
-  MockRandom rng1;
-  {
-    InSequence s;
-    EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.5));
-    EXPECT_CALL(rng1, NextGeometric()).WillOnce(Return(0.5));
-  }
-
-  Sampler sampler1(rng1);
+  Sampler sampler1 = MakeSampler({}, {{0.5, 0.5}});
   EXPECT_TRUE(std::holds_alternative<std::monostate>(
       sphere->SampleBySolidAngle(Point(0.0, 0.0, 0.0), BACK_FACE, sampler1)));
 
-  MockRandom rng2;
-  {
-    InSequence s;
-    EXPECT_CALL(rng2, NextGeometric()).WillOnce(Return(0.5));
-    EXPECT_CALL(rng2, NextGeometric()).WillOnce(Return(0.5));
-  }
-
-  Sampler sampler2(rng2);
+  Sampler sampler2 = MakeSampler({}, {{0.5, 0.5}});
   std::variant<std::monostate, Point, Vector> sample2 =
       sphere->SampleBySolidAngle(Point(0.0, 0.0, 0.0), FRONT_FACE, sampler2);
   Vector vector2 = std::get<Vector>(sample2);
@@ -334,14 +313,7 @@ TEST(Sphere, SampleBySolidAngle) {
   EXPECT_NEAR(vector2.y, 0.488296, 0.001);
   EXPECT_NEAR(vector2.z, 0.872677, 0.001);
 
-  MockRandom rng3;
-  {
-    InSequence s;
-    EXPECT_CALL(rng3, NextGeometric()).WillOnce(Return(0.5));
-    EXPECT_CALL(rng3, NextGeometric()).WillOnce(Return(0.5));
-  }
-
-  Sampler sampler3(rng3);
+  Sampler sampler3 = MakeSampler({}, {{0.5, 0.5}});
   std::variant<std::monostate, Point, Vector> sample3 =
       sphere->SampleBySolidAngle(Point(0.0, 0.0, 3.0), BACK_FACE, sampler3);
   EXPECT_EQ(Point(2.0, 0.0, 3.0), std::get<Point>(sample3));

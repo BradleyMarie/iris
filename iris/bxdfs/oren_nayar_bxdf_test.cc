@@ -3,18 +3,18 @@
 #include <numbers>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
@@ -23,11 +23,9 @@ TEST(OrenNayarBrdfTest, NullReflector) {
 }
 
 TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
   std::optional<Vector> result = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, 1.0), sampler);
@@ -38,11 +36,9 @@ TEST(OrenNayarBrdfTest, SampleDiffuseAligned) {
 }
 
 TEST(OrenNayarBrdfTest, SampleDiffuseUnaligned) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, NextGeometric()).Times(2).WillRepeatedly(Return(0.0));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {{0.0, 0.0}});
 
+  MockReflector reflector;
   const Bxdf* bxdf = MakeOrenNayarBrdf(GetBxdfAllocator(), &reflector, 0.1);
   std::optional<Vector> result = bxdf->SampleDiffuse(
       Vector(0.0, 0.0, 1.0), Vector(0.0, 0.0, -1.0), sampler);

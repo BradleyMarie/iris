@@ -66,8 +66,8 @@ cc_test(
         ":vector",
         "//iris/bxdfs:mock_bxdf",
         "//iris/internal:arena",
-        "//iris/random:mock_random",
         "//iris/reflectors:mock_reflector",
+        "//iris/testing:sampler",
         "//iris/testing:spectral_allocator",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
@@ -253,7 +253,7 @@ cc_test(
         ":vector",
         "//iris/geometry:mock_geometry",
         "//iris/internal:hit_arena",
-        "//iris/random:mock_random",
+        "//iris/testing:sampler",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -500,7 +500,7 @@ cc_test(
         "//iris/internal:arena",
         "//iris/light_scenes:mock_light_scene",
         "//iris/lights:mock_light",
-        "//iris/random:mock_random",
+        "//iris/testing:sampler",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],
@@ -633,28 +633,15 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":float",
-        ":random",
     ],
 )
 
 cc_library(
     name = "random",
-    srcs = ["random.cc"],
     hdrs = ["random.h"],
     visibility = ["//visibility:public"],
     deps = [
         ":float",
-    ],
-)
-
-cc_test(
-    name = "random_test",
-    srcs = ["random_test.cc"],
-    deps = [
-        ":random",
-        "//iris/random:mock_random",
-        "@googletest//:gtest",
-        "@googletest//:gtest_main",
     ],
 )
 
@@ -869,6 +856,7 @@ cc_library(
     deps = [
         ":float",
         ":random",
+        ":random_bitstream",
     ],
 )
 
@@ -876,8 +864,10 @@ cc_test(
     name = "sampler_test",
     srcs = ["sampler_test.cc"],
     deps = [
+        ":float",
         ":sampler",
         "//iris/random:mock_random",
+        "//iris/random_bitstreams:mock_random_bitstream",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

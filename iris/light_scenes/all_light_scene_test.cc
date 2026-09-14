@@ -10,11 +10,11 @@
 #include "iris/lights/mock_light.h"
 #include "iris/point.h"
 #include "iris/power_matchers/mock_power_matcher.h"
-#include "iris/random/mock_random.h"
 #include "iris/reference_counted.h"
 #include "iris/scene_objects.h"
 #include "iris/scenes/list_scene.h"
 #include "iris/testing/light_sample_allocator.h"
+#include "iris/testing/sampler.h"
 
 namespace iris {
 namespace light_scenes {
@@ -22,17 +22,17 @@ namespace {
 
 using ::iris::lights::MockLight;
 using ::iris::power_matchers::MockPowerMatcher;
-using ::iris::random::MockRandom;
 using ::iris::testing::GetLightSampleAllocator;
+using ::iris::testing::MakeSampler;
 
 const static MockPowerMatcher kPowerMatcher;
 
 TEST(AllLightSceneTest, NoLights) {
-  MockRandom rng;
+  Sampler sampler = MakeSampler({}, {});
   SceneObjects scene_objects = SceneObjects::Builder().Build();
   std::unique_ptr<LightScene> light_scene =
       MakeAllLightSceneBuilder()->Build(scene_objects, kPowerMatcher);
-  EXPECT_EQ(nullptr, light_scene->Sample(Point(0.0, 0.0, 0.0), rng,
+  EXPECT_EQ(nullptr, light_scene->Sample(Point(0.0, 0.0, 0.0), sampler,
                                          GetLightSampleAllocator()));
 }
 
@@ -43,7 +43,7 @@ TEST(AllLightSceneTest, TwoLights) {
   ReferenceCounted<MockLight> light1 = MakeReferenceCounted<MockLight>();
   const Light* light1_ptr = light1.Get();
 
-  MockRandom rng;
+  Sampler sampler = MakeSampler({}, {});
 
   SceneObjects::Builder scene_builder;
   scene_builder.Add(std::move(light0));
@@ -53,8 +53,8 @@ TEST(AllLightSceneTest, TwoLights) {
   std::unique_ptr<LightScene> light_scene =
       MakeAllLightSceneBuilder()->Build(objects, kPowerMatcher);
 
-  const LightSample* light_samples =
-      light_scene->Sample(Point(0.0, 0.0, 0.0), rng, GetLightSampleAllocator());
+  const LightSample* light_samples = light_scene->Sample(
+      Point(0.0, 0.0, 0.0), sampler, GetLightSampleAllocator());
   ASSERT_NE(nullptr, light_samples);
 
   const LightSample* light1_sample = light_samples;

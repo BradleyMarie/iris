@@ -26,7 +26,7 @@ class EnvironmentalLight final : public Light {
   EnvironmentalLight(const iris::EnvironmentalLight& light) noexcept;
 
   std::optional<SampleResult> Sample(
-      const HitPoint& hit_point, Sampler sampler,
+      const HitPoint& hit_point, Sampler& sampler,
       iris::VisibilityTester& tester,
       SpectralAllocator& allocator) const override;
 
@@ -46,7 +46,7 @@ EnvironmentalLight::EnvironmentalLight(
     : Light({false}), light_(light) {}
 
 std::optional<Light::SampleResult> EnvironmentalLight::Sample(
-    const HitPoint& hit_point, Sampler sampler, iris::VisibilityTester& tester,
+    const HitPoint& hit_point, Sampler& sampler, iris::VisibilityTester& tester,
     SpectralAllocator& allocator) const {
   std::optional<iris::EnvironmentalLight::SampleResult> sample =
       light_.Sample(sampler, allocator);

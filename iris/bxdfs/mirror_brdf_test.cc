@@ -3,19 +3,19 @@
 #include <variant>
 
 #include "googletest/include/gtest/gtest.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::Return;
 
@@ -26,11 +26,9 @@ TEST(MirrorBrdfTest, Null) {
 }
 
 TEST(MirrorBrdfTest, Sample) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
+  MockReflector reflector;
   const Bxdf* bxdf = MakeMirrorBrdf(GetBxdfAllocator(), &reflector);
   auto result = std::get<Bxdf::SpecularSample>(
       bxdf->Sample(Vector(1.0, 1.0, 1.0), std::nullopt, Vector(0.0, 0.0, 1.0),
@@ -44,11 +42,9 @@ TEST(MirrorBrdfTest, Sample) {
 }
 
 TEST(MirrorBrdfTest, SampleWithDerivatives) {
-  MockReflector reflector;
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
+  MockReflector reflector;
   const Bxdf* bxdf = MakeMirrorBrdf(GetBxdfAllocator(), &reflector);
   auto result = std::get<Bxdf::SpecularSample>(bxdf->Sample(
       Vector(1.0, 1.0, 1.0), {{Vector(1.0, 0.5, 1.0), Vector(0.5, 1.0, 1.0)}},

@@ -14,7 +14,7 @@ namespace integrators {
 namespace internal {
 
 std::optional<Bsdf::SampleResult> SampleIndirectLighting(
-    const RayTracer::SurfaceIntersection& intersection, Sampler sampler,
+    const RayTracer::SurfaceIntersection& intersection, Sampler& sampler,
     SpectralAllocator& allocator, RayDifferential& trace_ray);
 
 }  // namespace internal

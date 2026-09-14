@@ -65,7 +65,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleNoLens) {
   EXPECT_NEAR(sample->image_uv[0] + 1.0, sample->image_uv_dxdy[0], 0.01);
   EXPECT_FALSE(sample->lens_uv);
   EXPECT_EQ(1.0, sample->weight);
-  EXPECT_NE(&rng, &sample->rng);
+  EXPECT_TRUE(sample->rng);
 }
 
 TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
@@ -97,7 +97,7 @@ TEST(LowDiscrepancyImageSamplerTest, NextSampleWithLens) {
   EXPECT_EQ(0.125, (*sample->lens_uv)[0]);
   EXPECT_EQ(0.375, (*sample->lens_uv)[1]);
   EXPECT_EQ(1.0, sample->weight);
-  EXPECT_NE(&rng, &sample->rng);
+  EXPECT_TRUE(sample->rng);
 }
 
 TEST(LowDiscrepancyImageSamplerTest, TwoSamples) {
@@ -137,7 +137,6 @@ TEST(LowDiscrepancyImageSamplerTest, Replicate) {
 TEST(LowDiscrepancyRandomTest, Passes) {
   auto sequence = std::make_unique<MockLowDiscrepancySequence>();
   EXPECT_CALL(*sequence, Permute(_)).Times(1);
-  EXPECT_CALL(*sequence, Discard(_)).Times(1);
 
   {
     InSequence s;
@@ -150,18 +149,13 @@ TEST(LowDiscrepancyRandomTest, Passes) {
   EXPECT_CALL(*sequence, SampleWeight(1)).WillOnce(Return(1.0));
 
   MockRandomBitstream rng;
-  EXPECT_CALL(rng, Next()).WillRepeatedly(Return(0u));
-
   LowDiscrepancyImageSampler sampler(std::move(sequence), 1);
   sampler.StartPixel({1, 1}, {0, 0}, rng);
 
   auto sample = sampler.NextSample(false, rng);
   ASSERT_TRUE(sample);
-  EXPECT_NE(&rng, &sample->rng);
-  EXPECT_EQ(0u, sample->rng.NextIndex(2));
-  EXPECT_EQ(0.875, sample->rng.NextGeometric());
-  EXPECT_EQ(0.0, sample->rng.NextVisual());
-  sample->rng.DiscardGeometric(1);
+  ASSERT_TRUE(sample->rng);
+  EXPECT_EQ(0.875, sample->rng->Next());
 }
 
 }  // namespace

@@ -4,18 +4,18 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/mock_bxdf.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -53,9 +53,7 @@ TEST(AttenuatedBrdfTest, IsDiffuse) {
 }
 
 TEST(AttenuatedBrdfTest, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockBxdf mock_bxdf;
   EXPECT_CALL(mock_bxdf, SampleDiffuse(Vector(0.0, 0.0, 1.0),
@@ -72,9 +70,7 @@ TEST(AttenuatedBrdfTest, SampleDiffuse) {
 }
 
 TEST(AttenuatedBrdfTest, Sample) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockBxdf mock_bxdf;
   EXPECT_CALL(mock_bxdf, Sample(Vector(0.0, 0.0, 1.0), Eq(std::nullopt),
@@ -92,12 +88,10 @@ TEST(AttenuatedBrdfTest, Sample) {
 }
 
 TEST(AttenuatedBrdfTest, SampleSpecular) {
+  Sampler sampler = MakeSampler({}, {});
+
   MockReflector reflector;
   EXPECT_CALL(reflector, Reflectance(2.0)).WillRepeatedly(Return(0.5));
-
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2)).Times(1);
-  Sampler sampler(rng);
 
   MockBxdf mock_bxdf;
   EXPECT_CALL(mock_bxdf, Sample(Vector(0.0, 0.0, 1.0), Eq(std::nullopt),

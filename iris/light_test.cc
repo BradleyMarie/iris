@@ -18,7 +18,7 @@ namespace {
 
 class PublicLight : public Light {
   std::optional<SampleResult> Sample(
-      const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
+      const HitPoint& hit_point, Sampler& sampler, VisibilityTester& tester,
       SpectralAllocator& allocator) const override {
     return std::nullopt;
   }
@@ -41,7 +41,7 @@ class InternalLight : public Light {
       : Light(parameters) {}
 
   std::optional<SampleResult> Sample(
-      const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
+      const HitPoint& hit_point, Sampler& sampler, VisibilityTester& tester,
       SpectralAllocator& allocator) const override {
     return std::nullopt;
   }

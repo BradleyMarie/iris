@@ -26,7 +26,7 @@ class DirectionalLight final : public Light {
       : spectrum_(std::move(spectrum)), to_light_(Normalize(to_light)) {}
 
   std::optional<SampleResult> Sample(
-      const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
+      const HitPoint& hit_point, Sampler& sampler, VisibilityTester& tester,
       SpectralAllocator& allocator) const override;
 
   const Spectrum* Emission(const Ray& to_light, VisibilityTester& tester,
@@ -42,7 +42,7 @@ class DirectionalLight final : public Light {
 };
 
 std::optional<Light::SampleResult> DirectionalLight::Sample(
-    const HitPoint& hit_point, Sampler sampler, VisibilityTester& tester,
+    const HitPoint& hit_point, Sampler& sampler, VisibilityTester& tester,
     SpectralAllocator& allocator) const {
   if (!spectrum_) {
     return std::nullopt;

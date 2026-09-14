@@ -2,19 +2,19 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/bxdfs/mock_bxdf.h"
-#include "iris/random/mock_random.h"
 #include "iris/reflectors/mock_reflector.h"
 #include "iris/testing/bxdf_allocator.h"
+#include "iris/testing/sampler.h"
 #include "iris/testing/spectral_allocator.h"
 
 namespace iris {
 namespace bxdfs {
 namespace {
 
-using ::iris::random::MockRandom;
 using ::iris::reflectors::MockReflector;
 using ::iris::testing::GetBxdfAllocator;
 using ::iris::testing::GetSpectralAllocator;
+using ::iris::testing::MakeSampler;
 using ::testing::_;
 using ::testing::DoAll;
 using ::testing::Eq;
@@ -64,9 +64,7 @@ TEST(CompositeBxdfTest, IsDiffuse) {
 }
 
 TEST(CompositeBxdfTest, SampleDiffuseNone) {
-  MockRandom rng;
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({}, {});
 
   MockBxdf bxdf0;
   EXPECT_CALL(bxdf0, IsDiffuse(NotNull()))
@@ -85,10 +83,7 @@ TEST(CompositeBxdfTest, SampleDiffuseNone) {
 }
 
 TEST(CompositeBxdfTest, SampleDiffuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextIndex(2)).WillOnce(Return(1));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({0.75}, {});
 
   MockBxdf bxdf0;
   EXPECT_CALL(bxdf0, IsDiffuse(NotNull()))
@@ -118,10 +113,7 @@ TEST(CompositeBxdfTest, SampleDiffuse) {
 }
 
 TEST(CompositeBxdfTest, SampleAllDifuse) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextIndex(2)).WillOnce(Return(1));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({0.75}, {});
 
   MockBxdf bxdf0;
   EXPECT_CALL(bxdf0, IsDiffuse(NotNull()))
@@ -146,10 +138,7 @@ TEST(CompositeBxdfTest, SampleAllDifuse) {
 }
 
 TEST(CompositeBxdfTest, SampleAllSpecular) {
-  MockRandom rng;
-  EXPECT_CALL(rng, NextIndex(2)).WillOnce(Return(1));
-  EXPECT_CALL(rng, DiscardGeometric(2));
-  Sampler sampler(rng);
+  Sampler sampler = MakeSampler({0.75}, {});
 
   MockReflector reflector;
 

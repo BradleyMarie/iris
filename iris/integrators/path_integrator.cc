@@ -14,10 +14,10 @@
 #include "iris/integrators/internal/sample_direct_lighting.h"
 #include "iris/integrators/internal/sample_indirect_lighting.h"
 #include "iris/light_sampler.h"
-#include "iris/random.h"
 #include "iris/ray_differential.h"
 #include "iris/ray_tracer.h"
 #include "iris/reflectors/uniform_reflector.h"
+#include "iris/sampler.h"
 #include "iris/spectral_allocator.h"
 #include "iris/spectrum.h"
 #include "iris/visibility_tester.h"
@@ -46,7 +46,7 @@ class PathIntegrator final : public Integrator {
                                     VisibilityTester& visibility_tester,
                                     const AlbedoMatcher& albedo_matcher,
                                     SpectralAllocator& spectral_allocator,
-                                    Random& rng) override;
+                                    Sampler& sampler) override;
 
   virtual std::unique_ptr<Integrator> Duplicate() const override;
 
@@ -75,7 +75,7 @@ PathIntegrator::PathIntegrator(visual maximum_path_continue_probability,
 const Spectrum* PathIntegrator::Integrate(
     RayDifferential ray, RayTracer& ray_tracer, LightSampler& light_sampler,
     VisibilityTester& visibility_tester, const AlbedoMatcher& albedo_matcher,
-    SpectralAllocator& spectral_allocator, Random& rng) {
+    SpectralAllocator& spectral_allocator, Sampler& sampler) {
   PathBuilder path_builder(reflectors_, spectra_, attenuations_);
 
   const Reflector* path_reflectance = kPerfectReflector.Get();
@@ -94,7 +94,7 @@ const Spectrum* PathIntegrator::Integrate(
     }
 
     const Spectrum* direct_lighting = SampleDirectLighting(
-        light_sampler, ray, *trace_result.surface_intersection, rng,
+        light_sampler, ray, *trace_result.surface_intersection, sampler,
         visibility_tester, spectral_allocator);
     path_builder.Add(direct_lighting, spectral_allocator);
 
@@ -102,10 +102,9 @@ const Spectrum* PathIntegrator::Integrate(
       break;
     }
 
-    std::optional<Bsdf::SampleResult> bsdf_sample =
-        SampleIndirectLighting(*trace_result.surface_intersection,
-                               iris::Sampler(rng), spectral_allocator,
-                               /*modified*/ ray);
+    std::optional<Bsdf::SampleResult> bsdf_sample = SampleIndirectLighting(
+        *trace_result.surface_intersection, sampler, spectral_allocator,
+        /*modified=*/ray);
     if (!bsdf_sample) {
       break;
     }
@@ -128,7 +127,7 @@ const Spectrum* PathIntegrator::Integrate(
 
     if (min_bounces_ <= bounces) {
       std::optional<visual_t> roulette_pdf = russian_roulette_.Evaluate(
-          rng, path_attenuation * albedo_matcher.Match(*path_reflectance));
+          sampler, path_attenuation * albedo_matcher.Match(*path_reflectance));
       if (!roulette_pdf) {
         break;
       }

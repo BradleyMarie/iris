@@ -6,86 +6,50 @@
 
 #include "googletest/include/gtest/gtest.h"
 #include "iris/float.h"
-#include "iris/random/mock_random.h"
 #include "iris/sampler.h"
+#include "iris/testing/sampler.h"
 
 namespace iris {
 namespace environmental_lights {
 namespace internal {
 namespace {
 
-using ::iris::random::MockRandom;
-using ::testing::InSequence;
-using ::testing::Return;
+using ::iris::testing::MakeSampler;
 
 TEST(Distribution2D, Sample) {
   std::vector<visual> values = {1.0, 1.0, 3.0, 3.0};
   Distribution2D dist(values, {2, 2});
 
-  {
-    InSequence sequence;
+  Sampler sampler0 = MakeSampler({0.125, 0.5}, {});
+  auto [u0, v0] = dist.Sample(sampler0);
+  EXPECT_EQ(0.5, u0);
+  EXPECT_EQ(0.25, v0);
 
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.125));
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.5));
-    Sampler sampler(rng);
-
-    auto [u, v] = dist.Sample(sampler);
-    EXPECT_EQ(0.5, u);
-    EXPECT_EQ(0.25, v);
-  }
-
-  {
-    InSequence sequence;
-
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.75));
-    Sampler sampler(rng);
-
-    auto [u, v] = dist.Sample(sampler);
-    EXPECT_EQ(0.75, u);
-    EXPECT_EQ(0.5, v);
-  }
+  Sampler sampler1 = MakeSampler({0.25, 0.75}, {});
+  auto [u1, v1] = dist.Sample(sampler1);
+  EXPECT_EQ(0.75, u1);
+  EXPECT_EQ(0.5, v1);
 }
 
 TEST(Distribution2D, SampleAll) {
   std::vector<visual> values = {1.0, 1.0, 3.0, 3.0};
   Distribution2D dist(values, {2, 2});
 
-  {
-    InSequence sequence;
+  Sampler sampler0 = MakeSampler({0.125, 0.5}, {});
+  visual_t pdf;
+  size_t offset;
+  auto [u0, v0] = dist.Sample(sampler0, &pdf, &offset);
+  EXPECT_EQ(0.5, u0);
+  EXPECT_EQ(0.25, v0);
+  EXPECT_EQ(0.5, pdf);
+  EXPECT_EQ(1u, offset);
 
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.125));
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.5));
-    Sampler sampler(rng);
-
-    visual_t pdf;
-    size_t offset;
-    auto [u, v] = dist.Sample(sampler, &pdf, &offset);
-    EXPECT_EQ(0.5, u);
-    EXPECT_EQ(0.25, v);
-    EXPECT_EQ(0.5, pdf);
-    EXPECT_EQ(1u, offset);
-  }
-
-  {
-    InSequence sequence;
-
-    MockRandom rng;
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.25));
-    EXPECT_CALL(rng, NextVisual()).WillOnce(Return(0.75));
-    Sampler sampler(rng);
-
-    visual_t pdf;
-    size_t offset;
-    auto [u, v] = dist.Sample(sampler, &pdf, &offset);
-    EXPECT_EQ(0.75, u);
-    EXPECT_EQ(0.5, v);
-    EXPECT_EQ(1.5, pdf);
-    EXPECT_EQ(3u, offset);
-  }
+  Sampler sampler1 = MakeSampler({0.25, 0.75}, {});
+  auto [u1, v1] = dist.Sample(sampler1, &pdf, &offset);
+  EXPECT_EQ(0.75, u1);
+  EXPECT_EQ(0.5, v1);
+  EXPECT_EQ(1.5, pdf);
+  EXPECT_EQ(3u, offset);
 }
 
 TEST(Distribution2D, Pdf) {
