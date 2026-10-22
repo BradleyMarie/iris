@@ -5,10 +5,11 @@ module(name = "iris", version = "head")
 bazel_dep(name = "abseil-cpp", version = "20260817.0")
 bazel_dep(name = "googletest", version = "1.18.0.bcr.1", dev_dependency = True)
 bazel_dep(name = "libdeflate", version = "1.26")
-bazel_dep(name = "plyodine", version = "1.1.1")
-bazel_dep(name = "rules_cc", version = "0.2.22")
-bazel_dep(name = "openexr", version = "3.4.15")
-bazel_dep(name = "protobuf", version = "36.0.bcr.1")
+bazel_dep(name = "plyodine", version = "1.1.2")
+bazel_dep(name = "rules_cc", version = "0.2.26")
+bazel_dep(name = "openexr", version = "3.5.2")
+bazel_dep(name = "pbrt_proto", version = "1.0.0")
+bazel_dep(name = "protobuf", version = "37.0-rc1")
 
 # Git Dependencies
 bazel_dep(name = "libfbsdf")
@@ -23,11 +24,4 @@ git_override(
     module_name = "libspd",
     remote = "https://github.com/bradleymarie/libspd.git",
     commit = "75b4fa28bd65e099d7966046cb3520355d137e45",
-)
-
-bazel_dep(name = "pbrt_proto")
-git_override(
-    module_name = "pbrt_proto",
-    remote = "https://github.com/bradleymarie/pbrt_proto.git",
-    commit = "f7ebbae122c8fd98f49218e6a7428a4ded4446cd",
 )
